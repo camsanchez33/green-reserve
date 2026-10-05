@@ -5,12 +5,13 @@
 // and handlers come from useCourseDetail() via useCourse().
 
 import { describeCheckIn } from '@/components/admin/CourseCheckInCard';
-import { Phone, FileText, Upload, StickyNote, AlertTriangle } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 import { formatDate as fmtDate } from '@/lib/format';
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { iCls } from './shared';
 import { useCourse } from './context';
+import { StatusDot } from '@/components/ui/StatusDot';
 
 export function RecordsTab() {
   const { courseId, detail, docsData, docsLoading, noteDraft, setNoteDraft, noteSaving, docUploading, docsError, addClientNote, uploadDocument, c } = useCourse();
@@ -82,7 +83,7 @@ export function RecordsTab() {
                       <div className="border border-line rounded-md divide-y divide-line">
                         {(detail.calls ?? []).map(cl => (
                           <div key={cl.id} className="px-3 py-2.5 flex items-start gap-3">
-                            <Phone className={'w-3.5 h-3.5 mt-0.5 shrink-0 ' + (cl.outcome === 'talked' ? 'text-ok' : cl.outcome === 'scheduled' ? 'text-pine' : 'text-ink-faint')} />
+                            
                             <div className="flex-1 min-w-0">
                               <div className="text-sm text-ink">{describeCheckIn(cl)}</div>
                               {cl.notes && <div className="text-xs text-ink-soft mt-1 whitespace-pre-wrap">{cl.notes}</div>}
@@ -97,7 +98,7 @@ export function RecordsTab() {
                     <div className="flex items-center justify-between mb-4">
                       <Eyebrow>Uploaded documents</Eyebrow>
                       <label className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover cursor-pointer transition-colors">
-                        <Upload className="w-3.5 h-3.5" />{docUploading ? 'Uploading…' : 'Upload PDF'}
+                        {docUploading ? 'Uploading…' : 'Upload PDF'}
                         <input
                           type="file" accept="application/pdf" className="hidden" disabled={docUploading}
                           onChange={e => { const f = e.target.files?.[0]; if (f) uploadDocument(f); e.target.value = ''; }}
@@ -137,7 +138,7 @@ export function RecordsTab() {
                         disabled={noteSaving || !noteDraft.trim()}
                         className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-sm font-medium rounded-md transition-colors"
                       >
-                        <StickyNote className="w-3.5 h-3.5" />Add
+                        Add
                       </button>
                     </div>
                     {docsData.notes.length === 0 ? (
@@ -155,7 +156,7 @@ export function RecordsTab() {
                   </Card>
 
                   <div className="flex items-center gap-2 text-xs text-ink-faint px-1">
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <StatusDot status="warn" />
                     E-signature workflow — planned, not yet built.
                   </div>
                 </>

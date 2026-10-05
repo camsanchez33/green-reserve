@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, User, ArrowLeft, ExternalLink, Send, AlertTriangle, ChevronRight, X } from 'lucide-react';
+import { Search, User, ArrowLeft, ExternalLink, X } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { MANAGER_PLUS } from '@/lib/admin-roles';
@@ -197,7 +197,7 @@ function GolfersInner() {
               {detailLoading && <div className="py-16 text-center text-ink-muted text-sm">Loading…</div>}
               {detailError && (
                 <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0"/>{detailError}
+                  <StatusDot status="warn" />{detailError}
                   <button onClick={loadDetail} className="ml-auto underline">Retry</button>
                 </div>
               )}
@@ -207,7 +207,7 @@ function GolfersInner() {
                   {/* Identity */}
                   <Card className="p-5">
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-full bg-pine/10 flex items-center justify-center shrink-0"><User className="w-4 h-4 text-pine"/></div>
+                      
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-ink text-base">{detail.firstName} {detail.lastName} {detail.isGuest && <span className="text-xs font-normal text-ink-muted">· guest, no account</span>}</div>
                         <a href={'mailto:' + detail.email} className="text-sm text-ink-soft hover:text-pine">{detail.email}</a>
@@ -298,13 +298,13 @@ function GolfersInner() {
                               {canCancel && (
                                 <button onClick={() => act(b, 'resend_confirmation')} disabled={isBusy}
                                   className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-md border border-line hover:border-line-strong text-ink-muted hover:text-ink transition-colors disabled:opacity-50">
-                                  <Send className="w-3 h-3"/>{isBusy ? 'Working…' : 'Resend confirmation'}
+                                  {isBusy ? 'Working…' : 'Resend confirmation'}
                                 </button>
                               )}
                               {canReceipt && (
                                 <button onClick={() => act(b, 'resend_receipt')} disabled={isBusy}
                                   className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-md border border-line hover:border-line-strong text-ink-muted hover:text-ink transition-colors disabled:opacity-50">
-                                  <Send className="w-3 h-3"/>{isBusy ? 'Working…' : 'Resend receipt'}
+                                  {isBusy ? 'Working…' : 'Resend receipt'}
                                 </button>
                               )}
                               {canCancel && canMoveMoney && (
@@ -339,7 +339,7 @@ function GolfersInner() {
 
               {searchError && (
                 <div className="bg-bad/5 border border-bad/20 rounded-lg px-4 py-3 text-sm text-bad mb-4 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0"/>{searchError}
+                  <StatusDot status="warn" />{searchError}
                 </div>
               )}
 
@@ -363,7 +363,7 @@ function GolfersInner() {
                                 <div className="text-xs text-ink-muted">{g.bookingCount} booking{g.bookingCount !== 1 ? 's' : ''}</div>
                                 <div className="text-xs text-ink-faint mt-0.5">Since {fmtDate(g.createdAt)}</div>
                               </div>
-                              <ChevronRight className="w-4 h-4 text-ink-faint shrink-0"/>
+                              
                             </button>
                           ))}
                         </Card>
@@ -384,7 +384,7 @@ function GolfersInner() {
                                 <div className="text-xs text-ink-muted">{p.count} booking{p.count !== 1 ? 's' : ''}</div>
                                 <div className="text-xs text-ink-faint mt-0.5">Last: {p.latest.courseName} · {p.latest.teeDate}</div>
                               </div>
-                              <ChevronRight className="w-4 h-4 text-ink-faint shrink-0"/>
+                              
                             </button>
                           ))}
                         </Card>

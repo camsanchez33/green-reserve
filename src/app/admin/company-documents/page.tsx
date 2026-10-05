@@ -7,7 +7,7 @@
 // No-silent-failures rule: every action shows pending, then success or an
 // error that says what to do next; a failed load shows a retry, never "empty".
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FileText, Download, Trash2, Upload } from 'lucide-react';
+import { Download, Trash2, Upload } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure, ErrorBanner } from '@/components/ui/ErrorState';
@@ -106,7 +106,7 @@ export default function CompanyDocumentsPage() {
               <input ref={fileRef} type="file" accept="application/pdf,image/png,image/jpeg" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); }} />
               <Btn onClick={() => fileRef.current?.click()} disabled={uploading}>
-                <span className="inline-flex items-center gap-2"><Upload className="w-4 h-4" />{uploading ? 'Uploading…' : 'Choose file'}</span>
+                <span className="inline-flex items-center gap-2">{uploading ? 'Uploading…' : 'Choose file'}</span>
               </Btn>
               <span className="text-xs text-ink-muted">PDF, PNG or JPEG, up to 25 MB.</span>
             </div>
@@ -131,7 +131,7 @@ export default function CompanyDocumentsPage() {
                   <ul>
                     {g.docs.map(d => (
                       <li key={d.url} className="flex items-center gap-3 px-5 py-3 border-t border-line">
-                        <FileText className="w-4 h-4 text-ink-muted shrink-0" />
+                        
                         <div className="min-w-0 flex-1">
                           <a href={downloadHref(d.url)} target="_blank" rel="noopener" className="text-sm font-medium text-ink hover:underline break-all">{d.name}</a>
                           <div className="text-xs text-ink-muted">{fmtSize(d.size)} · added {formatDateTime(d.uploadedAt)}</div>

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
-import { HardDrive, Clock3, Zap, GitBranch, Bug, ExternalLink, Landmark, Link2, Phone, MessageCircle } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -46,12 +46,11 @@ interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
 // U-A (UI_REVISE_SPEC §3): one legible signal per card. Green = this page reads
 // the real state. Grey = link-only; we can only point you at where it lives.
 // Turning a grey card green is a schema item, not a reskin.
-function SystemCard({ icon, title, tracked = false, right, children }: { icon: React.ReactNode; title: string; tracked?: boolean; right?: React.ReactNode; children: React.ReactNode }) {
+function SystemCard({ title, tracked = false, right, children }: { title: string; tracked?: boolean; right?: React.ReactNode; children: React.ReactNode }) {
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-ink-muted">{icon}</span>
           <Eyebrow>{title}</Eyebrow>
           <span title={tracked ? 'Tracked here — this page reads the real state.' : 'Link-only — this page cannot see the real state; follow the link.'}>
             <StatusDot status={tracked ? 'ok' : 'neutral'}/>
@@ -223,7 +222,7 @@ export default function AdminSystemPage() {
             {/* MP-8a: the read-only Platform card. "What's live right now?" was
                 the one real argument for a Settings page; this answers it
                 without adding a write surface. */}
-            <SystemCard icon={<Landmark className="w-3.5 h-3.5"/>} title="Platform" tracked
+            <SystemCard title="Platform" tracked
               right={p && <StatusDot status={p.env === 'production' ? 'ok' : 'warn'} label={p.env} />}>
               {p ? (
                 <div className="space-y-3">
@@ -272,7 +271,7 @@ export default function AdminSystemPage() {
             </SystemCard>
 
             {/* MP-8b: each job's last recorded run. Red = failed, never finished, or overdue. */}
-            <SystemCard icon={<Clock3 className="w-3.5 h-3.5"/>} title="Crons" tracked={!!data}
+            <SystemCard title="Crons" tracked={!!data}
               right={<span className="text-[11px] text-ink-faint">{data ? `${data.crons.length} scheduled` : ''}</span>}>
               {data && data.crons.length > 0 && (
                 <div className="divide-y divide-line-soft mb-3">
@@ -304,7 +303,7 @@ export default function AdminSystemPage() {
 
             {/* CAL-2: what the public booking page believes, without reading code.
                 Cal.com is the only scheduler; availability lives in Cal.com. */}
-            <SystemCard icon={<Phone className="w-3.5 h-3.5"/>} title="Call booking (Cal.com)" tracked>
+            <SystemCard title="Call booking (Cal.com)" tracked>
               {data?.calcom ? (
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
@@ -336,7 +335,7 @@ export default function AdminSystemPage() {
             </SystemCard>
 
             {/* BIRDIE_AI_SPEC B1: the assistant's switch and today's spend, in replies. */}
-            <SystemCard icon={<MessageCircle className="w-3.5 h-3.5"/>} title="Birdie" tracked
+            <SystemCard title="Birdie" tracked
               right={data?.birdie ? <span className="text-[11px] text-ink-faint">{data.birdie.model}</span> : undefined}>
               {data?.birdie ? (
                 <div className="space-y-2">
@@ -366,7 +365,7 @@ export default function AdminSystemPage() {
 
             {/* MP-8a: moved here from the Courses list. GET always dry-runs;
                 the cleanup and the force-delete are explicit owner clicks. */}
-            <SystemCard icon={<Link2 className="w-3.5 h-3.5"/>} title="Data integrity" tracked
+            <SystemCard title="Data integrity" tracked
               right={
                 <button
                   onClick={checkOrphans}
@@ -445,7 +444,7 @@ export default function AdminSystemPage() {
               )}
             </SystemCard>
 
-            <SystemCard icon={<HardDrive className="w-3.5 h-3.5"/>} title="Backups">
+            <SystemCard title="Backups">
               <div className="flex items-center gap-2 mb-2">
                 <StatusDot status="neutral"/>
                 <span className="text-sm text-ink-soft">Not tracked in-app — verify the nightly workflow ran in GitHub Actions.</span>
@@ -454,7 +453,7 @@ export default function AdminSystemPage() {
             </SystemCard>
 
             {/* MP-8b: the last verified event this endpoint received (CronRunLog, job webhook:stripe). */}
-            <SystemCard icon={<Zap className="w-3.5 h-3.5"/>} title="Stripe Webhook" tracked={!!data}>
+            <SystemCard title="Stripe Webhook" tracked={!!data}>
               <div className="flex items-start gap-2 mb-2">
                 <span className="mt-1"><StatusDot status={p && !p.integrations.stripeWebhook ? 'bad' : data?.stripeWebhook ? (data.stripeWebhook.outcome === 'error' ? 'bad' : 'ok') : 'neutral'}/></span>
                 <span className="text-sm text-ink-soft">
@@ -470,7 +469,7 @@ export default function AdminSystemPage() {
               {data && <OutLink href={data.links.stripeWebhooks}>Open Stripe webhooks</OutLink>}
             </SystemCard>
 
-            <SystemCard icon={<GitBranch className="w-3.5 h-3.5"/>} title="CI">
+            <SystemCard title="CI">
               <div className="flex items-center gap-2 mb-2">
                 <StatusDot status="neutral"/>
                 <span className="text-sm text-ink-soft">Not polled in-app — check the latest GitHub Actions run.</span>
@@ -478,7 +477,7 @@ export default function AdminSystemPage() {
               {data && <OutLink href={data.links.ci}>View CI runs</OutLink>}
             </SystemCard>
 
-            <SystemCard icon={<Bug className="w-3.5 h-3.5"/>} title="Sentry">
+            <SystemCard title="Sentry">
               <div className="flex items-center gap-2 mb-2">
                 <StatusDot status={p ? (p.integrations.sentry ? 'neutral' : 'warn') : 'neutral'}/>
                 <span className="text-sm text-ink-soft">

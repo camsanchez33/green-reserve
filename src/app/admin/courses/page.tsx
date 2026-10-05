@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
 import Link from 'next/link';
-import { RefreshCw, Search, Download, Phone } from 'lucide-react';
+import { Search } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
@@ -274,7 +274,7 @@ function CoursesContent() {
             onClick={e => e.stopPropagation()}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors"
           >
-            <Phone className="w-3 h-3" />Set up call
+            Set up call
           </Link>
         );
       }
@@ -311,7 +311,7 @@ function CoursesContent() {
         onClick={e => e.stopPropagation()}
         className="inline-flex items-center gap-1.5 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors"
       >
-        <Phone className="w-3 h-3" />Schedule
+        Schedule
       </Link>
     );
   };
@@ -436,7 +436,7 @@ function CoursesContent() {
                 onClick={() => loadCourses(view)}
                 className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
               >
-                <RefreshCw className="w-4 h-4" />Refresh
+                Refresh
               </button>
               {/* CS-2 §1: every course as a CSV, same auth as the list. */}
               <a
@@ -444,7 +444,7 @@ function CoursesContent() {
                 download
                 className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
               >
-                <Download className="w-4 h-4" />Export CSV
+                Export CSV
               </a>
             </div>
           </div>

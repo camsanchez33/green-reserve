@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { RefreshCw, Search, Trash2, ArchiveRestore, RotateCcw, Download, Phone } from 'lucide-react';
+import { Search, Trash2, ArchiveRestore } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
@@ -475,7 +475,7 @@ function InquiriesListInner() {
           onClick={e => e.stopPropagation()}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-2.5 py-1 transition-colors"
         >
-          <Phone className="w-3 h-3" />Set up call
+          Set up call
         </Link>
       );
     }
@@ -538,7 +538,7 @@ function InquiriesListInner() {
                 <span className="truncate">{inq.courseName}</span>
                 {s.resubmits > 0 && (
                   <span title="Submitted the interest form again while already in the pipeline" className="shrink-0">
-                    <RotateCcw className="w-3 h-3 text-warn" />
+                    
                   </span>
                 )}
               </div>
@@ -713,7 +713,7 @@ function InquiriesListInner() {
                 onClick={loadInquiries}
                 className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
               >
-                <RefreshCw className="w-4 h-4" />Refresh
+                Refresh
               </button>
               {/* IC-3 §5: every alive + closed row as a CSV, same auth as the list. */}
               <a
@@ -721,7 +721,7 @@ function InquiriesListInner() {
                 download
                 className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
               >
-                <Download className="w-4 h-4" />Export CSV
+                Export CSV
               </a>
             </div>
           </div>

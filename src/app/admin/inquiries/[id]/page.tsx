@@ -1,11 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import {
-  ArrowLeft, Mail, Wrench, Power, CheckCircle, Clock, Trash2,
-  XCircle, ArrowUpRight, Copy, Archive, Pencil, Save, RefreshCw, Eye, MoreHorizontal, Check,
-  Globe, ArchiveRestore, RotateCcw, Phone,
-} from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Copy, Archive, Save, RefreshCw, MoreHorizontal, Check, Phone } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import {
@@ -834,19 +830,19 @@ function InquiryDetailInner() {
                 {!isArchived && <span className="text-sm text-ink-faint">{days}d in stage</span>}
                 {!isArchived && upcomingCall && (
                   <span className="flex items-center gap-1.5 text-xs text-pine font-medium">
-                    <Phone className="w-3.5 h-3.5" />Call {fmtCallTime(upcomingCall.scheduledAt)}
+                    Call {fmtCallTime(upcomingCall.scheduledAt)}
                   </span>
                 )}
                 {!isArchived && !upcomingCall && missedCall && (
                   <span className="flex items-center gap-1.5 text-xs text-warn font-medium">
-                    <Phone className="w-3.5 h-3.5" />Log the call ({fmtCallTime(missedCall.scheduledAt)})
+                    Log the call ({fmtCallTime(missedCall.scheduledAt)})
                   </span>
                 )}
                 {isArchived && inq.status !== 'live' && inq.status !== 'rejected' && (() => {
                   const { reason, date } = whyArchived(inq);
                   return (
                     <span className="flex items-center gap-1.5 text-xs text-ink-muted">
-                      <Archive className="w-3.5 h-3.5" />{reason} · {fmtDate(date)}
+                      {reason} · {fmtDate(date)}
                     </span>
                   );
                 })()}
@@ -862,38 +858,38 @@ function InquiryDetailInner() {
 
               {inq.status === 'pending' && (
                 <button onClick={() => action('mark_in_review')} disabled={processing} className={btnP}>
-                  <Clock className="w-3.5 h-3.5" />In Review
+                  In Review
                 </button>
               )}
               {inq.status === 'in_review' && (
                 <button onClick={() => setPendingAction('send_sheet')} disabled={processing} className={btnP}>
-                  <Mail className="w-3.5 h-3.5" />Send Sheet
+                  Send Sheet
                 </button>
               )}
               {inq.status === 'details_requested' && (
                 <button onClick={() => setPendingAction('resend_sheet')} disabled={processing} className={btnO}>
-                  <Mail className="w-3.5 h-3.5" />Resend Sheet
+                  Resend Sheet
                 </button>
               )}
               {inq.status === 'details_submitted' && (
                 <button onClick={() => guardBuild('create_draft')} disabled={processing} className={btnP}>
-                  <CheckCircle className="w-3.5 h-3.5" />Create Draft Course
+                  <StatusDot status="ok" />Create Draft Course
                 </button>
               )}
               {inq.status === 'building' && allChangesAddressed && (
                 <button onClick={() => setPendingAction('send_preview')} disabled={sendingPreview} className={btnP}>
-                  <Eye className="w-3.5 h-3.5" />{sendingPreview ? 'Sending…' : 'Send Updated Preview'}
+                  {sendingPreview ? 'Sending…' : 'Send Updated Preview'}
                 </button>
               )}
               {inq.status === 'building' && !pageChangesRequested && !allChangesAddressed && (
                 <button onClick={() => setPendingAction('go_live')} disabled={processing} className={btnP}>
-                  <Power className="w-3.5 h-3.5" />Go Live
+                  Go Live
                 </button>
               )}
               {inq.status === 'live' && inq.builtCourseId && (
                 <button onClick={() => router.push('/admin/courses/' + inq.builtCourseId)}
                   className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover bg-pine/5 hover:bg-pine/10 border border-pine/20 px-3 py-2 rounded-md transition-colors">
-                  <Wrench className="w-3.5 h-3.5" />Manage course <ArrowUpRight className="w-3.5 h-3.5" />
+                  Manage course <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
               )}
               {/* DELETION DOCTRINE — permanent delete only for inquiries that
@@ -901,7 +897,7 @@ function InquiryDetailInner() {
               {(inq.status === 'archived' || inq.status === 'rejected') && !inq.builtCourseId && (
                 <button onClick={() => { setPendingAction('delete'); setDeleteCourseConfirm(''); }}
                   className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-bad hover:bg-bad/5 px-3 py-1.5 rounded-md border border-line hover:border-bad/20 transition-colors">
-                  <Trash2 className="w-3.5 h-3.5" />Delete permanently
+                  Delete permanently
                 </button>
               )}
 
@@ -926,31 +922,31 @@ function InquiryDetailInner() {
                 {!isArchived && inq.status !== 'live' && !isSnoozed && (
                   <button onClick={() => { setMoreOpen(false); setSnoozeDate(''); setPendingAction('snooze'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                    <Clock className="w-3.5 h-3.5" />Snooze&hellip;
+                    Snooze&hellip;
                   </button>
                 )}
                 {!isArchived && inq.status !== 'live' && isSnoozed && (
                   <button onClick={() => { setMoreOpen(false); action('unsnooze'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                    <Clock className="w-3.5 h-3.5" />Clear snooze
+                    Clear snooze
                   </button>
                 )}
                 {!inq.builtCourseId && !isArchived && inq.status !== 'building' && (
                   <button onClick={() => { setMoreOpen(false); router.push('/admin/create?' + wizardParams.toString()); }}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                    <ArrowUpRight className="w-3.5 h-3.5" />Manual build (in person)
+                    Manual build (in person)
                   </button>
                 )}
                 {(inq.status === 'pending' || inq.status === 'in_review' || inq.status === 'details_requested' || inq.status === 'details_submitted') && (
                   <button onClick={() => { setMoreOpen(false); setPendingAction('reject'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
-                    <XCircle className="w-3.5 h-3.5" />Reject
+                    <StatusDot status="bad" />Reject
                   </button>
                 )}
                 {inq.status === 'in_review' && (
                   <button onClick={() => guardBuild('build_without_sheet')} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                    <Wrench className="w-3.5 h-3.5" />Build without sheet
+                    Build without sheet
                   </button>
                 )}
                 {inq.status === 'building' && (
@@ -958,34 +954,34 @@ function InquiryDetailInner() {
                     {inq.builtCourseId && (
                       <button onClick={() => { setMoreOpen(false); router.push('/admin/courses/' + inq.builtCourseId); }}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Wrench className="w-3.5 h-3.5" />Manage Course
+                        Manage Course
                       </button>
                     )}
                     <button onClick={() => { setMoreOpen(false); setPendingAction('dashboard_access'); }} disabled={processing}
                       className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                      <Mail className="w-3.5 h-3.5" />Send dashboard access (resend)
+                      Send dashboard access (resend)
                     </button>
                     {inq.builtCourseId && !pageApproved && (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('send_preview'); }} disabled={sendingPreview}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Eye className="w-3.5 h-3.5" />{sendingPreview ? 'Sending…' : (previewSentEvent ? 'Send Updated Preview' : 'Send Preview')}
+                        {sendingPreview ? 'Sending…' : (previewSentEvent ? 'Send Updated Preview' : 'Send Preview')}
                       </button>
                     )}
                     {inq.builtCourseId && pageApproved && (
                       <div className="px-2 py-1.5">
                         <div className="flex items-center gap-1.5 text-xs text-ok font-medium px-0 py-1">
-                          <CheckCircle className="w-3.5 h-3.5" />Approved{approvedEvent ? ' · ' + fmtDate(approvedEvent.createdAt) : ''}
+                          <StatusDot status="ok" />Approved{approvedEvent ? ' · ' + fmtDate(approvedEvent.createdAt) : ''}
                         </div>
                         <button onClick={() => { setMoreOpen(false); requestReReview(); }} disabled={requestingReReview}
                           className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                          <RefreshCw className="w-3.5 h-3.5" />{requestingReReview ? 'Requesting…' : 'Request re-review'}
+                          {requestingReReview ? 'Requesting…' : 'Request re-review'}
                         </button>
                       </div>
                     )}
                     {pageChangesRequested && (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('go_live'); }} disabled={processing}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Power className="w-3.5 h-3.5" />Go Live anyway
+                        Go Live anyway
                       </button>
                     )}
                     {/* A-02d availability recap: Archive is available from
@@ -994,7 +990,7 @@ function InquiryDetailInner() {
                     {inq.builtCourseId && (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('archive_course'); }} disabled={processing}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Archive className="w-3.5 h-3.5" />Archive
+                        Archive
                       </button>
                     )}
                     {/* DELETION DOCTRINE — only unbuilt inquiries can be
@@ -1004,7 +1000,7 @@ function InquiryDetailInner() {
                     {!inq.builtCourseId && (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); setDeleteCourseConfirm(''); }}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />Delete
+                        Delete
                       </button>
                     )}
                   </>
@@ -1018,7 +1014,7 @@ function InquiryDetailInner() {
                     {inq.builtCourseId && (
                       <button onClick={() => { setMoreOpen(false); router.push('/admin/courses/' + inq.builtCourseId); }}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Wrench className="w-3.5 h-3.5" />Manage Course
+                        Manage Course
                       </button>
                     )}
                     {!courseSlug && courseExtrasFailed && (
@@ -1027,19 +1023,19 @@ function InquiryDetailInner() {
                     {courseSlug && (
                       <a href={'/courses/' + courseSlug} target="_blank" rel="noopener noreferrer" onClick={() => setMoreOpen(false)}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Globe className="w-3.5 h-3.5" />View public page
+                        View public page
                       </a>
                     )}
                     {courseSlug && (
                       <button onClick={() => { copyBookingLink(); }}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Copy className="w-3.5 h-3.5" />{linkCopied ? 'Copied!' : 'Copy booking link'}
+                        {linkCopied ? 'Copied!' : 'Copy booking link'}
                       </button>
                     )}
                     {inq.builtCourseId && (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('archive_course'); }} disabled={processing}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Archive className="w-3.5 h-3.5" />Archive
+                        Archive
                       </button>
                     )}
                   </>
@@ -1051,12 +1047,12 @@ function InquiryDetailInner() {
                     {inq.builtCourseId && (
                       <button onClick={() => { setMoreOpen(false); router.push('/admin/courses/' + inq.builtCourseId); }}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                        <Wrench className="w-3.5 h-3.5" />View course
+                        View course
                       </button>
                     )}
                     <button onClick={() => { setMoreOpen(false); setPendingAction('restore_archived'); }} disabled={processing}
                       className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
-                      <ArchiveRestore className="w-3.5 h-3.5" />Restore to previous stage
+                      Restore to previous stage
                     </button>
                     {inq.builtCourseId ? (
                       <p className="px-2 py-2 text-[11px] text-ink-soft leading-relaxed">
@@ -1065,7 +1061,7 @@ function InquiryDetailInner() {
                     ) : (
                       <button onClick={() => { setMoreOpen(false); setPendingAction('delete'); setDeleteCourseConfirm(''); }}
                         className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
-                        <Trash2 className="w-3.5 h-3.5" />Permanently delete
+                        Permanently delete
                       </button>
                     )}
                   </>
@@ -1076,7 +1072,7 @@ function InquiryDetailInner() {
 
           {isSnoozed && (
             <div className="mt-3 flex items-center gap-2 bg-warn/5 border border-warn/20 rounded-lg px-4 py-2.5 text-xs text-warn max-w-3xl">
-              <Clock className="w-3.5 h-3.5 shrink-0" />
+              
               <span>
                 Snoozed until {fmtDate(inq.snoozeUntil as string)} — it stays out of the work queue until then,
                 unless the course gets in touch first.
@@ -1094,7 +1090,7 @@ function InquiryDetailInner() {
           {resubmit && (
             <div className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-lg px-4 py-3">
               <div className="flex items-center gap-2 mb-1.5">
-                <RotateCcw className="w-3.5 h-3.5 text-warn shrink-0" />
+                
                 <span className="text-xs font-medium text-warn">
                   They submitted the interest form again on {fmtDate(resubmit.at.toISOString())}
                 </span>
@@ -1212,7 +1208,7 @@ function InquiryDetailInner() {
                                 disabled={addressingCategory === it.category}
                                 className="shrink-0 flex items-center gap-1.5 text-xs font-medium text-ink-soft bg-paper border border-line hover:border-line-strong hover:text-ink px-2.5 py-1.5 rounded-md disabled:opacity-50 transition-colors"
                               >
-                                <Check className="w-3.5 h-3.5" />{addressingCategory === it.category ? 'Saving…' : 'Addressed'}
+                                {addressingCategory === it.category ? 'Saving…' : 'Addressed'}
                               </button>
                             </div>
                           ))}
@@ -1310,10 +1306,10 @@ function InquiryDetailInner() {
               <p className="text-warn text-xs leading-relaxed mb-2.5">{nameConflict.message}</p>
               <div className="flex items-center gap-2">
                 <button onClick={() => router.push('/admin/courses/' + nameConflict.existingCourseId)} className={btnO}>
-                  <Wrench className="w-3.5 h-3.5" />View existing course
+                  View existing course
                 </button>
                 <button onClick={() => createDraftCourse(true)} disabled={processing} className={btnO}>
-                  <CheckCircle className="w-3.5 h-3.5" />Create anyway
+                  <StatusDot status="ok" />Create anyway
                 </button>
                 <button onClick={() => setNameConflict(null)} className="text-xs text-ink-faint hover:text-ink transition-colors ml-1">Dismiss</button>
               </div>
@@ -1361,14 +1357,14 @@ function InquiryDetailInner() {
                     });
                     setEditContact(true);
                   }} className="flex items-center gap-1 text-xs text-ink-muted hover:text-pine transition-colors">
-                    <Pencil className="w-3 h-3" /> Edit
+                     Edit
                   </button>
                 ) : (
                   <div className="flex items-center gap-2">
                     <button onClick={() => setEditContact(false)} className="text-xs text-ink-muted hover:text-ink transition-colors">Cancel</button>
                     <button onClick={saveContact} disabled={processing}
                       className="flex items-center gap-1 text-xs bg-pine text-white px-2.5 py-1 rounded-md hover:bg-pine-hover disabled:opacity-50 transition-colors">
-                      <Save className="w-3 h-3" /> Save
+                       Save
                     </button>
                   </div>
                 )}
@@ -1899,7 +1895,7 @@ function InquiryDetailInner() {
                   <Card className="divide-y divide-line">
                     {calls.map(c => (
                       <div key={c.id} className="px-4 py-3 flex items-start gap-3">
-                        <Phone className={'w-3.5 h-3.5 mt-0.5 shrink-0 ' + (c.outcome === 'talked' ? 'text-ok' : c.outcome === 'scheduled' ? 'text-pine' : 'text-ink-faint')} />
+                        
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-ink">{describeCall(c)}</div>
                           <div className="text-xs text-ink-faint mt-0.5">

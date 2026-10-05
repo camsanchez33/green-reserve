@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Power, Globe, ArchiveX, ArchiveRestore, X, RefreshCw, Eye, CheckCircle, MoreVertical } from 'lucide-react';
+import { ArrowLeft, X, MoreVertical } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Card } from '@/components/ui/Card';
@@ -94,7 +94,7 @@ export default function CourseDetailPage() {
               {!c.active && c.operator && detail?.approval.status === 'approved' && (
                 <>
                   <span className="px-3 py-1.5 rounded-md text-xs font-medium border bg-ok/5 text-ok border-ok/20 flex items-center gap-1.5">
-                    <CheckCircle className="w-3.5 h-3.5" />
+                    <StatusDot status="ok" />
                     Approved{detail.approval.approvedAt ? ' · ' + new Date(detail.approval.approvedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                   </span>
                   <button
@@ -114,7 +114,7 @@ export default function CourseDetailPage() {
                   className="px-3 py-1.5 rounded-md text-xs font-medium border transition-colors flex items-center gap-1.5 bg-paper text-ink-soft border-line hover:text-pine hover:border-pine/30 hover:bg-pine/5 disabled:opacity-50"
                   title="Send preview + dashboard access to operator"
                 >
-                  <Eye className="w-3.5 h-3.5" />
+                  
                   {sendingPreview ? 'Sending…' : 'Send Preview'}
                 </button>
               )}
@@ -129,7 +129,7 @@ export default function CourseDetailPage() {
                 disabled={liveToggleBusy}
                 className={'hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors disabled:opacity-50 ' + (c.active ? 'bg-bad/5 text-bad border-bad/20 hover:bg-bad/10' : 'bg-ok/5 text-ok border-ok/20 hover:bg-ok/10')}
               >
-                <Power className="w-3.5 h-3.5" />
+                
                 {liveToggleBusy ? 'Working…' : c.active ? 'Take offline' : 'Set live'}
               </button>
               <a
@@ -137,13 +137,13 @@ export default function CourseDetailPage() {
                 target="_blank"
                 className="hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-pine hover:border-pine/30 hover:bg-pine/5 transition-colors"
               >
-                <Globe className="w-3.5 h-3.5" />View page
+                View page
               </a>
               <button
                 onClick={loadDetail}
                 className="hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-ink hover:bg-paper transition-colors"
               >
-                <RefreshCw className="w-3.5 h-3.5" />Refresh
+                Refresh
               </button>
               <div className="relative">
                 <button
@@ -171,7 +171,7 @@ export default function CourseDetailPage() {
                           disabled={liveToggleBusy}
                           className={'w-full flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-paper transition-colors disabled:opacity-50 ' + (c.active ? 'text-bad' : 'text-ok')}
                         >
-                          <Power className="w-3.5 h-3.5" />
+                          
                           {liveToggleBusy ? 'Working…' : c.active ? 'Take offline' : 'Set live'}
                         </button>
                         <a
@@ -180,13 +180,13 @@ export default function CourseDetailPage() {
                           onClick={() => setDangerOpen(false)}
                           className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors"
                         >
-                          <Globe className="w-3.5 h-3.5" />View page
+                          View page
                         </a>
                         <button
                           onClick={() => { setDangerOpen(false); loadDetail(); }}
                           className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors"
                         >
-                          <RefreshCw className="w-3.5 h-3.5" />Refresh
+                          Refresh
                         </button>
                         <div className="border-t border-line-soft my-1.5" />
                       </div>
@@ -196,7 +196,7 @@ export default function CourseDetailPage() {
                           disabled={archiveBusy}
                           className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ok hover:bg-ok/5 transition-colors disabled:opacity-50"
                         >
-                          <ArchiveRestore className="w-3.5 h-3.5" />Restore course
+                          Restore course
                         </button>
                       ) : (
                         <button
@@ -204,7 +204,7 @@ export default function CourseDetailPage() {
                           disabled={archiveBusy}
                           className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-ink-soft hover:bg-paper transition-colors disabled:opacity-50"
                         >
-                          <ArchiveX className="w-3.5 h-3.5" />Archive course
+                          Archive course
                         </button>
                       )}
                       {/* DELETION DOCTRINE (RUN_QUEUE) — anything that ever
@@ -292,7 +292,7 @@ export default function CourseDetailPage() {
               onClick={restoreCourse}
               className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-ok/10 text-ok border border-ok/20 hover:bg-ok/20 transition-colors"
             >
-              <ArchiveRestore className="w-3.5 h-3.5" />Restore
+              Restore
             </button>
           </div>
         )}

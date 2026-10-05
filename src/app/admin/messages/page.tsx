@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Send, MessageSquare, ArrowUpRight, RefreshCw, Radio, Mail, Users, Archive, CheckCircle2, RotateCcw } from 'lucide-react';
+import { Send, RefreshCw } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -299,7 +299,7 @@ function MessagesContent() {
 
           {view === 'conversations' && !selectedCourseId && (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-              <MessageSquare className="w-10 h-10 text-ink-faint mb-3" />
+              
               <div className="text-sm font-medium text-ink mb-1">Select a conversation</div>
               <div className="text-xs text-ink-muted">
                 {waitingCount > 0
@@ -349,7 +349,6 @@ function MessagesContent() {
                   {thread?.id && !archivedThread && !denied && (
                     <button onClick={() => setClosed(!thread.closedAt)} disabled={closing}
                       className="flex items-center gap-1.5 text-xs font-medium text-ink-soft hover:text-ink border border-line hover:border-line-strong px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
-                      {thread.closedAt ? <RotateCcw className="w-3.5 h-3.5"/> : <CheckCircle2 className="w-3.5 h-3.5"/>}
                       {closing ? 'Saving…' : thread.closedAt ? 'Reopen' : 'Close'}
                     </button>
                   )}
@@ -364,7 +363,7 @@ function MessagesContent() {
                     onClick={() => router.push('/admin/courses/' + selectedCourseId)}
                     className="flex items-center gap-1.5 text-xs font-medium text-ink-soft hover:text-pine border border-line hover:border-pine/30 px-3 py-1.5 rounded-md transition-colors"
                   >
-                    View course <ArrowUpRight className="w-3.5 h-3.5" />
+                    View course 
                   </button>
                 </div>
               </div>
@@ -374,7 +373,7 @@ function MessagesContent() {
                 {loading && <div className="text-center py-10 text-ink-muted text-sm">Loading...</div>}
                 {!loading && (!thread || thread.messages.length === 0) && (
                   <div className="text-center py-10">
-                    <MessageSquare className="w-8 h-8 text-ink-faint mx-auto mb-2" />
+                    
                     <div className={'text-sm ' + (threadError ? 'text-bad' : 'text-ink-muted')}>
                       {threadError ? threadError.msg : archivedThread ? 'No messages, and this course is archived.' : 'No messages yet. Send one below to start the conversation.'}
                     </div>
@@ -387,7 +386,7 @@ function MessagesContent() {
                       <div className="max-w-[70%]">
                         {msg.isBroadcast && (
                           <div className="flex items-center gap-1 mb-1 text-[10px] text-ink-muted">
-                            <Radio className="w-3 h-3" /> Announcement
+                             Announcement
                           </div>
                         )}
                         <div className={
@@ -404,7 +403,7 @@ function MessagesContent() {
                             onClick={() => router.push(`/admin/inquiries/${thread.inquiryId}`)}
                             className="mt-1 text-[11px] font-medium text-pine hover:underline flex items-center gap-1"
                           >
-                            View on inquiry <ArrowUpRight className="w-3 h-3"/>
+                            View on inquiry 
                           </button>
                         )}
                         <div className={'text-[10px] mt-1 ' + (isAdmin ? 'text-right text-ink-faint' : 'text-ink-faint')}>
@@ -429,7 +428,7 @@ function MessagesContent() {
                 )}
                 {archivedThread && (
                   <div className="flex items-center gap-2 text-xs text-ink-soft bg-paper border border-line rounded-md px-3 py-2 mb-3">
-                    <Archive className="w-3.5 h-3.5 text-ink-muted shrink-0" />
+                    
                     Messaging is off for archived courses — the operator has left. Restore the course from its page if you need to reach them.
                   </div>
                 )}
@@ -450,7 +449,7 @@ function MessagesContent() {
                     disabled={!compose.trim() || sending || composerLocked}
                     className="flex items-center gap-1.5 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-sm font-medium rounded-md transition-colors shrink-0"
                   >
-                    <Send className="w-3.5 h-3.5" />{sending ? 'Sending…' : 'Send'}
+                    {sending ? 'Sending…' : 'Send'}
                   </button>
                 </div>
                 <div className="text-[10px] text-ink-faint mt-1.5">⌘/Ctrl + Enter to send</div>
@@ -546,7 +545,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
             </p>
           </div>
           <button onClick={load} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
-            <RefreshCw className="w-4 h-4"/>Refresh
+            Refresh
           </button>
         </div>
 
@@ -569,7 +568,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
         {isOwner ? (
           <Card className="p-6 mb-7">
             <div className="flex items-center gap-2 mb-4">
-              <Radio className="w-4 h-4 text-pine"/>
+              
               <span className="text-sm font-medium text-ink">{reviewing ? 'Review before sending' : 'New announcement'}</span>
               {reviewing && (
                 <button onClick={() => setReviewing(false)} className="ml-auto text-xs text-ink-muted hover:text-ink transition-colors">Edit</button>
@@ -592,7 +591,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
                     <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} className="w-4 h-4 accent-pine rounded" />
                     <div>
                       <div className="text-sm font-medium text-ink flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5 text-ink-muted"/>Also send as email
+                        Also send as email
                       </div>
                       <div className="text-xs text-ink-muted mt-0.5">
                         {reach ? `To ${reach.operators} operator${reach.operators === 1 ? '' : 's'} of live courses` : 'To every operator of a live course'}
@@ -633,14 +632,14 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
                     disabled={testing || sending}
                     className="flex items-center gap-2 px-4 py-2.5 border border-line text-ink-soft hover:text-ink hover:border-line-strong disabled:opacity-40 rounded-md text-[12.5px] font-medium transition-colors"
                   >
-                    <Mail className="w-4 h-4"/>{testing ? 'Sending test…' : 'Send test to me'}
+                    {testing ? 'Sending test…' : 'Send test to me'}
                   </button>
                   <button
                     onClick={sendBroadcast}
                     disabled={sending}
                     className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
                   >
-                    <Send className="w-4 h-4"/>
+                    
                     {sending ? 'Sending…' : 'Confirm & send'}
                   </button>
                 </div>
@@ -670,7 +669,7 @@ function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () =
                     {b.emailSent && <StatusDot status="ok" label="Emailed" />}
                     {b.dismissalCount > 0 && (
                       <span className="flex items-center gap-1 text-[11px] text-ink-muted">
-                        <Users className="w-3 h-3"/>{b.dismissalCount} dismissed
+                        {b.dismissalCount} dismissed
                       </span>
                     )}
                   </div>

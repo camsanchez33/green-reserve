@@ -51,25 +51,25 @@ this script with a non-zero exit — that is the point of the tag.
 | url | auth | guard | methods | file | lines |
 |---|---|---|---|---|---|
 | `/` | public | public | page | `src/app/page.tsx` | 21 |
-| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 548 |
+| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 544 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 211 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 163 |
 | `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 522 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 334 |
-| `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 760 |
+| `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 761 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 406 |
-| `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 70 |
+| `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
 | `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 463 |
 | `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 990 |
-| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2266 |
+| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2262 |
 | `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 154 |
-| `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 696 |
+| `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 695 |
 | `/admin/owner-login` | admin | client-side | page | `src/app/admin/owner-login/page.tsx` | 147 |
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 130 |
-| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 909 |
+| `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 905 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
-| `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 537 |
+| `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 536 |
 | `/api/admin/activity` | admin | file | GET | `src/app/api/admin/activity/route.ts` | 145 |
 | `/api/admin/archive-course` | admin | file | POST | `src/app/api/admin/archive-course/route.ts` | 71 |
 | `/api/admin/backfill-orphaned-inquiries` | admin | file | POST | `src/app/api/admin/backfill-orphaned-inquiries/route.ts` | 42 |
@@ -373,7 +373,7 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/StatusDot.tsx` | 35 | 36 |  | `StatusDot` |
+| `src/components/ui/StatusDot.tsx` | 38 | 36 |  | `StatusDot` |
 | `src/components/ui/Card.tsx` | 30 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/Eyebrow.tsx` | 28 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/ui/field.ts` | 18 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
@@ -393,8 +393,8 @@ Sorted the same way.
 | `src/components/PlainHeader.tsx` | 3 | 17 |  | `default (PlainHeader)` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
 | `src/components/ui/Btn.tsx` | 2 | 27 |  | `Btn` |
-| `src/components/admin/CommandPalette.tsx` | 1 | 248 |  | `default (CommandPalette)` |
-| `src/components/admin/InquiryCallCards.tsx` | 1 | 913 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
+| `src/components/admin/CommandPalette.tsx` | 1 | 236 |  | `default (CommandPalette)` |
+| `src/components/admin/InquiryCallCards.tsx` | 1 | 914 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
 | `src/components/admin/OwnerTwoFactorCard.tsx` | 1 | 159 | OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only). | `default (OwnerTwoFactorCard)` |
 | `src/components/AnnouncementBanner.tsx` | 1 | 49 |  | `default (AnnouncementBanner)` |
 | `src/components/birdie/BirdieWidget.tsx` | 1 | 168 | BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard. | `default (BirdieWidget)` |

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { LoadFailure } from '@/components/ui/ErrorState';
@@ -105,14 +105,14 @@ export default function ActivityPage() {
               <p className="text-[13.5px] text-ink-soft mt-2">Cross-course event feed</p>
             </div>
             <button onClick={() => doLoad(page, courseId, from, to)} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
-              <RefreshCw className="w-4 h-4"/>Refresh
+              Refresh
             </button>
           </div>
 
           {/* Filters */}
           <Card className="p-4 mb-5">
             <div className="flex items-center gap-2 mb-3">
-              <Filter className="w-4 h-4 text-pine"/>
+              
               <Eyebrow as="span">Filters</Eyebrow>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -194,11 +194,11 @@ export default function ActivityPage() {
               <div className="flex items-center gap-2">
                 <button onClick={handlePrev} disabled={page <= 1}
                   className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink disabled:opacity-30 px-3 py-1.5 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
-                  <ChevronLeft className="w-4 h-4"/>Prev
+                  Prev
                 </button>
                 <button onClick={handleNext} disabled={!hasMore}
                   className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink disabled:opacity-30 px-3 py-1.5 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
-                  Next<ChevronRight className="w-4 h-4"/>
+                  Next
                 </button>
               </div>
             </div>

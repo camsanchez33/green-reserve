@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Lock, User } from 'lucide-react';
+
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import OwnerTwoFactorCard from '@/components/admin/OwnerTwoFactorCard';
@@ -59,7 +59,7 @@ export default function ProfilePage() {
           {/* Account info */}
           <Card className="p-5 mb-5">
             <div className="flex items-center gap-2 mb-4">
-              <User className="w-4 h-4 text-pine" />
+              
               <span className="text-sm font-medium text-ink">Account</span>
             </div>
             <div className="space-y-3">
@@ -91,7 +91,7 @@ export default function ProfilePage() {
           {/* Change password */}
           <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Lock className="w-4 h-4 text-pine" />
+              
               <span className="text-sm font-medium text-ink">Change password</span>
             </div>
             {cpError && (
