@@ -431,9 +431,9 @@ function WizardContent() {
           {step === 2 && (
             <div className="space-y-5">
               <Card className="p-6 space-y-4">
-                <Eyebrow>Course Details</Eyebrow>
+                <Eyebrow>Course details</Eyebrow>
                 <div>
-                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Course Name *</Eyebrow>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Course name *</Eyebrow>
                   <input value={basics.name} onChange={e => setBasics(b => ({ ...b, name: e.target.value }))} className={iCls} placeholder="Pine Brook Golf Club" autoFocus/></label>
                 </div>
                 <div>
@@ -646,10 +646,10 @@ function WizardContent() {
           {step === 4 && (
             <div className="space-y-5">
               <Card className="p-6 space-y-4">
-                <Eyebrow>Operator Account</Eyebrow>
+                <Eyebrow>Operator account</Eyebrow>
                 <p className="text-xs text-ink-muted">Creates their dashboard login. They receive a welcome email with a temp password and setup link.</p>
                 <div>
-                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Full Name *</Eyebrow>
+                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Full name *</Eyebrow>
                   <input value={op.contactName} onChange={e => setOp(f => ({ ...f, contactName: e.target.value }))} className={iCls} placeholder="John Smith" autoFocus/></label>
                 </div>
                 <div>

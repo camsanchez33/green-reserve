@@ -26,7 +26,7 @@ export function SetupTab() {
 
               {/* 4a — onboarding checklist as named steps */}
               <Card className="p-6">
-                <Eyebrow className="mb-4">Onboarding Checklist</Eyebrow>
+                <Eyebrow className="mb-4">Onboarding checklist</Eyebrow>
                 <div className="space-y-3">
                   {steps.map(s => {
                     // AGREEMENT = GO-LIVE GATE item 3 — a live course missing
@@ -50,7 +50,7 @@ export function SetupTab() {
               {/* 4b — auto-chase reminders */}
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <Eyebrow>Auto-Chase Reminders</Eyebrow>
+                  <Eyebrow>Auto-chase reminders</Eyebrow>
                   <button
                     onClick={() => toggleRemindersPaused(!detail.remindersPaused)}
                     disabled={remindersBusy || detail.timeline === null}
@@ -85,7 +85,7 @@ export function SetupTab() {
 
               {/* 4c — full mirror of operator settings, same endpoint/whitelist the operator's own Settings page uses */}
               <Card className="p-6 space-y-4">
-                <Eyebrow>Course Policy</Eyebrow>
+                <Eyebrow>Course policy</Eyebrow>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block"><Eyebrow as="span" className="block mb-1.5">Walking policy</Eyebrow>

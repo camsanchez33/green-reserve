@@ -23,7 +23,7 @@ export function RecordsTab() {
               {!docsLoading && docsData && (
                 <>
                   <Card className="p-6">
-                    <Eyebrow className="mb-4">Auto Records</Eyebrow>
+                    <Eyebrow className="mb-4">Auto records</Eyebrow>
                     <div className="space-y-3">
                       {/* AG-2 §3: one row per acceptance, and a red "Not signed"
                           per signable document still missing. */}
@@ -95,7 +95,7 @@ export function RecordsTab() {
 
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <Eyebrow>Uploaded Documents</Eyebrow>
+                      <Eyebrow>Uploaded documents</Eyebrow>
                       <label className="flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover cursor-pointer transition-colors">
                         <Upload className="w-3.5 h-3.5" />{docUploading ? 'Uploading…' : 'Upload PDF'}
                         <input
@@ -123,7 +123,7 @@ export function RecordsTab() {
                   </Card>
 
                   <Card className="p-6">
-                    <Eyebrow className="mb-4">Client Notes</Eyebrow>
+                    <Eyebrow className="mb-4">Client notes</Eyebrow>
                     <div className="flex gap-2 mb-4">
                       <input
                         value={noteDraft}

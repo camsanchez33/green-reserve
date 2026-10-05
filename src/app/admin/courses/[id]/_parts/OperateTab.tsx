@@ -130,7 +130,7 @@ export function OperateTab() {
                   rebuilt the whole sheet. */}
               <Card className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <Eyebrow>Tee Time Schedules</Eyebrow>
+                  <Eyebrow>Tee time schedules</Eyebrow>
                   {!showAddSched && !editSched && (
                     <button
                       onClick={() => { setSchedMsg(null); setShowAddSched(true); }}
@@ -222,7 +222,7 @@ export function OperateTab() {
 
                 {showAddSched && (
                   <div className="border-t border-line pt-4 space-y-3">
-                    <Eyebrow>Add Schedule</Eyebrow>
+                    <Eyebrow>Add schedule</Eyebrow>
                     <ScheduleFields products={(detail?.layout?.products ?? []).filter(p => p.active)}
                       value={newSchedule}
                       onChange={p => setNewSchedule(s => ({ ...s, ...p }))}
