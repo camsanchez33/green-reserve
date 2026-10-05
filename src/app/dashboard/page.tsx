@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
@@ -137,6 +138,9 @@ function DashboardPageInner() {
   // window) or delay the start (the B-9 frost delay above).
   type WxGroup = { bookingId: string; name: string; players: number; time: string; noEmail: boolean };
   type WxPlan = { from: string; to: string; wholeDay: boolean; startedBefore: string | null; groups: WxGroup[]; teeTimeIds: string[] };
+  // SP-A: what this login may do on the sheet (owners: everything).
+  const access = useDashboardAccess();
+  const wxTabs = ([['cancel', 'Cancel times'], ['delay', 'Delay start']] as const).filter(([k]) => access.can(k === 'cancel' ? 'sheet.weather_cancel' : 'sheet.delay_start'));
   const [wxMode, setWxMode] = useState<'cancel' | 'delay'>('cancel');
   const [wxWhole, setWxWhole] = useState(true);
   const [wxFrom, setWxFrom] = useState('13:00');
@@ -652,14 +656,16 @@ function DashboardPageInner() {
                   <button onClick={() => loadTimes(selectedDate)} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
                     <RefreshCw className="w-3.5 h-3.5"/>Refresh
                   </button>
-                  {selectedDate >= today() && (
-                    <button onClick={() => { setFrostOpen(true); setWxMode('cancel'); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                  {selectedDate >= today() && wxTabs.length > 0 && (
+                    <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="flex items-center gap-1.5 text-[12.5px] text-ink-soft px-3 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
                       <CloudRain className="w-3.5 h-3.5"/>Weather
                     </button>
                   )}
+                  {access.can('sheet.edit_times') && (
                   <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 text-[12.5px] bg-pine hover:bg-pine-hover text-white px-3 py-1.5 rounded-md transition-colors">
                     <Plus className="w-3.5 h-3.5"/>Add Time
                   </button>
+                  )}
                 </div>
               </div>
 
@@ -675,7 +681,7 @@ function DashboardPageInner() {
                       <div className="flex-1 min-w-[220px] text-[13.5px] leading-snug text-ink">
                         <b className="font-semibold">{fmtTime(tt.time)} group ({b.golferName}) hasn&apos;t checked in</b> — tee time was {ago} minute{ago === 1 ? '' : 's'} ago · {b.players} player{b.players === 1 ? '' : 's'}.
                       </div>
-                      {b.paymentStatus === 'manual' ? (
+                      {!(b.paymentStatus === 'manual' ? access.can('sheet.counter_payment') : access.can('sheet.checkin')) ? null : b.paymentStatus === 'manual' ? (
                         <button
                           onClick={() => bookingLifecycle(b, 'paid_offline')}
                           disabled={rowBusy === b.id}
@@ -696,12 +702,12 @@ function DashboardPageInner() {
                         Still coming
                       </button>
                       {/* SD-5: recorded on the booking; the fee cron treats the booking as before. */}
-                      <button
+                      {access.can('sheet.no_show') && <button
                         onClick={() => bookingLifecycle(b, 'no_show')}
                         disabled={rowBusy === b.id}
                         className="h-[34px] px-3 text-[12.5px] text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
                         {rowBusy === b.id ? 'Saving…' : 'Mark no-show'}
-                      </button>
+                      </button>}
                     </div>
                   ))}
                 </div>
@@ -748,7 +754,7 @@ function DashboardPageInner() {
                 <div className="text-center py-16">
                   <p className="font-medium text-ink mb-1">No tee times for this date</p>
                   <p className="text-sm text-ink-muted mb-4">Add times manually or check your schedule covers this day</p>
-                  <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Tee Time</button>
+                  {access.can('sheet.edit_times') && <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add Tee Time</button>}
                 </div>
               ) : (
                 <div className="divide-y divide-line">
@@ -792,14 +798,14 @@ function DashboardPageInner() {
                             // A walk-in / phone group pays at the counter: "Pay" is the
                             // same per-group paid-at-counter action as in the open row.
                             const pay = live.length === 1 && live[0].paymentStatus === 'manual' ? live[0] : null;
-                            const canWalkIn = !isBlocked && tt.playersBooked < tt.playersAvailable;
-                            if (pay) return (
+                            const canWalkIn = !isBlocked && tt.playersBooked < tt.playersAvailable && access.can('sheet.walkin');
+                            if (pay && access.can('sheet.counter_payment')) return (
                               <button onClick={e => { e.stopPropagation(); bookingLifecycle(pay, 'paid_offline'); }} disabled={rowBusy === pay.id}
                                 className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors disabled:opacity-50">
                                 {rowBusy === pay.id ? '…' : 'Pay'}
                               </button>
                             );
-                            if (quick) return (
+                            if (quick && access.can('sheet.checkin')) return (
                               <button onClick={e => { e.stopPropagation(); checkInBooking(quick); }} disabled={checkingInId === quick.id}
                                 className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors disabled:opacity-50">
                                 {checkingInId === quick.id ? '…' : 'Check in'}
@@ -821,13 +827,15 @@ function DashboardPageInner() {
                             );
                             return <span className="w-[72px]" aria-hidden="true" />;
                           })()}
+                          {access.can('sheet.block') && (
                           <button onClick={e => { e.stopPropagation(); toggleBlock(tt); }} disabled={slotBusy === tt.id}
                             className="text-[12.5px] px-2.5 min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors disabled:opacity-50">
                             {slotBusy === tt.id ? '…' : tt.status==='blocked'?'Unblock':'Block'}
                           </button>
+                          )}
                           {/* A tee time that has gone off stays on the sheet — deleting it
                               would erase an unfilled slot from Analytics (the API refuses too). */}
-                          {isPast ? <span className="w-[58px] text-center text-[11.5px] text-ink-faint cursor-help" title="Past tee times stay on the sheet so your reports stay accurate">—</span> : (
+                          {!access.can('sheet.edit_times') ? null : isPast ? <span className="w-[58px] text-center text-[11.5px] text-ink-faint cursor-help" title="Past tee times stay on the sheet so your reports stay accurate">—</span> : (
                             <button onClick={e => { e.stopPropagation(); deleteTime(tt); }} disabled={slotBusy === tt.id}
                               className="w-[58px] text-[12.5px] min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
                               Delete
@@ -850,24 +858,24 @@ function DashboardPageInner() {
                                   {b.noShowAt && b.status === 'confirmed' && (
                                     <span className="ml-2 text-[10px] font-medium uppercase tracking-[0.1em] text-bad">No-show</span>
                                   )}
-                                  <div className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'no contact on file') : b.golferEmail}</div>
+                                  {access.can('sheet.golfer_contact') && <div className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'no contact on file') : b.golferEmail}</div>}
                                 </div>
                                 {b.status === 'confirmed' && b.checkInFailReason ? (
                                   <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink" title={b.checkInFailReason}><StatusDot status="bad" />Card declined</span>
                                 ) : (
                                   <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
                                 )}
-                                {b.status === 'confirmed' && b.noShowAt && (
+                                {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
                                   <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'still_coming'); }} disabled={rowBusy === b.id}
                                     className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? '…' : 'Still coming'}</button>
                                 )}
-                                {b.status === 'confirmed' && b.paymentStatus === 'manual' && (
+                                {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
                                   <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'paid_offline'); }} disabled={rowBusy === b.id}
                                     className="shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors bg-pine hover:bg-pine-hover">
                                     {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
                                   </button>
                                 )}
-                                {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && (
+                                {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
                                   <button
                                     onClick={e => { e.stopPropagation(); if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
                                     disabled={checkingInId===b.id}
@@ -921,8 +929,8 @@ function DashboardPageInner() {
               <button onClick={() => setFrostOpen(false)} disabled={frostBusy || wxBusy} className="text-ink-muted hover:text-ink disabled:opacity-40" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
             {!frostResult && !wxResult && (
-              <div role="tablist" className="grid grid-cols-2 gap-1 p-1 bg-paper rounded-md mb-4">
-                {([['cancel', 'Cancel times'], ['delay', 'Delay start']] as const).map(([k, l]) => (
+              <div role="tablist" className={'grid gap-1 p-1 bg-paper rounded-md mb-4 ' + (wxTabs.length > 1 ? 'grid-cols-2' : 'grid-cols-1')}>
+                {wxTabs.map(([k, l]) => (
                   <button key={k} role="tab" aria-selected={wxMode === k} disabled={frostBusy || wxBusy} onClick={() => setWxMode(k)}
                     className={'py-1.5 rounded-md text-[13px] font-semibold transition-colors disabled:opacity-60 ' + (wxMode === k ? 'bg-white text-ink shadow-card' : 'text-ink-muted hover:text-ink')}>{l}</button>
                 ))}

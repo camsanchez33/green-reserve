@@ -258,10 +258,33 @@ model CourseStaff {
   password            String
   name                String
   role                String    @default("staff")
+  /// SP-A (STAFF_POLICY_SPEC): what this staff login may do — keys from
+  /// src/lib/staff-permissions.ts. Read only when permissionsSetAt is set.
+  permissions         String[]  @default([])
+  /// "starter" | "front_desk" | "manager" | "custom" — the preset last applied.
+  preset              String    @default("")
+  /// Null = never set by the owner: resolved as the Legacy preset in code, so
+  /// staff created before SP-A keep their powers with no backfill.
+  permissionsSetAt    DateTime?
   active              Boolean   @default(true)
   failedLoginAttempts Int       @default(0)
   lockoutUntil        DateTime?
   createdAt           DateTime  @default(now())
+}
+
+/// SP-A: who changed a staff member's permissions, append-only. No foreign
+/// keys, so deleting a staff row never erases the record of what it could do.
+model StaffPermissionChange {
+  id        String   @id @default(cuid())
+  courseId  String
+  staffId   String
+  changedBy String
+  before    String[]
+  after     String[]
+  createdAt DateTime @default(now())
+
+  @@index([courseId, createdAt])
+  @@index([staffId])
 }
 
 model GolferAccount {

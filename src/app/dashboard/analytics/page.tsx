@@ -158,9 +158,9 @@ function AnalyticsInner() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <div className="max-w-xl mx-auto px-6 py-16">
           <Card className="p-6">
-            <h1 className="text-[20px] font-serif font-medium text-ink">{denied ? 'Analytics is for the course owner' : 'Your session ended'}</h1>
+            <h1 className="text-[20px] font-serif font-medium text-ink">{denied ? 'Your login doesn’t include Analytics' : 'Your session ended'}</h1>
             <p className="text-[13.5px] text-ink-soft mt-2">{denied
-              ? 'It shows revenue and what each golfer spends, so it opens on the owner’s login only. Ask the owner if you need a number from it.'
+              ? 'It shows revenue and what each golfer spends. The course owner can turn on “See analytics” for you in Settings → Staff & permissions.'
               : 'Sign in again to see your analytics.'}</p>
             <Link href={denied ? '/dashboard' : '/dashboard/login'} className="inline-flex mt-4 px-4 py-2 rounded-md bg-pine text-white text-[13px] font-semibold hover:bg-pine-hover">{denied ? 'Back to the tee sheet' : 'Sign in'}</Link>
           </Card>

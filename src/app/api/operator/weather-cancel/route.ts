@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { todayIn } from '@/lib/course-time';
 import { formatTeeTime, formatTeeDate } from '@/lib/format';
@@ -9,8 +9,9 @@ import { planWeatherCancel, applyWeatherCancel, isWeatherTime } from '@/lib/weat
 // WX-1 weather cancel. POST { date, from?, to?, reason?, apply }. No from/to =
 // the whole day. Without `apply` it returns the plan (which groups would be
 // cancelled) and changes nothing; with `apply: true` it re-plans from the
-// current sheet and applies that. Staff can run it — they can already cancel a
-// booking one at a time, and on a storm day they are the ones at the counter.
+// current sheet and applies that. SP-A: applying waives fees (and refunds a
+// hold already taken), so it needs "Weather: cancel times" — off by default
+// for staff; the course owner grants it per person.
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -33,6 +34,8 @@ export async function POST(req: NextRequest) {
 
   const plan = await planWeatherCancel(session.courseId, date, window, course?.timezone);
   if (body.apply !== true) return NextResponse.json({ plan });
+  const denied = requirePermission(session, 'sheet.weather_cancel'); // SP-A: preview is open to anyone on the sheet; applying is a permission
+  if (denied) return denied;
 
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
   if (plan.teeTimeIds.length === 0) return NextResponse.json({ error: 'There are no upcoming tee times in that window.' }, { status: 409 });

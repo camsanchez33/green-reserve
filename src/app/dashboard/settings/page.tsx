@@ -2,9 +2,11 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { US_TIMEZONES } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Save, Plus, Trash2, Copy, Users, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
+import { Save, CheckCircle2, AlertCircle, Loader2, KeyRound, Mail, Smartphone, Image as ImageIcon, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
+import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { toast } from '@/components/dashboard/Toast';
 import CourseLayoutTab from '@/components/dashboard/CourseLayoutTab';
 import CoursePreview from '@/components/dashboard/CoursePreview';
@@ -13,7 +15,6 @@ import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 
 type Course = Record<string, unknown>;
-interface StaffMember { id: string; name: string; email: string; role: string; active: boolean; }
 // U-O (UI_REVISE_SPEC §3, "Settings: sub-nav on the left naming the existing
 // sections in this order"). The sections are the same forms and the same
 // fields as before — only their names, grouping and the nav's axis change.
@@ -33,6 +34,9 @@ type Section = typeof SECTIONS[number];
 // Sections whose contents save themselves (staff, password, 2FA) — the
 // header Save button is hidden on these.
 const NO_SAVE_BUTTON: Section[] = ['Staff & account'];
+// SP-A: the cancellation policy is the owner's alone — a staff login with
+// "Edit course settings" never sends these (the API refuses them too).
+const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy'];
 
 // SD-8: Save used to PATCH the WHOLE form, so saving a dress-code chip also
 // re-sent every facility toggle and every price — two people editing different
@@ -184,11 +188,8 @@ function SettingsPageInner() {
   // SD-8 review: blank fields and a failed load used to look identical.
   const [formLoaded, setFormLoaded] = useState(false);
   const [formError, setFormError] = useState('');
-  const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [newStaff, setNewStaff] = useState({ name:'', email:'', role:'staff' });
-  const [addingStaff, setAddingStaff] = useState(false);
-  const [staffResult, setStaffResult] = useState<{tempPassword:string;name:string}|null>(null);
-  const [showPass, setShowPass] = useState(false);
+  const [staffCount, setStaffCount] = useState(0);
+  const isStaffLogin = useDashboardAccess().isStaff;
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState('');
@@ -221,7 +222,6 @@ function SettingsPageInner() {
 
   useEffect(() => {
     refreshForm();
-    fetch('/api/operator/staff').then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d)) setStaff(d); }).catch(() => {});
     fetch('/api/operator/profile').then(r => r.ok ? r.json() : null).then(p => { if (p?.email) setOperatorEmail(p.email); }).catch(() => {});
     refreshPhotos();
     // Admin can flip live/draft status or Stripe connection state while this
@@ -323,7 +323,7 @@ function SettingsPageInner() {
     // Only this section's fields travel. A key the operator never saw on
     // screen cannot be re-sent by a save they did not mean to make.
     const patch: Record<string, unknown> = {};
-    for (const k of SECTION_FIELDS[active]) if (k in form) patch[k] = form[k];
+    for (const k of SECTION_FIELDS[active]) if (k in form && !(isStaffLogin && POLICY_FIELDS.includes(k))) patch[k] = form[k];
     try {
       const res = await fetch('/api/operator/settings',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
       if (!res.ok) {
@@ -347,37 +347,6 @@ function SettingsPageInner() {
     }
   }
 
-  async function addStaffMember() {
-    if(!newStaff.name||!newStaff.email) return;
-    setAddingStaff(true);
-    // Review (no-silent-failures): same try/catch/finally SD-1 gave save().
-    try {
-      const res = await fetch('/api/operator/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(newStaff)});
-      const data = await res.json().catch(() => ({}));
-      if(res.ok){ setStaffResult({tempPassword:data.tempPassword,name:newStaff.name}); setNewStaff({name:'',email:'',role:'staff'}); fetch('/api/operator/staff').then(r=>r.json()).then(setStaff).catch(() => {}); }
-      else toast(data.error || 'Could not add that staff account.');
-    } catch {
-      toast('Network error — the staff account was not created. Check your connection and try again.');
-    } finally {
-      setAddingStaff(false);
-    }
-  }
-
-  async function removeStaff(id:string) {
-    if(!confirm('Remove this staff member?')) return;
-    // SD-10: the row vanished whether or not the server agreed.
-    const r = await fetch('/api/operator/staff',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).catch(() => null);
-    if (!r || !r.ok) { const d = r ? await r.json().catch(() => ({})) : {}; toast(d.error || 'Could not remove that staff member.'); return; }
-    setStaff(s=>s.filter(m=>m.id!==id));
-    toast('Staff member removed — their login stops working now.', 'ok');
-  }
-
-  async function toggleStaff(id:string, active:boolean) {
-    const r = await fetch('/api/operator/staff',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,active})}).catch(() => null);
-    if (!r || !r.ok) { const d = r ? await r.json().catch(() => ({})) : {}; toast(d.error || 'Could not change that staff account.'); return; }
-    setStaff(s=>s.map(m=>m.id===id?{...m,active}:m));
-    toast(active ? 'Staff account re-enabled.' : 'Staff account disabled — their login stops working now.', 'ok');
-  }
 
   async function save2FA() {
     const method = (form.twoFactorMethod as string) || 'email';
@@ -426,7 +395,7 @@ function SettingsPageInner() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="settings"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <StaffNotice what="these settings" />
+        <StaffNotice what="these settings" edit="settings.edit" />
         {/* U-O (§1b): page header = serif title + one sentence carrying this
             page's own numbers, read off state the page already loads. */}
         <div className="bg-white border-b border-line px-6 py-4 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
@@ -435,7 +404,7 @@ function SettingsPageInner() {
               <h1 className="text-[30px] font-serif font-medium leading-none tracking-tight text-ink">Settings</h1>
             </div>
             <p className="text-[13.5px] text-ink-soft mt-2">
-              {(form.name as string) || 'Your course'} · {(form.liveStatus as string) === 'live' ? 'live to golfers' : 'not live yet'} · {form.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'} · {staff.length} staff account{staff.length !== 1 ? 's' : ''} · {photos.length} photo{photos.length !== 1 ? 's' : ''}
+              {(form.name as string) || 'Your course'} · {(form.liveStatus as string) === 'live' ? 'live to golfers' : 'not live yet'} · {form.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'} · {staffCount} staff account{staffCount !== 1 ? 's' : ''} · {photos.length} photo{photos.length !== 1 ? 's' : ''}
             </p>
           </div>
           {!NO_SAVE_BUTTON.includes(active) && (
@@ -731,7 +700,11 @@ function SettingsPageInner() {
           {/* ── Cancellation ── */}
           {active==='Pricing & cancellation' && (
             <div className="space-y-5">
-              <SectionCard title="Cancellation">
+              {isStaffLogin ? (
+                <SectionCard title="Cancellation">
+                  <p className="text-sm text-ink-soft">Free cancellation until {String(form.cancellationHours ?? 24)} hours before the tee time{form.lateCancellationFee ? `, then a $${Number(form.lateCancellationFee).toFixed(2)} late fee` : ', with no late fee'}. Only the course owner&apos;s login can change the cancellation policy.</p>
+                </SectionCard>
+              ) : (<SectionCard title="Cancellation">
                 <Toggle label="Cancellation fee" checked={!!form.lateCancellationFee} onChange={() => set('lateCancellationFee', form.lateCancellationFee ? 0 : 10)}/>
                 {!!form.lateCancellationFee && (
                   <>
@@ -750,7 +723,7 @@ function SettingsPageInner() {
                   <FInput value={form.checkInWindowHours as number} onChange={v=>set('checkInWindowHours',Number(v))} type="number"/>
                 </Field>
                 <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
-              </SectionCard>
+              </SectionCard>)}
             </div>
           )}
 
@@ -839,66 +812,11 @@ function SettingsPageInner() {
           {/* ── Staff ── */}
           {active==='Staff & account' && (
             <div className="space-y-5">
-              <SectionCard title="Staff Accounts">
-                <p className="text-sm text-ink-soft">Staff members get their own login credentials and full dashboard access for your course.</p>
-
-                {staffResult && (
-                  <div className="bg-ok/5 border border-ok/20 rounded-md p-4">
-                    <div className="font-medium text-ok mb-2">{staffResult.name} added — share these credentials:</div>
-                    <div className="flex items-center justify-between bg-paper rounded-md px-3 py-2 border border-line mb-2">
-                      <span className="text-sm font-mono text-ink">{showPass ? staffResult.tempPassword : '••••••••••••'}</span>
-                      <div className="flex gap-2">
-                        <button onClick={() => setShowPass(!showPass)} className="text-ink-muted hover:text-ink">
-                          {showPass ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
-                        </button>
-                        <button onClick={() => navigator.clipboard.writeText(staffResult.tempPassword)} className="text-ink-muted hover:text-ink">
-                          <Copy className="w-4 h-4"/>
-                        </button>
-                      </div>
-                    </div>
-                    <button onClick={() => setStaffResult(null)} className="text-xs text-pine underline">Dismiss</button>
-                  </div>
-                )}
-
-                {staff.length > 0 && (
-                  <div className="space-y-2">
-                    {staff.map(m => (
-                      <div key={m.id} className="flex items-center gap-3 bg-paper border border-line rounded-md px-4 py-3">
-                        <div className="w-8 h-8 bg-pine/10 rounded-full flex items-center justify-center text-pine font-medium text-sm">{m.name[0]}</div>
-                        <div className="flex-1">
-                          <div className="font-medium text-ink text-sm">{m.name}</div>
-                          <div className="text-xs text-ink-muted">{m.email} · <span className="capitalize">{m.role}</span></div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={'text-xs font-medium ' + (m.active ? 'text-ok' : 'text-ink-muted')}>{m.active ? 'Active' : 'Disabled'}</span>
-                          <button onClick={() => toggleStaff(m.id, !m.active)} className="text-xs text-pine hover:underline">{m.active ? 'Disable' : 'Enable'}</button>
-                          <button onClick={() => removeStaff(m.id)} className="text-ink-faint hover:text-bad transition-colors"><Trash2 className="w-4 h-4"/></button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="bg-paper border border-dashed border-line rounded-md p-4">
-                  <div className="font-medium text-ink text-sm mb-3 flex items-center gap-2"><Users className="w-4 h-4 text-ink-muted"/>Add Staff Member</div>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <Field label="Name"><FInput value={newStaff.name} onChange={v=>setNewStaff(s=>({...s,name:v}))} placeholder="First Last"/></Field>
-                    <Field label="Email"><FInput value={newStaff.email} onChange={v=>setNewStaff(s=>({...s,email:v}))} type="email"/></Field>
-                  </div>
-                  <Field label="Role">
-                    <select value={newStaff.role} onChange={e=>setNewStaff(s=>({...s,role:e.target.value}))} className={iCls}>
-                      {/* SD-11: "Manager (full access)" promised a role the
-                          session does not have — every staff login is tee-sheet
-                          access (SD-1). One honest option. Existing rows saved
-                          as "manager" keep working, as staff. */}
-                      <option value="staff">Staff — tee sheet, check-ins, messages</option>
-                    </select>
-                  </Field>
-                  <button onClick={addStaffMember} disabled={addingStaff||!newStaff.name||!newStaff.email}
-                    className="mt-3 w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-                    <Plus className="w-4 h-4"/> {addingStaff ? 'Adding...' : 'Add Staff Member'}
-                  </button>
-                </div>
+              {/* SP-A: who works here and what each person may do — the owner's alone. */}
+              <SectionCard title="Staff & permissions">
+                {isStaffLogin
+                  ? <p className="text-sm text-ink-soft">Staff accounts and what each person can do are managed from the course owner&apos;s login.</p>
+                  : <StaffPermissions onCount={setStaffCount} />}
               </SectionCard>
             </div>
           )}

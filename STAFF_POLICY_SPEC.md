@@ -169,9 +169,10 @@ Everything in the "never grantable" list keeps `STAFF_FORBIDDEN`.
 
 ### A8. GreenReserve admin
 
-`/admin/courses/[id]` → Team tab lists the course's staff with their preset and
-permissions (read-only), so support can answer "why can't my starter cancel?" without
-logging in as the course.
+`/admin/courses/[id]` → Overview → **Staff & access** card lists each person with their preset and an
+expandable, read-only permission list (money-moving ones marked), so support can answer "why can't my
+starter cancel?" without logging in as the course. (Built on the existing staff card rather than a new
+Team tab — MP-5d cut the course page to six tabs on purpose.)
 
 ### A9. Verification (Part A)
 
@@ -286,6 +287,13 @@ edits the policy.
   call site with the amount logged; a live walk on a test course is the final check.
 
 ---
+
+## Built — Part A (2026-10-05)
+
+Migration `staff_permissions` (CourseStaff.permissions/preset/permissionsSetAt + StaffPermissionChange).
+Every route in A5 gated; the 200/403 matrix was run for owner, Manager, Front desk, Starter and a Legacy row
+and matched A2/A3 cell for cell (Legacy: everything it had, 403 on weather-cancel apply and waive). Single
+cancel gained "Cancel, no fee" (sheet.waive_fee) on Money → Cancellations. Live walk pending.
 
 ## Build order
 

@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
-import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 
 export async function POST() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (session.isStaff) return NextResponse.json({ error: STAFF_FORBIDDEN }, { status: 403 });
+  { const denied = requirePermission(session, 'schedule.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   const course = await prisma.course.findUnique({ where: { id: session.courseId } });

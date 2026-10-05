@@ -13,7 +13,7 @@ GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list fo
 ### Payment flow (deferred, not immediate)
 - Golfers save a card at booking via Stripe SetupIntent — **nothing is charged at booking time**
 - Charge happens at **check-in** via direct Stripe charge against the saved PaymentMethod
-- Courses with no cancellation fee policy skip card collection entirely (no-card flow)
+- Every online booking saves a card (FB-3, Cam 2026-09-29) — GreenReserve's $1.50 fee is charged to it on a no-show or a counter-paid round, so a course with no cancellation fee still collects a card. Whether a course may turn the card off is an open decision (STAFF_POLICY_SPEC §B0)
 - Cancellation-window hold: the moment a booking's cancellation cutoff passes, the `hourly` cron charges the fee (the daily `cancellation-cutoff` is a safety net) to the saved card for EVERY still-confirmed booking at a fee-policy course. It is a hold, not a no-show penalty — it is refunded at check-in. No-fee courses get a check-in reminder email instead.
 - Cancelling after the window keeps that fee (non-refundable)
 
@@ -105,6 +105,9 @@ Enforced by `.github/workflows/perf-audit.yml` on every PR (budgets, audited pag
 
 ### No-silent-failures rule (admin)
 Every admin action must show: pending state → then success or an explicit error explaining what to do next. Never swallow a `catch` in an admin fetch handler — always surface the error to the user. Never silently redirect away on a fetch failure — show an inline error state with a retry option. This rule applies to all new admin routes and must be audited when touching existing admin pages.
+
+### Staff permissions (SP-A, STAFF_POLICY_SPEC Part A)
+Staff logins are permissioned PER PERSON by the course owner (Settings → Staff & permissions). The catalog, presets and dependencies live in ONE file, `src/lib/staff-permissions.ts`; `resolveDashboardSession()` exposes `session.permissions` and every staff-reachable route gates with `requirePermission(session, key)`. The client (`useDashboardAccess()`) only hides — the route is the control. A new staff-reachable action needs a key in the catalog AND a `requirePermission` call. Staff rows with `permissionsSetAt` null resolve as the Legacy preset (pre-SP-A powers minus weather cancel and waiving fees). Never grantable: staff management, Stripe, the agreement, the cancellation policy (`STAFF_FORBIDDEN` stays on those).
 
 ### Session policy (per surface)
 

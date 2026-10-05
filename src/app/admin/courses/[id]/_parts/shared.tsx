@@ -56,7 +56,7 @@ export interface CourseDetail {
     schedules?: { id: string; createdAt: string }[];
     operator: { id: string; name: string; email: string; phone?: string; emailVerified: boolean; onboardingStep: number } | null;
   };
-  staff: { id: string; name: string; email: string; role: string; active: boolean }[];
+  staff: { id: string; name: string; email: string; role: string; active: boolean; preset: string; permissions: string[] }[];
   recentBookings: {
     id: string; golferName: string; golferEmail: string; players: number;
     totalAmount: number; createdAt: string;

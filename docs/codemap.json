@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 372,
+    "files": 375,
     "routes": 204,
-    "libs": 100,
-    "models": 34,
+    "libs": 102,
+    "models": 35,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -246,7 +246,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-      "lines": 383,
+      "lines": 393,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -271,6 +271,7 @@
         "@/lib/course-setup",
         "@/lib/format",
         "@/lib/inquiry-call",
+        "@/lib/staff-permissions",
         "lucide-react",
         "next/link"
       ],
@@ -1315,7 +1316,7 @@
     },
     {
       "path": "src/app/api/admin/course-detail/route.ts",
-      "lines": 314,
+      "lines": 319,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1350,6 +1351,7 @@
         "@/lib/go-live-preflight",
         "@/lib/prisma",
         "@/lib/sheet-vs-live",
+        "@/lib/staff-permissions",
         "next/server"
       ],
       "usedBy": []
@@ -4155,7 +4157,7 @@
     },
     {
       "path": "src/app/api/operator/blackouts/route.ts",
-      "lines": 46,
+      "lines": 47,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4191,7 +4193,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 242,
+      "lines": 266,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4227,6 +4229,7 @@
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/session",
+        "@/lib/staff-permissions",
         "@/lib/stripe",
         "crypto",
         "next/server"
@@ -4369,7 +4372,7 @@
     },
     {
       "path": "src/app/api/operator/frost-delay/route.ts",
-      "lines": 31,
+      "lines": 33,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4424,7 +4427,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 269,
+      "lines": 270,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4469,7 +4472,7 @@
     },
     {
       "path": "src/app/api/operator/messages/route.ts",
-      "lines": 120,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4505,7 +4508,7 @@
     },
     {
       "path": "src/app/api/operator/my-courses/route.ts",
-      "lines": 26,
+      "lines": 33,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4525,6 +4528,7 @@
         "@/lib/auth",
         "@/lib/prisma",
         "@/lib/session",
+        "@/lib/staff-permissions",
         "next/server"
       ],
       "usedBy": []
@@ -4766,7 +4770,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/route.ts",
-      "lines": 70,
+      "lines": 71,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4807,7 +4811,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 113,
+      "lines": 119,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4879,7 +4883,7 @@
     },
     {
       "path": "src/app/api/operator/staff/route.ts",
-      "lines": 62,
+      "lines": 124,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4914,6 +4918,7 @@
         "@/lib/agreement-required",
         "@/lib/prisma",
         "@/lib/session",
+        "@/lib/staff-permissions",
         "bcryptjs",
         "crypto",
         "next/server"
@@ -5046,7 +5051,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 123,
+      "lines": 133,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5090,7 +5095,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 120,
+      "lines": 121,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5165,7 +5170,7 @@
     },
     {
       "path": "src/app/api/operator/weather-cancel/route.ts",
-      "lines": 47,
+      "lines": 50,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5922,7 +5927,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 710,
+      "lines": 719,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5944,6 +5949,7 @@
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/use-dashboard-access",
         "lucide-react",
         "react"
       ],
@@ -5981,7 +5987,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 190,
+      "lines": 183,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -6003,6 +6009,7 @@
         "@/components/dashboard/money/PayoutsPanel",
         "@/components/dashboard/money/types",
         "@/lib/dashboard-fetch",
+        "@/lib/use-dashboard-access",
         "lucide-react",
         "next/navigation",
         "react"
@@ -6059,7 +6066,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1324,
+      "lines": 1332,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6086,6 +6093,7 @@
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
         "lucide-react",
@@ -6142,7 +6150,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 448,
+      "lines": 457,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6164,6 +6172,7 @@
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/use-dashboard-access",
         "lucide-react",
         "react"
       ],
@@ -6171,7 +6180,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 985,
+      "lines": 903,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6190,11 +6199,13 @@
         "@/components/dashboard/CourseLayoutTab",
         "@/components/dashboard/CoursePreview",
         "@/components/dashboard/StaffNotice",
+        "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/lib/course-time",
         "@/lib/image-resize",
         "@/lib/password",
         "@/lib/unsaved-guard",
+        "@/lib/use-dashboard-access",
         "lucide-react",
         "next/navigation",
         "react"
@@ -6952,7 +6963,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 273,
+      "lines": 282,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6977,6 +6988,7 @@
         "@/components/dashboard/Toast",
         "@/lib/dashboard-visits",
         "@/lib/unsaved-guard",
+        "@/lib/use-dashboard-access",
         "lucide-react",
         "next/navigation",
         "react"
@@ -7412,8 +7424,8 @@
     },
     {
       "path": "src/components/dashboard/StaffNotice.tsx",
-      "lines": 26,
-      "purpose": "SD-11 (from the SD review).",
+      "lines": 30,
+      "purpose": "SD-11 / SP-A.",
       "brain": [],
       "exports": [
         {
@@ -7427,12 +7439,44 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "lucide-react",
-        "react"
+        "@/lib/staff-permissions",
+        "@/lib/use-dashboard-access",
+        "lucide-react"
       ],
       "usedBy": [
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/StaffPermissions.tsx",
+      "lines": 243,
+      "purpose": "SP-A (STAFF_POLICY_SPEC A6):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "StaffPermissions",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/Toast",
+        "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "@/lib/staff-permissions",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
         "src/app/dashboard/settings/page.tsx"
       ]
     },
@@ -7497,12 +7541,13 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/OperatorSidebar.tsx",
+        "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 159,
+      "lines": 178,
       "purpose": "SD-8 — the Cancellations half of the Money page.",
       "brain": [],
       "exports": [
@@ -7521,6 +7566,7 @@
         "@/components/dashboard/Toast",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/use-dashboard-access",
         "lucide-react",
         "react"
       ],
@@ -7804,7 +7850,8 @@
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
-        "src/components/admin/OwnerTwoFactorCard.tsx"
+        "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/StaffPermissions.tsx"
       ]
     },
     {
@@ -7967,6 +8014,7 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
+        "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx"
       ]
     },
@@ -8008,7 +8056,8 @@
         "src/app/admin/set-password/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
-        "src/components/admin/OwnerTwoFactorCard.tsx"
+        "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/StaffPermissions.tsx"
       ]
     },
     {
@@ -10460,6 +10509,7 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
     },
@@ -11031,6 +11081,7 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/lib/frost-delay.ts"
@@ -12561,13 +12612,21 @@
     },
     {
       "path": "src/lib/session.ts",
-      "lines": 80,
+      "lines": 99,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "ACTIVE_COURSE_COOKIE",
           "kind": "const"
+        },
+        {
+          "name": "can",
+          "kind": "fn"
+        },
+        {
+          "name": "requirePermission",
+          "kind": "fn"
         },
         {
           "name": "resolveDashboardSession",
@@ -12590,7 +12649,9 @@
       "imports": [
         "./auth",
         "./prisma",
-        "next/headers"
+        "./staff-permissions",
+        "next/headers",
+        "next/server"
       ],
       "usedBy": [
         "src/app/api/birdie/chat/route.ts",
@@ -12750,6 +12811,83 @@
       "usedBy": [
         "src/app/admin/layout.tsx",
         "src/app/dashboard/layout.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/staff-permissions.ts",
+      "lines": 129,
+      "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ALL_KEYS",
+          "kind": "const"
+        },
+        {
+          "name": "deniedMessage",
+          "kind": "fn"
+        },
+        {
+          "name": "labelFor",
+          "kind": "fn"
+        },
+        {
+          "name": "LEGACY_KEYS",
+          "kind": "const"
+        },
+        {
+          "name": "normalizePermissions",
+          "kind": "fn"
+        },
+        {
+          "name": "PermissionDef",
+          "kind": "type"
+        },
+        {
+          "name": "PermissionKey",
+          "kind": "type"
+        },
+        {
+          "name": "PERMISSIONS",
+          "kind": "const"
+        },
+        {
+          "name": "presetFor",
+          "kind": "fn"
+        },
+        {
+          "name": "PresetKey",
+          "kind": "type"
+        },
+        {
+          "name": "PRESETS",
+          "kind": "const"
+        },
+        {
+          "name": "resolveStaffPermissions",
+          "kind": "fn"
+        },
+        {
+          "name": "withoutPermission",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/my-courses/route.ts",
+        "src/app/api/operator/staff/route.ts",
+        "src/components/dashboard/StaffNotice.tsx",
+        "src/components/dashboard/StaffPermissions.tsx",
+        "src/lib/session.ts",
+        "src/lib/use-dashboard-access.ts"
       ]
     },
     {
@@ -13095,6 +13233,41 @@
         "src/app/dashboard/settings/page.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/birdie/BirdieWidget.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/use-dashboard-access.ts",
+      "lines": 51,
+      "purpose": "SP-A:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DashboardAccess",
+          "kind": "type"
+        },
+        {
+          "name": "useDashboardAccess",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./staff-permissions",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/members/page.tsx",
+        "src/app/dashboard/money/page.tsx",
+        "src/app/dashboard/page.tsx",
+        "src/app/dashboard/schedules/page.tsx",
+        "src/app/dashboard/settings/page.tsx",
+        "src/components/OperatorSidebar.tsx",
+        "src/components/dashboard/StaffNotice.tsx",
+        "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
     },
     {
@@ -15018,6 +15191,7 @@
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/staff/route.ts",
         "src/app/api/preview/send/route.ts",
         "src/lib/session.ts"
       ]
@@ -15193,6 +15367,18 @@
         {
           "name": "role",
           "type": "String"
+        },
+        {
+          "name": "permissions",
+          "type": "String[]"
+        },
+        {
+          "name": "preset",
+          "type": "String"
+        },
+        {
+          "name": "permissionsSetAt",
+          "type": "DateTime?"
         },
         {
           "name": "active",
@@ -15785,6 +15971,45 @@
       ],
       "writers": [],
       "readers": []
+    },
+    {
+      "name": "StaffPermissionChange",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "staffId",
+          "type": "String"
+        },
+        {
+          "name": "changedBy",
+          "type": "String"
+        },
+        {
+          "name": "before",
+          "type": "String[]"
+        },
+        {
+          "name": "after",
+          "type": "String[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/staff/route.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/staff/route.ts"
+      ]
     },
     {
       "name": "TeeSet",

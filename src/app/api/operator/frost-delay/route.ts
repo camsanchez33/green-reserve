@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { todayIn } from '@/lib/course-time';
 import { planFrostDelay, applyFrostDelay, isFrostTime } from '@/lib/frost-delay';
 
@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
 
   const plan = await planFrostDelay(session.courseId, date, newStart);
   if (body.apply !== true) return NextResponse.json({ plan });
+  const denied = requirePermission(session, 'sheet.delay_start'); // SP-A: preview is open to anyone on the sheet; applying is a permission
+  if (denied) return denied;
   if (plan.moves.length === 0 && plan.unplaced.length === 0 && plan.blockTeeTimeIds.length === 0) {
     return NextResponse.json({ error: `There are no tee times before ${newStart} on that day.` }, { status: 409 });
   }

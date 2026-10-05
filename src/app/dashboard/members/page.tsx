@@ -5,6 +5,7 @@ import {
   RefreshCw, UserCheck, UserX, ChevronDown, AlertCircle, CheckCircle2, UserPlus, Mail,
 } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
@@ -52,6 +53,7 @@ const WIZARD_STEPS = [{ n: 1, label: 'Name & Color' }, { n: 2, label: 'Pricing' 
 
 /* ─── Main ────────────────────────────────────────────────────────────────── */
 export default function MembersPage() {
+  const pageAccess = useDashboardAccess();
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,6 +191,13 @@ export default function MembersPage() {
   const setTF = (k: keyof typeof tierForm, v: unknown) => setTierForm(f => ({ ...f, [k]: v }));
   const canContinue = wizStep === 1 ? !!tierForm.name?.trim() : true;
 
+  // SP-A: a login without "members.view" sees only why — never a working page whose every action is refused.
+  if (pageAccess.loaded && !pageAccess.can('members.view')) return (
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+      <OperatorSidebar active="members"/>
+      <main className="flex-1 md:overflow-y-auto"><StaffNotice what="the members list" view="members.view" /></main>
+    </div>
+  );
   if (loading) return (
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
@@ -204,7 +213,7 @@ export default function MembersPage() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <StaffNotice what="the members list" />
+        <StaffNotice what="the members list" view="members.view" edit="members.edit" />
         <div className="max-w-2xl mx-auto px-6 py-10">
 
           <button onClick={closeWizard} className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-6 transition-colors">
@@ -390,7 +399,7 @@ export default function MembersPage() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <StaffNotice what="the members list" />
+        <StaffNotice what="the members list" view="members.view" edit="members.edit" />
         <div className="max-w-lg mx-auto px-6 py-16 text-center">
           <div className="w-14 h-14 rounded-md bg-ok/10 flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-7 h-7 text-ok"/>
@@ -452,7 +461,7 @@ export default function MembersPage() {
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <StaffNotice what="the members list" />
+        <StaffNotice what="the members list" view="members.view" edit="members.edit" />
         <div className="bg-white border-b border-line sticky top-0 z-10">
           {/* U-O (§1b): serif title + one sentence of this page's numbers;
               the tiers/members switch becomes two square chips. */}

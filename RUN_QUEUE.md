@@ -75,6 +75,11 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   per person with presets, "needs to be very extensive". One additive migration (CourseStaff.permissions /
   preset / permissionsSetAt + StaffPermissionChange audit). Closes the /gr-review 2026-10-04 HIGH (staff
   could waive/refund fees via Weather). Legacy staff keep today's powers minus weather-cancel and waive.
+  BUILT 2026-10-05: lib/staff-permissions.ts (24 keys, 3 presets + Legacy), requirePermission on every
+  staff-reachable route, Settings → Staff & permissions (per-person toggles, presets, dependencies, audit
+  line), sidebar / tee sheet / Weather tabs / Money tabs follow the login, denied pages explain which toggle
+  to ask for, admin course Overview shows each person's access. Verified locally (migration from scratch +
+  zero diff; full 200/403 matrix per preset). Box open until a live walk.
 - [ ] SP-B — cancellation & card policy (STAFF_POLICY_SPEC.md Part B): fee basis per booking/player,
   when the late fee is taken (hold at cutoff / late cancel / late cancel or no-show / manual), no-show
   fee, one describePolicy() for every golfer surface. The card-off switch WAITS ON CAM (spec §B0:

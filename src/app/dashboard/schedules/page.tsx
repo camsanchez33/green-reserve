@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Pencil, Check, X, Power, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
+import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
@@ -26,6 +27,7 @@ type ProductOpt = { id: string; label: string; holes: number; active: boolean; s
 const emptyForm = () => ({ productId: '' as string, tierName:'standard', daysOfWeek:[0,1,2,3,4,5,6] as number[], startTime:'06:30', endTime:'17:30', intervalMinutes:8, holes:18, greenFeeWeekday:65, greenFeeWeekend:85, memberRateWeekday:'', memberRateWeekend:'', residentRateWeekday:'', residentRateWeekend:'', cartFee:18, walkingAllowed:true });
 
 export default function SchedulesPage() {
+  const pageAccess = useDashboardAccess();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -195,11 +197,18 @@ export default function SchedulesPage() {
     toast(row.active ? 'Schedule resumed — its times are back on the sheet.' : 'Schedule paused — its open times are off the sheet.', 'ok');
   }
 
+  // SP-A: a login without "schedule.view" sees only why — never a working page whose every action is refused.
+  if (pageAccess.loaded && !pageAccess.can('schedule.view')) return (
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
+      <OperatorSidebar active="schedule"/>
+      <main className="flex-1 md:overflow-y-auto"><StaffNotice what="the schedule" view="schedule.view" /></main>
+    </div>
+  );
   return (
     <div className="flex flex-col md:flex-row min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="schedule"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <StaffNotice what="the schedule" />
+        <StaffNotice what="the schedule" view="schedule.view" edit="schedule.edit" />
         <div className="bg-white border-b border-line px-6 py-4 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
           {/* U-O (§1b): serif title + one sentence of this page's numbers. */}
           <div className="min-w-0">
