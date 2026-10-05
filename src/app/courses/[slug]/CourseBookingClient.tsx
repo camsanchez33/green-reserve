@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Phone, Globe, Star, ChevronLeft, ChevronRight, Check, ExternalLink } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import type { Course, TeeTime } from '@/lib/courses-data';
 import { TrustNote } from '@/components/TrustNote';
 import { ACCESS_FEE_PER_PLAYER, hoursLabel } from '@/lib/booking-fees';
@@ -817,7 +817,7 @@ export default function CourseDetailPage({
       )}
 
       {/* Course hero */}
-      <div className="relative h-40 sm:h-48 flex items-end overflow-hidden" style={heroStyle}>
+      <div className="relative h-56 sm:h-72 flex items-end overflow-hidden" style={heroStyle}>
         {heroOverlay}
         {memberSession ? (
           <Link
@@ -842,7 +842,7 @@ export default function CourseDetailPage({
             Sign in
           </Link>
         )}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-6">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-7 sm:pb-9">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div className="flex items-end gap-4">
               {course.logo_url && (
@@ -862,8 +862,8 @@ export default function CourseDetailPage({
                 </span>
               )}
               <div>
-                <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">{course.name}</h1>
-                <p className="text-white/90 flex items-center gap-1.5 mt-1 text-sm">
+                <h1 className="text-[34px] sm:text-[52px] font-serif text-white leading-none">{course.name}</h1>
+                <p className="text-white flex items-center gap-1.5 mt-2.5 text-[15px]">
                   
                   {[typeLabel, [course.city, course.state].filter(Boolean).join(', '), course.holes ? `${course.holes} holes` : '', course.par ? `Par ${course.par}` : ''].filter(Boolean).join(' · ')}
                 </p>
@@ -879,6 +879,11 @@ export default function CourseDetailPage({
           </div>
         </div>
       </div>
+
+      {/* CLUB-2: the course's own colour as a thin rule under the band. Flat
+          accent (no photo) has the same colour above it, so the rule darkens
+          a step to stay visible. */}
+      <div className="h-[5px]" style={{ backgroundColor: accent, filter: course.hero_image_url ? undefined : 'brightness(0.8)' }} aria-hidden="true" />
 
       {/* Course alert banner */}
       {course.conditions && (
@@ -938,12 +943,10 @@ export default function CourseDetailPage({
 
               {/* LEFT: Filters */}
               <aside className={`${filtersOpen ? 'block' : 'hidden'} lg:block`}>
-                <div className="lg:sticky lg:top-20 bg-white rounded-lg border border-line divide-y divide-line">
+                <div className="lg:sticky lg:top-20 divide-y divide-line">
 
-                  <div className="px-5 py-4 flex items-center justify-between">
-                    <span className="font-medium text-ink text-sm flex items-center gap-2">
-                       Filters
-                    </span>
+                  <div className="pb-4 flex items-center justify-between">
+                    <span className="font-serif text-ink text-[22px] leading-none">Filters</span>
                     {activeFilterCount > 0 && (
                       <button onClick={resetFilters} className="text-xs font-medium transition-opacity hover:opacity-70" style={{ color: accent }}>
                         Reset all
@@ -952,7 +955,7 @@ export default function CourseDetailPage({
                   </div>
 
                   {/* Calendar */}
-                  <div className="px-5 py-4">
+                  <div className="py-5">
                     <div className="flex items-center justify-between mb-3">
                       <button
                         onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}
@@ -1000,8 +1003,8 @@ export default function CourseDetailPage({
                   </div>
 
                   {/* Players */}
-                  <div className="px-5 py-4">
-                    <div className="text-[13px] font-semibold text-ink mb-2">Players</div>
+                  <div className="py-5">
+                    <div className="font-serif text-ink text-[19px] leading-none mb-3">Players</div>
                     <div className="flex gap-1.5">
                       {[1, 2, 3, 4].map(n => {
                         const isSel = players === n;
@@ -1021,8 +1024,8 @@ export default function CourseDetailPage({
                   </div>
 
                   {/* Time of day */}
-                  <div className="px-5 py-4">
-                    <div className="text-[13px] font-semibold text-ink mb-2">Time of day</div>
+                  <div className="py-5">
+                    <div className="font-serif text-ink text-[19px] leading-none mb-3">Time of day</div>
                     <div className="grid grid-cols-2 gap-1.5">
                       {TOD_OPTIONS.map(o => {
                         const isSel = todFilter === o.key;
@@ -1042,9 +1045,9 @@ export default function CourseDetailPage({
 
                   {/* Max price */}
                   {priceBounds && priceBounds.min < priceBounds.max && (
-                    <div className="px-5 py-4">
+                    <div className="py-5">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[13px] font-semibold text-ink">Max price</span>
+                        <span className="font-serif text-ink text-[19px] leading-none">Max price</span>
                         <span className="text-xs font-medium text-ink">${maxPrice ?? priceBounds.max}</span>
                       </div>
                       <input
@@ -1065,8 +1068,8 @@ export default function CourseDetailPage({
 
                   {/* Holes */}
                   {hasHolesData && (
-                    <div className="px-5 py-4">
-                      <div className="text-[13px] font-semibold text-ink mb-2">Holes</div>
+                    <div className="py-5">
+                      <div className="font-serif text-ink text-[19px] leading-none mb-3">Holes</div>
                       <div className="grid grid-cols-3 gap-1.5">
                         {(['all', '9', '18'] as const).map(h => {
                           const isSel = holesFilter === h;
@@ -1171,7 +1174,7 @@ export default function CourseDetailPage({
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div className="flex items-baseline gap-3 flex-wrap">
-                    <h2 className="font-serif font-semibold tracking-tight text-ink text-xl">
+                    <h2 className="font-serif text-ink text-[28px] sm:text-[34px] leading-none">
                       Tee times for <span style={{ color: accent }}>{displayDate(selectedDate)}</span>
                     </h2>
                     {!loadingTimes && teeTimes.length > 0 && (
@@ -1323,13 +1326,13 @@ export default function CourseDetailPage({
                     {groups.map(g => (
                       <div key={g.key}>
                         {todFilter === 'all' && (
-                          <div className="text-[13px] font-semibold text-ink mb-2 flex items-center gap-1.5">
-                             {g.label}
+                          <div className="font-serif text-ink text-[20px] leading-none mb-2.5">
+                            {g.label}
                           </div>
                         )}
                         {/* FLOW-2 (Cam 2026-10-01): one sheet with hairline rows, like the
                             homepage's golfer phone — not a stack of bordered boxes. */}
-                        <div className="bg-white rounded-lg shadow-card divide-y divide-line overflow-hidden">
+                        <div className="bg-white border-t-2 border-ink divide-y divide-line">
                           {g.items.map(t => {
                             const isSel = selectedTime?.id === t.id;
                             const h = holesOf(t);
@@ -1389,10 +1392,10 @@ export default function CourseDetailPage({
                                       </span>
                                     ) : (
                                       <span
-                                        className={`${isSel ? 'inline-flex' : 'hidden sm:inline-flex'} items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-xs font-medium transition-colors`}
+                                        className={`${isSel ? 'inline-flex' : 'hidden sm:inline-flex'} items-center gap-1 px-3 sm:px-4 py-2 rounded-md text-[13px] font-semibold transition-colors`}
                                         style={isSel ? { backgroundColor: accent, color: '#fff' } : { border: `1px solid ${accent}`, color: accent }}
                                       >
-                                        {isSel ? <><Check size={12} /> Selected</> : 'Select'}
+                                        {isSel ? 'Selected' : 'Select'}
                                       </span>
                                     )}
                                   </div>
@@ -1534,9 +1537,9 @@ export default function CourseDetailPage({
           <section id="about" className="mt-14 scroll-mt-6">{(
             <div className="grid lg:grid-cols-3 gap-6 items-start">
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-lg p-7 border border-line">
-                  <h2 className="font-semibold text-ink text-xl mb-4">About This Course</h2>
-                  <p className="text-ink-soft leading-relaxed">{course.description}</p>
+                <div className="border-t-2 border-ink pt-5">
+                  <h2 className="font-serif text-ink text-[28px] leading-none mb-4">About the course</h2>
+                  <p className="text-ink leading-relaxed">{course.description}</p>
                   {/* SD-1: defence in depth — the settings API validates this
                       now, but a row written before that rule is rendered as a
                       raw href here, so the render refuses anything but http(s). */}
@@ -1547,19 +1550,19 @@ export default function CourseDetailPage({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 mt-5 px-4 py-2.5 rounded-md text-sm font-medium border border-line text-ink hover:border-pine/40 transition-colors"
                     >
-                      <ExternalLink size={14} />
-                      Gift Cards
+                      Gift cards
+                      <ExternalLink size={14} aria-hidden="true" />
                     </a>
                   )}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-line">
                     {[
-                      { label: 'Course Type', value: typeLabel },
+                      { label: 'Course type', value: typeLabel },
                       { label: 'Holes', value: String(course.holes) },
                       { label: 'Par', value: String(course.par) },
-                      { label: 'Walking', value: course.walking_allowed ? 'Allowed' : 'Cart Only' },
+                      { label: 'Walking', value: course.walking_allowed ? 'Allowed' : 'Cart only' },
                       { label: 'Cart', value: course.cart_required ? 'Required' : 'Optional' },
                       { label: 'State', value: course.state },
-                    ].map(f => (
+                    ].filter(f => f.value && f.value !== 'undefined' && f.value !== 'null').map(f => (
                       <div key={f.label}>
                         <div className="text-[13px] font-semibold text-ink mb-0.5">{f.label}</div>
                         <div className="text-ink font-medium text-sm">{f.value}</div>
@@ -1569,8 +1572,8 @@ export default function CourseDetailPage({
                 </div>
 
                 {amenities.length > 0 && (
-                  <div className="bg-white rounded-lg p-7 border border-line">
-                    <h2 className="font-semibold text-ink text-xl mb-4">Amenities</h2>
+                  <div className="border-t border-line pt-5">
+                    <h2 className="font-serif text-ink text-[22px] leading-none mb-4">Amenities</h2>
                     <div className="flex flex-wrap gap-2">
                       {amenities.map(a => (
                         <span
@@ -1578,7 +1581,6 @@ export default function CourseDetailPage({
                           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium"
                           style={{ backgroundColor: `${accent}10`, color: accent }}
                         >
-                          <Check size={13} />
                           {a}
                         </span>
                       ))}
@@ -1587,12 +1589,12 @@ export default function CourseDetailPage({
                 )}
               </div>
 
-              <div className="bg-white rounded-lg p-7 border border-line">
-                <h2 className="font-semibold text-ink text-xl mb-4">Contact</h2>
+              {(course.address || course.phone || course.website) && <div className="border-t-2 border-ink pt-5">
+                <h2 className="font-serif text-ink text-[28px] leading-none mb-4">Contact</h2>
                 <div className="space-y-3">
                   {course.address && (
                     <div className="space-y-1.5">
-                      <div className="flex items-start gap-3 text-sm text-ink-soft">
+                      <div className="flex items-start gap-3 text-sm text-ink">
                         
                         {course.address}
                       </div>
@@ -1601,7 +1603,7 @@ export default function CourseDetailPage({
                           href={directionsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline ml-7"
+                          className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
                           style={{ color: accent }}
                         >
                           
@@ -1611,26 +1613,24 @@ export default function CourseDetailPage({
                     </div>
                   )}
                   {course.phone && (
-                    <a href={`tel:${course.phone}`} className="flex items-center gap-3 text-sm text-ink-soft hover:opacity-70 transition-opacity">
-                      <Phone size={16} className="text-ink-muted" />
+                    <a href={`tel:${course.phone}`} className="flex items-center gap-3 text-sm text-ink hover:opacity-70 transition-opacity">
                       {course.phone}
                     </a>
                   )}
                   {course.website && (
                     <a href={course.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm hover:underline" style={{ color: accent }}>
-                      <Globe size={16} className="text-ink-muted" />
                       {course.website.replace(/^https?:\/\//, '')}
                     </a>
                   )}
                 </div>
-              </div>
+              </div>}
             </div>
           )}</section>
 
           {/* Photos — a section under the sheet (B-1), not a tab */}
           {hasPhotos && (
             <section id="photos" className="mt-14 scroll-mt-6">
-              <h2 className="font-serif font-semibold tracking-tight text-ink text-xl mb-4">Photos</h2>
+              <h2 className="font-serif text-ink text-[28px] leading-none mb-4">Photos</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {coursePhotos.map(p => (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -1663,9 +1663,6 @@ export default function CourseDetailPage({
           <div className="bg-white rounded-lg max-w-sm w-full p-6 shadow-card" onClick={e => e.stopPropagation()}>
             {alertSent ? (
               <div className="text-center py-2">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${accent}14`, color: accent }}>
-                  <Check size={20} />
-                </div>
                 <p className="font-serif font-semibold text-ink text-xl mb-1.5">Alert set</p>
                 <p className="text-sm text-ink mb-5">We&apos;ll email you when a spot opens up at {course.name}.</p>
                 <button

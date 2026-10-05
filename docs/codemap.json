@@ -5624,7 +5624,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1758,
+      "lines": 1755,
       "purpose": "",
       "brain": [],
       "exports": [

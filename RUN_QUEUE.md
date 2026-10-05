@@ -125,10 +125,15 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     tee-sheet demo stays the hero product shot (no photo placeholders).
     Garamond is semibold site-wide (.font-serif 600, `font-serif font-medium`
     → semibold in 59 files); `fairway` token added (decoration only).
-  - [ ] CLUB-2 golfer pages (course photo band, course
-    color buttons)  - [ ] CLUB-3 dashboard shell (tabs across the top, no
-    sidebar on desktop, mobile bar kept; show Cam first)  - [ ] CLUB-4 /admin
-    + rest
+  - [x] CLUB-2 golfer course page — BUILT 2026-10-05: taller photo band with the
+    course name in 52px Garamond, a 5px course-colour rule under it, filters
+    without the card box (Garamond section heads), tee times under a 2px ink
+    rule (no shadow card), About/Contact as ruled sections (no boxes, empty
+    Contact and blank facts hidden), decorative Phone/Globe/Check icons gone.
+    Zero behaviour change. Booking flow pages (/book, confirmation) still to follow.
+  - [ ] CLUB-3 dashboard shell (tabs across the top, no sidebar on desktop,
+    mobile bar kept; show Cam first)
+  - [ ] CLUB-4 /admin + rest
 - [x] UI-H-1 — BUILT 2026-10-01: the homepage from the approved plain-background
   mockup (HOMEPAGE_SPEC.md, docs/design/home/index.html). Archivo replaces Fraunces
   + Inter for the public look (staff look untouched). Working hero demo (tee sheet +

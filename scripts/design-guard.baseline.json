@@ -112,9 +112,9 @@
     "lucide": 1
   },
   "src/app/courses/[slug]/CourseBookingClient.tsx": {
-    "card": 2,
+    "card": 1,
     "input": 3,
-    "lucide": 7
+    "lucide": 4
   },
   "src/app/courses/[slug]/account/AccountPortalClient.tsx": {
     "card": 2,
