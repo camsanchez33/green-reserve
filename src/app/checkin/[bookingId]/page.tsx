@@ -161,7 +161,7 @@ function CheckInPageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">You&apos;re checked in!</h1>
+            <h1 className="text-[30px] font-serif leading-none text-ink mb-3">You&apos;re checked in!</h1>
             <p className="text-ink-soft mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</p>
             {result?.feeRefunded && (
               <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-6 text-left">
@@ -198,12 +198,12 @@ function CheckInPageInner() {
   const summary = (
     <div className="bg-paper rounded-md p-5 mb-6 space-y-2 text-sm border border-line">
       <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(info.date)}</span></div>
-      <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{fmtTime(info.time)}</span></div>
+      <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{fmtTime(info.time)}</span></div>
       <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{info.players} &middot; {info.productLabel ? `${info.productLabel} · ` : ''}{info.holes} holes</span></div>
       <div className="border-t border-line mt-2 pt-2 space-y-1.5">
-        <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${(info.greenFeeTotal / 100).toFixed(2)}</span></div>
-        {cartCents > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${(cartCents / 100).toFixed(2)}</span></div>}
-        {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
+        <div className="flex justify-between text-ink-soft"><span>Green fee</span><span>${(info.greenFeeTotal / 100).toFixed(2)}</span></div>
+        {cartCents > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>${(cartCents / 100).toFixed(2)}</span></div>}
+        {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
         <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
         {/* The number they're about to pay is the biggest thing on the card. */}
         <div className="flex justify-between items-baseline border-t border-line pt-3">
@@ -229,7 +229,7 @@ function CheckInPageInner() {
       <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
         <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
         <div className="p-8">
-          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-1">Check in, {info.golferName.split(' ')[0]}?</h1>
+          <h1 className="text-[30px] font-serif leading-none text-ink mb-2">Check in, {info.golferName.split(' ')[0]}?</h1>
           <p className="text-ink-soft text-sm mb-6">
             {info.hasCard
               ? 'Confirm your round and pay now — no need to stop at the pro shop.'

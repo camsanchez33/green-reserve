@@ -78,17 +78,13 @@ function deadlineLabel(dateStr: string, timeStr: string, hoursBefore: number) {
   return `${day} at ${clock} (course time)`;
 }
 
-// Numbered step heading — the reserve screen is two steps, and says so.
-function StepHeading({ n, title, note }: { n: number; title: string; note?: string }) {
+// The reserve screen's two sections. CLUB-5 (Cam 2026-10-05, "drop the
+// numbers"): headed by name alone — no numbered circles.
+function StepHeading({ title, note }: { title: string; note?: string }) {
   return (
-    <div className="flex items-baseline gap-2.5">
-      <span className="w-5 h-5 rounded-full bg-paper border border-line text-[11px] font-medium text-ink-soft flex items-center justify-center shrink-0 tabular-nums">
-        {n}
-      </span>
-      <div>
-        <h2 className="font-serif font-semibold text-ink text-lg leading-none">{title}</h2>
-        {note && <p className="text-xs text-ink mt-1">{note}</p>}
-      </div>
+    <div>
+      <h2 className="font-serif text-ink text-[22px] leading-none">{title}</h2>
+      {note && <p className="text-[13px] text-ink mt-1.5">{note}</p>}
     </div>
   );
 }
@@ -180,7 +176,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={confirmedData.courseName} accent={accent} />
           <div className="p-8 text-center">
-            <h1 className="text-[26px] font-serif font-semibold tracking-tight text-ink mb-2">You&apos;re all set</h1>
+            <h1 className="text-[34px] font-serif leading-none text-ink mb-3">You&apos;re all set</h1>
             <p className="text-ink-soft mb-6 text-sm">
               {confirmedData.noCard
                 ? <>Your spot is reserved — <strong className="text-ink">no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
@@ -223,12 +219,12 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
             <div className="bg-paper rounded-lg p-5 mb-6 text-left space-y-2 text-sm border border-line">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(confirmedData.date)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{formatTime(confirmedData.time)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{formatTime(confirmedData.time)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{confirmedData.players}</span></div>
               <div className="border-t border-line mt-2 pt-2 space-y-1.5">
-                <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>${confirmedData.greenFeeTotal.toFixed(2)}</span></div>
-                {confirmedData.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>${confirmedData.cartFeeTotal.toFixed(2)}</span></div>}
-                {confirmedData.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>${confirmedData.rangeBallsTotal.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-ink-soft"><span>Green fee</span><span>${confirmedData.greenFeeTotal.toFixed(2)}</span></div>
+                {confirmedData.cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>${confirmedData.cartFeeTotal.toFixed(2)}</span></div>}
+                {confirmedData.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${confirmedData.rangeBallsTotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-ink-soft"><span>{serviceFeeLabel(confirmedData.players)}</span><span>${confirmedData.accessFeeTotal.toFixed(2)}</span></div>
                 <div className="flex justify-between font-semibold text-ink border-t border-line pt-2">
                   <span>Estimated total at check-in</span><span>${confirmedData.totalAmount.toFixed(2)}</span>
@@ -297,7 +293,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
            Back to tee times
         </button>
 
-        <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Confirm Your Tee Time</h1>
+        <h1 className="text-[34px] font-serif leading-none text-ink mb-3">Confirm your tee time</h1>
         <p className="text-ink-soft text-sm mb-8">
           {terms.cardNeeded
             ? <>Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</>
@@ -309,7 +305,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             <CourseHeaderBar courseName={course.name} accent={accent} />
             <div className="p-6 space-y-3 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{displayDate(date)}</span></div>
-              <div className="flex justify-between"><span className="text-ink-muted">Tee Time</span><span className="font-medium text-ink">{formatTime(teeTime.time)}</span></div>
+              <div className="flex justify-between"><span className="text-ink-muted">Tee time</span><span className="font-medium text-ink">{formatTime(teeTime.time)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Round</span><span className="font-medium text-ink">{teeTime.product_label ? `${teeTime.product_label} · ` : ''}{teeTime.holes} holes</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Players</span><span className="font-medium text-ink">{players}</span></div>
 
@@ -374,7 +370,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 <div className="border-t border-line pt-3 space-y-1.5">
                   <div className="flex justify-between items-baseline">
                     <span className="font-medium text-ink">You&apos;ll pay at check-in</span>
-                    <span className="font-serif font-semibold text-ink text-xl leading-none">${total.toFixed(2)}</span>
+                    <span className="font-bold text-ink text-xl leading-none tabular-nums">${total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-baseline">
                     <span className="text-ink-muted">Charged today</span>
@@ -515,9 +511,9 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   // confirmation email only — never for registration or sign-up prompts.
   return (
     <div className="bg-white rounded-lg border border-line p-6 space-y-5">
-      <StepHeading n={1} title="Your details" note="Where your confirmation goes — no account is created." />
+      <StepHeading title="Your details" note="Where your confirmation goes — no account is created." />
       <div>
-        <label className={lCls}>Full Name</label>
+        <label className={lCls}>Full name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Smith" className={iCls} />
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -533,7 +529,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
 
       {needsCard && <>
       <div className="pt-1 border-t border-line-soft" />
-      <StepHeading n={2} title="A card to hold your spot" note="Nothing is charged today." />
+      <StepHeading title="A card to hold your spot" note="Nothing is charged today." />
       <div>
         <label className={lCls}>Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
@@ -545,7 +541,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
 
       {error && <p className="text-bad text-sm">{error}</p>}
 
-      <TrustNote>No charge until check-in.</TrustNote>
+      {!needsCard && <TrustNote>No charge until check-in.</TrustNote>}
       <p className="text-[11px] text-ink text-center leading-snug">
         By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
       </p>
@@ -555,7 +551,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         className="w-full py-3.5 rounded-md font-medium text-white text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ backgroundColor: accent }}
       >
-        {loading ? <><Loader2 size={16} className="animate-spin" /> {needsCard ? 'Saving card…' : 'Booking…'}</> : 'Confirm Tee Time'}
+        {loading ? <><Loader2 size={16} className="animate-spin" /> {needsCard ? 'Saving card…' : 'Booking…'}</> : 'Confirm tee time'}
       </button>
       {needsCard && (
       <div className="flex items-center justify-center gap-2 text-ink-muted text-xs">

@@ -62,9 +62,9 @@ function PriceBreakdown({ greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFe
 }) {
   return (
     <div className="space-y-1.5 text-sm">
-      <div className="flex justify-between text-ink-soft"><span>Green Fee</span><span>{dollars(greenFeeTotal)}</span></div>
-      {cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart Fee</span><span>{dollars(cartFeeTotal)}</span></div>}
-      {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range Balls</span><span>{dollars(rangeBallsTotal)}</span></div>}
+      <div className="flex justify-between text-ink-soft"><span>Green fee</span><span>{dollars(greenFeeTotal)}</span></div>
+      {cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>{dollars(cartFeeTotal)}</span></div>}
+      {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>{dollars(rangeBallsTotal)}</span></div>}
       <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {players})</span><span>{dollars(accessFeeTotal)}</span></div>
       <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
         <span>Total due at check-in</span><span>{dollars(totalAmount)}</span>
@@ -255,7 +255,7 @@ function ManagePageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Booking cancelled</h1>
+            <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking cancelled</h1>
             <p className="text-ink-soft text-sm mb-6">Your spot at {info.courseName} on {fmtDate(info.date)} has been cancelled.</p>
             {cancelResult?.feeCharged
               ? <div className="bg-warn/5 border border-warn/20 rounded-md p-4 mb-4 text-left"><p className="text-warn text-sm font-medium">Late-cancellation fee applied</p><p className="text-ink-soft text-xs mt-1">A {dollars(info.cancellationFeeTotal)} fee was charged — this cancellation came after the free-cancel window closed. Non-refundable.</p></div>
@@ -276,7 +276,7 @@ function ManagePageInner() {
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
           <div className="p-8 text-center">
-            <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Booking updated</h1>
+            <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking updated</h1>
             <p className="text-ink-soft text-sm mb-6">A confirmation email has been sent with your updated details.</p>
             <div className="bg-paper rounded-md border border-line p-4 mb-6 text-left space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(modifyResult.date)}</span></div>
@@ -383,7 +383,7 @@ function ManagePageInner() {
                   style={{ backgroundColor: info.brandColor }}
                   className="w-full py-3 rounded-md text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  {swapping ? <><Loader2 size={14} className="animate-spin" /> Changing…</> : 'Confirm New Time'}
+                  {swapping ? <><Loader2 size={14} className="animate-spin" /> Changing…</> : 'Confirm new time'}
                 </button>
               </div>
             )}
@@ -420,7 +420,7 @@ function ManagePageInner() {
                 className="w-10 h-10 rounded-md border border-line flex items-center justify-center text-ink font-medium text-lg hover:border-pine/40 disabled:opacity-30 disabled:cursor-not-allowed"
               >−</button>
               <div className="flex-1 text-center">
-                <span className="text-3xl font-serif font-semibold text-ink">{selectedPlayers}</span>
+                <span className="text-3xl font-bold text-ink tabular-nums">{selectedPlayers}</span>
                 <p className="text-xs text-ink-muted mt-1">player{selectedPlayers !== 1 ? 's' : ''}</p>
               </div>
               <button
@@ -465,7 +465,7 @@ function ManagePageInner() {
       <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
         <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} />
         <div className="p-8">
-          <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-1">
+          <h1 className="text-[30px] font-serif leading-none text-ink mb-2">
             {alreadyCancelled ? 'Booking cancelled' : alreadyCompleted ? 'Round complete' : `Hi, ${info.golferName.split(' ')[0]}`}
           </h1>
           <p className="text-ink-soft text-sm mb-6">
