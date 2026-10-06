@@ -83,6 +83,17 @@ Findings: R-GOLF-002, R-PAY-007, R-BOOK-010. Where: `src/app/api/manage/[booking
 - **G13** A signed-in golfer opening a valid emailed manage link for a booking not on their account gets "Invalid or expired link". R-AUTH-003, R-GOLF-003. 
 - **G14** "Still coming" has no state guard and refunds GreenReserve's fee on bookings that were never no-shows. R-OPS-002, R-PAY-005. 
 
+## Follow-ups found while fixing (2026-10-06)
+
+From the G8 review (all pre-existing; G8 makes them reach about twice as many bookings):
+- **G8-a** A card-on-file booking with a late-cancel fee leaves the cutoff warning's query once the pay-link email flips it to `awaiting_checkin`. If `checkInWindowHours*60 > cancellationHours*60 + 75` (e.g. 24 h check-in window, 12 h cancellation; the 3/24 defaults are fine), the warning never goes out. `src/app/api/cron/hourly/route.ts:50`.
+- **G8-b** `src/lib/booking-status.ts:53` labels every `awaiting_checkin` booking "Cutoff passed, no fee policy", which is wrong before the cutoff and wrong for late-cancel-fee bookings. Copy only.
+- **G8-c** `src/lib/analytics.ts:121` drops `awaiting_checkin` bookings from the "on card" upcoming bucket. Classification only.
+- **G8-d** The warning window is exactly one cron interval, so a few minutes of Vercel jitter can miss or repeat it at boundary minutes. Fixed for good by R-CRON-005's sent-once stamp.
+
+From the G13 review:
+- **G13-a** `src/app/api/manage/[bookingId]/send-modified-email/route.ts:44` sends the email fire-and-forget (gotcha 6: Vercel can freeze it) and the route has no rate limit.
+
 ## Needs Cam
 
 - **G3 severity:** does a group that arrives after the auto no-show window keep the no-show fee when staff check them in? The code comment says no; one verifier read describePolicy as yes.
