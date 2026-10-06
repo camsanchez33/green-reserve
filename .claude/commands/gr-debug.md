@@ -52,4 +52,5 @@ closes the investigation.
 - **How Cam verifies it on the live site:** URL and exact steps.
 - **Noticed but not fixed:** anything else you saw, as candidate queue items.
 
-Commit and push with a message naming the bug.
+Before committing, dispatch `final-reviewer` with the bug and the diff; BLOCK →
+fix → re-review. Commit and push only on PASS, with a message naming the bug.

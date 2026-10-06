@@ -72,6 +72,36 @@ here listed `src/app/account/`, which has never existed.
 
 ---
 
+## Overseer protocol — who does what (Cam 2026-10-06)
+
+The main session is the **overseer** (the strongest model available — set with
+`/model`; currently Opus 5.5). It plans every task, decides what to delegate,
+and owns the final call. Agent models and effort are fixed in each
+`.claude/agents/*.md` frontmatter, so routing = choosing the agent.
+
+| Work | Who | Model · effort |
+|---|---|---|
+| Lookups: "where is X", "who writes Y" | `scout` | Haiku · low |
+| Plan, design, anything ambiguous | overseer | session model |
+| Money, auth/sessions, tenant isolation, charging crons, schema | **overseer only** — never delegated | session model |
+| Mechanical edits from an exact plan: UI pages/components, copy, admin screens, new tests | `builder` (allow-list: no `src/lib`, `src/app/api`, payment pages, schema or config) | Sonnet · medium |
+| Zero-behavior reskin items, in a worktree (only via `/gr-batch`) | `reskin-worker` | Opus |
+| Design-system / admin no-silent-failure audits | `design-auditor`, `admin-ux-auditor` | Sonnet |
+| Security / spec audits | `security-auditor`, `spec-conformance` | Opus |
+| **Every diff, before verification and push** | `final-reviewer` | Opus · high |
+
+Rules:
+- **Don't delegate small work.** A sub-agent starts cold and re-reads what the
+  overseer already has. Under ~3 files, or when the overseer already holds the
+  context, the overseer does it itself.
+- **Money and auth never go to a cheaper model** — the 2026-10-05 review found
+  the S1 bugs there.
+- **Nothing ships without `final-reviewer` PASS** — `/gr-run` and `/gr-debug` run it before every push. BLOCK → fix → re-review. The
+  reviewer is never the agent that wrote the change. The overseer then verifies
+  (tests, CI) and decides.
+- Parallel, independent lanes (a full-site review) use a Workflow only when Cam
+  asks for one.
+
 ## Build & deploy
 
 ### CRITICAL: build validation

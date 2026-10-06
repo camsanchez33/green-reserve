@@ -5,8 +5,9 @@ argument-hint: <queue item or spec phase, e.g. "REVISE A-07" or "ONBOARDING_V2 V
 
 # GR Run — $ARGUMENTS
 
-This runs in the main thread so Cam can steer mid-run. Do not delegate the build to
-a subagent.
+This runs in the main thread so Cam can steer mid-run. The overseer owns the build;
+it may hand a mechanical, UI-only sub-part to `builder` per CLAUDE.md's **Overseer
+protocol**, never the whole build and never money or auth code.
 
 ## 0. Before anything else
 
@@ -79,6 +80,9 @@ exists.
   spot if two files now claim the same `@brain` concept — which is the point of
   it. The status board has no such gate, which is exactly why it belongs on the
   same line as the one that does.
+- **Final review.** Dispatch `final-reviewer` with the queue item and the diff
+  (`git diff`). BLOCK → fix → re-review until PASS. Nothing is pushed without a
+  PASS (CLAUDE.md, Overseer protocol).
 - Commit with a message naming the queue item.
 - Push. Vercel auto-deploys `main`.
 - Update the item in the queue file: append the commit sha, and **leave the box

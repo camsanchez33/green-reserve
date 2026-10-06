@@ -15,7 +15,7 @@ CLAUDE.md            the facts        what is true about this codebase
 
 A fact is anything that could change without anyone thinking about this folder: a
 color token, a route path, a model name, a session TTL, a banned class. Facts live in
-`CLAUDE.md`, the `*_SPEC.md` files, and `ARCHITECTURE.md`. Every agent's first action
+`CLAUDE.md`, the `*_SPEC.md` files, and `docs/CODEMAP.md`. Every agent's first action
 is to *read* the fact it needs, not recall it.
 
 Behavior is how to work: what order to check things in, what counts as evidence, when
@@ -44,11 +44,13 @@ work started, and the board already answers it. The checkbox split belongs to th
 idea: `/gr-run` records the sha and leaves the box open, `/gr-review` checks it. A box
 that gets checked at ship time cannot tell you which shipped work was never audited.
 
-Builds stay in the main thread on purpose. A builder subagent hands back a summary
-and takes away the ability to steer mid-run — and the summary is exactly the thing
-that most needs auditing.
+Builds stay in the main thread on purpose: a subagent hands back a summary and takes
+away the ability to steer mid-run. The overseer may still hand a mechanical, UI-only
+piece to `builder` (an allow-list keeps it off money, auth and config), and every diff
+goes through `final-reviewer` before it is pushed. Routing lives in CLAUDE.md's
+**Overseer protocol**.
 
-### Agents — own context window, read-only, run in parallel
+### Agents — own context window, run in parallel (read-only except `builder` and `reskin-worker`)
 
 | Agent | Answers |
 |---|---|
@@ -56,6 +58,9 @@ that most needs auditing.
 | `security-auditor` | Can a valid session reach data or money that isn't its own? |
 | `admin-ux-auditor` | Can a user click something and not be able to tell what happened? |
 | `spec-conformance` | Does the shipped code actually do what the spec block said, item by item? |
+| `scout` | Where is X? Which files do Y? Cheap lookups that return `path:line`, nothing else. |
+| `final-reviewer` | Should this diff ship? The gate before every push — BLOCK or PASS with evidence. |
+| `builder` | Writes. A mechanical, UI-only sub-part of a plan the overseer already decided. |
 
 None of them can edit. That's deliberate: an agent that fixes what it just judged is
 how unreviewed changes ship. They report, Cam decides, `/gr-run` builds.
