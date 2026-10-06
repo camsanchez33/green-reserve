@@ -5443,7 +5443,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 677,
+      "lines": 679,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9796,7 +9796,7 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 161,
+      "lines": 164,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
@@ -9838,6 +9838,10 @@
         },
         {
           "name": "holdsAtCutoff",
+          "kind": "fn"
+        },
+        {
+          "name": "holdTodayLine",
           "kind": "fn"
         },
         {
