@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 19:54 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `c105e0f` · working tree **2 dirty file(s)**
+Generated 2026-10-06 20:50 UTC · branch `claude/cron-send-windows` · HEAD `f3ef9df` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 10 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 13 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `8aafc7a` | 2026-10-06 | G8: counter Check in opens the card modal for any booking without a card |
+| `07ee7d8` | 2026-10-06 | G8: hourly cron sends every pay-link and cutoff warning (R-CRON-003) |
+| `51e2896` | 2026-10-06 | Final reviewer runs on Fable (#80) |
 | `c105e0f` | 2026-10-06 | Overseer protocol: route work to the right model, review every diff before push (#79) |
 | `187260b` | 2026-10-06 | PAY-3: Apple Pay / Google Pay to hold the card at booking |
 | `57c1b2f` | 2026-10-06 | PAY-2: count the booking fees eaten on rounds paid at the counter |
@@ -27,8 +30,8 @@ Generated 2026-10-06 19:54 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `
 
 ### Uncommitted working tree (2 file(s))
 
-- `M .claude/agents/final-reviewer.md`
-- `M CLAUDE.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -176,9 +179,9 @@ This is the distinction a raw checkbox count gets wrong.
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 5d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 7d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 7d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 0d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 1d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-05 | 1d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 1d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 7d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 7d |
 | `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 7d |
@@ -207,6 +210,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `f3ef9df` 2026-10-06 — queue/spec update: ledger follow-ups from the G8 and G13 reviews
+- `8aafc7a` 2026-10-06 — G8: counter Check in opens the card modal for any booking without a card
+- `07ee7d8` 2026-10-06 — G8: hourly cron sends every pay-link and cutoff warning (R-CRON-003)
+- `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
 - `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
 - `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
@@ -215,10 +222,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c534f1e` 2026-10-05 — Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)
 - `2e6dec2` 2026-10-05 — Golfer sign-in code can no longer be cracked offline (R-AUTH-001)
 - `4f1580c` 2026-10-05 — "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)
-- `69cc708` 2026-10-05 — No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)
-- `321902b` 2026-10-05 — queue/spec update
-- `ce494cc` 2026-10-05 — queue/spec update
-- `475ff29` 2026-10-05 — DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)
 
 ---
 

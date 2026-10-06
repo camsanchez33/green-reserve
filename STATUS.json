@@ -1,18 +1,39 @@
 {
-  "generatedAt": "2026-10-06T19:54:46.125Z",
+  "generatedAt": "2026-10-06T20:50:11.990Z",
   "repo": {
-    "head": "c105e0f",
-    "branch": "claude/eager-maxwell-qf1pd0",
+    "head": "f3ef9df",
+    "branch": "claude/cron-send-windows",
     "dirtyCount": 2,
     "dirty": [
-      "M .claude/agents/final-reviewer.md",
-      " M CLAUDE.md"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "8aafc7a",
+        "date": "2026-10-06T20:47:41+00:00",
+        "subject": "G8: counter Check in opens the card modal for any booking without a card",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "07ee7d8",
+        "date": "2026-10-06T20:46:59+00:00",
+        "subject": "G8: hourly cron sends every pay-link and cutoff warning (R-CRON-003)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "51e2896",
+        "date": "2026-10-06T15:59:13-04:00",
+        "subject": "Final reviewer runs on Fable (#80)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "c105e0f",
         "date": "2026-10-06T15:53:08-04:00",
@@ -614,12 +635,6 @@
       "ageDays": 7
     },
     {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 0
-    },
-    {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
@@ -627,6 +642,12 @@
     },
     {
       "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-05",
+      "ageDays": 1
+    },
+    {
+      "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
       "ageDays": 1
@@ -785,6 +806,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f3ef9df",
+      "date": "2026-10-06",
+      "subject": "queue/spec update: ledger follow-ups from the G8 and G13 reviews"
+    },
+    {
+      "h": "8aafc7a",
+      "date": "2026-10-06",
+      "subject": "G8: counter Check in opens the card modal for any booking without a card"
+    },
+    {
+      "h": "07ee7d8",
+      "date": "2026-10-06",
+      "subject": "G8: hourly cron sends every pay-link and cutoff warning (R-CRON-003)"
+    },
+    {
+      "h": "51e2896",
+      "date": "2026-10-06",
+      "subject": "Final reviewer runs on Fable (#80)"
+    },
+    {
       "h": "c105e0f",
       "date": "2026-10-06",
       "subject": "Overseer protocol: route work to the right model, review every diff before push (#79)"
@@ -823,26 +864,6 @@
       "h": "4f1580c",
       "date": "2026-10-05",
       "subject": "\"Still coming\" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)"
-    },
-    {
-      "h": "69cc708",
-      "date": "2026-10-05",
-      "subject": "No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)"
-    },
-    {
-      "h": "321902b",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "ce494cc",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "475ff29",
-      "date": "2026-10-05",
-      "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
     }
   ]
 }
