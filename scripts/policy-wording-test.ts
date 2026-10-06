@@ -1,0 +1,41 @@
+// Golfer-facing money wording (R-CRON-004, R-GOLF-009). The "your cancellation
+// window closes soon" email used to promise every golfer "a fee will be charged
+// to your card automatically" — true only for a hold. Now it shares
+// afterCutoffLine() with describePolicy(), so the email and the terms the golfer
+// booked under say the same thing for each timing.
+// Pure. Run: npx tsx scripts/policy-wording-test.ts
+import { readFileSync } from 'fs';
+import { describePolicy, policyFrom, afterCutoffLine, policyMoney } from '../src/lib/cancel-policy';
+
+let failed = 0;
+const check = (label: string, ok: boolean, detail?: string) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail ? ' — ' + detail : ''}`); if (!ok) failed++; };
+
+// 1. describePolicy wording is unchanged by the refactor (word for word).
+const expected: Record<string, string> = {
+  hold_at_cutoff: 'After that, a $20 hold is charged to your card. It’s refunded when you check in, and kept if you cancel late or don’t show.',
+  late_cancel: 'Cancel after that and a $20 late-cancellation fee is charged to your card.',
+  late_cancel_or_no_show: 'Cancel after that, or don’t show, and a $20 fee is charged to your card.',
+};
+for (const [timing, line] of Object.entries(expected)) {
+  const { lines } = describePolicy(policyFrom({ lateCancellationFeeCents: 2000, lateFeeTiming: timing }));
+  check(`describePolicy (${timing}) keeps its wording`, lines[1] === line, lines[1]);
+}
+
+// 2. The email's line: no "automatically charged" promise for late-cancel timings.
+const email = (t: string | null) => afterCutoffLine(t, policyMoney(2500), 'once the window closes');
+check('hold email says the hold is charged and refunded', /hold is charged/.test(email('hold_at_cutoff')) && /refunded when you check in/.test(email('hold_at_cutoff')));
+check('late-cancel email only charges if they cancel', email('late_cancel') === 'Cancel once the window closes and a $25 late-cancellation fee is charged to your card.', email('late_cancel'));
+check('late-cancel-or-no-show email names both', /or don’t show/.test(email('late_cancel_or_no_show')));
+check('a booking made before SP-B (no timing) reads as a hold', email(null) === email('hold_at_cutoff'));
+check('cents are shown as the golfer reads them', policyMoney(750) === '$7.50' && policyMoney(2000) === '$20');
+
+// 3. The fixed "charged automatically" sentence is gone, and every sender passes the timing.
+const emailSrc = readFileSync('src/lib/email.ts', 'utf8');
+check('email.ts no longer hard-codes "charged to your card automatically"', !/charged to your card automatically/.test(emailSrc));
+check('hourly cron passes the booking timing to the warning', /lateFeeTiming: booking\.lateFeeTimingAtBooking/.test(readFileSync('src/app/api/cron/hourly/route.ts', 'utf8')));
+const bookSrc = readFileSync('src/app/api/bookings/route.ts', 'utf8');
+check('booking route passes the timing to the warning', /lateFeeTiming: policy\.lateFeeTiming/.test(bookSrc));
+check('booking route skips the warning once the cutoff has passed (R-GOLF-009)', /minsUntilCutoff > 0 && minsUntilCutoff < 75/.test(bookSrc));
+
+console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
+process.exit(failed === 0 ? 0 : 1);

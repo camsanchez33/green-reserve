@@ -4,17 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 20:57 UTC · branch `claude/cron-send-windows` · HEAD `0739e76` · working tree **13 dirty file(s)**
+Generated 2026-10-06 21:35 UTC · branch `claude/money-wording-warning` · HEAD `f5b2bb8` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 15 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 14 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `0927537` | 2026-10-06 | Regenerate code map and status board |
-| `8aafc7a` | 2026-10-06 | G8: counter Check in opens the card modal for any booking without a card |
-| `07ee7d8` | 2026-10-06 | G8: hourly cron sends every pay-link and cutoff warning (R-CRON-003) |
+| `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
+| `c0c4cea` | 2026-10-06 | G13: signed-in golfers can use a booking's emailed manage link (#82) |
 | `3e3d9ec` | 2026-10-06 | Control Room: every session reports its own status (#81) |
 | `51e2896` | 2026-10-06 | Final reviewer runs on Fable (#80) |
 | `c105e0f` | 2026-10-06 | Overseer protocol: route work to the right model, review every diff before push (#79) |
@@ -30,21 +29,15 @@ Generated 2026-10-06 20:57 UTC · branch `claude/cron-send-windows` · HEAD `073
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `MM docs/CODEMAP.md`
-- `MM docs/codemap.json`
-- `A  scripts/manage-access-test.ts`
-- `M  src/app/api/bookings/cancel/route.ts`
-- `M  src/app/api/manage/[bookingId]/available-times/route.ts`
-- `M  src/app/api/manage/[bookingId]/change-players/route.ts`
-- `M  src/app/api/manage/[bookingId]/route.ts`
-- `M  src/app/api/manage/[bookingId]/send-modified-email/route.ts`
-- `M  src/app/api/manage/[bookingId]/swap-time/route.ts`
-- `A  src/lib/manage-access.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M src/app/api/bookings/route.ts`
+- `M src/app/api/cron/hourly/route.ts`
+- `M src/lib/cancel-policy.ts`
+- `M src/lib/email.ts`
+- `?? scripts/policy-wording-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -223,10 +216,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `0927537` 2026-10-06 — Regenerate code map and status board
-- `f3ef9df` 2026-10-06 — queue/spec update: ledger follow-ups from the G8 and G13 reviews
-- `8aafc7a` 2026-10-06 — G8: counter Check in opens the card modal for any booking without a card
-- `07ee7d8` 2026-10-06 — G8: hourly cron sends every pay-link and cutoff warning (R-CRON-003)
+- `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
+- `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
 - `3e3d9ec` 2026-10-06 — Control Room: every session reports its own status (#81)
 - `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
 - `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
@@ -235,6 +226,8 @@ This is the distinction a raw checkbox count gets wrong.
 - `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
 - `066fa1b` 2026-10-05 — queue/spec update
 - `c534f1e` 2026-10-05 — Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)
+- `2e6dec2` 2026-10-05 — Golfer sign-in code can no longer be cracked offline (R-AUTH-001)
+- `4f1580c` 2026-10-05 — "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)
 
 ---
 

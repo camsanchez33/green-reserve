@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
+import { afterCutoffLine, policyMoney } from '@/lib/cancel-policy';
 
 let _resend: Resend | null = null;
 function getResend() {
@@ -291,7 +292,10 @@ export async function sendCancellationWarningEmail(data: {
   golferName: string; golferEmail: string; courseName: string; courseSlug?: string;
   date: string; time: string; feeAmount: number; bookingId: string; cancellationHours: number;
   checkInToken?: string | null;
+  /** The booking's lateFeeTimingAtBooking — the consequence line depends on it (R-CRON-004). */
+  lateFeeTiming?: string | null;
 }) {
+  const consequence = afterCutoffLine(data.lateFeeTiming, policyMoney(data.feeAmount), 'once the window closes');
   const portalUrl = data.courseSlug
     ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
     : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
@@ -305,7 +309,7 @@ export async function sendCancellationWarningEmail(data: {
     </p>
     <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;">
       <p style="margin:0 0 6px;color:#92400e;font-size:14px;font-weight:700;">If you need to cancel, do it now.</p>
-      <p style="margin:0;color:#92400e;font-size:14px;">After the window closes, a $${(data.feeAmount / 100).toFixed(2)} late-cancellation fee will be charged to your card automatically.</p>
+      <p style="margin:0;color:#92400e;font-size:14px;">${consequence}</p>
     </div>
     <a href="${manageUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:16px;">Cancel for Free &rarr;</a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">If you're keeping your tee time, no action needed — we'll see you on the course.</p>

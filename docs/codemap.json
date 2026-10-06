@@ -2918,7 +2918,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 403,
+      "lines": 406,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3261,7 +3261,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 221,
+      "lines": 222,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9795,10 +9795,14 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 135,
+      "lines": 144,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
+        {
+          "name": "afterCutoffLine",
+          "kind": "fn"
+        },
         {
           "name": "bookingWindowHours",
           "kind": "fn"
@@ -9858,6 +9862,10 @@
         {
           "name": "policyFrom",
           "kind": "fn"
+        },
+        {
+          "name": "policyMoney",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -9875,6 +9883,7 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/lib/cancel-booking.ts",
+        "src/lib/email.ts",
         "src/lib/normalize-course.ts"
       ]
     },
@@ -10970,7 +10979,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1823,
+      "lines": 1827,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11218,6 +11227,7 @@
       "guard": null,
       "imports": [
         "@/lib/booking-fees",
+        "@/lib/cancel-policy",
         "resend"
       ],
       "usedBy": [

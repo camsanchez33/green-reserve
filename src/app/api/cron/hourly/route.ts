@@ -83,6 +83,7 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
           bookingId: booking.id,
           cancellationHours: windowHours,
           checkInToken: booking.checkInToken,
+          lateFeeTiming: booking.lateFeeTimingAtBooking,
         });
         results.warnings++;
       } catch (err) {

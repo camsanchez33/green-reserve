@@ -337,7 +337,9 @@ export async function POST(req: NextRequest) {
     const minsUntilCutoff = (cutoffMs - Date.now()) / 60000;
 
     if (cancellationFeeTotal > 0 && savedPaymentMethodId) {
-      if (minsUntilCutoff < 75) {
+      // R-GOLF-009: only while the window is still open — booked inside it, there
+      // is no "closes within the next hour" to warn about.
+      if (minsUntilCutoff > 0 && minsUntilCutoff < 75) {
         await sendCancellationWarningEmail({
           golferName,
           golferEmail,
@@ -349,6 +351,7 @@ export async function POST(req: NextRequest) {
           bookingId: claimed.id,
           cancellationHours: teeTimeFull.course.cancellationHours,
           checkInToken: claimed.checkInToken,
+          lateFeeTiming: policy.lateFeeTiming,
         }).catch(console.error);
       }
     } else if (cancellationFeeTotal <= 0 && minsUntilCutoff < 165) {
