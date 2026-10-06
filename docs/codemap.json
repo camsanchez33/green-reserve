@@ -4209,7 +4209,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 285,
+      "lines": 311,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4243,11 +4243,14 @@
         "@/lib/claim-tee-time",
         "@/lib/course-time",
         "@/lib/email",
+        "@/lib/format",
+        "@/lib/golfer-otp",
         "@/lib/no-show-fee",
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/staff-permissions",
         "@/lib/stripe",
+        "@/lib/twilio",
         "crypto",
         "next/server"
       ],
@@ -5554,7 +5557,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 291,
+      "lines": 343,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6086,7 +6089,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1351,
+      "lines": 1362,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11393,6 +11396,7 @@
         "src/app/admin/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
@@ -11533,7 +11537,8 @@
       ],
       "usedBy": [
         "src/app/api/golfer/auth/otp/request/route.ts",
-        "src/app/api/golfer/auth/otp/verify/route.ts"
+        "src/app/api/golfer/auth/otp/verify/route.ts",
+        "src/app/api/operator/bookings/route.ts"
       ]
     },
     {
@@ -13533,10 +13538,14 @@
     },
     {
       "path": "src/lib/twilio.ts",
-      "lines": 32,
+      "lines": 42,
       "purpose": "",
       "brain": [],
       "exports": [
+        {
+          "name": "sendSms",
+          "kind": "fn"
+        },
         {
           "name": "sendSmsOtp",
           "kind": "fn"
@@ -13552,6 +13561,7 @@
       ],
       "usedBy": [
         "src/app/api/golfer/auth/otp/request/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/lib/two-factor.ts"
       ]
     },
@@ -14352,6 +14362,7 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/checkin-booking.ts",

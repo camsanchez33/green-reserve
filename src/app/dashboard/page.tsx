@@ -45,6 +45,8 @@ type Booking = {
   checkedInPlayers?: number | null;
   /** SP-B: false when the golfer booked without a card (pay-link course). */
   hasCard?: boolean;
+  /** PAY-1: a textable number is on file (sent even to logins that can't see it). */
+  hasPhone?: boolean;
 };
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 // SD-3: "today" is the COURSE's today (see courseTz inside the component) —
@@ -224,12 +226,16 @@ function DashboardPageInner() {
   // SP-B (Cam 2026-10-05: "push them to the pay link"): a no-card golfer pays
   // through their check-in link — round and booking fee together — instead of
   // at the counter. This (re)sends it.
-  async function sendPayLink(b: Booking) {
+  // PAY-1: 'sms' texts it to the golfer at the counter (Apple Pay / Google Pay
+  // on their own phone); 'email' is the original.
+  async function sendPayLink(b: Booking, via: 'sms' | 'email' = 'email') {
     setRowBusy(b.id);
-    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'send_pay_link' }) });
+    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'send_pay_link', via }) });
     setRowBusy(null);
     if (!r.ok) { toast(r.error); return; }
-    toast(`Pay link sent to ${r.data.sentTo}. They can check in and pay from their phone.`, 'ok');
+    toast(via === 'sms'
+      ? `Pay link texted to ${r.data.sentTo}. They can pay with Apple Pay, Google Pay or a card, and the sheet updates when they do.`
+      : `Pay link sent to ${r.data.sentTo}. They can check in and pay from their phone.`, 'ok');
   }
 
   async function checkInBooking(b: Booking) {
@@ -882,10 +888,15 @@ function DashboardPageInner() {
                                     {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
                                   </button>
                                 )}
+                                {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && (
+                                  <button onClick={e => { e.stopPropagation(); sendPayLink(b, 'sms'); }} disabled={rowBusy === b.id}
+                                    title="Text them a link to pay on their phone (Apple Pay, Google Pay or card); the booking fee is collected with the round"
+                                    className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
+                                )}
                                 {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && (
                                   <button onClick={e => { e.stopPropagation(); sendPayLink(b); }} disabled={rowBusy === b.id}
                                     title="Email them their link to check in and pay online — the booking fee is collected with the round"
-                                    className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? 'Sending…' : 'Send pay link'}</button>
+                                    className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? 'Sending…' : 'Email pay link'}</button>
                                 )}
                                 {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
                                   <button

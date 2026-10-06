@@ -263,6 +263,20 @@ async function main() {
     process.exit(1);
   }
 
+  console.log('\n── Text pay link (PAY-1) ─────────────────────────────────────────');
+  {
+    const textIt = (cookie: string) => api('/api/operator/bookings', { method: 'PATCH', cookie, body: { id: bookingA.id, action: 'send_pay_link', via: 'sms' } });
+    checkStatus('Op B cannot text a pay link for Course A\'s booking → 404', (await textIt(cookieB)).status, 404);
+    await prisma.booking.update({ where: { id: bookingA.id }, data: { golferPhone: '' } });
+    checkStatus('Text pay link with no number on the booking → 409', (await textIt(cookieA)).status, 409);
+    await prisma.booking.update({ where: { id: bookingA.id }, data: { golferPhone: '(555) 010-1234' } });
+    const sent = await textIt(cookieA);
+    // No Twilio credentials in test runs: the send must fail LOUDLY (502 with a
+    // reason), never report success it didn't have.
+    checkStatus('Text pay link without SMS set up says so → 502', sent.status, 502);
+    await prisma.booking.update({ where: { id: bookingA.id }, data: { golferPhone: '' } });
+  }
+
   console.log('\n── Golfer sign-in code is single-use ─────────────────────────────');
   {
     // R-AUTH-001: one challenge + code signs in once; replaying it is refused.

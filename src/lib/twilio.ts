@@ -29,3 +29,13 @@ export async function sendSmsOtp(to: string, code: string) {
     throw err;
   }
 }
+
+/** PAY-1: one plain text message (the counter's "Text pay link"). Throws on failure. */
+export async function sendSms(to: string, body: string) {
+  const from = process.env.TWILIO_FROM_NUMBER;
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !from) {
+    throw new Error('Text messages are not set up (Twilio)');
+  }
+  const msg = await getClient().messages.create({ to, from, body });
+  console.log('[twilio] sendSms — to:', to.slice(0, 3) + '…' + to.slice(-4), '| SID:', msg.sid);
+}

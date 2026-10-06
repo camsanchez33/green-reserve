@@ -12,6 +12,9 @@ import { randomUUID } from 'crypto';
 import { chargeAccessFeeSeparately, refundSeparateAccessFee, liveSeparateFee, type FeeChargeResult } from '@/lib/access-fee';
 import { refundOnConnectedAccount } from '@/lib/stripe';
 import { markNoShow, refundNoShowFee } from '@/lib/no-show-fee';
+import { sendSms } from '@/lib/twilio';
+import { normalizePhone } from '@/lib/golfer-otp';
+import { formatTeeTime } from '@/lib/format';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
@@ -68,7 +71,7 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
@@ -110,8 +113,31 @@ export async function PATCH(req: NextRequest) {
   // GreenReserve's fee in one charge — rather than at the counter, where the
   // fee can't be collected. Staff can (re)send that link from the sheet.
   if (action === 'send_pay_link') {
-    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, checkInToken: true, status: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
+    // PAY-1 (Cam 2026-10-06: "the text link with apple pay"): the counter can
+    // TEXT the link — the golfer standing there pays on their own phone (Apple
+    // Pay / Google Pay / card), nobody types a card. Counter and phone bookings
+    // ('manual') qualify too; one booked without an email has no token yet, so
+    // it gets one here.
+    const via = viaRaw === 'sms' ? 'sms' : 'email';
+    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
     if (!b || b.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be sent a pay link.' }, { status: 409 });
+    if (via === 'sms') {
+      const digits = (b.golferPhone || '').replace(/\D/g, '');
+      if (digits.length < 10) return NextResponse.json({ error: 'There’s no mobile number on this booking — take payment at the counter.' }, { status: 409 });
+      let token = b.checkInToken;
+      if (!token) {
+        token = randomUUID();
+        await prisma.booking.update({ where: { id }, data: { checkInToken: token } });
+      }
+      const to = normalizePhone(b.golferPhone);
+      const url = `${process.env.NEXT_PUBLIC_URL}/checkin/${id}?token=${token}`;
+      try {
+        await sendSms(to, `${b.course.name}: check in and pay for your ${formatTeeTime(b.teeTime.time)} tee time here (Apple Pay, Google Pay or card): ${url}`);
+      } catch (err) {
+        return NextResponse.json({ error: `The text didn’t send (${err instanceof Error ? err.message : 'SMS error'}) — try email, or take payment at the counter.` }, { status: 502 });
+      }
+      return NextResponse.json({ success: true, sentTo: `${to.slice(0, -4).replace(/\d/g, '•')}${to.slice(-4)}` });
+    }
     if (!b.checkInToken) return NextResponse.json({ error: 'This booking has no pay link — check them in at the counter.' }, { status: 409 });
     if (!b.golferEmail || isPlaceholderEmail(b.golferEmail)) return NextResponse.json({ error: 'There’s no email on this booking to send the link to — check them in at the counter.' }, { status: 409 });
     try {
