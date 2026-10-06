@@ -62,7 +62,7 @@ goes through `final-reviewer` before it is pushed. Routing lives in CLAUDE.md's
 | `final-reviewer` | Should this diff ship? The gate before every push — BLOCK or PASS with evidence. |
 | `builder` | Writes. A mechanical, UI-only sub-part of a plan the overseer already decided. |
 
-None of them can edit. That's deliberate: an agent that fixes what it just judged is
+Apart from `builder` and `reskin-worker`, none of them can edit. That's deliberate: an agent that fixes what it just judged is
 how unreviewed changes ship. They report, Cam decides, `/gr-run` builds.
 
 ## Two rules every agent shares
