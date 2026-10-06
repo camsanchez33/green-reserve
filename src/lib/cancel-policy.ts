@@ -96,6 +96,21 @@ const basis = (b: FeeBasis) => (b === 'player' ? ' per player' : '');
 const hours = (h: number) => (h === 1 ? '1 hour' : `${h} hours`);
 
 /**
+ * The one sentence for what happens once free cancellation ends, by timing.
+ * `fee` is already worded ("$20", "$5 per player"). describePolicy() and the
+ * "your window closes soon" email both use it, so they can't disagree
+ * (R-CRON-004). Bookings made before SP-B carry no timing: a hold, as before.
+ */
+export function afterCutoffLine(timing: string | null | undefined, fee: string, after = 'after that'): string {
+  if (timing === 'late_cancel') return `Cancel ${after} and a ${fee} late-cancellation fee is charged to your card.`;
+  if (timing === 'late_cancel_or_no_show') return `Cancel ${after}, or don’t show, and a ${fee} fee is charged to your card.`;
+  return `${after[0].toUpperCase()}${after.slice(1)}, a ${fee} hold is charged to your card. It’s refunded when you check in, and kept if you cancel late or don’t show.`;
+}
+
+/** Cents as the golfer reads them: "$20", "$7.50". */
+export const policyMoney = money;
+
+/**
  * What the golfer reads, as short sentences. `headline` is one line for tight
  * spaces (the booking summary); `lines` is the full terms.
  */
@@ -106,13 +121,7 @@ export function describePolicy(p: CancelPolicy): { headline: string; lines: stri
   if (late) {
     const fee = `${money(p.lateCancellationFeeCents)}${basis(p.lateFeeBasis)}`;
     lines.push(`Free cancellation until ${hours(p.cancellationHours)} before your tee time.`);
-    if (p.lateFeeTiming === 'hold_at_cutoff') {
-      lines.push(`After that, a ${fee} hold is charged to your card. It’s refunded when you check in, and kept if you cancel late or don’t show.`);
-    } else if (p.lateFeeTiming === 'late_cancel') {
-      lines.push(`Cancel after that and a ${fee} late-cancellation fee is charged to your card.`);
-    } else {
-      lines.push(`Cancel after that, or don’t show, and a ${fee} fee is charged to your card.`);
-    }
+    lines.push(afterCutoffLine(p.lateFeeTiming, fee));
   } else {
     lines.push('Cancel any time before your tee time at no charge.');
   }
