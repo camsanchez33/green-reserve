@@ -6,7 +6,7 @@ import { chargeOnConnectedAccount } from '@/lib/stripe';
 import { recordBookingEventSafe } from '@/lib/booking-events';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
-import { markNoShow, dueAutoNoShows } from '@/lib/no-show-fee';
+import { markNoShow, dueAutoNoShows, chargeNoShow, dueNoShowCharges } from '@/lib/no-show-fee';
 import { cutoffWarningDue, checkInEmailDue } from '@/lib/cron-windows';
 import {
   sendCancellationWarningEmail,
@@ -45,7 +45,7 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   if (denied) return denied;
 
   const now = new Date();
-  const results = { warnings: 0, charged: 0, checkIns: 0, autoNoShows: 0, failed: 0 };
+  const results = { warnings: 0, charged: 0, checkIns: 0, autoNoShows: 0, noShowCharges: 0, failed: 0 };
 
   // ─── 1 & 2: Fee-policy bookings (card on file, fee > 0) ─────────────────────
   const feeBookings = await prisma.booking.findMany({
@@ -201,6 +201,20 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
       results.autoNoShows++;
     } catch (err) {
       console.error(`Automatic no-show failed for booking ${id}:`, err);
+      results.failed++;
+    }
+  }
+
+  // ─── 3c: No-show charges at the course's midnight (NS-EOD, Cam 2026-10-06) ───
+  // A mark only flags the booking. Once the course's local date has passed the
+  // tee date, every booking still flagged and never checked in is charged —
+  // so a late group checked in before midnight is never charged at all.
+  for (const id of await dueNoShowCharges(now)) {
+    try {
+      await chargeNoShow(id);
+      results.noShowCharges++;
+    } catch (err) {
+      console.error(`No-show charge failed for booking ${id}:`, err);
       results.failed++;
     }
   }

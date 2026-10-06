@@ -154,11 +154,10 @@ export async function PATCH(req: NextRequest) {
     if (!isPastIn(booking.course.timezone, booking.teeTime.date, booking.teeTime.time)) {
       return NextResponse.json({ error: 'You can mark a no-show once their tee time has passed.' }, { status: 409 });
     }
-    // SP-B: lib/no-show-fee — the same mark and charges as the automatic no-show.
-    const r = await markNoShow(id, staff, { actorName });
-    const courseNote = r.courseFee.charged ? `No-show fee of $${(r.courseFee.amountCents / 100).toFixed(2)} charged.`
-      : r.courseFee.reason === 'no no-show fee on this booking' ? null : `The no-show fee could not be charged (${r.courseFee.reason}).`;
-    return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: [feeNote(r.fee), courseNote].filter(Boolean).join(' ') || null });
+    // NS-EOD: the mark only flags the booking; any no-show charge is taken at
+    // the course's midnight if they still haven't checked in (lib/no-show-fee).
+    await markNoShow(id, staff, { actorName });
+    return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: 'Marked a no-show. Any no-show charge is taken at midnight if they still haven’t checked in — “Still coming” or checking them in before then cancels it.' });
   }
   if (action === 'still_coming') {
     await prisma.$transaction(async (tx) => {

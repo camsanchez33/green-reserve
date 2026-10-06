@@ -330,7 +330,8 @@ async function chargeBooking(
         roundPaymentIntentId: paymentIntentId,
         checkInFailReason: '',
         // Only a real check-in completes the booking and stamps the arrival.
-        ...(mode.recordCheckIn ? { status: 'completed', checkedInAt: new Date(), ...(partialApplied ? { checkedInPlayers: showed } : {}) } : {}),
+        // NS-EOD: a group that arrives after being flagged a no-show is no longer one.
+        ...(mode.recordCheckIn ? { status: 'completed', checkedInAt: new Date(), noShowAt: null, ...(partialApplied ? { checkedInPlayers: showed } : {}) } : {}),
       },
     });
     if (mode.recordCheckIn) {

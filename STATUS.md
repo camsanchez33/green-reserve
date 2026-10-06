@@ -4,17 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 22:02 UTC · branch `claude/receipt-charges` · HEAD `7de38d5` · working tree **9 dirty file(s)**
+Generated 2026-10-06 22:18 UTC · branch `claude/noshow-end-of-day` · HEAD `bc65c9f` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 19 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 18 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `7de38d5` | 2026-10-06 | Receipt: a refund the product issued is not subtracted twice |
-| `4a81f80` | 2026-10-06 | Receipt: refunds netted, kept hold called a fee, cash total relabelled |
-| `4353bdb` | 2026-10-06 | Receipt shows what actually reached the golfer's card (R-GOLF-010) |
+| `bc65c9f` | 2026-10-06 | Receipt shows what actually reached the golfer's card (#88) |
+| `d19d5cb` | 2026-10-06 | Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86) |
 | `a075be8` | 2026-10-06 | Booking and course pages say what the policy really charges (#85) |
 | `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
 | `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
@@ -36,15 +35,15 @@ Generated 2026-10-06 22:02 UTC · branch `claude/receipt-charges` · HEAD `7de38
 
 ### Uncommitted working tree (9 file(s))
 
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `MM docs/CODEMAP.md`
-- `MM docs/codemap.json`
-- `A  scripts/checkin-wording-test.ts`
-- `M  src/app/api/checkin/[bookingId]/route.ts`
-- `M  src/app/checkin/[bookingId]/page.tsx`
-- `A  src/lib/checkin-errors.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M src/app/api/cron/hourly/route.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/lib/cancel-policy.ts`
+- `M src/lib/checkin-booking.ts`
+- `M src/lib/no-show-fee.ts`
+- `?? scripts/noshow-eod-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -223,9 +222,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `7de38d5` 2026-10-06 — Receipt: a refund the product issued is not subtracted twice
-- `4a81f80` 2026-10-06 — Receipt: refunds netted, kept hold called a fee, cash total relabelled
-- `4353bdb` 2026-10-06 — Receipt shows what actually reached the golfer's card (R-GOLF-010)
+- `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
+- `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
@@ -235,6 +233,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
 - `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
+- `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
 
 ---
 

@@ -1,16 +1,22 @@
 // SP-B (STAFF_POLICY_SPEC Part B4). One way to mark a no-show, used by the
-// counter ("Mark no-show") and by the hourly cron's automatic no-show, so both
-// charge exactly the same things:
+// counter ("Mark no-show") and by the hourly cron's automatic no-show.
 //
-//   - the mark itself (noShowAt + a no_show_marked event, in one transaction);
+// NS-EOD (Cam 2026-10-06: "if the course charges no shows they all get charged
+// at 12 midnight eod"): marking only FLAGS the booking (noShowAt + a
+// no_show_marked event). The charges wait until the course's local midnight:
+// the hourly cron runs chargeNoShow() for every booking dueNoShowCharges()
+// returns — still flagged, still confirmed, never checked in, its tee date now
+// past on the course's clock. A late group checked in before then (or cleared
+// with "still coming") is never charged, so there is nothing to refund.
+//
+// At midnight chargeNoShow() takes, on the course's connected account:
 //   - GreenReserve's booking fee, charged on its own (FB-3);
 //   - the COURSE's no-show charge — Booking.noShowFeeTotal, copied from the
 //     policy at booking (a separate no-show fee, or the late fee under "cancel
-//     late or don't show") — charged on the course's connected account.
-//
-// "Still coming" undoes it: refundNoShowFee() returns the course's charge, and
-// the caller refunds the booking fee as before. Charges are best effort and
-// never undo the mark; failures are recorded on the PaymentEvent ledger.
+//     late or don't show").
+// Charges are best effort and never undo the mark; failures are recorded on
+// the PaymentEvent ledger. refundNoShowFee() still returns a charge taken in
+// error after midnight.
 import Stripe from 'stripe';
 import { prisma } from './prisma';
 import { stripe, chargeOnConnectedAccount } from './stripe';
@@ -18,6 +24,7 @@ import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { chargeAccessFeeSeparately, type FeeChargeResult } from './access-fee';
 import { teeToUtcMs } from './tee-time-utils';
+import { todayIn } from './course-time';
 
 export type NoShowResult = {
   /** GreenReserve's booking fee. */
@@ -33,7 +40,22 @@ export async function liveNoShowCharge(bookingId: string): Promise<{ stripeId: s
   return last && last.kind === 'no_show_fee' ? { stripeId: last.stripeId, amountCents: last.amountCents } : null;
 }
 
-export async function markNoShow(bookingId: string, actor: EventActor, opts: { actorName?: string; auto?: boolean } = {}): Promise<NoShowResult> {
+/** Flag a booking as a no-show. Charges nothing — see chargeNoShow(), run at the course's midnight. */
+export async function markNoShow(bookingId: string, actor: EventActor, opts: { actorName?: string; auto?: boolean } = {}): Promise<void> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { id: true, courseId: true, players: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true } } },
+  });
+  if (!booking) throw new Error('Booking not found');
+  const teeTimeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
+  await prisma.$transaction(async (tx) => {
+    await tx.booking.update({ where: { id: bookingId }, data: { noShowAt: new Date() } });
+    await recordBookingEvent(tx, { bookingId, courseId: booking.courseId, actor, teeTimeAt, type: 'no_show_marked', playerCount: booking.players, ...(opts.auto ? { metadata: { auto: true } } : {}) });
+  });
+}
+
+/** The end-of-day charges for a booking still flagged a no-show (hourly cron, after the course's midnight). */
+export async function chargeNoShow(bookingId: string): Promise<NoShowResult> {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     select: {
@@ -44,13 +66,9 @@ export async function markNoShow(bookingId: string, actor: EventActor, opts: { a
   });
   if (!booking) throw new Error('Booking not found');
   const teeTimeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
+  const actor: EventActor = { type: 'cron' };
 
-  await prisma.$transaction(async (tx) => {
-    await tx.booking.update({ where: { id: bookingId }, data: { noShowAt: new Date() } });
-    await recordBookingEvent(tx, { bookingId, courseId: booking.courseId, actor, teeTimeAt, type: 'no_show_marked', playerCount: booking.players, ...(opts.auto ? { metadata: { auto: true } } : {}) });
-  });
-
-  const fee = await chargeAccessFeeSeparately(bookingId, { why: 'no_show', actor: opts.auto ? 'system' : 'operator', actorName: opts.actorName });
+  const fee = await chargeAccessFeeSeparately(bookingId, { why: 'no_show', actor: 'system' });
 
   let courseFee: NoShowResult['courseFee'] = { charged: false, reason: 'no no-show fee on this booking' };
   const amountCents = Math.round(booking.noShowFeeTotal);
@@ -58,9 +76,8 @@ export async function markNoShow(bookingId: string, actor: EventActor, opts: { a
     if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) courseFee = { charged: false, reason: 'no card on file' };
     else if (!booking.course.stripeAccountId || !booking.course.stripeAccountActive) courseFee = { charged: false, reason: 'the course’s Stripe account is not connected' };
     else {
-      // A new charge is only possible after a refund ("still coming", then a
-      // second no-show), so refunds number the attempts and Stripe can't replay
-      // the refunded PaymentIntent.
+      // A new charge is only possible after a refund, so refunds number the
+      // attempts and Stripe can't replay the refunded PaymentIntent.
       const attempt = await prisma.paymentEvent.count({ where: { bookingId, kind: 'no_show_fee_refunded' } });
       try {
         const pi = await chargeOnConnectedAccount({
@@ -72,17 +89,47 @@ export async function markNoShow(bookingId: string, actor: EventActor, opts: { a
           description: `No-show fee - ${booking.course.name} - booking ${booking.id}`,
           idempotencyKey: `noshowfee-${booking.id}-${attempt}-${booking.stripePaymentMethodId}`,
         });
-        await recordPaymentEvent({ bookingId, kind: 'no_show_fee', amountCents, stripeId: pi.id, actor: opts.auto ? 'cron' : 'operator', actorName: opts.actorName, detail: opts.auto ? 'No-show fee (automatic — not checked in)' : 'No-show fee' });
+        await recordPaymentEvent({ bookingId, kind: 'no_show_fee', amountCents, stripeId: pi.id, actor: 'cron', detail: 'No-show fee (end of day — not checked in)' });
         await recordBookingEventSafe({ bookingId, courseId: booking.courseId, type: 'fee_charged', actor, amountCents, playerCount: booking.players, teeTimeAt, stripeId: pi.id, metadata: { reason: 'no_show_fee' } });
         courseFee = { charged: true, amountCents };
       } catch (err) {
         const reason = err instanceof Error ? err.message : String(err);
-        await recordPaymentEvent({ bookingId, kind: 'charge_failed', amountCents, actor: opts.auto ? 'cron' : 'operator', actorName: opts.actorName, detail: `No-show fee: ${reason}` }).catch(() => {});
+        await recordPaymentEvent({ bookingId, kind: 'charge_failed', amountCents, actor: 'cron', detail: `No-show fee: ${reason}` }).catch(() => {});
         courseFee = { charged: false, reason };
       }
     }
   }
   return { fee, courseFee };
+}
+
+/**
+ * Bookings whose no-show charges are due now: flagged a no-show, still
+ * confirmed, never checked in, and the course's local date is past the tee
+ * date (its midnight has gone by). Each is tried once — a booking with any
+ * charge or failed attempt recorded since it was flagged is not tried again
+ * (staff can retry from the money tools). Scans the last three days.
+ */
+export async function dueNoShowCharges(now: Date): Promise<string[]> {
+  const scanFrom = new Date(now.getTime() - 3 * 86_400_000).toISOString().slice(0, 10);
+  const candidates = await prisma.booking.findMany({
+    where: { status: 'confirmed', noShowAt: { not: null }, checkedInAt: null, teeTime: { date: { gte: scanFrom } } },
+    select: { id: true, noShowAt: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } },
+  });
+  const pastMidnight = candidates.filter(b => todayIn(b.course.timezone, now) > b.teeTime.date);
+  if (!pastMidnight.length) return [];
+  const attempted = await prisma.paymentEvent.findMany({
+    where: {
+      bookingId: { in: pastMidnight.map(b => b.id) },
+      OR: [
+        { kind: 'no_show_fee' },
+        { kind: 'fee_charged' },
+        { kind: 'charge_failed', detail: { startsWith: 'No-show fee' } },
+        { kind: 'charge_failed', detail: { startsWith: 'GreenReserve fee' } },
+      ],
+    },
+    select: { bookingId: true, createdAt: true },
+  });
+  return pastMidnight.filter(b => !attempted.some(e => e.bookingId === b.id && b.noShowAt && e.createdAt >= b.noShowAt)).map(b => b.id);
 }
 
 /**
