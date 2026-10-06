@@ -132,7 +132,12 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
           amountCents: Math.round(booking.cancellationFeeTotal),
           applicationFeeCents: 0,
           description: `Late-cancellation fee - ${booking.course.name} - booking ${booking.id}`,
-          idempotencyKey: hold ? `cancelfee-${booking.id}-${booking.stripePaymentMethodId}` : `latefee-${booking.id}-${booking.stripePaymentMethodId}`,
+          // The crons' key only while a cron could still be racing this cancel
+          // (card_on_file). After a hold was taken and refunded (collectPayment),
+          // reusing it would make Stripe replay the refunded PaymentIntent.
+          idempotencyKey: hold && booking.paymentStatus === 'card_on_file'
+            ? `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`
+            : `latefee-${booking.id}-${booking.stripePaymentMethodId}`,
         });
         feeAlreadyCharged = true;
       } catch (err) {

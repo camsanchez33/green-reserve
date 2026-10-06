@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 21:48 UTC · branch `claude/money-wording-manage` · HEAD `c0d9254` · working tree **6 dirty file(s)**
+Generated 2026-10-06 21:54 UTC · branch `claude/money-wording-manage` · HEAD `371b324` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 19 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 20 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `371b324` | 2026-10-06 | Manage page says what cancelling costs right now (R-GOLF-008) |
 | `d3f8706` | 2026-10-06 | A hold not yet taken is charged when the golfer cancels late |
 | `447dc5b` | 2026-10-06 | Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00 |
 | `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
@@ -34,14 +35,17 @@ Generated 2026-10-06 21:48 UTC · branch `claude/money-wording-manage` · HEAD `
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (9 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/policy-wording-test.ts`
-- `M src/app/api/manage/[bookingId]/route.ts`
-- `M src/app/manage/[bookingId]/page.tsx`
-- `M src/lib/cancel-policy.ts`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `M  scripts/hold-late-cancel-test.ts`
+- `M  src/components/dashboard/money/CancellationsPanel.tsx`
+- `M  src/lib/cancel-booking.ts`
+- `M  src/lib/course-closure.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -220,6 +224,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `371b324` 2026-10-06 — Manage page says what cancelling costs right now (R-GOLF-008)
 - `d3f8706` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late
 - `447dc5b` 2026-10-06 — Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
@@ -231,7 +236,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
 - `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
-- `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
 
 ---
 

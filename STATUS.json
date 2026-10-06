@@ -1,22 +1,32 @@
 {
-  "generatedAt": "2026-10-06T21:48:15.884Z",
+  "generatedAt": "2026-10-06T21:54:37.357Z",
   "repo": {
-    "head": "c0d9254",
+    "head": "371b324",
     "branch": "claude/money-wording-manage",
-    "dirtyCount": 6,
+    "dirtyCount": 9,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/policy-wording-test.ts",
-      " M src/app/api/manage/[bookingId]/route.ts",
-      " M src/app/manage/[bookingId]/page.tsx",
-      " M src/lib/cancel-policy.ts"
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "M  scripts/hold-late-cancel-test.ts",
+      "M  src/components/dashboard/money/CancellationsPanel.tsx",
+      "M  src/lib/cancel-booking.ts",
+      "M  src/lib/course-closure.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "371b324",
+        "date": "2026-10-06T21:48:16+00:00",
+        "subject": "Manage page says what cancelling costs right now (R-GOLF-008)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d3f8706",
         "date": "2026-10-06T21:46:14+00:00",
@@ -852,6 +862,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "371b324",
+      "date": "2026-10-06",
+      "subject": "Manage page says what cancelling costs right now (R-GOLF-008)"
+    },
+    {
       "h": "d3f8706",
       "date": "2026-10-06",
       "subject": "A hold not yet taken is charged when the golfer cancels late"
@@ -905,11 +920,6 @@
       "h": "187260b",
       "date": "2026-10-06",
       "subject": "PAY-3: Apple Pay / Google Pay to hold the card at booking"
-    },
-    {
-      "h": "57c1b2f",
-      "date": "2026-10-06",
-      "subject": "PAY-2: count the booking fees eaten on rounds paid at the counter"
     }
   ]
 }
