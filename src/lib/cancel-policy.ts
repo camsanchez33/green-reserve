@@ -117,6 +117,9 @@ export function insideWindowLine(timing: string | null | undefined, fee: string)
   return `This tee time is already past the free-cancellation cutoff, so the ${fee} hold is charged to your card within the hour. It’s refunded when you check in.`;
 }
 
+/** Booked past the cutoff on a hold course: what "today" really means (R-GOLF-009). */
+export const holdTodayLine = (fee: string) => `a ${fee} hold is charged within the hour, refunded at check-in`;
+
 /** The short form for a one-line summary: "then a $20 hold, refunded at check-in". */
 export function afterCutoffShort(timing: string | null | undefined, fee: string): string {
   if (timing === 'late_cancel') return `then a ${fee} fee if you cancel`;

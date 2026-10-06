@@ -13,7 +13,7 @@ import { Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
-import { describePolicy, policyFrom, afterCutoffLine, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
+import { describePolicy, policyFrom, afterCutoffLine, insideWindowLine, policyMoney, holdTodayLine, holdsAtCutoff, type CancelPolicy } from '@/lib/cancel-policy';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
 // No-fee courses never touch Stripe JS at all.
@@ -205,7 +205,9 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
               <TimelineStep
                 accent={accent}
                 when="Today"
-                what={<>Booked · <strong className="text-ink font-medium">charged today $0.00</strong></>}
+                what={confirmedData.cutoffPassed && confirmedData.cancellationFeeTotal > 0 && holdsAtCutoff({ lateFeeTimingAtBooking: confirmedData.lateFeeTiming })
+                  ? <>Booked · <strong className="text-ink font-medium">{holdTodayLine(policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}</strong></>
+                  : <>Booked · <strong className="text-ink font-medium">charged today $0.00</strong></>}
               />
               {/* Wording from cancel-policy.ts (afterCutoffLine / insideWindowLine), by the
                   booking's own timing; booked past the cutoff, it says so (R-GOLF-009). */}

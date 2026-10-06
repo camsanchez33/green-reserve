@@ -45,6 +45,7 @@ check('the short form for late-cancel is conditional', afterCutoffShort('late_ca
 const bookClient = readFileSync('src/app/book/BookClient.tsx', 'utf8');
 check('confirmation no longer hard-codes the late-fee sentence', !/late-cancellation fee is charged to your card on file/.test(bookClient));
 check('card form no longer says "you pay at the course" on every course', !/you pay at the course when you check in/.test(bookClient));
+check('booked past the cutoff on a hold course, Today no longer says $0.00', /holdTodayLine\(/.test(bookClient));
 check('confirmation branches on cutoffPassed', /confirmedData\.cutoffPassed/.test(bookClient));
 const coursePage = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('course trust line checks the slot against the cutoff', /slotPastCutoff/.test(coursePage) && /insideWindowLine\(/.test(coursePage));
