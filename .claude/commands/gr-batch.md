@@ -112,13 +112,17 @@ Run `/gr-review batch/<date>-<slug>` with the range `main...batch/<date>-<slug>`
 command already dispatches only the auditors whose surface changed and collates. One
 review, not four.
 
+Then dispatch `final-reviewer` over the same range (CLAUDE.md, Overseer protocol —
+nothing ships without its PASS). BLOCK → fix on the batch branch → re-review.
+
 ## 8. Hand off — Cam ships
 
 Finish with:
 
 - one line per accepted item, one per rejected item with the guard's reason
 - tsc / parse results for the merged tree
-- the review's blockers, if any
+- the review's blockers, if any, and the `final-reviewer` verdict — the push and
+  merge commands below are only handed over on a PASS
 - the exact commands for Cam: `git push -u origin batch/<date>-<slug>` → open the Vercel
   preview for that branch → walk the manual checks from the review and the workers'
   `UNVERIFIED` lists → then `git checkout main && git merge --ff-only batch/<date>-<slug>

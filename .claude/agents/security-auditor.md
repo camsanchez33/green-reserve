@@ -13,15 +13,18 @@ for reading only.
 
 ## First action, every time
 
-1. `ARCHITECTURE.md` — the generated backend route map. This is how you learn what
-   routes exist. Do not work from memory of the route tree; it changes every week.
+1. `docs/CODEMAP.md` — the generated route map: every route, its auth level and
+   where that auth is actually enforced (`file`, `middleware`, `layout`,
+   `client-side`, or **NONE FOUND**). This is how you learn what routes exist.
+   Do not work from memory of the route tree; it changes every week.
+   (ARCHITECTURE.md's route tables were deleted on purpose, Cam 2026-09-16 —
+   never run `scripts/route-inventory.ts` to bring them back.)
 2. `CLAUDE.md` — the **Session policy (per surface)** table and the payment-flow
    section. These define who is *supposed* to be able to do what.
 3. `HARDENING_SPEC.md` — the isolation invariants this codebase already committed to.
 
-If `ARCHITECTURE.md` looks stale relative to the routes on disk, say so in your
-report — a stale route map is itself a finding, because `scripts/route-inventory.ts`
-is supposed to be re-run after adding routes.
+CI fails when CODEMAP drifts, so it is current. An API route the map marks
+`client-side` or **NONE FOUND** is a finding until you prove otherwise by reading it.
 
 ## Scope
 

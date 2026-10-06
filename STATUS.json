@@ -1,17 +1,39 @@
 {
-  "generatedAt": "2026-10-05T23:50:59.648Z",
+  "generatedAt": "2026-10-06T19:49:15.002Z",
   "repo": {
-    "head": "69fc911",
-    "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 1,
+    "head": "d60e32f",
+    "branch": "claude/overseer-routing",
+    "dirtyCount": 2,
     "dirty": [
-      "M REVIEW_LEDGER.md"
+      "M .claude/README.md",
+      " M .claude/agents/builder.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "187260b",
+        "date": "2026-10-06T02:44:25+00:00",
+        "subject": "PAY-3: Apple Pay / Google Pay to hold the card at booking",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "57c1b2f",
+        "date": "2026-10-06T02:28:54+00:00",
+        "subject": "PAY-2: count the booking fees eaten on rounds paid at the counter",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ebe8ab8",
+        "date": "2026-10-06T02:20:10+00:00",
+        "subject": "PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "c534f1e",
         "date": "2026-10-05T23:24:54+00:00",
@@ -551,50 +573,38 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-05",
+      "lastTouched": "2026-10-06",
       "ageDays": 0
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 4,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-04",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-01",
-      "ageDays": 4
+      "ageDays": 5
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
-    },
-    {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 0
-    },
-    {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 0
+      "ageDays": 7
     },
     {
       "file": "REVIEW_SPEC.md",
@@ -603,158 +613,205 @@
       "ageDays": 0
     },
     {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-05",
+      "ageDays": 1
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-05",
+      "ageDays": 1
+    },
+    {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 6
+      "ageDays": 7
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "d60e32f",
+      "date": "2026-10-06",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "a9b78a8",
+      "date": "2026-10-06",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "d9f5f9a",
+      "date": "2026-10-06",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "187260b",
+      "date": "2026-10-06",
+      "subject": "PAY-3: Apple Pay / Google Pay to hold the card at booking"
+    },
+    {
+      "h": "57c1b2f",
+      "date": "2026-10-06",
+      "subject": "PAY-2: count the booking fees eaten on rounds paid at the counter"
+    },
+    {
+      "h": "ebe8ab8",
+      "date": "2026-10-06",
+      "subject": "PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in"
+    },
+    {
+      "h": "066fa1b",
+      "date": "2026-10-05",
+      "subject": "queue/spec update"
+    },
     {
       "h": "c534f1e",
       "date": "2026-10-05",
@@ -779,41 +836,6 @@
       "h": "321902b",
       "date": "2026-10-05",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "ce494cc",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "475ff29",
-      "date": "2026-10-05",
-      "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
-    },
-    {
-      "h": "fa48d8f",
-      "date": "2026-10-05",
-      "subject": "CI: run the test scripts on every PR; fix three stale tests"
-    },
-    {
-      "h": "5007cb9",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "189dc3b",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "2e7f6fc",
-      "date": "2026-10-05",
-      "subject": "CARD-1: explicit card-at-booking choice in Settings"
-    },
-    {
-      "h": "10d853c",
-      "date": "2026-10-05",
-      "subject": "BIRDIE-B4b: Birdie drafts changes, the operator confirms"
     }
   ]
 }

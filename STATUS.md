@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-05 23:50 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `69fc911` · working tree **1 dirty file(s)**
+Generated 2026-10-06 19:49 UTC · branch `claude/overseer-routing` · HEAD `d60e32f` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 6 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 9 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `187260b` | 2026-10-06 | PAY-3: Apple Pay / Google Pay to hold the card at booking |
+| `57c1b2f` | 2026-10-06 | PAY-2: count the booking fees eaten on rounds paid at the counter |
+| `ebe8ab8` | 2026-10-06 | PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in |
 | `c534f1e` | 2026-10-05 | Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001) |
 | `2e6dec2` | 2026-10-05 | Golfer sign-in code can no longer be cracked offline (R-AUTH-001) |
 | `4f1580c` | 2026-10-05 | "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001) |
@@ -21,9 +24,10 @@ Generated 2026-10-05 23:50 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M REVIEW_LEDGER.md`
+- `M .claude/README.md`
+- `M .claude/agents/builder.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -165,55 +169,55 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-05 | 0d |
-| `ARCHITECTURE.md` | 4 | 2026-09-29 | 6d |
-| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 0d |
-| `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 4d |
-| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 6d |
-| `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 6d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-05 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-06 | 0d |
+| `ARCHITECTURE.md` | 4 | 2026-09-29 | 7d |
+| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 1d |
+| `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 5d |
+| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 7d |
+| `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 7d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 0d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 6d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 6d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 1d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-05 | 1d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 7d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 7d |
 
 ## Recent commits
 
+- `d60e32f` 2026-10-06 — queue/spec update
+- `a9b78a8` 2026-10-06 — queue/spec update
+- `d9f5f9a` 2026-10-06 — queue/spec update
+- `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
+- `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
+- `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
+- `066fa1b` 2026-10-05 — queue/spec update
 - `c534f1e` 2026-10-05 — Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)
 - `2e6dec2` 2026-10-05 — Golfer sign-in code can no longer be cracked offline (R-AUTH-001)
 - `4f1580c` 2026-10-05 — "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)
 - `69cc708` 2026-10-05 — No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)
 - `321902b` 2026-10-05 — queue/spec update
-- `ce494cc` 2026-10-05 — queue/spec update
-- `475ff29` 2026-10-05 — DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)
-- `fa48d8f` 2026-10-05 — CI: run the test scripts on every PR; fix three stale tests
-- `5007cb9` 2026-10-05 — queue/spec update
-- `189dc3b` 2026-10-05 — queue/spec update
-- `2e7f6fc` 2026-10-05 — CARD-1: explicit card-at-booking choice in Settings
-- `10d853c` 2026-10-05 — BIRDIE-B4b: Birdie drafts changes, the operator confirms
 
 ---
 

@@ -6,7 +6,7 @@ whole design.
 ```
 CLAUDE.md            the facts        what is true about this codebase
 .claude/commands/    the rituals      main-thread work that writes and commits
-.claude/agents/      the judgments    read-only investigations, run in parallel
+.claude/agents/      the judgments    investigations and scoped builders, run in parallel
 ```
 
 ## The one rule
@@ -15,7 +15,7 @@ CLAUDE.md            the facts        what is true about this codebase
 
 A fact is anything that could change without anyone thinking about this folder: a
 color token, a route path, a model name, a session TTL, a banned class. Facts live in
-`CLAUDE.md`, the `*_SPEC.md` files, and `ARCHITECTURE.md`. Every agent's first action
+`CLAUDE.md`, the `*_SPEC.md` files, and `docs/CODEMAP.md`. Every agent's first action
 is to *read* the fact it needs, not recall it.
 
 Behavior is how to work: what order to check things in, what counts as evidence, when
@@ -44,11 +44,13 @@ work started, and the board already answers it. The checkbox split belongs to th
 idea: `/gr-run` records the sha and leaves the box open, `/gr-review` checks it. A box
 that gets checked at ship time cannot tell you which shipped work was never audited.
 
-Builds stay in the main thread on purpose. A builder subagent hands back a summary
-and takes away the ability to steer mid-run — and the summary is exactly the thing
-that most needs auditing.
+Builds stay in the main thread on purpose: a subagent hands back a summary and takes
+away the ability to steer mid-run. The overseer may still hand a mechanical, UI-only
+piece to `builder` (an allow-list keeps it off money, auth and config), and every diff
+goes through `final-reviewer` before it is pushed. Routing lives in CLAUDE.md's
+**Overseer protocol**.
 
-### Agents — own context window, read-only, run in parallel
+### Agents — own context window, run in parallel (read-only except `builder` and `reskin-worker`)
 
 | Agent | Answers |
 |---|---|
@@ -56,8 +58,11 @@ that most needs auditing.
 | `security-auditor` | Can a valid session reach data or money that isn't its own? |
 | `admin-ux-auditor` | Can a user click something and not be able to tell what happened? |
 | `spec-conformance` | Does the shipped code actually do what the spec block said, item by item? |
+| `scout` | Where is X? Which files do Y? Cheap lookups that return `path:line`, nothing else. |
+| `final-reviewer` | Should this diff ship? The gate before every push — BLOCK or PASS with evidence. |
+| `builder` | Writes. A mechanical, UI-only sub-part of a plan the overseer already decided. |
 
-None of them can edit. That's deliberate: an agent that fixes what it just judged is
+Apart from `builder` and `reskin-worker`, none of them can edit. That's deliberate: an agent that fixes what it just judged is
 how unreviewed changes ship. They report, Cam decides, `/gr-run` builds.
 
 ## Two rules every agent shares
@@ -70,7 +75,7 @@ evaporated on inspection — a false positive costs more than a miss.
 timing, live-data, third-party — comes back as a named manual check, not a guess
 promoted to a verdict.
 
-## When to add a fifth agent
+## When to add another agent
 
 Only when the answer to all three is yes:
 
@@ -97,7 +102,7 @@ A fourth piece, sitting on top of the three above:
 
 ```
 .claude/commands/gr-batch.md   the dispatcher   plans, spawns, gates, merges — never builds features
-.claude/agents/reskin-worker.md the one builder  write-capable, worktree-isolated, allowed-list-scoped
+.claude/agents/reskin-worker.md the batch builder write-capable, worktree-isolated, allowed-list-scoped
 scripts/batch-plan.mjs          zero-token gate  file ownership: overlap + reserved-path check
 scripts/reskin-guard.mjs        zero-token gate  "zero behavior": added fetch/prisma/useState/... on a range
 .claude/hooks/parse-on-edit.js  zero-token gate  parse check after every Edit/Write, everywhere
@@ -134,13 +139,13 @@ four costs roughly four runs. The token savings in this layer come from elsewher
 - `tsc` and the status board run once on the merged tree, not once per item
 - one `/gr-review` over the batch instead of four
 - workers are told to read §1 + their own block, not the queue or the whole spec
-- every agent pins its model explicitly; none inherits. Fable is reserved for the main
-  thread (where Cam steers). `design-auditor` and `admin-ux-auditor` run on `sonnet` —
+- every agent pins its model explicitly; none inherits. The main-thread (overseer) model is set in CLAUDE.md's **Overseer protocol**. `design-auditor` and `admin-ux-auditor` run on `sonnet` —
   their checks are mechanical (banned classes, swallowed catches). `security-auditor`,
-  `spec-conformance` and `reskin-worker` run on `opus` — judgment work, but never the
-  main-thread model. No agent runs on `haiku`: the evidence rule (open the file, confirm,
-  false positives cost more than misses) is what a small model is worst at, and the
-  haiku-shaped jobs are already scripts
+  `spec-conformance` and `reskin-worker` run on `opus` — judgment work. The only `haiku` agent is `scout`, and only
+  because it returns lookups (`path:line`, facts) with no verdicts — the evidence
+  rule (open the file, confirm, false positives cost more than misses) is what a
+  small model is worst at, so no judging agent runs on it. `final-reviewer` is
+  `opus`/high; `builder` is `sonnet`/medium behind an allow-list
 
 ### Worktree mechanics worth knowing
 
