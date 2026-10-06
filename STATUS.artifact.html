@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-06 21:51 UTC</span><span>claude/receipt-charges @ a075be8</span>
+    <span>2026-10-06 21:57 UTC</span><span>claude/receipt-charges @ 4353bdb</span>
     <span>6 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">16 runs have shipped that the queue doesn't know about</div>
+<div class="lede">17 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">4353bdb</span><span>Receipt shows what actually reached the golfer's card (R-GOLF-010)</span></li>
 <li><span class="h">a075be8</span><span>Booking and course pages say what the policy really charges (#85)</span></li>
 <li><span class="h">384b502</span><span>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</span></li>
 <li><span class="h">f5b2bb8</span><span>G8: hourly cron sends every pay link and cutoff warning (#83)</span></li>
@@ -153,7 +154,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/receipt/[bookingId]/route.ts</code></li><li><code>M src/app/receipt/[bookingId]/page.tsx</code></li><li><code>?? scripts/receipt-charges-test.ts</code></li><li><code>?? src/lib/receipt-charges.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/receipt-charges-test.ts</code></li><li><code>M src/app/api/receipt/[bookingId]/route.ts</code></li><li><code>M src/app/receipt/[bookingId]/page.tsx</code></li><li><code>M src/lib/receipt-charges.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -280,6 +281,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">4353bdb</td><td class="num">2026-10-06</td><td>Receipt shows what actually reached the golfer's card (R-GOLF-010)</td></tr>
 <tr><td class="num">a075be8</td><td class="num">2026-10-06</td><td>Booking and course pages say what the policy really charges (#85)</td></tr>
 <tr><td class="num">384b502</td><td class="num">2026-10-06</td><td>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</td></tr>
 <tr><td class="num">f5b2bb8</td><td class="num">2026-10-06</td><td>G8: hourly cron sends every pay link and cutoff warning (#83)</td></tr>
@@ -291,7 +293,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">57c1b2f</td><td class="num">2026-10-06</td><td>PAY-2: count the booking fees eaten on rounds paid at the counter</td></tr>
 <tr><td class="num">ebe8ab8</td><td class="num">2026-10-06</td><td>PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in</td></tr>
 <tr><td class="num">066fa1b</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
-<tr><td class="num">c534f1e</td><td class="num">2026-10-05</td><td>Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

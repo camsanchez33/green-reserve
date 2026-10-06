@@ -60,6 +60,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     cancellationFeeTotal: booking.cancellationFeeTotal,
     cancellationFeeCharged: !!booking.cancellationFeeChargeId,
     paidOffline: booking.paidOffline,
+    roundRefunded: booking.paymentStatus === 'refunded',
     charges,
     chargedNowCents: chargedNowCents(charges),
     createdAt: booking.createdAt,

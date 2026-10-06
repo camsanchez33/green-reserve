@@ -15,6 +15,7 @@ type ReceiptData = {
   cancellationFeeTotal: number; cancellationFeeCharged: boolean; createdAt: string;
   /** R-GOLF-010: what actually reached the card — from lib/receipt-charges. */
   paidOffline?: boolean;
+  roundRefunded?: boolean;
   charges?: { label: string; amountCents: number; refunded: boolean }[];
   chargedNowCents?: number;
 };
@@ -83,12 +84,15 @@ function ReceiptPageInner() {
   const charges = data.charges ?? [];
   const chargedNow = data.chargedNowCents ?? 0;
 
-  const statusLabel = paidAtCourse ? 'Paid at the course'
+  const refunded = !!data.roundRefunded;
+  const statusLabel = refunded ? 'Refunded'
+    : paidAtCourse ? 'Paid at the course'
     : isCompleted ? 'Paid at check-in'
     : isCancelled ? 'Cancelled'
     : 'Due at course';
 
-  const totalLabel = paidAtCourse ? 'Total, paid at the course'
+  // The card block below says what the card took; these totals are the booking's price.
+  const totalLabel = refunded || paidAtCourse ? 'Booking total'
     : isCompleted ? 'Total charged'
     : isCancelled ? 'Booking total (not charged)'
     : 'Estimated total due at course';
@@ -126,7 +130,7 @@ function ReceiptPageInner() {
             <div className="px-6 py-6">
               {/* Status + title */}
               <div className="mb-5">
-                <StatusDot status={isCompleted ? 'ok' : isCancelled ? 'bad' : 'neutral'} label={statusLabel} />
+                <StatusDot status={refunded ? 'neutral' : isCompleted ? 'ok' : isCancelled ? 'bad' : 'neutral'} label={statusLabel} />
                 <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mt-3 mb-1">{data.courseName}</h1>
                 {data.courseLocation && <p className="text-ink text-sm">{data.courseLocation}</p>}
               </div>
@@ -176,7 +180,7 @@ function ReceiptPageInner() {
                   {charges.map((c, i) => (
                     <div key={i} className="flex justify-between px-4 py-3">
                       <span className="text-ink-soft">{c.label}{c.refunded ? ' · refunded' : ''}</span>
-                      <span className={c.refunded ? 'text-ink-muted line-through' : 'font-medium text-ink'}>{dollars(c.amountCents)}</span>
+                      <span className={c.refunded ? 'text-ink-muted line-through' : 'font-medium text-ink'}>{c.amountCents < 0 ? `−${dollars(-c.amountCents)}` : dollars(c.amountCents)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
@@ -189,7 +193,7 @@ function ReceiptPageInner() {
               {/* Payment line */}
               {isCompleted && (
                 <div className="text-sm text-ink mb-5">
-                  {paidAtCourse ? 'Paid at the course' : 'Paid at check-in'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
+                  {refunded ? 'Refunded' : paidAtCourse ? 'Paid at the course' : 'Paid at check-in'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
               )}
               {!isCompleted && !isCancelled && (

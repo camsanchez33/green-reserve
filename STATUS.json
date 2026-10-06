@@ -1,22 +1,29 @@
 {
-  "generatedAt": "2026-10-06T21:51:38.745Z",
+  "generatedAt": "2026-10-06T21:57:13.890Z",
   "repo": {
-    "head": "a075be8",
+    "head": "4353bdb",
     "branch": "claude/receipt-charges",
     "dirtyCount": 6,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
+      " M scripts/receipt-charges-test.ts",
       " M src/app/api/receipt/[bookingId]/route.ts",
       " M src/app/receipt/[bookingId]/page.tsx",
-      "?? scripts/receipt-charges-test.ts",
-      "?? src/lib/receipt-charges.ts"
+      " M src/lib/receipt-charges.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "4353bdb",
+        "date": "2026-10-06T21:51:39+00:00",
+        "subject": "Receipt shows what actually reached the golfer's card (R-GOLF-010)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "a075be8",
         "date": "2026-10-06T17:48:49-04:00",
@@ -831,6 +838,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4353bdb",
+      "date": "2026-10-06",
+      "subject": "Receipt shows what actually reached the golfer's card (R-GOLF-010)"
+    },
+    {
       "h": "a075be8",
       "date": "2026-10-06",
       "subject": "Booking and course pages say what the policy really charges (#85)"
@@ -884,11 +896,6 @@
       "h": "066fa1b",
       "date": "2026-10-05",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "c534f1e",
-      "date": "2026-10-05",
-      "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)"
     }
   ]
 }

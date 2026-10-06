@@ -89,6 +89,31 @@ async function main() {
     check('a round paid in cash at the counter shows no card charge', c.length === 0);
   }
 
+  {
+    const b = await seed({ status: 'completed', paymentStatus: 'refunded', roundPaymentIntentId: 'pi_round' });
+    await prisma.paymentEvent.create({ data: { bookingId: b.id, kind: 'refund', amountCents: 10300, stripeId: 're_full', detail: 'test' } });
+    const c = await receiptCharges(b.id);
+    check('an admin full refund shows the round and the refund, nothing on the card', c.some(x => x.label === 'Your round') && c.some(x => x.label === 'Refunded to your card' && x.amountCents === -10300) && chargedNowCents(c) === 0, JSON.stringify(c));
+  }
+  {
+    const b = await seed({ status: 'completed', paymentStatus: 'paid', roundPaymentIntentId: 'pi_round' });
+    await prisma.paymentEvent.create({ data: { bookingId: b.id, kind: 'refund', amountCents: 5000, stripeId: 're_part', detail: 'test' } });
+    const c = await receiptCharges(b.id);
+    check('a partial refund is netted from what is on the card', chargedNowCents(c) === 5300, JSON.stringify(c));
+  }
+  {
+    const b = await seed({ lateFeeTimingAtBooking: 'hold_at_cutoff', status: 'cancelled', paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: 'pi_hold' });
+    const c = await receiptCharges(b.id);
+    check('a hold kept on a cancelled booking is called the fee, not a hold', c.some(x => x.label === 'Late-cancellation fee') && !c.some(x => x.label === 'Late-cancellation hold'), JSON.stringify(c));
+  }
+  {
+    const b = await seed({ status: 'cancelled', paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: 'pi_late', lateFeeTimingAtBooking: 'late_cancel', stripePaymentIntentId: 'pi_fee2' });
+    await prisma.paymentEvent.create({ data: { bookingId: b.id, kind: 'fee_charged', amountCents: 300, stripeId: 'pi_fee2', detail: 'test' } });
+    await prisma.paymentEvent.create({ data: { bookingId: b.id, kind: 'fee_refunded', amountCents: 300, stripeId: 're_fee2', detail: 'from Stripe' } });
+    const c = await receiptCharges(b.id);
+    check('a booking fee refunded from the Stripe dashboard shows refunded', c.some(x => x.label === 'Booking fee' && x.refunded), JSON.stringify(c));
+  }
+
   await cleanup();
   console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
   await prisma.$disconnect();

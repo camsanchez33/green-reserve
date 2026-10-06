@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 21:51 UTC · branch `claude/receipt-charges` · HEAD `a075be8` · working tree **6 dirty file(s)**
+Generated 2026-10-06 21:57 UTC · branch `claude/receipt-charges` · HEAD `4353bdb` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 16 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 17 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `4353bdb` | 2026-10-06 | Receipt shows what actually reached the golfer's card (R-GOLF-010) |
 | `a075be8` | 2026-10-06 | Booking and course pages say what the policy really charges (#85) |
 | `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
 | `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
@@ -35,10 +36,10 @@ Generated 2026-10-06 21:51 UTC · branch `claude/receipt-charges` · HEAD `a075b
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M scripts/receipt-charges-test.ts`
 - `M src/app/api/receipt/[bookingId]/route.ts`
 - `M src/app/receipt/[bookingId]/page.tsx`
-- `?? scripts/receipt-charges-test.ts`
-- `?? src/lib/receipt-charges.ts`
+- `M src/lib/receipt-charges.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -217,6 +218,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4353bdb` 2026-10-06 — Receipt shows what actually reached the golfer's card (R-GOLF-010)
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
@@ -228,7 +230,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
 - `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
 - `066fa1b` 2026-10-05 — queue/spec update
-- `c534f1e` 2026-10-05 — Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)
 
 ---
 
