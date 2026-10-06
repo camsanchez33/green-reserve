@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { getGolferSession } from '@/lib/auth';
+import { canManageBooking } from '@/lib/manage-access';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     select: { checkInToken: true, golferAccountId: true, courseId: true, teeTimeId: true, players: true, teeTime: { select: { date: true } } },
   });
   if (!booking) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
-  const authorized = golferSession ? booking.golferAccountId === golferSession.golferId : booking.checkInToken === token;
+  const authorized = canManageBooking(booking, golferSession?.golferId, token);
   if (!authorized) {
     return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
   }

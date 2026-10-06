@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 20:41 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `54f59ad` · working tree clean
+Generated 2026-10-06 20:53 UTC · branch `claude/manage-link-auth` · HEAD `6f48e30` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 11 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 13 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `6f48e30` | 2026-10-06 | Regenerate code map and status board |
+| `f2f2f1d` | 2026-10-06 | G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003) |
 | `51e2896` | 2026-10-06 | Final reviewer runs on Fable (#80) |
 | `c105e0f` | 2026-10-06 | Overseer protocol: route work to the right model, review every diff before push (#79) |
 | `187260b` | 2026-10-06 | PAY-3: Apple Pay / Google Pay to hold the card at booking |
@@ -25,6 +27,16 @@ Generated 2026-10-06 20:41 UTC · branch `claude/eager-maxwell-qf1pd0` · HEAD `
 | `fa48d8f` | 2026-10-05 | CI: run the test scripts on every PR; fix three stale tests |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (4 file(s))
+
+- `M  CLAUDE.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -44,18 +56,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 37d | `7246a62` | `RUN_QUEUE.md:983` |
+| MP-1 | 2026-08-29 | 37d | `41f5ea8` | `RUN_QUEUE.md:1013` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 37d | `4ef11dd` | `RUN_QUEUE.md:1048` |
+| MP-2 | 2026-08-29 | 37d | `958f229` | `RUN_QUEUE.md:1089` |
+| MP-2b | 2026-08-29 | 37d | `a134af5` | `RUN_QUEUE.md:1126` |
+| MP-2c | 2026-08-29 | 37d | `e5b5413` | `RUN_QUEUE.md:1175` |
+| MP-2d | 2026-08-29 | 37d | `22d0f68` | `RUN_QUEUE.md:1223` |
+| MP-2e | 2026-08-30 | 37d | `bf3bcb2` | `RUN_QUEUE.md:1265` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | — | — | — | `RUN_QUEUE.md:818` |
 | SD-8e — status is rendered as bare coloured text where the design | — | — | — | `RUN_QUEUE.md:844` |
 | SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | — | — | — | `RUN_QUEUE.md:921` |
 | BUG: 56 of 59 email senders report success when Resend rejects the send | — | — | — | `RUN_QUEUE.md:942` |
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | — | — | — | `RUN_QUEUE.md:983` |
-| MP-1 | — | — | — | `RUN_QUEUE.md:1013` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | — | — | — | `RUN_QUEUE.md:1048` |
-| MP-2 | — | — | — | `RUN_QUEUE.md:1089` |
-| MP-2b | — | — | — | `RUN_QUEUE.md:1126` |
-| MP-2c | — | — | — | `RUN_QUEUE.md:1175` |
-| MP-2d | — | — | — | `RUN_QUEUE.md:1223` |
-| MP-2e | — | — | — | `RUN_QUEUE.md:1265` |
 | MP-5e part 3 — the Overview relationship feed (notes + settings | — | — | — | `RUN_QUEUE.md:1585` |
 | UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2498` |
 | BUG: inquiry submissions send no emails | — | — | — | `RUN_QUEUE.md:2856` |
@@ -200,7 +212,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `54f59ad` 2026-10-06 — queue/spec update: Control Room — every session reports its own status row
+- `6f48e30` 2026-10-06 — Regenerate code map and status board
+- `f2f2f1d` 2026-10-06 — G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)
 - `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
 - `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
@@ -211,7 +224,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2e6dec2` 2026-10-05 — Golfer sign-in code can no longer be cracked offline (R-AUTH-001)
 - `4f1580c` 2026-10-05 — "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)
 - `69cc708` 2026-10-05 — No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)
-- `321902b` 2026-10-05 — queue/spec update
 
 ---
 

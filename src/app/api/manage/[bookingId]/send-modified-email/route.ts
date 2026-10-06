@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendBookingModifiedEmail } from '@/lib/email';
 import { getGolferSession } from '@/lib/auth';
+import { canManageBooking } from '@/lib/manage-access';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   });
 
   if (!booking) return NextResponse.json({ error: 'Invalid' }, { status: 404 });
-  const authorized = golferSession ? booking.golferAccountId === golferSession.golferId : booking.checkInToken === token;
+  const authorized = canManageBooking(booking, golferSession?.golferId, token);
   if (!authorized) {
     return NextResponse.json({ error: 'Invalid' }, { status: 404 });
   }

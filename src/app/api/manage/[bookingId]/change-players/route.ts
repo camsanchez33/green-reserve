@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 import { getGolferSession } from '@/lib/auth';
+import { canManageBooking } from '@/lib/manage-access';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       });
 
       if (!booking) throw Object.assign(new Error(), { code: 'INVALID' });
-      const authorized = golferSession ? booking.golferAccountId === golferSession.golferId : booking.checkInToken === token;
+      const authorized = canManageBooking(booking, golferSession?.golferId, token);
       if (!authorized) throw Object.assign(new Error(), { code: 'INVALID' });
       if (booking.status !== 'confirmed') throw Object.assign(new Error(), { code: 'NOT_CONFIRMED' });
       if (booking.players === newPlayers) throw Object.assign(new Error(), { code: 'SAME' });
