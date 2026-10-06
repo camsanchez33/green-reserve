@@ -239,7 +239,10 @@ function DashboardPageInner() {
   }
 
   async function checkInBooking(b: Booking) {
-    if (b.paymentStatus === 'no_payment_method') { setCardModalReason(''); setCardModalBooking(b); return; }
+    // No saved card → the card modal. Keyed on the card itself, not paymentStatus:
+    // the hourly cron flips a no-card booking to 'awaiting_checkin' when it sends
+    // the pay link, which is before most golfers reach the counter.
+    if (b.hasCard === false || b.paymentStatus === 'no_payment_method') { setCardModalReason(''); setCardModalBooking(b); return; }
     // SD-5: partial party — the charge is prorated to who showed.
     const showed = askHeadcount(b);
     if (showed === null) return;

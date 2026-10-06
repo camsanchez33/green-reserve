@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 383,
+    "files": 384,
     "routes": 204,
-    "libs": 109,
+    "libs": 110,
     "models": 35,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3261,7 +3261,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 219,
+      "lines": 221,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3285,6 +3285,7 @@
         "@/lib/cancel-policy",
         "@/lib/cron-auth",
         "@/lib/cron-log",
+        "@/lib/cron-windows",
         "@/lib/email",
         "@/lib/no-show-fee",
         "@/lib/prisma",
@@ -6096,7 +6097,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1362,
+      "lines": 1365,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10810,6 +10811,31 @@
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/stripe/webhook/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/cron-windows.ts",
+      "lines": 26,
+      "purpose": "R-CRON-003 — when the hourly cron sends its time-based emails.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "checkInEmailDue",
+          "kind": "fn"
+        },
+        {
+          "name": "cutoffWarningDue",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/cron/hourly/route.ts"
       ]
     },
     {

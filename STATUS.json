@@ -1,31 +1,54 @@
 {
-  "generatedAt": "2026-10-06T20:53:42.423Z",
+  "generatedAt": "2026-10-06T20:57:35.950Z",
   "repo": {
-    "head": "6f48e30",
-    "branch": "claude/manage-link-auth",
-    "dirtyCount": 4,
+    "head": "0739e76",
+    "branch": "claude/cron-send-windows",
+    "dirtyCount": 13,
     "dirty": [
-      "M  CLAUDE.md",
       "UU STATUS.artifact.html",
       "UU STATUS.json",
-      "UU STATUS.md"
+      "UU STATUS.md",
+      "MM docs/CODEMAP.md",
+      "MM docs/codemap.json",
+      "A  scripts/manage-access-test.ts",
+      "M  src/app/api/bookings/cancel/route.ts",
+      "M  src/app/api/manage/[bookingId]/available-times/route.ts",
+      "M  src/app/api/manage/[bookingId]/change-players/route.ts",
+      "M  src/app/api/manage/[bookingId]/route.ts",
+      "M  src/app/api/manage/[bookingId]/send-modified-email/route.ts",
+      "M  src/app/api/manage/[bookingId]/swap-time/route.ts",
+      "A  src/lib/manage-access.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
       {
-        "h": "6f48e30",
-        "date": "2026-10-06T20:50:08+00:00",
+        "h": "0927537",
+        "date": "2026-10-06T20:50:13+00:00",
         "subject": "Regenerate code map and status board",
         "ids": [],
         "matches": []
       },
       {
-        "h": "f2f2f1d",
-        "date": "2026-10-06T20:47:01+00:00",
-        "subject": "G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)",
+        "h": "8aafc7a",
+        "date": "2026-10-06T20:47:41+00:00",
+        "subject": "G8: counter Check in opens the card modal for any booking without a card",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "07ee7d8",
+        "date": "2026-10-06T20:46:59+00:00",
+        "subject": "G8: hourly cron sends every pay-link and cutoff warning (R-CRON-003)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3e3d9ec",
+        "date": "2026-10-06T16:46:29-04:00",
+        "subject": "Control Room: every session reports its own status (#81)",
         "ids": [],
         "matches": []
       },
@@ -808,14 +831,29 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "6f48e30",
+      "h": "0927537",
       "date": "2026-10-06",
       "subject": "Regenerate code map and status board"
     },
     {
-      "h": "f2f2f1d",
+      "h": "f3ef9df",
       "date": "2026-10-06",
-      "subject": "G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)"
+      "subject": "queue/spec update: ledger follow-ups from the G8 and G13 reviews"
+    },
+    {
+      "h": "8aafc7a",
+      "date": "2026-10-06",
+      "subject": "G8: counter Check in opens the card modal for any booking without a card"
+    },
+    {
+      "h": "07ee7d8",
+      "date": "2026-10-06",
+      "subject": "G8: hourly cron sends every pay-link and cutoff warning (R-CRON-003)"
+    },
+    {
+      "h": "3e3d9ec",
+      "date": "2026-10-06",
+      "subject": "Control Room: every session reports its own status (#81)"
     },
     {
       "h": "51e2896",
@@ -851,21 +889,6 @@
       "h": "c534f1e",
       "date": "2026-10-05",
       "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)"
-    },
-    {
-      "h": "2e6dec2",
-      "date": "2026-10-05",
-      "subject": "Golfer sign-in code can no longer be cracked offline (R-AUTH-001)"
-    },
-    {
-      "h": "4f1580c",
-      "date": "2026-10-05",
-      "subject": "\"Still coming\" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)"
-    },
-    {
-      "h": "69cc708",
-      "date": "2026-10-05",
-      "subject": "No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)"
     }
   ]
 }
