@@ -1,18 +1,27 @@
 {
-  "generatedAt": "2026-10-06T20:50:11.990Z",
+  "generatedAt": "2026-10-06T20:53:45.498Z",
   "repo": {
-    "head": "f3ef9df",
+    "head": "0927537",
     "branch": "claude/cron-send-windows",
-    "dirtyCount": 2,
+    "dirtyCount": 4,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M  CLAUDE.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "0927537",
+        "date": "2026-10-06T20:50:13+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "8aafc7a",
         "date": "2026-10-06T20:47:41+00:00",
@@ -133,6 +142,62 @@
   ],
   "awaiting": [
     {
+      "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
+      "line": 983,
+      "hash": "7246a62",
+      "shipDate": "2026-08-29",
+      "ageDays": 37
+    },
+    {
+      "title": "MP-1",
+      "line": 1013,
+      "hash": "41f5ea8",
+      "shipDate": "2026-08-29",
+      "ageDays": 37
+    },
+    {
+      "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
+      "line": 1048,
+      "hash": "4ef11dd",
+      "shipDate": "2026-08-29",
+      "ageDays": 37
+    },
+    {
+      "title": "MP-2",
+      "line": 1089,
+      "hash": "958f229",
+      "shipDate": "2026-08-29",
+      "ageDays": 37
+    },
+    {
+      "title": "MP-2b",
+      "line": 1126,
+      "hash": "a134af5",
+      "shipDate": "2026-08-29",
+      "ageDays": 37
+    },
+    {
+      "title": "MP-2c",
+      "line": 1175,
+      "hash": "e5b5413",
+      "shipDate": "2026-08-29",
+      "ageDays": 37
+    },
+    {
+      "title": "MP-2d",
+      "line": 1223,
+      "hash": "22d0f68",
+      "shipDate": "2026-08-29",
+      "ageDays": 37
+    },
+    {
+      "title": "MP-2e",
+      "line": 1265,
+      "hash": "bf3bcb2",
+      "shipDate": "2026-08-30",
+      "ageDays": 37
+    },
+    {
       "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
       "line": 818,
       "hash": null,
@@ -156,62 +221,6 @@
     {
       "title": "BUG: 56 of 59 email senders report success when Resend rejects the send",
       "line": 942,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin",
-      "line": 983,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-1",
-      "line": 1013,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
-      "line": 1048,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2",
-      "line": 1089,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2b",
-      "line": 1126,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2c",
-      "line": 1175,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2d",
-      "line": 1223,
-      "hash": null,
-      "shipDate": null,
-      "ageDays": null
-    },
-    {
-      "title": "MP-2e",
-      "line": 1265,
       "hash": null,
       "shipDate": null,
       "ageDays": null
@@ -806,6 +815,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0927537",
+      "date": "2026-10-06",
+      "subject": "Regenerate code map and status board"
+    },
+    {
       "h": "f3ef9df",
       "date": "2026-10-06",
       "subject": "queue/spec update: ledger follow-ups from the G8 and G13 reviews"
@@ -859,11 +873,6 @@
       "h": "2e6dec2",
       "date": "2026-10-05",
       "subject": "Golfer sign-in code can no longer be cracked offline (R-AUTH-001)"
-    },
-    {
-      "h": "4f1580c",
-      "date": "2026-10-05",
-      "subject": "\"Still coming\" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)"
     }
   ]
 }
