@@ -192,8 +192,8 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   // Cam 2026-10-05: "if the player never checked in then it could be a no show".
   // A booking made under a policy with automatic no-show, still confirmed and
   // nobody checked in N minutes after its tee time, is marked a no-show through
-  // the same helper the counter uses (lib/no-show-fee) — same charges, same
-  // "still coming" undo. Runs hourly, so a mark can land up to an hour after N.
+  // the same helper the counter uses (lib/no-show-fee): flagged only, charged
+  // at the course's midnight by 3c, same "still coming" undo. Runs hourly, so a mark can land up to an hour after N.
   // Which bookings are due: dueAutoNoShows() in lib/no-show-fee.
   for (const id of await dueAutoNoShows(now)) {
     try {

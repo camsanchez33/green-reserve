@@ -5,7 +5,7 @@ import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee
 import { chargesOnLateCancel, bookingWindowHours } from './cancel-policy';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
-import { liveNoShowCharge, refundNoShowFee } from './no-show-fee';
+import { liveNoShowCharge, refundNoShowFee, chargeNoShow } from './no-show-fee';
 
 export type CancellationOptions = {
   /**
@@ -98,6 +98,12 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // never charge the late fee on top — describePolicy promises "never both".
   // The no-show charge stands as the fee kept; a waived (weather) cancel gives
   // it back, like any other fee the course waives.
+  // NS-EOD: marking a no-show charges nothing until the course's midnight, and
+  // cancelling takes the booking out of that run. Cancelling a flagged booking
+  // is the final word, so its no-show charges are taken now (unless waived).
+  if (booking.noShowAt && !waiveFee && !(await liveNoShowCharge(bookingId))) {
+    await chargeNoShow(bookingId).catch(err => console.error(JSON.stringify({ ev: 'cancel.noshow_charge.fail', bookingId, error: err instanceof Error ? err.message : String(err) })));
+  }
   let noShowCharge = booking.noShowAt ? await liveNoShowCharge(bookingId) : null;
   if (noShowCharge && waiveFee) {
     const r = await refundNoShowFee(bookingId, 'cancellation (fee waived)');
@@ -244,7 +250,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // fee, GreenReserve's fee is charged with it. A free or waived cancel keeps
   // nothing — any booking fee charged on its own (a no-show then cancelled) is
   // refunded, as FB-3 did. Neither ever blocks the cancellation.
-  // A kept no-show charge keeps the booking fee charged with it (markNoShow).
+  // A kept no-show charge keeps the booking fee charged with it (chargeNoShow).
   if (noShowCharge && !waiveFee) await chargeAccessFeeSeparately(bookingId, { why: 'no_show', actor: 'system' });
   else if (feeAlreadyCharged && !waiveFee) await chargeAccessFeeSeparately(bookingId, { why: 'late_cancel', actor: 'system' });
   else await refundSeparateAccessFee(bookingId, 'booking cancelled', 'system');

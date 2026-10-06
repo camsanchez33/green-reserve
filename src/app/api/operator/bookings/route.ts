@@ -101,7 +101,8 @@ export async function PATCH(req: NextRequest) {
   //                charge, and never counted as platform-collected.
   // FB-3 (Cam 2026-09-29): a no-show or a counter-paid round never reaches the
   // check-in charge that carries GreenReserve's $1.50/player, so the fee is
-  // charged on its own here (lib/access-fee.ts). The staff action never waits
+  // charged on its own (lib/access-fee.ts) — for a no-show, at the course's
+  // midnight (hourly cron, NS-EOD). The staff action never waits
   // on it or fails because of it — the tee sheet is told what happened.
   const actorName = session.email;
   // EV-1: every counter action below is DB-only, so its event is written in the

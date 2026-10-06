@@ -9,6 +9,7 @@ import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { markNoShow, dueNoShowCharges, chargeNoShow } from '../src/lib/no-show-fee';
 import { describePolicy, policyFrom } from '../src/lib/cancel-policy';
+import { performCancellation } from '../src/lib/cancel-booking';
 
 const prisma = new PrismaClient();
 const TAG = 'noshoweodtest';
@@ -87,7 +88,20 @@ async function main() {
   await prisma.booking.update({ where: { id: cleared.id }, data: { noShowAt: null } });
   check('"Still coming" before midnight means no charge', !(await dueNoShowCharges(nextMorning)).includes(cleared.id));
 
-  // 6. The golfer is told when.
+  // 6. Cancelling a flagged booking before midnight takes the no-show charge
+  // then — the cancel would otherwise take it out of the midnight run.
+  const cancelled = await seed(today);
+  await markNoShow(cancelled.id, { type: 'staff', id: null });
+  await performCancellation(cancelled.id, { type: 'staff', id: null }, { notifySlotAlerts: false });
+  check('cancelling a flagged no-show attempts the no-show charge', (await attempts(cancelled.id)) === 1);
+
+  // 7. A waived (weather) cancel of a flagged booking charges nothing.
+  const waived = await seed(today);
+  await markNoShow(waived.id, { type: 'staff', id: null });
+  await performCancellation(waived.id, { type: 'staff', id: null }, { notifySlotAlerts: false, waiveFee: true, reason: 'test weather' });
+  check('a waived cancel of a flagged no-show charges nothing', (await attempts(waived.id)) === 0);
+
+  // 8. The golfer is told when.
   const lines = describePolicy(policyFrom({ noShowFeeCents: 2500 })).lines.join(' ');
   check('the policy says no-show fees are charged at the end of the day', /end of the day/.test(lines), lines);
 

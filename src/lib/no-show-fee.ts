@@ -68,8 +68,6 @@ export async function chargeNoShow(bookingId: string): Promise<NoShowResult> {
   const teeTimeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
   const actor: EventActor = { type: 'cron' };
 
-  const fee = await chargeAccessFeeSeparately(bookingId, { why: 'no_show', actor: 'system' });
-
   let courseFee: NoShowResult['courseFee'] = { charged: false, reason: 'no no-show fee on this booking' };
   const amountCents = Math.round(booking.noShowFeeTotal);
   if (amountCents > 0 && !(await liveNoShowCharge(bookingId))) {
@@ -99,23 +97,27 @@ export async function chargeNoShow(bookingId: string): Promise<NoShowResult> {
       }
     }
   }
+  // GreenReserve's fee after the course's, so the course's charge is never the
+  // one a failure here leaves untried (dueNoShowCharges).
+  const fee = await chargeAccessFeeSeparately(bookingId, { why: 'no_show', actor: 'system' });
   return { fee, courseFee };
 }
 
 /**
  * Bookings whose no-show charges are due now: flagged a no-show, still
  * confirmed, never checked in, and the course's local date is past the tee
- * date (its midnight has gone by). Each is tried once — a booking with any
- * charge or failed attempt recorded since it was flagged is not tried again
- * (staff can retry from the money tools). Scans the last three days.
+ * date (its midnight has gone by). Each charge is tried once per flag — a
+ * booking whose charges were all taken or failed since it was flagged is not
+ * tried again. Bookings with nothing to charge are skipped. Scans the last
+ * three days.
  */
 export async function dueNoShowCharges(now: Date): Promise<string[]> {
   const scanFrom = new Date(now.getTime() - 3 * 86_400_000).toISOString().slice(0, 10);
   const candidates = await prisma.booking.findMany({
     where: { status: 'confirmed', noShowAt: { not: null }, checkedInAt: null, teeTime: { date: { gte: scanFrom } } },
-    select: { id: true, noShowAt: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } },
+    select: { id: true, noShowAt: true, noShowFeeTotal: true, accessFeeTotal: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } },
   });
-  const pastMidnight = candidates.filter(b => todayIn(b.course.timezone, now) > b.teeTime.date);
+  const pastMidnight = candidates.filter(b => todayIn(b.course.timezone, now) > b.teeTime.date && (b.noShowFeeTotal > 0 || b.accessFeeTotal > 0));
   if (!pastMidnight.length) return [];
   const attempted = await prisma.paymentEvent.findMany({
     where: {
@@ -127,9 +129,19 @@ export async function dueNoShowCharges(now: Date): Promise<string[]> {
         { kind: 'charge_failed', detail: { startsWith: 'GreenReserve fee' } },
       ],
     },
-    select: { bookingId: true, createdAt: true },
+    select: { bookingId: true, createdAt: true, kind: true, detail: true },
   });
-  return pastMidnight.filter(b => !attempted.some(e => e.bookingId === b.id && b.noShowAt && e.createdAt >= b.noShowAt)).map(b => b.id);
+  // chargeNoShow takes the course's fee first, so "tried" means the course's
+  // fee was charged or failed since the flag; a booking with no course fee
+  // goes by GreenReserve's fee instead. A crash after the course's charge can
+  // then only cost GreenReserve's own fee, never the course's money.
+  return pastMidnight.filter(b => {
+    const since = attempted.filter(e => e.bookingId === b.id && b.noShowAt && e.createdAt >= b.noShowAt);
+    const tried = b.noShowFeeTotal > 0
+      ? since.some(e => e.kind === 'no_show_fee' || (e.kind === 'charge_failed' && e.detail?.startsWith('No-show fee')))
+      : since.some(e => e.kind === 'fee_charged' || (e.kind === 'charge_failed' && e.detail?.startsWith('GreenReserve fee')));
+    return !tried;
+  }).map(b => b.id);
 }
 
 /**
@@ -137,7 +149,7 @@ export async function dueNoShowCharges(now: Date): Promise<string[]> {
  * automatic no-show, still confirmed, nobody checked in, N minutes past the
  * tee time. Only the last two days are scanned; anything older was handled.
  *
- * R-CRON-001: "still coming" clears noShowAt and refunds both charges, which
+ * R-CRON-001: "still coming" clears noShowAt (and refunds any charge taken), which
  * used to put the booking straight back in this list with its due time still
  * past — the next run re-marked it and charged again. Staff have spoken for
  * that round: a booking with a no_show_cleared event is never auto-marked
