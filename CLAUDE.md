@@ -171,6 +171,34 @@ it reports work as "not started" that shipped hours ago.
 `AUDIT_MASTER.md` is Cam's private ideas bank. It is gitignored. Never commit it,
 and never move its contents into the queue without asking.
 
+### Control Room — every session reports itself (Cam 2026-10-06)
+
+Cam watches what every session is doing on the Control Room page,
+https://claude.ai/artifact/CWmgjgJHTZaTr4XThBuvZL. A page cannot list sessions,
+so each session writes its own row. **Only the main session (the overseer)
+writes — sub-agents never touch it** (they share the session id and would
+overwrite the row). Use the `ArtifactData` tool (load it with ToolSearch) on that
+URL, collection `sessions`, doc id = this session's id (the `session_…` part of
+the `Claude-Session:` URL in the commit attribution). If `ArtifactData` isn't
+available, skip the Control Room and say so once in the first reply.
+
+- **When:** at the start of the run (after committing dirty docs), after each
+  real step (a push, a PR opened or merged, a blocker hit), at least every ~20
+  minutes during a long step, and as the last thing before ending the turn.
+- **First write:** `get` the doc. Missing → `set` it (no `if_version`). Present
+  (a resumed or compacted session) → `update` with its `version`. Every later
+  write is `update` with `if_version` = the version the previous write returned;
+  if refused, `get` and redo it with the current version.
+- **Fields:** `title` (the session's title), `state` — `working` | `waiting`
+  (needs Cam) | `review` (PR ready for Cam) | `failed` | `done`, `doing` (one
+  plain sentence: what it is doing right now), `needs` (what Cam must do, or
+  ""), `pr` (number or null), `branch`, `model` (short id, e.g. `fable-5-1`), `sessionUrl`
+  (`https://claude.ai/code/<session id>`), `updatedAt` (`date -u
+  +%Y-%m-%dT%H:%M:%SZ` — real time, never guessed).
+- End every turn with `state` other than `working` — a `working` row that goes
+  30 minutes without a write shows as **Silent** on the page.
+- Never put secrets, customer data or env values in a row; Cam may share the page.
+
 ### Doc-file commit rule
 After every run, `git status` — if dirty:
 - **Doc files** (`RUN_QUEUE.md`, `*_SPEC.md`, `CLAUDE.md`, everything under `.claude/`, `scripts/*.mjs`, everything under `legal/`): COMMIT with message `"queue/spec update"` — never discard; Cowork edits them between runs.

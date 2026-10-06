@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-06 20:50 UTC</span><span>claude/manage-link-auth @ f2f2f1d</span>
-    <span>2 uncommitted</span>
+    <span>2026-10-06 20:53 UTC</span><span>claude/manage-link-auth @ 6f48e30</span>
+    <span>4 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">12 runs have shipped that the queue doesn't know about</div>
+<div class="lede">13 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">6f48e30</span><span>Regenerate code map and status board</span></li>
 <li><span class="h">f2f2f1d</span><span>G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)</span></li>
 <li><span class="h">51e2896</span><span>Final reviewer runs on Fable (#80)</span></li>
 <li><span class="h">c105e0f</span><span>Overseer protocol: route work to the right model, review every diff before push (#79)</span></li>
@@ -149,7 +150,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<ul class="plain"><li><code>M  CLAUDE.md</code></li><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -209,18 +210,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
+<div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age">37d</span><span class="where">7246a62</span></div>
+<div class="row"><span class="t">MP-1</span><span class="age">37d</span><span class="where">41f5ea8</span></div>
+<div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age">37d</span><span class="where">4ef11dd</span></div>
+<div class="row"><span class="t">MP-2</span><span class="age">37d</span><span class="where">958f229</span></div>
+<div class="row"><span class="t">MP-2b</span><span class="age">37d</span><span class="where">a134af5</span></div>
+<div class="row"><span class="t">MP-2c</span><span class="age">37d</span><span class="where">e5b5413</span></div>
+<div class="row"><span class="t">MP-2d</span><span class="age">37d</span><span class="where">22d0f68</span></div>
+<div class="row"><span class="t">MP-2e</span><span class="age">37d</span><span class="where">bf3bcb2</span></div>
 <div class="row"><span class="t">SD-8d — browser Back still discards unsaved Settings edits (from the</span><span class="age"></span><span class="where"></span></div>
 <div class="row"><span class="t">SD-8e — status is rendered as bare coloured text where the design</span><span class="age"></span><span class="where"></span></div>
 <div class="row"><span class="t">SD-9c — auth: (1) staff password recovery — CourseStaff has no reset</span><span class="age"></span><span class="where"></span></div>
 <div class="row"><span class="t">BUG: 56 of 59 email senders report success when Resend rejects the send</span><span class="age"></span><span class="where"></span></div>
-<div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age"></span><span class="where"></span></div>
-<div class="row"><span class="t">MP-1</span><span class="age"></span><span class="where"></span></div>
-<div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age"></span><span class="where"></span></div>
-<div class="row"><span class="t">MP-2</span><span class="age"></span><span class="where"></span></div>
-<div class="row"><span class="t">MP-2b</span><span class="age"></span><span class="where"></span></div>
-<div class="row"><span class="t">MP-2c</span><span class="age"></span><span class="where"></span></div>
-<div class="row"><span class="t">MP-2d</span><span class="age"></span><span class="where"></span></div>
-<div class="row"><span class="t">MP-2e</span><span class="age"></span><span class="where"></span></div>
 <div class="row"><span class="t">MP-5e part 3 — the Overview relationship feed (notes + settings</span><span class="age"></span><span class="where"></span></div>
 <div class="row"><span class="t">UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until r</span><span class="age"></span><span class="where"></span></div>
 <div class="row"><span class="t">BUG: inquiry submissions send no emails</span><span class="age"></span><span class="where"></span></div>
@@ -276,6 +277,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">6f48e30</td><td class="num">2026-10-06</td><td>Regenerate code map and status board</td></tr>
 <tr><td class="num">f2f2f1d</td><td class="num">2026-10-06</td><td>G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)</td></tr>
 <tr><td class="num">51e2896</td><td class="num">2026-10-06</td><td>Final reviewer runs on Fable (#80)</td></tr>
 <tr><td class="num">c105e0f</td><td class="num">2026-10-06</td><td>Overseer protocol: route work to the right model, review every diff before push (#79)</td></tr>
@@ -287,7 +289,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">2e6dec2</td><td class="num">2026-10-05</td><td>Golfer sign-in code can no longer be cracked offline (R-AUTH-001)</td></tr>
 <tr><td class="num">4f1580c</td><td class="num">2026-10-05</td><td>&quot;Still coming&quot; sticks: auto no-show never re-marks a cleared booking (R-CRON-001)</td></tr>
 <tr><td class="num">69cc708</td><td class="num">2026-10-05</td><td>No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)</td></tr>
-<tr><td class="num">321902b</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
