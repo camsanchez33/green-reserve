@@ -1,18 +1,22 @@
 {
-  "generatedAt": "2026-10-06T19:54:46.125Z",
+  "generatedAt": "2026-10-06T20:41:00.696Z",
   "repo": {
-    "head": "c105e0f",
+    "head": "54f59ad",
     "branch": "claude/eager-maxwell-qf1pd0",
-    "dirtyCount": 2,
-    "dirty": [
-      "M .claude/agents/final-reviewer.md",
-      " M CLAUDE.md"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "51e2896",
+        "date": "2026-10-06T15:59:13-04:00",
+        "subject": "Final reviewer runs on Fable (#80)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "c105e0f",
         "date": "2026-10-06T15:53:08-04:00",
@@ -614,12 +618,6 @@
       "ageDays": 7
     },
     {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 0
-    },
-    {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
@@ -627,6 +625,12 @@
     },
     {
       "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-05",
+      "ageDays": 1
+    },
+    {
+      "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
       "ageDays": 1
@@ -785,6 +789,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "54f59ad",
+      "date": "2026-10-06",
+      "subject": "queue/spec update: Control Room — every session reports its own status row"
+    },
+    {
+      "h": "51e2896",
+      "date": "2026-10-06",
+      "subject": "Final reviewer runs on Fable (#80)"
+    },
+    {
       "h": "c105e0f",
       "date": "2026-10-06",
       "subject": "Overseer protocol: route work to the right model, review every diff before push (#79)"
@@ -833,16 +847,6 @@
       "h": "321902b",
       "date": "2026-10-05",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "ce494cc",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "475ff29",
-      "date": "2026-10-05",
-      "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
     }
   ]
 }
