@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 385,
+    "files": 386,
     "routes": 204,
-    "libs": 111,
+    "libs": 112,
     "models": 35,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5366,7 +5366,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 61,
+      "lines": 69,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5386,6 +5386,7 @@
         "@/lib/admin-session",
         "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/receipt-charges",
         "next/server"
       ],
       "usedBy": []
@@ -6701,7 +6702,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 211,
+      "lines": 236,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8199,7 +8200,8 @@
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
-        "src/lib/no-show-fee.ts"
+        "src/lib/no-show-fee.ts",
+        "src/lib/receipt-charges.ts"
       ]
     },
     {
@@ -9898,7 +9900,8 @@
         "src/app/dashboard/settings/page.tsx",
         "src/lib/cancel-booking.ts",
         "src/lib/email.ts",
-        "src/lib/normalize-course.ts"
+        "src/lib/normalize-course.ts",
+        "src/lib/receipt-charges.ts"
       ]
     },
     {
@@ -12348,7 +12351,8 @@
       "usedBy": [
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/operator/bookings/route.ts",
-        "src/lib/cancel-booking.ts"
+        "src/lib/cancel-booking.ts",
+        "src/lib/receipt-charges.ts"
       ]
     },
     {
@@ -12735,6 +12739,7 @@
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/rate-limit.ts",
+        "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
         "src/lib/schedule-service.ts",
         "src/lib/session.ts",
@@ -12910,6 +12915,40 @@
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/birdie/guardrails.ts",
         "src/lib/call-invite.ts"
+      ]
+    },
+    {
+      "path": "src/lib/receipt-charges.ts",
+      "lines": 93,
+      "purpose": "R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "chargedNowCents",
+          "kind": "fn"
+        },
+        {
+          "name": "ReceiptCharge",
+          "kind": "type"
+        },
+        {
+          "name": "receiptCharges",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./access-fee",
+        "./cancel-policy",
+        "./no-show-fee",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/receipt/[bookingId]/route.ts"
       ]
     },
     {
@@ -14516,6 +14555,7 @@
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/no-show-fee.ts",
+        "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -14575,7 +14615,8 @@
       "writers": [],
       "readers": [
         "src/lib/analytics.ts",
-        "src/lib/no-show-fee.ts"
+        "src/lib/no-show-fee.ts",
+        "src/lib/receipt-charges.ts"
       ]
     },
     {
@@ -16498,7 +16539,8 @@
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/money-problems.ts",
-        "src/lib/no-show-fee.ts"
+        "src/lib/no-show-fee.ts",
+        "src/lib/receipt-charges.ts"
       ]
     },
     {

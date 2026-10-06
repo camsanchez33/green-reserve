@@ -1,22 +1,46 @@
 {
-  "generatedAt": "2026-10-06T21:53:19.247Z",
+  "generatedAt": "2026-10-06T22:02:26.456Z",
   "repo": {
-    "head": "a075be8",
-    "branch": "claude/checkin-page-states",
-    "dirtyCount": 6,
+    "head": "7de38d5",
+    "branch": "claude/receipt-charges",
+    "dirtyCount": 9,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/checkin/[bookingId]/route.ts",
-      " M src/app/checkin/[bookingId]/page.tsx",
-      "?? scripts/checkin-wording-test.ts",
-      "?? src/lib/checkin-errors.ts"
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "MM docs/CODEMAP.md",
+      "MM docs/codemap.json",
+      "A  scripts/checkin-wording-test.ts",
+      "M  src/app/api/checkin/[bookingId]/route.ts",
+      "M  src/app/checkin/[bookingId]/page.tsx",
+      "A  src/lib/checkin-errors.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "7de38d5",
+        "date": "2026-10-06T22:00:54+00:00",
+        "subject": "Receipt: a refund the product issued is not subtracted twice",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4a81f80",
+        "date": "2026-10-06T21:57:14+00:00",
+        "subject": "Receipt: refunds netted, kept hold called a fee, cash total relabelled",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4353bdb",
+        "date": "2026-10-06T21:51:39+00:00",
+        "subject": "Receipt shows what actually reached the golfer's card (R-GOLF-010)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "a075be8",
         "date": "2026-10-06T17:48:49-04:00",
@@ -831,6 +855,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "7de38d5",
+      "date": "2026-10-06",
+      "subject": "Receipt: a refund the product issued is not subtracted twice"
+    },
+    {
+      "h": "4a81f80",
+      "date": "2026-10-06",
+      "subject": "Receipt: refunds netted, kept hold called a fee, cash total relabelled"
+    },
+    {
+      "h": "4353bdb",
+      "date": "2026-10-06",
+      "subject": "Receipt shows what actually reached the golfer's card (R-GOLF-010)"
+    },
+    {
       "h": "a075be8",
       "date": "2026-10-06",
       "subject": "Booking and course pages say what the policy really charges (#85)"
@@ -874,21 +913,6 @@
       "h": "57c1b2f",
       "date": "2026-10-06",
       "subject": "PAY-2: count the booking fees eaten on rounds paid at the counter"
-    },
-    {
-      "h": "ebe8ab8",
-      "date": "2026-10-06",
-      "subject": "PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in"
-    },
-    {
-      "h": "066fa1b",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "c534f1e",
-      "date": "2026-10-05",
-      "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)"
     }
   ]
 }
