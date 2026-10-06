@@ -1,20 +1,34 @@
 {
-  "generatedAt": "2026-10-06T21:46:13.943Z",
+  "generatedAt": "2026-10-06T21:47:04.536Z",
   "repo": {
-    "head": "384b502",
-    "branch": "claude/hold-on-late-cancel",
-    "dirtyCount": 4,
+    "head": "d3f8706",
+    "branch": "claude/money-wording-manage",
+    "dirtyCount": 11,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/lib/cancel-booking.ts",
-      "?? scripts/hold-late-cancel-test.ts"
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "M  scripts/policy-wording-test.ts",
+      "M  src/app/api/bookings/route.ts",
+      "M  src/app/book/BookClient.tsx",
+      "M  src/app/courses/[slug]/CourseBookingClient.tsx",
+      "M  src/lib/cancel-policy.ts",
+      "M  src/lib/normalize-course.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "d3f8706",
+        "date": "2026-10-06T21:46:14+00:00",
+        "subject": "A hold not yet taken is charged when the golfer cancels late",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "384b502",
         "date": "2026-10-06T17:42:06-04:00",
@@ -822,6 +836,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d3f8706",
+      "date": "2026-10-06",
+      "subject": "A hold not yet taken is charged when the golfer cancels late"
+    },
+    {
       "h": "384b502",
       "date": "2026-10-06",
       "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)"
@@ -875,11 +894,6 @@
       "h": "c534f1e",
       "date": "2026-10-05",
       "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)"
-    },
-    {
-      "h": "2e6dec2",
-      "date": "2026-10-05",
-      "subject": "Golfer sign-in code can no longer be cracked offline (R-AUTH-001)"
     }
   ]
 }
