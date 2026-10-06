@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(teeTimes.map(t => {
     const bookings = (t as { bookings?: Row[] }).bookings;
     if (!bookings) return t;
-    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, ...b }) => ({ ...b, hasCard: !!stripePaymentMethodId, ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
+    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, ...b }) => ({ ...b, hasCard: !!stripePaymentMethodId, hasPhone: b.golferPhone.replace(/\D/g, '').length >= 10, ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
   }));
 }
 

@@ -1,9 +1,10 @@
 'use client';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import type { PaymentRequest } from '@stripe/stripe-js';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 
@@ -34,14 +35,64 @@ function fmtDate(d: string) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, addCart, onResult, onError }: {
-  bookingId: string; token: string; totalAmount: number; golferName: string; accent: string; addCart: boolean;
+function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseName, accent, addCart, onResult, onError }: {
+  bookingId: string; token: string; totalAmount: number; golferName: string; courseName: string; accent: string; addCart: boolean;
   onResult: (r: { totalCharged: number; feeRefunded: boolean; feeRefundFailed?: boolean; feeRefundAmount: number }) => void;
   onError: (msg: string) => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
+  // PAY-1 (Cam 2026-10-06): Apple Pay / Google Pay. Stripe shows the button
+  // only where the phone or browser has a wallet set up; everyone else sees the
+  // card form alone, as before.
+  const [walletRequest, setWalletRequest] = useState<PaymentRequest | null>(null);
+  // The wallet sheet's handler is registered once; the cart toggle can change
+  // after that, so it reads the latest choice from here.
+  const addCartRef = useRef(addCart);
+  addCartRef.current = addCart;
+
+  /** One charge path for the card form and the wallet. True when it went through. */
+  async function charge(paymentMethodId: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/checkin/${bookingId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, paymentMethodId, addCart: addCartRef.current }),
+      });
+      const data = await res.json();
+      if (!res.ok) { onError(data.error || 'Check-in failed.'); return false; }
+      onResult(data);
+      return true;
+    } catch {
+      onError('Something went wrong. Please try again or check in at the pro shop.');
+      return false;
+    }
+  }
+
+  useEffect(() => {
+    if (!stripe) return;
+    const req = stripe.paymentRequest({
+      country: 'US',
+      currency: 'usd',
+      total: { label: courseName || 'Tee time', amount: totalAmount },
+      requestPayerName: true,
+    });
+    let live = true;
+    req.canMakePayment().then(r => { if (live && r) setWalletRequest(req); }).catch(() => {});
+    req.on('paymentmethod', async (ev) => {
+      onError('');
+      const ok = await charge(ev.paymentMethod.id);
+      ev.complete(ok ? 'success' : 'fail');
+    });
+    return () => { live = false; };
+    // Registered once per Stripe instance; the amount is kept current below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stripe]);
+
+  useEffect(() => {
+    walletRequest?.update({ total: { label: courseName || 'Tee time', amount: totalAmount } });
+  }, [walletRequest, totalAmount, courseName]);
 
   async function handleSubmit() {
     if (!stripe || !elements) return;
@@ -56,15 +107,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, 
         billing_details: { name: golferName },
       });
       if (error) { onError(error.message || 'Card error.'); setLoading(false); return; }
-
-      const res = await fetch(`/api/checkin/${bookingId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, paymentMethodId: paymentMethod.id, addCart }),
-      });
-      const data = await res.json();
-      if (!res.ok) { onError(data.error || 'Check-in failed.'); setLoading(false); return; }
-      onResult(data);
+      if (!(await charge(paymentMethod.id))) setLoading(false);
     } catch {
       onError('Something went wrong. Please try again or check in at the pro shop.');
       setLoading(false);
@@ -73,6 +116,14 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, accent, 
 
   return (
     <div className="space-y-4">
+      {walletRequest && (
+        <>
+          <PaymentRequestButtonElement options={{ paymentRequest: walletRequest, style: { paymentRequestButton: { type: 'buy', theme: 'dark', height: '48px' } } }} />
+          <div className="flex items-center gap-3 text-xs text-ink-muted">
+            <span className="h-px flex-1 bg-line" />or pay with a card<span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
       <div>
         <label className="block text-[13px] font-semibold text-ink mb-1.5">Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
@@ -268,6 +319,7 @@ function CheckInPageInner() {
                 token={token}
                 totalAmount={payTotal}
                 golferName={info.golferName}
+                courseName={info.courseName}
                 accent={info.brandColor}
                 addCart={addCart}
                 onResult={setResult}
