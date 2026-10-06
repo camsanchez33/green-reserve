@@ -2,7 +2,7 @@ import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
 import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee';
-import { chargesOnLateCancel, bookingWindowHours } from './cancel-policy';
+import { chargesOnLateCancel, holdsAtCutoff, bookingWindowHours } from './cancel-policy';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { liveNoShowCharge, refundNoShowFee } from './no-show-fee';
@@ -107,14 +107,20 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
 
   // SP-B: under "only if they cancel late" / "cancel late or don't show" nothing
   // was held at the cutoff — a cancellation inside the window charges the late
-  // fee NOW. Best effort: a failed charge is recorded and reported, and never
+  // fee NOW. A hold not yet taken is charged now too (below). Best effort: a failed charge is recorded and reported, and never
   // blocks the cancellation (STAFF_POLICY_SPEC B4).
   let lateFee: { id: string } | null = null;
   let lateFeeChargeFailed = '';
   const teeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
   const windowHours = bookingWindowHours(booking, booking.course);
   const isLate = !!teeAt && teeAt.getTime() - windowHours * 3600_000 <= Date.now();
-  if (!waiveFee && !feeAlreadyCharged && !noShowCharge && isLate && booking.cancellationFeeTotal > 0 && chargesOnLateCancel(booking)) {
+  // A hold booking cancelled after its cutoff but before the hourly cron took the
+  // hold (or after a failed hold charge) used to escape the fee entirely, though
+  // describePolicy promises the hold is "kept if you cancel late". It is charged
+  // here with the crons' own idempotency key, so a cron run racing this cancel
+  // cannot charge it twice.
+  const hold = holdsAtCutoff(booking);
+  if (!waiveFee && !feeAlreadyCharged && !noShowCharge && isLate && booking.cancellationFeeTotal > 0 && (chargesOnLateCancel(booking) || hold)) {
     if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) lateFeeChargeFailed = 'no card on file';
     else if (!booking.course.stripeAccountId || !booking.course.stripeAccountActive) lateFeeChargeFailed = 'the course’s Stripe account is not connected';
     else {
@@ -126,7 +132,12 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
           amountCents: Math.round(booking.cancellationFeeTotal),
           applicationFeeCents: 0,
           description: `Late-cancellation fee - ${booking.course.name} - booking ${booking.id}`,
-          idempotencyKey: `latefee-${booking.id}-${booking.stripePaymentMethodId}`,
+          // The crons' key only while a cron could still be racing this cancel
+          // (card_on_file). After a hold was taken and refunded (collectPayment),
+          // reusing it would make Stripe replay the refunded PaymentIntent.
+          idempotencyKey: hold && booking.paymentStatus === 'card_on_file'
+            ? `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`
+            : `latefee-${booking.id}-${booking.stripePaymentMethodId}`,
         });
         feeAlreadyCharged = true;
       } catch (err) {

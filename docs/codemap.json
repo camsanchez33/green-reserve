@@ -7617,7 +7617,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 179,
+      "lines": 181,
       "purpose": "SD-8 — the Cancellations half of the Money page.",
       "brain": [],
       "exports": [
@@ -9760,7 +9760,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 255,
+      "lines": 266,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10290,7 +10290,7 @@
     },
     {
       "path": "src/lib/course-closure.ts",
-      "lines": 125,
+      "lines": 128,
       "purpose": "MP-5b.",
       "brain": [],
       "exports": [

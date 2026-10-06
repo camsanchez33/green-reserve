@@ -1,19 +1,23 @@
 {
-  "generatedAt": "2026-10-06T22:02:26.456Z",
+  "generatedAt": "2026-10-06T22:14:24.996Z",
   "repo": {
-    "head": "7de38d5",
-    "branch": "claude/receipt-charges",
-    "dirtyCount": 9,
+    "head": "0c8bf58",
+    "branch": "claude/hold-on-late-cancel",
+    "dirtyCount": 13,
     "dirty": [
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
-      "MM docs/CODEMAP.md",
-      "MM docs/codemap.json",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
       "A  scripts/checkin-wording-test.ts",
+      "A  scripts/receipt-charges-test.ts",
       "M  src/app/api/checkin/[bookingId]/route.ts",
+      "M  src/app/api/receipt/[bookingId]/route.ts",
       "M  src/app/checkin/[bookingId]/page.tsx",
-      "A  src/lib/checkin-errors.ts"
+      "M  src/app/receipt/[bookingId]/page.tsx",
+      "A  src/lib/checkin-errors.ts",
+      "A  src/lib/receipt-charges.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -21,23 +25,16 @@
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
       {
-        "h": "7de38d5",
-        "date": "2026-10-06T22:00:54+00:00",
-        "subject": "Receipt: a refund the product issued is not subtracted twice",
+        "h": "84793bc",
+        "date": "2026-10-06T21:57:24+00:00",
+        "subject": "Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button",
         "ids": [],
         "matches": []
       },
       {
-        "h": "4a81f80",
-        "date": "2026-10-06T21:57:14+00:00",
-        "subject": "Receipt: refunds netted, kept hold called a fee, cash total relabelled",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "4353bdb",
-        "date": "2026-10-06T21:51:39+00:00",
-        "subject": "Receipt shows what actually reached the golfer's card (R-GOLF-010)",
+        "h": "7049cb2",
+        "date": "2026-10-06T21:54:17+00:00",
+        "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay",
         "ids": [],
         "matches": []
       },
@@ -45,6 +42,13 @@
         "h": "a075be8",
         "date": "2026-10-06T17:48:49-04:00",
         "subject": "Booking and course pages say what the policy really charges (#85)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d3f8706",
+        "date": "2026-10-06T21:46:14+00:00",
+        "subject": "A hold not yet taken is charged when the golfer cancels late",
         "ids": [],
         "matches": []
       },
@@ -855,24 +859,24 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "7de38d5",
+      "h": "84793bc",
       "date": "2026-10-06",
-      "subject": "Receipt: a refund the product issued is not subtracted twice"
+      "subject": "Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button"
     },
     {
-      "h": "4a81f80",
+      "h": "7049cb2",
       "date": "2026-10-06",
-      "subject": "Receipt: refunds netted, kept hold called a fee, cash total relabelled"
-    },
-    {
-      "h": "4353bdb",
-      "date": "2026-10-06",
-      "subject": "Receipt shows what actually reached the golfer's card (R-GOLF-010)"
+      "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay"
     },
     {
       "h": "a075be8",
       "date": "2026-10-06",
       "subject": "Booking and course pages say what the policy really charges (#85)"
+    },
+    {
+      "h": "d3f8706",
+      "date": "2026-10-06",
+      "subject": "A hold not yet taken is charged when the golfer cancels late"
     },
     {
       "h": "384b502",
