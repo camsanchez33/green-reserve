@@ -4,26 +4,20 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 22:19 UTC · branch `claude/money-wording-manage` · HEAD `ad930d1` · working tree **5 dirty file(s)**
+Generated 2026-10-06 22:25 UTC · branch `claude/noshow-end-of-day` · HEAD `e9b14f0` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 26 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 20 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e9b14f0` | 2026-10-06 | Cancelling a flagged no-show takes its charge then; course fee charged first |
+| `806638a` | 2026-10-06 | No-show charges wait until the course's midnight (NS-EOD, G3) |
 | `bc65c9f` | 2026-10-06 | Receipt shows what actually reached the golfer's card (#88) |
 | `d19d5cb` | 2026-10-06 | Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86) |
-| `84793bc` | 2026-10-06 | Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button |
-| `82d59a7` | 2026-10-06 | Manage page: a kept no-show or already-charged fee is never called free |
-| `7049cb2` | 2026-10-06 | Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay |
 | `a075be8` | 2026-10-06 | Booking and course pages say what the policy really charges (#85) |
-| `371b324` | 2026-10-06 | Manage page says what cancelling costs right now (R-GOLF-008) |
-| `d3f8706` | 2026-10-06 | A hold not yet taken is charged when the golfer cancels late |
-| `447dc5b` | 2026-10-06 | Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00 |
 | `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
-| `919f59a` | 2026-10-06 | Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009) |
-| `2999ca5` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) |
 | `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
 | `c0c4cea` | 2026-10-06 | G13: signed-in golfers can use a booking's emailed manage link (#82) |
 | `3e3d9ec` | 2026-10-06 | Control Room: every session reports its own status (#81) |
@@ -41,16 +35,24 @@ Generated 2026-10-06 22:19 UTC · branch `claude/money-wording-manage` · HEAD `
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (13 file(s))
 
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  scripts/hold-late-cancel-test.ts`
+- `M  scripts/policy-wording-test.ts`
+- `M  src/app/api/manage/[bookingId]/route.ts`
+- `M  src/app/manage/[bookingId]/page.tsx`
+- `M  src/components/dashboard/money/CancellationsPanel.tsx`
+- `M  src/lib/cancel-booking.ts`
+- `M  src/lib/cancel-policy.ts`
+- `M  src/lib/course-closure.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -226,18 +228,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e9b14f0` 2026-10-06 — Cancelling a flagged no-show takes its charge then; course fee charged first
+- `806638a` 2026-10-06 — No-show charges wait until the course's midnight (NS-EOD, G3)
 - `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
 - `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
-- `84793bc` 2026-10-06 — Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button
-- `82d59a7` 2026-10-06 — Manage page: a kept no-show or already-charged fee is never called free
-- `7049cb2` 2026-10-06 — Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
-- `371b324` 2026-10-06 — Manage page says what cancelling costs right now (R-GOLF-008)
-- `d3f8706` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late
-- `447dc5b` 2026-10-06 — Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
-- `919f59a` 2026-10-06 — Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009)
-- `2999ca5` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)
+- `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
+- `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
+- `3e3d9ec` 2026-10-06 — Control Room: every session reports its own status (#81)
+- `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
+- `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
+- `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
 
 ---
 

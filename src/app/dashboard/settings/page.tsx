@@ -785,7 +785,7 @@ function SettingsPageInner() {
                 {formTerms.cardNeeded && <Toggle label="No-show fee" checked={!!form.noShowFee} onChange={() => set('noShowFee', form.noShowFee ? 0 : 20)}/>}
                 {formTerms.cardNeeded && !!form.noShowFee && (
                   <div className="grid sm:grid-cols-2 gap-3">
-                    <Field label="No-show fee ($)" hint="Charged when a group never shows. Under “cancel late or don’t show” this replaces the late fee for a no-show.">
+                    <Field label="No-show fee ($)" hint="Charged at midnight when a group marked a no-show never checked in. Under “cancel late or don’t show” this replaces the late fee for a no-show.">
                       <FInput value={form.noShowFee as number} onChange={v=>set('noShowFee',Number(v))} type="number" step="0.01"/>
                     </Field>
                     <Field label="Charged">
@@ -798,7 +798,7 @@ function SettingsPageInner() {
                 )}
                 <Toggle label="Mark no-shows automatically" checked={!!form.autoNoShowMinutes} onChange={() => set('autoNoShowMinutes', form.autoNoShowMinutes ? null : 30)}/>
                 {!!form.autoNoShowMinutes && (
-                  <Field label="Minutes after the tee time with nobody checked in" hint="Checked every hour. Staff can undo it with “Still coming”, which refunds what it charged.">
+                  <Field label="Minutes after the tee time with nobody checked in" hint="Checked every hour. It only flags the group — nothing is charged until midnight, and “Still coming” or a check-in before then clears it.">
                     <FInput value={form.autoNoShowMinutes as number} onChange={v=>set('autoNoShowMinutes',Number(v))} type="number"/>
                   </Field>
                 )}

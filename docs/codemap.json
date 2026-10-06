@@ -3262,7 +3262,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 222,
+      "lines": 236,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9762,7 +9762,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 266,
+      "lines": 272,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9801,7 +9801,7 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 218,
+      "lines": 221,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
@@ -10033,7 +10033,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 397,
+      "lines": 398,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10563,6 +10563,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/no-show-fee.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -12316,12 +12317,20 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 135,
+      "lines": 194,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
         {
+          "name": "chargeNoShow",
+          "kind": "fn"
+        },
+        {
           "name": "dueAutoNoShows",
+          "kind": "fn"
+        },
+        {
+          "name": "dueNoShowCharges",
           "kind": "fn"
         },
         {
@@ -12349,6 +12358,7 @@
       "imports": [
         "./access-fee",
         "./booking-events",
+        "./course-time",
         "./prisma",
         "./refund-booking",
         "./stripe",

@@ -205,6 +205,9 @@ export function describePolicy(p: CancelPolicy): { headline: string; lines: stri
   if (p.autoNoShowMinutes && chargesNoShow(p)) {
     lines.push(`A group not checked in ${p.autoNoShowMinutes} minutes after its tee time counts as a no-show.`);
   }
+  if (chargesNoShow(p)) {
+    lines.push('No-show charges are taken at the end of the day, so a late group checked in before then isn’t charged for a no-show.');
+  }
   if (card) {
     lines.push('Your card is saved at booking. Nothing else is charged until you play.');
   } else {
