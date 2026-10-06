@@ -6,6 +6,7 @@ import { sumExpensesForPeriodCents } from '@/lib/expenses';
 import { fetchStripeFeeWindow } from '@/lib/platform-stripe';
 import { friendlyStripeError } from '@/lib/stripe-errors';
 import { FAILED_CHARGE_WHERE, missedCheckInWhere, openDisputes } from '@/lib/money-problems';
+import { counterFeesUncollected } from '@/lib/access-fee';
 
 // REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker
 // (day / week / month-to-date / custom) drives the ENTIRE page. Support+ sees
@@ -170,6 +171,7 @@ export async function GET(req: NextRequest) {
       serviceFees: (agg?._sum.accessFeeTotal ?? 0) / 100,
       greenFeeVolume: ((agg?._sum.greenFeeTotal ?? 0) + (agg?._sum.cartFeeTotal ?? 0)) / 100,
       failedCharges: failedCountByCourse.get(c.id) ?? 0,
+      counterRounds: 0, counterFeesUncollected: 0,
     };
   });
 
@@ -184,6 +186,21 @@ export async function GET(req: NextRequest) {
     prisma.paymentEvent.aggregate({ where: { kind: 'fee_refunded', createdAt: inCurrent }, _sum: { amountCents: true } }),
   ]);
   const separateFeesCents = (sepCharged._sum.amountCents ?? 0) - (sepRefunded._sum.amountCents ?? 0);
+
+  // PAY-2 (Cam 2026-10-06: "if a customer pays cash they log it and it just
+  // goes to analytics and we are just going to have to eat it"): an online
+  // booking paid at the counter (cash or the course's own terminal) carries no
+  // GR fee unless a saved card let us charge it separately. Not a problem to
+  // chase — a cost to watch, per course. Counter/phone bookings never carry a
+  // fee (accessFeeTotal 0), so they are not counted.
+  const counter = await counterFeesUncollected(inCurrent);
+  const counterUncollectedByCourse = counter.byCourse;
+  const counterUncollectedCents = counter.cents;
+  const counterUncollectedRounds = counter.rounds;
+  for (const row of byCourse) {
+    const c = counterUncollectedByCourse.get(row.courseId);
+    if (c) { row.counterRounds = c.rounds; row.counterFeesUncollected = c.cents / 100; }
+  }
 
   // ---- Problems (ALL-TIME): money that should exist and does not ----
   const failedCheckIn = failedCheckIns.map(b => ({
@@ -232,6 +249,8 @@ export async function GET(req: NextRequest) {
       bookedPendingRounds: bookedPendingAgg._count.id,
       separateFees: separateFeesCents / 100,
       separateFeeCharges: sepCharged._count.id,
+      counterFeesUncollected: counterUncollectedCents / 100,
+      counterRoundsUncollected: counterUncollectedRounds,
     },
     byCourse,
     moneyInMotion: {
