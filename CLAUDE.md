@@ -84,7 +84,7 @@ and owns the final call. Agent models and effort are fixed in each
 | Lookups: "where is X", "who writes Y" | `scout` | Haiku · low |
 | Plan, design, anything ambiguous | overseer | session model |
 | Money, auth/sessions, tenant isolation, charging crons, schema | **overseer only** — never delegated | session model |
-| Mechanical edits from an exact plan: UI pages/components, copy, admin screens, new tests | `builder` (allow-list: no `src/lib`, `src/app/api`, payment pages, schema or config) | Sonnet · medium |
+| Mechanical edits from an exact plan: UI pages/components, copy, admin screens, new tests | `builder` — allow-list in `.claude/agents/builder.md`: no lib/api/schema/config, no UI that writes through the API or handles cards/tokens | Sonnet · medium |
 | Zero-behavior reskin items, in a worktree (only via `/gr-batch`) | `reskin-worker` | Opus |
 | Design-system / admin no-silent-failure audits | `design-auditor`, `admin-ux-auditor` | Sonnet |
 | Security / spec audits | `security-auditor`, `spec-conformance` | Opus |

@@ -6,7 +6,7 @@ whole design.
 ```
 CLAUDE.md            the facts        what is true about this codebase
 .claude/commands/    the rituals      main-thread work that writes and commits
-.claude/agents/      the judgments    read-only investigations, run in parallel
+.claude/agents/      the judgments    investigations and scoped builders, run in parallel
 ```
 
 ## The one rule
@@ -75,7 +75,7 @@ evaporated on inspection — a false positive costs more than a miss.
 timing, live-data, third-party — comes back as a named manual check, not a guess
 promoted to a verdict.
 
-## When to add a fifth agent
+## When to add another agent
 
 Only when the answer to all three is yes:
 
@@ -102,7 +102,7 @@ A fourth piece, sitting on top of the three above:
 
 ```
 .claude/commands/gr-batch.md   the dispatcher   plans, spawns, gates, merges — never builds features
-.claude/agents/reskin-worker.md the one builder  write-capable, worktree-isolated, allowed-list-scoped
+.claude/agents/reskin-worker.md the batch builder write-capable, worktree-isolated, allowed-list-scoped
 scripts/batch-plan.mjs          zero-token gate  file ownership: overlap + reserved-path check
 scripts/reskin-guard.mjs        zero-token gate  "zero behavior": added fetch/prisma/useState/... on a range
 .claude/hooks/parse-on-edit.js  zero-token gate  parse check after every Edit/Write, everywhere
@@ -143,9 +143,11 @@ four costs roughly four runs. The token savings in this layer come from elsewher
   thread (where Cam steers). `design-auditor` and `admin-ux-auditor` run on `sonnet` —
   their checks are mechanical (banned classes, swallowed catches). `security-auditor`,
   `spec-conformance` and `reskin-worker` run on `opus` — judgment work, but never the
-  main-thread model. No agent runs on `haiku`: the evidence rule (open the file, confirm,
-  false positives cost more than misses) is what a small model is worst at, and the
-  haiku-shaped jobs are already scripts
+  main-thread model. The only `haiku` agent is `scout`, and only
+  because it returns lookups (`path:line`, facts) with no verdicts — the evidence
+  rule (open the file, confirm, false positives cost more than misses) is what a
+  small model is worst at, so no judging agent runs on it. `final-reviewer` is
+  `opus`/high; `builder` is `sonnet`/medium behind an allow-list
 
 ### Worktree mechanics worth knowing
 
