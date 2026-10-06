@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-384 source files · 204 routes · 110 libraries · 35 models
+385 source files · 204 routes · 111 libraries · 35 models
 
 ## Single sources of truth
 
@@ -138,7 +138,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 73 |
 | `/api/calcom/webhook` | public | public | POST | `src/app/api/calcom/webhook/route.ts` | 219 |
 | `/api/call/[token]` | public | public | GET | `src/app/api/call/[token]/route.ts` | 80 |
-| `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 80 |
+| `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 84 |
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 44 |
 | `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 13 |
 | `/api/courses/[slug]/account` | golfer | file | GET | `src/app/api/courses/[slug]/account/route.ts` | 86 |
@@ -220,7 +220,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |
 | `/book` | public | public | page | `src/app/book/page.tsx` | 33 |
 | `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 141 |
-| `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 343 |
+| `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 362 |
 | `/contact` | public | public | page | `src/app/contact/page.tsx` | 41 |
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 45 |
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
@@ -358,6 +358,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/birdie/course-context.ts` | 1 | 72 | BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course. | `describeCourseContext`, `operatorCourseContext`, `OperatorCourseContext` |
 | `src/lib/birdie/knowledge-operator.ts` | 1 | 64 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |
 | `src/lib/birdie/proposals.ts` | 1 | 201 | BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES. | `isProposeTool`, `ProposalCard`, `ProposalOutcome`, `PROPOSE_TOOLS`, `runProposeTool` |
+| `src/lib/checkin-errors.ts` | 1 | 15 | R-GOLF-011: | `golferCheckInError` |
 | `src/lib/course-action-queue.ts` | 1 | 37 | COURSES_SHEET_SPEC CS-1 §4 — the Overview action queue's course rows for check-in calls. | `buildCourseCheckInRows`, `QueueCourse` |
 | `src/lib/course-feed.ts` | 1 | 64 | MP-5e part 3 — the course's relationship feed: | `buildRelationshipFeed`, `FeedItem`, `FeedKind` |
 | `src/lib/cron-windows.ts` | 1 | 26 | R-CRON-003 — when the hourly cron sends its time-based emails. | `checkInEmailDue`, `cutoffWarningDue` |

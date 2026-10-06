@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 384,
+    "files": 385,
     "routes": 204,
-    "libs": 110,
+    "libs": 111,
     "models": 35,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3043,7 +3043,7 @@
     },
     {
       "path": "src/app/api/checkin/[bookingId]/route.ts",
-      "lines": 80,
+      "lines": 84,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3066,6 +3066,7 @@
       "guard": "token",
       "imports": [
         "@/lib/checkin-booking",
+        "@/lib/checkin-errors",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "next/server"
@@ -5565,7 +5566,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 343,
+      "lines": 362,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10055,6 +10056,27 @@
         "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/checkin-errors.ts",
+      "lines": 15,
+      "purpose": "R-GOLF-011:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "golferCheckInError",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/checkin/[bookingId]/route.ts"
       ]
     },
     {
