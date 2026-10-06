@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 382,
+    "files": 383,
     "routes": 204,
-    "libs": 108,
+    "libs": 109,
     "models": 35,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -2890,7 +2890,7 @@
     },
     {
       "path": "src/app/api/bookings/cancel/route.ts",
-      "lines": 45,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2909,6 +2909,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/cancel-booking",
+        "@/lib/manage-access",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "next/server"
@@ -3688,7 +3689,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/available-times/route.ts",
-      "lines": 55,
+      "lines": 56,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3706,6 +3707,7 @@
       "guard": "file",
       "imports": [
         "@/lib/auth",
+        "@/lib/manage-access",
         "@/lib/money",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -3715,7 +3717,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/change-players/route.ts",
-      "lines": 100,
+      "lines": 101,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3733,6 +3735,7 @@
       "guard": "file",
       "imports": [
         "@/lib/auth",
+        "@/lib/manage-access",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/terms",
@@ -3761,6 +3764,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/cancel-policy",
+        "@/lib/manage-access",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/tee-time-utils",
@@ -3770,7 +3774,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
-      "lines": 47,
+      "lines": 48,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3789,6 +3793,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/email",
+        "@/lib/manage-access",
         "@/lib/prisma",
         "next/server"
       ],
@@ -3796,7 +3801,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/swap-time/route.ts",
-      "lines": 138,
+      "lines": 139,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3814,6 +3819,7 @@
       "guard": "file",
       "imports": [
         "@/lib/auth",
+        "@/lib/manage-access",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/terms",
@@ -12054,6 +12060,32 @@
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/orphan-sweep/route.ts",
         "src/app/api/admin/reconcile-lifecycle-pairs/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/manage-access.ts",
+      "lines": 17,
+      "purpose": "R-AUTH-003 / R-GOLF-003 (G13) — who may manage a booking from the golfer side.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "canManageBooking",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/bookings/cancel/route.ts",
+        "src/app/api/manage/[bookingId]/available-times/route.ts",
+        "src/app/api/manage/[bookingId]/change-players/route.ts",
+        "src/app/api/manage/[bookingId]/route.ts",
+        "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
+        "src/app/api/manage/[bookingId]/swap-time/route.ts"
       ]
     },
     {

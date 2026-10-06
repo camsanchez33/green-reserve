@@ -1,18 +1,32 @@
 {
-  "generatedAt": "2026-10-06T19:54:46.125Z",
+  "generatedAt": "2026-10-06T20:50:07.506Z",
   "repo": {
-    "head": "c105e0f",
-    "branch": "claude/eager-maxwell-qf1pd0",
+    "head": "f2f2f1d",
+    "branch": "claude/manage-link-auth",
     "dirtyCount": 2,
     "dirty": [
-      "M .claude/agents/final-reviewer.md",
-      " M CLAUDE.md"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "f2f2f1d",
+        "date": "2026-10-06T20:47:01+00:00",
+        "subject": "G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "51e2896",
+        "date": "2026-10-06T15:59:13-04:00",
+        "subject": "Final reviewer runs on Fable (#80)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "c105e0f",
         "date": "2026-10-06T15:53:08-04:00",
@@ -614,12 +628,6 @@
       "ageDays": 7
     },
     {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 0
-    },
-    {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
@@ -627,6 +635,12 @@
     },
     {
       "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-05",
+      "ageDays": 1
+    },
+    {
+      "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
       "ageDays": 1
@@ -785,6 +799,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f2f2f1d",
+      "date": "2026-10-06",
+      "subject": "G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)"
+    },
+    {
+      "h": "51e2896",
+      "date": "2026-10-06",
+      "subject": "Final reviewer runs on Fable (#80)"
+    },
+    {
       "h": "c105e0f",
       "date": "2026-10-06",
       "subject": "Overseer protocol: route work to the right model, review every diff before push (#79)"
@@ -833,16 +857,6 @@
       "h": "321902b",
       "date": "2026-10-05",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "ce494cc",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "475ff29",
-      "date": "2026-10-05",
-      "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
     }
   ]
 }

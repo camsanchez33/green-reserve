@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-06 19:54 UTC</span><span>claude/eager-maxwell-qf1pd0 @ c105e0f</span>
+    <span>2026-10-06 20:50 UTC</span><span>claude/manage-link-auth @ f2f2f1d</span>
     <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">10 runs have shipped that the queue doesn't know about</div>
+<div class="lede">12 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">f2f2f1d</span><span>G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)</span></li>
+<li><span class="h">51e2896</span><span>Final reviewer runs on Fable (#80)</span></li>
 <li><span class="h">c105e0f</span><span>Overseer protocol: route work to the right model, review every diff before push (#79)</span></li>
 <li><span class="h">187260b</span><span>PAY-3: Apple Pay / Google Pay to hold the card at booking</span></li>
 <li><span class="h">57c1b2f</span><span>PAY-2: count the booking fees eaten on rounds paid at the counter</span></li>
@@ -147,7 +149,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card">
 <h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M .claude/agents/final-reviewer.md</code></li><li><code>M CLAUDE.md</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -244,9 +246,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">2</td><td class="num">2026-10-01 &middot; 5d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">1</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 <tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">1</td><td class="num">2026-09-29 &middot; 7d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 0d</td></tr>
 <tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 1d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 1d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 1d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 <tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
@@ -274,6 +276,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">f2f2f1d</td><td class="num">2026-10-06</td><td>G13: a signed-in golfer can use a booking's emailed manage link (R-GOLF-003)</td></tr>
+<tr><td class="num">51e2896</td><td class="num">2026-10-06</td><td>Final reviewer runs on Fable (#80)</td></tr>
 <tr><td class="num">c105e0f</td><td class="num">2026-10-06</td><td>Overseer protocol: route work to the right model, review every diff before push (#79)</td></tr>
 <tr><td class="num">187260b</td><td class="num">2026-10-06</td><td>PAY-3: Apple Pay / Google Pay to hold the card at booking</td></tr>
 <tr><td class="num">57c1b2f</td><td class="num">2026-10-06</td><td>PAY-2: count the booking fees eaten on rounds paid at the counter</td></tr>
@@ -284,8 +288,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">4f1580c</td><td class="num">2026-10-05</td><td>&quot;Still coming&quot; sticks: auto no-show never re-marks a cleared booking (R-CRON-001)</td></tr>
 <tr><td class="num">69cc708</td><td class="num">2026-10-05</td><td>No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)</td></tr>
 <tr><td class="num">321902b</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
-<tr><td class="num">ce494cc</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
-<tr><td class="num">475ff29</td><td class="num">2026-10-05</td><td>DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
