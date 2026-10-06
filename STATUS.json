@@ -1,18 +1,25 @@
 {
-  "generatedAt": "2026-10-06T19:49:15.002Z",
+  "generatedAt": "2026-10-06T19:54:46.125Z",
   "repo": {
-    "head": "d60e32f",
-    "branch": "claude/overseer-routing",
+    "head": "c105e0f",
+    "branch": "claude/eager-maxwell-qf1pd0",
     "dirtyCount": 2,
     "dirty": [
-      "M .claude/README.md",
-      " M .claude/agents/builder.md"
+      "M .claude/agents/final-reviewer.md",
+      " M CLAUDE.md"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "c105e0f",
+        "date": "2026-10-06T15:53:08-04:00",
+        "subject": "Overseer protocol: route work to the right model, review every diff before push (#79)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "187260b",
         "date": "2026-10-06T02:44:25+00:00",
@@ -778,19 +785,9 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "d60e32f",
+      "h": "c105e0f",
       "date": "2026-10-06",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "a9b78a8",
-      "date": "2026-10-06",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "d9f5f9a",
-      "date": "2026-10-06",
-      "subject": "queue/spec update"
+      "subject": "Overseer protocol: route work to the right model, review every diff before push (#79)"
     },
     {
       "h": "187260b",
@@ -836,6 +833,16 @@
       "h": "321902b",
       "date": "2026-10-05",
       "subject": "queue/spec update"
+    },
+    {
+      "h": "ce494cc",
+      "date": "2026-10-05",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "475ff29",
+      "date": "2026-10-05",
+      "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
     }
   ]
 }
