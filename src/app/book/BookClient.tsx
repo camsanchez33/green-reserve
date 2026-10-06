@@ -13,7 +13,7 @@ import { Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
-import { describePolicy, policyFrom, type CancelPolicy } from '@/lib/cancel-policy';
+import { describePolicy, policyFrom, afterCutoffLine, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
 // No-fee courses never touch Stripe JS at all.
@@ -50,6 +50,8 @@ type ConfirmedData = {
   courseName: string; date: string; time: string; players: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
   cancellationFeeTotal: number; cancellationHours: number;
+  /** The booking's late-fee timing and whether its cutoff had already passed at booking. */
+  lateFeeTiming?: string | null; cutoffPassed?: boolean;
   noCard?: boolean;
   golferEmail: string;
 };
@@ -205,17 +207,21 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 when="Today"
                 what={<>Booked · <strong className="text-ink font-medium">charged today $0.00</strong></>}
               />
+              {/* Wording from cancel-policy.ts (afterCutoffLine / insideWindowLine), by the
+                  booking's own timing; booked past the cutoff, it says so (R-GOLF-009). */}
               <TimelineStep
                 accent={accent}
-                when={confirmedData.cancellationFeeTotal > 0 ? 'Free to cancel until' : 'Any time before your round'}
-                what={confirmedData.cancellationFeeTotal > 0
-                  ? <>
-                      {deadlineLabel(confirmedData.date, confirmedData.time, confirmedData.cancellationHours) || `${hoursLabel(confirmedData.cancellationHours)} before your tee time`}
-                      <span className="block text-ink text-xs mt-0.5">
-                        After that, a ${confirmedData.cancellationFeeTotal.toFixed(2)} late-cancellation fee is charged to your card on file.
-                      </span>
-                    </>
-                  : <>Cancel free of charge — this course has no late-cancellation fee.</>}
+                when={confirmedData.cancellationFeeTotal <= 0 ? 'Any time before your round' : confirmedData.cutoffPassed ? 'Cancellation' : 'Free to cancel until'}
+                what={confirmedData.cancellationFeeTotal <= 0
+                  ? <>Cancel free of charge — this course has no late-cancellation fee.</>
+                  : confirmedData.cutoffPassed
+                    ? <>{insideWindowLine(confirmedData.lateFeeTiming, policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}</>
+                    : <>
+                        {deadlineLabel(confirmedData.date, confirmedData.time, confirmedData.cancellationHours) || `${hoursLabel(confirmedData.cancellationHours)} before your tee time`}
+                        <span className="block text-ink text-xs mt-0.5">
+                          {afterCutoffLine(confirmedData.lateFeeTiming, policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}
+                        </span>
+                      </>}
               />
               <TimelineStep
                 last
@@ -487,6 +493,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
       accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
       cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
+      lateFeeTiming: data.lateFeeTiming ?? null, cutoffPassed: !!data.cutoffPassed,
       golferEmail: who.email,
       noCard: !needsCard,
     });
@@ -631,7 +638,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
           <CardElement options={cardStyle} />
         </div>
-        <TrustNote className="mt-1.5">Nothing is charged now — you pay at the course when you check in.</TrustNote>
+        <TrustNote className="mt-1.5">Nothing is charged now. The terms above say when your card can be.</TrustNote>
       </div>
       </>}
 
