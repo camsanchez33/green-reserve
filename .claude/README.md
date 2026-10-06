@@ -139,11 +139,9 @@ four costs roughly four runs. The token savings in this layer come from elsewher
 - `tsc` and the status board run once on the merged tree, not once per item
 - one `/gr-review` over the batch instead of four
 - workers are told to read §1 + their own block, not the queue or the whole spec
-- every agent pins its model explicitly; none inherits. Fable is reserved for the main
-  thread (where Cam steers). `design-auditor` and `admin-ux-auditor` run on `sonnet` —
+- every agent pins its model explicitly; none inherits. The main-thread (overseer) model is set in CLAUDE.md's **Overseer protocol**. `design-auditor` and `admin-ux-auditor` run on `sonnet` —
   their checks are mechanical (banned classes, swallowed catches). `security-auditor`,
-  `spec-conformance` and `reskin-worker` run on `opus` — judgment work, but never the
-  main-thread model. The only `haiku` agent is `scout`, and only
+  `spec-conformance` and `reskin-worker` run on `opus` — judgment work. The only `haiku` agent is `scout`, and only
   because it returns lookups (`path:line`, facts) with no verdicts — the evidence
   rule (open the file, confirm, false positives cost more than misses) is what a
   small model is worst at, so no judging agent runs on it. `final-reviewer` is

@@ -1,15 +1,12 @@
 {
-  "generatedAt": "2026-10-06T19:40:46.843Z",
+  "generatedAt": "2026-10-06T19:49:15.002Z",
   "repo": {
-    "head": "34599f2",
+    "head": "d60e32f",
     "branch": "claude/overseer-routing",
-    "dirtyCount": 5,
+    "dirtyCount": 2,
     "dirty": [
-      "M .claude/agents/security-auditor.md",
-      " M CLAUDE.md",
-      "?? .claude/agents/builder.md",
-      "?? .claude/agents/final-reviewer.md",
-      "?? .claude/agents/scout.md"
+      "M .claude/README.md",
+      " M .claude/agents/builder.md"
     ],
     "looksLikeRunInProgress": false
   },
@@ -781,6 +778,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d60e32f",
+      "date": "2026-10-06",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "a9b78a8",
+      "date": "2026-10-06",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "d9f5f9a",
+      "date": "2026-10-06",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "187260b",
       "date": "2026-10-06",
       "subject": "PAY-3: Apple Pay / Google Pay to hold the card at booking"
@@ -824,21 +836,6 @@
       "h": "321902b",
       "date": "2026-10-05",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "ce494cc",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "475ff29",
-      "date": "2026-10-05",
-      "subject": "DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)"
-    },
-    {
-      "h": "fa48d8f",
-      "date": "2026-10-05",
-      "subject": "CI: run the test scripts on every PR; fix three stale tests"
     }
   ]
 }

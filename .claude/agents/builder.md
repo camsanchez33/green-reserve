@@ -28,7 +28,8 @@ Everything else belongs to the overseer. In particular, never:
   route as cleared for you. Writes are where money, permissions, roles, 2FA,
   agreements, fees and policies change; a list of "dangerous" routes always misses
   one, so the default is no. Also excluded: any `.tsx` that imports `@stripe/*`, or
-  reads a `?token=` from the URL or checks a session itself. Grep before editing;
+  reads a `?token=` from the URL, checks a session itself, or queries the database
+  directly (imports `@/lib/prisma`). Grep before editing;
   when unsure, it is excluded.
 - named, because they match the rule today: `src/app/book/**`, `src/app/checkin/**`,
   `src/app/manage/**`, `src/app/membership/**`, `src/app/receipt/**`,

@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 19:40 UTC · branch `claude/overseer-routing` · HEAD `34599f2` · working tree **5 dirty file(s)**
+Generated 2026-10-06 19:49 UTC · branch `claude/overseer-routing` · HEAD `d60e32f` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -24,13 +24,10 @@ Generated 2026-10-06 19:40 UTC · branch `claude/overseer-routing` · HEAD `3459
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M .claude/agents/security-auditor.md`
-- `M CLAUDE.md`
-- `?? .claude/agents/builder.md`
-- `?? .claude/agents/final-reviewer.md`
-- `?? .claude/agents/scout.md`
+- `M .claude/README.md`
+- `M .claude/agents/builder.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -209,6 +206,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `d60e32f` 2026-10-06 — queue/spec update
+- `a9b78a8` 2026-10-06 — queue/spec update
+- `d9f5f9a` 2026-10-06 — queue/spec update
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
 - `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
 - `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
@@ -218,9 +218,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `4f1580c` 2026-10-05 — "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)
 - `69cc708` 2026-10-05 — No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)
 - `321902b` 2026-10-05 — queue/spec update
-- `ce494cc` 2026-10-05 — queue/spec update
-- `475ff29` 2026-10-05 — DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)
-- `fa48d8f` 2026-10-05 — CI: run the test scripts on every PR; fix three stale tests
 
 ---
 
