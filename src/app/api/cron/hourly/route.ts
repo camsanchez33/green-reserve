@@ -7,6 +7,7 @@ import { recordBookingEventSafe } from '@/lib/booking-events';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
 import { markNoShow, dueAutoNoShows } from '@/lib/no-show-fee';
+import { cutoffWarningDue, checkInEmailDue } from '@/lib/cron-windows';
 import {
   sendCancellationWarningEmail,
   sendCancellationFeeChargedEmail,
@@ -20,15 +21,16 @@ import { sendCallReminders } from '@/lib/call-invite';
  * Runs every hour (Vercel Pro). Handles all time-sensitive booking actions:
  *
  * 1. WARNING EMAIL  — fee courses: fires ~1 hour before the cancellation cutoff
- *    so the golfer can still cancel for free. Window: cutoff is 45–75 min out.
+ *    so the golfer can still cancel for free. Window: cutoff is 15–75 min out
+ *    (cutoffWarningDue — 60 wide so hourly runs never step over it).
  *
  * 2. CHARGE         — fee courses: charges the late-cancellation fee the moment
  *    the window closes. paymentStatus update acts as dedup so the daily
  *    cancellation-cutoff cron (safety net) won't double-charge.
  *
- * 3. CHECK-IN EMAIL — no-fee courses: fires ~3 hours before the tee time with
- *    the golfer's check-in link. Window: tee time is 165–195 min out.
- *    Sets paymentStatus = 'awaiting_checkin' as dedup.
+ * 3. CHECK-IN EMAIL — no-fee courses: fires once the tee time is within the
+ *    course's checkInWindowHours, with the golfer's check-in link
+ *    (checkInEmailDue). Sets paymentStatus = 'awaiting_checkin' as dedup.
  *
  * 4. AGREEMENT PDFS — AG-2: signed agreements whose courtesy PDF failed to
  *    render or store get another go (the row is the record either way).
@@ -67,7 +69,7 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
     const cutoffMs = teeMs - windowHours * 3600 * 1000;
     const minsToCutoff = (cutoffMs - now.getTime()) / 60000;
 
-    if (minsToCutoff >= 45 && minsToCutoff < 75) {
+    if (cutoffWarningDue(minsToCutoff)) {
       // ── Warning email (~1 hour before cutoff) ──
       try {
         await sendCancellationWarningEmail({
@@ -162,7 +164,7 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   for (const booking of noCardBookings) {
     const minsToTee = (teeToUtcMs(booking.teeTime.date, booking.teeTime.time, booking.course.timezone) - now.getTime()) / 60000;
     const windowMins = booking.course.checkInWindowHours * 60;
-    if (minsToTee < windowMins - 15 || minsToTee >= windowMins + 15) continue; // ±15 min around the window
+    if (!checkInEmailDue(minsToTee, windowMins)) continue;
 
     try {
       await prisma.booking.update({
