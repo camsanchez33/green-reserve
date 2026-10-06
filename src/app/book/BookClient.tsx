@@ -1,13 +1,14 @@
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 // SP-B: the /pure entry injects Stripe.js only when loadStripe() is called — the
 // main entry injects it on import, which loaded Stripe even on no-card courses.
 import { loadStripe } from '@stripe/stripe-js/pure';
 import type { Stripe } from '@stripe/stripe-js';
 import {
-  Elements, CardElement, useStripe, useElements,
+  Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements,
 } from '@stripe/react-stripe-js';
+import type { PaymentRequest } from '@stripe/stripe-js';
 import { Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
@@ -404,6 +405,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
                 accent={accent}
                 needsCard={terms.cardNeeded}
+                courseName={course.name}
                 onConfirmed={setConfirmedData}
               />
             </Elements>
@@ -426,7 +428,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   );
 }
 
-function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, needsCard, onConfirmed }: {
+function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, needsCard, courseName, onConfirmed }: {
   teeTimeId: string;
   players: number;
   golfer: GolferProfile | null;
@@ -435,6 +437,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   accent: string;
   /** SP-B: false when the course's policy charges nothing — no card is asked for. */
   needsCard: boolean;
+  courseName: string;
   onConfirmed: (data: ConfirmedData) => void;
 }) {
   const stripe   = useStripe();
@@ -454,6 +457,110 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
     }
   }, [golfer]);
 
+  // The wallet sheet's handler is registered once, so it reads the latest
+  // form values from here.
+  const latest = useRef({ name, email, phone });
+  latest.current = { name, email, phone };
+
+  /** Create the booking. setupIntentId when a card was saved for it. */
+  async function book(who: { name: string; email: string; phone: string }, setupIntentId?: string): Promise<boolean> {
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        teeTimeId,
+        players,
+        golferName: who.name,
+        golferEmail: who.email,
+        golferPhone: who.phone,
+        // SEC-1: only the SetupIntent — the server reads its customer and card from Stripe.
+        ...(setupIntentId ? { setupIntentId } : {}),
+        cartSelected,
+        rangeBallsSize,
+        termsAccepted: true,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); return false; }
+    onConfirmed({
+      courseName: data.courseName, date: data.date, time: data.time, players: data.players,
+      greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
+      accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
+      cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
+      golferEmail: who.email,
+      noCard: !needsCard,
+    });
+    return true;
+  }
+
+  /** A SetupIntent for this golfer (the card is held, nothing charged). */
+  async function newSetupIntent(who: { name: string; email: string }): Promise<string | null> {
+    const siRes = await fetch('/api/bookings/setup-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: who.email, name: who.name }),
+    });
+    const siData = await siRes.json();
+    if (!siRes.ok) { setError(siData.error || 'Could not prepare card setup.'); return null; }
+    return siData.clientSecret as string;
+  }
+
+  // PAY-3 (Cam 2026-10-06: "if the course takes the card then it should be
+  // able to take apple pay"): Apple Pay / Google Pay hold the card exactly as
+  // the card form does — a SetupIntent, $0 today. Stripe shows the button only
+  // where a wallet is set up. The wallet supplies name and email when the form
+  // has none yet.
+  const [walletRequest, setWalletRequest] = useState<PaymentRequest | null>(null);
+  useEffect(() => {
+    if (!needsCard || !stripe) return;
+    const req = stripe.paymentRequest({
+      country: 'US',
+      currency: 'usd',
+      total: { label: `${courseName || 'Tee time'} · card held, nothing charged today`, amount: 0, pending: true },
+      requestPayerName: true,
+      requestPayerEmail: true,
+    });
+    let live = true;
+    req.canMakePayment().then(r => { if (live && r) setWalletRequest(req); }).catch(() => {});
+    req.on('paymentmethod', async (ev) => {
+      setError('');
+      const f = latest.current;
+      const who = {
+        name: f.name.trim() || ev.payerName || '',
+        email: f.email.trim() || ev.payerEmail || '',
+        phone: f.phone,
+      };
+      if (!who.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(who.email)) {
+        ev.complete('fail');
+        setError('Please enter your name and email, then try Apple Pay again.');
+        return;
+      }
+      if (!f.name.trim()) setName(who.name);
+      if (!f.email.trim()) setEmail(who.email);
+      setLoading(true);
+      try {
+        const clientSecret = await newSetupIntent(who);
+        if (!clientSecret) { ev.complete('fail'); setLoading(false); return; }
+        const first = await stripe.confirmCardSetup(clientSecret, { payment_method: ev.paymentMethod.id }, { handleActions: false });
+        if (first.error || !first.setupIntent) { ev.complete('fail'); setError(first.error?.message || 'Your card could not be saved.'); setLoading(false); return; }
+        ev.complete('success');
+        let si = first.setupIntent;
+        if (si.status === 'requires_action') {
+          const again = await stripe.confirmCardSetup(clientSecret);
+          if (again.error || !again.setupIntent) { setError(again.error?.message || 'Your bank did not approve the card.'); setLoading(false); return; }
+          si = again.setupIntent;
+        }
+        if (!(await book(who, si.id))) setLoading(false);
+      } catch {
+        setError('Something went wrong. Please try again.');
+        setLoading(false);
+      }
+    });
+    return () => { live = false; };
+    // Registered once per Stripe instance; form values are read from `latest`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stripe, needsCard]);
+
   async function handleSubmit() {
     setError('');
     if (!name.trim() || !email.trim()) { setError('Please enter your name and email.'); return; }
@@ -466,15 +573,10 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       if (!stripe || !elements) { setError('Payment form is still loading — try again in a moment.'); setLoading(false); return; }
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) { setError('Card details are required.'); setLoading(false); return; }
-      const siRes = await fetch('/api/bookings/setup-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name }),
-      });
-      const siData = await siRes.json();
-      if (!siRes.ok) { setError(siData.error || 'Could not prepare card setup.'); setLoading(false); return; }
+      const clientSecret = await newSetupIntent({ name, email });
+      if (!clientSecret) { setLoading(false); return; }
 
-      const { error: setupError, setupIntent } = await stripe.confirmCardSetup(siData.clientSecret, {
+      const { error: setupError, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
         payment_method: { card: cardElement, billing_details: { name, email } },
       });
       if (setupError) { setError(setupError.message || 'Your card could not be saved.'); setLoading(false); return; }
@@ -486,33 +588,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       setupIntentId = setupIntent.id;
       }
 
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teeTimeId,
-          players,
-          golferName: name,
-          golferEmail: email,
-          golferPhone: phone,
-          // SEC-1: only the SetupIntent — the server reads its customer and card from Stripe.
-          ...(setupIntentId ? { setupIntentId } : {}),
-          cartSelected,
-          rangeBallsSize,
-          termsAccepted: true,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Something went wrong. Please try again.'); setLoading(false); return; }
-
-      onConfirmed({
-        courseName: data.courseName, date: data.date, time: data.time, players: data.players,
-        greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, rangeBallsTotal: data.rangeBallsTotal,
-        accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount,
-        cancellationFeeTotal: data.cancellationFeeTotal, cancellationHours: data.cancellationHours ?? 24,
-        golferEmail: email,
-        noCard: !needsCard,
-      });
+      if (!(await book({ name, email, phone }, setupIntentId))) setLoading(false);
     } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);
@@ -542,6 +618,14 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       {needsCard && <>
       <div className="pt-1 border-t border-line-soft" />
       <StepHeading title="A card to hold your spot" note="Nothing is charged today." />
+      {walletRequest && (
+        <>
+          <PaymentRequestButtonElement options={{ paymentRequest: walletRequest, style: { paymentRequestButton: { type: 'book', theme: 'dark', height: '48px' } } }} />
+          <div className="flex items-center gap-3 text-xs text-ink-muted">
+            <span className="h-px flex-1 bg-line" />or enter a card<span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
       <div>
         <label className={lCls}>Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
