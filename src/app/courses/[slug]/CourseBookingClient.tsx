@@ -1,5 +1,6 @@
 'use client';
-import { describePolicy, policyFrom, type CancelPolicy } from '@/lib/cancel-policy';
+import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
+import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -115,6 +116,8 @@ function buildMonthGrid(month: Date): (Date | null)[] {
 }
 
 type CourseWithBrand = Course & {
+  /** The course's IANA timezone, for "is this slot already past the cutoff" (R-GOLF-009). */
+  timezone?: string | null;
   // B-1: the trust line reads the course's own policy. normalize-course.ts has
   // always sent these; the type just never named them.
   cancellation_hours?: number;
@@ -670,7 +673,13 @@ export default function CourseDetailPage({
   const cancelHours = course.cancellation_hours ?? 24;
   const hasLateFee = (course.late_cancellation_fee ?? 0) > 0;
   // SP-B: a card is asked for only when the policy can charge one.
-  const cardNeeded = describePolicy(course.cancel_policy ?? policyFrom({ cancellationHours: cancelHours, lateCancellationFeeCents: Math.round((course.late_cancellation_fee ?? 0) * 100) })).cardNeeded;
+  const coursePolicy = course.cancel_policy ?? policyFrom({ cancellationHours: cancelHours, lateCancellationFeeCents: Math.round((course.late_cancellation_fee ?? 0) * 100) });
+  const cardNeeded = describePolicy(coursePolicy).cardNeeded;
+  // The trust line's fee, worded as describePolicy words it ("$20", "$5 per player").
+  const lateFeeWords = `${policyMoney(coursePolicy.lateCancellationFeeCents)}${coursePolicy.lateFeeBasis === 'player' ? ' per player' : ''}`;
+  // R-GOLF-009: the picked slot's free-cancellation cutoff has already passed (course clock).
+  const slotPastCutoff = hasLateFee && !!selectedTime && !!course.timezone
+    && teeToUtcMs(selectedDate, selectedTime.time, course.timezone) - cancelHours * 3600_000 <= Date.now();
   const directionsUrl = course.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(course.address)}` : '';
 
   // Public look: a real photo when the course has one, otherwise a flat tint
@@ -1202,11 +1211,13 @@ export default function CourseDetailPage({
                     own policy — the same facts /book states after the golfer
                     has already committed. */}
                 <p className="mb-3 text-[13px] leading-relaxed text-ink-soft">
-                  <b className="text-ink font-semibold">Nothing charged today.</b>{' '}
+                  {!slotPastCutoff && <><b className="text-ink font-semibold">Nothing charged today.</b>{' '}</>}
                   {hasLateFee
-                    ? (selectedTime
-                        ? <>Cancel free until <b className="text-ink font-medium">{deadlineLabel(selectedDate, selectedTime.time, cancelHours)}</b> (course time).</>
-                        : <>Cancel free until {hoursLabel(cancelHours)} before your tee time.</>)
+                    ? (slotPastCutoff
+                        ? <>{insideWindowLine(coursePolicy.lateFeeTiming, lateFeeWords)}</>
+                        : selectedTime
+                        ? <>Cancel free until <b className="text-ink font-medium">{deadlineLabel(selectedDate, selectedTime.time, cancelHours)}</b> (course time), {afterCutoffShort(coursePolicy.lateFeeTiming, lateFeeWords)}.</>
+                        : <>Cancel free until {hoursLabel(cancelHours)} before your tee time, {afterCutoffShort(coursePolicy.lateFeeTiming, lateFeeWords)}.</>)
                     : cardNeeded ? <>Cancel any time — a card is saved for no-shows.</> : <>No card needed — cancel any time.</>}
                   {' '}${ACCESS_FEE_PER_PLAYER.toFixed(2)}/player booking fee.
                 </p>

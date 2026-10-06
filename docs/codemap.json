@@ -2918,7 +2918,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 406,
+      "lines": 412,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5443,7 +5443,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 670,
+      "lines": 679,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5643,7 +5643,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1755,
+      "lines": 1766,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5665,6 +5665,7 @@
         "@/lib/change-requests",
         "@/lib/courses-data",
         "@/lib/demo-courses",
+        "@/lib/tee-time-utils",
         "lucide-react",
         "next/image",
         "next/link",
@@ -9795,12 +9796,16 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 144,
+      "lines": 164,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
         {
           "name": "afterCutoffLine",
+          "kind": "fn"
+        },
+        {
+          "name": "afterCutoffShort",
           "kind": "fn"
         },
         {
@@ -9833,6 +9838,14 @@
         },
         {
           "name": "holdsAtCutoff",
+          "kind": "fn"
+        },
+        {
+          "name": "holdTodayLine",
+          "kind": "fn"
+        },
+        {
+          "name": "insideWindowLine",
           "kind": "fn"
         },
         {
@@ -12318,7 +12331,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 70,
+      "lines": 71,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13519,6 +13532,7 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/lib/analytics.ts",
         "src/lib/booking-events.ts",
         "src/lib/no-show-fee.ts"

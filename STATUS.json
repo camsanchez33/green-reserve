@@ -1,23 +1,46 @@
 {
-  "generatedAt": "2026-10-06T21:35:10.012Z",
+  "generatedAt": "2026-10-06T21:43:19.157Z",
   "repo": {
-    "head": "f5b2bb8",
-    "branch": "claude/money-wording-warning",
-    "dirtyCount": 7,
+    "head": "9f21a54",
+    "branch": "claude/money-wording-booking",
+    "dirtyCount": 2,
     "dirty": [
       "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/cron/hourly/route.ts",
-      " M src/lib/cancel-policy.ts",
-      " M src/lib/email.ts",
-      "?? scripts/policy-wording-test.ts"
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "447dc5b",
+        "date": "2026-10-06T21:42:50+00:00",
+        "subject": "Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "384b502",
+        "date": "2026-10-06T17:42:06-04:00",
+        "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "919f59a",
+        "date": "2026-10-06T21:37:51+00:00",
+        "subject": "Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2999ca5",
+        "date": "2026-10-06T21:35:11+00:00",
+        "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f5b2bb8",
         "date": "2026-10-06T17:04:15-04:00",
@@ -818,6 +841,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "447dc5b",
+      "date": "2026-10-06",
+      "subject": "Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00"
+    },
+    {
+      "h": "384b502",
+      "date": "2026-10-06",
+      "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)"
+    },
+    {
+      "h": "919f59a",
+      "date": "2026-10-06",
+      "subject": "Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009)"
+    },
+    {
+      "h": "2999ca5",
+      "date": "2026-10-06",
+      "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)"
+    },
+    {
       "h": "f5b2bb8",
       "date": "2026-10-06",
       "subject": "G8: hourly cron sends every pay link and cutoff warning (#83)"
@@ -856,26 +899,6 @@
       "h": "ebe8ab8",
       "date": "2026-10-06",
       "subject": "PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in"
-    },
-    {
-      "h": "066fa1b",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "c534f1e",
-      "date": "2026-10-05",
-      "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)"
-    },
-    {
-      "h": "2e6dec2",
-      "date": "2026-10-05",
-      "subject": "Golfer sign-in code can no longer be cracked offline (R-AUTH-001)"
-    },
-    {
-      "h": "4f1580c",
-      "date": "2026-10-05",
-      "subject": "\"Still coming\" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)"
     }
   ]
 }
