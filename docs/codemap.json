@@ -3746,7 +3746,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 81,
+      "lines": 84,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6486,7 +6486,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 560,
+      "lines": 558,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6504,6 +6504,7 @@
         "@/components/CourseHeaderBar",
         "@/components/GolferExitLinks",
         "@/components/ui/StatusDot",
+        "@/lib/cancel-policy",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -9796,7 +9797,7 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 164,
+      "lines": 210,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
@@ -9810,6 +9811,10 @@
         },
         {
           "name": "bookingWindowHours",
+          "kind": "fn"
+        },
+        {
+          "name": "cancelNowWords",
           "kind": "fn"
         },
         {
@@ -9895,6 +9900,7 @@
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/app/manage/[bookingId]/page.tsx",
         "src/lib/cancel-booking.ts",
         "src/lib/email.ts",
         "src/lib/normalize-course.ts"

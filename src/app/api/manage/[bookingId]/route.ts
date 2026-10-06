@@ -76,5 +76,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     status: booking.status,
     paymentStatus: booking.paymentStatus,
     windowOpen,
+    // R-GOLF-008: what the manage page needs to word a cancel truthfully.
+    lateFeeTiming: booking.lateFeeTimingAtBooking ?? null,
+    hasCard: !!booking.stripeCustomerId && !!booking.stripePaymentMethodId,
   });
 }

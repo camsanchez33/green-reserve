@@ -5,7 +5,7 @@
 // booked under say the same thing for each timing.
 // Pure. Run: npx tsx scripts/policy-wording-test.ts
 import { readFileSync } from 'fs';
-import { describePolicy, policyFrom, afterCutoffLine, policyMoney, insideWindowLine, afterCutoffShort } from '../src/lib/cancel-policy';
+import { describePolicy, policyFrom, afterCutoffLine, policyMoney, insideWindowLine, afterCutoffShort, cancelNowWords } from '../src/lib/cancel-policy';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: string) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail ? ' — ' + detail : ''}`); if (!ok) failed++; };
@@ -50,6 +50,26 @@ check('confirmation branches on cutoffPassed', /confirmedData\.cutoffPassed/.tes
 const coursePage = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('course trust line checks the slot against the cutoff', /slotPastCutoff/.test(coursePage) && /insideWindowLine\(/.test(coursePage));
 check('booking API returns cutoffPassed and the timing', /cutoffPassed,/.test(bookSrc) && /lateFeeTiming: +policy\.lateFeeTiming,/.test(bookSrc));
+
+// 5. Manage page (R-GOLF-008): the cancel sentences match what performCancellation charges.
+{
+  const base = { cancellationHours: 24, feeCents: 2000, bookingFeeCents: 600 };
+  const open = cancelNowWords({ ...base, windowOpen: true, timing: 'hold_at_cutoff', feeAlreadyCharged: false });
+  check('manage: before the cutoff it is free', /no charge/.test(open.confirm) && /Free cancellation until 24 hours/.test(open.banner));
+  const taken = cancelNowWords({ ...base, windowOpen: false, timing: 'hold_at_cutoff', feeAlreadyCharged: true });
+  check('manage: a taken hold is kept AND the booking fee is charged (no "won’t add another charge")', /kept, and the \$6 booking fee is charged/.test(taken.confirm), taken.confirm);
+  const untaken = cancelNowWords({ ...base, windowOpen: false, timing: 'hold_at_cutoff', feeAlreadyCharged: false });
+  check('manage: an untaken hold is charged on cancel, with the booking fee', untaken.confirm === 'Cancelling now charges the $20 hold plus the $6 booking fee to your card. None of it is refundable.', untaken.confirm);
+  const late = cancelNowWords({ ...base, windowOpen: false, timing: 'late_cancel', feeAlreadyCharged: false });
+  check('manage: late-cancel charges the fee now', /charges the \$20 fee plus the \$6 booking fee/.test(late.confirm));
+  const noCard = cancelNowWords({ ...base, bookingFeeCents: 0, windowOpen: false, timing: 'late_cancel', feeAlreadyCharged: false });
+  check('manage: no booking fee mentioned when none would be charged', !/booking fee/.test(noCard.confirm));
+  const free = cancelNowWords({ ...base, feeCents: 0, windowOpen: false, timing: null, feeAlreadyCharged: false });
+  check('manage: a no-fee course is free any time', /no late-cancellation fee/.test(free.banner));
+  const manageSrc = readFileSync('src/app/manage/[bookingId]/page.tsx', 'utf8');
+  check('manage page no longer says cancelling "won’t add another charge"', !/won't add another charge|won’t add another charge/.test(manageSrc));
+  check('manage page reads cancelNowWords', /cancelNowWords\(/.test(manageSrc));
+}
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

@@ -1,21 +1,16 @@
 {
-  "generatedAt": "2026-10-06T21:47:04.536Z",
+  "generatedAt": "2026-10-06T21:48:15.884Z",
   "repo": {
-    "head": "d3f8706",
+    "head": "c0d9254",
     "branch": "claude/money-wording-manage",
-    "dirtyCount": 11,
+    "dirtyCount": 6,
     "dirty": [
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "M  docs/CODEMAP.md",
-      "M  docs/codemap.json",
-      "M  scripts/policy-wording-test.ts",
-      "M  src/app/api/bookings/route.ts",
-      "M  src/app/book/BookClient.tsx",
-      "M  src/app/courses/[slug]/CourseBookingClient.tsx",
-      "M  src/lib/cancel-policy.ts",
-      "M  src/lib/normalize-course.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/policy-wording-test.ts",
+      " M src/app/api/manage/[bookingId]/route.ts",
+      " M src/app/manage/[bookingId]/page.tsx",
+      " M src/lib/cancel-policy.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -30,9 +25,30 @@
         "matches": []
       },
       {
+        "h": "447dc5b",
+        "date": "2026-10-06T21:42:50+00:00",
+        "subject": "Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "384b502",
         "date": "2026-10-06T17:42:06-04:00",
         "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "919f59a",
+        "date": "2026-10-06T21:37:51+00:00",
+        "subject": "Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2999ca5",
+        "date": "2026-10-06T21:35:11+00:00",
+        "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)",
         "ids": [],
         "matches": []
       },
@@ -841,9 +857,24 @@
       "subject": "A hold not yet taken is charged when the golfer cancels late"
     },
     {
+      "h": "447dc5b",
+      "date": "2026-10-06",
+      "subject": "Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00"
+    },
+    {
       "h": "384b502",
       "date": "2026-10-06",
       "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)"
+    },
+    {
+      "h": "919f59a",
+      "date": "2026-10-06",
+      "subject": "Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009)"
+    },
+    {
+      "h": "2999ca5",
+      "date": "2026-10-06",
+      "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)"
     },
     {
       "h": "f5b2bb8",
@@ -879,21 +910,6 @@
       "h": "57c1b2f",
       "date": "2026-10-06",
       "subject": "PAY-2: count the booking fees eaten on rounds paid at the counter"
-    },
-    {
-      "h": "ebe8ab8",
-      "date": "2026-10-06",
-      "subject": "PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in"
-    },
-    {
-      "h": "066fa1b",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "c534f1e",
-      "date": "2026-10-05",
-      "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)"
     }
   ]
 }

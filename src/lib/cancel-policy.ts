@@ -127,6 +127,52 @@ export function afterCutoffShort(timing: string | null | undefined, fee: string)
   return `then a ${fee} hold, refunded at check-in`;
 }
 
+/**
+ * R-GOLF-008: what cancelling a booking costs right now, for the manage page —
+ * the banner, the confirm step and the card subtitle, matching what
+ * performCancellation() charges: free before the cutoff; after it, the late
+ * fee or hold (kept if already taken, charged now if not), and GreenReserve's
+ * booking fee with it when a card is on file (SP-B).
+ */
+export function cancelNowWords(b: {
+  windowOpen: boolean;
+  cancellationHours: number;
+  feeCents: number;
+  timing: string | null | undefined;
+  feeAlreadyCharged: boolean;
+  /** The booking fee charged with a kept late fee — 0 when none would be (no card, none on the booking). */
+  bookingFeeCents: number;
+}): { banner: string; confirm: string; subtitle: string } {
+  if (b.feeCents <= 0) {
+    return { banner: 'Free cancellation any time — no late-cancellation fee.', confirm: 'Cancel for free — no charge to your card.', subtitle: 'Free to cancel any time — no late-cancellation fee.' };
+  }
+  const fee = money(b.feeCents);
+  if (b.windowOpen) {
+    return {
+      banner: `Free cancellation until ${hours(b.cancellationHours)} before your tee time. ${afterCutoffLine(b.timing, fee)}`,
+      confirm: 'Cancel for free — no charge to your card.',
+      subtitle: 'Free right now — nothing is charged to your card.',
+    };
+  }
+  const isHold = (b.timing ?? 'hold_at_cutoff') === 'hold_at_cutoff';
+  const what = isHold ? `${fee} hold` : `${fee} fee`;
+  const plus = b.bookingFeeCents > 0 ? ` plus the ${money(b.bookingFeeCents)} booking fee` : '';
+  if (b.feeAlreadyCharged) {
+    return {
+      banner: isHold
+        ? `The free-cancellation window has closed and the ${what} has been charged. It’s refunded when you check in, and kept if you cancel.`
+        : `The free-cancellation window has closed and the ${what} has been charged.`,
+      confirm: `The ${what} already charged is kept${plus ? `, and the ${money(b.bookingFeeCents)} booking fee is charged` : ''}. None of it is refundable.`,
+      subtitle: `The ${what} already charged is kept if you cancel.`,
+    };
+  }
+  return {
+    banner: insideWindowLine(b.timing, fee),
+    confirm: `Cancelling now charges the ${what}${plus} to your card. None of it is refundable.`,
+    subtitle: `Cancelling now charges the ${what}${plus}.`,
+  };
+}
+
 /** Cents as the golfer reads them: "$20", "$7.50". */
 export const policyMoney = money;
 

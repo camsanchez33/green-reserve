@@ -4,16 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 21:47 UTC · branch `claude/money-wording-manage` · HEAD `d3f8706` · working tree **11 dirty file(s)**
+Generated 2026-10-06 21:48 UTC · branch `claude/money-wording-manage` · HEAD `c0d9254` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 16 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 19 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
 | `d3f8706` | 2026-10-06 | A hold not yet taken is charged when the golfer cancels late |
+| `447dc5b` | 2026-10-06 | Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00 |
 | `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
+| `919f59a` | 2026-10-06 | Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009) |
+| `2999ca5` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) |
 | `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
 | `c0c4cea` | 2026-10-06 | G13: signed-in golfers can use a booking's emailed manage link (#82) |
 | `3e3d9ec` | 2026-10-06 | Control Room: every session reports its own status (#81) |
@@ -31,19 +34,14 @@ Generated 2026-10-06 21:47 UTC · branch `claude/money-wording-manage` · HEAD `
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (6 file(s))
 
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `M  docs/CODEMAP.md`
-- `M  docs/codemap.json`
-- `M  scripts/policy-wording-test.ts`
-- `M  src/app/api/bookings/route.ts`
-- `M  src/app/book/BookClient.tsx`
-- `M  src/app/courses/[slug]/CourseBookingClient.tsx`
-- `M  src/lib/cancel-policy.ts`
-- `M  src/lib/normalize-course.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/policy-wording-test.ts`
+- `M src/app/api/manage/[bookingId]/route.ts`
+- `M src/app/manage/[bookingId]/page.tsx`
+- `M src/lib/cancel-policy.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -223,7 +221,10 @@ This is the distinction a raw checkbox count gets wrong.
 ## Recent commits
 
 - `d3f8706` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late
+- `447dc5b` 2026-10-06 — Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
+- `919f59a` 2026-10-06 — Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009)
+- `2999ca5` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
 - `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
 - `3e3d9ec` 2026-10-06 — Control Room: every session reports its own status (#81)
@@ -231,9 +232,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
 - `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
-- `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
-- `066fa1b` 2026-10-05 — queue/spec update
-- `c534f1e` 2026-10-05 — Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)
 
 ---
 
