@@ -88,7 +88,7 @@ and owns the final call. Agent models and effort are fixed in each
 | Zero-behavior reskin items, in a worktree (only via `/gr-batch`) | `reskin-worker` | Opus |
 | Design-system / admin no-silent-failure audits | `design-auditor`, `admin-ux-auditor` | Sonnet |
 | Security / spec audits | `security-auditor`, `spec-conformance` | Opus |
-| **Every diff, before verification and push** | `final-reviewer` | Opus · high |
+| **Every diff, before verification and push** | `final-reviewer` | Fable · high (Cam 2026-10-06: the last gate reads only a diff, so the strongest model costs little here) |
 
 Rules:
 - **Don't delegate small work.** A sub-agent starts cold and re-reads what the
