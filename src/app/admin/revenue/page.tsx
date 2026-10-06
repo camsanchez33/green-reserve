@@ -23,6 +23,8 @@ interface CourseRow {
   // `collectedRounds` / `serviceFees` = rounds checked in and paid in it.
   // `failedCharges` is ALL-TIME, matching the problems list.
   booked: number; collectedRounds: number; serviceFees: number; greenFeeVolume: number; failedCharges: number;
+  // PAY-2: online bookings paid at the counter (cash / course terminal) — GR's fee not collected.
+  counterRounds: number; counterFeesUncollected: number;
 }
 interface FailedCharge {
   bookingId: string; courseId: string; courseName: string; golferName: string; golferEmail: string;
@@ -62,7 +64,7 @@ interface PlatformStripeData {
   reconciliation: { basis: string; expected: number; actual: number; delta: number; matches: boolean; message: string };
   period: string;
 }
-type SortKey = 'name' | 'booked' | 'collectedRounds' | 'serviceFees' | 'greenFeeVolume' | 'failedCharges';
+type SortKey = 'name' | 'booked' | 'collectedRounds' | 'serviceFees' | 'counterFeesUncollected' | 'greenFeeVolume' | 'failedCharges';
 
 interface RevenueData {
   period: { kind: PeriodKind; label: string; from: string; to: string };
@@ -74,6 +76,7 @@ interface RevenueData {
     feesCollected: number; collectedRounds: number; feesCollectedDelta: Delta;
     bookedPending: number; bookedPendingRounds: number;
     separateFees?: number; separateFeeCharges?: number;
+    counterFeesUncollected?: number; counterRoundsUncollected?: number;
     stripeProcessing?: number; stripeUnavailable?: boolean;
     expenses?: number; expensesDelta?: Delta;
     net?: number; netDeltaAbs?: number;
@@ -282,12 +285,12 @@ export default function RevenuePage() {
     // MP-6a: this exported whatever the table happened to be filtered to and
     // said nothing about it. The first line now states the period, the basis
     // and every filter in force, and a filtered file is named as one.
-    const header = ['Course', 'Status', 'Booked', 'Rounds collected', 'Fees collected', 'Green fee volume', 'Failed charges (all-time)', 'Stripe'];
+    const header = ['Course', 'Status', 'Booked', 'Rounds collected', 'Fees collected', 'Paid at counter (rounds)', 'Fees not collected (paid at counter)', 'Green fee volume', 'Failed charges (all-time)', 'Stripe'];
     const esc = (v: string) => /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
     const statusOf = (r: CourseRow) => r.archived ? 'Archived' : r.active ? 'Live' : 'Not live';
     const filters = [search ? `search "${search}"` : null, showArchived ? null : 'archived courses hidden'].filter(Boolean).join('; ');
     const note = `# GreenReserve fees by course · ${data.period.label} (${data.period.from} to ${data.period.to}) · collected basis (rounds checked in and paid)${filters ? ' · filters: ' + filters : ' · no filters'} · ${rows.length} of ${data.byCourse.length} courses`;
-    const lines = rows.map(r => [r.name, statusOf(r), String(r.booked), String(r.collectedRounds), r.serviceFees.toFixed(2), r.greenFeeVolume.toFixed(2), String(r.failedCharges), r.stripeActive ? 'Connected' : 'Not connected'].map(esc).join(','));
+    const lines = rows.map(r => [r.name, statusOf(r), String(r.booked), String(r.collectedRounds), r.serviceFees.toFixed(2), String(r.counterRounds), r.counterFeesUncollected.toFixed(2), r.greenFeeVolume.toFixed(2), String(r.failedCharges), r.stripeActive ? 'Connected' : 'Not connected'].map(esc).join(','));
     const csv = [note, header.join(','), ...lines].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -555,6 +558,13 @@ export default function RevenuePage() {
                       <span className="text-ink-muted"> from {fmtCount(pnl.separateFeeCharges ?? 0)} charge{pnl.separateFeeCharges === 1 ? '' : 's'}, net of refunds — counted in net below.</span>
                     </div>
                   )}
+                  {/* PAY-2 (Cam 2026-10-06): cash / course-terminal rounds — eaten on purpose, watched here. */}
+                  {(pnl.counterRoundsUncollected ?? 0) > 0 && (
+                    <div className="mt-1 text-xs text-ink-soft">
+                      Not collected, paid at the counter: <span className="font-medium text-ink tabular-nums">{fmtMoney(pnl.counterFeesUncollected ?? 0)}</span>
+                      <span className="text-ink-muted"> across {fmtCount(pnl.counterRoundsUncollected ?? 0)} online booking{pnl.counterRoundsUncollected === 1 ? '' : 's'} paid in cash or on the course&apos;s own terminal. By course in the table below.</span>
+                    </div>
+                  )}
                 </div>
                 {isOwner && (
                   <button onClick={openDrawer}
@@ -699,6 +709,7 @@ export default function RevenuePage() {
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="booked" label="Booked" right/></div></th>
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="collectedRounds" label="Checked in" right/></div></th>
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="serviceFees" label="Fees collected" right/></div></th>
+                        <th className="px-4 py-3 font-normal" title="Online bookings paid in cash or on the course's own terminal — GreenReserve's fee not collected"><div className="flex justify-end"><SortHead col="counterFeesUncollected" label="Paid at counter" right/></div></th>
                         <th className="px-4 py-3 font-normal"><div className="flex justify-end"><SortHead col="greenFeeVolume" label="Green fee vol." right/></div></th>
                         <th className="px-4 py-3 font-normal" title="All time — matches the problems list above, not the period"><div className="flex justify-end"><SortHead col="failedCharges" label="Failed · all time" right/></div></th>
                         <th className="text-center px-4 py-3 font-normal"><Eyebrow as="span">Stripe</Eyebrow></th>
@@ -718,6 +729,7 @@ export default function RevenuePage() {
                           <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtCount(r.booked)}</td>
                           <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtCount(r.collectedRounds)}</td>
                           <td className="px-4 py-3 text-right tabular-nums font-medium text-ink">{fmtMoney(r.serviceFees)}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{r.counterRounds > 0 ? <>{fmtMoney(r.counterFeesUncollected)} <span className="text-ink-muted">· {fmtCount(r.counterRounds)}</span></> : <span className="text-ink-faint">—</span>}</td>
                           <td className="px-4 py-3 text-right tabular-nums text-ink-soft">{fmtMoney(r.greenFeeVolume)}</td>
                           <td className="px-4 py-3 text-right tabular-nums">{r.failedCharges > 0 ? <span className="text-bad font-medium">{r.failedCharges}</span> : <span className="text-ink-faint">—</span>}</td>
                           <td className="px-4 py-3"><div className="flex justify-center"><StatusDot status={r.stripeActive ? 'ok' : 'warn'} label={r.stripeActive ? 'Connected' : 'Not connected'}/></div></td>

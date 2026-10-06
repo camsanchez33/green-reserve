@@ -943,7 +943,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 905,
+      "lines": 917,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2166,7 +2166,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 310,
+      "lines": 329,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2183,6 +2183,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/access-fee",
         "@/lib/admin-session",
         "@/lib/course-metrics",
         "@/lib/expenses",
@@ -8140,7 +8141,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 151,
+      "lines": 181,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -8152,6 +8153,10 @@
         },
         {
           "name": "chargeAccessFeeSeparately",
+          "kind": "fn"
+        },
+        {
+          "name": "counterFeesUncollected",
           "kind": "fn"
         },
         {
@@ -8180,6 +8185,7 @@
         "stripe"
       ],
       "usedBy": [
+        "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/cancel-booking.ts",

@@ -148,3 +148,33 @@ export async function refundSeparateAccessFee(bookingId: string, reason: string,
   await logFeeEvent(bookingId, 'fee_refunded', r.amount, r.id, actor, actorName, 'booking_fee_refunded');
   return { ok: true, refunded: true };
 }
+
+/**
+ * PAY-2 (Cam 2026-10-06: "if a customer pays cash they log it and it just goes
+ * to analytics and we are just going to have to eat it"). Online bookings paid
+ * at the counter (cash, or the course's own terminal) in the window whose
+ * GreenReserve fee was never collected. A fee charged separately to a saved
+ * card (and not refunded) counts as collected. Counter/phone bookings carry no
+ * fee (accessFeeTotal 0) and are never counted.
+ */
+export async function counterFeesUncollected(paidAt: { gte: Date; lt: Date }): Promise<{
+  cents: number; rounds: number; byCourse: Map<string, { rounds: number; cents: number }>;
+}> {
+  const rows = await prisma.booking.findMany({
+    where: { paymentStatus: 'paid_offline', accessFeeTotal: { gt: 0 }, paidAt },
+    select: { courseId: true, accessFeeTotal: true, paymentEvents: { where: { kind: { in: ['fee_charged', 'fee_refunded'] } }, select: { kind: true, amountCents: true } } },
+  });
+  const byCourse = new Map<string, { rounds: number; cents: number }>();
+  let cents = 0;
+  let rounds = 0;
+  for (const b of rows) {
+    const net = b.paymentEvents.reduce((n, e) => n + (e.kind === 'fee_charged' ? e.amountCents : -e.amountCents), 0);
+    if (net > 0) continue;
+    cents += b.accessFeeTotal;
+    rounds += 1;
+    const c = byCourse.get(b.courseId) ?? { rounds: 0, cents: 0 };
+    c.rounds += 1; c.cents += b.accessFeeTotal;
+    byCourse.set(b.courseId, c);
+  }
+  return { cents, rounds, byCourse };
+}
