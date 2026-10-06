@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 22:18 UTC · branch `claude/noshow-end-of-day` · HEAD `bc65c9f` · working tree **9 dirty file(s)**
+Generated 2026-10-06 22:25 UTC · branch `claude/noshow-end-of-day` · HEAD `e9b14f0` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 18 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 20 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e9b14f0` | 2026-10-06 | Cancelling a flagged no-show takes its charge then; course fee charged first |
+| `806638a` | 2026-10-06 | No-show charges wait until the course's midnight (NS-EOD, G3) |
 | `bc65c9f` | 2026-10-06 | Receipt shows what actually reached the golfer's card (#88) |
 | `d19d5cb` | 2026-10-06 | Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86) |
 | `a075be8` | 2026-10-06 | Booking and course pages say what the policy really charges (#85) |
@@ -33,17 +35,21 @@ Generated 2026-10-06 22:18 UTC · branch `claude/noshow-end-of-day` · HEAD `bc6
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (13 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/api/cron/hourly/route.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/lib/cancel-policy.ts`
-- `M src/lib/checkin-booking.ts`
-- `M src/lib/no-show-fee.ts`
-- `?? scripts/noshow-eod-test.ts`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  scripts/hold-late-cancel-test.ts`
+- `M  scripts/policy-wording-test.ts`
+- `M  src/app/api/manage/[bookingId]/route.ts`
+- `M  src/app/manage/[bookingId]/page.tsx`
+- `M  src/components/dashboard/money/CancellationsPanel.tsx`
+- `M  src/lib/cancel-booking.ts`
+- `M  src/lib/cancel-policy.ts`
+- `M  src/lib/course-closure.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -222,6 +228,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e9b14f0` 2026-10-06 — Cancelling a flagged no-show takes its charge then; course fee charged first
+- `806638a` 2026-10-06 — No-show charges wait until the course's midnight (NS-EOD, G3)
 - `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
 - `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
@@ -232,8 +240,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
 - `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
-- `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
-- `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
 
 ---
 

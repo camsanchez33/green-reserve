@@ -3747,7 +3747,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 81,
+      "lines": 87,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3767,6 +3767,7 @@
         "@/lib/auth",
         "@/lib/cancel-policy",
         "@/lib/manage-access",
+        "@/lib/no-show-fee",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/tee-time-utils",
@@ -4218,7 +4219,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 310,
+      "lines": 311,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6506,6 +6507,7 @@
         "@/components/CourseHeaderBar",
         "@/components/GolferExitLinks",
         "@/components/ui/StatusDot",
+        "@/lib/cancel-policy",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -7617,7 +7619,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 179,
+      "lines": 181,
       "purpose": "SD-8 — the Cancellations half of the Money page.",
       "brain": [],
       "exports": [
@@ -9760,7 +9762,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 255,
+      "lines": 272,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9799,7 +9801,7 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 167,
+      "lines": 221,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
@@ -9813,6 +9815,10 @@
         },
         {
           "name": "bookingWindowHours",
+          "kind": "fn"
+        },
+        {
+          "name": "cancelNowWords",
           "kind": "fn"
         },
         {
@@ -9898,6 +9904,7 @@
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/app/manage/[bookingId]/page.tsx",
         "src/lib/cancel-booking.ts",
         "src/lib/email.ts",
         "src/lib/normalize-course.ts",
@@ -10290,7 +10297,7 @@
     },
     {
       "path": "src/lib/course-closure.ts",
-      "lines": 125,
+      "lines": 128,
       "purpose": "MP-5b.",
       "brain": [],
       "exports": [
@@ -12310,7 +12317,7 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 182,
+      "lines": 194,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
@@ -12360,6 +12367,7 @@
       ],
       "usedBy": [
         "src/app/api/cron/hourly/route.ts",
+        "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/receipt-charges.ts"

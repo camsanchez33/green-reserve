@@ -6,6 +6,7 @@ import { XCircle, Loader2, Clock, Users, ArrowLeft } from 'lucide-react';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { cancelNowWords } from '@/lib/cancel-policy';
 
 type BookingInfo = {
   bookingId: string;
@@ -31,6 +32,9 @@ type BookingInfo = {
   status: string;
   paymentStatus: string;
   windowOpen: boolean;
+  lateFeeTiming?: string | null;
+  hasCard?: boolean;
+  noShowKept?: boolean;
 };
 
 type AvailableSlot = {
@@ -299,24 +303,20 @@ function ManagePageInner() {
   const alreadyCompleted = info.status === 'completed';
   const canModify = !alreadyCancelled && !alreadyCompleted && info.windowOpen;
 
-  const policyText = info.cancellationFeeTotal > 0
-    ? info.windowOpen
-      ? `Free to cancel until ${info.cancellationHours}h before your tee time. A ${dollars(info.cancellationFeeTotal)} fee applies after that.`
-      : `The free-cancellation window has closed. A ${dollars(info.cancellationFeeTotal)} fee has been or will be charged.`
-    : 'Free cancellation any time — no late-cancellation fee.';
-
-  const confirmCancelMsg = info.windowOpen
-    ? `Cancel for free — no charge to your card.`
-    : info.cancellationFeeCharged
-      ? `A ${dollars(info.cancellationFeeTotal)} fee was already charged. Cancelling now won't add another charge, but the fee is non-refundable.`
-      : `The free-cancel window has closed. Cancelling will charge ${dollars(info.cancellationFeeTotal)} to your card.`;
-
-  // Same policy facts as the banner above, shrunk to one line for the card.
-  const cancelSubtitle = info.cancellationFeeTotal === 0
-    ? 'Free to cancel any time — no late-cancellation fee.'
-    : info.windowOpen
-      ? 'Free right now — nothing is charged to your card.'
-      : `A ${dollars(info.cancellationFeeTotal)} late-cancellation fee applies.`;
+  // R-GOLF-008: every cancel sentence comes from cancel-policy.ts and matches
+  // what performCancellation() charges (amounts are cents).
+  const cancelWords = cancelNowWords({
+    windowOpen: info.windowOpen,
+    cancellationHours: info.cancellationHours,
+    feeCents: info.cancellationFeeTotal,
+    timing: info.lateFeeTiming,
+    feeAlreadyCharged: info.cancellationFeeCharged,
+    bookingFeeCents: info.hasCard && info.accessFeeTotal >= 50 ? info.accessFeeTotal : 0,
+    noShowKept: !!info.noShowKept,
+  });
+  const policyText = cancelWords.banner;
+  const confirmCancelMsg = cancelWords.confirm;
+  const cancelSubtitle = cancelWords.subtitle;
 
   // ── Change time: slot picker ──────────────────────────────────────────────
   if (view === 'change-time') {

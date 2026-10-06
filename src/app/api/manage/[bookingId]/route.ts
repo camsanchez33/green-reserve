@@ -5,6 +5,7 @@ import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
 import { bookingWindowHours } from '@/lib/cancel-policy';
+import { liveNoShowCharge } from '@/lib/no-show-fee';
 
 const TOKEN_GRACE_MS = 24 * 60 * 60 * 1000; // 24h after tee time
 
@@ -76,5 +77,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     status: booking.status,
     paymentStatus: booking.paymentStatus,
     windowOpen,
+    // R-GOLF-008: what the manage page needs to word a cancel truthfully.
+    lateFeeTiming: booking.lateFeeTimingAtBooking ?? null,
+    hasCard: !!booking.stripeCustomerId && !!booking.stripePaymentMethodId,
+    // A live no-show charge is kept by any cancel — the page must not call cancelling free.
+    noShowKept: !!booking.noShowAt && !!(await liveNoShowCharge(booking.id)),
   });
 }

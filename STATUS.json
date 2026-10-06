@@ -1,25 +1,43 @@
 {
-  "generatedAt": "2026-10-06T22:18:35.992Z",
+  "generatedAt": "2026-10-06T22:25:40.100Z",
   "repo": {
-    "head": "bc65c9f",
+    "head": "e9b14f0",
     "branch": "claude/noshow-end-of-day",
-    "dirtyCount": 9,
+    "dirtyCount": 13,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/cron/hourly/route.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/lib/cancel-policy.ts",
-      " M src/lib/checkin-booking.ts",
-      " M src/lib/no-show-fee.ts",
-      "?? scripts/noshow-eod-test.ts"
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  scripts/hold-late-cancel-test.ts",
+      "M  scripts/policy-wording-test.ts",
+      "M  src/app/api/manage/[bookingId]/route.ts",
+      "M  src/app/manage/[bookingId]/page.tsx",
+      "M  src/components/dashboard/money/CancellationsPanel.tsx",
+      "M  src/lib/cancel-booking.ts",
+      "M  src/lib/cancel-policy.ts",
+      "M  src/lib/course-closure.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "e9b14f0",
+        "date": "2026-10-06T22:25:32+00:00",
+        "subject": "Cancelling a flagged no-show takes its charge then; course fee charged first",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "806638a",
+        "date": "2026-10-06T22:18:37+00:00",
+        "subject": "No-show charges wait until the course's midnight (NS-EOD, G3)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "bc65c9f",
         "date": "2026-10-06T18:06:40-04:00",
@@ -848,6 +866,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e9b14f0",
+      "date": "2026-10-06",
+      "subject": "Cancelling a flagged no-show takes its charge then; course fee charged first"
+    },
+    {
+      "h": "806638a",
+      "date": "2026-10-06",
+      "subject": "No-show charges wait until the course's midnight (NS-EOD, G3)"
+    },
+    {
       "h": "bc65c9f",
       "date": "2026-10-06",
       "subject": "Receipt shows what actually reached the golfer's card (#88)"
@@ -896,16 +924,6 @@
       "h": "187260b",
       "date": "2026-10-06",
       "subject": "PAY-3: Apple Pay / Google Pay to hold the card at booking"
-    },
-    {
-      "h": "57c1b2f",
-      "date": "2026-10-06",
-      "subject": "PAY-2: count the booking fees eaten on rounds paid at the counter"
-    },
-    {
-      "h": "ebe8ab8",
-      "date": "2026-10-06",
-      "subject": "PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in"
     }
   ]
 }
