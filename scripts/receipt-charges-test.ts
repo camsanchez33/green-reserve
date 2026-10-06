@@ -114,6 +114,15 @@ async function main() {
     check('a booking fee refunded from the Stripe dashboard shows refunded', c.some(x => x.label === 'Booking fee' && x.refunded), JSON.stringify(c));
   }
 
+  {
+    // The webhook echoes a refund the product issued (hold refunded at check-in): counted once.
+    const b = await seed({ lateFeeTimingAtBooking: 'hold_at_cutoff', status: 'completed', paymentStatus: 'paid', roundPaymentIntentId: 'pi_round', cancellationFeeChargeId: 'pi_hold' });
+    await prisma.bookingEvent.create({ data: { bookingId: b.id, courseId: b.courseId, type: 'fee_refunded', actorType: 'system', amountCents: 2000, stripeId: 're_hold_echo', metadata: { reason: 'hold_refunded_at_checkin' } } });
+    await prisma.paymentEvent.create({ data: { bookingId: b.id, kind: 'refund', amountCents: 2000, stripeId: 're_hold_echo', detail: 'Refund recorded from Stripe' } });
+    const c = await receiptCharges(b.id);
+    check('a webhook echo of the check-in hold refund is not subtracted twice', chargedNowCents(c) === 10300 && !c.some(x => x.label === 'Refunded to your card'), JSON.stringify(c));
+  }
+
   await cleanup();
   console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
   await prisma.$disconnect();

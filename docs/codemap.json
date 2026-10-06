@@ -6701,7 +6701,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 235,
+      "lines": 236,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12897,7 +12897,7 @@
     },
     {
       "path": "src/lib/receipt-charges.ts",
-      "lines": 89,
+      "lines": 93,
       "purpose": "R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt.",
       "brain": [],
       "exports": [

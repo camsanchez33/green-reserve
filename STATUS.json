@@ -1,14 +1,13 @@
 {
-  "generatedAt": "2026-10-06T21:57:13.890Z",
+  "generatedAt": "2026-10-06T22:00:53.801Z",
   "repo": {
-    "head": "4353bdb",
+    "head": "4a81f80",
     "branch": "claude/receipt-charges",
-    "dirtyCount": 6,
+    "dirtyCount": 5,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/receipt-charges-test.ts",
-      " M src/app/api/receipt/[bookingId]/route.ts",
       " M src/app/receipt/[bookingId]/page.tsx",
       " M src/lib/receipt-charges.ts"
     ],
@@ -17,6 +16,13 @@
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "4a81f80",
+        "date": "2026-10-06T21:57:14+00:00",
+        "subject": "Receipt: refunds netted, kept hold called a fee, cash total relabelled",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "4353bdb",
         "date": "2026-10-06T21:51:39+00:00",
@@ -838,6 +844,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4a81f80",
+      "date": "2026-10-06",
+      "subject": "Receipt: refunds netted, kept hold called a fee, cash total relabelled"
+    },
+    {
       "h": "4353bdb",
       "date": "2026-10-06",
       "subject": "Receipt shows what actually reached the golfer's card (R-GOLF-010)"
@@ -891,11 +902,6 @@
       "h": "ebe8ab8",
       "date": "2026-10-06",
       "subject": "PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in"
-    },
-    {
-      "h": "066fa1b",
-      "date": "2026-10-05",
-      "subject": "queue/spec update"
     }
   ]
 }

@@ -22,7 +22,7 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
   if (!b) return [];
   const refundEvents = await prisma.bookingEvent.findMany({
     where: { bookingId, type: 'fee_refunded' },
-    select: { amountCents: true, metadata: true },
+    select: { amountCents: true, metadata: true, stripeId: true },
   });
   const refundedFor = (reasons: string[]) => refundEvents.find(e => reasons.includes(String((e.metadata as { reason?: string } | null)?.reason ?? '')));
 
@@ -76,8 +76,12 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
   // Refunds recorded against the round or the hold (admin refunds, the Stripe
   // dashboard via the webhook). They don't say which charge they belong to, so
   // they are one row the card total nets out.
-  const refunds = await prisma.paymentEvent.aggregate({ where: { bookingId, kind: 'refund' }, _sum: { amountCents: true } });
-  const refundedCents = refunds._sum.amountCents ?? 0;
+  // The webhook also ledgers refunds the product issued itself (hold at check-in,
+  // waived fee, round refunded on cancel) — those are already shown as refunded
+  // rows above, so a 'refund' with the same Stripe refund id is skipped.
+  const shown = new Set(refundEvents.map(e => e.stripeId).filter(Boolean));
+  const refunds = await prisma.paymentEvent.findMany({ where: { bookingId, kind: 'refund' }, select: { amountCents: true, stripeId: true } });
+  const refundedCents = refunds.filter(r => !shown.has(r.stripeId)).reduce((t, r) => t + r.amountCents, 0);
   if (refundedCents > 0) out.push({ label: 'Refunded to your card', amountCents: -refundedCents, refunded: false });
 
   return out;

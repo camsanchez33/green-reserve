@@ -252,7 +252,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/operator-agreement` | public | public | page | `src/app/operator-agreement/page.tsx` | 82 |
 | `/preview/[courseId]` | public | token | page | `src/app/preview/[courseId]/page.tsx` | 58 |
 | `/privacy` | public | public | page | `src/app/privacy/page.tsx` | 249 |
-| `/receipt/[bookingId]` | golfer | token | page | `src/app/receipt/[bookingId]/page.tsx` | 235 |
+| `/receipt/[bookingId]` | golfer | token | page | `src/app/receipt/[bookingId]/page.tsx` | 236 |
 | `/terms` | public | public | page | `src/app/terms/page.tsx` | 192 |
 
 ## Libraries
@@ -362,7 +362,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-feed.ts` | 1 | 64 | MP-5e part 3 — the course's relationship feed: | `buildRelationshipFeed`, `FeedItem`, `FeedKind` |
 | `src/lib/cron-windows.ts` | 1 | 26 | R-CRON-003 — when the hourly cron sends its time-based emails. | `checkInEmailDue`, `cutoffWarningDue` |
 | `src/lib/frost-delay.ts` | 1 | 107 | B-9 frost delay (Cam 2026-10-01: | `applyFrostDelay`, `FrostMove`, `FrostPlan`, `isFrostTime`, `planFrostDelay` |
-| `src/lib/receipt-charges.ts` | 1 | 89 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
+| `src/lib/receipt-charges.ts` | 1 | 93 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |
 | `src/lib/tier-wire.ts` | 1 | 43 |  | `tierToWire` |
 | `src/lib/use-resource.ts` | 1 | 40 | MP-11b (ADMIN_V4 V4-7 item 4). | `ResourceError`, `useResource` |

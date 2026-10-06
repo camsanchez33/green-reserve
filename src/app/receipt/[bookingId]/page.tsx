@@ -84,7 +84,8 @@ function ReceiptPageInner() {
   const charges = data.charges ?? [];
   const chargedNow = data.chargedNowCents ?? 0;
 
-  const refunded = !!data.roundRefunded;
+  // paymentStatus 'refunded' is also set when a cancelled booking's fee is waived — only a played round reads "Refunded".
+  const refunded = !!data.roundRefunded && !isCancelled;
   const statusLabel = refunded ? 'Refunded'
     : paidAtCourse ? 'Paid at the course'
     : isCompleted ? 'Paid at check-in'
