@@ -66,6 +66,11 @@ check('booking API returns cutoffPassed and the timing', /cutoffPassed,/.test(bo
   check('manage: no booking fee mentioned when none would be charged', !/booking fee/.test(noCard.confirm));
   const free = cancelNowWords({ ...base, feeCents: 0, windowOpen: false, timing: null, feeAlreadyCharged: false });
   check('manage: a no-fee course is free any time', /no late-cancellation fee/.test(free.banner));
+  const chargedButOpen = cancelNowWords({ ...base, windowOpen: true, timing: 'hold_at_cutoff', feeAlreadyCharged: true });
+  check('manage: a fee already charged is kept even if the window reads open', /already charged is kept/.test(chargedButOpen.confirm) && !/Cancel for free/.test(chargedButOpen.confirm), chargedButOpen.confirm);
+  const noShow = cancelNowWords({ ...base, feeCents: 0, windowOpen: false, timing: null, feeAlreadyCharged: false, noShowKept: true });
+  check('manage: a no-show’d booking is never told cancelling is free', /no-show fee already charged is kept/.test(noShow.confirm) && !/free/i.test(noShow.banner), noShow.banner);
+  check('manage GET reports a live no-show charge', /noShowKept: !!booking\.noShowAt && !!\(await liveNoShowCharge/.test(readFileSync('src/app/api/manage/[bookingId]/route.ts', 'utf8')));
   const manageSrc = readFileSync('src/app/manage/[bookingId]/page.tsx', 'utf8');
   check('manage page no longer says cancelling "won’t add another charge"', !/won't add another charge|won’t add another charge/.test(manageSrc));
   check('manage page reads cancelNowWords', /cancelNowWords\(/.test(manageSrc));

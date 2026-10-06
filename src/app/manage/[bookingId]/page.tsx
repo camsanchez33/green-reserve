@@ -34,6 +34,7 @@ type BookingInfo = {
   windowOpen: boolean;
   lateFeeTiming?: string | null;
   hasCard?: boolean;
+  noShowKept?: boolean;
 };
 
 type AvailableSlot = {
@@ -311,6 +312,7 @@ function ManagePageInner() {
     timing: info.lateFeeTiming,
     feeAlreadyCharged: info.cancellationFeeCharged,
     bookingFeeCents: info.hasCard && info.accessFeeTotal >= 50 ? info.accessFeeTotal : 0,
+    noShowKept: !!info.noShowKept,
   });
   const policyText = cancelWords.banner;
   const confirmCancelMsg = cancelWords.confirm;

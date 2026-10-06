@@ -1,25 +1,29 @@
 {
-  "generatedAt": "2026-10-06T21:54:37.357Z",
+  "generatedAt": "2026-10-06T21:55:27.537Z",
   "repo": {
-    "head": "371b324",
+    "head": "894a6c8",
     "branch": "claude/money-wording-manage",
-    "dirtyCount": 9,
+    "dirtyCount": 6,
     "dirty": [
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "M  docs/CODEMAP.md",
-      "M  docs/codemap.json",
-      "M  scripts/hold-late-cancel-test.ts",
-      "M  src/components/dashboard/money/CancellationsPanel.tsx",
-      "M  src/lib/cancel-booking.ts",
-      "M  src/lib/course-closure.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/policy-wording-test.ts",
+      " M src/app/api/manage/[bookingId]/route.ts",
+      " M src/app/manage/[bookingId]/page.tsx",
+      " M src/lib/cancel-policy.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "7049cb2",
+        "date": "2026-10-06T21:54:17+00:00",
+        "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "371b324",
         "date": "2026-10-06T21:48:16+00:00",
@@ -862,6 +866,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "7049cb2",
+      "date": "2026-10-06",
+      "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay"
+    },
+    {
       "h": "371b324",
       "date": "2026-10-06",
       "subject": "Manage page says what cancelling costs right now (R-GOLF-008)"
@@ -915,11 +924,6 @@
       "h": "c105e0f",
       "date": "2026-10-06",
       "subject": "Overseer protocol: route work to the right model, review every diff before push (#79)"
-    },
-    {
-      "h": "187260b",
-      "date": "2026-10-06",
-      "subject": "PAY-3: Apple Pay / Google Pay to hold the card at booking"
     }
   ]
 }

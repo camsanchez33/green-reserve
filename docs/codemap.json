@@ -3746,7 +3746,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 84,
+      "lines": 87,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3766,6 +3766,7 @@
         "@/lib/auth",
         "@/lib/cancel-policy",
         "@/lib/manage-access",
+        "@/lib/no-show-fee",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/tee-time-utils",
@@ -6486,7 +6487,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 558,
+      "lines": 560,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9797,7 +9798,7 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 210,
+      "lines": 218,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
@@ -12331,6 +12332,7 @@
       ],
       "usedBy": [
         "src/app/api/cron/hourly/route.ts",
+        "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/cancel-booking.ts"
       ]

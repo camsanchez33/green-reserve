@@ -142,28 +142,36 @@ export function cancelNowWords(b: {
   feeAlreadyCharged: boolean;
   /** The booking fee charged with a kept late fee — 0 when none would be (no card, none on the booking). */
   bookingFeeCents: number;
+  /** A no-show charge is live on this booking — cancelling keeps it and adds nothing. */
+  noShowKept?: boolean;
 }): { banner: string; confirm: string; subtitle: string } {
+  // A no-show fee already charged is kept whatever the clock or policy says (performCancellation).
+  if (b.noShowKept) {
+    const s = 'The no-show fee already charged is kept if you cancel. Cancelling adds nothing.';
+    return { banner: s, confirm: s, subtitle: s };
+  }
   if (b.feeCents <= 0) {
     return { banner: 'Free cancellation any time — no late-cancellation fee.', confirm: 'Cancel for free — no charge to your card.', subtitle: 'Free to cancel any time — no late-cancellation fee.' };
   }
   const fee = money(b.feeCents);
+  const isHold = (b.timing ?? 'hold_at_cutoff') === 'hold_at_cutoff';
+  const what = isHold ? `${fee} hold` : `${fee} fee`;
+  const plus = b.bookingFeeCents > 0 ? ` plus the ${money(b.bookingFeeCents)} booking fee` : '';
+  // A fee already charged is kept whatever the clock says (performCancellation keeps it).
+  if (b.feeAlreadyCharged) {
+    return {
+      banner: isHold
+        ? `The ${what} has been charged to your card. It’s refunded when you check in, and kept if you cancel.`
+        : `The ${what} has been charged to your card.`,
+      confirm: `The ${what} already charged is kept${plus ? `, and the ${money(b.bookingFeeCents)} booking fee is charged` : ''}. None of it is refundable.`,
+      subtitle: `The ${what} already charged is kept if you cancel.`,
+    };
+  }
   if (b.windowOpen) {
     return {
       banner: `Free cancellation until ${hours(b.cancellationHours)} before your tee time. ${afterCutoffLine(b.timing, fee)}`,
       confirm: 'Cancel for free — no charge to your card.',
       subtitle: 'Free right now — nothing is charged to your card.',
-    };
-  }
-  const isHold = (b.timing ?? 'hold_at_cutoff') === 'hold_at_cutoff';
-  const what = isHold ? `${fee} hold` : `${fee} fee`;
-  const plus = b.bookingFeeCents > 0 ? ` plus the ${money(b.bookingFeeCents)} booking fee` : '';
-  if (b.feeAlreadyCharged) {
-    return {
-      banner: isHold
-        ? `The free-cancellation window has closed and the ${what} has been charged. It’s refunded when you check in, and kept if you cancel.`
-        : `The free-cancellation window has closed and the ${what} has been charged.`,
-      confirm: `The ${what} already charged is kept${plus ? `, and the ${money(b.bookingFeeCents)} booking fee is charged` : ''}. None of it is refundable.`,
-      subtitle: `The ${what} already charged is kept if you cancel.`,
     };
   }
   return {
