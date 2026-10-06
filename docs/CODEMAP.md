@@ -133,7 +133,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/auth/reset-password` | public | entry | GET POST | `src/app/api/auth/reset-password/route.ts` | 81 |
 | `/api/auth/verify` | public | public | POST | `src/app/api/auth/verify/route.ts` | 36 |
 | `/api/birdie/chat` | operator | file | GET POST PUT | `src/app/api/birdie/chat/route.ts` | 246 |
-| `/api/bookings` | golfer | public for POST | GET POST | `src/app/api/bookings/route.ts` | 406 |
+| `/api/bookings` | golfer | public for POST | GET POST | `src/app/api/bookings/route.ts` | 412 |
 | `/api/bookings/cancel` | golfer | file | POST | `src/app/api/bookings/cancel/route.ts` | 44 |
 | `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 73 |
 | `/api/calcom/webhook` | public | public | POST | `src/app/api/calcom/webhook/route.ts` | 219 |
@@ -277,7 +277,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-call.ts` | 13 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
 | `src/lib/inquiry-status.ts` | 12 | 465 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +21 more |
 | `src/lib/admin-fetch.ts` | 11 | 150 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
-| `src/lib/cancel-policy.ts` | 10 | 144 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `bookingWindowHours`, `CancelPolicy`, `cardRequired`, `chargesNoShow`, `chargesOnLateCancel`, `describePolicy`, `FeeBasis` +9 more |
+| `src/lib/cancel-policy.ts` | 10 | 164 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `CancelPolicy`, `cardRequired`, `chargesNoShow`, `chargesOnLateCancel`, `describePolicy` +12 more |
 | `src/lib/staff-permissions.ts` | 10 | 129 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
 | `src/lib/booking-events.ts` | 9 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
 | `src/lib/dashboard-fetch.ts` | 9 | 43 | SD-10 (from the SD review). | `dfetch`, `DFetchResult` |
@@ -285,13 +285,13 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/agreements.ts` | 8 | 118 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +1 more |
 | `src/lib/course-metrics.ts` | 8 | 219 | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ GR-fees/period math defined ONCE. | `COMPLETED_BOOKING_STATUSES`, `computeCourseHealth`, `computeNetPnL`, `CourseHealth`, `CourseHealthInput`, `CourseHealthStatus`, `HEALTH_STATUS_DOT`, `HEALTH_STATUS_LABEL` +9 more |
 | `src/lib/private-blob.ts` | 8 | 33 | Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29). | `isBlobStoreUrl`, `PRIVATE_STORAGE_MISSING`, `privateBlobToken` |
+| `src/lib/tee-time-utils.ts` | 8 | 41 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
 | `src/lib/use-dashboard-access.ts` | 8 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/agreement-gate.ts` | 7 | 91 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement` |
 | `src/lib/course-checkin.ts` | 7 | 106 | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. | `CHECKIN_AGENDA`, `CHECKIN_DUE_WINDOW_DAYS`, `CHECKIN_EVERY_DAYS`, `CHECKIN_FIRST_DAYS`, `CheckinAgendaItem`, `CheckinCallLike`, `CheckinCourseLike`, `checkInSignal` +8 more |
 | `src/lib/cron-log.ts` | 7 | 136 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/member-session.ts` | 7 | 89 |  | `getGolferMembership`, `getMemberSession`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
 | `src/lib/preview-token.ts` | 7 | 25 |  | `signPreviewToken`, `verifyPreviewToken` |
-| `src/lib/tee-time-utils.ts` | 7 | 41 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
 | `src/lib/access-fee.ts` | 6 | 181 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/booking-fees.ts` | 6 | 11 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `hoursLabel`, `serviceFeeLabel` |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
@@ -325,7 +325,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-needs.ts` | 3 | 38 | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column. | `NeedItem`, `stillNeed` |
 | `src/lib/money-problems.ts` | 3 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
 | `src/lib/no-show-fee.ts` | 3 | 135 | SP-B (STAFF_POLICY_SPEC Part B4). | `dueAutoNoShows`, `liveNoShowCharge`, `markNoShow`, `NoShowResult`, `refundNoShowFee` |
-| `src/lib/normalize-course.ts` | 3 | 70 |  | `normalizeDbCourse` |
+| `src/lib/normalize-course.ts` | 3 | 71 |  | `normalizeDbCourse` |
 | `src/lib/public-course.ts` | 3 | 29 | PERF-1: | `loadPublicCourse` |
 | `src/lib/thread-signal.ts` | 3 | 52 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
 | `src/lib/twilio.ts` | 3 | 42 |  | `sendSms`, `sendSmsOtp` |
@@ -408,7 +408,7 @@ Sorted the same way.
 | `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 469 |  | `default (CourseLayoutTab)` |
 | `src/components/dashboard/CoursePreview.tsx` | 1 | 80 | B-6 (UI_REVISE_SPEC §4): | `CoursePreviewProps`, `default (CoursePreview)` |
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |
-| `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 179 | SD-8 — the Cancellations half of the Money page. | `CancellationsPanel` |
+| `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 181 | SD-8 — the Cancellations half of the Money page. | `CancellationsPanel` |
 | `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 124 | SD-8 — the Payments half of the Money page. | `PaymentsPanel` |
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 126 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |

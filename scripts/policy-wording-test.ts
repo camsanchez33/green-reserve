@@ -5,7 +5,7 @@
 // booked under say the same thing for each timing.
 // Pure. Run: npx tsx scripts/policy-wording-test.ts
 import { readFileSync } from 'fs';
-import { describePolicy, policyFrom, afterCutoffLine, policyMoney } from '../src/lib/cancel-policy';
+import { describePolicy, policyFrom, afterCutoffLine, policyMoney, insideWindowLine, afterCutoffShort } from '../src/lib/cancel-policy';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: string) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail ? ' — ' + detail : ''}`); if (!ok) failed++; };
@@ -36,6 +36,20 @@ check('hourly cron passes the booking timing to the warning', /lateFeeTiming: bo
 const bookSrc = readFileSync('src/app/api/bookings/route.ts', 'utf8');
 check('booking route passes the timing to the warning', /lateFeeTiming: policy\.lateFeeTiming/.test(bookSrc));
 check('booking route skips the warning once the cutoff has passed (R-GOLF-009)', /minsUntilCutoff > 0 && minsUntilCutoff < 75/.test(bookSrc));
+
+// 4. Booked or browsing past the cutoff (R-GOLF-009): never "free to cancel until" a past time.
+check('inside the window, a hold says it is charged within the hour', /hold is charged to your card within the hour/.test(insideWindowLine('hold_at_cutoff', '$20')));
+check('inside the window, late-cancel says cancelling now charges', /Cancelling now charges the \$20 late-cancellation fee/.test(insideWindowLine('late_cancel', '$20')));
+check('the short trust-line form names the hold', afterCutoffShort('hold_at_cutoff', '$20') === 'then a $20 hold, refunded at check-in');
+check('the short form for late-cancel is conditional', afterCutoffShort('late_cancel', '$20') === 'then a $20 fee if you cancel');
+const bookClient = readFileSync('src/app/book/BookClient.tsx', 'utf8');
+check('confirmation no longer hard-codes the late-fee sentence', !/late-cancellation fee is charged to your card on file/.test(bookClient));
+check('card form no longer says "you pay at the course" on every course', !/you pay at the course when you check in/.test(bookClient));
+check('booked past the cutoff on a hold course, Today no longer says $0.00', /holdTodayLine\(/.test(bookClient));
+check('confirmation branches on cutoffPassed', /confirmedData\.cutoffPassed/.test(bookClient));
+const coursePage = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
+check('course trust line checks the slot against the cutoff', /slotPastCutoff/.test(coursePage) && /insideWindowLine\(/.test(coursePage));
+check('booking API returns cutoffPassed and the timing', /cutoffPassed,/.test(bookSrc) && /lateFeeTiming: +policy\.lateFeeTiming,/.test(bookSrc));
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

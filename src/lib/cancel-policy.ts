@@ -107,6 +107,26 @@ export function afterCutoffLine(timing: string | null | undefined, fee: string, 
   return `${after[0].toUpperCase()}${after.slice(1)}, a ${fee} hold is charged to your card. It’s refunded when you check in, and kept if you cancel late or don’t show.`;
 }
 
+/**
+ * R-GOLF-009: booked (or looking at a slot) after free cancellation has already
+ * ended. The golfer must not read "free to cancel until" a time already past.
+ */
+export function insideWindowLine(timing: string | null | undefined, fee: string): string {
+  if (timing === 'late_cancel') return `This tee time is already past the free-cancellation cutoff. Cancelling now charges the ${fee} late-cancellation fee.`;
+  if (timing === 'late_cancel_or_no_show') return `This tee time is already past the free-cancellation cutoff. Cancelling now, or not showing, charges the ${fee} fee.`;
+  return `This tee time is already past the free-cancellation cutoff, so the ${fee} hold is charged to your card within the hour. It’s refunded when you check in.`;
+}
+
+/** Booked past the cutoff on a hold course: what "today" really means (R-GOLF-009). */
+export const holdTodayLine = (fee: string) => `a ${fee} hold is charged within the hour, refunded at check-in`;
+
+/** The short form for a one-line summary: "then a $20 hold, refunded at check-in". */
+export function afterCutoffShort(timing: string | null | undefined, fee: string): string {
+  if (timing === 'late_cancel') return `then a ${fee} fee if you cancel`;
+  if (timing === 'late_cancel_or_no_show') return `then a ${fee} fee if you cancel or don’t show`;
+  return `then a ${fee} hold, refunded at check-in`;
+}
+
 /** Cents as the golfer reads them: "$20", "$7.50". */
 export const policyMoney = money;
 

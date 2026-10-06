@@ -17,6 +17,7 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     city: c.city,
     state: c.state,
     address: c.address,
+    timezone: c.timezone ?? null,
     phone: c.phone,
     website: c.website,
     booking_url: c.bookingUrl ?? '',

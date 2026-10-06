@@ -371,6 +371,10 @@ export async function POST(req: NextRequest) {
     console.error('Email error:', err);
   }
 
+  // R-GOLF-009: the confirmation must not say "free to cancel until" a past time.
+  const cutoffPassed = teeToUtcMs(teeTimeFull.date, teeTimeFull.time, teeTimeFull.course.timezone || 'America/New_York')
+    - teeTimeFull.course.cancellationHours * 3600 * 1000 <= Date.now();
+
   return NextResponse.json({
     bookingId:      claimed.id,
     appliedRate,
@@ -382,6 +386,8 @@ export async function POST(req: NextRequest) {
     totalAmount:    totalCents     / 100,
     cancellationFeeTotal: cancellationFeeTotal / 100,
     cancellationHours: teeTimeFull.course.cancellationHours,
+    lateFeeTiming:  policy.lateFeeTiming,
+    cutoffPassed,
     courseName:     teeTimeFull.course.name,
     date:           teeTimeFull.date,
     time:           teeTimeFull.time,
