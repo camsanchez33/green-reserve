@@ -8,6 +8,7 @@
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { performCancellation } from '../src/lib/cancel-booking';
+import { cancelFutureBookingsForClosure } from '../src/lib/course-closure';
 
 const prisma = new PrismaClient();
 const TAG = 'holdlatecanceltest';
@@ -103,6 +104,14 @@ async function main() {
     await prisma.booking.update({ where: { id: b.id }, data: { paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: 'pi_test_hold', cancellationFeeChargedAt: new Date() } });
     await performCancellation(b.id, { type: 'golfer', id: null });
     check('a hold the cron already took is not charged again', (await feeAttempts(b.id)) === 0);
+  }
+
+  // 6. A course closure cancels every future booking and tells golfers nobody was charged — so it never charges a hold.
+  {
+    const b = await seed('closure', 10, 'hold_at_cutoff');
+    await cancelFutureBookingsForClosure(b.courseId);
+    check('a course closure does not charge an untaken hold', (await feeAttempts(b.id)) === 0);
+    check('the closure cancelled the booking', (await prisma.booking.findUnique({ where: { id: b.id } }))?.status === 'cancelled');
   }
 
   await cleanup();

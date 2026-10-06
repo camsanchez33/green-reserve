@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 21:46 UTC · branch `claude/hold-on-late-cancel` · HEAD `384b502` · working tree **4 dirty file(s)**
+Generated 2026-10-06 21:54 UTC · branch `claude/hold-on-late-cancel` · HEAD `d3f8706` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 15 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 16 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `d3f8706` | 2026-10-06 | A hold not yet taken is charged when the golfer cancels late |
 | `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
 | `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
 | `c0c4cea` | 2026-10-06 | G13: signed-in golfers can use a booking's emailed manage link (#82) |
@@ -30,12 +31,14 @@ Generated 2026-10-06 21:46 UTC · branch `claude/hold-on-late-cancel` · HEAD `3
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (6 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M scripts/hold-late-cancel-test.ts`
+- `M src/components/dashboard/money/CancellationsPanel.tsx`
 - `M src/lib/cancel-booking.ts`
-- `?? scripts/hold-late-cancel-test.ts`
+- `M src/lib/course-closure.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -214,6 +217,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `d3f8706` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
 - `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
@@ -225,7 +229,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
 - `066fa1b` 2026-10-05 — queue/spec update
 - `c534f1e` 2026-10-05 — Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)
-- `2e6dec2` 2026-10-05 — Golfer sign-in code can no longer be cracked offline (R-AUTH-001)
 
 ---
 

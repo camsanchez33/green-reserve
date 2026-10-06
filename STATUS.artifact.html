@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-06 21:46 UTC</span><span>claude/hold-on-late-cancel @ 384b502</span>
-    <span>4 uncommitted</span>
+    <span>2026-10-06 21:54 UTC</span><span>claude/hold-on-late-cancel @ d3f8706</span>
+    <span>6 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">15 runs have shipped that the queue doesn't know about</div>
+<div class="lede">16 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">d3f8706</span><span>A hold not yet taken is charged when the golfer cancels late</span></li>
 <li><span class="h">384b502</span><span>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</span></li>
 <li><span class="h">f5b2bb8</span><span>G8: hourly cron sends every pay link and cutoff warning (#83)</span></li>
 <li><span class="h">c0c4cea</span><span>G13: signed-in golfers can use a booking's emailed manage link (#82)</span></li>
@@ -152,7 +153,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/lib/cancel-booking.ts</code></li><li><code>?? scripts/hold-late-cancel-test.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/hold-late-cancel-test.ts</code></li><li><code>M src/components/dashboard/money/CancellationsPanel.tsx</code></li><li><code>M src/lib/cancel-booking.ts</code></li><li><code>M src/lib/course-closure.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -279,6 +280,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">d3f8706</td><td class="num">2026-10-06</td><td>A hold not yet taken is charged when the golfer cancels late</td></tr>
 <tr><td class="num">384b502</td><td class="num">2026-10-06</td><td>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</td></tr>
 <tr><td class="num">f5b2bb8</td><td class="num">2026-10-06</td><td>G8: hourly cron sends every pay link and cutoff warning (#83)</td></tr>
 <tr><td class="num">c0c4cea</td><td class="num">2026-10-06</td><td>G13: signed-in golfers can use a booking's emailed manage link (#82)</td></tr>
@@ -290,7 +292,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">ebe8ab8</td><td class="num">2026-10-06</td><td>PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in</td></tr>
 <tr><td class="num">066fa1b</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
 <tr><td class="num">c534f1e</td><td class="num">2026-10-05</td><td>Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)</td></tr>
-<tr><td class="num">2e6dec2</td><td class="num">2026-10-05</td><td>Golfer sign-in code can no longer be cracked offline (R-AUTH-001)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

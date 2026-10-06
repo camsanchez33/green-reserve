@@ -9756,7 +9756,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 261,
+      "lines": 266,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10252,7 +10252,7 @@
     },
     {
       "path": "src/lib/course-closure.ts",
-      "lines": 125,
+      "lines": 128,
       "purpose": "MP-5b.",
       "brain": [],
       "exports": [

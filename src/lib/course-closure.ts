@@ -81,8 +81,11 @@ export async function cancelFutureBookingsForClosure(
   const failed: ClosureResult['failed'] = [];
   let cancelled = 0;
   for (const b of bookings) {
+    // waiveFee: the golfer and the course are both told nobody was charged —
+    // a closure keeps no late fee or hold (and gives back one already taken).
     const result = await performCancellation(b.id, { type: 'system' }, {
       notifySlotAlerts: false,
+      waiveFee: true,
       reason: `${b.course.name} is no longer taking bookings through GreenReserve, so we have cancelled this round for you. You have not been charged for it.`,
     }).catch(err => ({ error: err instanceof Error ? err.message : String(err), status: 500 } as const));
 

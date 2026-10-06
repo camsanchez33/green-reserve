@@ -1,20 +1,29 @@
 {
-  "generatedAt": "2026-10-06T21:46:13.943Z",
+  "generatedAt": "2026-10-06T21:54:16.195Z",
   "repo": {
-    "head": "384b502",
+    "head": "d3f8706",
     "branch": "claude/hold-on-late-cancel",
-    "dirtyCount": 4,
+    "dirtyCount": 6,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
+      " M scripts/hold-late-cancel-test.ts",
+      " M src/components/dashboard/money/CancellationsPanel.tsx",
       " M src/lib/cancel-booking.ts",
-      "?? scripts/hold-late-cancel-test.ts"
+      " M src/lib/course-closure.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "d3f8706",
+        "date": "2026-10-06T21:46:14+00:00",
+        "subject": "A hold not yet taken is charged when the golfer cancels late",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "384b502",
         "date": "2026-10-06T17:42:06-04:00",
@@ -822,6 +831,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d3f8706",
+      "date": "2026-10-06",
+      "subject": "A hold not yet taken is charged when the golfer cancels late"
+    },
+    {
       "h": "384b502",
       "date": "2026-10-06",
       "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)"
@@ -875,11 +889,6 @@
       "h": "c534f1e",
       "date": "2026-10-05",
       "subject": "Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)"
-    },
-    {
-      "h": "2e6dec2",
-      "date": "2026-10-05",
-      "subject": "Golfer sign-in code can no longer be cracked offline (R-AUTH-001)"
     }
   ]
 }
