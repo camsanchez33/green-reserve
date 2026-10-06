@@ -4,18 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 21:43 UTC · branch `claude/money-wording-booking` · HEAD `9f21a54` · working tree **2 dirty file(s)**
+Generated 2026-10-06 21:51 UTC · branch `claude/receipt-charges` · HEAD `a075be8` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 18 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 16 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `447dc5b` | 2026-10-06 | Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00 |
+| `a075be8` | 2026-10-06 | Booking and course pages say what the policy really charges (#85) |
 | `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
-| `919f59a` | 2026-10-06 | Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009) |
-| `2999ca5` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) |
 | `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
 | `c0c4cea` | 2026-10-06 | G13: signed-in golfers can use a booking's emailed manage link (#82) |
 | `3e3d9ec` | 2026-10-06 | Control Room: every session reports its own status (#81) |
@@ -33,13 +31,17 @@ Generated 2026-10-06 21:43 UTC · branch `claude/money-wording-booking` · HEAD 
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (6 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M src/app/api/receipt/[bookingId]/route.ts`
+- `M src/app/receipt/[bookingId]/page.tsx`
+- `?? scripts/receipt-charges-test.ts`
+- `?? src/lib/receipt-charges.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -215,10 +217,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `447dc5b` 2026-10-06 — Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00
+- `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
-- `919f59a` 2026-10-06 — Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009)
-- `2999ca5` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
 - `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
 - `3e3d9ec` 2026-10-06 — Control Room: every session reports its own status (#81)
@@ -227,6 +227,8 @@ This is the distinction a raw checkbox count gets wrong.
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
 - `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
 - `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
+- `066fa1b` 2026-10-05 — queue/spec update
+- `c534f1e` 2026-10-05 — Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)
 
 ---
 

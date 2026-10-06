@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { receiptCharges, chargedNowCents } from '@/lib/receipt-charges';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -33,6 +34,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  // R-GOLF-010: what actually reached the golfer's card, from the money records.
+  const charges = await receiptCharges(booking.id);
+
   return NextResponse.json({
     bookingId: booking.id,
     golferName: booking.golferName,
@@ -55,6 +59,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     status: booking.status,
     cancellationFeeTotal: booking.cancellationFeeTotal,
     cancellationFeeCharged: !!booking.cancellationFeeChargeId,
+    paidOffline: booking.paidOffline,
+    charges,
+    chargedNowCents: chargedNowCents(charges),
     createdAt: booking.createdAt,
   });
 }
