@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { Loader2, Check } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { serviceFeeLabel } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
@@ -13,6 +13,11 @@ type ReceiptData = {
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; status: string;
   cancellationFeeTotal: number; cancellationFeeCharged: boolean; createdAt: string;
+  /** R-GOLF-010: what actually reached the card — from lib/receipt-charges. */
+  paidOffline?: boolean;
+  roundRefunded?: boolean;
+  charges?: { label: string; amountCents: number; refunded: boolean }[];
+  chargedNowCents?: number;
 };
 
 function fmtTime(t: string) {
@@ -75,12 +80,22 @@ function ReceiptPageInner() {
   const isCompleted = data.status === 'completed';
   const isCancelled = data.status === 'cancelled';
 
-  const statusLabel = isCompleted ? 'Paid at check-in'
+  const paidAtCourse = isCompleted && !!data.paidOffline;
+  const charges = data.charges ?? [];
+  const chargedNow = data.chargedNowCents ?? 0;
+
+  // paymentStatus 'refunded' is also set when a cancelled booking's fee is waived — only a played round reads "Refunded".
+  const refunded = !!data.roundRefunded && !isCancelled;
+  const statusLabel = refunded ? 'Refunded'
+    : paidAtCourse ? 'Paid at the course'
+    : isCompleted ? 'Paid at check-in'
     : isCancelled ? 'Cancelled'
     : 'Due at course';
 
-  const totalLabel = isCompleted ? 'Total charged'
-    : isCancelled ? 'Would have been'
+  // The card block below says what the card took; these totals are the booking's price.
+  const totalLabel = refunded || paidAtCourse ? 'Booking total'
+    : isCompleted ? 'Total charged'
+    : isCancelled ? 'Booking total (not charged)'
     : 'Estimated total due at course';
 
   return (
@@ -116,7 +131,7 @@ function ReceiptPageInner() {
             <div className="px-6 py-6">
               {/* Status + title */}
               <div className="mb-5">
-                <StatusDot status={isCompleted ? 'ok' : isCancelled ? 'bad' : 'neutral'} label={statusLabel} />
+                <StatusDot status={refunded ? 'neutral' : isCompleted ? 'ok' : isCancelled ? 'bad' : 'neutral'} label={statusLabel} />
                 <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mt-3 mb-1">{data.courseName}</h1>
                 {data.courseLocation && <p className="text-ink text-sm">{data.courseLocation}</p>}
               </div>
@@ -152,29 +167,39 @@ function ReceiptPageInner() {
                   <span className="text-ink-soft">{serviceFeeLabel(data.players)}</span>
                   <span className="font-medium text-ink">{dollars(data.accessFeeTotal)}</span>
                 </div>
-                {isCancelled && data.cancellationFeeCharged && data.cancellationFeeTotal > 0 && (
-                  <div className="flex justify-between px-4 py-3">
-                    <span className="text-ink-soft">Late-cancellation fee</span>
-                    <span className="font-medium text-ink">{dollars(data.cancellationFeeTotal)}</span>
-                  </div>
-                )}
                 <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
                   <span className="font-medium text-ink">{totalLabel}</span>
                   <span className="font-serif font-semibold text-ink text-xl leading-none">{dollars(data.totalAmount)}</span>
                 </div>
               </div>
 
+              {/* R-GOLF-010: every charge that reached the card, and any refund —
+                  read from the money records, so it matches the card statement. */}
+              {charges.length > 0 && (
+                <div className="border border-line rounded-md divide-y divide-line text-sm mb-5">
+                  <div className="px-4 py-3 font-medium text-ink">Charged to your card</div>
+                  {charges.map((c, i) => (
+                    <div key={i} className="flex justify-between px-4 py-3">
+                      <span className="text-ink-soft">{c.label}{c.refunded ? ' · refunded' : ''}</span>
+                      <span className={c.refunded ? 'text-ink-muted line-through' : 'font-medium text-ink'}>{c.amountCents < 0 ? `−${dollars(-c.amountCents)}` : dollars(c.amountCents)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
+                    <span className="font-medium text-ink">On your card</span>
+                    <span className="font-semibold text-ink">{dollars(chargedNow)}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Payment line */}
               {isCompleted && (
-                <div className="text-sm text-ink-soft mb-5 flex items-center gap-1.5 flex-wrap">
-                  <Check size={14} className="text-ok shrink-0" />
-                  <span className="font-medium text-ok">Paid</span>
-                  <span>at check-in · Booking #{data.bookingId.slice(0, 8).toUpperCase()}</span>
+                <div className="text-sm text-ink mb-5">
+                  {refunded ? 'Refunded' : paidAtCourse ? 'Paid at the course' : 'Paid at check-in'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
               )}
               {!isCompleted && !isCancelled && (
                 <div className="text-sm text-ink mb-5">
-                  Nothing has been charged yet. Payment collected at check-in. · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
+                  {chargedNow > 0 ? 'The round itself is paid when you check in.' : 'Nothing has been charged to your card yet. The round is paid when you check in.'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
               )}
               {isCancelled && (

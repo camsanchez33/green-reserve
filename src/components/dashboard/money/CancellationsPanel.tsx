@@ -61,7 +61,9 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
       ? `Cancel ${b.golferName}'s booking and waive the late fee?\n\n${feeCharged ? `The ${fee} already charged will be refunded to their card.` : 'No late fee will be charged.'}`
       : feeCharged
         ? `Cancel ${b.golferName}'s booking?\n\nTheir ${fee} late-cancellation fee was already charged and will NOT be refunded.`
-        : `Cancel ${b.golferName}'s booking?\n\nIf their free-cancellation window has already closed, the ${fee} late fee is charged to their card now. Use Waive fee to cancel without it.`;
+        : b.cancellationFeeTotal > 0
+          ? `Cancel ${b.golferName}'s booking?\n\nIf their free-cancellation window has already closed, the ${fee} late fee is charged to their card now.${canWaive ? ' Use “Cancel, no fee” to cancel without it.' : ''}`
+          : `Cancel ${b.golferName}'s booking?\n\nNo late fee on this booking — nothing is charged.`;
     if (!confirm(msg)) return;
     setCancelingId(b.id);
     const r = await dfetch<{ feeCharged?: boolean; feeRefundFailed?: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel', ...(waive ? { waiveFee: true } : {}) }) });

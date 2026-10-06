@@ -1,22 +1,39 @@
 {
-  "generatedAt": "2026-10-06T21:55:27.537Z",
+  "generatedAt": "2026-10-06T22:14:49.650Z",
   "repo": {
-    "head": "894a6c8",
+    "head": "82d59a7",
     "branch": "claude/money-wording-manage",
-    "dirtyCount": 6,
+    "dirtyCount": 16,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/policy-wording-test.ts",
-      " M src/app/api/manage/[bookingId]/route.ts",
-      " M src/app/manage/[bookingId]/page.tsx",
-      " M src/lib/cancel-policy.ts"
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  scripts/checkin-wording-test.ts",
+      "UU scripts/policy-wording-test.ts",
+      "A  scripts/receipt-charges-test.ts",
+      "M  src/app/api/checkin/[bookingId]/route.ts",
+      "M  src/app/api/receipt/[bookingId]/route.ts",
+      "M  src/app/checkin/[bookingId]/page.tsx",
+      "M  src/app/receipt/[bookingId]/page.tsx",
+      "M  src/components/dashboard/money/CancellationsPanel.tsx",
+      "UU src/lib/cancel-policy.ts",
+      "A  src/lib/checkin-errors.ts",
+      "A  src/lib/receipt-charges.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "82d59a7",
+        "date": "2026-10-06T21:55:28+00:00",
+        "subject": "Manage page: a kept no-show or already-charged fee is never called free",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "7049cb2",
         "date": "2026-10-06T21:54:17+00:00",
@@ -866,6 +883,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "82d59a7",
+      "date": "2026-10-06",
+      "subject": "Manage page: a kept no-show or already-charged fee is never called free"
+    },
+    {
       "h": "7049cb2",
       "date": "2026-10-06",
       "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay"
@@ -919,11 +941,6 @@
       "h": "51e2896",
       "date": "2026-10-06",
       "subject": "Final reviewer runs on Fable (#80)"
-    },
-    {
-      "h": "c105e0f",
-      "date": "2026-10-06",
-      "subject": "Overseer protocol: route work to the right model, review every diff before push (#79)"
     }
   ]
 }

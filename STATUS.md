@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 21:55 UTC · branch `claude/money-wording-manage` · HEAD `894a6c8` · working tree **6 dirty file(s)**
+Generated 2026-10-06 22:14 UTC · branch `claude/money-wording-manage` · HEAD `82d59a7` · working tree **16 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 21 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 22 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `82d59a7` | 2026-10-06 | Manage page: a kept no-show or already-charged fee is never called free |
 | `7049cb2` | 2026-10-06 | Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay |
 | `371b324` | 2026-10-06 | Manage page says what cancelling costs right now (R-GOLF-008) |
 | `d3f8706` | 2026-10-06 | A hold not yet taken is charged when the golfer cancels late |
@@ -36,14 +37,24 @@ Generated 2026-10-06 21:55 UTC · branch `claude/money-wording-manage` · HEAD `
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (16 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/policy-wording-test.ts`
-- `M src/app/api/manage/[bookingId]/route.ts`
-- `M src/app/manage/[bookingId]/page.tsx`
-- `M src/lib/cancel-policy.ts`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  scripts/checkin-wording-test.ts`
+- `UU scripts/policy-wording-test.ts`
+- `A  scripts/receipt-charges-test.ts`
+- `M  src/app/api/checkin/[bookingId]/route.ts`
+- `M  src/app/api/receipt/[bookingId]/route.ts`
+- `M  src/app/checkin/[bookingId]/page.tsx`
+- `M  src/app/receipt/[bookingId]/page.tsx`
+- `M  src/components/dashboard/money/CancellationsPanel.tsx`
+- `UU src/lib/cancel-policy.ts`
+- `A  src/lib/checkin-errors.ts`
+- `A  src/lib/receipt-charges.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -222,6 +233,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `82d59a7` 2026-10-06 — Manage page: a kept no-show or already-charged fee is never called free
 - `7049cb2` 2026-10-06 — Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay
 - `371b324` 2026-10-06 — Manage page says what cancelling costs right now (R-GOLF-008)
 - `d3f8706` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late
@@ -233,7 +245,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
 - `3e3d9ec` 2026-10-06 — Control Room: every session reports its own status (#81)
 - `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
-- `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
 
 ---
 

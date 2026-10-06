@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { performCheckIn, cartAddOnCentsFor } from '@/lib/checkin-booking';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { golferCheckInError } from '@/lib/checkin-errors';
 
 // Public, token-gated check-in endpoint — the golfer doesn't need to be
 // logged in (they may be checking in from a different device than they
@@ -46,6 +47,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     holes: booking.teeTime.holes,
     productLabel: booking.teeTime.product?.label ?? null,
     status: booking.status,
+    // R-GOLF-011: a round paid in cash at the counter is never "charged to your card".
+    paidOffline: booking.paidOffline,
     totalAmount: booking.totalAmount,
     greenFeeTotal: booking.greenFeeTotal,
     cartFeeTotal: booking.cartFeeTotal,
@@ -74,6 +77,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   }
 
   const result = await performCheckIn(bookingId, { type: 'golfer' }, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true });
-  if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
+  if ('error' in result) return NextResponse.json({ error: golferCheckInError(result.error ?? 'Check-in failed.') }, { status: result.status });
   return NextResponse.json(result);
 }
+

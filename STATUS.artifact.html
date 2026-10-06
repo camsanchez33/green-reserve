@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-06 21:55 UTC</span><span>claude/money-wording-manage @ 894a6c8</span>
-    <span>6 uncommitted</span>
+    <span>2026-10-06 22:14 UTC</span><span>claude/money-wording-manage @ 82d59a7</span>
+    <span>16 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">21 runs have shipped that the queue doesn't know about</div>
+<div class="lede">22 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">82d59a7</span><span>Manage page: a kept no-show or already-charged fee is never called free</span></li>
 <li><span class="h">7049cb2</span><span>Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay</span></li>
 <li><span class="h">371b324</span><span>Manage page says what cancelling costs right now (R-GOLF-008)</span></li>
 <li><span class="h">d3f8706</span><span>A hold not yet taken is charged when the golfer cancels late</span></li>
@@ -158,7 +159,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/policy-wording-test.ts</code></li><li><code>M src/app/api/manage/[bookingId]/route.ts</code></li><li><code>M src/app/manage/[bookingId]/page.tsx</code></li><li><code>M src/lib/cancel-policy.ts</code></li></ul>
+<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  scripts/checkin-wording-test.ts</code></li><li><code>UU scripts/policy-wording-test.ts</code></li><li><code>A  scripts/receipt-charges-test.ts</code></li><li><code>M  src/app/api/checkin/[bookingId]/route.ts</code></li><li><code>M  src/app/api/receipt/[bookingId]/route.ts</code></li><li><code>M  src/app/checkin/[bookingId]/page.tsx</code></li><li><code>M  src/app/receipt/[bookingId]/page.tsx</code></li><li><code>M  src/components/dashboard/money/CancellationsPanel.tsx</code></li><li><code>UU src/lib/cancel-policy.ts</code></li><li><code>A  src/lib/checkin-errors.ts</code></li><li><code>A  src/lib/receipt-charges.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -285,6 +286,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">82d59a7</td><td class="num">2026-10-06</td><td>Manage page: a kept no-show or already-charged fee is never called free</td></tr>
 <tr><td class="num">7049cb2</td><td class="num">2026-10-06</td><td>Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay</td></tr>
 <tr><td class="num">371b324</td><td class="num">2026-10-06</td><td>Manage page says what cancelling costs right now (R-GOLF-008)</td></tr>
 <tr><td class="num">d3f8706</td><td class="num">2026-10-06</td><td>A hold not yet taken is charged when the golfer cancels late</td></tr>
@@ -296,7 +298,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">c0c4cea</td><td class="num">2026-10-06</td><td>G13: signed-in golfers can use a booking's emailed manage link (#82)</td></tr>
 <tr><td class="num">3e3d9ec</td><td class="num">2026-10-06</td><td>Control Room: every session reports its own status (#81)</td></tr>
 <tr><td class="num">51e2896</td><td class="num">2026-10-06</td><td>Final reviewer runs on Fable (#80)</td></tr>
-<tr><td class="num">c105e0f</td><td class="num">2026-10-06</td><td>Overseer protocol: route work to the right model, review every diff before push (#79)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
