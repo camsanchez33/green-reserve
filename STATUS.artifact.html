@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-06 21:35 UTC</span><span>claude/money-wording-warning @ f5b2bb8</span>
-    <span>7 uncommitted</span>
+    <span>2026-10-06 21:46 UTC</span><span>claude/hold-on-late-cancel @ 384b502</span>
+    <span>4 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">14 runs have shipped that the queue doesn't know about</div>
+<div class="lede">15 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">384b502</span><span>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</span></li>
 <li><span class="h">f5b2bb8</span><span>G8: hourly cron sends every pay link and cutoff warning (#83)</span></li>
 <li><span class="h">c0c4cea</span><span>G13: signed-in golfers can use a booking's emailed manage link (#82)</span></li>
 <li><span class="h">3e3d9ec</span><span>Control Room: every session reports its own status (#81)</span></li>
@@ -151,7 +152,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/bookings/route.ts</code></li><li><code>M src/app/api/cron/hourly/route.ts</code></li><li><code>M src/lib/cancel-policy.ts</code></li><li><code>M src/lib/email.ts</code></li><li><code>?? scripts/policy-wording-test.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/lib/cancel-booking.ts</code></li><li><code>?? scripts/hold-late-cancel-test.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -278,6 +279,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">384b502</td><td class="num">2026-10-06</td><td>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</td></tr>
 <tr><td class="num">f5b2bb8</td><td class="num">2026-10-06</td><td>G8: hourly cron sends every pay link and cutoff warning (#83)</td></tr>
 <tr><td class="num">c0c4cea</td><td class="num">2026-10-06</td><td>G13: signed-in golfers can use a booking's emailed manage link (#82)</td></tr>
 <tr><td class="num">3e3d9ec</td><td class="num">2026-10-06</td><td>Control Room: every session reports its own status (#81)</td></tr>
@@ -289,7 +291,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">066fa1b</td><td class="num">2026-10-05</td><td>queue/spec update</td></tr>
 <tr><td class="num">c534f1e</td><td class="num">2026-10-05</td><td>Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)</td></tr>
 <tr><td class="num">2e6dec2</td><td class="num">2026-10-05</td><td>Golfer sign-in code can no longer be cracked offline (R-AUTH-001)</td></tr>
-<tr><td class="num">4f1580c</td><td class="num">2026-10-05</td><td>&quot;Still coming&quot; sticks: auto no-show never re-marks a cleared booking (R-CRON-001)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -1,23 +1,27 @@
 {
-  "generatedAt": "2026-10-06T21:35:10.012Z",
+  "generatedAt": "2026-10-06T21:46:13.943Z",
   "repo": {
-    "head": "f5b2bb8",
-    "branch": "claude/money-wording-warning",
-    "dirtyCount": 7,
+    "head": "384b502",
+    "branch": "claude/hold-on-late-cancel",
+    "dirtyCount": 4,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/cron/hourly/route.ts",
-      " M src/lib/cancel-policy.ts",
-      " M src/lib/email.ts",
-      "?? scripts/policy-wording-test.ts"
+      " M src/lib/cancel-booking.ts",
+      "?? scripts/hold-late-cancel-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "384b502",
+        "date": "2026-10-06T17:42:06-04:00",
+        "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f5b2bb8",
         "date": "2026-10-06T17:04:15-04:00",
@@ -818,6 +822,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "384b502",
+      "date": "2026-10-06",
+      "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)"
+    },
+    {
       "h": "f5b2bb8",
       "date": "2026-10-06",
       "subject": "G8: hourly cron sends every pay link and cutoff warning (#83)"
@@ -871,11 +880,6 @@
       "h": "2e6dec2",
       "date": "2026-10-05",
       "subject": "Golfer sign-in code can no longer be cracked offline (R-AUTH-001)"
-    },
-    {
-      "h": "4f1580c",
-      "date": "2026-10-05",
-      "subject": "\"Still coming\" sticks: auto no-show never re-marks a cleared booking (R-CRON-001)"
     }
   ]
 }
