@@ -9801,10 +9801,95 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 221,
+      "lines": 218,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
-      "exports": [],
+      "exports": [
+        {
+          "name": "afterCutoffLine",
+          "kind": "fn"
+        },
+        {
+          "name": "afterCutoffShort",
+          "kind": "fn"
+        },
+        {
+          "name": "bookingWindowHours",
+          "kind": "fn"
+        },
+        {
+          "name": "cancelNowWords",
+          "kind": "fn"
+        },
+        {
+          "name": "CancelPolicy",
+          "kind": "type"
+        },
+        {
+          "name": "cardRequired",
+          "kind": "fn"
+        },
+        {
+          "name": "chargesNoShow",
+          "kind": "fn"
+        },
+        {
+          "name": "chargesOnLateCancel",
+          "kind": "fn"
+        },
+        {
+          "name": "describePolicy",
+          "kind": "fn"
+        },
+        {
+          "name": "FeeBasis",
+          "kind": "type"
+        },
+        {
+          "name": "holdsAtCutoff",
+          "kind": "fn"
+        },
+        {
+          "name": "holdTodayLine",
+          "kind": "fn"
+        },
+        {
+          "name": "insideWindowLine",
+          "kind": "fn"
+        },
+        {
+          "name": "isFeeBasis",
+          "kind": "fn"
+        },
+        {
+          "name": "isLateFeeTiming",
+          "kind": "fn"
+        },
+        {
+          "name": "LATE_FEE_TIMINGS",
+          "kind": "const"
+        },
+        {
+          "name": "LateFeeTiming",
+          "kind": "type"
+        },
+        {
+          "name": "lateFeeTotalCents",
+          "kind": "fn"
+        },
+        {
+          "name": "noShowTotalCents",
+          "kind": "fn"
+        },
+        {
+          "name": "policyFrom",
+          "kind": "fn"
+        },
+        {
+          "name": "policyMoney",
+          "kind": "const"
+        }
+      ],
       "route": null,
       "kind": null,
       "methods": [],
@@ -9824,8 +9909,7 @@
         "src/lib/email.ts",
         "src/lib/normalize-course.ts",
         "src/lib/receipt-charges.ts"
-      ],
-      "parseError": "Unexpected token (130:0) (line 130)"
+      ]
     },
     {
       "path": "src/lib/change-requests.ts",

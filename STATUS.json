@@ -1,32 +1,42 @@
 {
-  "generatedAt": "2026-10-06T22:14:49.650Z",
+  "generatedAt": "2026-10-06T22:19:07.038Z",
   "repo": {
-    "head": "82d59a7",
+    "head": "ad930d1",
     "branch": "claude/money-wording-manage",
-    "dirtyCount": 16,
+    "dirtyCount": 5,
     "dirty": [
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "A  scripts/checkin-wording-test.ts",
-      "UU scripts/policy-wording-test.ts",
-      "A  scripts/receipt-charges-test.ts",
-      "M  src/app/api/checkin/[bookingId]/route.ts",
-      "M  src/app/api/receipt/[bookingId]/route.ts",
-      "M  src/app/checkin/[bookingId]/page.tsx",
-      "M  src/app/receipt/[bookingId]/page.tsx",
-      "M  src/components/dashboard/money/CancellationsPanel.tsx",
-      "UU src/lib/cancel-policy.ts",
-      "A  src/lib/checkin-errors.ts",
-      "A  src/lib/receipt-charges.ts"
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "bc65c9f",
+        "date": "2026-10-06T18:06:40-04:00",
+        "subject": "Receipt shows what actually reached the golfer's card (#88)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d19d5cb",
+        "date": "2026-10-06T18:01:38-04:00",
+        "subject": "Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "84793bc",
+        "date": "2026-10-06T21:57:24+00:00",
+        "subject": "Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "82d59a7",
         "date": "2026-10-06T21:55:28+00:00",
@@ -38,6 +48,13 @@
         "h": "7049cb2",
         "date": "2026-10-06T21:54:17+00:00",
         "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a075be8",
+        "date": "2026-10-06T17:48:49-04:00",
+        "subject": "Booking and course pages say what the policy really charges (#85)",
         "ids": [],
         "matches": []
       },
@@ -883,6 +900,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "bc65c9f",
+      "date": "2026-10-06",
+      "subject": "Receipt shows what actually reached the golfer's card (#88)"
+    },
+    {
+      "h": "d19d5cb",
+      "date": "2026-10-06",
+      "subject": "Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)"
+    },
+    {
+      "h": "84793bc",
+      "date": "2026-10-06",
+      "subject": "Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button"
+    },
+    {
       "h": "82d59a7",
       "date": "2026-10-06",
       "subject": "Manage page: a kept no-show or already-charged fee is never called free"
@@ -891,6 +923,11 @@
       "h": "7049cb2",
       "date": "2026-10-06",
       "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay"
+    },
+    {
+      "h": "a075be8",
+      "date": "2026-10-06",
+      "subject": "Booking and course pages say what the policy really charges (#85)"
     },
     {
       "h": "371b324",
@@ -921,26 +958,6 @@
       "h": "2999ca5",
       "date": "2026-10-06",
       "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)"
-    },
-    {
-      "h": "f5b2bb8",
-      "date": "2026-10-06",
-      "subject": "G8: hourly cron sends every pay link and cutoff warning (#83)"
-    },
-    {
-      "h": "c0c4cea",
-      "date": "2026-10-06",
-      "subject": "G13: signed-in golfers can use a booking's emailed manage link (#82)"
-    },
-    {
-      "h": "3e3d9ec",
-      "date": "2026-10-06",
-      "subject": "Control Room: every session reports its own status (#81)"
-    },
-    {
-      "h": "51e2896",
-      "date": "2026-10-06",
-      "subject": "Final reviewer runs on Fable (#80)"
     }
   ]
 }

@@ -117,16 +117,20 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-06 22:14 UTC</span><span>claude/money-wording-manage @ 82d59a7</span>
-    <span>16 uncommitted</span>
+    <span>2026-10-06 22:19 UTC</span><span>claude/money-wording-manage @ ad930d1</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">22 runs have shipped that the queue doesn't know about</div>
+<div class="lede">26 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">bc65c9f</span><span>Receipt shows what actually reached the golfer's card (#88)</span></li>
+<li><span class="h">d19d5cb</span><span>Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)</span></li>
+<li><span class="h">84793bc</span><span>Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button</span></li>
 <li><span class="h">82d59a7</span><span>Manage page: a kept no-show or already-charged fee is never called free</span></li>
 <li><span class="h">7049cb2</span><span>Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay</span></li>
+<li><span class="h">a075be8</span><span>Booking and course pages say what the policy really charges (#85)</span></li>
 <li><span class="h">371b324</span><span>Manage page says what cancelling costs right now (R-GOLF-008)</span></li>
 <li><span class="h">d3f8706</span><span>A hold not yet taken is charged when the golfer cancels late</span></li>
 <li><span class="h">447dc5b</span><span>Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00</span></li>
@@ -157,9 +161,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  scripts/checkin-wording-test.ts</code></li><li><code>UU scripts/policy-wording-test.ts</code></li><li><code>A  scripts/receipt-charges-test.ts</code></li><li><code>M  src/app/api/checkin/[bookingId]/route.ts</code></li><li><code>M  src/app/api/receipt/[bookingId]/route.ts</code></li><li><code>M  src/app/checkin/[bookingId]/page.tsx</code></li><li><code>M  src/app/receipt/[bookingId]/page.tsx</code></li><li><code>M  src/components/dashboard/money/CancellationsPanel.tsx</code></li><li><code>UU src/lib/cancel-policy.ts</code></li><li><code>A  src/lib/checkin-errors.ts</code></li><li><code>A  src/lib/receipt-charges.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -286,18 +290,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 7d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">bc65c9f</td><td class="num">2026-10-06</td><td>Receipt shows what actually reached the golfer's card (#88)</td></tr>
+<tr><td class="num">d19d5cb</td><td class="num">2026-10-06</td><td>Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)</td></tr>
+<tr><td class="num">84793bc</td><td class="num">2026-10-06</td><td>Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button</td></tr>
 <tr><td class="num">82d59a7</td><td class="num">2026-10-06</td><td>Manage page: a kept no-show or already-charged fee is never called free</td></tr>
 <tr><td class="num">7049cb2</td><td class="num">2026-10-06</td><td>Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay</td></tr>
+<tr><td class="num">a075be8</td><td class="num">2026-10-06</td><td>Booking and course pages say what the policy really charges (#85)</td></tr>
 <tr><td class="num">371b324</td><td class="num">2026-10-06</td><td>Manage page says what cancelling costs right now (R-GOLF-008)</td></tr>
 <tr><td class="num">d3f8706</td><td class="num">2026-10-06</td><td>A hold not yet taken is charged when the golfer cancels late</td></tr>
 <tr><td class="num">447dc5b</td><td class="num">2026-10-06</td><td>Booked past the cutoff on a hold course: Today says the hold is coming, not $0.00</td></tr>
 <tr><td class="num">384b502</td><td class="num">2026-10-06</td><td>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</td></tr>
 <tr><td class="num">919f59a</td><td class="num">2026-10-06</td><td>Booking page and course page say what the policy really charges (R-GOLF-008, R-GOLF-009)</td></tr>
 <tr><td class="num">2999ca5</td><td class="num">2026-10-06</td><td>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009)</td></tr>
-<tr><td class="num">f5b2bb8</td><td class="num">2026-10-06</td><td>G8: hourly cron sends every pay link and cutoff warning (#83)</td></tr>
-<tr><td class="num">c0c4cea</td><td class="num">2026-10-06</td><td>G13: signed-in golfers can use a booking's emailed manage link (#82)</td></tr>
-<tr><td class="num">3e3d9ec</td><td class="num">2026-10-06</td><td>Control Room: every session reports its own status (#81)</td></tr>
-<tr><td class="num">51e2896</td><td class="num">2026-10-06</td><td>Final reviewer runs on Fable (#80)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
