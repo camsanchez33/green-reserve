@@ -4,16 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 21:59 UTC · branch `claude/hold-on-late-cancel` · HEAD `84793bc` · working tree **11 dirty file(s)**
+Generated 2026-10-06 22:14 UTC · branch `claude/hold-on-late-cancel` · HEAD `0c8bf58` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 18 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 19 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
 | `84793bc` | 2026-10-06 | Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button |
 | `7049cb2` | 2026-10-06 | Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay |
+| `a075be8` | 2026-10-06 | Booking and course pages say what the policy really charges (#85) |
 | `d3f8706` | 2026-10-06 | A hold not yet taken is charged when the golfer cancels late |
 | `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
 | `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
@@ -33,19 +34,21 @@ Generated 2026-10-06 21:59 UTC · branch `claude/hold-on-late-cancel` · HEAD `8
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (13 file(s))
 
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
-- `MM docs/CODEMAP.md`
-- `MM docs/codemap.json`
-- `M  scripts/policy-wording-test.ts`
-- `M  src/app/api/bookings/route.ts`
-- `M  src/app/book/BookClient.tsx`
-- `M  src/app/courses/[slug]/CourseBookingClient.tsx`
-- `M  src/lib/cancel-policy.ts`
-- `M  src/lib/normalize-course.ts`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `A  scripts/checkin-wording-test.ts`
+- `A  scripts/receipt-charges-test.ts`
+- `M  src/app/api/checkin/[bookingId]/route.ts`
+- `M  src/app/api/receipt/[bookingId]/route.ts`
+- `M  src/app/checkin/[bookingId]/page.tsx`
+- `M  src/app/receipt/[bookingId]/page.tsx`
+- `A  src/lib/checkin-errors.ts`
+- `A  src/lib/receipt-charges.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -226,6 +229,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 - `84793bc` 2026-10-06 — Staff cancel prompt: no $0.00 fee at no-fee courses; names the real button
 - `7049cb2` 2026-10-06 — Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay
+- `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
 - `d3f8706` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
@@ -235,7 +239,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
 - `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
 - `57c1b2f` 2026-10-06 — PAY-2: count the booking fees eaten on rounds paid at the counter
-- `ebe8ab8` 2026-10-06 — PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in
 
 ---
 

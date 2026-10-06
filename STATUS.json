@@ -1,21 +1,23 @@
 {
-  "generatedAt": "2026-10-06T21:59:12.934Z",
+  "generatedAt": "2026-10-06T22:14:24.996Z",
   "repo": {
-    "head": "84793bc",
+    "head": "0c8bf58",
     "branch": "claude/hold-on-late-cancel",
-    "dirtyCount": 11,
+    "dirtyCount": 13,
     "dirty": [
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
-      "MM docs/CODEMAP.md",
-      "MM docs/codemap.json",
-      "M  scripts/policy-wording-test.ts",
-      "M  src/app/api/bookings/route.ts",
-      "M  src/app/book/BookClient.tsx",
-      "M  src/app/courses/[slug]/CourseBookingClient.tsx",
-      "M  src/lib/cancel-policy.ts",
-      "M  src/lib/normalize-course.ts"
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "A  scripts/checkin-wording-test.ts",
+      "A  scripts/receipt-charges-test.ts",
+      "M  src/app/api/checkin/[bookingId]/route.ts",
+      "M  src/app/api/receipt/[bookingId]/route.ts",
+      "M  src/app/checkin/[bookingId]/page.tsx",
+      "M  src/app/receipt/[bookingId]/page.tsx",
+      "A  src/lib/checkin-errors.ts",
+      "A  src/lib/receipt-charges.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -33,6 +35,13 @@
         "h": "7049cb2",
         "date": "2026-10-06T21:54:17+00:00",
         "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a075be8",
+        "date": "2026-10-06T17:48:49-04:00",
+        "subject": "Booking and course pages say what the policy really charges (#85)",
         "ids": [],
         "matches": []
       },
@@ -860,6 +869,11 @@
       "subject": "Hold-on-late-cancel: closures waive, staff copy is true, no refunded-PI replay"
     },
     {
+      "h": "a075be8",
+      "date": "2026-10-06",
+      "subject": "Booking and course pages say what the policy really charges (#85)"
+    },
+    {
       "h": "d3f8706",
       "date": "2026-10-06",
       "subject": "A hold not yet taken is charged when the golfer cancels late"
@@ -903,11 +917,6 @@
       "h": "57c1b2f",
       "date": "2026-10-06",
       "subject": "PAY-2: count the booking fees eaten on rounds paid at the counter"
-    },
-    {
-      "h": "ebe8ab8",
-      "date": "2026-10-06",
-      "subject": "PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in"
     }
   ]
 }

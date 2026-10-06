@@ -22,6 +22,8 @@ type CheckInInfo = {
   date: string; time: string; players: number; holes: number; productLabel?: string | null; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   hasCard: boolean;
+  /** Paid in cash at the counter — never "charged to your card". */
+  paidOffline?: boolean;
   cartAddOnCents?: number;
 };
 
@@ -205,15 +207,32 @@ function CheckInPageInner() {
 
   if (!info) return null;
 
+  // R-GOLF-011: a cancelled booking has nothing to pay — never show it the pay form.
+  if (info.status === 'cancelled' && !result) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+          <div className="p-8 text-center">
+            <h1 className="text-[30px] font-serif leading-none text-ink mb-3">This booking was cancelled</h1>
+            <p className="text-ink-soft mb-6 text-sm">There&apos;s nothing to check in or pay. To play, book a new tee time.</p>
+            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (info.status === 'completed' || result) {
     const charged = result?.totalCharged ?? info.totalAmount;
+    const paidAtCounter = !result && !!info.paidOffline;
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">You&apos;re checked in!</h1>
-            <p className="text-ink-soft mb-6 text-sm">${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</p>
+            <p className="text-ink-soft mb-6 text-sm">{paidAtCounter ? 'Paid at the course. Enjoy your round.' : <>${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</>}</p>
             {result?.feeRefunded && (
               <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-6 text-left">
                 <p className="text-ok text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee has been refunded.</p>
