@@ -212,17 +212,26 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 
 ---
 
-## Homepage direction — READ `HOMEPAGE_SPEC.md` FIRST (Cam 2026-10-01)
+## Homepage direction — READ `HOMEPAGE_SPEC.md` §0 FIRST (Cam 2026-10-07)
 
-The homepage is built from the approved plain-background mockup
-(`docs/design/home/index.html`, UI-H-1): `src/app/HomeContent.tsx` +
-`home.module.css`, with ONE client island, `src/components/home/TeeSheetDemo.tsx`
-(hero demo + See it work share one store). Every "Book a demo" goes to `/demo`
-(→ Cal.com, tagged source=homepage); "Ask a question" goes to the short form at `/for-courses` (CLUB-0 — the long inquiry form is gone); the Cal.com webhook opens a pending
-"Demo booking" inquiry when a booking matches none. Rejected, never revive: Direction B
-(Figtree/white/pills), the printed-scorecard look, and every golf-hole / aerial
-course background concept. Homepage copy has NO durations and NO contract terms;
-CTAs are Book a demo + Ask a question. CLUB-1 (Cam 2026-10-05, after clubup.com): the page LEADS with what GreenReserve is ("GreenReserve is the online tee sheet and booking page for golf courses."), then who it's for, then the proof; "The tee sheet your course deserves." closes the page. The spec also lists what is waiting on Cam.
+HOME-2 is Cam's own layout: one full-screen coast photo with the cream logo
+centred and one line under it saying what we are (CLUB-1) → what it is
+(paragraph, bullets, "See how it works" + "Learn more about the tee sheet"
+cards) → what your course gets (only features that exist today; pro-shop
+access waits until built) → the working demo (tee sheet on a laptop, golfer
+phone beside it) with Book a demo → the logo again with "The tee sheet your
+course deserves." The detail, FAQ (+ its JSON-LD), about and contact live on
+`/teesheet`. `src/app/HomeContent.tsx` + `home.module.css`, ONE client island
+`src/components/home/TeeSheetDemo.tsx`, whose every label must match the real
+dashboard tee sheet and booking flow. Every "Book a demo" goes to `/demo`
+(→ Cal.com, tagged source=homepage); "Ask a question" goes to `/for-courses`
+(CLUB-0); the Cal.com webhook opens a pending "Demo booking" inquiry when a
+booking matches none. The one hero photo is allowed (Cam 2026-10-07 lifted the
+photo ban for it); still rejected, never revive: Direction B
+(Figtree/white/pills), the printed-scorecard look, the scroll-driven golf-hole
+concept and an aerial course behind the whole page. Homepage copy has NO
+durations and NO contract terms; fee sentences only from
+`legal/LQ-2_FEE_COPY.md`. The spec also lists what is waiting on Cam.
 
 ## Design system — ONE look for every page (FLOW-1, Cam 2026-10-01)
 
@@ -270,14 +279,14 @@ set there. Self-contained public pages that skip the Nav (/for-courses, setup sh
 - Reskin runs change **zero behavior** (UI_REVISE_SPEC §3); behavior lives in §4, one run each
 - Marketing fee copy is FROZEN behind the LQ-2 placeholder — never restore it in a reskin
 - Email template: ONE light template for all emails (operator + golfer) — white body, ink text, pine accents (`#1b4332`), sharp corners (`border-radius:4px`), zinc border. LOGO-1 (Cam 2026-09-30): the lockup sits TOP-LEFT of every email (`public/brand/email-logo-3x.png`, shown at 180px — rendered from the vector at 3x because email clients don't show SVG); the footer is text only, "GreenReserve · greenreserve.app".
-- Logo (LOGO-1): the vector lockup `public/brand/logo.svg` (cream: `logo-cream.svg`) everywhere on the web, with `unoptimized` on next/image — never the old raster `logo-lockup*.png`. Homepage header: logo pinned to the window's top-left corner (edge padding, not the content column), Operator login top-right. Browser-tab icons (`src/app/icon.svg`, `icon.png`, `favicon.ico`) are JUST the golfer (Cam 2026-09-30: "it should just be this guy") — pine, and cream in dark mode via the SVG's media query; the home-screen icon (`apple-icon.png`, `public/apple-touch-icon.png`) is the pine golfer on paper, since iOS paints transparency black. The golfer mark alone is `public/brand/golfer.svg`.
+- Logo (LOGO-1): the vector lockup `public/brand/logo.svg` (cream: `logo-cream.svg`) everywhere on the web, with `unoptimized` on next/image — never the old raster `logo-lockup*.png`. Homepage header (HOME-2): no nav logo — the hero's centred logo replaces it; Operator login + Book a demo top-right. Every other page keeps the logo top-left. Browser-tab icons (`src/app/icon.svg`, `icon.png`, `favicon.ico`) are JUST the golfer (Cam 2026-09-30: "it should just be this guy") — pine, and cream in dark mode via the SVG's media query; the home-screen icon (`apple-icon.png`, `public/apple-touch-icon.png`) is the pine golfer on paper, since iOS paints transparency black. The golfer mark alone is `public/brand/golfer.svg`.
 - PERS-1 (Cam 2026-10-05): every course-owned golfer page (book, confirmation, check-in, manage) wears the course's OWN uploads through `<CourseHeaderBar photoUrl logoUrl>` — the hero photo becomes a short band, the logo sits beside the name. No per-page images, no page builder. The one extra knob is `Course.confirmationNote` (Settings → Your course), shown on the confirmation screen and in the confirmation email
 - Birdie (BIRDIE_AI_SPEC B4a/B4b, Cam 2026-10-05): the dashboard assistant reads live data through `src/lib/birdie/tools.ts` and DRAFTS changes through `src/lib/birdie/proposals.ts` — a confirm card whose button calls the page's own route. Birdie never writes. A new Birdie action needs: a propose tool, its route in `PROPOSAL_ROUTES`, and a check in `scripts/birdie-isolation-test.ts`. Money, refunds, the cancellation policy, Stripe and staff stay off it
 - NO Birdie dog artwork anywhere (Cam 2026-09-30: "unprofessional — it should just be the little golfer logo"). 404, empty states, coming-soon pages and the assistant's avatar use the golfer mark, and copy never speaks as the character ("We couldn't find…", not "Birdie couldn't…"). The assistant keeps the NAME Birdie (a golf term).
 
 ### BANNED
 - `font-black`, `tracking-widest` — use `font-medium`/`font-semibold`/`font-bold` and `tracking-[0.06em]`–`tracking-[0.1em]` for eyebrows
-- Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard; gradients; drop shadows heavier than `0 1px 2px`. **Page-background gradients now have no exemption at all** (Cam 2026-09-16, H-2h): the four cream section hand-off dissolves on `/` are deleted, so `grep 'linear-gradient(.*#F6F4EC' src/app/home.module.css` must stay empty (match on the colour, not on `180deg` — two of the four deleted dissolves were `0deg`, so a `180deg` pattern would have passed with both still live). One exemption stands (Cam 2026-09-16, H-2h, reinstating H-2d-R1): the device mockups and cards in `home.module.css` keep their poster shadows — `.device`, `.heroDevice .device`, `.heroSheet`, `.laptopScreen`, `.btn:hover`, `.card:hover`. Nowhere else, and never on a staff surface. The two exemptions traded places on the same day and the trade was deliberate: H-2g deleted every shadow, then Cam chose shadows over dissolves, so the history reads as a reversal because it was one. The ban was never about scrims: a gradient that darkens a photo so text sits on it (`.storyShade`, `.dHd::after`) or shapes a device mockup's own hardware (`.laptopBase`) is not a background gradient and was never in scope — an earlier wording said "the only allowed gradients" while three such rules were already live, which is the kind of false absolute that gets a real rule ignored
+- Dark backgrounds (`bg-gray-950`, `bg-gray-900`) on admin/dashboard; gradients; drop shadows heavier than `0 1px 2px`. **Page-background gradients now have no exemption at all** (Cam 2026-09-16, H-2h): the four cream section hand-off dissolves on `/` are deleted, so `grep 'linear-gradient(.*#F6F4EC' src/app/home.module.css` must stay empty (match on the colour, not on `180deg` — two of the four deleted dissolves were `0deg`, so a `180deg` pattern would have passed with both still live). One exemption stands (Cam 2026-09-16, H-2h, reinstating H-2d-R1): the device mockups in `home.module.css` keep their poster shadows — `.laptopScreen` and `.phone` (HOME-2). Nowhere else, and never on a staff surface. The two exemptions traded places on the same day and the trade was deliberate: H-2g deleted every shadow, then Cam chose shadows over dissolves, so the history reads as a reversal because it was one. The ban was never about scrims: a gradient that darkens a photo so text sits on it (`.storyShade`, `.dHd::after`) or shapes a device mockup's own hardware (`.laptopBase`) is not a background gradient and was never in scope — an earlier wording said "the only allowed gradients" while three such rules were already live, which is the kind of false absolute that gets a real rule ignored
 - Tinted colored pill badges — use `<StatusDot>` instead
 - `emerald-600` as accent — use `pine` / `ok` tokens
 - `rounded-xl/2xl/3xl` anywhere

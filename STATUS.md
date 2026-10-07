@@ -4,16 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-06 22:25 UTC · branch `claude/noshow-end-of-day` · HEAD `e9b14f0` · working tree **13 dirty file(s)**
+Generated 2026-10-07 03:19 UTC · branch `claude/homepage-v2` · HEAD `e2a301d` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 20 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-05**. 22 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `e9b14f0` | 2026-10-06 | Cancelling a flagged no-show takes its charge then; course fee charged first |
-| `806638a` | 2026-10-06 | No-show charges wait until the course's midnight (NS-EOD, G3) |
+| `e2a301d` | 2026-10-07 | Homepage rebuilt to Cam's layout; accurate demo; new /teesheet page |
+| `2d1a02c` | 2026-10-06 | No-show charges taken at the course's midnight, not when marked (#90) |
+| `41e61b3` | 2026-10-06 | Manage page says what cancelling costs right now (#89) |
+| `f541b7c` | 2026-10-06 | A hold not yet taken is charged when the golfer cancels late (#87) |
 | `bc65c9f` | 2026-10-06 | Receipt shows what actually reached the golfer's card (#88) |
 | `d19d5cb` | 2026-10-06 | Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86) |
 | `a075be8` | 2026-10-06 | Booking and course pages say what the policy really charges (#85) |
@@ -35,21 +37,11 @@ Generated 2026-10-06 22:25 UTC · branch `claude/noshow-end-of-day` · HEAD `e9b
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (3 file(s))
 
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `UU docs/CODEMAP.md`
-- `UU docs/codemap.json`
-- `A  scripts/hold-late-cancel-test.ts`
-- `M  scripts/policy-wording-test.ts`
-- `M  src/app/api/manage/[bookingId]/route.ts`
-- `M  src/app/manage/[bookingId]/page.tsx`
-- `M  src/components/dashboard/money/CancellationsPanel.tsx`
-- `M  src/lib/cancel-booking.ts`
-- `M  src/lib/cancel-policy.ts`
-- `M  src/lib/course-closure.ts`
+- `M src/app/teesheet/page.tsx`
+- `M src/components/home/TeeSheetDemo.tsx`
+- `M src/lib/faq.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -72,12 +64,12 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 37d | `7246a62` | `RUN_QUEUE.md:983` |
-| MP-1 | 2026-08-29 | 37d | `41f5ea8` | `RUN_QUEUE.md:1013` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 37d | `4ef11dd` | `RUN_QUEUE.md:1048` |
-| MP-2 | 2026-08-29 | 37d | `958f229` | `RUN_QUEUE.md:1089` |
-| MP-2b | 2026-08-29 | 37d | `a134af5` | `RUN_QUEUE.md:1126` |
-| MP-2c | 2026-08-29 | 37d | `e5b5413` | `RUN_QUEUE.md:1175` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 38d | `7246a62` | `RUN_QUEUE.md:983` |
+| MP-1 | 2026-08-29 | 38d | `41f5ea8` | `RUN_QUEUE.md:1013` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 38d | `4ef11dd` | `RUN_QUEUE.md:1048` |
+| MP-2 | 2026-08-29 | 38d | `958f229` | `RUN_QUEUE.md:1089` |
+| MP-2b | 2026-08-29 | 38d | `a134af5` | `RUN_QUEUE.md:1126` |
+| MP-2c | 2026-08-29 | 38d | `e5b5413` | `RUN_QUEUE.md:1175` |
 | MP-2d | 2026-08-29 | 37d | `22d0f68` | `RUN_QUEUE.md:1223` |
 | MP-2e | 2026-08-30 | 37d | `bf3bcb2` | `RUN_QUEUE.md:1265` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | — | — | — | `RUN_QUEUE.md:818` |
@@ -191,14 +183,14 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-06 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 7d |
-| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 1d |
+| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 2d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 5d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 7d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 7d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-07 | 0d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 1d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-05 | 1d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 1d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 7d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 7d |
@@ -228,8 +220,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `e9b14f0` 2026-10-06 — Cancelling a flagged no-show takes its charge then; course fee charged first
-- `806638a` 2026-10-06 — No-show charges wait until the course's midnight (NS-EOD, G3)
+- `e2a301d` 2026-10-07 — Homepage rebuilt to Cam's layout; accurate demo; new /teesheet page
+- `2d1a02c` 2026-10-06 — No-show charges taken at the course's midnight, not when marked (#90)
+- `41e61b3` 2026-10-06 — Manage page says what cancelling costs right now (#89)
+- `f541b7c` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late (#87)
 - `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
 - `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
@@ -238,8 +232,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
 - `3e3d9ec` 2026-10-06 — Control Room: every session reports its own status (#81)
 - `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
-- `c105e0f` 2026-10-06 — Overseer protocol: route work to the right model, review every diff before push (#79)
-- `187260b` 2026-10-06 — PAY-3: Apple Pay / Google Pay to hold the card at booking
 
 ---
 

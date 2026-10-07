@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 386,
-    "routes": 204,
+    "files": 387,
+    "routes": 205,
     "libs": 112,
     "models": 35,
     "orphans": 10,
@@ -24,7 +24,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 166,
+      "lines": 114,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -41,7 +41,6 @@
       "imports": [
         "./home.module.css",
         "@/components/home/TeeSheetDemo",
-        "@/lib/faq",
         "next/image",
         "next/link"
       ],
@@ -6623,7 +6622,7 @@
     },
     {
       "path": "src/app/page.tsx",
-      "lines": 21,
+      "lines": 15,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6643,7 +6642,6 @@
       "guard": "public",
       "imports": [
         "./HomeContent",
-        "@/lib/faq",
         "next"
       ],
       "usedBy": []
@@ -6752,7 +6750,7 @@
     },
     {
       "path": "src/app/sitemap.ts",
-      "lines": 45,
+      "lines": 46,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6774,6 +6772,33 @@
         "@/lib/demo-courses",
         "@/lib/prisma",
         "next"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/teesheet/page.tsx",
+      "lines": 203,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (TeeSheetPage)",
+          "kind": "component"
+        },
+        {
+          "name": "metadata",
+          "kind": "const"
+        }
+      ],
+      "route": "/teesheet",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/faq",
+        "next",
+        "next/link"
       ],
       "usedBy": []
     },
@@ -6903,7 +6928,7 @@
     },
     {
       "path": "src/components/Footer.tsx",
-      "lines": 77,
+      "lines": 78,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6978,7 +7003,7 @@
     },
     {
       "path": "src/components/Nav.tsx",
-      "lines": 130,
+      "lines": 126,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7731,16 +7756,12 @@
     },
     {
       "path": "src/components/home/TeeSheetDemo.tsx",
-      "lines": 228,
-      "purpose": "UI-H-1 (HOMEPAGE_SPEC.md):",
+      "lines": 282,
+      "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
       "brain": [],
       "exports": [
         {
-          "name": "HeroDemo",
-          "kind": "component"
-        },
-        {
-          "name": "SeeItWorkDemo",
+          "name": "LaptopDemo",
           "kind": "component"
         }
       ],
@@ -7751,6 +7772,7 @@
       "guard": null,
       "imports": [
         "@/app/home.module.css",
+        "@/lib/booking-fees",
         "next/image",
         "react"
       ],
@@ -9364,6 +9386,7 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
+        "src/components/home/TeeSheetDemo.tsx",
         "src/lib/email.ts"
       ]
     },
@@ -11411,8 +11434,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/HomeContent.tsx",
-        "src/app/page.tsx"
+        "src/app/teesheet/page.tsx"
       ]
     },
     {

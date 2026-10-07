@@ -55,20 +55,16 @@ export default function Nav() {
   // approved design repeats it in the nav, hero, See it work and the end band.
   // On phones Operator login drops to the footer (its durable home, §4).
   if (isHome) {
+    // HOME-2 (Cam 2026-10-07): the homepage opens on the coast photo with the
+    // logo centred on it, so the nav carries no logo of its own there — just
+    // Operator login and Book a demo, light on the photo's dark top scrim.
     return (
       <nav className="absolute top-0 left-0 right-0 z-50">
-        <div className="px-6 md:px-10 py-5 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center shrink-0" aria-label="GreenReserve">
-            {/* Explicit width/height: this is near the top of the fold, so
-                the reserved box is what keeps §5's CLS budget. */}
-            <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={240} height={45} priority className="w-[170px] min-[960px]:w-[240px] h-auto" />
-          </Link>
-          {/* H-2g review: ink-soft, not ink-muted (ink-muted on paper is 3.3:1,
-              under the 4.5:1 floor for this size). */}
+        <div className="px-6 md:px-10 py-5 flex items-center justify-end gap-4">
           {/* UI-H-1: Operator login + Book a demo (HOMEPAGE_SPEC.md). /demo
               redirects to the Cal.com booker, or the inquiry form when it is off. */}
           <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/dashboard/login" className="hidden sm:inline text-ink-soft hover:text-ink text-[15px] font-medium transition-colors">
+            <Link href="/dashboard/login" className="hidden sm:inline text-white/90 hover:text-white text-[15px] font-medium transition-colors">
               Operator login
             </Link>
             <a href="/demo" className="inline-flex items-center h-[42px] px-4 rounded-md bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold transition-colors">

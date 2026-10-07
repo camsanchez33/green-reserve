@@ -1,164 +1,112 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { HeroDemo, SeeItWorkDemo } from '@/components/home/TeeSheetDemo';
-import { HOME_FAQ } from '@/lib/faq';
+import { LaptopDemo } from '@/components/home/TeeSheetDemo';
 import s from './home.module.css';
 
-// UI-H-1 (HOMEPAGE_SPEC.md, Cam 2026-10-01): the homepage from the approved
-// plain-background mockup (docs/design/home/index.html). Rejected and never to
-// return: Direction B, the printed scorecard, every golf-hole / aerial-course
-// background, and the stock photo "your course, not ours" section. Copy rules:
-// NO durations and NO contract terms; CTAs are Book a demo + Ask a question.
-// CLUB-1 (Cam 2026-10-05, after clubup.com): the page LEADS with what
-// GreenReserve is, then who it is for, then the proof. Heavier Garamond and a
-// fairway-green accent used as decoration only (rules, the stripe, underlines).
-// Fee copy stays behind LQ-2: "a small booking fee", never "keep 100%".
+// HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07): Cam's own layout. One idea per
+// scroll — the logo over the coast photo, what GreenReserve is, what a course
+// gets, the working demo with Book a demo, the logo again. The detail lives on
+// /teesheet ("Learn more about the tee sheet"). Copy rules still hold: NO
+// durations, NO contract terms, fee sentences only from legal/LQ-2_FEE_COPY.md
+// (never "keep 100%" or that the course nets its green fee to the cent), and
+// only features that exist today (pro-shop access waits until it's built).
 //
 // A server component; the only client JS is the demo island (TeeSheetDemo).
 
 const DEMO = '/demo';
 const INQUIRY = '/for-courses';
+const DETAIL = '/teesheet';
 
 const Arrow = () => <span aria-hidden="true">→</span>;
 
-const COURSES = [
-  { name: 'Hollow Creek', where: 'Suffern, NY', crest: 'HC', color: '#2B4A38', photo: '/home/course-hollow-creek.jpg', t: '7:32', meta: '4 spots · $52' },
-  { name: 'Stonebridge', where: 'Hudson, OH', crest: 'SB', color: '#7A2E2E', photo: '/home/course-stonebridge.jpg', t: '8:10', meta: '2 spots · $48' },
-  { name: 'Lake Wren', where: 'Traverse City, MI', crest: 'LW', color: '#23395B', photo: '/home/course-lake-wren.jpg', t: '9:20', meta: '3 spots · $64' },
+const DOES = [
+  'Your own booking page, with your course’s name, colors and photos',
+  'Online, phone and walk-in bookings on one tee sheet',
+  'Check-in and payment at the counter, or on the golfer’s own phone',
+  'Member rates, your cancellation policy and staff permissions, all set by you',
 ];
 
-const WHO = [
-  { h: 'For the course', p: 'Your own booking page with your name, colors and photos. You set the times, prices, member rates and cancellation policy.' },
-  { h: 'For the counter', p: 'Every booking on one sheet: online, phone and walk-in. Check groups in, take payment, and call off a stormy afternoon in one step.' },
-  { h: 'For the golfer', p: 'Book from your course’s website in a minute, get a confirmation email, and check in or pay online before the round.' },
-];
-
-const STEPS = [
-  { h: 'Tell us about your course', p: 'A short call about your tee sheet and how you take bookings today.' },
-  { h: 'We build it', p: 'Your booking page and tee sheet, set up with your times and prices.' },
-  { h: 'Go live', p: 'Add the button to your website. Golfers start booking.' },
+const HIGHLIGHTS = [
+  { h: 'Free for your course', p: 'No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.' },
+  { h: 'Birdie, your assistant', p: 'Ask how today looks, find a golfer’s booking or draft a change to the sheet. Birdie never changes anything until you confirm it.' },
+  { h: 'Analytics', p: 'Revenue collected and still owed, how full each day ran, no-shows, and the tee times that went unsold.' },
+  { h: 'Your money, your account', p: 'Golfers pay with one card payment to your course’s own Stripe account, and it lands on Stripe’s normal schedule.' },
 ];
 
 export default function HomeContent() {
   return (
     <div data-home-root="" className={s.root}>
-      {/* HERO — text left, the working demo right, on the plain ground. */}
+      {/* HERO — the logo over the coast, and one line that says what we are (CLUB-1). */}
       <section className={s.hero}>
-        <div className={s.heroText}>
-          <h1 className={s.display}>GreenReserve is the online tee sheet and booking page for golf courses.</h1>
-          <p>Golfers book tee times from a button on your own website. Your staff run online, phone and walk-in bookings, check-in and payment from one sheet.</p>
-          <div className={s.cta}>
-            <a className={s.btn} href={DEMO}>Book a demo <Arrow /></a>
-            <Link className={s.quiet} href={INQUIRY}>Ask a question</Link>
-          </div>
-          <div className={s.trust}>Free for courses.</div>
+        <Image src="/home/hero-coast.jpg" alt="" fill priority sizes="100vw" quality={50} className={s.heroImg} />
+        <div className={s.heroIn}>
+          <h1 className={s.heroLogo}>
+            <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={1530} height={286} priority className={s.heroLogoImg} />
+          </h1>
+          <p className={`${s.display} ${s.heroLine}`}>The online tee sheet and booking page for golf courses.</p>
         </div>
-        <HeroDemo />
+        <a href="#about" className={s.heroNext}>What it does <span aria-hidden="true">↓</span></a>
       </section>
 
-      {/* WHO IT IS FOR — CLUB-1: one line per side of the business. */}
-      <section className={`${s.col} ${s.who}`}>
-        <h2 className={s.display}>One system for the course, the counter and the golfer.</h2>
-        <div className={s.whoGrid}>
-          {WHO.map(w => <div key={w.h}><h3 className={s.display}>{w.h}</h3><p>{w.p}</p></div>)}
-        </div>
-      </section>
-      <div className={s.stripe} aria-hidden="true" />
-
-      {/* BUILT FOR THE COURSE — three staggered rows, each with its proof. */}
-      <section className={`${s.built} ${s.col}`}>
-        <div className={s.builtGrid}>
-          <h2 className={s.display}>Your course, your sheet, your golfers.</h2>
-          <div className={s.rows}>
-            <div className={s.row}>
-              <div><h3>Fill the tee sheet</h3><p>Golfers book from a “Book a tee time” button on your own website.</p></div>
-              <div className={s.frag} aria-hidden="true">
-                <div className={s.site}><div className={s.siteBar}><b>Hollow Creek</b><span>Course</span><span>Events</span><span className={s.siteBtn}>Book a tee time</span></div><div className={s.siteBody}>Established 1962</div></div>
-              </div>
-            </div>
-            <div className={s.row}>
-              <div><h3>Run the day</h3><p>Online, phone and walk-in bookings on one sheet, so nothing is double-booked.</p></div>
-              <div className={s.frag} aria-hidden="true">
-                <div className={s.walk}>
-                  <div><span className={s.t}>7:40</span><span>Pratt · 1</span><span className={s.tag}>Walk-up</span></div>
-                  <div className={s.added}><span className={s.t}>7:40</span><span>+ Kowalski · 1</span><span className={s.tag}>Added at counter</span></div>
-                  <div><span className={s.t}>7:48</span><span className={s.dim}>Open</span><span className={s.tag}>4 spots</span></div>
-                </div>
-              </div>
-            </div>
-            <div className={s.row}>
-              <div><h3>Keep your brand</h3><p>Your course&apos;s name, colors and photos. Not a discount marketplace.</p></div>
-              <div className={s.frag} aria-hidden="true">
-                <div className={s.brands}>
-                  {COURSES.map(c => (
-                    <div key={c.name} className={s.bp}>
-                      <div className={s.bpHead}>
-                        <Image src={c.photo} alt="" fill sizes="170px" className={s.phImg} />
-                        <span className={s.bpCrest} style={{ color: c.color }}>{c.crest}</span>
-                        <div><b>{c.name}</b><small>{c.where}</small></div>
-                      </div>
-                      <div className={s.bpRow}><b>{c.t}</b><span>{c.meta}</span></div>
-                      <div className={s.bpBtn} style={{ background: c.color }}>Reserve</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS — on the forest band, three steps, no durations. */}
-      <section className={s.setup} id="how">
-        <div className={`${s.col} ${s.setupGrid}`}>
+      {/* WHAT IT IS — the headline, the paragraph, the list, then the way on. */}
+      <section className={`${s.col} ${s.about}`} id="about">
+        <h2 className={s.display}>A free tee sheet built for how your course really runs.</h2>
+        <div className={s.aboutGrid}>
           <div>
-            <h2 className={s.display}>From first call<br />to first tee time.</h2>
-            <p className={s.lead}>We set it up with you, around how your course already runs.</p>
+            <p className={s.lead}>
+              GreenReserve gives your course its own online booking page and the tee sheet your staff run the day from.
+              Golfers book from a button on your website, on a page with your course&apos;s name, colors and photos.
+              Every booking, whether it came in online, by phone or at the counter, lands on the same sheet, so nothing
+              is double-booked. Green fees are paid into your course&apos;s own Stripe account, and GreenReserve charges your course nothing.
+            </p>
+            <ul className={s.does}>
+              {DOES.map(d => <li key={d}>{d}</li>)}
+            </ul>
           </div>
-          <ol className={s.steps}>
-            {STEPS.map(st => (
-              <li key={st.h}><h3>{st.h}</h3><p>{st.p}</p></li>
-            ))}
-          </ol>
+          <div className={s.cards}>
+            <a href="#see" className={s.card}>
+              <b className={s.display}>See how it works</b>
+              <span>Book a time as a golfer and watch it land on the tee sheet.</span>
+              <em>Try the demo <Arrow /></em>
+            </a>
+            <Link href={DETAIL} className={s.card}>
+              <b className={s.display}>Learn more about the tee sheet</b>
+              <span>Everything your course gets, in detail.</span>
+              <em>Read the overview <Arrow /></em>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* PRICE — one line; the details are for the call (LQ-2). */}
-      <section className={`${s.col} ${s.priceLine}`} id="pricing">
-        <h2 className={s.display}>Free for courses.</h2>
-        <p>No setup fee and no monthly fee. Golfers pay a small booking fee when they book online. We&apos;ll walk you through the details on a call.</p>
+      {/* WHAT YOU GET — only what exists today. */}
+      <section className={s.why} id="why">
+        <div className={s.col}>
+          <h2 className={s.display}>What your course gets.</h2>
+          <div className={s.whyGrid}>
+            {HIGHLIGHTS.map(h => <div key={h.h}><h3 className={s.display}>{h.h}</h3><p>{h.p}</p></div>)}
+          </div>
+          <Link href={DETAIL} className={s.quiet}>Learn more about the tee sheet</Link>
+        </div>
       </section>
 
-      {/* SEE IT WORK — the preview before booking a demo (Cam 2026-10-01). */}
+      {/* SEE HOW IT WORKS — the working demo on a laptop, then Book a demo. */}
       <section className={s.see} id="see">
         <div className={s.col}>
-          <h2 className={s.display}>Book a time. Watch it land on the sheet.</h2>
-          <p className={s.lead}>This is how it works, not a picture of it. Pick a time as a golfer, then flip to the sheet your shop runs. Try your course&apos;s color.</p>
-          <SeeItWorkDemo />
-          <div className={s.seeCta}>
+          <h2 className={s.display}>See how it works.</h2>
+          <p className={s.lead}>Book a time on the golfer&apos;s phone, then check the group in on the tee sheet. Try your course&apos;s color.</p>
+          <LaptopDemo />
+          <div className={s.seeCta} id="demo">
             <a className={s.btn} href={DEMO}>Book a demo <Arrow /></a>
             <span>We&apos;ll show it with your own course&apos;s times and prices.</span>
+            <Link className={s.quiet} href={INQUIRY}>Or ask a question</Link>
           </div>
         </div>
       </section>
 
-      {/* FAQ — the same array as the FAQPage JSON-LD in page.tsx; every answer printed. Last before the end band (Cam 2026-10-01). */}
-      <section className={`${s.col} ${s.faqWrap}`} id="faq">
-        <h2 className={s.display}>What courses ask us.</h2>
-        <div className={s.faq}>
-          {HOME_FAQ.map(f => <div key={f.q}><h3>{f.q}</h3><p>{f.a}</p></div>)}
-        </div>
-      </section>
-
-      {/* END */}
+      {/* END — the logo again, with the line. */}
       <section className={s.end}>
-        <div className={`${s.col} ${s.endIn}`}>
-          <div><h2 className={s.display}>The tee sheet your course deserves.</h2><span className={s.mail}>Or email thegreenreserve@outlook.com</span></div>
-          <div className={s.cta}>
-            <a className={`${s.btn} ${s.light}`} href={DEMO}>Book a demo <Arrow /></a>
-            <Link className={`${s.quiet} ${s.onDark}`} href={INQUIRY}>Ask a question</Link>
-          </div>
-        </div>
+        <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={1530} height={286} loading="lazy" className={s.endLogo} />
+        <p className={s.display}>The tee sheet your course deserves.</p>
       </section>
     </div>
   );
