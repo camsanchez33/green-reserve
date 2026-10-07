@@ -166,6 +166,7 @@ model Course {
   legalName             String             @default("")
   agreements            AgreementAcceptance[]
   courseProducts        CourseProduct[]
+  monthlyReviews        MonthlyReview[]
 
   @@index([operatorId])
 }
@@ -981,4 +982,29 @@ model AgreementVersion {
   createdAt    DateTime  @default(now())
 
   @@unique([document, version])
+}
+
+/// BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07): the monthly AI review of a
+/// course's previous month. `metrics` holds the numbers computed by
+/// lib/analytics.ts — the ONLY numbers the written text may use. The first full
+/// month a course is live is its baseline; later reviews measure against it.
+model MonthlyReview {
+  id         String    @id @default(cuid())
+  courseId   String
+  course     Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// YYYY-MM, in the course's own timezone.
+  month      String
+  isBaseline Boolean   @default(false)
+  metrics    Json
+  /// written | thin | failed
+  status     String
+  body       String?
+  model      String?
+  error      String?
+  emailedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([courseId, month])
+  @@index([courseId])
 }
