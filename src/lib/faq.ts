@@ -11,7 +11,7 @@ export const HOME_FAQ: { q: string; a: string }[] = [
   { q: 'What does it cost?', a: 'No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.' },
 ];
 
-/** schema.org FAQPage for the homepage <head>. */
+/** schema.org FAQPage for /teesheet (HOME-2). */
 export function faqJsonLd() {
   return {
     '@context': 'https://schema.org',

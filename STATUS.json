@@ -1,31 +1,26 @@
 {
-  "generatedAt": "2026-10-07T03:12:53.758Z",
+  "generatedAt": "2026-10-07T03:19:37.861Z",
   "repo": {
-    "head": "2d1a02c",
+    "head": "e2a301d",
     "branch": "claude/homepage-v2",
-    "dirtyCount": 15,
+    "dirtyCount": 3,
     "dirty": [
-      "M CLAUDE.md",
-      " M HOMEPAGE_SPEC.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/design-guard.baseline.json",
-      " M src/app/HomeContent.tsx",
-      " M src/app/home.module.css",
-      " M src/app/page.tsx",
-      " M src/app/sitemap.ts",
-      " M src/components/Footer.tsx",
-      " M src/components/Nav.tsx",
+      "M src/app/teesheet/page.tsx",
       " M src/components/home/TeeSheetDemo.tsx",
-      " M src/lib/faq.ts",
-      "?? public/home/hero-coast.jpg",
-      "?? src/app/teesheet/"
+      " M src/lib/faq.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-05T19:58:28+00:00",
     "unrecorded": [
+      {
+        "h": "e2a301d",
+        "date": "2026-10-07T03:13:50+00:00",
+        "subject": "Homepage rebuilt to Cam's layout; accurate demo; new /teesheet page",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "2d1a02c",
         "date": "2026-10-06T19:49:38-04:00",
@@ -241,7 +236,7 @@
       "line": 1175,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 37
+      "ageDays": 38
     },
     {
       "title": "MP-2d",
@@ -670,7 +665,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-06",
+      "lastTouched": "2026-10-07",
       "ageDays": 0
     },
     {
@@ -704,13 +699,13 @@
       "ageDays": 7
     },
     {
-      "file": "BIRDIE_AI_SPEC.md",
+      "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 1
+      "lastTouched": "2026-10-07",
+      "ageDays": 0
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
+      "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
       "ageDays": 1
@@ -875,6 +870,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e2a301d",
+      "date": "2026-10-07",
+      "subject": "Homepage rebuilt to Cam's layout; accurate demo; new /teesheet page"
+    },
+    {
       "h": "2d1a02c",
       "date": "2026-10-06",
       "subject": "No-show charges taken at the course's midnight, not when marked (#90)"
@@ -928,11 +928,6 @@
       "h": "51e2896",
       "date": "2026-10-06",
       "subject": "Final reviewer runs on Fable (#80)"
-    },
-    {
-      "h": "c105e0f",
-      "date": "2026-10-06",
-      "subject": "Overseer protocol: route work to the right model, review every diff before push (#79)"
     }
   ]
 }

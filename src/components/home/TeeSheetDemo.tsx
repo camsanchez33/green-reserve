@@ -140,12 +140,12 @@ function TeeSheet() {
                     <button type="button" className={s.ci} onClick={() => { update(x => ({ ...x, days: patchGroup(x, r.t, gi, { done: true }) })); toast(`${one.name} checked in — paid at the counter.`); }}>Pay</button>
                   )}
                   {one && one.src === 'online' && (
-                    <button type="button" className={s.ci} onClick={() => { update(x => ({ ...x, days: patchGroup(x, r.t, gi, { done: true }) })); toast(`Checked in — charged ${money(roundTotal(d, one.n))}`); }}>Check in</button>
+                    <button type="button" className={s.ci} onClick={() => { update(x => ({ ...x, days: patchGroup(x, r.t, gi, { done: true }) })); toast(`Checked in — charged ${money(roundTotal(d, one.n))}.`); }}>Check in</button>
                   )}
                   {!live.length && !r.blocked && booked(r) < CAP && (
                     <button type="button" className={s.wk} onClick={() => {
-                      update(x => ({ ...x, days: x.days.map((dd, di) => di !== x.day ? dd : { ...dd, rows: dd.rows.map(rr => rr.t !== r.t ? rr : { ...rr, groups: [...rr.groups, { name: 'Walk-in', n: 1, src: 'walk_in' as Src }] }) }) }));
-                      toast(`Walk-in added at ${fmt(r.t)}.`);
+                      update(x => ({ ...x, days: x.days.map((dd, di) => di !== x.day ? dd : { ...dd, rows: dd.rows.map(rr => rr.t !== r.t ? rr : { ...rr, groups: [...rr.groups, { name: 'Dana Price', n: 1, src: 'walk_in' as Src }] }) }) }));
+                      toast('Dana Price added.');
                     }}>Walk-in</button>
                   )}
                 </td>
@@ -261,11 +261,11 @@ export function LaptopDemo() {
     <>
       <div className={s.lbls} aria-hidden="true"><span>What your staff see</span><span>What golfers see</span></div>
       <div className={s.stage}>
-        <div className={s.laptop}>
+        <div className={s.laptop} role="region" aria-label="What your staff see">
           <div className={s.laptopScreen}><TeeSheet /></div>
           <div className={s.laptopBase} aria-hidden="true" />
         </div>
-        <div className={s.phoneSide}>
+        <div className={s.phoneSide} role="region" aria-label="What golfers see">
           <GolferPhone />
           <div className={s.sws}>
             <span>Course color</span>
