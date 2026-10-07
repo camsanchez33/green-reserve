@@ -8,6 +8,62 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
 
 ---
 
+## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
+
+Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3
+below conflict with this section, THIS section wins; they stay as history.
+
+**Homepage, top to bottom:**
+1. **Hero:** ONE full-screen photo (`public/home/hero-coast.jpg`: an oblique
+   aerial of a coastal course at sunset, chosen by Cam) with the cream logo
+   centred in the upper third and one line under it that says what we are
+   (CLUB-1 still holds): "The online tee sheet and booking page for golf
+   courses." A dark top-to-bottom scrim so the logo reads. The nav has no logo
+   on `/` (the hero's logo replaces it): Operator login + Book a demo, top right.
+2. **What it is** (`#about`): headline, one long paragraph, four bullets, and
+   two cards: "See how it works" (scrolls to the demo) and "Learn more about the
+   tee sheet" (→ `/teesheet`).
+3. **What your course gets** (`#why`): four highlights, only features that
+   exist today: Free, Birdie, Analytics, Your money / your account. **Pro-shop
+   access is NOT on the page until it is built** (Cam wants it; it is a
+   separate item to scope).
+4. **See how it works** (`#see`): the working demo, the operator tee sheet on a
+   laptop and the golfer's booking page on a phone beside it, one store behind
+   both. Then Book a demo + "Or ask a question".
+5. **End:** the logo again with "The tee sheet your course deserves."
+6. Footer: "© {year} GreenReserve. All rights reserved." + The tee sheet,
+   Terms, Privacy, Operator agreement, Contact, Operator login, email.
+
+**`/teesheet`**: the long version: everything a course gets (booking page, tee
+sheet, payments, cancellations and no-shows, members, staff, Birdie,
+analytics), how setup works, what it costs, the FAQ (the FAQPage JSON-LD moved
+here from `/`), about, contact. Add a walkthrough video here once one exists.
+The "About" paragraph is a first draft; Cam to rewrite it.
+
+**The demo must match the product (Cam: "it needs to actually be accurate").**
+Every label, status word and button in `src/components/home/TeeSheetDemo.tsx`
+copies the real dashboard tee sheet and the real booking flow (Pay for
+phone/walk-in groups, Check in for online, Walk-in on open slots, "N left" /
+"Full" / "Blocked" / "Checked in", Next up, the header line; the golfer side's
+two-line day chips, "$52 / player", Select, the itemized total with the
+$1.50/player booking fee, "Continue to Book →", "Confirm your tee time",
+"You're all set"). Change the product, check the demo. The planned next step
+(after the rest of the site is finished) is a REAL read-only demo course
+instead of this copy.
+
+**Rules that change:**
+- The photo ban in §1.2 is lifted for this one hero photo. The scroll-driven
+  golf-hole concept and an aerial course behind the WHOLE page stay rejected.
+- Fee copy: the LQ-2 freeze was lifted 2026-09-14; homepage and `/teesheet`
+  use only the allowed sentences in `legal/LQ-2_FEE_COPY.md` ($1.50 per player
+  is fine). Never "keep 100%", never "costs your course nothing" (the course
+  bears Stripe's fee on the $1.50); say "GreenReserve charges your course
+  nothing".
+- Still in force: no durations, no contract talk, CTAs Book a demo + Ask a
+  question, realistic names (no Smith/Johnson/celebrities).
+
+---
+
 ## 1. What Cam decided (in order, so nobody re-litigates it)
 
 1. The old homepage (cream Clubhouse, Fraunces) and the first redesigns looked

@@ -61,6 +61,7 @@ export default function Footer() {
           <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={130} height={25} loading="lazy" className="w-[130px] h-auto" />
         </Link>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2 justify-center">
+          <Link href="/teesheet" className="hover:text-ink transition-colors">The tee sheet</Link>
           <Link href="/terms" className="hover:text-ink transition-colors">Terms</Link>
           <Link href="/privacy" className="hover:text-ink transition-colors">Privacy</Link>
           <Link href="/operator-agreement" className="hover:text-ink transition-colors">Operator agreement</Link>
@@ -69,7 +70,7 @@ export default function Footer() {
           <Link href="/dashboard/login" className="hover:text-ink transition-colors">Operator login</Link>
           <a href="mailto:thegreenreserve@outlook.com" className="hover:text-ink transition-colors">thegreenreserve@outlook.com</a>
         </nav>
-        <span>© {new Date().getFullYear()} GreenReserve</span>
+        <span>© {new Date().getFullYear()} GreenReserve. All rights reserved.</span>
       </div>
     </footer>
   );

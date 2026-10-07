@@ -204,7 +204,7 @@
     "card": 1
   },
   "src/app/receipt/[bookingId]/page.tsx": {
-    "lucide": 2
+    "lucide": 1
   },
   "src/app/terms/page.tsx": {
     "card": 1
