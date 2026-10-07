@@ -117,37 +117,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-07 23:53 UTC</span><span>claude/bi-monthly-review @ 0a54482</span>
-    <span>14 uncommitted</span>
+    <span>2026-10-07 23:55 UTC</span><span>claude/bi-monthly-review @ 3959421</span>
+    <span>1 uncommitted</span>
   </div>
 </header>
-<div class="alarm">
-<div class="lede">22 runs have shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-10-05. These commits appear nowhere in it.</p>
-<ul>
-<li><span class="h">0a54482</span><span>Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)</span></li>
-<li><span class="h">2d1a02c</span><span>No-show charges taken at the course's midnight, not when marked (#90)</span></li>
-<li><span class="h">41e61b3</span><span>Manage page says what cancelling costs right now (#89)</span></li>
-<li><span class="h">f541b7c</span><span>A hold not yet taken is charged when the golfer cancels late (#87)</span></li>
-<li><span class="h">bc65c9f</span><span>Receipt shows what actually reached the golfer's card (#88)</span></li>
-<li><span class="h">d19d5cb</span><span>Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)</span></li>
-<li><span class="h">a075be8</span><span>Booking and course pages say what the policy really charges (#85)</span></li>
-<li><span class="h">384b502</span><span>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</span></li>
-<li><span class="h">f5b2bb8</span><span>G8: hourly cron sends every pay link and cutoff warning (#83)</span></li>
-<li><span class="h">c0c4cea</span><span>G13: signed-in golfers can use a booking's emailed manage link (#82)</span></li>
-<li><span class="h">3e3d9ec</span><span>Control Room: every session reports its own status (#81)</span></li>
-<li><span class="h">51e2896</span><span>Final reviewer runs on Fable (#80)</span></li>
-<li><span class="h">c105e0f</span><span>Overseer protocol: route work to the right model, review every diff before push (#79)</span></li>
-<li><span class="h">187260b</span><span>PAY-3: Apple Pay / Google Pay to hold the card at booking</span></li>
-<li><span class="h">57c1b2f</span><span>PAY-2: count the booking fees eaten on rounds paid at the counter</span></li>
-<li><span class="h">ebe8ab8</span><span>PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in</span></li>
-<li><span class="h">c534f1e</span><span>Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001)</span></li>
-<li><span class="h">2e6dec2</span><span>Golfer sign-in code can no longer be cracked offline (R-AUTH-001)</span></li>
-<li><span class="h">4f1580c</span><span>&quot;Still coming&quot; sticks: auto no-show never re-marks a cleared booking (R-CRON-001)</span></li>
-<li><span class="h">69cc708</span><span>No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003)</span></li>
-<li><span class="h">475ff29</span><span>DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001)</span></li>
-<li><span class="h">fa48d8f</span><span>CI: run the test scripts on every PR; fix three stale tests</span></li>
-</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">238</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">21</span><span class="l">Awaiting review</span></div>
@@ -157,9 +130,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M RUN_QUEUE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li><li><code>M src/lib/email.ts</code></li><li><code>M vercel.json</code></li><li><code>?? PLATFORM_ROADMAP_SPEC.md</code></li><li><code>?? prisma/migrations/20261007234814_monthly_review/</code></li><li><code>?? scripts/monthly-review-test.ts</code></li><li><code>?? src/app/api/cron/monthly-review/</code></li><li><code>?? src/app/api/operator/monthly-reviews/</code></li><li><code>?? src/lib/monthly-review.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M PLATFORM_ROADMAP_SPEC.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -251,10 +224,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">7</td><td class="num">2026-10-06 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">7</td><td class="num">2026-10-07 &middot; 0d</td></tr>
 <tr><td><code>ARCHITECTURE.md</code></td><td class="num">4</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">2</td><td class="num">2026-10-04 &middot; 2d</td></tr>
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">2</td><td class="num">2026-10-01 &middot; 6d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-07 &middot; 0d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">1</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 <tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">1</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-06 &middot; 0d</td></tr>
@@ -287,6 +261,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">3959421</td><td class="num">2026-10-07</td><td>BI-1: monthly AI review of each course's previous month</td></tr>
 <tr><td class="num">0a54482</td><td class="num">2026-10-06</td><td>Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)</td></tr>
 <tr><td class="num">2d1a02c</td><td class="num">2026-10-06</td><td>No-show charges taken at the course's midnight, not when marked (#90)</td></tr>
 <tr><td class="num">41e61b3</td><td class="num">2026-10-06</td><td>Manage page says what cancelling costs right now (#89)</td></tr>
@@ -298,7 +273,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">f5b2bb8</td><td class="num">2026-10-06</td><td>G8: hourly cron sends every pay link and cutoff warning (#83)</td></tr>
 <tr><td class="num">c0c4cea</td><td class="num">2026-10-06</td><td>G13: signed-in golfers can use a booking's emailed manage link (#82)</td></tr>
 <tr><td class="num">3e3d9ec</td><td class="num">2026-10-06</td><td>Control Room: every session reports its own status (#81)</td></tr>
-<tr><td class="num">51e2896</td><td class="num">2026-10-06</td><td>Final reviewer runs on Fable (#80)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

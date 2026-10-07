@@ -60,12 +60,35 @@ before, on Analytics and emailed to the owner.
 
 ## 2. ACT-1 — move a group to another time (staff)
 
-Doesn't exist today, even by hand. Tee sheet row → Move → pick a day and a time
-with room → confirm. Money-adjacent: the new time may have a different rate (the
-booking is re-priced to the new slot, shown before confirming) and a different
-cancellation cutoff (the policy copied onto the booking stays; the cutoff moves
-with the tee time; a hold already charged stays charged). Golfer gets an email
-(and a text once MSG-1 is live). Permission key `sheet.move`. Event logged.
+Doesn't exist today, even by hand. What already moves bookings, and how:
+the golfer's own "change my time" (`/api/manage/[id]/swap-time`) reprices to
+the new slot's STANDARD rate and resets the booking fee to $1.50 × players —
+wrong for member bookings (they lose their rate) and for counter bookings
+(they gain a fee they never had) — and logs no event; frost delay
+(`lib/frost-delay.ts`) keeps the price and logs no event.
+
+Build ONE `moveBooking()` (src/lib/move-booking.ts) that all three use:
+- Serializable transaction (claim new slot, release old, P2034 → "just taken").
+- Same course, new slot not blocked, room for the whole group, not in the
+  past, booking still confirmed and not checked in.
+- **Price:** the booked price is KEPT by default (a course-initiated move
+  shouldn't change what the golfer agreed to). Staff may tick "Charge the new
+  time's rate" when the rates differ, offered only for standard-rate bookings.
+  The golfer's own swap keeps repricing to the new slot (they chose it), but
+  member rates are re-applied through the tier and the booking fee keeps its
+  per-player amount (0 stays 0). The tier-rate helper moves out of the
+  bookings route into src/lib/tier-rates.ts unchanged.
+- **Cancellation window:** the policy copied onto the booking stays; the
+  cutoff moves with the tee time. A hold already charged stays charged (it is
+  refunded at check-in as always). Moving into a time whose cutoff has passed
+  shows "the free-cancellation window for this time has closed — the hold is
+  charged within the hour" before confirming.
+- New BookingEvent type `booking_moved` (additive enum value) with from/to.
+- Golfer emailed (`sendBookingModifiedEmail`); texted once MSG-1 is live.
+- Permission key `sheet.move` ("Move a group to another time"), in the Front
+  desk+ presets that already hold `sheet.walkin`.
+- Tee sheet: expanded row → Move → day picker + times with room, price and
+  window notes, Confirm. Toast "{name} moved to 8:16 AM."
 
 ## 3. ACT-2 — Birdie acts on the tee sheet
 

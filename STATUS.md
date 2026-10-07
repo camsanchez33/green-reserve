@@ -4,58 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-07 23:53 UTC · branch `claude/bi-monthly-review` · HEAD `0a54482` · working tree **14 dirty file(s)**
+Generated 2026-10-07 23:55 UTC · branch `claude/bi-monthly-review` · HEAD `3959421` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-05**. 22 commit(s) since then are not mentioned anywhere in it:
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-| commit | date | subject |
-|---|---|---|
-| `0a54482` | 2026-10-06 | Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91) |
-| `2d1a02c` | 2026-10-06 | No-show charges taken at the course's midnight, not when marked (#90) |
-| `41e61b3` | 2026-10-06 | Manage page says what cancelling costs right now (#89) |
-| `f541b7c` | 2026-10-06 | A hold not yet taken is charged when the golfer cancels late (#87) |
-| `bc65c9f` | 2026-10-06 | Receipt shows what actually reached the golfer's card (#88) |
-| `d19d5cb` | 2026-10-06 | Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86) |
-| `a075be8` | 2026-10-06 | Booking and course pages say what the policy really charges (#85) |
-| `384b502` | 2026-10-06 | Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84) |
-| `f5b2bb8` | 2026-10-06 | G8: hourly cron sends every pay link and cutoff warning (#83) |
-| `c0c4cea` | 2026-10-06 | G13: signed-in golfers can use a booking's emailed manage link (#82) |
-| `3e3d9ec` | 2026-10-06 | Control Room: every session reports its own status (#81) |
-| `51e2896` | 2026-10-06 | Final reviewer runs on Fable (#80) |
-| `c105e0f` | 2026-10-06 | Overseer protocol: route work to the right model, review every diff before push (#79) |
-| `187260b` | 2026-10-06 | PAY-3: Apple Pay / Google Pay to hold the card at booking |
-| `57c1b2f` | 2026-10-06 | PAY-2: count the booking fees eaten on rounds paid at the counter |
-| `ebe8ab8` | 2026-10-06 | PAY-1: text the pay link from the counter; Apple Pay / Google Pay at check-in |
-| `c534f1e` | 2026-10-05 | Every cutoff uses the window the booking was made under (R-PAY-003, R-CRON-002, R-GOLF-001) |
-| `2e6dec2` | 2026-10-05 | Golfer sign-in code can no longer be cracked offline (R-AUTH-001) |
-| `4f1580c` | 2026-10-05 | "Still coming" sticks: auto no-show never re-marks a cleared booking (R-CRON-001) |
-| `69cc708` | 2026-10-05 | No-show then cancel: never charge the late fee on top (R-PAY-002, R-BOOK-003) |
-| `475ff29` | 2026-10-05 | DST: tee times map to the right instant on clock-change Sundays (R-BOOK-001) |
-| `fa48d8f` | 2026-10-05 | CI: run the test scripts on every PR; fix three stale tests |
+### Uncommitted working tree (1 file(s))
 
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+- `M PLATFORM_ROADMAP_SPEC.md`
 
-### Uncommitted working tree (14 file(s))
-
-- `M CLAUDE.md`
-- `M RUN_QUEUE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M src/app/dashboard/analytics/page.tsx`
-- `M src/lib/email.ts`
-- `M vercel.json`
-- `?? PLATFORM_ROADMAP_SPEC.md`
-- `?? prisma/migrations/20261007234814_monthly_review/`
-- `?? scripts/monthly-review-test.ts`
-- `?? src/app/api/cron/monthly-review/`
-- `?? src/app/api/operator/monthly-reviews/`
-- `?? src/lib/monthly-review.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -195,10 +155,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-06 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 2d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-07 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 0d |
@@ -232,6 +193,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `3959421` 2026-10-07 — BI-1: monthly AI review of each course's previous month
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)
 - `2d1a02c` 2026-10-06 — No-show charges taken at the course's midnight, not when marked (#90)
 - `41e61b3` 2026-10-06 — Manage page says what cancelling costs right now (#89)
@@ -243,7 +205,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
 - `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
 - `3e3d9ec` 2026-10-06 — Control Room: every session reports its own status (#81)
-- `51e2896` 2026-10-06 — Final reviewer runs on Fable (#80)
 
 ---
 
