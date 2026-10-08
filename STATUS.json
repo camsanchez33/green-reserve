@@ -1,25 +1,36 @@
 {
-  "generatedAt": "2026-10-08T03:42:08.790Z",
+  "generatedAt": "2026-10-08T03:58:07.190Z",
   "repo": {
-    "head": "fadcf67",
-    "branch": "claude/sheet-fit-cancel",
-    "dirtyCount": 9,
-    "dirty": [
-      "M CLAUDE.md",
-      " M PLATFORM_ROADMAP_SPEC.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/operator/tee-times/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/components/dashboard/TeeSheetBoard.tsx",
-      " M src/components/dashboard/money/CancellationsPanel.tsx",
-      "?? src/lib/cancel-confirm.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "head": "7f79a3a",
+    "branch": "claude/analytics-rework",
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
+      {
+        "h": "9e2ff56",
+        "date": "2026-10-08T03:57:59+00:00",
+        "subject": "AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b7079ea",
+        "date": "2026-10-07T23:56:16-04:00",
+        "subject": "Tee sheet: one board that fits the page, cancel from the sheet (#99)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3c3c337",
+        "date": "2026-10-08T03:53:18+00:00",
+        "subject": "AN-2: Analytics reworked so it reads plainly",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "fadcf67",
         "date": "2026-10-07T23:23:01-04:00",
@@ -564,7 +575,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-07",
+      "lastTouched": "2026-10-08",
       "ageDays": 0
     },
     {
@@ -775,6 +786,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "9e2ff56",
+      "date": "2026-10-08",
+      "subject": "AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value"
+    },
+    {
+      "h": "b7079ea",
+      "date": "2026-10-07",
+      "subject": "Tee sheet: one board that fits the page, cancel from the sheet (#99)"
+    },
+    {
+      "h": "3c3c337",
+      "date": "2026-10-08",
+      "subject": "AN-2: Analytics reworked so it reads plainly"
+    },
+    {
       "h": "fadcf67",
       "date": "2026-10-07",
       "subject": "SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)"
@@ -818,21 +844,6 @@
       "h": "2d1a02c",
       "date": "2026-10-06",
       "subject": "No-show charges taken at the course's midnight, not when marked (#90)"
-    },
-    {
-      "h": "41e61b3",
-      "date": "2026-10-06",
-      "subject": "Manage page says what cancelling costs right now (#89)"
-    },
-    {
-      "h": "f541b7c",
-      "date": "2026-10-06",
-      "subject": "A hold not yet taken is charged when the golfer cancels late (#87)"
-    },
-    {
-      "h": "bc65c9f",
-      "date": "2026-10-06",
-      "subject": "Receipt shows what actually reached the golfer's card (#88)"
     }
   ]
 }
