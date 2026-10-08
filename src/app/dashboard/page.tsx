@@ -18,6 +18,7 @@ import GettingStartedChecklist from '@/components/dashboard/GettingStartedCheckl
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
+import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { formatTeeDay as fmtDate, formatTeeTime as fmtTime } from '@/lib/format';
 
@@ -114,6 +115,8 @@ function DashboardPageInner() {
   const [changesError, setChangesError] = useState('');
   const [changesConfirmMsg, setChangesConfirmMsg] = useState('');
   const [showAddModal, setShowAddModal]       = useState(false);
+  // MSG-1: the message-the-day's-golfers dialog.
+  const [messageOpen, setMessageOpen] = useState(false);
   // ACT-1: the group being moved to another time.
   const [moveTarget, setMoveTarget] = useState<{ booking: { id: string; golferName: string; players: number; emailable: boolean }; fromTeeTimeId: string } | null>(null);
   const [showConditions, setShowConditions]   = useState(false);
@@ -682,6 +685,11 @@ function DashboardPageInner() {
                       Weather
                     </button>
                   )}
+                  {access.can('sheet.message_golfers') && (
+                    <button onClick={() => setMessageOpen(true)} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
+                      Message golfers
+                    </button>
+                  )}
                   {access.can('sheet.edit_times') && (
                   <button onClick={() => setShowAddModal(true)} className="text-[13px] font-semibold bg-pine hover:bg-pine-hover text-white px-3.5 py-1.5 rounded-md transition-colors">
                     Add time
@@ -939,6 +947,9 @@ function DashboardPageInner() {
           )}
         </div>
       </main>
+
+      {/* ── MSG-1: message the day's golfers ── */}
+      {messageOpen && <GolferMessageModal date={selectedDate} onClose={() => setMessageOpen(false)} />}
 
       {/* ── ACT-1: move a group to another time ── */}
       {moveTarget && (

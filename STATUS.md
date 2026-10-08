@@ -4,27 +4,27 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 00:46 UTC · branch `claude/act2-birdie-acts` · HEAD `912e5f7` · working tree **6 dirty file(s)**
+Generated 2026-10-08 01:03 UTC · branch `claude/msg1-golfer-messages` · HEAD `27ff9ab` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 2 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 4 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `912e5f7` | 2026-10-08 | ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link |
+| `27ff9ab` | 2026-10-08 | MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate |
+| `3058152` | 2026-10-08 | MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up) |
+| `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (4 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/birdie-isolation-test.ts`
-- `M scripts/birdie-sheet-drafts-test.ts`
-- `M src/lib/birdie/proposal-types.ts`
-- `M src/lib/birdie/proposals.ts`
+- `M scripts/golfer-messages-test.ts`
+- `M src/lib/golfer-messages.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -167,9 +167,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
-| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 2d |
+| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 3d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
@@ -205,7 +205,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `912e5f7` 2026-10-08 — ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link
+- `27ff9ab` 2026-10-08 — MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate
+- `3058152` 2026-10-08 — MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)
+- `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
 - `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)
@@ -215,8 +217,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
 - `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
-- `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
-- `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
 
 ---
 

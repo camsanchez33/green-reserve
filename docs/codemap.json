@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 393,
-    "routes": 207,
-    "libs": 115,
-    "models": 36,
+    "files": 396,
+    "routes": 208,
+    "libs": 116,
+    "models": 37,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -4461,6 +4461,43 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/golfer-messages/route.ts",
+      "lines": 59,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/golfer-messages",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/golfer-messages",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "@/lib/session",
+        "@/lib/twilio",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/members/remind-overdue/route.ts",
       "lines": 76,
       "purpose": "",
@@ -6160,7 +6197,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1379,
+      "lines": 1390,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6177,6 +6214,7 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/GettingStartedChecklist",
+        "@/components/dashboard/GolferMessageModal",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/MoveGroupModal",
         "@/components/dashboard/Toast",
@@ -7527,6 +7565,33 @@
       ]
     },
     {
+      "path": "src/components/dashboard/GolferMessageModal.tsx",
+      "lines": 136,
+      "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (GolferMessageModal)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/LoadError.tsx",
       "lines": 16,
       "purpose": "SD-10.",
@@ -8260,6 +8325,7 @@
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx"
       ]
@@ -11048,6 +11114,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/components/AnnouncementBanner.tsx",
+        "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
@@ -11152,7 +11219,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1850,
+      "lines": 1869,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11258,6 +11325,10 @@
         },
         {
           "name": "sendCourseLiveOrientationEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendCourseNoticeEmail",
           "kind": "fn"
         },
         {
@@ -11451,6 +11522,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
         "src/lib/frost-delay.ts",
+        "src/lib/golfer-messages.ts",
         "src/lib/monthly-review.ts",
         "src/lib/refund-booking.ts",
         "src/lib/submit-change-request.ts",
@@ -11628,11 +11700,13 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
-        "src/lib/frost-delay.ts"
+        "src/lib/frost-delay.ts",
+        "src/lib/golfer-messages.ts"
       ]
     },
     {
@@ -11708,6 +11782,61 @@
       ]
     },
     {
+      "path": "src/lib/golfer-messages.ts",
+      "lines": 110,
+      "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "audience",
+          "kind": "fn"
+        },
+        {
+          "name": "checkWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_MESSAGE_CHARS",
+          "kind": "const"
+        },
+        {
+          "name": "reach",
+          "kind": "fn"
+        },
+        {
+          "name": "sendCourseMessage",
+          "kind": "fn"
+        },
+        {
+          "name": "SMS_CHARS",
+          "kind": "const"
+        },
+        {
+          "name": "smsRoom",
+          "kind": "fn"
+        },
+        {
+          "name": "Window",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./email",
+        "./format",
+        "./golfer-otp",
+        "./prisma",
+        "./twilio"
+      ],
+      "usedBy": [
+        "src/app/api/operator/golfer-messages/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/golfer-otp.ts",
       "lines": 94,
       "purpose": "",
@@ -11766,7 +11895,8 @@
       "usedBy": [
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
-        "src/app/api/operator/bookings/route.ts"
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/golfer-messages.ts"
       ]
     },
     {
@@ -12978,6 +13108,7 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -13032,6 +13163,7 @@
         "src/lib/cron-log.ts",
         "src/lib/frost-delay.ts",
         "src/lib/go-live-preflight.ts",
+        "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
@@ -13210,6 +13342,7 @@
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/agreement/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
@@ -13501,6 +13634,7 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -13650,7 +13784,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 130,
+      "lines": 131,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -14016,7 +14150,7 @@
     },
     {
       "path": "src/lib/twilio.ts",
-      "lines": 42,
+      "lines": 45,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14026,6 +14160,10 @@
         },
         {
           "name": "sendSmsOtp",
+          "kind": "fn"
+        },
+        {
+          "name": "smsConfigured",
           "kind": "fn"
         }
       ],
@@ -14040,6 +14178,8 @@
       "usedBy": [
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
+        "src/lib/golfer-messages.ts",
         "src/lib/two-factor.ts"
       ]
     },
@@ -15557,6 +15697,10 @@
         {
           "name": "monthlyReviews",
           "type": "MonthlyReview[]"
+        },
+        {
+          "name": "golferMessages",
+          "type": "CourseMessage[]"
         }
       ],
       "writers": [
@@ -15606,6 +15750,7 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -15633,6 +15778,7 @@
         "src/lib/birdie/course-context.ts",
         "src/lib/course-closure.ts",
         "src/lib/go-live-preflight.ts",
+        "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
         "src/lib/monthly-review.ts",
         "src/lib/public-course.ts",
@@ -15990,6 +16136,65 @@
         "src/lib/checkin-booking.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-session.ts"
+      ]
+    },
+    {
+      "name": "CourseMessage",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "date",
+          "type": "String"
+        },
+        {
+          "name": "fromTime",
+          "type": "String?"
+        },
+        {
+          "name": "toTime",
+          "type": "String?"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "sentEmail",
+          "type": "Int"
+        },
+        {
+          "name": "sentSms",
+          "type": "Int"
+        },
+        {
+          "name": "failed",
+          "type": "Int"
+        },
+        {
+          "name": "sentBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/golfer-messages.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/golfer-messages/route.ts"
       ]
     },
     {
@@ -17199,6 +17404,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/frost-delay.ts",
+        "src/lib/golfer-messages.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",

@@ -11,7 +11,7 @@
 export type PermissionKey =
   | 'sheet.view' | 'sheet.checkin' | 'sheet.counter_payment' | 'sheet.walkin' | 'sheet.move' | 'sheet.no_show'
   | 'sheet.cancel' | 'sheet.waive_fee' | 'sheet.block' | 'sheet.edit_times' | 'sheet.delay_start'
-  | 'sheet.weather_cancel' | 'sheet.golfer_contact'
+  | 'sheet.weather_cancel' | 'sheet.golfer_contact' | 'sheet.message_golfers'
   | 'money.cancellations' | 'money.payments' | 'money.refund' | 'money.charge_fee' | 'money.payouts'
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
@@ -44,6 +44,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'sheet.edit_times', group: 'Tee sheet', label: 'Add and delete tee times', help: 'Add an extra time or remove an empty one.' },
   { key: 'sheet.delay_start', group: 'Tee sheet', label: 'Weather: delay the start', help: 'Frost delay — move early groups into later open times and email them.' },
   { key: 'sheet.weather_cancel', group: 'Tee sheet', label: 'Weather: cancel times', help: 'Cancel every booking in a window or the whole day, with no fee, and email golfers.', requires: ['sheet.cancel'], movesMoney: true },
+  { key: 'sheet.message_golfers', group: 'Tee sheet', label: 'Message the day’s golfers', help: 'Email (and text, when set up) everyone booked on a day or a window of it — a frost delay, cart path only.' },
   { key: 'sheet.golfer_contact', group: 'Tee sheet', label: 'See golfer email and phone', help: 'Shows contact details on the sheet and in bookings.' },
   { key: 'money.cancellations', group: 'Money', label: 'See cancellations', help: 'The list of cancelled bookings and any fees kept.' },
   { key: 'money.payments', group: 'Money', label: 'See payments', help: 'What was charged, per booking and in total.' },
@@ -69,7 +70,7 @@ export const PRESETS: { key: PresetKey; label: string; help: string; keys: Permi
   { key: 'starter', label: 'Starter', help: 'Sees the sheet, checks groups in, marks no-shows.',
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use'] },
   { key: 'front_desk', label: 'Front desk', help: 'Runs the counter: payments, walk-ins, cancellations, blocking.',
-    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'money.cancellations'] },
+    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'money.cancellations'] },
   { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given.', keys: [...ALL_KEYS] },
 ];
 

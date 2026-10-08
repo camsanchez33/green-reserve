@@ -1847,3 +1847,22 @@ export async function sendMonthlyReviewEmail(data: {
   `);
   await getResend().emails.send({ from: FROM, to: data.to, subject: `${data.courseName}: your ${data.monthLabel} review`, html });
 }
+
+/** MSG-1: a course's notice to the golfers booked on a day ("frost delay,
+ *  first tee 9:00"). The text is the course's own, escaped, line breaks kept.
+ *  Replies go to the course, not GreenReserve. */
+export async function sendCourseNoticeEmail(data: {
+  to: string; golferName: string; courseName: string; replyTo?: string | null;
+  dateLabel: string; teeTime: string; body: string;
+}) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">A note from ${escHtml(data.courseName)}</h1>
+    <p style="margin:0 0 18px;color:#6b7280;font-size:14px;">About your ${escHtml(data.teeTime)} tee time on ${escHtml(data.dateLabel)}.</p>
+    <div style="color:#111827;font-size:15px;line-height:1.6;white-space:pre-wrap;">${escHtml(data.body)}</div>
+    <p style="margin:22px 0 0;color:#6b7280;font-size:13px;">Questions? Reply to this email to reach ${escHtml(data.courseName)}.</p>
+  `);
+  await getResend().emails.send({
+    from: FROM, to: data.to, subject: subj(`${data.courseName}: about your ${data.teeTime} tee time`), html,
+    ...(data.replyTo ? { replyTo: data.replyTo } : {}),
+  });
+}

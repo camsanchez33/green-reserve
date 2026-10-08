@@ -167,6 +167,7 @@ model Course {
   agreements            AgreementAcceptance[]
   courseProducts        CourseProduct[]
   monthlyReviews        MonthlyReview[]
+  golferMessages        CourseMessage[]
 
   @@index([operatorId])
 }
@@ -1009,4 +1010,27 @@ model MonthlyReview {
 
   @@unique([courseId, month])
   @@index([courseId])
+}
+
+/// MSG-1 (PLATFORM_ROADMAP_SPEC §5): a notice a course sent to the golfers
+/// booked on one day (or a window of it) — "frost delay, first tee 9:00".
+/// Operational only: it goes to people booked that day, never a marketing list.
+model CourseMessage {
+  id         String   @id @default(cuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// YYYY-MM-DD, course-local
+  date       String
+  /// HH:MM window, inclusive; null = the whole day
+  fromTime   String?
+  toTime     String?
+  body       String
+  sentEmail  Int      @default(0)
+  sentSms    Int      @default(0)
+  failed     Int      @default(0)
+  /// "staff:<id>" / "op:<id>"
+  sentBy     String
+  createdAt  DateTime @default(now())
+
+  @@index([courseId, createdAt])
 }

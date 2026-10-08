@@ -14,9 +14,9 @@ the first live course's feedback re-orders this list.
 |---|---|---|---|
 | 1 | BI-1 Monthly AI review | shipped (#92) | — |
 | 2 | ACT-1 Move a group (staff) | shipped (#93) | — |
-| 3 | ACT-2 Birdie acts on the tee sheet | built (PR) — cancels wait | confirm the rule change (below) |
+| 3 | ACT-2 Birdie acts on the tee sheet | shipped (#94) — cancels wait | confirm the rule change (below) |
 | 4 | POS-1 Pro shop sales | spec | hardware + fee decision |
-| 5 | MSG-1 Reminders + messages to golfers | spec | Twilio A2P registration (SMS only) |
+| 5 | MSG-1 Reminders + messages to golfers | v1 built (PR): notices to a day's golfers | Twilio A2P registration (SMS only) |
 | 6 | OUT-1 Tournaments & outings + invoices | spec | — |
 | 7 | FB-1 Food & beverage | after POS-1 | — |
 | 8 | PWA-1 "Add to Home Screen" booking app | small, any time | — |
@@ -139,6 +139,15 @@ SMS switched on by env. Automatic reminders (day before, with the check-in /
 pay link); course messages to a day's golfers ("frost delay to 9am"), to
 members, or to past golfers who opted in. Opt-out honoured on every text; the
 STOP keyword is handled. Lives on the existing Messages tab.
+
+**MSG-1 v1 (built 2026-10-08):** "Message golfers" on the tee sheet sends a
+course's notice to everyone booked on a day or a window of it — email always,
+text when Twilio is set up and the box is ticked ("Reply STOP to opt out"
+appended). One message per golfer, replies go to the course's email, every
+send logged (`CourseMessage`) with its outcome, six notices an hour per course,
+permission `sheet.message_golfers` (Front desk, Manager). Day-before reminders
+already exist (`send-reminders` cron). Later: members and opted-in past golfers
+(needs consent + unsubscribe), and a Birdie draft for it.
 
 ## 6. OUT-1 — tournaments & outings, with invoices
 

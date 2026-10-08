@@ -1,16 +1,14 @@
 {
-  "generatedAt": "2026-10-08T00:46:06.365Z",
+  "generatedAt": "2026-10-08T01:03:20.183Z",
   "repo": {
-    "head": "912e5f7",
-    "branch": "claude/act2-birdie-acts",
-    "dirtyCount": 6,
+    "head": "27ff9ab",
+    "branch": "claude/msg1-golfer-messages",
+    "dirtyCount": 4,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/birdie-isolation-test.ts",
-      " M scripts/birdie-sheet-drafts-test.ts",
-      " M src/lib/birdie/proposal-types.ts",
-      " M src/lib/birdie/proposals.ts"
+      " M scripts/golfer-messages-test.ts",
+      " M src/lib/golfer-messages.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -18,9 +16,23 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "912e5f7",
-        "date": "2026-10-08T00:40:02+00:00",
-        "subject": "ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link",
+        "h": "27ff9ab",
+        "date": "2026-10-08T01:01:54+00:00",
+        "subject": "MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3058152",
+        "date": "2026-10-08T00:57:54+00:00",
+        "subject": "MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f4b4a0b",
+        "date": "2026-10-07T20:50:25-04:00",
+        "subject": "ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)",
         "ids": [],
         "matches": []
       },
@@ -533,7 +545,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-08",
+      "lastTouched": "2026-10-07",
       "ageDays": 0
     },
     {
@@ -546,7 +558,7 @@
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-04",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "UI_REVISE_SPEC.md",
@@ -744,9 +756,19 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "912e5f7",
+      "h": "27ff9ab",
       "date": "2026-10-08",
-      "subject": "ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link"
+      "subject": "MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate"
+    },
+    {
+      "h": "3058152",
+      "date": "2026-10-08",
+      "subject": "MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)"
+    },
+    {
+      "h": "f4b4a0b",
+      "date": "2026-10-07",
+      "subject": "ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)"
     },
     {
       "h": "90e1375",
@@ -792,16 +814,6 @@
       "h": "a075be8",
       "date": "2026-10-06",
       "subject": "Booking and course pages say what the policy really charges (#85)"
-    },
-    {
-      "h": "384b502",
-      "date": "2026-10-06",
-      "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)"
-    },
-    {
-      "h": "f5b2bb8",
-      "date": "2026-10-06",
-      "subject": "G8: hourly cron sends every pay link and cutoff warning (#83)"
     }
   ]
 }
