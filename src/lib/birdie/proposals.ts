@@ -271,9 +271,12 @@ async function findGroup(ctx: ToolContext, date: unknown, time: unknown, golfer:
   if (!slot) return { error: `There’s no ${fmtTime(time)} tee time on ${fmtDate(date)}. Call get_tee_sheet for that day.` };
   const groups = await prisma.booking.findMany({
     where: { courseId: ctx.courseId, teeTimeId: slot.id, status: 'confirmed' },
-    select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, stripePaymentMethodId: true, checkInToken: true },
+    select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, stripePaymentMethodId: true, checkInToken: true, accessFeeTotal: true },
   });
   const want = String(golfer).trim().toLowerCase();
+  // An exact name always wins ("Alan Smith" isn't ambiguous just because "Al" is also booked).
+  const exact = groups.filter(g => g.golferName.toLowerCase() === want);
+  if (exact.length === 1) return { group: exact[0] };
   const hits = groups.filter(g => g.golferName.toLowerCase().includes(want) || want.includes(g.golferName.toLowerCase()));
   if (hits.length === 0) return { error: `No booked group called “${String(golfer).trim()}” at ${fmtTime(time)} on ${fmtDate(date)}.${groups.length ? ` That time has: ${groups.map(g => g.golferName).join(', ')}.` : ''}` };
   if (hits.length > 1) return { error: `More than one group matches at ${fmtTime(time)}: ${hits.map(g => g.golferName).join(', ')}. Ask which one.` };
@@ -390,7 +393,7 @@ async function sendPayLink(input: Record<string, unknown>, ctx: ToolContext): Pr
     id: cardId(),
     title: `${via === 'sms' ? 'Text' : 'Email'} ${g.golferName} their pay link`,
     changes: [{ label: `${fmtDate(String(input.date))} · ${fmtTime(String(input.time))}`, from: 'Not paid', to: `Pay link ${via === 'sms' ? 'texted' : 'emailed'}` }],
-    note: 'They check in and pay on their own phone — Apple Pay, Google Pay or card. The booking fee is collected with the round.',
+    note: `They check in and pay on their own phone — Apple Pay, Google Pay or card.${g.accessFeeTotal > 0 ? ' The booking fee is collected with the round.' : ''}`,
     call: { method: 'PATCH', path: '/api/operator/bookings', body: { id: g.id, action: 'send_pay_link', via } },
   });
 }

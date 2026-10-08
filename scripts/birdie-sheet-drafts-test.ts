@@ -50,6 +50,14 @@ async function main() {
   check('move: into a blocked time is refused', intoBlocked.isError && !intoBlocked.card, intoBlocked.content);
   const nobody = await runProposeTool('propose_move_group', { date: DAY, time: '08:00', golfer: 'Bob', toTime: '09:00' }, ctx);
   check('move: an unknown golfer is refused and the real names offered', nobody.isError && /Ann Lee/.test(nobody.content));
+  const t930 = await slot('09:30', { booked: 3 });
+  for (const n of ['Al', 'Alan Smith']) await prisma.booking.create({ data: { teeTimeId: t930.id, courseId: course.id, golferName: n, golferEmail: `${TAG}@test.local`, players: n === 'Al' ? 1 : 2, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 5000, status: 'confirmed', paymentStatus: 'manual' } });
+  const exactName = await runProposeTool('propose_move_group', { date: DAY, time: '09:30', golfer: 'Alan Smith', toTime: '09:10' }, ctx);
+  check('move: an exact name resolves even when a shorter name also matches', !!exactName.card, exactName.content);
+  const short = await runProposeTool('propose_move_group', { date: DAY, time: '09:30', golfer: 'al', toTime: '09:10' }, ctx);
+  check('move: the exact short name picks that group, not the longer one', /Move Al \(1\)/.test(short.card?.title ?? ''), short.card?.title);
+  const partial = await runProposeTool('propose_move_group', { date: DAY, time: '09:30', golfer: 'smith', toTime: '09:10' }, ctx);
+  check('move: a partial name that fits one group resolves', /Alan Smith/.test(partial.card?.title ?? ''), partial.content);
 
   // Block a run of times
   const block = await runProposeTool('propose_block_times', { date: DAY, from: '08:00', to: '09:20', block: true }, ctx);

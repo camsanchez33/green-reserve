@@ -143,6 +143,7 @@ check('propose_add_booking: more than 4 players is refused', tooMany.isError && 
 const bk = (body: Record<string, unknown>, method = 'PATCH') => ({ ...goodCard, call: { method, path: '/api/operator/bookings', body } });
 check('widget: a move card passes', isProposalCard(bk({ id: 'b', action: 'move', newTeeTimeId: 't' })));
 check('widget: a pay-link card passes', isProposalCard(bk({ id: 'b', action: 'send_pay_link', via: 'sms' })));
+check('widget: a move card carrying extra fields is refused', !isProposalCard(bk({ id: 'b', action: 'move', newTeeTimeId: 't', reprice: true })));
 check('widget: a cancel on the bookings route is refused', !isProposalCard(bk({ id: 'b', action: 'cancel' })));
 check('widget: a check-in on the bookings route is refused', !isProposalCard(bk({ id: 'b', action: 'checkin' })));
 check('widget: paid-at-counter is refused', !isProposalCard(bk({ id: 'b', action: 'paid_offline' })));

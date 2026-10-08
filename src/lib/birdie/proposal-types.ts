@@ -24,12 +24,14 @@ export const PROPOSAL_ROUTES: Record<ProposalCall['path'], ProposalCall['method'
   '/api/operator/tee-times': ['PATCH'],
 };
 
+const sameKeys = (body: Record<string, unknown>, keys: string[]) => Object.keys(body).sort().join() === [...keys].sort().join();
+
 /** What a card's body may ask of a route that does more than one thing. */
 const BODY_RULES: Partial<Record<ProposalCall['path'], (method: string, body: Record<string, unknown>) => boolean>> = {
   // Move a group or send a pay link; never cancel, check in, mark paid or no-show.
   '/api/operator/bookings': (method, body) => method === 'POST'
     ? body.checkInNow !== true && (body.source === 'phone' || body.source === 'walk_in')
-    : body.action === 'move' || body.action === 'send_pay_link',
+    : (body.action === 'move' && sameKeys(body, ['id', 'action', 'newTeeTimeId'])) || (body.action === 'send_pay_link' && sameKeys(body, ['id', 'action', 'via'])),
   // Block or open a time; nothing else.
   '/api/operator/tee-times': (_m, body) => body.status === 'blocked' || body.status === 'available',
 };

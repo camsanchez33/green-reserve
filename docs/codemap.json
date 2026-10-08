@@ -9273,7 +9273,7 @@
     },
     {
       "path": "src/lib/birdie/proposal-types.ts",
-      "lines": 59,
+      "lines": 61,
       "purpose": "BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call).",
       "brain": [],
       "exports": [
@@ -9313,7 +9313,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 414,
+      "lines": 417,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [

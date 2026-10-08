@@ -1,26 +1,29 @@
 {
-  "generatedAt": "2026-10-08T00:39:48.222Z",
+  "generatedAt": "2026-10-08T00:46:06.365Z",
   "repo": {
-    "head": "90e1375",
+    "head": "912e5f7",
     "branch": "claude/act2-birdie-acts",
-    "dirtyCount": 10,
+    "dirtyCount": 6,
     "dirty": [
-      "M CLAUDE.md",
-      " M PLATFORM_ROADMAP_SPEC.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/birdie-isolation-test.ts",
-      " M src/app/api/birdie/chat/route.ts",
-      " M src/components/birdie/ConfirmCard.tsx",
+      " M scripts/birdie-sheet-drafts-test.ts",
       " M src/lib/birdie/proposal-types.ts",
-      " M src/lib/birdie/proposals.ts",
-      "?? scripts/birdie-sheet-drafts-test.ts"
+      " M src/lib/birdie/proposals.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
+      {
+        "h": "912e5f7",
+        "date": "2026-10-08T00:40:02+00:00",
+        "subject": "ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "90e1375",
         "date": "2026-10-07T20:35:28-04:00",
@@ -530,7 +533,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-07",
+      "lastTouched": "2026-10-08",
       "ageDays": 0
     },
     {
@@ -554,7 +557,7 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-07",
+      "lastTouched": "2026-10-08",
       "ageDays": 0
     },
     {
@@ -741,6 +744,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "912e5f7",
+      "date": "2026-10-08",
+      "subject": "ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link"
+    },
+    {
       "h": "90e1375",
       "date": "2026-10-07",
       "subject": "ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)"
@@ -794,11 +802,6 @@
       "h": "f5b2bb8",
       "date": "2026-10-06",
       "subject": "G8: hourly cron sends every pay link and cutoff warning (#83)"
-    },
-    {
-      "h": "c0c4cea",
-      "date": "2026-10-06",
-      "subject": "G13: signed-in golfers can use a booking's emailed manage link (#82)"
     }
   ]
 }
