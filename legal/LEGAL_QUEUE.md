@@ -32,15 +32,28 @@ attempted. `⚖️` cannot be closed by a Claude session.
       Agreement. The contract currently says one thing and the code does another.
       → Findings L-3 · Register PM-5
 
-- [ ] **LQ-4 — Membership fee: Operator Agreement still says $0.50.**
-      2026-10-08 (Cam): the fee is now 1% of the dues, added to what the member
-      pays (`membershipFeeCents()`, `src/lib/stripe.ts`). /terms (v2026-10-08)
-      and /for-courses say 1%. The signed Operator Agreement v2026-08 still says
-      "$0.50 on each membership-dues payment … added to what the member pays".
-      Courses are not worse off (the member pays it on top of the dues), but
-      the contract names the wrong number. NEEDS CAM: approve a v2026-10 agreement
-      with "1% of each membership-dues payment" and decide whether existing
-      courses must re-accept (bumping `CURRENT_AGREEMENT_VERSION` triggers that).
+- [ ] **LQ-4 — Membership fee: Operator Agreement v2026-10 (1%), courses re-accept.**
+      2026-10-08 (Cam): fee is 1% of dues, member-paid, NO cap (#102 live);
+      existing courses must re-accept ("Yup they should no cap").
+      Draft: `legal/drafts/operator-agreement-2026-10.md` — only the two fee
+      sentences change; front matter `reacceptRequired: true` + changeSummary.
+      It sits OUTSIDE legal/documents/ on purpose: the newest file there is what
+      /operator-agreement shows and what every new course signs the moment it
+      deploys — before counsel (the AG-3 gate lives only in the seed script),
+      and with no re-accept window for existing courses until the seed runs.
+      AG-3 gate: the seed REFUSES a re-acceptance bump without
+      `counselReviewed: <date>` in the front matter. To ship: counsel reads the
+      draft → add `counselReviewed: YYYY-MM-DD` and set `effectiveAt` to the
+      real ship date (the pages display it; the file is immutable once seeded)
+      → move it to `legal/documents/operator-agreement/2026-10.md` → merge →
+      ONLY AFTER the deploy is live, run `scripts/seed-agreement-versions.ts`
+      against prod from the merged main checkout. The 30-day window starts at
+      seed time. The day-0 notice is sent by the `hourly` cron
+      (`sendAgreementBumpNotices()`) at its next run, reading title and
+      changeSummary from the file on PROD's disk — seeded before the deploy,
+      it emails every course a notice with no "What changed" and stamps
+      `noticeSentAt`, so it cannot be re-sent without a DB edit.
+      NEEDS CAM: counsel review, or an explicit decision to drop the gate.
       → Findings L-4 · Register PM-4
 
 - [ ] **LQ-5 — Form the entity.** ⚖️ optional but cheap
