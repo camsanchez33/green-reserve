@@ -210,6 +210,15 @@ default to the list (a day of squares scrolls sideways there), and the toggle
 stays. Queued: the homepage demo (`TeeSheetDemo.tsx`) still shows the list —
 move it to the board.
 
+**One sheet, fits the page, cancel (Cam 2026-10-08):** "make the tee sheet so
+it fits the page", "is it smart to have both options" (no — one view), "you
+have to be able to cancel someones time from the sheet". The list view and the
+toggle are gone; the board is the sheet on every screen. One row per hour with
+that hour's times across it (the busiest hour sets the column count, so :10
+sits under :10), never a sideways scroll; phones get two across. The panel
+gains Cancel booking / Cancel, no fee, with the same confirm and result wording
+as Money → Cancellations (`lib/cancel-confirm.ts`), the same route and fee rules.
+
 ## Parked (and why)
 
 - **Employee scheduling** — Homebase and 7shifts already do it well and free;

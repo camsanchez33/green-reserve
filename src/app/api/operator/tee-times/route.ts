@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       product: { select: { label: true } },
       ...(withBookings ? { bookings: {
       where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
-      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true },
+      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true, cancellationFeeTotal: true },
     } } : {}),
     },
   });

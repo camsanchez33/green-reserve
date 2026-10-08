@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 397,
+    "files": 398,
     "routes": 208,
-    "libs": 116,
+    "libs": 117,
     "models": 37,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -6197,7 +6197,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1477,
+      "lines": 1365,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6223,6 +6223,7 @@
         "@/components/ui/MonthPicker",
         "@/components/ui/StatusDot",
         "@/lib/booking-status",
+        "@/lib/cancel-confirm",
         "@/lib/change-requests",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
@@ -7757,7 +7758,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetBoard.tsx",
-      "lines": 157,
+      "lines": 164,
       "purpose": "SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -7838,7 +7839,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 181,
+      "lines": 172,
       "purpose": "SD-8 — the Cancellations half of the Money page.",
       "brain": [],
       "exports": [
@@ -7856,6 +7857,7 @@
         "./types",
         "@/components/dashboard/Toast",
         "@/components/ui/StatusDot",
+        "@/lib/cancel-confirm",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/use-dashboard-access",
@@ -10026,6 +10028,32 @@
         "src/app/api/operator/bookings/route.ts",
         "src/lib/course-closure.ts",
         "src/lib/weather-cancel.ts"
+      ]
+    },
+    {
+      "path": "src/lib/cancel-confirm.ts",
+      "lines": 34,
+      "purpose": "The words staff read before cancelling a booking — the tee sheet's panel and Money → Cancellations ask the same question the same way, so the fee outcome they promise matches what lib/cancel-bookin...",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cancelConfirmText",
+          "kind": "fn"
+        },
+        {
+          "name": "cancelResultText",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
+        "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
     },
     {
