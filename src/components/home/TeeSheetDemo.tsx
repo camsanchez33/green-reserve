@@ -89,8 +89,9 @@ type Tone = 'ok' | 'warn';
 /** groupTone() in TeeSheetBoard: paid = checked in. */
 const toneOf = (g: Group): Tone => g.done ? 'ok' : 'warn';
 const slotTone = (r: Row): Tone | null => !r.groups.length ? null : r.groups.every(g => g.done) ? 'ok' : 'warn';
-/** getBookingStatus() labels, as the panel shows them. */
-const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at counter') : g.src === 'online' ? 'Card on File' : 'Pay at counter';
+/** getBookingStatus() labels, as the panel shows them. The demo course takes no
+ *  card (the phone says so), so an online booking is "No Card Required". */
+const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at counter') : g.src === 'online' ? 'No Card Required' : 'Pay at counter';
 const seats = (r: Row) => r.blocked ? <i className={s.dim}>Blocked</i> : CAP - booked(r) <= 0 ? <span className={s.full}>Full</span> : <span className={s.dim}>{CAP - booked(r)} open</span>;
 const hourOf = (t: string) => Number(t.slice(0, 2));
 const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -141,8 +142,8 @@ function TeeSheet() {
                   <button key={r.t} type="button" aria-label={`${fmt(r.t)}. Open`} onClick={() => update(x => ({ ...x, open: r.t, toast: '' }))}
                     className={[s.sq, r.blocked ? s.sqBlocked : '', tone === 'ok' ? s.eOk : tone === 'warn' ? s.eWarn : '', past ? s.sqPast : '', r.t === nextUp ? s.sqNext : '', st.open === r.t ? s.sqSel : '', r.groups.some(g => g.isNew) ? s.sqNew : ''].join(' ')}>
                     <span className={s.sqTop}><b>{fmt(r.t)}</b>{r.t === nextUp && <em>Next up</em>}</span>
-                    <span className={s.sqGs}>{r.groups.map(g => (
-                      <span key={g.name} className={s.sqG}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} /><span>{g.name}</span><small>{g.n}</small></span>
+                    <span className={s.sqGs}>{r.groups.map((g, i) => (
+                      <span key={`${g.name}-${i}`} className={s.sqG}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} /><span>{g.name}</span><small>{g.n}</small></span>
                     ))}</span>
                     <span className={s.sqFoot}><span className={s.dim}>{r.blocked ? '' : `${booked(r)} of ${CAP}`}</span>{seats(r)}</span>
                   </button>
@@ -163,7 +164,7 @@ function TeeSheet() {
           </div>
           {!panel.groups.length && <p className={s.dim}>No bookings yet.</p>}
           {panel.groups.map((g, gi) => (
-            <div key={g.name} className={s.pnlG}>
+            <div key={`${g.name}-${gi}`} className={s.pnlG}>
               <div><b>{g.name}</b> <span className={s.dim}>{g.n} player{g.n === 1 ? '' : 's'}</span>{g.src !== 'online' && <span className={s.dim}> {g.src === 'phone' ? 'Phone' : 'Walk-in'}</span>}</div>
               <div className={s.pnlAct}>
                 <span className={s.pnlSt}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} />{statusOf(g)}</span>
