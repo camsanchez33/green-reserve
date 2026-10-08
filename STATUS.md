@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 03:15 UTC · branch `claude/board-main` · HEAD `ea2d17b` · working tree **6 dirty file(s)**
+Generated 2026-10-08 03:42 UTC · branch `claude/sheet-fit-cancel` · HEAD `fadcf67` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 5 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 6 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `fadcf67` | 2026-10-07 | SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98) |
 | `ea2d17b` | 2026-10-07 | SHEET-2: board view of the tee sheet (#97) |
 | `2707e36` | 2026-10-07 | Move a group after they've checked in (#96) |
 | `fef4012` | 2026-10-07 | MSG-1: courses message the golfers booked on a day (#95) |
@@ -20,14 +21,17 @@ Generated 2026-10-08 03:15 UTC · branch `claude/board-main` · HEAD `ea2d17b` �
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (9 file(s))
 
 - `M CLAUDE.md`
 - `M PLATFORM_ROADMAP_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M src/app/api/operator/tee-times/route.ts`
 - `M src/app/dashboard/page.tsx`
 - `M src/components/dashboard/TeeSheetBoard.tsx`
+- `M src/components/dashboard/money/CancellationsPanel.tsx`
+- `?? src/lib/cancel-confirm.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -177,7 +181,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-07 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 8d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 1d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 2d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 2d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 8d |
@@ -208,6 +212,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `fadcf67` 2026-10-07 — SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)
 - `ea2d17b` 2026-10-07 — SHEET-2: board view of the tee sheet (#97)
 - `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
 - `fef4012` 2026-10-07 — MSG-1: courses message the golfers booked on a day (#95)
@@ -219,7 +224,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `41e61b3` 2026-10-06 — Manage page says what cancelling costs right now (#89)
 - `f541b7c` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late (#87)
 - `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
-- `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 
 ---
 

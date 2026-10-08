@@ -5,8 +5,8 @@
 // per hour, that hour's tee times as equal squares, every group named with its
 // player count. A square's left edge says where its money stands: green, every
 // group has paid; amber, someone is booked but hasn't paid; red, a declined card
-// or a no-show. Tapping a square opens it (the page's panel carries every action
-// the list has). Dragging a group onto another square opens the SAME ACT-1 move
+// or a no-show. Tapping a square opens it (the page's panel carries every action:
+// check in, pay, cancel, move, walk-in, block). Dragging a group onto another square opens the SAME ACT-1 move
 // dialog with that time priced — nothing moves until its confirm.
 import { useState } from 'react';
 import { formatTeeTime } from '@/lib/format';
@@ -77,14 +77,20 @@ export default function TeeSheetBoard({ slots, isPast, nextUpId, selectedId, can
     const h = Number(s.time.slice(0, 2));
     hours.set(h, [...(hours.get(h) ?? []), s]);
   }
+  const perHour = Math.max(1, ...[...hours.values()].map(l => l.length));
 
   return (
     <div>
-      <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1">
+      {/* Fits the page (Cam 2026-10-08): one row per hour, that hour's times
+          across it, so the day reads top to bottom and never scrolls sideways.
+          Every row has the same number of columns (the busiest hour's), so a
+          :10 time sits under the :10 time above it. Phones get two across. */}
+      <div className="space-y-3 pb-3">
         {[...hours.entries()].map(([h, list]) => (
-          <section key={h} className="w-[184px] shrink-0" aria-label={hourLabel(h)}>
-            <h3 className="text-[13px] font-semibold text-ink mb-2 px-0.5">{hourLabel(h)}</h3>
-            <div className="space-y-2">
+          <section key={h} className="sm:flex sm:gap-3" aria-label={hourLabel(h)}>
+            <h3 className="text-[13px] font-semibold text-ink mb-1.5 sm:mb-0 sm:w-12 sm:shrink-0 sm:pt-2">{hourLabel(h)}</h3>
+            <div className="flex-1 min-w-0 grid grid-cols-2 sm:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))] gap-2"
+              style={{ '--cols': perHour } as React.CSSProperties}>
               {list.map(s => {
                 const past = isPast(s);
                 const blocked = s.status === 'blocked';
@@ -101,7 +107,7 @@ export default function TeeSheetBoard({ slots, isPast, nextUpId, selectedId, can
                     onDragLeave={() => setOver(o => (o === s.id ? null : o))}
                     onDrop={e => { e.preventDefault(); if (dragging && target) onMove(dragging.group, dragging.fromId, s.id); setDragging(null); setOver(null); }}
                     style={blocked ? HATCH : undefined}
-                    className={'h-[138px] flex flex-col px-2.5 py-2 cursor-pointer motion-safe:transition-colors '
+                    className={'min-h-[112px] min-w-0 flex flex-col px-2.5 py-2 cursor-pointer motion-safe:transition-colors '
                       + (blocked ? 'bg-paper rounded-lg ' : CARD + ' ')
                       + (tone ? EDGE[tone] + ' ' : '')
                       + (over === s.id ? 'ring-2 ring-pine ' : selectedId === s.id ? 'ring-2 ring-pine/50 ' : next ? 'ring-1 ring-pine ' : target ? 'ring-1 ring-pine/30 ' : '')
@@ -109,12 +115,12 @@ export default function TeeSheetBoard({ slots, isPast, nextUpId, selectedId, can
                     <button type="button"
                       aria-label={`${formatTeeTime(s.time)}${next ? ', next up' : ''}${tone ? `, ${TONE_LABEL[tone].toLowerCase()}` : ''}. Open`}
                       onClick={e => { e.stopPropagation(); onSelect(s.id); }}
-                      className="w-full flex items-baseline justify-between gap-2 text-left rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-pine/40">
+                      className="w-full flex flex-wrap items-baseline justify-between gap-x-2 text-left rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-pine/40">
                       <span className="text-[14px] font-semibold text-ink tabular-nums">{formatTeeTime(s.time)}</span>
                       {next && <span className="text-[11.5px] font-semibold text-pine">Next up</span>}
                     </button>
                     <div className="mt-1.5 space-y-0.5 min-h-0 flex-1">
-                      {groups.map(g => {
+                      {groups.slice(0, groups.length > 3 ? 2 : 3).map(g => {
                         // A past time's group can still move (checked in online, then late).
                         const can = canMove && movable(g) && (g.status !== 'completed' || canMoveCheckedIn);
                         const t = groupTone(g);
@@ -135,6 +141,7 @@ export default function TeeSheetBoard({ slots, isPast, nextUpId, selectedId, can
                           </button>
                         );
                       })}
+                      {groups.length > 3 && <div className="px-1 text-[12px] text-ink-muted">+{groups.length - 2} more</div>}
                     </div>
                     <div className="flex items-baseline justify-between text-[12px] tabular-nums pt-1">
                       <span className="text-ink-muted">{blocked ? '' : `${s.playersBooked} of ${s.playersAvailable}`}</span>

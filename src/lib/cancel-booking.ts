@@ -267,5 +267,6 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   else await refundSeparateAccessFee(bookingId, 'booking cancelled', 'system');
 
   // A kept no-show charge reads as a fee kept on every screen, as in the email.
-  return { success: true, feeCharged: feeAlreadyCharged || !!noShowCharge, roundRefunded, feeRefundFailed, lateFeeChargeFailed } as const;
+  // noShowFeeKeptCents: the screens name WHICH fee was kept (a no-show charge is not a late fee).
+  return { success: true, feeCharged: feeAlreadyCharged || !!noShowCharge, noShowFeeKeptCents: noShowCharge?.amountCents ?? 0, roundRefunded, feeRefundFailed, lateFeeChargeFailed } as const;
 }
