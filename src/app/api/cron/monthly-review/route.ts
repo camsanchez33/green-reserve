@@ -9,9 +9,12 @@ import { runMonthlyReview, emailPendingReviews } from '@/lib/monthly-review';
 // its previous month the first run after that month ends in its own timezone,
 // a failed one is retried the next day, and a missed run catches up. The
 // unique (courseId, month) row is the dedup. A few courses per run keeps the
-// function well inside its time limit; the rest follow on later runs.
+// function inside its time limit; the rest follow on later runs.
 export const maxDuration = 300;
-const PER_RUN = 12;
+// Every course comes due on the same day, and one review is up to two model
+// calls; stop well inside maxDuration so the run always finishes (and logs).
+const PER_RUN = 4;
+const BUDGET_MS = 200_000;
 
 export const GET = cronRoute('monthly-review', async (req: NextRequest) => {
   const denied = cronAuthFailure(req);
@@ -26,8 +29,9 @@ export const GET = cronRoute('monthly-review', async (req: NextRequest) => {
 
   const results = { written: 0, thin: 0, failed: 0, skipped: 0, emailed: 0, errors: [] as string[] };
   let attempted = 0;
+  const start = Date.now();
   for (const c of courses) {
-    if (attempted >= PER_RUN) break;
+    if (attempted >= PER_RUN || Date.now() - start > BUDGET_MS) break;
     try {
       const r = await runMonthlyReview(c.id, now);
       if (r.outcome === 'written' || r.outcome === 'thin' || r.outcome === 'failed') attempted++;
@@ -41,5 +45,6 @@ export const GET = cronRoute('monthly-review', async (req: NextRequest) => {
       results.errors.push(`${c.id}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
-  return NextResponse.json({ ok: results.failed === 0, ...results });
+  // `error` as a string so Admin → System shows the real cause.
+  return NextResponse.json({ ok: results.failed === 0, error: results.errors.join('; ') || undefined, ...results });
 });

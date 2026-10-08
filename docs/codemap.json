@@ -3297,7 +3297,7 @@
     },
     {
       "path": "src/app/api/cron/monthly-review/route.ts",
-      "lines": 46,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12405,7 +12405,7 @@
     },
     {
       "path": "src/lib/monthly-review.ts",
-      "lines": 243,
+      "lines": 256,
       "purpose": "BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -12419,6 +12419,10 @@
         },
         {
           "name": "claudeWriter",
+          "kind": "fn"
+        },
+        {
+          "name": "draftProblems",
           "kind": "fn"
         },
         {
@@ -12439,6 +12443,10 @@
         },
         {
           "name": "previousMonth",
+          "kind": "fn"
+        },
+        {
+          "name": "ratioWords",
           "kind": "fn"
         },
         {

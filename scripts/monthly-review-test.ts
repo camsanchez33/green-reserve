@@ -5,7 +5,7 @@
 // Run: npx tsx scripts/monthly-review-test.ts
 import { PrismaClient } from '@prisma/client';
 import {
-  previousMonth, monthRange, isFullMonth, validateNumbers, runMonthlyReview,
+  previousMonth, monthRange, isFullMonth, validateNumbers, draftProblems, runMonthlyReview,
   type Writer, type ReviewBody,
 } from '../src/lib/monthly-review';
 
@@ -69,6 +69,8 @@ async function main() {
   check('small counting numbers pass', validateNumbers('Try these 3 changes.', facts).length === 0);
   check('an invented figure is caught', JSON.stringify(validateNumbers('Revenue rose to $98,765.', facts)) === '[98765]');
   check('an invented percentage is caught', validateNumbers('No-shows fell 37%.', facts).includes(37));
+  check('a ratio word is caught', draftProblems('Bookings doubled this month.', facts).includes('doubled'));
+  check('half is caught', draftProblems('Half of your tee times went unsold.', facts).includes('half'));
 
   await cleanup();
   const live = await seedCourse(new Date('2026-07-15T12:00:00Z'));

@@ -122,6 +122,17 @@ export function validateNumbers(text: string, facts: unknown): number[] {
   return [...new Set(toNums(text).filter(n => !ok.has(n)))];
 }
 
+/** Ratio words carry a number the digit check can't see ("doubled", "half"). */
+const RATIO_WORDS = /\b(doubl\w*|tripl\w*|twice|thrice|half|halved|third|quarter)\b/gi;
+export function ratioWords(text: string): string[] {
+  return [...new Set((text.match(RATIO_WORDS) ?? []).map(w => w.toLowerCase()))];
+}
+
+/** Everything wrong with a draft's numbers, as one list for the retry note. */
+export function draftProblems(text: string, facts: unknown): string[] {
+  return [...validateNumbers(text, facts).map(String), ...ratioWords(text)];
+}
+
 // ── The writer ──────────────────────────────────────────────────────────────
 export type ReviewBody = { verdict: string; wentWell: string[]; fellShort: string[]; recommendations: string[] };
 export type Writer = (facts: ReviewFacts, retryNote?: string) => Promise<ReviewBody>;
@@ -132,7 +143,7 @@ const SYSTEM = `You write the monthly business review for a golf course owner, i
 
 You are given one JSON object of facts about last month, computed by the software. Reply with the review as JSON matching the schema.
 
-Numbers: use ONLY numbers that appear in the facts, copied exactly (you may drop decimals). Never calculate a new number — no sums, differences, ratios or percentages of your own; every comparison you need is already in "change" and "changeFromBaseline". Never estimate or invent a figure. If a number you'd want isn't there, say it in words without a number.
+Numbers: use ONLY numbers that appear in the facts, copied exactly (you may drop decimals). Never calculate a new number — no sums, differences, ratios or percentages of your own, and no ratio words (doubled, half, twice, a third); every comparison you need is already in "change" and "changeFromBaseline". Never estimate or invent a figure. If a number you'd want isn't there, say it in words without a number.
 
 Interpret: explain what the numbers mean for the business and why it matters, in plain words an owner uses. Be specific — name days, hours and figures.
 
@@ -191,7 +202,9 @@ export async function runMonthlyReview(courseId: string, now: Date = new Date(),
   if (existing && existing.status !== 'failed') return { outcome: 'exists', month };
 
   const baselineRow = await prisma.monthlyReview.findFirst({
-    where: { courseId, isBaseline: true, month: { lt: month } }, select: { month: true, metrics: true },
+    // A baseline that never got a readable review isn't one the owner can see —
+    // the next month that is written becomes the starting line instead.
+    where: { courseId, isBaseline: true, month: { lt: month }, status: { in: ['written', 'thin'] } }, select: { month: true, metrics: true },
   });
   const a = await computeAnalytics(courseId, monthRange(month), now);
   const prevMonth = previousMonth(`${month}-01`);
@@ -203,10 +216,10 @@ export async function runMonthlyReview(courseId: string, now: Date = new Date(),
   let error = '';
   try {
     let draft = await writer(facts);
-    let bad = validateNumbers(reviewText(draft), facts);
+    let bad = draftProblems(reviewText(draft), facts);
     if (bad.length) {
       draft = await writer(facts, bad.join(', '));
-      bad = validateNumbers(reviewText(draft), facts);
+      bad = draftProblems(reviewText(draft), facts);
     }
     if (bad.length) error = `the draft used numbers not in the facts: ${bad.join(', ')}`;
     else body = draft;
