@@ -1,16 +1,24 @@
 {
-  "generatedAt": "2026-10-08T00:46:06.365Z",
+  "generatedAt": "2026-10-08T00:57:53.549Z",
   "repo": {
-    "head": "912e5f7",
-    "branch": "claude/act2-birdie-acts",
-    "dirtyCount": 6,
+    "head": "f4b4a0b",
+    "branch": "claude/msg1-golfer-messages",
+    "dirtyCount": 14,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M PLATFORM_ROADMAP_SPEC.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/birdie-isolation-test.ts",
-      " M scripts/birdie-sheet-drafts-test.ts",
-      " M src/lib/birdie/proposal-types.ts",
-      " M src/lib/birdie/proposals.ts"
+      " M prisma/schema.prisma",
+      " M scripts/design-guard.baseline.json",
+      " M src/app/dashboard/page.tsx",
+      " M src/lib/email.ts",
+      " M src/lib/staff-permissions.ts",
+      " M src/lib/twilio.ts",
+      "?? prisma/migrations/20261008005120_course_message/",
+      "?? scripts/golfer-messages-test.ts",
+      "?? src/app/api/operator/golfer-messages/",
+      "?? src/components/dashboard/GolferMessageModal.tsx",
+      "?? src/lib/golfer-messages.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -18,9 +26,9 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "912e5f7",
-        "date": "2026-10-08T00:40:02+00:00",
-        "subject": "ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link",
+        "h": "f4b4a0b",
+        "date": "2026-10-07T20:50:25-04:00",
+        "subject": "ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)",
         "ids": [],
         "matches": []
       },
@@ -533,7 +541,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-08",
+      "lastTouched": "2026-10-07",
       "ageDays": 0
     },
     {
@@ -546,7 +554,7 @@
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-04",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "UI_REVISE_SPEC.md",
@@ -557,7 +565,7 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-08",
+      "lastTouched": "2026-10-07",
       "ageDays": 0
     },
     {
@@ -744,9 +752,9 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "912e5f7",
-      "date": "2026-10-08",
-      "subject": "ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link"
+      "h": "f4b4a0b",
+      "date": "2026-10-07",
+      "subject": "ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)"
     },
     {
       "h": "90e1375",

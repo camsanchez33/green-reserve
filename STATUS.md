@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 00:46 UTC · branch `claude/act2-birdie-acts` · HEAD `912e5f7` · working tree **6 dirty file(s)**
+Generated 2026-10-08 00:57 UTC · branch `claude/msg1-golfer-messages` · HEAD `f4b4a0b` · working tree **14 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,19 +12,27 @@ Generated 2026-10-08 00:46 UTC · branch `claude/act2-birdie-acts` · HEAD `912e
 
 | commit | date | subject |
 |---|---|---|
-| `912e5f7` | 2026-10-08 | ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link |
+| `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (14 file(s))
 
+- `M PLATFORM_ROADMAP_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/birdie-isolation-test.ts`
-- `M scripts/birdie-sheet-drafts-test.ts`
-- `M src/lib/birdie/proposal-types.ts`
-- `M src/lib/birdie/proposals.ts`
+- `M prisma/schema.prisma`
+- `M scripts/design-guard.baseline.json`
+- `M src/app/dashboard/page.tsx`
+- `M src/lib/email.ts`
+- `M src/lib/staff-permissions.ts`
+- `M src/lib/twilio.ts`
+- `?? prisma/migrations/20261008005120_course_message/`
+- `?? scripts/golfer-messages-test.ts`
+- `?? src/app/api/operator/golfer-messages/`
+- `?? src/components/dashboard/GolferMessageModal.tsx`
+- `?? src/lib/golfer-messages.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -167,11 +175,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
-| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 2d |
+| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 3d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-07 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 0d |
@@ -205,7 +213,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `912e5f7` 2026-10-08 — ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link
+- `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
 - `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)

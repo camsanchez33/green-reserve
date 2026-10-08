@@ -30,6 +30,9 @@ export async function sendSmsOtp(to: string, code: string) {
   }
 }
 
+/** Whether text messages can be sent at all (Twilio env present). */
+export const smsConfigured = () => !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER);
+
 /** PAY-1: one plain text message (the counter's "Text pay link"). Throws on failure. */
 export async function sendSms(to: string, body: string) {
   const from = process.env.TWILIO_FROM_NUMBER;
