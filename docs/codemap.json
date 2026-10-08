@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 387,
-    "routes": 205,
-    "libs": 112,
-    "models": 35,
+    "files": 390,
+    "routes": 207,
+    "libs": 113,
+    "models": 36,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -3296,6 +3296,37 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/cron/monthly-review/route.ts",
+      "lines": 51,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
+        }
+      ],
+      "route": "/api/cron/monthly-review",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "cron",
+      "guard": "file",
+      "imports": [
+        "@/lib/cron-auth",
+        "@/lib/cron-log",
+        "@/lib/monthly-review",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/cron/send-reminders/route.ts",
       "lines": 88,
       "purpose": "",
@@ -4529,6 +4560,32 @@
       "guard": "file",
       "imports": [
         "@/lib/email",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/monthly-reviews/route.ts",
+      "lines": 29,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/monthly-reviews",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/monthly-review",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -5837,7 +5894,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 423,
+      "lines": 479,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -8854,7 +8911,8 @@
       "usedBy": [
         "src/app/api/operator/analytics/route.ts",
         "src/app/dashboard/analytics/page.tsx",
-        "src/lib/birdie/tools.ts"
+        "src/lib/birdie/tools.ts",
+        "src/lib/monthly-review.ts"
       ]
     },
     {
@@ -10586,6 +10644,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/monthly-review.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -10836,6 +10895,7 @@
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/cron/generate-tee-times/route.ts",
         "src/app/api/cron/hourly/route.ts",
+        "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/lib/cron-log.ts"
       ]
@@ -10887,6 +10947,7 @@
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/cron/generate-tee-times/route.ts",
         "src/app/api/cron/hourly/route.ts",
+        "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/stripe/webhook/route.ts"
       ]
@@ -11048,7 +11109,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1827,
+      "lines": 1850,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11237,6 +11298,10 @@
           "kind": "fn"
         },
         {
+          "name": "sendMonthlyReviewEmail",
+          "kind": "fn"
+        },
+        {
           "name": "sendOnboardingChaseEmail",
           "kind": "fn"
         },
@@ -11342,6 +11407,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
         "src/lib/frost-delay.ts",
+        "src/lib/monthly-review.ts",
         "src/lib/refund-booking.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/two-factor.ts",
@@ -12338,6 +12404,106 @@
       ]
     },
     {
+      "path": "src/lib/monthly-review.ts",
+      "lines": 256,
+      "purpose": "BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "allowedNumbers",
+          "kind": "fn"
+        },
+        {
+          "name": "buildFacts",
+          "kind": "fn"
+        },
+        {
+          "name": "claudeWriter",
+          "kind": "fn"
+        },
+        {
+          "name": "draftProblems",
+          "kind": "fn"
+        },
+        {
+          "name": "emailPendingReviews",
+          "kind": "fn"
+        },
+        {
+          "name": "isFullMonth",
+          "kind": "fn"
+        },
+        {
+          "name": "monthLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "monthRange",
+          "kind": "fn"
+        },
+        {
+          "name": "previousMonth",
+          "kind": "fn"
+        },
+        {
+          "name": "ratioWords",
+          "kind": "fn"
+        },
+        {
+          "name": "REVIEW_MODEL",
+          "kind": "const"
+        },
+        {
+          "name": "ReviewBody",
+          "kind": "type"
+        },
+        {
+          "name": "ReviewFacts",
+          "kind": "type"
+        },
+        {
+          "name": "ReviewOutcome",
+          "kind": "type"
+        },
+        {
+          "name": "reviewText",
+          "kind": "fn"
+        },
+        {
+          "name": "runMonthlyReview",
+          "kind": "fn"
+        },
+        {
+          "name": "THIN_BOOKINGS",
+          "kind": "const"
+        },
+        {
+          "name": "validateNumbers",
+          "kind": "fn"
+        },
+        {
+          "name": "Writer",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./analytics",
+        "./course-time",
+        "./email",
+        "./prisma",
+        "@anthropic-ai/sdk"
+      ],
+      "usedBy": [
+        "src/app/api/cron/monthly-review/route.ts",
+        "src/app/api/operator/monthly-reviews/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/no-show-fee.ts",
       "lines": 194,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
@@ -12683,6 +12849,7 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/cron/hourly/route.ts",
+        "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/auth/me/route.ts",
@@ -12722,6 +12889,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/onboarding-complete/route.ts",
@@ -12775,6 +12943,7 @@
         "src/lib/lifecycle.ts",
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
+        "src/lib/monthly-review.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
@@ -13242,6 +13411,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/photos/[id]/route.ts",
@@ -15263,6 +15433,10 @@
         {
           "name": "courseProducts",
           "type": "CourseProduct[]"
+        },
+        {
+          "name": "monthlyReviews",
+          "type": "MonthlyReview[]"
         }
       ],
       "writers": [
@@ -15301,6 +15475,7 @@
         "src/app/api/courses/[slug]/account/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
+        "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/session/route.ts",
@@ -15339,6 +15514,7 @@
         "src/lib/course-closure.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/monthly-review.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/submit-change-request.ts",
@@ -16476,6 +16652,70 @@
         "src/app/api/admin/stats/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/lib/submit-change-request.ts"
+      ]
+    },
+    {
+      "name": "MonthlyReview",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "month",
+          "type": "String"
+        },
+        {
+          "name": "isBaseline",
+          "type": "Boolean"
+        },
+        {
+          "name": "metrics",
+          "type": "Json"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "body",
+          "type": "String?"
+        },
+        {
+          "name": "model",
+          "type": "String?"
+        },
+        {
+          "name": "error",
+          "type": "String?"
+        },
+        {
+          "name": "emailedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/monthly-review.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/monthly-reviews/route.ts",
+        "src/lib/monthly-review.ts"
       ]
     },
     {

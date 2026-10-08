@@ -1824,3 +1824,26 @@ export async function sendAgreementBumpAdminSummaryEmail(data: { title: string; 
   const r = await getResend().emails.send({ from: FROM, to: 'thegreenreserve@outlook.com', subject: `[GreenReserve] ${data.title} v${data.version} notice sent to ${data.notified}`, html });
   if (r.error) throw new Error(r.error.message);
 }
+
+/** BI-1: the monthly AI review, to the course owner. The text is the model's,
+ *  so every string is escaped; the numbers in it were checked against the
+ *  computed facts before it was stored (lib/monthly-review.ts). */
+export async function sendMonthlyReviewEmail(data: {
+  to: string; courseName: string; monthLabel: string; isBaseline: boolean;
+  review: { verdict: string; wentWell: string[]; fellShort: string[]; recommendations: string[] };
+}) {
+  const list = (title: string, items: string[]) => items.length ? `
+    <p style="margin:20px 0 6px;color:#111827;font-size:15px;font-weight:700;">${title}</p>
+    <ul style="margin:0;padding-left:18px;color:#374151;font-size:14px;line-height:1.55;">${items.map(i => `<li style="margin:0 0 6px;">${escHtml(i)}</li>`).join('')}</ul>` : '';
+  const url = `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/dashboard/analytics#reviews`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">${escHtml(data.courseName)}: ${escHtml(data.monthLabel)} review</h1>
+    <p style="margin:0 0 18px;color:#6b7280;font-size:14px;">${data.isBaseline ? 'Your first full month. These numbers are the starting line your next reviews measure against.' : 'Measured against your starting month and the month before.'}</p>
+    <p style="margin:0;color:#111827;font-size:16px;line-height:1.5;">${escHtml(data.review.verdict)}</p>
+    ${list('What went well', data.review.wentWell)}
+    ${list('Where you fell short', data.review.fellShort)}
+    ${list('What to try next', data.review.recommendations)}
+    <a href="${url}" style="display:block;margin-top:24px;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:13px;border-radius:4px;font-weight:700;font-size:15px;">See the numbers &rarr;</a>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.to, subject: `${data.courseName}: your ${data.monthLabel} review`, html });
+}

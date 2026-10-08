@@ -117,6 +117,60 @@ function Table({ head, rows, empty }: { head: string[]; rows: React.ReactNode[][
   );
 }
 
+// BI-1 (PLATFORM_ROADMAP_SPEC §1): the monthly AI review. Its own fetch — it
+// does not follow the range picker. The words are the model's, the numbers in
+// them were checked against lib/analytics.ts before the review was stored.
+type Review = { month: string; label: string; isBaseline: boolean; thin: boolean; writtenAt: string; review: { verdict: string; wentWell: string[]; fellShort: string[]; recommendations: string[] } };
+
+function ReviewList({ title, items }: { title: string; items: string[] }) {
+  if (!items.length) return null;
+  return (
+    <div className="mt-4">
+      <h3 className="text-[13.5px] font-semibold text-ink">{title}</h3>
+      <ul className="mt-1.5 space-y-1.5">{items.map(i => <li key={i} className="text-[13.5px] text-ink leading-snug pl-4 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-2 before:h-0.5 before:bg-fairway">{i}</li>)}</ul>
+    </div>
+  );
+}
+
+function MonthlyReviews() {
+  const [reviews, setReviews] = useState<Review[] | null>(null);
+  const [error, setError] = useState('');
+  const [open, setOpen] = useState(0);
+  const load = useCallback(async () => {
+    setError('');
+    const res = await dfetch<{ reviews: Review[] }>('/api/operator/monthly-reviews');
+    if (res.ok) setReviews(res.data.reviews); else setError(res.error);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  return (
+    <div id="reviews" className="mb-5">
+      <Section title="Monthly reviews" note="Written on the 1st about the month before. Your first full month is your starting line; every review after measures against it and the month before. Every number comes from the figures below.">
+        {error && <LoadError message={error} onRetry={load} />}
+        {!reviews && !error && <div className="py-6 text-center text-ink-muted"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>}
+        {reviews && reviews.length === 0 && <p className="text-[13.5px] text-ink-soft">Your first review arrives after your first full month on GreenReserve.</p>}
+        {reviews && reviews.map((r, i) => (
+          <div key={r.month} className={i > 0 ? 'border-t border-line pt-4 mt-4' : ''}>
+            <button onClick={() => setOpen(open === i ? -1 : i)} aria-expanded={open === i} className="w-full flex items-baseline justify-between gap-3 text-left">
+              <span className="font-serif text-[20px] text-ink">{r.label}{r.isBaseline ? <span className="ml-2 font-sans text-[12.5px] text-ink-muted">Starting line</span> : null}</span>
+              <span className="text-[12.5px] font-semibold text-ink-soft">{open === i ? 'Hide' : 'Read'}</span>
+            </button>
+            {open === i && (
+              <div className="mt-2 max-w-[62em]">
+                <p className="text-[14.5px] text-ink leading-relaxed">{r.review.verdict}</p>
+                {r.thin && <p className="text-[12.5px] text-ink-muted mt-1">A quiet month: too few bookings to draw firm conclusions.</p>}
+                <ReviewList title="What went well" items={r.review.wentWell} />
+                <ReviewList title="Where you fell short" items={r.review.fellShort} />
+                <ReviewList title="What to try next" items={r.review.recommendations} />
+              </div>
+            )}
+          </div>
+        ))}
+      </Section>
+    </div>
+  );
+}
+
 function AnalyticsInner() {
   const [preset, setPreset] = useState<Preset>('30d');
   const [today, setToday] = useState('');
@@ -202,6 +256,8 @@ function AnalyticsInner() {
                 className="px-3 py-1.5 rounded-md bg-pine text-white font-semibold disabled:opacity-50">Apply</button>
             </div>
           )}
+
+          <MonthlyReviews />
 
           {error && <LoadError message={d ? `${error} Still showing ${fmtDay(d.range.from)} – ${fmtDay(d.range.to)}.` : error} onRetry={() => load(preset, custom, compare, today)} />}
           {loading && !d && <div className="py-24 text-center text-ink-muted"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}

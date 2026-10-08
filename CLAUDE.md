@@ -301,6 +301,7 @@ Schedules are in `vercel.json`.
 - `send-reminders` — pre-round reminders and membership pay links
 - `generate-tee-times` — materialises slots from `TeeTimeSchedule`
 - `chase-onboarding` — nudges courses stalled in onboarding
+- `monthly-review` — BI-1 (PLATFORM_ROADMAP_SPEC §1): daily, writes each live course's AI review of its previous month once that month ends in the course's timezone (`src/lib/monthly-review.ts`). The numbers come from `computeAnalytics()`; the model only interprets them, and `validateNumbers()` rejects any draft carrying a number it wasn't given. First full live month = the baseline. Emails the owner; shown on Analytics → Monthly reviews
 
 Every cron route is wrapped in `cronRoute(job, handler)` (`src/lib/cron-log.ts`, MP-8b), which writes one `CronRunLog` row per run; Admin → System reads it and goes red on a failed, unfinished or overdue run. A new cron must use the wrapper AND be added to `vercel.json`, or System cannot see it. Stripe webhook receipts land in the same table as job `webhook:stripe`.
 
