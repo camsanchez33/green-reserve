@@ -1,29 +1,33 @@
 {
-  "generatedAt": "2026-10-08T01:46:24.322Z",
+  "generatedAt": "2026-10-08T02:08:11.157Z",
   "repo": {
-    "head": "1e44ba5",
-    "branch": "claude/move-checked-in",
-    "dirtyCount": 2,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
-    ],
+    "head": "9482db8",
+    "branch": "claude/sheet2-board",
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "1e44ba5",
-        "date": "2026-10-08T01:45:20+00:00",
-        "subject": "Refuse moving a checked-in round from an earlier day",
+        "h": "9482db8",
+        "date": "2026-10-08T02:07:15+00:00",
+        "subject": "SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view",
         "ids": [],
         "matches": []
       },
       {
-        "h": "99c9f2c",
-        "date": "2026-10-08T01:43:30+00:00",
-        "subject": "Staff can move a group that has already checked in",
+        "h": "a9fd5f5",
+        "date": "2026-10-08T02:03:24+00:00",
+        "subject": "SHEET-2: board view of the tee sheet",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2707e36",
+        "date": "2026-10-07T22:03:04-04:00",
+        "subject": "Move a group after they've checked in (#96)",
         "ids": [],
         "matches": []
       },
@@ -88,7 +92,7 @@
       "line": 1014,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 38
+      "ageDays": 39
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
@@ -761,14 +765,19 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "1e44ba5",
+      "h": "9482db8",
       "date": "2026-10-08",
-      "subject": "Refuse moving a checked-in round from an earlier day"
+      "subject": "SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view"
     },
     {
-      "h": "99c9f2c",
+      "h": "a9fd5f5",
       "date": "2026-10-08",
-      "subject": "Staff can move a group that has already checked in"
+      "subject": "SHEET-2: board view of the tee sheet"
+    },
+    {
+      "h": "2707e36",
+      "date": "2026-10-07",
+      "subject": "Move a group after they've checked in (#96)"
     },
     {
       "h": "fef4012",
@@ -814,11 +823,6 @@
       "h": "bc65c9f",
       "date": "2026-10-06",
       "subject": "Receipt shows what actually reached the golfer's card (#88)"
-    },
-    {
-      "h": "d19d5cb",
-      "date": "2026-10-06",
-      "subject": "Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)"
     }
   ]
 }

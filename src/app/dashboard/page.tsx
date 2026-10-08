@@ -18,6 +18,7 @@ import GettingStartedChecklist from '@/components/dashboard/GettingStartedCheckl
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
+import TeeSheetBoard, { type BoardGroup } from '@/components/dashboard/TeeSheetBoard';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { formatTeeDay as fmtDate, formatTeeTime as fmtTime } from '@/lib/format';
@@ -118,7 +119,12 @@ function DashboardPageInner() {
   // MSG-1: the message-the-day's-golfers dialog.
   const [messageOpen, setMessageOpen] = useState(false);
   // ACT-1: the group being moved to another time.
-  const [moveTarget, setMoveTarget] = useState<{ booking: { id: string; golferName: string; players: number; emailable: boolean; checkedIn: boolean }; fromTeeTimeId: string } | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{ booking: { id: string; golferName: string; players: number; emailable: boolean; checkedIn: boolean }; fromTeeTimeId: string; toTeeTimeId?: string } | null>(null);
+  // SHEET-2: the list (default — the counter scans it fastest) or the board.
+  // Remembered per browser; a blocked storage just means the list.
+  const [view, setViewState] = useState<'list' | 'board'>('list');
+  useEffect(() => { try { if (localStorage.getItem('gr_sheet_view') === 'board') setViewState('board'); } catch {} }, []);
+  const setView = (v: 'list' | 'board') => { setViewState(v); try { localStorage.setItem('gr_sheet_view', v); } catch {} };
   const [showConditions, setShowConditions]   = useState(false);
   const [expandedId, setExpandedId]           = useState<string | null>(null);
   const [conditions, setConditions]       = useState('');
@@ -602,7 +608,8 @@ function DashboardPageInner() {
           </div>
         )}
 
-        <div className="max-w-4xl mx-auto px-6 py-6">
+        {/* SHEET-2: the board gets the screen's width, so more of the day shows at once. */}
+        <div className={(view === 'board' ? 'max-w-[1600px]' : 'max-w-4xl') + ' mx-auto px-6 py-6'}>
 
           {/* AN-1 (Cam: no "Getting Started" banner on the sheet): it shows only
               while a step that blocks taking bookings or money is unfinished —
@@ -765,8 +772,16 @@ function DashboardPageInner() {
                       <button onClick={() => setSelectedDate(today())} className="ml-1 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Today</button>
                     )}
                   </div>
+                  <div className="ml-auto inline-flex rounded-md border border-line overflow-hidden text-[12.5px] font-medium" role="group" aria-label="Tee sheet view">
+                    {(['list', 'board'] as const).map(v => (
+                      <button key={v} onClick={() => setView(v)} aria-pressed={view === v}
+                        className={'px-3 py-1 transition-colors ' + (view === v ? 'bg-pine text-white' : 'bg-white text-ink-soft hover:text-ink')}>
+                        {v === 'list' ? 'List' : 'Board'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-b border-line text-[12.5px] font-semibold text-ink">
+                <div className={(view === 'board' ? 'hidden' : 'hidden sm:flex') + ' items-center gap-4 px-4 py-2 border-b border-line text-[12.5px] font-semibold text-ink'}>
                   <span className="w-[76px]">Time</span>
                   <span className="flex-1">Group</span>
                   {!commonRate && <span className="hidden md:inline w-[150px] text-right">Rate</span>}
@@ -783,6 +798,24 @@ function DashboardPageInner() {
                   <p className="text-sm text-ink-soft mb-4">Add times manually or check your schedule covers this day</p>
                   {access.can('sheet.edit_times') && <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add tee time</button>}
                 </div>
+              ) : view === 'board' ? (
+                <div className="bg-paper/70 p-3 sm:p-4 rounded-b-lg">
+                  {q && visibleTimes.length === 0 && <p className="text-center py-6 text-ink-muted text-sm">No bookings match &quot;{search}&quot; on this date.</p>}
+                  <TeeSheetBoard
+                    slots={visibleTimes}
+                    isPast={t => selectedDate < today() || (selectedDate === today() && t.time <= nowHM)}
+                    nextUpId={nextUpId}
+                    canMove={access.can('sheet.move')}
+                    canMoveCheckedIn={selectedDate >= today()}
+                    onMove={(g: BoardGroup, fromId, toId) => setMoveTarget({
+                      booking: { id: g.id, golferName: g.golferName, players: g.players, emailable: !g.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: g.status === 'completed' },
+                      fromTeeTimeId: fromId, toTeeTimeId: toId,
+                    })}
+                    onOpen={id => {
+                      setViewState('list'); setExpandedId(id); // a peek — the saved preference stays
+                      requestAnimationFrame(() => document.getElementById(`tt-${id}`)?.scrollIntoView({ block: 'center' }));
+                    }} />
+                </div>
               ) : (
                 <div className="divide-y divide-line">
                   {q && visibleTimes.length === 0 && (
@@ -796,7 +829,7 @@ function DashboardPageInner() {
                     const isPast = selectedDate < today() || (selectedDate === today() && tt.time < nowHM);
                     const isBlocked = tt.status === 'blocked';
                     return (
-                    <div key={tt.id}
+                    <div key={tt.id} id={`tt-${tt.id}`}
                       className={'group px-4 py-1.5 cursor-pointer transition-colors ' + slotRowCls(tt) + (tt.id===nextUpId ? ' shadow-[inset_3px_0_0_var(--color-pine)]' : '') + (isPast && !isBlocked ? ' opacity-50' : '')}
                       style={isBlocked ? HATCH : undefined}
                       onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
@@ -953,7 +986,7 @@ function DashboardPageInner() {
 
       {/* ── ACT-1: move a group to another time ── */}
       {moveTarget && (
-        <MoveGroupModal booking={moveTarget.booking} fromTeeTimeId={moveTarget.fromTeeTimeId} date={selectedDate} today={today()} nowHM={nowHM}
+        <MoveGroupModal booking={moveTarget.booking} fromTeeTimeId={moveTarget.fromTeeTimeId} initialPickId={moveTarget.toTeeTimeId} date={selectedDate} today={today()} nowHM={nowHM}
           onClose={() => setMoveTarget(null)}
           onMoved={toDate => { setMoveTarget(null); if (toDate !== selectedDate) setSelectedDate(toDate); else loadTimes(selectedDate); }} />
       )}
