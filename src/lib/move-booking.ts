@@ -43,10 +43,11 @@ export type MoveOk = {
    *  the hourly cron will charge this many cents. 0 = nothing will be charged. */
   holdDueCents: number;
 };
-export type MoveCode = 'MOVED' | 'NOT_FOUND' | 'WRONG_COURSE' | 'NOT_CONFIRMED' | 'CHECKED_IN' | 'SAME' | 'SLOT_GONE' | 'BLOCKED' | 'PAST' | 'FULL' | 'CONFLICT';
+export type MoveCode = 'NO_SHOW' | 'MOVED' | 'NOT_FOUND' | 'WRONG_COURSE' | 'NOT_CONFIRMED' | 'CHECKED_IN' | 'SAME' | 'SLOT_GONE' | 'BLOCKED' | 'PAST' | 'FULL' | 'CONFLICT';
 export type MoveFail = { ok: false; code: MoveCode; message: string; spotsLeft?: number };
 
 const MESSAGES: Record<MoveCode, string> = {
+  NO_SHOW: 'This group is marked as a no-show. Mark them “Still coming” first, then move them.',
   MOVED: 'This group was already moved.',
   NOT_FOUND: 'That booking no longer exists.',
   WRONG_COURSE: 'That tee time belongs to a different course.',
@@ -90,7 +91,8 @@ export async function moveBooking(opts: {
       const b = await tx.booking.findUnique({
         where: { id: opts.bookingId },
         select: {
-          id: true, courseId: true, teeTimeId: true, players: true, status: true, checkedInAt: true,
+          id: true, courseId: true, teeTimeId: true, players: true, status: true, checkedInAt: true, noShowAt: true,
+          paymentStatus: true, roundPaymentIntentId: true,
           cartSelected: true, appliedRate: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
@@ -100,6 +102,9 @@ export async function moveBooking(opts: {
       if (!b || (opts.courseId && b.courseId !== opts.courseId)) throw new MoveError('NOT_FOUND');
       if (b.status !== 'confirmed') throw new MoveError('NOT_CONFIRMED');
       if (b.checkedInAt) throw new MoveError('CHECKED_IN');
+      // A no-show may already carry its charges (taken at the course's midnight);
+      // "Still coming" is the path that refunds them. Moving would leave them.
+      if (b.noShowAt) throw new MoveError('NO_SHOW');
       if (opts.expectFromTeeTimeId && b.teeTimeId !== opts.expectFromTeeTimeId) throw new MoveError('MOVED');
       if (b.teeTimeId === opts.newTeeTimeId) throw new MoveError('SAME');
 
@@ -118,7 +123,10 @@ export async function moveBooking(opts: {
       // ── price ──
       let rate = { greenFeeCents: slot.greenFeeCents, cartFeeCents: slot.cartFeeCents };
       if (b.appliedRate !== 'standard') {
-        const tier = await tx.membershipTier.findFirst({ where: { courseId: b.courseId, name: b.appliedRate } });
+        // Tier names aren't unique in the schema: take the oldest ACTIVE tier of
+        // that name so the answer is deterministic (a tierId on Booking is the
+        // proper fix; the tiers route now refuses duplicate names).
+        const tier = await tx.membershipTier.findFirst({ where: { courseId: b.courseId, name: b.appliedRate, active: true }, orderBy: { createdAt: 'asc' } });
         rate = tier
           ? applyTierRates(slot, tier)
           // A member rate whose tier is gone: keep what they paid per player.
@@ -128,7 +136,11 @@ export async function moveBooking(opts: {
       const newCart = b.cartSelected ? rate.cartFeeCents * b.players : 0;
       const range = Math.round(b.rangeBallsTotal);
       const access = Math.round(b.accessFeeTotal); // per-player amount unchanged: same players
-      const keep = opts.pricing === 'keep';
+      // A round already paid (admin "collect payment" before check-in) keeps its
+      // price: the charge is done, and repricing would leave the ledger and the
+      // golfer's "due at check-in" disagreeing with what was taken.
+      const paid = b.paymentStatus === 'paid' || !!b.roundPaymentIntentId;
+      const keep = opts.pricing === 'keep' || paid;
       const greenFeeTotal = keep ? Math.round(b.greenFeeTotal) : newGreen;
       const cartFeeTotal = keep ? Math.round(b.cartFeeTotal) : newCart;
       const totals = { greenFeeTotal, cartFeeTotal, rangeBallsTotal: range, accessFeeTotal: access, totalAmount: greenFeeTotal + cartFeeTotal + range + access };
@@ -141,7 +153,7 @@ export async function moveBooking(opts: {
         ok: true, bookingId: b.id, players: b.players,
         from: { teeTimeId: b.teeTime.id, date: b.teeTime.date, time: b.teeTime.time },
         to: { teeTimeId: slot.id, date: slot.date, time: slot.time, holes: slot.holes },
-        totals, newSlotTotals: { greenFeeTotal: newGreen, cartFeeTotal: newCart, totalAmount: newGreen + newCart + range + access },
+        totals, newSlotTotals: paid ? { greenFeeTotal, cartFeeTotal, totalAmount: totals.totalAmount } : { greenFeeTotal: newGreen, cartFeeTotal: newCart, totalAmount: newGreen + newCart + range + access },
         priceChanged, cutoffPassed, holdDueCents,
       };
       if (opts.dryRun) throw new DryRun(result);

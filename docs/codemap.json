@@ -5184,7 +5184,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 121,
+      "lines": 130,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12544,7 +12544,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 175,
+      "lines": 187,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [

@@ -4,32 +4,28 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 00:22 UTC · branch `claude/act1-move-group` · HEAD `14b40dd` · working tree **18 dirty file(s)**
+Generated 2026-10-08 00:30 UTC · branch `claude/act1-move-group` · HEAD `c5493ee` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-10-07**. 1 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (18 file(s))
+| commit | date | subject |
+|---|---|---|
+| `c5493ee` | 2026-10-08 | ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay |
 
-- `M CLAUDE.md`
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (8 file(s))
+
 - `M PLATFORM_ROADMAP_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/design-guard.baseline.json`
-- `M src/app/api/bookings/route.ts`
+- `M scripts/move-booking-test.ts`
 - `M src/app/api/manage/[bookingId]/swap-time/route.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/api/operator/frost-delay/route.ts`
+- `M src/app/api/operator/tiers/route.ts`
 - `M src/app/dashboard/page.tsx`
-- `M src/lib/frost-delay.ts`
-- `M src/lib/staff-permissions.ts`
-- `?? prisma/migrations/20261008000823_booking_moved_event/`
-- `?? scripts/move-booking-test.ts`
-- `?? src/components/dashboard/MoveGroupModal.tsx`
-- `?? src/lib/move-booking.ts`
-- `?? src/lib/tier-rates.ts`
+- `M src/lib/move-booking.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -172,11 +168,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 2d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-07 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 0d |
@@ -210,6 +206,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `c5493ee` 2026-10-08 — ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)
 - `2d1a02c` 2026-10-06 — No-show charges taken at the course's midnight, not when marked (#90)
@@ -221,7 +218,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
 - `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
-- `3e3d9ec` 2026-10-06 — Control Room: every session reports its own status (#81)
 
 ---
 

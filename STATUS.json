@@ -1,34 +1,32 @@
 {
-  "generatedAt": "2026-10-08T00:22:21.499Z",
+  "generatedAt": "2026-10-08T00:30:07.105Z",
   "repo": {
-    "head": "14b40dd",
+    "head": "c5493ee",
     "branch": "claude/act1-move-group",
-    "dirtyCount": 18,
+    "dirtyCount": 8,
     "dirty": [
-      "M CLAUDE.md",
-      " M PLATFORM_ROADMAP_SPEC.md",
+      "M PLATFORM_ROADMAP_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/design-guard.baseline.json",
-      " M src/app/api/bookings/route.ts",
+      " M scripts/move-booking-test.ts",
       " M src/app/api/manage/[bookingId]/swap-time/route.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/frost-delay/route.ts",
+      " M src/app/api/operator/tiers/route.ts",
       " M src/app/dashboard/page.tsx",
-      " M src/lib/frost-delay.ts",
-      " M src/lib/staff-permissions.ts",
-      "?? prisma/migrations/20261008000823_booking_moved_event/",
-      "?? scripts/move-booking-test.ts",
-      "?? src/components/dashboard/MoveGroupModal.tsx",
-      "?? src/lib/move-booking.ts",
-      "?? src/lib/tier-rates.ts"
+      " M src/lib/move-booking.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
-    "unrecorded": []
+    "unrecorded": [
+      {
+        "h": "c5493ee",
+        "date": "2026-10-08T00:22:38+00:00",
+        "subject": "ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 238,
@@ -530,7 +528,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-07",
+      "lastTouched": "2026-10-08",
       "ageDays": 0
     },
     {
@@ -554,7 +552,7 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-07",
+      "lastTouched": "2026-10-08",
       "ageDays": 0
     },
     {
@@ -741,6 +739,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c5493ee",
+      "date": "2026-10-08",
+      "subject": "ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay"
+    },
+    {
       "h": "14b40dd",
       "date": "2026-10-07",
       "subject": "BI-1: monthly AI review of each course's previous month (#92)"
@@ -794,11 +797,6 @@
       "h": "c0c4cea",
       "date": "2026-10-06",
       "subject": "G13: signed-in golfers can use a booking's emailed manage link (#82)"
-    },
-    {
-      "h": "3e3d9ec",
-      "date": "2026-10-06",
-      "subject": "Control Room: every session reports its own status (#81)"
     }
   ]
 }

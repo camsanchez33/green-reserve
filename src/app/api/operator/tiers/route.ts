@@ -29,6 +29,11 @@ export async function POST(req: NextRequest) {
           discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
+  // ACT-1 review: a booking records its tier by NAME, so two live tiers with one
+  // name would make repricing a moved member ambiguous.
+  if (await prisma.membershipTier.findFirst({ where: { courseId: session.courseId, name: name.trim(), active: true }, select: { id: true } })) {
+    return NextResponse.json({ error: `You already have a tier called “${name.trim()}”. Pick a different name.` }, { status: 409 });
+  }
 
   // Validate: must have either flat rates OR a discount %, not both
   const hasFlat = greenFeeWeekday != null || greenFeeWeekend != null;
@@ -73,6 +78,10 @@ export async function PATCH(req: NextRequest) {
 
   const tier = await prisma.membershipTier.findUnique({ where: { id } });
   if (!tier || tier.courseId !== session.courseId) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (typeof updates.name === 'string' && updates.name.trim() && updates.name.trim() !== tier.name &&
+      await prisma.membershipTier.findFirst({ where: { courseId: session.courseId, name: updates.name.trim(), active: true, id: { not: id } }, select: { id: true } })) {
+    return NextResponse.json({ error: `You already have a tier called “${updates.name.trim()}”. Pick a different name.` }, { status: 409 });
+  }
 
   const updated = await prisma.membershipTier.update({
     where: { id },

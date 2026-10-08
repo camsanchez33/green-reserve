@@ -87,6 +87,32 @@ async function main() {
   await moveBooking({ bookingId: member.id, newTeeTimeId: m2.id, courseId: c.id, pricing: 'new_slot', actor: { type: 'golfer' }, now: NOW });
   check('a member is repriced at their tier rate, not the public one', (await bk(member.id))?.greenFeeTotal === 6400 * 2, String((await bk(member.id))?.greenFeeTotal));
 
+  // 3b. Tier lookup: an inactive tier of the same name is ignored; the oldest active wins.
+  await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Silver', discountPct: 50, active: false } });
+  await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Silver', discountPct: 10 } });
+  const s1 = await slot(c.id, '2026-10-22', '09:00');
+  const s2 = await slot(c.id, '2026-10-22', '09:30');
+  const silver = await book(c.id, s1.id, { green: 4500, rate: 'Silver' });
+  await moveBooking({ bookingId: silver.id, newTeeTimeId: s2.id, courseId: c.id, pricing: 'new_slot', actor: { type: 'golfer' }, now: NOW });
+  check('an inactive tier of the same name is ignored', (await bk(silver.id))?.greenFeeTotal === 4500 * 2);
+
+  // 3c. A round already paid keeps its price, whatever the pricing asked for.
+  const p1 = await slot(c.id, '2026-10-22', '12:00');
+  const p2 = await slot(c.id, '2026-10-22', '12:30', { green: 9000 });
+  const paidB = await book(c.id, p1.id);
+  await prisma.booking.update({ where: { id: paidB.id }, data: { paymentStatus: 'paid', roundPaymentIntentId: 'pi_paid' } });
+  const rp = await moveBooking({ bookingId: paidB.id, newTeeTimeId: p2.id, courseId: c.id, pricing: 'new_slot', actor: STAFF, now: NOW });
+  check('a paid round is not repriced', rp.ok && (await bk(paidB.id))?.greenFeeTotal === 10000 && !rp.priceChanged);
+  check('a paid round offers no new-rate price', rp.ok && rp.newSlotTotals.totalAmount === rp.totals.totalAmount);
+
+  // 3d. A flagged no-show is not moved.
+  const n1 = await slot(c.id, '2026-10-22', '13:00');
+  const n2 = await slot(c.id, '2026-10-22', '13:30');
+  const ns = await book(c.id, n1.id);
+  await prisma.booking.update({ where: { id: ns.id }, data: { noShowAt: new Date() } });
+  const rn = await moveBooking({ bookingId: ns.id, newTeeTimeId: n2.id, courseId: c.id, pricing: 'keep', actor: STAFF, now: NOW });
+  check('a flagged no-show is refused', !rn.ok && rn.code === 'NO_SHOW');
+
   // 4. A counter booking (no booking fee) never gains one.
   const k1 = await slot(c.id, '2026-10-22', '10:00');
   const k2 = await slot(c.id, '2026-10-22', '11:00');
