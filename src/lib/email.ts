@@ -1649,7 +1649,7 @@ export async function sendMemberMagicLink(data: {
 
 export async function sendMembershipReceiptEmail(data: {
   name: string; email: string; courseName: string; tierName: string;
-  amountPaid: number; expiresAt: Date | null;
+  amountPaid: number; serviceFee: number; expiresAt: Date | null;
 }) {
   const until = data.expiresAt
     ? data.expiresAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -1658,7 +1658,7 @@ export async function sendMembershipReceiptEmail(data: {
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">Payment received</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're all set, ${data.name}.</h1>
     <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">
-      Your payment of <strong>$${data.amountPaid.toFixed(2)}</strong> to <strong>${data.courseName}</strong> went through.
+      Your payment of <strong>$${data.amountPaid.toFixed(2)}</strong> to <strong>${data.courseName}</strong> went through${data.serviceFee > 0 ? ` (dues $${(data.amountPaid - data.serviceFee).toFixed(2)} plus GreenReserve's $${data.serviceFee.toFixed(2)} service fee, 1% of the dues)` : ''}.
       Your <strong>${data.tierName}</strong> membership is active${until ? ` through <strong>${until}</strong>` : ''}.
     </p>
     <p style="margin:0;color:#9ca3af;font-size:12px;">Keep this email as your receipt. Member rates apply automatically when you book while signed in.</p>

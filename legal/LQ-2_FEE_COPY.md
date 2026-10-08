@@ -30,7 +30,7 @@ fee to the cent.
   card you take today. GreenReserve charges you nothing on top of it."
 - "No setup fee, no monthly fee, no commission on your green fees."
 
-**L-4 folds in here (assumption — Cam has not ruled on it):** the $0.50 taken on
+**Superseded 2026-10-08 (Cam: "1 percent fee on membership, paid by golfers whatever that price may be"):** the membership fee is now 1% of the dues, added to what the member pays (`membershipFeeCents()` in `src/lib/stripe.ts`); /terms and /for-courses say so. Every "$0.50 / 50¢" below now reads "1% of the dues". Historic note — L-4 folded in here (assumption — Cam had not ruled on it): the $0.50 taken on
 each membership-dues payment (`MEMBERSHIP_FEE_CENTS`) stays and is DISCLOSED in the
 same pass. If Cam would rather delete that fee, delete the sentence and the
 constant together — never one without the other.
@@ -64,7 +64,7 @@ Box ~562:
 > payment to your own Stripe account. Stripe's standard processing fee (currently
 > 2.9% + 30¢ per payment) comes out of that payment, as with any card you take —
 > GreenReserve charges you nothing on top of it. Our $1.50 per player is then passed
-> to GreenReserve. That, plus 50¢ on each membership-dues payment collected through
+> to GreenReserve. That, plus 1% of each membership-dues payment collected through
 > GreenReserve, is our only revenue: no setup fee, no monthly fee, no commission on
 > your green fees.
 
@@ -85,7 +85,7 @@ FAQ ~575 "Who pays the $1.50?":
 > check-in depending on the course's payment flow. The fee is collected within the
 > same card payment as the green fee, on the course's Stripe account, and passed to
 > GreenReserve. Where a course collects membership dues through GreenReserve, a
-> **$0.50 fee per dues payment** applies in the same way. GreenReserve charges
+> **GreenReserve service fee of 1% of the dues** is added to each dues payment the member makes. GreenReserve charges
 > courses no listing, subscription, or commission fees. Stripe's processing fees
 > apply to each payment under the course's own Stripe agreement.
 
@@ -95,7 +95,7 @@ Bump `CURRENT_TERMS_VERSION` in `src/lib/terms.ts`.
 
 §1, replace the "only fee … never deducted" sentence:
 > Listing is free. GreenReserve's fees are a $1.50 per-player service fee on each
-> online booking and a $0.50 fee on each membership-dues payment collected through
+> online booking and a fee of 1% of each membership-dues payment collected through
 > GreenReserve; both are added to what the golfer or member pays, not deducted from
 > your listed prices.
 

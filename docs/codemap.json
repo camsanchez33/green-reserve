@@ -4018,7 +4018,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 138,
+      "lines": 142,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6617,7 +6617,7 @@
     },
     {
       "path": "src/app/membership/[id]/page.tsx",
-      "lines": 197,
+      "lines": 205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6905,7 +6905,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 192,
+      "lines": 196,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13960,7 +13960,7 @@
     },
     {
       "path": "src/lib/stripe.ts",
-      "lines": 87,
+      "lines": 96,
       "purpose": "Every charge, refund and SetupIntent GreenReserve makes goes through here.",
       "brain": [
         "money-movement"
@@ -13975,8 +13975,12 @@
           "kind": "fn"
         },
         {
-          "name": "MEMBERSHIP_FEE_CENTS",
+          "name": "MEMBERSHIP_FEE_RATE",
           "kind": "const"
+        },
+        {
+          "name": "membershipFeeCents",
+          "kind": "fn"
         },
         {
           "name": "refundOnConnectedAccount",
@@ -14114,7 +14118,7 @@
     },
     {
       "path": "src/lib/terms.ts",
-      "lines": 6,
+      "lines": 7,
       "purpose": "Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to.",
       "brain": [],
       "exports": [

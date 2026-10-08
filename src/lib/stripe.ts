@@ -11,7 +11,16 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_place
 });
 
 export const ACCESS_FEE_CENTS = 150; // $1.50 per player in cents
-export const MEMBERSHIP_FEE_CENTS = 50; // GreenReserve's flat cut per membership payment
+/**
+ * GreenReserve's fee on a membership-dues payment (Cam 2026-10-08: "1 percent fee
+ * on membership, paid by golfers whatever that price may be"): 1% of the dues,
+ * rounded to the cent, ADDED to what the member pays — never taken from the
+ * course's dues. Replaces the flat 50¢ that used to come out of the course's side.
+ */
+export const MEMBERSHIP_FEE_RATE = 0.01;
+export function membershipFeeCents(duesCents: number): number {
+  return duesCents > 0 ? Math.round(duesCents * MEMBERSHIP_FEE_RATE) : 0;
+}
 
 /**
  * Charges a card the platform saved (via SetupIntent on a platform Customer)
