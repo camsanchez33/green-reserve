@@ -134,8 +134,13 @@ Removes the "what about my POS?" objection. Not a full retail system:
   Stripe Terminal smart readers (server-driven, work from the web dashboard,
   ~$250–350 each) vs Tap to Pay on iPhone (no hardware, but needs a native app,
   which we don't have). Recommendation: server-driven reader first.
-- **Decision for Cam:** does GreenReserve take a fee on shop sales (a second
-  revenue line), and how is it worded? Fee copy is legal-gated (legal/LQ-2).
+- **Decided (Cam 2026-10-08): GreenReserve takes $0.50 on pro shop
+  purchases.** Still open before building: per sale or per item (recommended:
+  per sale, one charge however many items); who pays it (recommended: the
+  course, taken as the Stripe application fee, so the shop's prices stay what
+  the tag says; adding 50¢ to a golfer's $4 sleeve of tees at the register
+  reads badly); whether cash sales count (they can't be collected, like
+  PAY-2). Golfer- or course-facing fee wording still goes through legal/LQ-2.
 - Daily sales on Analytics; feeds BI-1.
 
 ## 5. MSG-1 — reminders and messages to golfers
@@ -218,6 +223,7 @@ that hour's times across it (the busiest hour sets the column count, so :10
 sits under :10), never a sideways scroll; phones get two across. The panel
 gains Cancel booking / Cancel, no fee, with the same confirm and result wording
 as Money → Cancellations (`lib/cancel-confirm.ts`), the same route and fee rules.
+The homepage demo now shows the board and its panel too (2026-10-08).
 
 ## Parked (and why)
 

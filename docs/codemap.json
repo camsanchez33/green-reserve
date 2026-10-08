@@ -7952,7 +7952,7 @@
     },
     {
       "path": "src/components/home/TeeSheetDemo.tsx",
-      "lines": 282,
+      "lines": 316,
       "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
       "brain": [],
       "exports": [

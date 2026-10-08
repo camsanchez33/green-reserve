@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-08T03:58:07.190Z",
+  "generatedAt": "2026-10-08T12:46:53.937Z",
   "repo": {
-    "head": "7f79a3a",
-    "branch": "claude/analytics-rework",
+    "head": "ed62a49",
+    "branch": "claude/demo-board",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -11,9 +11,23 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "9e2ff56",
-        "date": "2026-10-08T03:57:59+00:00",
-        "subject": "AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value",
+        "h": "ed62a49",
+        "date": "2026-10-08T12:46:05+00:00",
+        "subject": "Demo panel: online bookings at the no-card demo course read 'No Card Required'; unique keys",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f58ff2e",
+        "date": "2026-10-08T12:41:48+00:00",
+        "subject": "Homepage demo shows the board: squares, paid/booked edges, Next up, the panel",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "718522c",
+        "date": "2026-10-08T00:03:31-04:00",
+        "subject": "AN-2: Analytics reworked so it reads plainly (#100)",
         "ids": [],
         "matches": []
       },
@@ -21,13 +35,6 @@
         "h": "b7079ea",
         "date": "2026-10-07T23:56:16-04:00",
         "subject": "Tee sheet: one board that fits the page, cancel from the sheet (#99)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "3c3c337",
-        "date": "2026-10-08T03:53:18+00:00",
-        "subject": "AN-2: Analytics reworked so it reads plainly",
         "ids": [],
         "matches": []
       },
@@ -148,7 +155,7 @@
       "line": 1224,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 38
+      "ageDays": 39
     },
     {
       "title": "MP-2e",
@@ -594,12 +601,12 @@
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-01",
-      "ageDays": 6
+      "ageDays": 7
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-07",
+      "lastTouched": "2026-10-08",
       "ageDays": 0
     },
     {
@@ -786,19 +793,24 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "9e2ff56",
+      "h": "ed62a49",
       "date": "2026-10-08",
-      "subject": "AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value"
+      "subject": "Demo panel: online bookings at the no-card demo course read 'No Card Required'; unique keys"
+    },
+    {
+      "h": "f58ff2e",
+      "date": "2026-10-08",
+      "subject": "Homepage demo shows the board: squares, paid/booked edges, Next up, the panel"
+    },
+    {
+      "h": "718522c",
+      "date": "2026-10-08",
+      "subject": "AN-2: Analytics reworked so it reads plainly (#100)"
     },
     {
       "h": "b7079ea",
       "date": "2026-10-07",
       "subject": "Tee sheet: one board that fits the page, cancel from the sheet (#99)"
-    },
-    {
-      "h": "3c3c337",
-      "date": "2026-10-08",
-      "subject": "AN-2: Analytics reworked so it reads plainly"
     },
     {
       "h": "fadcf67",
@@ -839,11 +851,6 @@
       "h": "0a54482",
       "date": "2026-10-06",
       "subject": "Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)"
-    },
-    {
-      "h": "2d1a02c",
-      "date": "2026-10-06",
-      "subject": "No-show charges taken at the course's midnight, not when marked (#90)"
     }
   ]
 }
