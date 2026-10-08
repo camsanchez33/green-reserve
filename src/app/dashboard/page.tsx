@@ -803,7 +803,7 @@ function DashboardPageInner() {
                   {q && visibleTimes.length === 0 && <p className="text-center py-6 text-ink-muted text-sm">No bookings match &quot;{search}&quot; on this date.</p>}
                   <TeeSheetBoard
                     slots={visibleTimes}
-                    isPast={t => selectedDate < today() || (selectedDate === today() && t.time < nowHM)}
+                    isPast={t => selectedDate < today() || (selectedDate === today() && t.time <= nowHM)}
                     nextUpId={nextUpId}
                     canMove={access.can('sheet.move')}
                     canMoveCheckedIn={selectedDate >= today()}
@@ -812,7 +812,7 @@ function DashboardPageInner() {
                       fromTeeTimeId: fromId, toTeeTimeId: toId,
                     })}
                     onOpen={id => {
-                      setView('list'); setExpandedId(id);
+                      setViewState('list'); setExpandedId(id); // a peek — the saved preference stays
                       requestAnimationFrame(() => document.getElementById(`tt-${id}`)?.scrollIntoView({ block: 'center' }));
                     }} />
                 </div>

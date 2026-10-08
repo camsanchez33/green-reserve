@@ -90,24 +90,26 @@ export default function TeeSheetBoard({ slots, isPast, nextUpId, canMove, canMov
                 const target = takes(s);
                 const groups = s.bookings ?? [];
                 return (
+                  // The card takes a pointer tap anywhere; for keyboard and screen
+                  // readers its time line is the button (chips stay siblings, never nested).
                   <div key={s.id}
-                    role="button" tabIndex={0}
-                    aria-label={picked ? (target ? `Move ${picked.group.golferName} to ${formatTeeTime(s.time)}` : `${formatTeeTime(s.time)} can't take this group`) : `${formatTeeTime(s.time)} — show in the list`}
                     onClick={() => (picked ? drop(s) : onOpen(s.id))}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (picked) drop(s); else onOpen(s.id); } }}
                     onDragOver={e => { if (target) { e.preventDefault(); if (over !== s.id) setOver(s.id); } }}
                     onDragLeave={() => setOver(o => (o === s.id ? null : o))}
                     onDrop={e => { e.preventDefault(); drop(s); }}
                     style={blocked ? HATCH : undefined}
-                    className={'px-2.5 py-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-pine/40 motion-safe:transition-colors '
+                    className={'px-2.5 py-2 cursor-pointer motion-safe:transition-colors '
                       + (blocked ? 'bg-paper rounded-lg ' : CARD + ' ')
                       + (s.id === nextUpId ? 'shadow-[inset_3px_0_0_var(--color-pine)] ' : '')
                       + (over === s.id ? 'ring-2 ring-pine ' : target ? 'ring-1 ring-pine/30 ' : '')
                       + (picked && !target && s.id !== picked.fromId ? 'opacity-40 ' : past && !blocked ? 'opacity-50 ' : blocked ? 'opacity-60 ' : '')}>
-                    <div className="flex items-baseline justify-between gap-2 text-[12.5px]">
+                    <button type="button"
+                      aria-label={picked ? (target ? `Move ${picked.group.golferName} to ${formatTeeTime(s.time)}` : `${formatTeeTime(s.time)} can't take this group`) : `${formatTeeTime(s.time)}, show in the list`}
+                      onClick={e => { e.stopPropagation(); if (picked) drop(s); else onOpen(s.id); }}
+                      className="w-full flex items-baseline justify-between gap-2 text-[12.5px] text-left rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-pine/40">
                       <span className="text-[13.5px] font-semibold text-ink tabular-nums">{formatTeeTime(s.time)}</span>
                       {slotLine(s)}
-                    </div>
+                    </button>
                     {groups.length > 0 && (
                       <div className="mt-1.5 space-y-1">
                         {groups.map(g => {
@@ -118,14 +120,13 @@ export default function TeeSheetBoard({ slots, isPast, nextUpId, canMove, canMov
                           return (
                             <button key={g.id} type="button"
                               draggable={can}
-                              disabled={!can}
+                              aria-disabled={!can || undefined}
                               aria-pressed={can ? isPicked : undefined}
                               title={can ? 'Drag to another time, or tap then tap a time' : undefined}
-                              onClick={e => { e.stopPropagation(); if (can) setPicked(isPicked ? null : { group: g, fromId: s.id }); }}
-                              onKeyDown={e => e.stopPropagation()}
+                              onClick={e => { if (!can) return; e.stopPropagation(); setPicked(isPicked ? null : { group: g, fromId: s.id }); }}
                               onDragStart={e => { e.dataTransfer.setData('text/plain', g.id); e.dataTransfer.effectAllowed = 'move'; setPicked({ group: g, fromId: s.id, viaDrag: true }); }}
                               onDragEnd={() => { setOver(null); setPicked(p => (p?.viaDrag ? null : p)); }}
-                              className={'w-full flex items-center gap-1.5 rounded-md px-2 py-1 text-left text-[12.5px] disabled:cursor-default '
+                              className={'w-full flex items-center gap-1.5 rounded-md px-2 py-1 text-left text-[12.5px] '
                                 + (isPicked ? 'bg-pine text-white ' : 'bg-paper/70 text-ink ')
                                 + (can ? 'cursor-grab active:cursor-grabbing hover:bg-paper ' : '')
                                 + (isPicked ? 'hover:bg-pine ' : '')}>

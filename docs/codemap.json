@@ -7757,7 +7757,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetBoard.tsx",
-      "lines": 153,
+      "lines": 154,
       "purpose": "SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07:",
       "brain": [],
       "exports": [

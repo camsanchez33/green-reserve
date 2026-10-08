@@ -424,7 +424,7 @@ Sorted the same way.
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 126 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/dashboard/MoveGroupModal.tsx` | 1 | 154 | ACT-1 (PLATFORM_ROADMAP_SPEC §2): | `default (MoveGroupModal)` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
-| `src/components/dashboard/TeeSheetBoard.tsx` | 1 | 153 | SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07: | `BoardGroup`, `BoardSlot`, `default (TeeSheetBoard)` |
+| `src/components/dashboard/TeeSheetBoard.tsx` | 1 | 154 | SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07: | `BoardGroup`, `BoardSlot`, `default (TeeSheetBoard)` |
 | `src/components/Footer.tsx` | 1 | 78 |  | `default (Footer)` |
 | `src/components/home/TeeSheetDemo.tsx` | 1 | 282 | HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07: | `LaptopDemo` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
