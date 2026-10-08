@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-08T12:46:53.937Z",
+  "generatedAt": "2026-10-08T17:09:42.987Z",
   "repo": {
-    "head": "ed62a49",
-    "branch": "claude/demo-board",
+    "head": "650d7ea",
+    "branch": "claude/membership-fee",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -11,16 +11,23 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "ed62a49",
-        "date": "2026-10-08T12:46:05+00:00",
-        "subject": "Demo panel: online bookings at the no-card demo course read 'No Card Required'; unique keys",
+        "h": "650d7ea",
+        "date": "2026-10-08T17:06:36+00:00",
+        "subject": "Membership fee: pay-link email shows the 1% and the real total; for-courses copy matches LQ-2",
         "ids": [],
         "matches": []
       },
       {
-        "h": "f58ff2e",
-        "date": "2026-10-08T12:41:48+00:00",
-        "subject": "Homepage demo shows the board: squares, paid/booked edges, Next up, the panel",
+        "h": "aede463",
+        "date": "2026-10-08T17:03:18+00:00",
+        "subject": "Membership fee: 1% of dues, paid by the member on top",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2eae475",
+        "date": "2026-10-08T08:51:28-04:00",
+        "subject": "Homepage demo shows the board (#101)",
         "ids": [],
         "matches": []
       },
@@ -162,7 +169,7 @@
       "line": 1266,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
-      "ageDays": 38
+      "ageDays": 39
     },
     {
       "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
@@ -589,7 +596,7 @@
       "file": "ARCHITECTURE.md",
       "openRefs": 4,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -613,13 +620,13 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "HOMEPAGE_SPEC.md",
@@ -643,164 +650,169 @@
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 8
+      "ageDays": 9
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "ed62a49",
+      "h": "650d7ea",
       "date": "2026-10-08",
-      "subject": "Demo panel: online bookings at the no-card demo course read 'No Card Required'; unique keys"
+      "subject": "Membership fee: pay-link email shows the 1% and the real total; for-courses copy matches LQ-2"
     },
     {
-      "h": "f58ff2e",
+      "h": "aede463",
       "date": "2026-10-08",
-      "subject": "Homepage demo shows the board: squares, paid/booked edges, Next up, the panel"
+      "subject": "Membership fee: 1% of dues, paid by the member on top"
+    },
+    {
+      "h": "2eae475",
+      "date": "2026-10-08",
+      "subject": "Homepage demo shows the board (#101)"
     },
     {
       "h": "718522c",
@@ -846,11 +858,6 @@
       "h": "14b40dd",
       "date": "2026-10-07",
       "subject": "BI-1: monthly AI review of each course's previous month (#92)"
-    },
-    {
-      "h": "0a54482",
-      "date": "2026-10-06",
-      "subject": "Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)"
     }
   ]
 }
