@@ -6197,7 +6197,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1423,
+      "lines": 1477,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7757,7 +7757,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetBoard.tsx",
-      "lines": 154,
+      "lines": 157,
       "purpose": "SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -7772,6 +7772,10 @@
         {
           "name": "default (TeeSheetBoard)",
           "kind": "component"
+        },
+        {
+          "name": "groupTone",
+          "kind": "fn"
         }
       ],
       "route": null,

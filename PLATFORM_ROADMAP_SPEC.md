@@ -197,6 +197,19 @@ cancels), and the ACT-1 dialog opens with that time already priced; nothing
 moves until "Move group". Tapping a card with nothing picked opens that time
 in the list. Groups move under the same rules as the list's Move link.
 
+**Board becomes the sheet (Cam 2026-10-08):** "on the board you should able to
+pay and stuff … the board should just replace the list completely" and "these
+should all be squares that you can see all the people in it and how many …
+next up … green if its paid yellow if its booked". Built: equal squares (every
+group and its count, "N of 4", open seats), a 3px left edge in `ok` (all paid)
+/ `warn` (booked, not paid) / `bad` (declined card, no-show) with a legend,
+"Next up" on the next time, and a side panel on tap carrying the list's exact
+group buttons (check in, pay at counter, pay links, move, still coming) plus
+walk-in, block and delete. Board is the default on tablet/desktop; phones
+default to the list (a day of squares scrolls sideways there), and the toggle
+stays. Queued: the homepage demo (`TeeSheetDemo.tsx`) still shows the list —
+move it to the board.
+
 ## Parked (and why)
 
 - **Employee scheduling** — Homebase and 7shifts already do it well and free;

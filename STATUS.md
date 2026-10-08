@@ -4,22 +4,33 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 02:08 UTC · branch `claude/sheet2-board` · HEAD `9482db8` · working tree clean
+Generated 2026-10-08 03:15 UTC · branch `claude/board-main` · HEAD `ea2d17b` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 6 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 5 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `9482db8` | 2026-10-08 | SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view |
-| `a9fd5f5` | 2026-10-08 | SHEET-2: board view of the tee sheet |
+| `ea2d17b` | 2026-10-07 | SHEET-2: board view of the tee sheet (#97) |
 | `2707e36` | 2026-10-07 | Move a group after they've checked in (#96) |
 | `fef4012` | 2026-10-07 | MSG-1: courses message the golfers booked on a day (#95) |
 | `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (6 file(s))
+
+- `M CLAUDE.md`
+- `M PLATFORM_ROADMAP_SPEC.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M src/app/dashboard/page.tsx`
+- `M src/components/dashboard/TeeSheetBoard.tsx`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -41,10 +52,10 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|---|
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 39d | `7246a62` | `RUN_QUEUE.md:984` |
 | MP-1 | 2026-08-29 | 39d | `41f5ea8` | `RUN_QUEUE.md:1014` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 38d | `4ef11dd` | `RUN_QUEUE.md:1049` |
-| MP-2 | 2026-08-29 | 38d | `958f229` | `RUN_QUEUE.md:1090` |
-| MP-2b | 2026-08-29 | 38d | `a134af5` | `RUN_QUEUE.md:1127` |
-| MP-2c | 2026-08-29 | 38d | `e5b5413` | `RUN_QUEUE.md:1176` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 39d | `4ef11dd` | `RUN_QUEUE.md:1049` |
+| MP-2 | 2026-08-29 | 39d | `958f229` | `RUN_QUEUE.md:1090` |
+| MP-2b | 2026-08-29 | 39d | `a134af5` | `RUN_QUEUE.md:1127` |
+| MP-2c | 2026-08-29 | 39d | `e5b5413` | `RUN_QUEUE.md:1176` |
 | MP-2d | 2026-08-29 | 38d | `22d0f68` | `RUN_QUEUE.md:1224` |
 | MP-2e | 2026-08-30 | 38d | `bf3bcb2` | `RUN_QUEUE.md:1266` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | — | — | — | `RUN_QUEUE.md:819` |
@@ -159,11 +170,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 3d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-07 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 0d |
@@ -197,8 +208,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `9482db8` 2026-10-08 — SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view
-- `a9fd5f5` 2026-10-08 — SHEET-2: board view of the tee sheet
+- `ea2d17b` 2026-10-07 — SHEET-2: board view of the tee sheet (#97)
 - `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
 - `fef4012` 2026-10-07 — MSG-1: courses message the golfers booked on a day (#95)
 - `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
@@ -209,6 +219,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `41e61b3` 2026-10-06 — Manage page says what cancelling costs right now (#89)
 - `f541b7c` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late (#87)
 - `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
+- `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 
 ---
 
