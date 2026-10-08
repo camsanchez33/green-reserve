@@ -1012,7 +1012,7 @@ function DashboardPageInner() {
             className="relative bg-white w-full sm:w-[420px] h-full overflow-y-auto shadow-card px-5 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
             <div className="flex items-start justify-between gap-3 mb-1">
               <div>
-                <h2 className="font-serif font-semibold text-ink text-[24px] leading-tight">{fmtTime(panelSlot.time)}</h2>
+                <h2 className="font-sans font-bold text-ink text-[24px] leading-tight tabular-nums">{fmtTime(panelSlot.time)}</h2>
                 <p className="text-[13px] text-ink-soft">{fmtDate(selectedDate)} · {panelSlot.playersBooked} of {panelSlot.playersAvailable} players{panelSlot.id === nextUpId ? ' · Next up' : ''}</p>
               </div>
               <button onClick={() => setPanelId(null)} className="text-ink-muted hover:text-ink p-1" aria-label="Close"><X className="w-5 h-5" /></button>
