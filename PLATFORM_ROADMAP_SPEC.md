@@ -155,8 +155,9 @@ for one-tap rebooking. Small; can ship any time.
 ## 9. SHEET-2 — a board view of the tee sheet (Cam 2026-10-07, "noted for later")
 
 Cam: "in almost a calendar type style … each was a box on the page that can
-easily be moved around." A second view beside today's list: each tee time is a
-card in a grid (a column per hour, cards down the column), a group is a chip
+easily be moved around … like a draft board." A second view beside today's list, laid out like a draft board: each tee time
+is a card in a grid (a column per hour, that hour's times stacked down it, the
+whole day visible at once), a group is a chip
 inside its card, and dragging a group onto another card IS the ACT-1 move —
 same checks, same price and window notes, same confirm. Builds on ACT-1, so it
 comes after it. Guardrails: the list stays (a full day is 50–60 times; the
