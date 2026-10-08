@@ -28,6 +28,7 @@ confirmed → (no-show: staff, or auto N min after tee time) → noShowAt set, n
 confirmed → (staff marks no-show) → noShowAt set, still confirmed (reversible: "still coming")
 confirmed → (staff "paid offline") → completed, paymentStatus paid_offline, no Stripe charge
 confirmed → (moved: staff, golfer's own swap, frost delay) → still confirmed on the new tee time; ONE lib/move-booking.ts (ACT-1). Staff keep the booked price unless they pick the new time's rate; a golfer's swap is priced at the new slot with their member tier re-applied; the booking fee keeps its per-player amount (0 stays 0); a hold already taken stays; event booking_moved
+completed → (staff moves a checked-in group, Cam 2026-10-08) → still completed on the new tee time; price always kept (it's paid), nothing charged or refunded; the golfer's own swap and frost delay still refuse checked-in groups
 ```
 
 ### Check-in

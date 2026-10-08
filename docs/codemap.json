@@ -4251,7 +4251,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 340,
+      "lines": 341,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7619,7 +7619,7 @@
     },
     {
       "path": "src/components/dashboard/MoveGroupModal.tsx",
-      "lines": 138,
+      "lines": 140,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2):",
       "brain": [],
       "exports": [
@@ -9379,7 +9379,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 417,
+      "lines": 419,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [
@@ -11219,7 +11219,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1869,
+      "lines": 1871,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12681,7 +12681,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 187,
+      "lines": 198,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [

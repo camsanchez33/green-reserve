@@ -115,11 +115,11 @@ export async function PATCH(req: NextRequest) {
   // before Confirm. The price is kept unless staff ask for the new time's rate.
   if (action === 'move') {
     if (typeof newTeeTimeId !== 'string' || !newTeeTimeId) return NextResponse.json({ error: 'Pick a tee time to move to.' }, { status: 400 });
-    const r = await moveBooking({ bookingId: id, newTeeTimeId, courseId: session.courseId, pricing: reprice === true ? 'new_slot' : 'keep', actor: staff, dryRun: dryRun === true });
+    const r = await moveBooking({ bookingId: id, newTeeTimeId, courseId: session.courseId, pricing: reprice === true ? 'new_slot' : 'keep', actor: staff, allowCheckedIn: true, dryRun: dryRun === true });
     if (!r.ok) return NextResponse.json({ error: r.message, code: r.code }, { status: r.code === 'NOT_FOUND' ? 404 : 409 });
     const seesPay = can(session, 'money.payments');
     const view = {
-      ok: true, dryRun: dryRun === true, to: r.to, players: r.players, cutoffPassed: r.cutoffPassed, holdDue: r.holdDueCents > 0, priceChanged: r.priceChanged,
+      ok: true, dryRun: dryRun === true, to: r.to, players: r.players, cutoffPassed: r.cutoffPassed, holdDue: r.holdDueCents > 0, priceChanged: r.priceChanged, checkedIn: r.checkedIn,
       ...(seesPay ? { totals: r.totals, newSlotTotals: r.newSlotTotals, holdDueCents: r.holdDueCents } : {}),
     };
     if (dryRun === true) return NextResponse.json(view);
@@ -132,6 +132,7 @@ export async function PATCH(req: NextRequest) {
         date: moved.teeTime.date, time: moved.teeTime.time, holes: moved.teeTime.holes, productLabel: moved.teeTime.product?.label ?? null,
         players: moved.players, greenFeeTotal: moved.greenFeeTotal, cartFeeTotal: moved.cartFeeTotal, rangeBallsTotal: moved.rangeBallsTotal,
         accessFeeTotal: moved.accessFeeTotal, totalAmount: moved.totalAmount, bookingId: moved.id, checkInToken: moved.checkInToken,
+        checkedIn: r.checkedIn,
       }).then(() => true, (err) => { console.error(JSON.stringify({ ev: 'move.email.fail', bookingId: id, error: err instanceof Error ? err.message : String(err) })); return false; });
     }
     return NextResponse.json({ ...view, emailed });

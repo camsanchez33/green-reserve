@@ -343,12 +343,14 @@ export async function sendBookingModifiedEmail(data: {
   date: string; time: string; players: number; holes: number; productLabel?: string | null;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; bookingId: string; checkInToken: string | null;
+  /** Already checked in (and paid): no "Check In & Pay", the total reads as paid. */
+  checkedIn?: boolean;
 }) {
   const portalUrl = data.courseSlug
     ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
     : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
   const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
-  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
+  const checkInUrl = data.checkInToken && !data.checkedIn ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dbeafe;color:#1e3a8a;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Booking Updated</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">Your booking has been updated.</h1>
@@ -361,7 +363,7 @@ export async function sendBookingModifiedEmail(data: {
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
         ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</span></td></tr>` : ''}
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">${serviceFeeLabel(data.players)}</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
-        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">New total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
+        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">${data.checkedIn ? 'Total (already paid)' : 'New total at check-in'}</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
       </table>
     </div>
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}

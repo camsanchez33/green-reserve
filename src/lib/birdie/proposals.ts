@@ -262,15 +262,16 @@ async function unblockDay(input: Record<string, unknown>, ctx: ToolContext): Pro
 // ── ACT-2: the tee sheet ────────────────────────────────────────────────────
 const nameOk = (v: unknown) => typeof v === 'string' && v.trim().length >= 2 && v.trim().length <= 120;
 
-/** The one confirmed group at date + time whose name matches, or an error. */
-async function findGroup(ctx: ToolContext, date: unknown, time: unknown, golfer: unknown) {
+/** The one confirmed group at date + time whose name matches, or an error.
+ *  checkedIn: also a group that has already checked in (a move only). */
+async function findGroup(ctx: ToolContext, date: unknown, time: unknown, golfer: unknown, opts: { checkedIn?: boolean } = {}) {
   if (typeof date !== 'string' || !DATE.test(date)) return { error: 'The day must be YYYY-MM-DD.' };
   if (typeof time !== 'string' || !HHMM.test(time)) return { error: 'The tee time must be HH:MM, 24-hour.' };
   if (!nameOk(golfer)) return { error: 'Give the golfer’s name as the tee sheet shows it.' };
   const slot = await prisma.teeTime.findFirst({ where: { courseId: ctx.courseId, date, time }, select: { id: true } });
   if (!slot) return { error: `There’s no ${fmtTime(time)} tee time on ${fmtDate(date)}. Call get_tee_sheet for that day.` };
   const groups = await prisma.booking.findMany({
-    where: { courseId: ctx.courseId, teeTimeId: slot.id, status: 'confirmed' },
+    where: { courseId: ctx.courseId, teeTimeId: slot.id, status: opts.checkedIn ? { in: ['confirmed', 'completed'] } : 'confirmed' },
     select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, stripePaymentMethodId: true, checkInToken: true, accessFeeTotal: true },
   });
   const want = String(golfer).trim().toLowerCase();
@@ -285,7 +286,7 @@ async function findGroup(ctx: ToolContext, date: unknown, time: unknown, golfer:
 
 async function moveGroup(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
   if (!ctx.can('sheet.move')) return err("This login can't move groups — the course owner decides that under Settings → Staff & permissions.");
-  const found = await findGroup(ctx, input.date, input.time, input.golfer);
+  const found = await findGroup(ctx, input.date, input.time, input.golfer, { checkedIn: true });
   if ('error' in found) return err(found.error as string);
   const toDate = input.toDate === undefined ? String(input.date) : input.toDate;
   if (typeof toDate !== 'string' || !DATE.test(toDate)) return err('The new day must be YYYY-MM-DD.');
@@ -293,11 +294,12 @@ async function moveGroup(input: Record<string, unknown>, ctx: ToolContext): Prom
   const target = await prisma.teeTime.findFirst({ where: { courseId: ctx.courseId, date: toDate, time: input.toTime }, select: { id: true } });
   if (!target) return err(`There’s no ${fmtTime(input.toTime)} tee time on ${fmtDate(toDate)}.`);
   // The real move's own checks and price, run as a dry run: nothing changes.
-  const r = await moveBooking({ bookingId: found.group.id, newTeeTimeId: target.id, courseId: ctx.courseId, pricing: 'keep', actor: { type: 'staff' }, dryRun: true });
+  const r = await moveBooking({ bookingId: found.group.id, newTeeTimeId: target.id, courseId: ctx.courseId, pricing: 'keep', actor: { type: 'staff' }, allowCheckedIn: true, dryRun: true });
   if (!r.ok) return err(r.message);
   const g = found.group;
   const emailable = !!g.golferEmail && !isPlaceholderEmail(g.golferEmail);
   const notes = [
+    ...(r.checkedIn ? ['They’ve already checked in and paid, so nothing is charged or refunded.'] : []),
     ctx.can('money.payments') ? `The price stays ${money(r.totals.totalAmount / 100)}.` : 'The price stays what they booked.',
     emailable ? 'They’re emailed the new time.' : 'There’s no email on file, so let them know.',
   ];

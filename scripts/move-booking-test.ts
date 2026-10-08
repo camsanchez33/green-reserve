@@ -150,6 +150,21 @@ async function main() {
   check('a checked-in group → NOT_CONFIRMED', (await moveBooking({ bookingId: done.id, newTeeTimeId: bl2.id, courseId: c.id, pricing: 'keep', actor: STAFF, now: NOW })).ok === false);
   check('nothing moved on a refusal', (await bk(mover.id))?.teeTimeId === x.id && (await tt(full.id))?.playersBooked === 3);
 
+  // 6b. A checked-in group (Cam 2026-10-08: "people are going to check in online").
+  const ciFrom = await slot(c.id, '2026-10-26', '11:00'), ciTo = await slot(c.id, '2026-10-09', '09:00', { green: 9000 });
+  const ci = await book(c.id, ciFrom.id, { status: 'completed' });
+  await prisma.booking.update({ where: { id: ci.id }, data: { checkedInAt: NOW, paymentStatus: 'paid', cancellationFeeTotal: 2500 } });
+  check('the golfer’s own swap still refuses a checked-in group', (await moveBooking({ bookingId: ci.id, newTeeTimeId: ciTo.id, courseId: c.id, pricing: 'new_slot', actor: { type: 'golfer' }, now: NOW })).ok === false);
+  const rci = await moveBooking({ bookingId: ci.id, newTeeTimeId: ciTo.id, courseId: c.id, pricing: 'new_slot', actor: STAFF, allowCheckedIn: true, now: NOW });
+  const ciAfter = await bk(ci.id);
+  check('staff can move a checked-in group', rci.ok && ciAfter?.teeTimeId === ciTo.id, rci.ok ? '' : rci.code);
+  check('…it stays checked in', ciAfter?.status === 'completed' && !!ciAfter.checkedInAt);
+  check('…its paid price stays even when the new rate is asked for', rci.ok && rci.checkedIn && !rci.priceChanged && ciAfter?.greenFeeTotal === 10000);
+  check('…and no hold is reported inside the window', rci.ok && rci.cutoffPassed && rci.holdDueCents === 0);
+  check('…the seats moved with it', (await tt(ciFrom.id))?.playersBooked === 0 && (await tt(ciTo.id))?.playersBooked === 2);
+  const gone = await book(c.id, (await slot(c.id, '2026-10-26', '11:10')).id, { status: 'cancelled' });
+  check('a cancelled booking is still refused', (await moveBooking({ bookingId: gone.id, newTeeTimeId: bl2.id, courseId: c.id, pricing: 'keep', actor: STAFF, allowCheckedIn: true, now: NOW })).ok === false);
+
   // 7. Dry run changes nothing; cutoff flag.
   const soon = await slot(c.id, '2026-10-09', '08:00'); // 20h after NOW, inside the 24h window
   const dry = await moveBooking({ bookingId: mover.id, newTeeTimeId: soon.id, courseId: c.id, pricing: 'keep', actor: STAFF, now: NOW, dryRun: true });
