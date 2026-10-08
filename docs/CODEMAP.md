@@ -427,7 +427,7 @@ Sorted the same way.
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
 | `src/components/dashboard/TeeSheetBoard.tsx` | 1 | 164 | SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07: | `BoardGroup`, `BoardSlot`, `default (TeeSheetBoard)`, `groupTone` |
 | `src/components/Footer.tsx` | 1 | 78 |  | `default (Footer)` |
-| `src/components/home/TeeSheetDemo.tsx` | 1 | 282 | HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07: | `LaptopDemo` |
+| `src/components/home/TeeSheetDemo.tsx` | 1 | 315 | HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07: | `LaptopDemo` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
 | `src/components/Nav.tsx` | 1 | 126 |  | `default (Nav)` |
 | `src/components/ui/MonthPicker.tsx` | 1 | 75 |  | `MonthPicker` |

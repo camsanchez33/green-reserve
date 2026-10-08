@@ -3,8 +3,10 @@
 // the homepage's working demo — the operator tee sheet on a laptop and the
 // golfer's booking page on a phone, both reading ONE module-level store, so a
 // time booked on the phone lands on the sheet. Every label, status word and
-// button copies the real product: the sheet from src/app/dashboard/page.tsx
-// (slotStatus / the row's Pay · Check in · Walk-in button / the header line),
+// button copies the real product: the sheet is the board (SHEET-2,
+// components/dashboard/TeeSheetBoard.tsx: one row per hour, a square per time,
+// the money edge, "Next up", the legend) and its side panel (groupRow() in
+// src/app/dashboard/page.tsx: the same status words and buttons),
 // the phone from courses/[slug]/CourseBookingClient.tsx and book/BookClient.tsx.
 // CLAUDE.md: change one, check the other.
 // Bundle note (perf rules): the page's only client island, plain React, no
@@ -22,42 +24,47 @@ type Step = 'pick' | 'confirm' | 'done';
 type State = {
   days: Day[]; day: number; n: number; sel: string | null; step: Step;
   acc: string; find: string; toast: string;
+  /** The board square whose panel is open. */
+  open: string | null;
 };
 
 const CAP = 4;
 const HOLES = 18;
-// The sheet's "now" on the demo's today: 7:00 has teed off, 7:08 is next up.
+// The sheet's "now" on the demo's today: 7:00 has teed off, 7:15 is next up.
 const NOW = '07:05';
 const GOLFER = { name: 'Alex Rivera', email: 'alex.rivera@example.com' };
 
 const INITIAL_DAYS: Day[] = [
   { chip: 'Today', num: '4', short: 'Sat, Oct 4', long: 'Saturday, October 4', today: true, rate: 52, rows: [
     { t: '07:00', groups: [{ name: 'Marisa Conti', n: 4, src: 'online', done: true }] },
-    { t: '07:08', groups: [{ name: 'Grace Okafor', n: 2, src: 'online' }] },
-    { t: '07:16', groups: [], blocked: true },
-    { t: '07:24', groups: [{ name: 'Luis Delgado', n: 3, src: 'phone' }] },
-    { t: '07:32', groups: [] },
-    { t: '07:40', groups: [{ name: 'Ken Ito', n: 2, src: 'online' }, { name: 'Sam Lee', n: 2, src: 'online' }] },
-    { t: '07:48', groups: [] } ] },
+    { t: '07:15', groups: [{ name: 'Grace Okafor', n: 2, src: 'online' }] },
+    { t: '07:30', groups: [], blocked: true },
+    { t: '07:45', groups: [{ name: 'Luis Delgado', n: 3, src: 'phone' }] },
+    { t: '08:00', groups: [] },
+    { t: '08:15', groups: [{ name: 'Ken Ito', n: 2, src: 'online', done: true }, { name: 'Sam Lee', n: 2, src: 'online' }] },
+    { t: '08:30', groups: [] },
+    { t: '08:45', groups: [{ name: 'Nina Shah', n: 1, src: 'walk_in' }] } ] },
   { chip: 'Sun', num: '5', short: 'Sun, Oct 5', long: 'Sunday, October 5', rate: 52, rows: [
     { t: '07:00', groups: [{ name: 'Pete Kowalski', n: 4, src: 'online' }] },
-    { t: '07:08', groups: [] },
-    { t: '07:16', groups: [{ name: 'Rob Brennan', n: 2, src: 'phone' }] },
-    { t: '07:24', groups: [] },
-    { t: '07:32', groups: [{ name: 'Aya Mori', n: 3, src: 'online' }] },
-    { t: '07:40', groups: [] },
-    { t: '07:48', groups: [] } ] },
+    { t: '07:15', groups: [] },
+    { t: '07:30', groups: [{ name: 'Rob Brennan', n: 2, src: 'phone' }] },
+    { t: '07:45', groups: [] },
+    { t: '08:00', groups: [{ name: 'Aya Mori', n: 3, src: 'online' }] },
+    { t: '08:15', groups: [] },
+    { t: '08:30', groups: [] },
+    { t: '08:45', groups: [] } ] },
   { chip: 'Mon', num: '6', short: 'Mon, Oct 6', long: 'Monday, October 6', rate: 44, rows: [
     { t: '07:00', groups: [] },
-    { t: '07:08', groups: [{ name: 'Jim Pratt', n: 1, src: 'walk_in' }] },
-    { t: '07:16', groups: [] },
-    { t: '07:24', groups: [] },
-    { t: '07:32', groups: [{ name: 'Ana Reyes', n: 2, src: 'phone' }] },
-    { t: '07:40', groups: [] },
-    { t: '07:48', groups: [] } ] },
+    { t: '07:15', groups: [{ name: 'Jim Pratt', n: 1, src: 'walk_in' }] },
+    { t: '07:30', groups: [] },
+    { t: '07:45', groups: [] },
+    { t: '08:00', groups: [{ name: 'Ana Reyes', n: 2, src: 'phone' }] },
+    { t: '08:15', groups: [] },
+    { t: '08:30', groups: [] },
+    { t: '08:45', groups: [] } ] },
 ];
 
-let state: State = { days: INITIAL_DAYS, day: 0, n: 2, sel: null, step: 'pick', acc: '#2B4A38', find: '', toast: '' };
+let state: State = { days: INITIAL_DAYS, day: 0, n: 2, sel: null, step: 'pick', acc: '#2B4A38', find: '', toast: '', open: null };
 const listeners = new Set<() => void>();
 const subscribe = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; };
 const getState = () => state;
@@ -69,9 +76,6 @@ const money = (v: number) => '$' + v.toFixed(2);
 const fmt = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; };
 const booked = (r: Row) => r.groups.reduce((a, g) => a + g.n, 0);
 const roundTotal = (d: Day, n: number) => n * d.rate + n * ACCESS_FEE_PER_PLAYER;
-const patchGroup = (st: State, t: string, gi: number, patch: Partial<Group>): Day[] =>
-  st.days.map((d, di) => di !== st.day ? d : { ...d, rows: d.rows.map(r => r.t !== t ? r : { ...r, groups: r.groups.map((g, i) => i === gi ? { ...g, ...patch, isNew: false } : g) }) });
-
 const ACCENTS = [
   { c: '#2B4A38', label: 'Pine' },
   { c: '#7A2E2E', label: 'Oxblood' },
@@ -80,14 +84,16 @@ const ACCENTS = [
 ];
 const TABS = ['Tee sheet', 'Analytics', 'Schedule', 'Members', 'Money', 'Messages', 'Settings'];
 
-/* ── the operator tee sheet (dashboard/page.tsx) ─────────────────────────── */
-function slotStatus(r: Row) {
-  if (r.blocked) return <span className={s.hold}>Blocked</span>;
-  if (!r.groups.length) return <span className={s.dim}>{CAP} spots open</span>;
-  if (r.groups.every(g => g.done)) return <span className={s.in}>Checked in</span>;
-  const left = CAP - booked(r);
-  return left === 0 ? <span className={s.full}>Full</span> : <span className={s.dueTxt}>{left} left</span>;
-}
+/* ── the operator tee sheet: the board (TeeSheetBoard.tsx) and its panel ──── */
+type Tone = 'ok' | 'warn';
+/** groupTone() in TeeSheetBoard: paid = checked in. */
+const toneOf = (g: Group): Tone => g.done ? 'ok' : 'warn';
+const slotTone = (r: Row): Tone | null => !r.groups.length ? null : r.groups.every(g => g.done) ? 'ok' : 'warn';
+/** getBookingStatus() labels, as the panel shows them. */
+const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at counter') : g.src === 'online' ? 'Card on File' : 'Pay at counter';
+const seats = (r: Row) => r.blocked ? <i className={s.dim}>Blocked</i> : CAP - booked(r) <= 0 ? <span className={s.full}>Full</span> : <span className={s.dim}>{CAP - booked(r)} open</span>;
+const hourOf = (t: string) => Number(t.slice(0, 2));
+const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
 
 function TeeSheet() {
   const st = useDemo();
@@ -96,8 +102,12 @@ function TeeSheet() {
   const q = st.find.trim().toLowerCase();
   const rows = q ? d.rows.filter(r => r.groups.some(g => g.name.toLowerCase().includes(q))) : d.rows;
   const nextUp = d.today ? d.rows.find(r => !r.blocked && r.t > NOW)?.t : undefined;
-  const step = (by: number) => update(x => ({ ...x, day: Math.max(0, Math.min(x.days.length - 1, x.day + by)), sel: null, step: 'pick', toast: '' }));
+  const step = (by: number) => update(x => ({ ...x, day: Math.max(0, Math.min(x.days.length - 1, x.day + by)), sel: null, step: 'pick', toast: '', open: null }));
   const toast = (msg: string) => { update(x => ({ ...x, toast: msg })); };
+  const hours = [...new Set(rows.map(r => hourOf(r.t)))];
+  const perHour = Math.max(1, ...hours.map(h => rows.filter(r => hourOf(r.t) === h).length));
+  const panel = st.open ? d.rows.find(r => r.t === st.open) ?? null : null;
+  const setRow = (t: string, fn: (r: Row) => Row) => update(x => ({ ...x, days: x.days.map((dd, di) => di !== x.day ? dd : { ...dd, rows: dd.rows.map(r => r.t !== t ? r : fn(r)) }) }));
 
   return (
     <div className={s.app}>
@@ -119,42 +129,65 @@ function TeeSheet() {
         <button type="button" aria-label="Next day" disabled={st.day === st.days.length - 1} onClick={() => step(1)}>›</button>
         {!d.today && <button type="button" className={s.todayLink} onClick={() => step(-st.day)}>Today</button>}
       </div>
-      <table className={s.tt}>
-        <thead><tr><th>Time</th><th>Group</th><th className={s.r}>Status</th><th><span className={s.sr}>Action</span></th></tr></thead>
-        <tbody>
-          {rows.map(r => {
-            const live = r.groups.filter(g => !g.done);
-            const one = live.length === 1 ? live[0] : null;
-            const gi = one ? r.groups.indexOf(one) : -1;
-            const past = d.today && r.t < NOW && !r.blocked;
-            return (
-              <tr key={r.t} className={`${r.blocked ? s.blocked : ''} ${past ? s.past : ''} ${r.t === nextUp ? s.next : ''} ${r.groups.some(g => g.isNew) ? s.new : ''}`}>
-                <td className={s.t}>{fmt(r.t)}</td>
-                <td>
-                  {r.groups.length ? r.groups.map(g => `${g.name} · ${g.n}`).join(', ') : r.t !== nextUp && <span className={s.dim}>—</span>}
-                  {r.t === nextUp && <span className={s.nextTag}>Next up</span>}
-                </td>
-                <td className={s.r}>{slotStatus(r)}</td>
-                <td className={s.r}>
-                  {one && one.src !== 'online' && (
-                    <button type="button" className={s.ci} onClick={() => { update(x => ({ ...x, days: patchGroup(x, r.t, gi, { done: true }) })); toast(`${one.name} checked in — paid at the counter.`); }}>Pay</button>
-                  )}
-                  {one && one.src === 'online' && (
-                    <button type="button" className={s.ci} onClick={() => { update(x => ({ ...x, days: patchGroup(x, r.t, gi, { done: true }) })); toast(`Checked in — charged ${money(roundTotal(d, one.n))}.`); }}>Check in</button>
-                  )}
-                  {!live.length && !r.blocked && booked(r) < CAP && (
-                    <button type="button" className={s.wk} onClick={() => {
-                      update(x => ({ ...x, days: x.days.map((dd, di) => di !== x.day ? dd : { ...dd, rows: dd.rows.map(rr => rr.t !== r.t ? rr : { ...rr, groups: [...rr.groups, { name: 'Dana Price', n: 1, src: 'walk_in' as Src }] }) }) }));
-                      toast('Dana Price added.');
-                    }}>Walk-in</button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-          {!rows.length && <tr><td colSpan={4} className={s.dim}>No golfer matches “{st.find}”.</td></tr>}
-        </tbody>
-      </table>
+      <div className={s.bd}>
+        {hours.map(h => (
+          <div key={h} className={s.bdRow}>
+            <b className={s.bdHr}>{hourLabel(h)}</b>
+            <div className={s.bdGrid} style={{ '--cols': perHour } as React.CSSProperties}>
+              {rows.filter(r => hourOf(r.t) === h).map(r => {
+                const tone = slotTone(r);
+                const past = d.today && r.t < NOW && !r.blocked;
+                return (
+                  <button key={r.t} type="button" aria-label={`${fmt(r.t)}. Open`} onClick={() => update(x => ({ ...x, open: r.t, toast: '' }))}
+                    className={[s.sq, r.blocked ? s.sqBlocked : '', tone === 'ok' ? s.eOk : tone === 'warn' ? s.eWarn : '', past ? s.sqPast : '', r.t === nextUp ? s.sqNext : '', st.open === r.t ? s.sqSel : '', r.groups.some(g => g.isNew) ? s.sqNew : ''].join(' ')}>
+                    <span className={s.sqTop}><b>{fmt(r.t)}</b>{r.t === nextUp && <em>Next up</em>}</span>
+                    <span className={s.sqGs}>{r.groups.map(g => (
+                      <span key={g.name} className={s.sqG}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} /><span>{g.name}</span><small>{g.n}</small></span>
+                    ))}</span>
+                    <span className={s.sqFoot}><span className={s.dim}>{r.blocked ? '' : `${booked(r)} of ${CAP}`}</span>{seats(r)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {!rows.length && <p className={s.dim}>No golfer matches “{st.find}”.</p>}
+        <div className={s.lg}><span><i className={s.dOk} />Paid</span><span><i className={s.dWarn} />Booked, not paid yet</span><span><i className={s.dBad} />Needs attention</span></div>
+      </div>
+
+      {panel && (
+        <div className={s.pnl} role="dialog" aria-label={`${fmt(panel.t)} tee time`}>
+          <div className={s.pnlHd}>
+            <div><b>{fmt(panel.t)}</b><span>{d.short} · {booked(panel)} of {CAP} players{panel.t === nextUp ? ' · Next up' : ''}</span></div>
+            <button type="button" aria-label="Close" onClick={() => update(x => ({ ...x, open: null }))}>×</button>
+          </div>
+          {!panel.groups.length && <p className={s.dim}>No bookings yet.</p>}
+          {panel.groups.map((g, gi) => (
+            <div key={g.name} className={s.pnlG}>
+              <div><b>{g.name}</b> <span className={s.dim}>{g.n} player{g.n === 1 ? '' : 's'}</span>{g.src !== 'online' && <span className={s.dim}> {g.src === 'phone' ? 'Phone' : 'Walk-in'}</span>}</div>
+              <div className={s.pnlAct}>
+                <span className={s.pnlSt}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} />{statusOf(g)}</span>
+                {!g.done && <button type="button" className={s.ci} onClick={() => {
+                  setRow(panel.t, r => ({ ...r, groups: r.groups.map((x, i) => i === gi ? { ...x, done: true, isNew: false } : x) }));
+                  toast(g.src === 'online' ? `Checked in — charged ${money(roundTotal(d, g.n))}.` : `${g.name} checked in — paid at the counter.`);
+                }}>{g.src === 'online' ? 'Check in' : 'Check in · paid at counter'}</button>}
+                {!g.done && <button type="button" className={s.cx} onClick={() => {
+                  setRow(panel.t, r => ({ ...r, groups: r.groups.filter((_, i) => i !== gi) }));
+                  toast('Cancelled — no charge was made.');
+                }}>Cancel booking</button>}
+              </div>
+            </div>
+          ))}
+          <div className={s.pnlSlot}>
+            {!panel.blocked && booked(panel) < CAP && <button type="button" className={s.wk} onClick={() => {
+              setRow(panel.t, r => ({ ...r, groups: [...r.groups, { name: 'Dana Price', n: 1, src: 'walk_in' as Src }] }));
+              toast('Dana Price added.');
+            }}>Walk-in or phone booking</button>}
+            {!panel.groups.length && <button type="button" className={s.wk} onClick={() => setRow(panel.t, r => ({ ...r, blocked: !r.blocked }))}>{panel.blocked ? 'Unblock' : 'Block'}</button>}
+          </div>
+        </div>
+      )}
+
       <div className={s.appFoot}>
         <span className={s.toast} role="status">{st.toast}</span>
         <span>{groups.length} group{groups.length === 1 ? '' : 's'} booked · {d.rows.filter(r => !r.blocked).length} tee times</span>
