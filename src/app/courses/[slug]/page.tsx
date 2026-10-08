@@ -16,17 +16,26 @@ export async function generateMetadata(
   const isDemo = DEMO_COURSE_SLUGS.includes(slug);
   const robots = isDemo ? { index: false, follow: false } : undefined;
   if (!course) return { title: 'Book Tee Times' };
+  // PWA-1: "Add to Home Screen" saves the course as its own app (lib/course-app.ts).
+  // Both routes 404 for a course golfers can't see, so a draft gets nothing.
+  const app: Metadata = {
+    manifest: `/courses/${encodeURIComponent(slug)}/manifest.webmanifest`,
+    icons: { apple: `/courses/${encodeURIComponent(slug)}/app-icon/180` },
+    appleWebApp: { capable: true, title: course.name, statusBarStyle: 'default' },
+  };
   if (course.type === 'private') {
     return {
       title: `${course.name} — Member Portal`,
       description: `${course.name} is a private club on GreenReserve. Members sign in to book tee times.`,
       robots,
+      ...app,
     };
   }
   return {
     title: `${course.name} — Book Tee Times`,
     description: `Book tee times at ${course.name} in ${course.city}, ${course.state}. Online reservations powered by GreenReserve — direct booking, no middleman.`,
     robots,
+    ...app,
   };
 }
 

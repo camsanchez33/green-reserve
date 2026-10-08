@@ -169,6 +169,17 @@ cycle for every course): a web-app manifest and icon per course so regulars
 can save the course's booking page to their phone, with a saved golfer account
 for one-tap rebooking. Small; can ship any time.
 
+**Shipped (2026-10-08):** `/courses/[slug]/manifest.webmanifest` and
+`/courses/[slug]/app-icon/[180|192|512]`, wired into the course page's
+metadata (`lib/course-app.ts`). The icon is the course's uploaded logo on white
+(PNG/JPEG from our Blob store only), else its initials on its `brandColor`;
+both 404 for a course golfers can't see. Scope is the whole site, so booking,
+check-in and the account stay inside the saved app. The saved account is the
+existing 90-day sliding golfer login — on iPhone a home-screen app keeps its
+own cookies, so the golfer signs in once inside it. Not built: any prompt
+telling golfers they can do this (iPhone has no install prompt; it is Share →
+Add to Home Screen) — waits on Cam's call on where that line goes.
+
 ## 9. SHEET-2 — a board view of the tee sheet (Cam 2026-10-07, "noted for later")
 
 Cam: "in almost a calendar type style … each was a box on the page that can
