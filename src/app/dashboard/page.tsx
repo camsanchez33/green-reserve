@@ -18,6 +18,7 @@ import GettingStartedChecklist from '@/components/dashboard/GettingStartedCheckl
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
+import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
 import TeeSheetBoard, { type BoardGroup } from '@/components/dashboard/TeeSheetBoard';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
@@ -46,6 +47,8 @@ type Booking = {
   noShowAt?: string | null;
   paidOffline?: boolean;
   checkedInPlayers?: number | null;
+  /** The late fee this booking carries (cents) — the cancel confirm says what it costs. */
+  cancellationFeeTotal?: number;
   /** SP-B: false when the golfer booked without a card (pay-link course). */
   hasCard?: boolean;
   /** PAY-1: a textable number is on file (sent even to logins that can't see it). */
@@ -57,20 +60,6 @@ type Booking = {
 const todayFallback = () => todayIn(DEFAULT_TZ);
 const addDays = (d: string, n: number) => { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n); return dt.toISOString().split('T')[0]; };
 
-// FLOW-1 (Cam 2026-10-01: "clunky, doesn't look clean"): the sheet is ONE
-// white sheet with hairline rows, like the homepage demo — not a stack of
-// bordered boxes. A row's state shows in its status text; a blocked row is
-// hatched and faded, and nothing else is tinted.
-function slotRowCls(tt: TeeTime) {
-  if (tt.status === 'blocked') return 'bg-paper opacity-60';
-  return 'bg-white hover:bg-paper/70';
-}
-// U-O (UI_REVISE_SPEC §1b, canvas "Operator · Tee sheet"): a blocked row is
-// hatched rather than merely faded, so "nothing can be booked here" reads at a
-// glance from across the counter. Purely a background — no behavior.
-const HATCH: React.CSSProperties = {
-  backgroundImage: 'repeating-linear-gradient(135deg, #E3E4DE 0 1px, transparent 1px 7px)',
-};
 // FLOW-1: the demo's status column — "Checked in", "2 left", "Full",
 // "4 spots open", or a muted italic "Blocked".
 function slotStatus(tt: TeeTime) {
@@ -120,21 +109,10 @@ function DashboardPageInner() {
   const [messageOpen, setMessageOpen] = useState(false);
   // ACT-1: the group being moved to another time.
   const [moveTarget, setMoveTarget] = useState<{ booking: { id: string; golferName: string; players: number; emailable: boolean; checkedIn: boolean }; fromTeeTimeId: string; toTeeTimeId?: string } | null>(null);
-  // SHEET-2 (Cam 2026-10-08: "the board should just replace the list"): the
-  // board is the sheet; the list stays for phones, where a day of squares means
-  // scrolling sideways. A saved choice wins; a blocked storage just means the default.
-  const [view, setViewState] = useState<'list' | 'board'>('board');
-  useEffect(() => {
-    let saved: string | null = null;
-    try { saved = localStorage.getItem('gr_sheet_view'); } catch {}
-    if (saved === 'list' || saved === 'board') setViewState(saved);
-    else if (window.matchMedia('(max-width: 767px)').matches) setViewState('list');
-  }, []);
-  // The board's open square: every action the list's open row has.
+  // SHEET-2 (Cam 2026-10-08: "is it smart to have both" — no: one sheet). The
+  // board is the tee sheet; tapping a square opens this panel.
   const [panelId, setPanelId] = useState<string | null>(null);
-  const setView = (v: 'list' | 'board') => { setViewState(v); try { localStorage.setItem('gr_sheet_view', v); } catch {} };
   const [showConditions, setShowConditions]   = useState(false);
-  const [expandedId, setExpandedId]           = useState<string | null>(null);
   const [conditions, setConditions]       = useState('');
   const [conditionsInput, setConditionsInput] = useState('');
   const [savingConditions, setSavingConditions] = useState(false);
@@ -214,6 +192,23 @@ function DashboardPageInner() {
     const n = Number(raw);
     if (!Number.isInteger(n) || n < 1 || n > b.players) { toast(`Enter a number between 1 and ${b.players}.`, 'warn'); return null; }
     return n;
+  }
+
+  // Cancel from the sheet (Cam 2026-10-08: "you have to be able to cancel someones
+  // time from the sheet") — the same route, words and fee rules as Money → Cancellations.
+  async function cancelGroup(b: Booking, waive: boolean) {
+    const c = { golferName: b.golferName, paymentStatus: b.paymentStatus, cancellationFeeTotal: b.cancellationFeeTotal ?? 0, noShowAt: b.noShowAt };
+    if (!confirm(cancelConfirmText(c, waive, access.can('sheet.waive_fee')))) return;
+    setRowBusy(b.id);
+    try {
+      const r = await dfetch<CancelResult>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel', ...(waive ? { waiveFee: true } : {}) }) });
+      if (!r.ok) { toast(r.error, 'warn'); return; }
+      const out = cancelResultText(c, waive, r.data ?? {});
+      toast(out.text, out.tone);
+      await loadTimes(selectedDate);
+    } finally {
+      setRowBusy(null);
+    }
   }
 
   async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'paid_offline') {
@@ -520,9 +515,7 @@ function DashboardPageInner() {
     ? teeTimes.filter(t => t.bookings?.some(b => b.golferName.toLowerCase().includes(q) || b.golferEmail.toLowerCase().includes(q)))
     : teeTimes;
 
-  // One group's line and its actions — the list's open row and the board's
-  // panel both render this, so the two can never offer different buttons.
-  useEffect(() => { setPanelId(null); }, [selectedDate, view]);
+  useEffect(() => { setPanelId(null); }, [selectedDate]);
   useEffect(() => {
     // Esc closes the panel — not while a dialog opened from it is on top.
     if (!panelId || moveTarget || walkInSlot || cardModalBooking) return;
@@ -531,12 +524,13 @@ function DashboardPageInner() {
     return () => window.removeEventListener('keydown', esc);
   }, [panelId, moveTarget, walkInSlot, cardModalBooking]);
   const panelSlot = panelId ? teeTimes.find(t => t.id === panelId) ?? null : null;
-  // stacked: the panel is narrow, so the name sits on its own line above the buttons.
-  const groupRow = (b: Booking, tt: TeeTime, stacked = false) => {
+  // One group's line and its buttons, in the board's panel (narrow, so the name
+  // sits on its own line above the buttons).
+  const groupRow = (b: Booking, tt: TeeTime) => {
     const bStatus = getBookingStatus(b.status, b.paymentStatus);
     return (
       <div key={b.id} className={'flex flex-wrap items-center justify-between text-[13.5px] bg-paper/60 rounded-md px-3 py-2 gap-2 ' + (b.checkInFailReason && b.status === 'confirmed' ? 'shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
-        <div className={stacked ? 'basis-full min-w-0' : 'flex-1 min-w-0'}>
+        <div className="basis-full min-w-0">
           <span className="font-medium text-ink">{b.golferName}</span>
           <span className="text-ink-muted ml-2">{b.players} player{b.players!==1?'s':''}</span>
           {(b.source === 'walk_in' || b.source === 'phone') && (
@@ -583,6 +577,14 @@ function DashboardPageInner() {
             className={'shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors ' + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
             {checkingInId===b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in'}
           </button>
+        )}
+        {b.status === 'confirmed' && access.can('sheet.cancel') && (
+          <button onClick={e => { e.stopPropagation(); cancelGroup(b, false); }} disabled={rowBusy === b.id}
+            className="shrink-0 text-xs text-bad hover:bg-bad/5 px-2 py-1 rounded-md disabled:opacity-50">{rowBusy === b.id ? '…' : 'Cancel booking'}</button>
+        )}
+        {b.status === 'confirmed' && access.can('sheet.cancel') && access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
+          <button onClick={e => { e.stopPropagation(); cancelGroup(b, true); }} disabled={rowBusy === b.id}
+            className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">Cancel, no fee</button>
         )}
       </div>
     );
@@ -685,7 +687,7 @@ function DashboardPageInner() {
         )}
 
         {/* SHEET-2: the board gets the screen's width, so more of the day shows at once. */}
-        <div className={(view === 'board' ? 'max-w-[1600px]' : 'max-w-4xl') + ' mx-auto px-6 py-6'}>
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6">
 
           {/* AN-1 (Cam: no "Getting Started" banner on the sheet): it shows only
               while a step that blocks taking bookings or money is unfinished —
@@ -848,21 +850,6 @@ function DashboardPageInner() {
                       <button onClick={() => setSelectedDate(today())} className="ml-1 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Today</button>
                     )}
                   </div>
-                  <div className="ml-auto inline-flex rounded-md border border-line overflow-hidden text-[12.5px] font-medium" role="group" aria-label="Tee sheet view">
-                    {(['list', 'board'] as const).map(v => (
-                      <button key={v} onClick={() => setView(v)} aria-pressed={view === v}
-                        className={'px-3 py-1 transition-colors ' + (view === v ? 'bg-pine text-white' : 'bg-white text-ink-soft hover:text-ink')}>
-                        {v === 'list' ? 'List' : 'Board'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className={(view === 'board' ? 'hidden' : 'hidden sm:flex') + ' items-center gap-4 px-4 py-2 border-b border-line text-[12.5px] font-semibold text-ink'}>
-                  <span className="w-[76px]">Time</span>
-                  <span className="flex-1">Group</span>
-                  {!commonRate && <span className="hidden md:inline w-[150px] text-right">Rate</span>}
-                  <span className="w-[110px] text-right">Status</span>
-                  <span className="w-[190px]" aria-hidden="true"/>
                 </div>
               {loading ? (
                 <div className="flex items-center justify-center py-16 text-ink-muted gap-2">
@@ -874,7 +861,7 @@ function DashboardPageInner() {
                   <p className="text-sm text-ink-soft mb-4">Add times manually or check your schedule covers this day</p>
                   {access.can('sheet.edit_times') && <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add tee time</button>}
                 </div>
-              ) : view === 'board' ? (
+              ) : (
                 <div className="bg-paper/70 p-3 sm:p-4 rounded-b-lg">
                   {q && visibleTimes.length === 0 && <p className="text-center py-6 text-ink-muted text-sm">No bookings match &quot;{search}&quot; on this date.</p>}
                   <TeeSheetBoard
@@ -889,105 +876,6 @@ function DashboardPageInner() {
                       fromTeeTimeId: fromId, toTeeTimeId: toId,
                     })}
                     onSelect={setPanelId} />
-                </div>
-              ) : (
-                <div className="divide-y divide-line">
-                  {q && visibleTimes.length === 0 && (
-                    <div className="text-center py-10 text-ink-muted text-sm">
-                      No bookings match &quot;{search}&quot; on this date.
-                    </div>
-                  )}
-                  {visibleTimes.map(tt => {
-                    // U-O: a time that has already gone off fades back — the
-                    // sheet reads forward. Blocked times are hatched.
-                    const isPast = selectedDate < today() || (selectedDate === today() && tt.time < nowHM);
-                    const isBlocked = tt.status === 'blocked';
-                    return (
-                    <div key={tt.id} id={`tt-${tt.id}`}
-                      className={'group px-4 py-1.5 cursor-pointer transition-colors ' + slotRowCls(tt) + (tt.id===nextUpId ? ' shadow-[inset_3px_0_0_var(--color-pine)]' : '') + (isPast && !isBlocked ? ' opacity-50' : '')}
-                      style={isBlocked ? HATCH : undefined}
-                      onClick={() => setExpandedId(expandedId===tt.id?null:tt.id)}>
-                      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-y-2">
-                        <div className="flex basis-full sm:basis-auto flex-1 items-center gap-4 min-w-0">
-                          <span className="font-sans font-bold text-ink text-[15px] leading-none w-[76px] shrink-0 whitespace-nowrap tabular-nums">{fmtTime(tt.time)}</span>
-                          <span className="flex-1 min-w-0 truncate text-[13.5px] text-ink">
-                            {expandedId!==tt.id && (tt.bookings?.length ?? 0) > 0
-                              ? <>{tt.bookings!.slice(0, 3).map(b => `${b.golferName} · ${b.players}`).join(', ')}{tt.bookings!.length > 3 && <span className="text-ink-muted"> +{tt.bookings!.length - 3} more</span>}</>
-                              : tt.id!==nextUpId && <span className="text-ink-faint">—</span>}
-                            {tt.id===nextUpId && <span className={((tt.bookings?.length ?? 0) > 0 && expandedId!==tt.id ? 'ml-2 ' : '') + 'text-[12px] font-semibold text-pine'}>Next up</span>}
-                          </span>
-                          {!commonRate && (
-                            <span className="hidden md:inline w-[150px] text-right text-[12.5px] text-ink-muted whitespace-nowrap tabular-nums">{rateLabel(tt)}</span>
-                          )}
-                          <span className="sm:w-[110px] text-right whitespace-nowrap text-[13px]">{slotStatus(tt)}</span>
-                        </div>
-                        <div className="flex items-center justify-end gap-1 sm:ml-4 shrink-0 ml-auto sm:w-[190px]">
-                          {/* SD-5: a walk-in or phone booking straight onto the slot. */}
-                          {/* As in the demo: a group waiting to check in gets the button on
-                              its row. Only the plain case — one group, card on file, no
-                              decline — anything else opens the row (same handler). */}
-                          {(() => {
-                            const live = (tt.bookings ?? []).filter(b => b.status === 'confirmed');
-                            const quick = live.length === 1 && live[0].paymentStatus !== 'manual' && !live[0].checkInFailReason && !live[0].noShowAt ? live[0] : null;
-                            // A walk-in / phone group pays at the counter: "Pay" is the
-                            // same per-group paid-at-counter action as in the open row.
-                            const pay = live.length === 1 && live[0].paymentStatus === 'manual' ? live[0] : null;
-                            const canWalkIn = !isBlocked && tt.playersBooked < tt.playersAvailable && access.can('sheet.walkin');
-                            if (pay && access.can('sheet.counter_payment')) return (
-                              <button onClick={e => { e.stopPropagation(); bookingLifecycle(pay, 'paid_offline'); }} disabled={rowBusy === pay.id}
-                                className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors disabled:opacity-50">
-                                {rowBusy === pay.id ? '…' : 'Pay'}
-                              </button>
-                            );
-                            if (quick && access.can('sheet.checkin')) return (
-                              <button onClick={e => { e.stopPropagation(); checkInBooking(quick); }} disabled={checkingInId === quick.id}
-                                className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md bg-pine text-white hover:bg-pine-hover transition-colors disabled:opacity-50">
-                                {checkingInId === quick.id ? '…' : 'Check in'}
-                              </button>
-                            );
-                            if (canWalkIn) return (
-                              <button onClick={e => { e.stopPropagation(); setWalkInSlot(tt); }}
-                                className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md border border-line text-ink hover:bg-paper transition-colors">
-                                Walk-in
-                              </button>
-                            );
-                            // Review (admin-UX): a slot whose groups need more than one tap
-                            // (several groups, a decline, a no-show) says so.
-                            if ((tt.bookings?.length ?? 0) > 0) return (
-                              <button onClick={e => { e.stopPropagation(); setExpandedId(expandedId === tt.id ? null : tt.id); }}
-                                className="w-[72px] text-[12.5px] font-semibold min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-soft hover:text-ink hover:bg-paper">
-                                {expandedId === tt.id ? 'Close' : 'Open'}
-                              </button>
-                            );
-                            return <span className="w-[72px]" aria-hidden="true" />;
-                          })()}
-                          {access.can('sheet.block') && (
-                          <button onClick={e => { e.stopPropagation(); toggleBlock(tt); }} disabled={slotBusy === tt.id}
-                            className="text-[12.5px] px-2.5 min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors disabled:opacity-50">
-                            {slotBusy === tt.id ? '…' : tt.status==='blocked'?'Unblock':'Block'}
-                          </button>
-                          )}
-                          {/* A tee time that has gone off stays on the sheet — deleting it
-                              would erase an unfilled slot from Analytics (the API refuses too). */}
-                          {!access.can('sheet.edit_times') ? null : isPast ? <span className="w-[58px] text-center text-[11.5px] text-ink-faint cursor-help" title="Past tee times stay on the sheet so your reports stay accurate">—</span> : (
-                            <button onClick={e => { e.stopPropagation(); deleteTime(tt); }} disabled={slotBusy === tt.id}
-                              className="w-[58px] text-[12.5px] min-h-[40px] md:min-h-0 md:py-1.5 rounded-md text-ink-muted hover:text-bad hover:bg-bad/5 transition-colors disabled:opacity-50">
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      {expandedId===tt.id && tt.bookings && tt.bookings.length>0 && (
-                        <div className="mt-2.5 sm:ml-[92px] space-y-1.5">
-                          {tt.bookings.map(b => groupRow(b, tt))}
-                        </div>
-                      )}
-                      {expandedId===tt.id && tt.bookings && tt.bookings.length===0 && (
-                        <div className="mt-2 sm:ml-[92px] text-[12.5px] text-ink-muted">No bookings yet</div>
-                      )}
-                    </div>
-                    );
-                  })}
                 </div>
               )}
                 {!loading && teeTimes.length > 0 && (
@@ -1005,7 +893,7 @@ function DashboardPageInner() {
       {messageOpen && <GolferMessageModal date={selectedDate} onClose={() => setMessageOpen(false)} />}
 
       {/* ── SHEET-2: the board's open square ── */}
-      {view === 'board' && panelSlot && (
+      {panelSlot && (
         <div className="fixed inset-0 z-40 flex justify-end" onClick={() => setPanelId(null)}>
           <div className="absolute inset-0 bg-ink/10" aria-hidden="true" />
           <aside role="dialog" aria-label={`${fmtTime(panelSlot.time)} tee time`} onClick={e => e.stopPropagation()}
@@ -1013,13 +901,13 @@ function DashboardPageInner() {
             <div className="flex items-start justify-between gap-3 mb-1">
               <div>
                 <h2 className="font-sans font-bold text-ink text-[24px] leading-tight tabular-nums">{fmtTime(panelSlot.time)}</h2>
-                <p className="text-[13px] text-ink-soft">{fmtDate(selectedDate)} · {panelSlot.playersBooked} of {panelSlot.playersAvailable} players{panelSlot.id === nextUpId ? ' · Next up' : ''}</p>
+                <p className="text-[13px] text-ink-soft">{fmtDate(selectedDate)} · {panelSlot.playersBooked} of {panelSlot.playersAvailable} players{!commonRate ? ` · ${rateLabel(panelSlot)}` : ''}{panelSlot.id === nextUpId ? ' · Next up' : ''}</p>
               </div>
               <button onClick={() => setPanelId(null)} className="text-ink-muted hover:text-ink p-1" aria-label="Close"><X className="w-5 h-5" /></button>
             </div>
             <div className="text-[13px] mb-4">{slotStatus(panelSlot)}</div>
             {(panelSlot.bookings ?? []).length > 0
-              ? <div className="space-y-1.5 mb-5">{(panelSlot.bookings ?? []).map(b => groupRow(b, panelSlot, true))}</div>
+              ? <div className="space-y-1.5 mb-5">{(panelSlot.bookings ?? []).map(b => groupRow(b, panelSlot))}</div>
               : <p className="text-[13.5px] text-ink-soft mb-5">No bookings yet.</p>}
             <div className="flex flex-wrap gap-2 border-t border-line pt-4">
               {panelSlot.status !== 'blocked' && panelSlot.playersBooked < panelSlot.playersAvailable && access.can('sheet.walkin') && (

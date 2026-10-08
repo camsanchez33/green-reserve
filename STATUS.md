@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 03:53 UTC · branch `claude/analytics-rework` · HEAD `fadcf67` · working tree **5 dirty file(s)**
+Generated 2026-10-08 03:42 UTC · branch `claude/sheet-fit-cancel` · HEAD `fadcf67` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -21,13 +21,17 @@ Generated 2026-10-08 03:53 UTC · branch `claude/analytics-rework` · HEAD `fadc
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (9 file(s))
 
 - `M CLAUDE.md`
+- `M PLATFORM_ROADMAP_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/design-guard.baseline.json`
-- `M src/app/dashboard/analytics/page.tsx`
+- `M src/app/api/operator/tee-times/route.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/components/dashboard/TeeSheetBoard.tsx`
+- `M src/components/dashboard/money/CancellationsPanel.tsx`
+- `?? src/lib/cancel-confirm.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
