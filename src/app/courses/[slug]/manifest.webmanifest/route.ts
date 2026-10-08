@@ -12,7 +12,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     id: base,
     name: course.name,
     short_name: course.name,
-    description: `Book tee times at ${course.name}.`,
+    description: course.isPrivate ? `Members of ${course.name} book tee times here.` : `Book tee times at ${course.name}.`,
     start_url: base,
     // The whole site, so booking, check-in and the golfer's account stay inside
     // the saved app instead of bouncing out to the browser.

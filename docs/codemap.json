@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 396,
-    "routes": 208,
-    "libs": 116,
+    "files": 399,
+    "routes": 210,
+    "libs": 117,
     "models": 37,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5855,6 +5855,54 @@
       "usedBy": []
     },
     {
+      "path": "src/app/courses/[slug]/app-icon/[size]/route.tsx",
+      "lines": 29,
+      "purpose": "PWA-1:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/courses/[slug]/app-icon/[size]",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/course-app",
+        "next/og"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/courses/[slug]/manifest.webmanifest/route.ts",
+      "lines": 26,
+      "purpose": "PWA-1:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/courses/[slug]/manifest.webmanifest",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/course-app",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/courses/[slug]/member/page.tsx",
       "lines": 843,
       "purpose": "",
@@ -5881,7 +5929,7 @@
     },
     {
       "path": "src/app/courses/[slug]/page.tsx",
-      "lines": 45,
+      "lines": 55,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10396,6 +10444,47 @@
       ]
     },
     {
+      "path": "src/lib/course-app.ts",
+      "lines": 57,
+      "purpose": "PWA-1 (PLATFORM_ROADMAP_SPEC §8):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "APP_ICON_SIZES",
+          "kind": "const"
+        },
+        {
+          "name": "initials",
+          "kind": "fn"
+        },
+        {
+          "name": "loadCourseApp",
+          "kind": "fn"
+        },
+        {
+          "name": "logoDataUrl",
+          "kind": "fn"
+        },
+        {
+          "name": "safeHex",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/public-course"
+      ],
+      "usedBy": [
+        "src/app/courses/[slug]/app-icon/[size]/route.tsx",
+        "src/app/courses/[slug]/manifest.webmanifest/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/course-checkin.ts",
       "lines": 106,
       "purpose": "COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses.",
@@ -13158,6 +13247,7 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
+        "src/lib/course-app.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cron-log.ts",
@@ -13224,10 +13314,14 @@
     },
     {
       "path": "src/lib/public-course.ts",
-      "lines": 29,
+      "lines": 34,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
+        {
+          "name": "isGolferVisible",
+          "kind": "fn"
+        },
         {
           "name": "loadPublicCourse",
           "kind": "fn"
@@ -13246,7 +13340,8 @@
       "usedBy": [
         "src/app/api/courses/[slug]/route.ts",
         "src/app/book/page.tsx",
-        "src/app/courses/[slug]/page.tsx"
+        "src/app/courses/[slug]/page.tsx",
+        "src/lib/course-app.ts"
       ]
     },
     {
@@ -15776,6 +15871,7 @@
         "src/lib/analytics.ts",
         "src/lib/announcement-audience.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/course-app.ts",
         "src/lib/course-closure.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",

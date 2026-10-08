@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 01:03 UTC · branch `claude/msg1-golfer-messages` · HEAD `27ff9ab` · working tree **4 dirty file(s)**
+Generated 2026-10-08 01:19 UTC · branch `claude/pwa1-home-screen` · HEAD `c29d7a2` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,19 +12,21 @@ Generated 2026-10-08 01:03 UTC · branch `claude/msg1-golfer-messages` · HEAD `
 
 | commit | date | subject |
 |---|---|---|
-| `27ff9ab` | 2026-10-08 | MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate |
-| `3058152` | 2026-10-08 | MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up) |
+| `c29d7a2` | 2026-10-08 | PWA-1: per-course home-screen app — manifest and icon |
+| `fef4012` | 2026-10-07 | MSG-1: courses message the golfers booked on a day (#95) |
 | `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (6 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/golfer-messages-test.ts`
-- `M src/lib/golfer-messages.ts`
+- `M src/app/courses/[slug]/manifest.webmanifest/route.ts`
+- `M src/app/courses/[slug]/page.tsx`
+- `M src/lib/course-app.ts`
+- `M src/lib/public-course.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -47,7 +49,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 38d | `7246a62` | `RUN_QUEUE.md:984` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 39d | `7246a62` | `RUN_QUEUE.md:984` |
 | MP-1 | 2026-08-29 | 38d | `41f5ea8` | `RUN_QUEUE.md:1014` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 38d | `4ef11dd` | `RUN_QUEUE.md:1049` |
 | MP-2 | 2026-08-29 | 38d | `958f229` | `RUN_QUEUE.md:1090` |
@@ -205,8 +207,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `27ff9ab` 2026-10-08 — MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate
-- `3058152` 2026-10-08 — MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)
+- `c29d7a2` 2026-10-08 — PWA-1: per-course home-screen app — manifest and icon
+- `fef4012` 2026-10-07 — MSG-1: courses message the golfers booked on a day (#95)
 - `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
 - `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)

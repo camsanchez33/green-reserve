@@ -6,6 +6,11 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { normalizeDbCourse } from '@/lib/normalize-course';
 
+/** The one rule for whether golfers can see a course (also lib/course-app.ts). */
+export function isGolferVisible(c: { active: boolean; liveStatus: string; archivedAt: Date | null }) {
+  return c.active && c.liveStatus === 'live' && !c.archivedAt;
+}
+
 /** The golfer-visible course, exactly as the API serialises it — or null. */
 export async function loadPublicCourse(slug: string) {
   const dbCourse = await prisma.course.findUnique({
@@ -18,7 +23,7 @@ export async function loadPublicCourse(slug: string) {
 
   // Only live, onboarded courses are visible to golfers — a draft/building
   // course has no real tee sheet yet, so there's nothing to show or book.
-  if (!dbCourse || !dbCourse.active || dbCourse.liveStatus !== 'live' || dbCourse.archivedAt) return null;
+  if (!dbCourse || !isGolferVisible(dbCourse)) return null;
 
   // MP-3 B2d: schedules are cents; the public course page shows a "from $X" price, so convert here.
   const cheapestCents = dbCourse.schedules.length > 0 ? Math.min(...dbCourse.schedules.map((s: { greenFeeWeekdayCents: number }) => s.greenFeeWeekdayCents)) : 0;

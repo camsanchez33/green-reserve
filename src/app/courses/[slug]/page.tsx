@@ -20,7 +20,8 @@ export async function generateMetadata(
   // Both routes 404 for a course golfers can't see, so a draft gets nothing.
   const app: Metadata = {
     manifest: `/courses/${encodeURIComponent(slug)}/manifest.webmanifest`,
-    icons: { apple: `/courses/${encodeURIComponent(slug)}/app-icon/180` },
+    // Setting `icons` drops the root's file-based icon.png, so keep the golfer favicon by hand.
+    icons: { icon: [{ url: '/icon.png', type: 'image/png', sizes: '32x32' }], apple: `/courses/${encodeURIComponent(slug)}/app-icon/180` },
     appleWebApp: { capable: true, title: course.name, statusBarStyle: 'default' },
   };
   if (course.type === 'private') {

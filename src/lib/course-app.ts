@@ -4,6 +4,7 @@
 // (/courses/[slug]/app-icon/[size]) read the course through here; only a course
 // golfers can see (lib/public-course's rule) has either.
 import { prisma } from '@/lib/prisma';
+import { isGolferVisible } from '@/lib/public-course';
 
 export const APP_ICON_SIZES = [180, 192, 512] as const;
 const DEFAULT_COLOR = '#24513B'; // Course.brandColor's schema default
@@ -11,10 +12,10 @@ const DEFAULT_COLOR = '#24513B'; // Course.brandColor's schema default
 export async function loadCourseApp(slug: string) {
   const c = await prisma.course.findUnique({
     where: { slug },
-    select: { name: true, slug: true, brandColor: true, logoUrl: true, active: true, liveStatus: true, archivedAt: true },
+    select: { name: true, slug: true, type: true, brandColor: true, logoUrl: true, active: true, liveStatus: true, archivedAt: true },
   });
-  if (!c || !c.active || c.liveStatus !== 'live' || c.archivedAt) return null;
-  return { name: c.name, slug: c.slug, color: safeHex(c.brandColor), logoUrl: c.logoUrl };
+  if (!c || !isGolferVisible(c)) return null;
+  return { name: c.name, slug: c.slug, isPrivate: c.type === 'private', color: safeHex(c.brandColor), logoUrl: c.logoUrl };
 }
 
 /** A #rgb/#rrggbb colour, or the default — the value lands in CSS and JSON. */
