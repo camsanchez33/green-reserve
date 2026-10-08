@@ -4,6 +4,20 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
+import { moveBooking } from '@/lib/move-booking';
+
+// The golfer's own "change my time". ACT-1: the move itself — claim, release,
+// price, event — is lib/move-booking.ts, shared with staff moves. The golfer
+// chose the new time, so it is priced at the new slot (a member keeps their
+// tier rate; the booking fee keeps its per-player amount), and the new price
+// re-stamps terms consent.
+const STATUS: Record<string, number> = { NO_SHOW: 409, NOT_FOUND: 404, WRONG_COURSE: 400, SAME: 409, NOT_CONFIRMED: 409, CHECKED_IN: 409, SLOT_GONE: 409, BLOCKED: 409, PAST: 409, FULL: 409, CONFLICT: 409 };
+const COPY: Record<string, string> = {
+  NO_SHOW: 'This booking cannot be modified', NOT_FOUND: 'Invalid link', NOT_CONFIRMED: 'This booking cannot be modified', CHECKED_IN: 'This booking cannot be modified',
+  SAME: 'That is your current tee time', SLOT_GONE: 'That tee time is no longer available', BLOCKED: 'That tee time is no longer available',
+  PAST: 'That tee time is no longer available', FULL: 'That tee time just filled up. Please pick another.',
+  WRONG_COURSE: 'Tee time belongs to a different course', CONFLICT: 'Conflict — that slot was just taken. Please try another.',
+};
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -22,117 +36,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     return NextResponse.json({ error: 'You must agree to the Terms of Service to change this booking.' }, { status: 400 });
   }
 
-  // Atomic: claim new slot + release old slot + update booking, all in one transaction.
-  // SERIALIZABLE prevents a race where two concurrent swaps both read "available" then double-book.
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { checkInToken: true, golferAccountId: true, courseId: true } });
+  if (!booking || !canManageBooking(booking, golferSession?.golferId, token)) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
+
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      const booking = await tx.booking.findUnique({
-        where: { id: bookingId },
-        select: {
-          id: true, checkInToken: true, golferAccountId: true, teeTimeId: true, players: true,
-          cartSelected: true, rangeBallsTotal: true, accessFeeTotal: true,
-          status: true,
-        },
-      });
-
-      if (!booking) throw Object.assign(new Error('invalid'), { code: 'INVALID' });
-      const authorized = canManageBooking(booking, golferSession?.golferId, token);
-      if (!authorized) throw Object.assign(new Error('invalid'), { code: 'INVALID' });
-      if (booking.status !== 'confirmed') throw Object.assign(new Error('not_confirmed'), { code: 'NOT_CONFIRMED' });
-      if (booking.teeTimeId === newTeeTimeId) throw Object.assign(new Error('same_slot'), { code: 'SAME' });
-
-      const newSlot = await tx.teeTime.findUnique({
-        where: { id: newTeeTimeId },
-        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true },
-      });
-      const oldSlot = await tx.teeTime.findUnique({
-        where: { id: booking.teeTimeId },
-        select: { id: true, courseId: true, playersBooked: true, playersAvailable: true },
-      });
-
-      if (!newSlot || !oldSlot) throw Object.assign(new Error('slot_not_found'), { code: 'NOT_FOUND' });
-      // Must be same course
-      if (newSlot.courseId !== oldSlot.courseId) throw Object.assign(new Error('wrong_course'), { code: 'WRONG_COURSE' });
-      if (newSlot.status === 'blocked') throw Object.assign(new Error('blocked'), { code: 'BLOCKED' });
-
-      const spotsLeft = newSlot.playersAvailable - newSlot.playersBooked;
-      if (spotsLeft < booking.players) throw Object.assign(new Error('full'), { code: 'FULL', spotsLeft });
-
-      // Recompute fees based on new slot rates
-      const players = booking.players;
-      // MP-3 B2c — this was a PRE-EXISTING BUG, fixed incidentally by the
-      // conversion. newSlot.greenFee was DOLLARS and this wrote the result
-      // straight into Booking.greenFeeTotal, which is CENTS, with no x100 — so
-      // swapping a tee time repriced the round at 1/100th ($50 became $0.50).
-      // Now both sides are cents and the multiply is simply correct.
-      const greenFeeTotal = newSlot.greenFeeCents * players;
-      const cartFeeTotal = booking.cartSelected ? newSlot.cartFeeCents * players : 0;
-      const accessFeeTotal = 150 * players;
-      const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
-
-      // Update booking with new tee time + recomputed fees. Re-stamp terms
-      // consent — the price just changed, so it's a fresh agreement.
-      await tx.booking.update({
-        where: { id: bookingId },
-        data: {
-          teeTimeId: newTeeTimeId,
-          greenFeeTotal,
-          cartFeeTotal,
-          accessFeeTotal,
-          totalAmount,
-          termsAcceptedAt: new Date(),
-          termsVersion: CURRENT_TERMS_VERSION,
-        },
-      });
-
-      // Release the old slot
-      const oldNewBooked = Math.max(0, oldSlot.playersBooked - players);
-      await tx.teeTime.update({
-        where: { id: oldSlot.id },
-        data: {
-          playersBooked: oldNewBooked,
-          status: 'available',
-        },
-      });
-
-      // Claim the new slot
-      const newBooked = newSlot.playersBooked + players;
-      await tx.teeTime.update({
-        where: { id: newSlot.id },
-        data: {
-          playersBooked: newBooked,
-          status: newBooked >= newSlot.playersAvailable ? 'full' : 'available',
-        },
-      });
-
-      return {
-        newTeeTimeId,
-        date: newSlot.date,
-        time: newSlot.time,
-        holes: newSlot.holes,
-        players,
-        greenFeeTotal,
-        cartFeeTotal,
-        rangeBallsTotal: Math.round(booking.rangeBallsTotal),
-        accessFeeTotal,
-        totalAmount,
-      };
-    }, { isolationLevel: 'Serializable' });
-
-    return NextResponse.json(result);
+    const r = await moveBooking({
+      bookingId, newTeeTimeId, courseId: booking.courseId, pricing: 'new_slot',
+      actor: { type: 'golfer', id: golferSession?.golferId ?? null }, terms: { version: CURRENT_TERMS_VERSION },
+    });
+    if (!r.ok) return NextResponse.json({ error: COPY[r.code] ?? r.message }, { status: STATUS[r.code] ?? 409 });
+    return NextResponse.json({
+      newTeeTimeId: r.to.teeTimeId, date: r.to.date, time: r.to.time, holes: r.to.holes, players: r.players,
+      ...r.totals,
+    });
   } catch (err) {
-    const e = err as { code?: string; message?: string };
-    if (e.code === 'INVALID') return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
-    if (e.code === 'NOT_CONFIRMED') return NextResponse.json({ error: 'This booking cannot be modified' }, { status: 409 });
-    if (e.code === 'SAME') return NextResponse.json({ error: 'That is your current tee time' }, { status: 409 });
-    if (e.code === 'BLOCKED' || e.code === 'NOT_FOUND') return NextResponse.json({ error: 'That tee time is no longer available' }, { status: 409 });
-    if (e.code === 'FULL') return NextResponse.json({ error: 'That tee time just filled up. Please pick another.' }, { status: 409 });
-    if (e.code === 'WRONG_COURSE') return NextResponse.json({ error: 'Tee time belongs to a different course' }, { status: 400 });
-    // PostgreSQL serialization failure
-    if ((err as { code?: string }).code === 'P2034') {
-      return NextResponse.json({ error: 'Conflict — that slot was just taken. Please try another.' }, { status: 409 });
-    }
-    console.error(JSON.stringify({ ev: 'manage.swap.fail', bookingId, error: e.message }));
+    console.error(JSON.stringify({ ev: 'manage.swap.fail', bookingId, error: err instanceof Error ? err.message : String(err) }));
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
   }
 }

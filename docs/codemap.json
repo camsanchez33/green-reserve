@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 390,
+    "files": 393,
     "routes": 207,
-    "libs": 113,
+    "libs": 115,
     "models": 36,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -2917,7 +2917,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 412,
+      "lines": 356,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2952,6 +2952,7 @@
         "@/lib/stripe",
         "@/lib/tee-time-utils",
         "@/lib/terms",
+        "@/lib/tier-rates",
         "crypto",
         "next/server",
         "stripe"
@@ -3834,7 +3835,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/swap-time/route.ts",
-      "lines": 139,
+      "lines": 57,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3853,6 +3854,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/manage-access",
+        "@/lib/move-booking",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/terms",
@@ -4249,7 +4251,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 311,
+      "lines": 340,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4285,6 +4287,7 @@
         "@/lib/email",
         "@/lib/format",
         "@/lib/golfer-otp",
+        "@/lib/move-booking",
         "@/lib/no-show-fee",
         "@/lib/prisma",
         "@/lib/session",
@@ -5181,7 +5184,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 121,
+      "lines": 130,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6157,7 +6160,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1365,
+      "lines": 1379,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6175,6 +6178,7 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/GettingStartedChecklist",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/MoveGroupModal",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
         "@/components/ui/MonthPicker",
@@ -7549,6 +7553,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/MoveGroupModal.tsx",
+      "lines": 138,
+      "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (MoveGroupModal)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/Toast",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/SignAgreements.tsx",
       "lines": 221,
       "purpose": "AGREEMENT_SPEC AG-2 §1 — the \"Sign\" step.",
@@ -7695,6 +7727,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/components/AnnouncementBanner.tsx",
         "src/components/OperatorSidebar.tsx",
+        "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
@@ -8227,6 +8260,7 @@
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx"
       ]
     },
@@ -9405,6 +9439,7 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
+        "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -9988,6 +10023,7 @@
         "src/app/manage/[bookingId]/page.tsx",
         "src/lib/cancel-booking.ts",
         "src/lib/email.ts",
+        "src/lib/move-booking.ts",
         "src/lib/normalize-course.ts",
         "src/lib/receipt-charges.ts"
       ]
@@ -11006,6 +11042,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/components/AnnouncementBanner.tsx",
+        "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
@@ -11584,6 +11621,7 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -11592,7 +11630,7 @@
     },
     {
       "path": "src/lib/frost-delay.ts",
-      "lines": 107,
+      "lines": 100,
       "purpose": "B-9 frost delay (Cam 2026-10-01:",
       "brain": [],
       "exports": [
@@ -11625,6 +11663,7 @@
       "imports": [
         "./email",
         "./format",
+        "./move-booking",
         "./prisma"
       ],
       "usedBy": [
@@ -12504,6 +12543,51 @@
       ]
     },
     {
+      "path": "src/lib/move-booking.ts",
+      "lines": 187,
+      "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "moveBooking",
+          "kind": "fn"
+        },
+        {
+          "name": "MoveCode",
+          "kind": "type"
+        },
+        {
+          "name": "MoveFail",
+          "kind": "type"
+        },
+        {
+          "name": "MoveOk",
+          "kind": "type"
+        },
+        {
+          "name": "MovePricing",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./cancel-policy",
+        "./prisma",
+        "./tier-rates",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/frost-delay.ts"
+      ]
+    },
+    {
       "path": "src/lib/no-show-fee.ts",
       "lines": 194,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
@@ -12944,6 +13028,7 @@
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
         "src/lib/monthly-review.ts",
+        "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
@@ -13557,7 +13642,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 129,
+      "lines": 130,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -13870,6 +13955,32 @@
         "src/app/admin/messages/page.tsx",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/stats/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/tier-rates.ts",
+      "lines": 61,
+      "purpose": "The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "applyTierRates",
+          "kind": "fn"
+        },
+        {
+          "name": "isWeekend",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/bookings/route.ts",
+        "src/lib/move-booking.ts"
       ]
     },
     {
@@ -14752,6 +14863,7 @@
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",

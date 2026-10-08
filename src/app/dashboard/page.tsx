@@ -17,6 +17,7 @@ import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
+import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { formatTeeDay as fmtDate, formatTeeTime as fmtTime } from '@/lib/format';
 
@@ -113,6 +114,8 @@ function DashboardPageInner() {
   const [changesError, setChangesError] = useState('');
   const [changesConfirmMsg, setChangesConfirmMsg] = useState('');
   const [showAddModal, setShowAddModal]       = useState(false);
+  // ACT-1: the group being moved to another time.
+  const [moveTarget, setMoveTarget] = useState<{ booking: { id: string; golferName: string; players: number; emailable: boolean }; fromTeeTimeId: string } | null>(null);
   const [showConditions, setShowConditions]   = useState(false);
   const [expandedId, setExpandedId]           = useState<string | null>(null);
   const [conditions, setConditions]       = useState('');
@@ -881,6 +884,10 @@ function DashboardPageInner() {
                                 ) : (
                                   <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
                                 )}
+                                {b.status === 'confirmed' && !b.noShowAt && access.can('sheet.move') && (
+                                  <button onClick={e => { e.stopPropagation(); setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app') }, fromTeeTimeId: tt.id }); }}
+                                    className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1">Move</button>
+                                )}
                                 {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
                                   <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'still_coming'); }} disabled={rowBusy === b.id}
                                     className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? '…' : 'Still coming'}</button>
@@ -932,6 +939,13 @@ function DashboardPageInner() {
           )}
         </div>
       </main>
+
+      {/* ── ACT-1: move a group to another time ── */}
+      {moveTarget && (
+        <MoveGroupModal booking={moveTarget.booking} fromTeeTimeId={moveTarget.fromTeeTimeId} date={selectedDate} today={today()} nowHM={nowHM}
+          onClose={() => setMoveTarget(null)}
+          onMoved={toDate => { setMoveTarget(null); if (toDate !== selectedDate) setSelectedDate(toDate); else loadTimes(selectedDate); }} />
+      )}
 
       {/* ── Add Tee Time Modal ── */}
       {showAddModal && (

@@ -4,19 +4,28 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 00:01 UTC · branch `claude/bi-monthly-review` · HEAD `6bb0ca2` · working tree **5 dirty file(s)**
+Generated 2026-10-08 00:30 UTC · branch `claude/act1-move-group` · HEAD `c5493ee` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-10-07**. 1 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (5 file(s))
+| commit | date | subject |
+|---|---|---|
+| `c5493ee` | 2026-10-08 | ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay |
 
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (8 file(s))
+
+- `M PLATFORM_ROADMAP_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/monthly-review-test.ts`
-- `M src/app/api/cron/monthly-review/route.ts`
-- `M src/lib/monthly-review.ts`
+- `M scripts/move-booking-test.ts`
+- `M src/app/api/manage/[bookingId]/swap-time/route.ts`
+- `M src/app/api/operator/tiers/route.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/lib/move-booking.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -159,7 +168,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 2d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
@@ -197,10 +206,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `6bb0ca2` 2026-10-08 — queue/spec update
-- `4ea8e12` 2026-10-08 — queue/spec update
-- `c55b3f8` 2026-10-07 — queue/spec update
-- `3959421` 2026-10-07 — BI-1: monthly AI review of each course's previous month
+- `c5493ee` 2026-10-08 — ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay
+- `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)
 - `2d1a02c` 2026-10-06 — No-show charges taken at the course's midnight, not when marked (#90)
 - `41e61b3` 2026-10-06 — Manage page says what cancelling costs right now (#89)
@@ -209,6 +216,8 @@ This is the distinction a raw checkbox count gets wrong.
 - `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
+- `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
+- `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
 
 ---
 

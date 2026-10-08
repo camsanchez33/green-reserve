@@ -1,21 +1,32 @@
 {
-  "generatedAt": "2026-10-08T00:01:28.785Z",
+  "generatedAt": "2026-10-08T00:30:07.105Z",
   "repo": {
-    "head": "6bb0ca2",
-    "branch": "claude/bi-monthly-review",
-    "dirtyCount": 5,
+    "head": "c5493ee",
+    "branch": "claude/act1-move-group",
+    "dirtyCount": 8,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M PLATFORM_ROADMAP_SPEC.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/monthly-review-test.ts",
-      " M src/app/api/cron/monthly-review/route.ts",
-      " M src/lib/monthly-review.ts"
+      " M scripts/move-booking-test.ts",
+      " M src/app/api/manage/[bookingId]/swap-time/route.ts",
+      " M src/app/api/operator/tiers/route.ts",
+      " M src/app/dashboard/page.tsx",
+      " M src/lib/move-booking.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-10-07T23:53:44+00:00",
-    "unrecorded": []
+    "queueLastCommit": "2026-10-07T20:05:42-04:00",
+    "unrecorded": [
+      {
+        "h": "c5493ee",
+        "date": "2026-10-08T00:22:38+00:00",
+        "subject": "ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 238,
@@ -517,7 +528,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-07",
+      "lastTouched": "2026-10-08",
       "ageDays": 0
     },
     {
@@ -728,24 +739,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "6bb0ca2",
+      "h": "c5493ee",
       "date": "2026-10-08",
-      "subject": "queue/spec update"
+      "subject": "ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay"
     },
     {
-      "h": "4ea8e12",
-      "date": "2026-10-08",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "c55b3f8",
+      "h": "14b40dd",
       "date": "2026-10-07",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "3959421",
-      "date": "2026-10-07",
-      "subject": "BI-1: monthly AI review of each course's previous month"
+      "subject": "BI-1: monthly AI review of each course's previous month (#92)"
     },
     {
       "h": "0a54482",
@@ -786,6 +787,16 @@
       "h": "384b502",
       "date": "2026-10-06",
       "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)"
+    },
+    {
+      "h": "f5b2bb8",
+      "date": "2026-10-06",
+      "subject": "G8: hourly cron sends every pay link and cutoff warning (#83)"
+    },
+    {
+      "h": "c0c4cea",
+      "date": "2026-10-06",
+      "subject": "G13: signed-in golfers can use a booking's emailed manage link (#82)"
     }
   ]
 }

@@ -9,7 +9,7 @@
 // (weather cancel and waiving a fee). Client-safe: no Node or Prisma imports.
 
 export type PermissionKey =
-  | 'sheet.view' | 'sheet.checkin' | 'sheet.counter_payment' | 'sheet.walkin' | 'sheet.no_show'
+  | 'sheet.view' | 'sheet.checkin' | 'sheet.counter_payment' | 'sheet.walkin' | 'sheet.move' | 'sheet.no_show'
   | 'sheet.cancel' | 'sheet.waive_fee' | 'sheet.block' | 'sheet.edit_times' | 'sheet.delay_start'
   | 'sheet.weather_cancel' | 'sheet.golfer_contact'
   | 'money.cancellations' | 'money.payments' | 'money.refund' | 'money.charge_fee' | 'money.payouts'
@@ -36,6 +36,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'sheet.checkin', group: 'Tee sheet', label: 'Check groups in', help: 'Check in a group and take a card payment at check-in.' },
   { key: 'sheet.counter_payment', group: 'Tee sheet', label: 'Mark paid at the counter', help: 'Record a round paid in cash or at the pro shop.' },
   { key: 'sheet.walkin', group: 'Tee sheet', label: 'Add walk-ins and phone bookings', help: 'Book an open time for someone at the counter or on the phone.' },
+  { key: 'sheet.move', group: 'Tee sheet', label: 'Move a group to another time', help: 'Move a booking to another open time. The golfer is emailed; the price stays unless you choose the new time’s rate.' },
   { key: 'sheet.no_show', group: 'Tee sheet', label: 'Mark no-shows', help: 'Mark a group that never arrived, or undo it with “still coming”.' },
   { key: 'sheet.cancel', group: 'Tee sheet', label: 'Cancel a booking', help: 'Cancel one booking. Your late-cancellation rule still applies.' },
   { key: 'sheet.waive_fee', group: 'Tee sheet', label: 'Waive the late fee', help: 'Cancel without the late fee — refunds a hold already taken.', requires: ['sheet.cancel'], movesMoney: true },
@@ -68,13 +69,13 @@ export const PRESETS: { key: PresetKey; label: string; help: string; keys: Permi
   { key: 'starter', label: 'Starter', help: 'Sees the sheet, checks groups in, marks no-shows.',
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use'] },
   { key: 'front_desk', label: 'Front desk', help: 'Runs the counter: payments, walk-ins, cancellations, blocking.',
-    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'money.cancellations'] },
+    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'money.cancellations'] },
   { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given.', keys: [...ALL_KEYS] },
 ];
 
 /** Staff created before SP-A: today's powers minus weather cancel and waiving a fee. */
 export const LEGACY_KEYS: PermissionKey[] = [
-  'sheet.view', 'sheet.checkin', 'sheet.counter_payment', 'sheet.walkin', 'sheet.no_show', 'sheet.cancel',
+  'sheet.view', 'sheet.checkin', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.no_show', 'sheet.cancel',
   'sheet.block', 'sheet.edit_times', 'sheet.delay_start', 'sheet.golfer_contact', 'money.cancellations', 'messages.use',
 ];
 

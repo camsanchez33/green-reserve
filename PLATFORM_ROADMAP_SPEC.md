@@ -12,8 +12,8 @@ the first live course's feedback re-orders this list.
 
 | # | Item | Status | Waiting on Cam |
 |---|---|---|---|
-| 1 | BI-1 Monthly AI review | built (PR) | — |
-| 2 | ACT-1 Move a group (staff) | spec | — |
+| 1 | BI-1 Monthly AI review | shipped (#92) | — |
+| 2 | ACT-1 Move a group (staff) | built (PR) | — |
 | 3 | ACT-2 Birdie acts on the tee sheet | spec | confirm the rule change (below) |
 | 4 | POS-1 Pro shop sales | spec | hardware + fee decision |
 | 5 | MSG-1 Reminders + messages to golfers | spec | Twilio A2P registration (SMS only) |
@@ -74,14 +74,22 @@ Build ONE `moveBooking()` (src/lib/move-booking.ts) that all three use:
   past, booking still confirmed and not checked in.
 - **Price:** the booked price is KEPT by default (a course-initiated move
   shouldn't change what the golfer agreed to). Staff may tick "Charge the new
-  time's rate" when the rates differ, offered only for standard-rate bookings.
+  time's rate" when the rates differ; a member is priced at their tier's rate
+  for the new day. A round already PAID (admin "collect payment") is never
+  repriced. A flagged no-show can't be moved — "Still coming" first (it
+  refunds any no-show charges).
   The golfer's own swap keeps repricing to the new slot (they chose it), but
   member rates are re-applied through the tier and the booking fee keeps its
   per-player amount (0 stays 0). The tier-rate helper moves out of the
   bookings route into src/lib/tier-rates.ts unchanged.
 - **Cancellation window:** the policy copied onto the booking stays; the
   cutoff moves with the tee time. A hold already charged stays charged (it is
-  refunded at check-in as always). Moving into a time whose cutoff has passed
+  refunded at check-in as always). **Open question for Cam:** when the COURSE moves a
+  group whose hold was already taken to a later time (back outside the
+  window), the hold stays, so cancelling then keeps it — the golfer lost free
+  cancellation through no act of their own. Option: refund the hold on a staff
+  move that lands outside the window. Today staff need `sheet.waive_fee` to
+  make it right. Moving into a time whose cutoff has passed
   shows "the free-cancellation window for this time has closed — the hold is
   charged within the hour" before confirming.
 - New BookingEvent type `booking_moved` (additive enum value) with from/to.
