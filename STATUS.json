@@ -1,26 +1,26 @@
 {
-  "generatedAt": "2026-10-08T02:08:11.157Z",
+  "generatedAt": "2026-10-08T03:15:10.890Z",
   "repo": {
-    "head": "9482db8",
-    "branch": "claude/sheet2-board",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "head": "ea2d17b",
+    "branch": "claude/board-main",
+    "dirtyCount": 6,
+    "dirty": [
+      "M CLAUDE.md",
+      " M PLATFORM_ROADMAP_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M src/app/dashboard/page.tsx",
+      " M src/components/dashboard/TeeSheetBoard.tsx"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "9482db8",
-        "date": "2026-10-08T02:07:15+00:00",
-        "subject": "SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a9fd5f5",
-        "date": "2026-10-08T02:03:24+00:00",
-        "subject": "SHEET-2: board view of the tee sheet",
+        "h": "ea2d17b",
+        "date": "2026-10-07T22:14:45-04:00",
+        "subject": "SHEET-2: board view of the tee sheet (#97)",
         "ids": [],
         "matches": []
       },
@@ -99,28 +99,28 @@
       "line": 1049,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 38
+      "ageDays": 39
     },
     {
       "title": "MP-2",
       "line": 1090,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 38
+      "ageDays": 39
     },
     {
       "title": "MP-2b",
       "line": 1127,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
-      "ageDays": 38
+      "ageDays": 39
     },
     {
       "title": "MP-2c",
       "line": 1176,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 38
+      "ageDays": 39
     },
     {
       "title": "MP-2d",
@@ -554,7 +554,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-08",
+      "lastTouched": "2026-10-07",
       "ageDays": 0
     },
     {
@@ -578,7 +578,7 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-08",
+      "lastTouched": "2026-10-07",
       "ageDays": 0
     },
     {
@@ -765,14 +765,9 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "9482db8",
-      "date": "2026-10-08",
-      "subject": "SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view"
-    },
-    {
-      "h": "a9fd5f5",
-      "date": "2026-10-08",
-      "subject": "SHEET-2: board view of the tee sheet"
+      "h": "ea2d17b",
+      "date": "2026-10-07",
+      "subject": "SHEET-2: board view of the tee sheet (#97)"
     },
     {
       "h": "2707e36",
@@ -823,6 +818,11 @@
       "h": "bc65c9f",
       "date": "2026-10-06",
       "subject": "Receipt shows what actually reached the golfer's card (#88)"
+    },
+    {
+      "h": "d19d5cb",
+      "date": "2026-10-06",
+      "subject": "Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)"
     }
   ]
 }
