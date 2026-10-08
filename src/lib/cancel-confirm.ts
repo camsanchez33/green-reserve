@@ -13,7 +13,7 @@ export function cancelConfirmText(b: Cancelable, waive: boolean, canWaive: boole
   // A booking marked no-show has its no-show charges taken by the cancel unless waived.
   const noShow = b.noShowAt && !waive ? '\n\nThey’re marked as a no-show, so any no-show charge is taken now.' : '';
   const body = waive
-    ? `Cancel ${b.golferName}'s booking and waive the late fee?\n\n${feeCharged ? `The ${fee} already charged will be refunded to their card.` : 'No late fee will be charged.'}`
+    ? `Cancel ${b.golferName}'s booking and waive the fee?\n\n${feeCharged ? `The ${fee} already charged will be refunded to their card.` : 'No late fee will be charged.'}${b.noShowAt ? ' Any no-show charge is refunded too.' : ''}`
     : feeCharged
       ? `Cancel ${b.golferName}'s booking?\n\nTheir ${fee} late-cancellation fee was already charged and will NOT be refunded.`
       : b.cancellationFeeTotal > 0
@@ -23,11 +23,15 @@ export function cancelConfirmText(b: Cancelable, waive: boolean, canWaive: boole
 }
 
 /** What happened, after the route answers. */
-export function cancelResultText(b: Cancelable, waive: boolean, r: { feeCharged?: boolean; feeRefundFailed?: string; lateFeeChargeFailed?: string; roundRefunded?: boolean }): { text: string; tone: 'ok' | 'warn' } {
+export type CancelResult = { feeCharged?: boolean; noShowFeeKeptCents?: number; feeRefundFailed?: string; lateFeeChargeFailed?: string; roundRefunded?: boolean };
+
+export function cancelResultText(b: Cancelable, waive: boolean, r: CancelResult): { text: string; tone: 'ok' | 'warn' } {
   const fee = usd(b.cancellationFeeTotal);
   const refunded = r.roundRefunded ? ' Their round payment was refunded.' : '';
   if (waive && r.feeRefundFailed) return { text: `Cancelled, but the ${fee} refund did not go through (${r.feeRefundFailed}) — refund it from Stripe.${refunded}`, tone: 'warn' };
   if (r.lateFeeChargeFailed) return { text: `Cancelled, but the ${fee} late fee could not be charged (${r.lateFeeChargeFailed}).${refunded}`, tone: 'warn' };
-  if (waive) return { text: `Cancelled — ${b.paymentStatus === 'cancellation_fee_charged' ? `the ${fee} fee was refunded.` : 'no fee.'}${refunded}`, tone: 'ok' };
+  if (waive) return { text: `Cancelled — ${b.paymentStatus === 'cancellation_fee_charged' ? `the ${fee} fee was refunded.` : b.noShowAt ? 'no fee, and any no-show charge was refunded.' : 'no fee.'}${refunded}`, tone: 'ok' };
+  // A kept no-show charge is named as one — it is not the late fee.
+  if (r.noShowFeeKeptCents && r.noShowFeeKeptCents > 0) return { text: `Cancelled — their ${usd(r.noShowFeeKeptCents)} no-show charge is kept.${refunded}`, tone: 'ok' };
   return { text: (r.feeCharged ? `Cancelled — the ${fee} late-cancellation fee is charged and kept.` : 'Cancelled — no charge was made.') + refunded, tone: 'ok' };
 }

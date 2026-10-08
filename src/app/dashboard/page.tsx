@@ -18,7 +18,7 @@ import GettingStartedChecklist from '@/components/dashboard/GettingStartedCheckl
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
 import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
-import { cancelConfirmText, cancelResultText } from '@/lib/cancel-confirm';
+import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
 import TeeSheetBoard, { type BoardGroup } from '@/components/dashboard/TeeSheetBoard';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
@@ -201,7 +201,7 @@ function DashboardPageInner() {
     if (!confirm(cancelConfirmText(c, waive, access.can('sheet.waive_fee')))) return;
     setRowBusy(b.id);
     try {
-      const r = await dfetch<{ feeCharged?: boolean; feeRefundFailed?: string; lateFeeChargeFailed?: string; roundRefunded?: boolean }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel', ...(waive ? { waiveFee: true } : {}) }) });
+      const r = await dfetch<CancelResult>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel', ...(waive ? { waiveFee: true } : {}) }) });
       if (!r.ok) { toast(r.error, 'warn'); return; }
       const out = cancelResultText(c, waive, r.data ?? {});
       toast(out.text, out.tone);
@@ -582,7 +582,7 @@ function DashboardPageInner() {
           <button onClick={e => { e.stopPropagation(); cancelGroup(b, false); }} disabled={rowBusy === b.id}
             className="shrink-0 text-xs text-bad hover:bg-bad/5 px-2 py-1 rounded-md disabled:opacity-50">{rowBusy === b.id ? '…' : 'Cancel booking'}</button>
         )}
-        {b.status === 'confirmed' && access.can('sheet.cancel') && access.can('sheet.waive_fee') && (b.cancellationFeeTotal ?? 0) > 0 && (
+        {b.status === 'confirmed' && access.can('sheet.cancel') && access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
           <button onClick={e => { e.stopPropagation(); cancelGroup(b, true); }} disabled={rowBusy === b.id}
             className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">Cancel, no fee</button>
         )}
@@ -901,7 +901,7 @@ function DashboardPageInner() {
             <div className="flex items-start justify-between gap-3 mb-1">
               <div>
                 <h2 className="font-sans font-bold text-ink text-[24px] leading-tight tabular-nums">{fmtTime(panelSlot.time)}</h2>
-                <p className="text-[13px] text-ink-soft">{fmtDate(selectedDate)} · {panelSlot.playersBooked} of {panelSlot.playersAvailable} players{panelSlot.id === nextUpId ? ' · Next up' : ''}</p>
+                <p className="text-[13px] text-ink-soft">{fmtDate(selectedDate)} · {panelSlot.playersBooked} of {panelSlot.playersAvailable} players{!commonRate ? ` · ${rateLabel(panelSlot)}` : ''}{panelSlot.id === nextUpId ? ' · Next up' : ''}</p>
               </div>
               <button onClick={() => setPanelId(null)} className="text-ink-muted hover:text-ink p-1" aria-label="Close"><X className="w-5 h-5" /></button>
             </div>

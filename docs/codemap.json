@@ -9993,7 +9993,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 272,
+      "lines": 273,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10032,13 +10032,17 @@
     },
     {
       "path": "src/lib/cancel-confirm.ts",
-      "lines": 34,
+      "lines": 38,
       "purpose": "The words staff read before cancelling a booking — the tee sheet's panel and Money → Cancellations ask the same question the same way, so the fee outcome they promise matches what lib/cancel-bookin...",
       "brain": [],
       "exports": [
         {
           "name": "cancelConfirmText",
           "kind": "fn"
+        },
+        {
+          "name": "CancelResult",
+          "kind": "type"
         },
         {
           "name": "cancelResultText",

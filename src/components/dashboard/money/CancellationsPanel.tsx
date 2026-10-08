@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { StatusDot } from '@/components/ui/StatusDot';
 
 import { dfetch } from '@/lib/dashboard-fetch';
-import { cancelConfirmText, cancelResultText } from '@/lib/cancel-confirm';
+import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
 import { toast } from '@/components/dashboard/Toast';
 import type { MoneyBooking, MoneyCourse } from './types';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
@@ -58,7 +58,7 @@ export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, on
   async function cancelBooking(b: MoneyBooking, waive = false) {
     if (!confirm(cancelConfirmText(b, waive, canWaive))) return;
     setCancelingId(b.id);
-    const r = await dfetch<{ feeCharged?: boolean; feeRefundFailed?: string; lateFeeChargeFailed?: string; roundRefunded?: boolean }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel', ...(waive ? { waiveFee: true } : {}) }) });
+    const r = await dfetch<CancelResult>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel', ...(waive ? { waiveFee: true } : {}) }) });
     setCancelingId(null);
     if (!r.ok) { toast(r.error); return; }
     const out = cancelResultText(b, waive, r.data ?? {});

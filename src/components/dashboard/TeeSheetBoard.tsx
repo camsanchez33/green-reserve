@@ -107,7 +107,7 @@ export default function TeeSheetBoard({ slots, isPast, nextUpId, selectedId, can
                     onDragLeave={() => setOver(o => (o === s.id ? null : o))}
                     onDrop={e => { e.preventDefault(); if (dragging && target) onMove(dragging.group, dragging.fromId, s.id); setDragging(null); setOver(null); }}
                     style={blocked ? HATCH : undefined}
-                    className={'h-[112px] min-w-0 flex flex-col px-2.5 py-2 cursor-pointer motion-safe:transition-colors '
+                    className={'min-h-[112px] min-w-0 flex flex-col px-2.5 py-2 cursor-pointer motion-safe:transition-colors '
                       + (blocked ? 'bg-paper rounded-lg ' : CARD + ' ')
                       + (tone ? EDGE[tone] + ' ' : '')
                       + (over === s.id ? 'ring-2 ring-pine ' : selectedId === s.id ? 'ring-2 ring-pine/50 ' : next ? 'ring-1 ring-pine ' : target ? 'ring-1 ring-pine/30 ' : '')
