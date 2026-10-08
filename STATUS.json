@@ -1,22 +1,28 @@
 {
-  "generatedAt": "2026-10-08T03:15:10.890Z",
+  "generatedAt": "2026-10-08T03:53:11.076Z",
   "repo": {
-    "head": "ea2d17b",
-    "branch": "claude/board-main",
-    "dirtyCount": 6,
+    "head": "fadcf67",
+    "branch": "claude/analytics-rework",
+    "dirtyCount": 5,
     "dirty": [
       "M CLAUDE.md",
-      " M PLATFORM_ROADMAP_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/dashboard/page.tsx",
-      " M src/components/dashboard/TeeSheetBoard.tsx"
+      " M scripts/design-guard.baseline.json",
+      " M src/app/dashboard/analytics/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
+      {
+        "h": "fadcf67",
+        "date": "2026-10-07T23:23:01-04:00",
+        "subject": "SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ea2d17b",
         "date": "2026-10-07T22:14:45-04:00",
@@ -597,7 +603,7 @@
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-06",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
@@ -765,6 +771,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "fadcf67",
+      "date": "2026-10-07",
+      "subject": "SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)"
+    },
+    {
       "h": "ea2d17b",
       "date": "2026-10-07",
       "subject": "SHEET-2: board view of the tee sheet (#97)"
@@ -818,11 +829,6 @@
       "h": "bc65c9f",
       "date": "2026-10-06",
       "subject": "Receipt shows what actually reached the golfer's card (#88)"
-    },
-    {
-      "h": "d19d5cb",
-      "date": "2026-10-06",
-      "subject": "Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)"
     }
   ]
 }

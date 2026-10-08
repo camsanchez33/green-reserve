@@ -231,7 +231,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 843 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1477 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 99 |
-| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 479 |
+| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 521 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 70 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 78 |
@@ -388,9 +388,9 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/StatusDot.tsx` | 40 | 36 |  | `StatusDot` |
+| `src/components/ui/StatusDot.tsx` | 41 | 36 |  | `StatusDot` |
 | `src/components/ui/Card.tsx` | 31 | 17 |  | `Card`, `CARD` |
-| `src/components/ui/Eyebrow.tsx` | 28 | 19 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/ui/Eyebrow.tsx` | 27 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/ui/field.ts` | 21 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 14 | 267 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |

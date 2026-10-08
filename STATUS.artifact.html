@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-08 03:15 UTC</span><span>claude/board-main @ ea2d17b</span>
-    <span>6 uncommitted</span>
+    <span>2026-10-08 03:53 UTC</span><span>claude/analytics-rework @ fadcf67</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">5 runs have shipped that the queue doesn't know about</div>
+<div class="lede">6 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-07. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">fadcf67</span><span>SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)</span></li>
 <li><span class="h">ea2d17b</span><span>SHEET-2: board view of the tee sheet (#97)</span></li>
 <li><span class="h">2707e36</span><span>Move a group after they've checked in (#96)</span></li>
 <li><span class="h">fef4012</span><span>MSG-1: courses message the golfers booked on a day (#95)</span></li>
@@ -142,7 +143,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M PLATFORM_ROADMAP_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/dashboard/TeeSheetBoard.tsx</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/design-guard.baseline.json</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -241,7 +242,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-07 &middot; 0d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">1</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 <tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">1</td><td class="num">2026-09-29 &middot; 8d</td></tr>
-<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-06 &middot; 0d</td></tr>
+<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-06 &middot; 1d</td></tr>
 <tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 2d</td></tr>
 <tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 2d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 8d</td></tr>
@@ -271,6 +272,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">fadcf67</td><td class="num">2026-10-07</td><td>SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)</td></tr>
 <tr><td class="num">ea2d17b</td><td class="num">2026-10-07</td><td>SHEET-2: board view of the tee sheet (#97)</td></tr>
 <tr><td class="num">2707e36</td><td class="num">2026-10-07</td><td>Move a group after they've checked in (#96)</td></tr>
 <tr><td class="num">fef4012</td><td class="num">2026-10-07</td><td>MSG-1: courses message the golfers booked on a day (#95)</td></tr>
@@ -282,7 +284,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">41e61b3</td><td class="num">2026-10-06</td><td>Manage page says what cancelling costs right now (#89)</td></tr>
 <tr><td class="num">f541b7c</td><td class="num">2026-10-06</td><td>A hold not yet taken is charged when the golfer cancels late (#87)</td></tr>
 <tr><td class="num">bc65c9f</td><td class="num">2026-10-06</td><td>Receipt shows what actually reached the golfer's card (#88)</td></tr>
-<tr><td class="num">d19d5cb</td><td class="num">2026-10-06</td><td>Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
