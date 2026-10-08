@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 00:30 UTC · branch `claude/act1-move-group` · HEAD `c5493ee` · working tree **8 dirty file(s)**
+Generated 2026-10-08 00:39 UTC · branch `claude/act2-birdie-acts` · HEAD `90e1375` · working tree **10 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,20 +12,22 @@ Generated 2026-10-08 00:30 UTC · branch `claude/act1-move-group` · HEAD `c5493
 
 | commit | date | subject |
 |---|---|---|
-| `c5493ee` | 2026-10-08 | ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay |
+| `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (10 file(s))
 
+- `M CLAUDE.md`
 - `M PLATFORM_ROADMAP_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/move-booking-test.ts`
-- `M src/app/api/manage/[bookingId]/swap-time/route.ts`
-- `M src/app/api/operator/tiers/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/lib/move-booking.ts`
+- `M scripts/birdie-isolation-test.ts`
+- `M src/app/api/birdie/chat/route.ts`
+- `M src/components/birdie/ConfirmCard.tsx`
+- `M src/lib/birdie/proposal-types.ts`
+- `M src/lib/birdie/proposals.ts`
+- `?? scripts/birdie-sheet-drafts-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -168,11 +170,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 2d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-07 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 0d |
@@ -206,7 +208,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `c5493ee` 2026-10-08 — ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay
+- `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)
 - `2d1a02c` 2026-10-06 — No-show charges taken at the course's midnight, not when marked (#90)

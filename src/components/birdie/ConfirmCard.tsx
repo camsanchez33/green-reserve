@@ -7,7 +7,7 @@
 // or the route's own error with a retry.
 import { useState } from 'react';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { isProposalCard, type ProposalCard } from '@/lib/birdie/proposal-types';
+import { isProposalCard, cardCalls, type ProposalCard } from '@/lib/birdie/proposal-types';
 
 type State = { kind: 'idle' } | { kind: 'applying' } | { kind: 'done' } | { kind: 'error'; message: string } | { kind: 'dismissed' };
 
@@ -21,25 +21,36 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
     setState({ kind: 'applying' });
     let ok = false;
     let message = '';
+    // ACT-2: a card may make several calls (one per tee time). They run in
+    // order and stop at the first refusal, which is reported with how far it got.
+    const calls = cardCalls(card);
+    let done = 0;
     try {
-      const r = await fetch(card.call.path, {
-        method: card.call.method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(card.call.body),
-      });
-      ok = r.ok;
-      if (!r.ok) {
-        const d = await r.json().catch(() => ({}));
-        message = typeof d.error === 'string' ? d.error : `The change was refused (${r.status}). Nothing was changed.`;
+      for (const call of calls) {
+        const r = await fetch(call.path, {
+          method: call.method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(call.body),
+        });
+        if (!r.ok) {
+          const d = await r.json().catch(() => ({}));
+          const why = typeof d.error === 'string' ? d.error : `The change was refused (${r.status}).`;
+          message = calls.length > 1 ? `${why} Stopped after ${done} of ${calls.length} — the rest were not changed.` : `${why}${typeof d.error === 'string' ? '' : ' Nothing was changed.'}`;
+          break;
+        }
+        done++;
       }
+      ok = done === calls.length;
     } catch {
-      message = 'Network error — nothing was changed. Check your connection and try again.';
+      message = calls.length > 1 && done > 0
+        ? `Network error after ${done} of ${calls.length} — the rest were not changed. Check your connection and try again.`
+        : 'Network error — nothing was changed. Check your connection and try again.';
     }
     // The log line is best-effort: the change already succeeded or failed on
     // its own route, and that is what the operator is shown.
     fetch('/api/birdie/chat', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ applied: { title: card.title, method: card.call.method, path: card.call.path, ok, error: message } }),
+      body: JSON.stringify({ applied: { title: card.title, method: card.call.method, path: card.call.path, ok, error: message, calls: calls.length, done } }),
     }).catch(() => undefined);
     setState(ok ? { kind: 'done' } : { kind: 'error', message });
   }
