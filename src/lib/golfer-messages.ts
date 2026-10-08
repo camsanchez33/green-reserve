@@ -59,6 +59,8 @@ export function reach(list: Recipient[]) {
 
 export async function sendCourseMessage(opts: {
   courseId: string; window: Window; body: string; sms: boolean; sentBy: string;
+  /** Test hook: the time budget (defaults to BUDGET_MS). */
+  budgetMs?: number;
 }): Promise<{ sentEmail: number; sentSms: number; failed: { name: string; how: 'email' | 'sms'; error: string }[]; unreachable: number }> {
   const course = await prisma.course.findUnique({ where: { id: opts.courseId }, select: { name: true, operator: { select: { email: true } } } });
   if (!course) throw new Error('Course not found');
@@ -81,7 +83,7 @@ export async function sendCourseMessage(opts: {
   // Twilio both rate-limit bursts. Every send is awaited (CLAUDE.md gotcha 6).
   for (let i = 0; i < list.length; i++) {
     const r = list[i];
-    if (Date.now() - start > BUDGET_MS) {
+    if (Date.now() - start > (opts.budgetMs ?? BUDGET_MS)) {
       // Out of time: say exactly who was not reached instead of dying silently.
       for (const left of list.slice(i)) {
         if (left.email) failed.push({ name: left.name, how: 'email', error: 'Ran out of time — not sent' });

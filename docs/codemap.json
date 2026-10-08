@@ -11783,7 +11783,7 @@
     },
     {
       "path": "src/lib/golfer-messages.ts",
-      "lines": 108,
+      "lines": 110,
       "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07:",
       "brain": [],
       "exports": [

@@ -6,7 +6,7 @@
 // last check.
 // Run: npx tsx scripts/golfer-messages-test.ts
 import { PrismaClient } from '@prisma/client';
-import { audience, reach, checkWindow, sendCourseMessage } from '../src/lib/golfer-messages';
+import { audience, reach, checkWindow, sendCourseMessage, smsRoom, SMS_CHARS } from '../src/lib/golfer-messages';
 
 const prisma = new PrismaClient();
 const TAG = 'golfermsgtest';
@@ -59,6 +59,12 @@ async function main() {
   check('the golfer with no contact is counted as unreachable', sent.unreachable === 1);
   const logged = await prisma.courseMessage.findFirst({ where: { courseId: c.id } });
   check('the message is logged with its outcome', !!logged && logged.body.startsWith('Frost delay') && logged.failed === sent.failed.length && logged.sentEmail === sent.sentEmail);
+
+  check('a text leaves room for the course name', smsRoom('Hollow Creek') === SMS_CHARS - 'Hollow Creek'.length - 2);
+  const late = await sendCourseMessage({ courseId: c.id, window: { date: DAY }, body: 'Cart path only today.', sms: false, sentBy: 'op:test', budgetMs: -1 });
+  check('out of time: every unsent golfer is named, nothing claimed', late.sentEmail === 0 && late.failed.length === 2 && late.failed.every(f => /Ran out of time/.test(f.error)), JSON.stringify(late.failed.map(f => f.error)));
+  const lateLog = await prisma.courseMessage.findFirst({ where: { courseId: c.id, body: 'Cart path only today.' } });
+  check('out of time: the log row exists with the misses counted', !!lateLog && lateLog.failed === 2 && lateLog.sentEmail === 0);
 
   await cleanup();
   console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

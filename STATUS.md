@@ -4,27 +4,26 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 01:01 UTC · branch `claude/msg1-golfer-messages` · HEAD `3058152` · working tree **6 dirty file(s)**
+Generated 2026-10-08 01:03 UTC · branch `claude/msg1-golfer-messages` · HEAD `27ff9ab` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 3 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 4 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `27ff9ab` | 2026-10-08 | MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate |
 | `3058152` | 2026-10-08 | MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up) |
 | `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (4 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/operator/golfer-messages/route.ts`
-- `M src/components/dashboard/GolferMessageModal.tsx`
-- `M src/lib/email.ts`
+- `M scripts/golfer-messages-test.ts`
 - `M src/lib/golfer-messages.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
@@ -206,6 +205,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `27ff9ab` 2026-10-08 — MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate
 - `3058152` 2026-10-08 — MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)
 - `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
 - `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
@@ -217,7 +217,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
 - `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
-- `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
 
 ---
 
