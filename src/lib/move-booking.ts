@@ -28,6 +28,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
+import { todayIn } from './course-time';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 
 export type MovePricing = 'keep' | 'new_slot';
@@ -51,10 +52,11 @@ export type MoveOk = {
    *  the hourly cron will charge this many cents. 0 = nothing will be charged. */
   holdDueCents: number;
 };
-export type MoveCode = 'NO_SHOW' | 'MOVED' | 'NOT_FOUND' | 'WRONG_COURSE' | 'NOT_CONFIRMED' | 'CHECKED_IN' | 'SAME' | 'SLOT_GONE' | 'BLOCKED' | 'PAST' | 'FULL' | 'CONFLICT';
+export type MoveCode = 'PLAYED' | 'NO_SHOW' | 'MOVED' | 'NOT_FOUND' | 'WRONG_COURSE' | 'NOT_CONFIRMED' | 'CHECKED_IN' | 'SAME' | 'SLOT_GONE' | 'BLOCKED' | 'PAST' | 'FULL' | 'CONFLICT';
 export type MoveFail = { ok: false; code: MoveCode; message: string; spotsLeft?: number };
 
 const MESSAGES: Record<MoveCode, string> = {
+  PLAYED: 'That round was on an earlier day — it has already been played.',
   NO_SHOW: 'This group is marked as a no-show. Mark them “Still coming” first, then move them.',
   MOVED: 'This group was already moved.',
   NOT_FOUND: 'That booking no longer exists.',
@@ -113,6 +115,10 @@ export async function moveBooking(opts: {
       const checkedIn = !!b.checkedInAt;
       if (checkedIn && !opts.allowCheckedIn) throw new MoveError('CHECKED_IN');
       if (b.status !== (checkedIn ? 'completed' : 'confirmed')) throw new MoveError('NOT_CONFIRMED');
+      // Day-level, so a group that checked in online and turns up late can still
+      // go to a later time today — but a round from an earlier day was played,
+      // and moving it would carry its revenue into another day (Analytics, BI-1).
+      if (checkedIn && b.teeTime.date < todayIn(b.course.timezone, now)) throw new MoveError('PLAYED');
       // A no-show may already carry its charges (taken at the course's midnight);
       // "Still coming" is the path that refunds them. Moving would leave them.
       if (b.noShowAt) throw new MoveError('NO_SHOW');

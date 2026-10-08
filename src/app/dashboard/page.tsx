@@ -892,7 +892,7 @@ function DashboardPageInner() {
                                 ) : (
                                   <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
                                 )}
-                                {((b.status === 'confirmed' && !b.noShowAt) || b.status === 'completed') && access.can('sheet.move') && (
+                                {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
                                   <button onClick={e => { e.stopPropagation(); setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: b.status === 'completed' }, fromTeeTimeId: tt.id }); }}
                                     className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1">Move</button>
                                 )}

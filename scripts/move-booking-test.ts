@@ -162,6 +162,10 @@ async function main() {
   check('…its paid price stays even when the new rate is asked for', rci.ok && rci.checkedIn && !rci.priceChanged && ciAfter?.greenFeeTotal === 10000);
   check('…and no hold is reported inside the window', rci.ok && rci.cutoffPassed && rci.holdDueCents === 0);
   check('…the seats moved with it', (await tt(ciFrom.id))?.playersBooked === 0 && (await tt(ciTo.id))?.playersBooked === 2);
+  const played = await book(c.id, (await slot(c.id, '2026-10-07', '11:00')).id, { status: 'completed' });
+  await prisma.booking.update({ where: { id: played.id }, data: { checkedInAt: new Date('2026-10-07T11:00:00Z'), paymentStatus: 'paid' } });
+  const rPlayed = await moveBooking({ bookingId: played.id, newTeeTimeId: bl2.id, courseId: c.id, pricing: 'keep', actor: STAFF, allowCheckedIn: true, now: NOW });
+  check('a checked-in round from an earlier day → PLAYED', !rPlayed.ok && rPlayed.code === 'PLAYED');
   const gone = await book(c.id, (await slot(c.id, '2026-10-26', '11:10')).id, { status: 'cancelled' });
   check('a cancelled booking is still refused', (await moveBooking({ bookingId: gone.id, newTeeTimeId: bl2.id, courseId: c.id, pricing: 'keep', actor: STAFF, allowCheckedIn: true, now: NOW })).ok === false);
 
