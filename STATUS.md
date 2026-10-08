@@ -4,17 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 03:58 UTC · branch `claude/analytics-rework` · HEAD `7f79a3a` · working tree clean
+Generated 2026-10-08 12:46 UTC · branch `claude/demo-board` · HEAD `ed62a49` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 9 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 10 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `9e2ff56` | 2026-10-08 | AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value |
+| `ed62a49` | 2026-10-08 | Demo panel: online bookings at the no-card demo course read 'No Card Required'; unique keys |
+| `f58ff2e` | 2026-10-08 | Homepage demo shows the board: squares, paid/booked edges, Next up, the panel |
+| `718522c` | 2026-10-08 | AN-2: Analytics reworked so it reads plainly (#100) |
 | `b7079ea` | 2026-10-07 | Tee sheet: one board that fits the page, cancel from the sheet (#99) |
-| `3c3c337` | 2026-10-08 | AN-2: Analytics reworked so it reads plainly |
 | `fadcf67` | 2026-10-07 | SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98) |
 | `ea2d17b` | 2026-10-07 | SHEET-2: board view of the tee sheet (#97) |
 | `2707e36` | 2026-10-07 | Move a group after they've checked in (#96) |
@@ -48,7 +49,7 @@ This is the distinction a raw checkbox count gets wrong.
 | MP-2 | 2026-08-29 | 39d | `958f229` | `RUN_QUEUE.md:1090` |
 | MP-2b | 2026-08-29 | 39d | `a134af5` | `RUN_QUEUE.md:1127` |
 | MP-2c | 2026-08-29 | 39d | `e5b5413` | `RUN_QUEUE.md:1176` |
-| MP-2d | 2026-08-29 | 38d | `22d0f68` | `RUN_QUEUE.md:1224` |
+| MP-2d | 2026-08-29 | 39d | `22d0f68` | `RUN_QUEUE.md:1224` |
 | MP-2e | 2026-08-30 | 38d | `bf3bcb2` | `RUN_QUEUE.md:1266` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | — | — | — | `RUN_QUEUE.md:819` |
 | SD-8e — status is rendered as bare coloured text where the design | — | — | — | `RUN_QUEUE.md:845` |
@@ -165,8 +166,8 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 7 | 2026-10-08 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 3d |
-| `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-07 | 0d |
+| `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 7d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 1d |
@@ -200,9 +201,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `9e2ff56` 2026-10-08 — AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value
+- `ed62a49` 2026-10-08 — Demo panel: online bookings at the no-card demo course read 'No Card Required'; unique keys
+- `f58ff2e` 2026-10-08 — Homepage demo shows the board: squares, paid/booked edges, Next up, the panel
+- `718522c` 2026-10-08 — AN-2: Analytics reworked so it reads plainly (#100)
 - `b7079ea` 2026-10-07 — Tee sheet: one board that fits the page, cancel from the sheet (#99)
-- `3c3c337` 2026-10-08 — AN-2: Analytics reworked so it reads plainly
 - `fadcf67` 2026-10-07 — SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)
 - `ea2d17b` 2026-10-07 — SHEET-2: board view of the tee sheet (#97)
 - `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
@@ -211,7 +213,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)
-- `2d1a02c` 2026-10-06 — No-show charges taken at the course's midnight, not when marked (#90)
 
 ---
 
