@@ -32,9 +32,15 @@ attempted. `⚖️` cannot be closed by a Claude session.
       Agreement. The contract currently says one thing and the code does another.
       → Findings L-3 · Register PM-5
 
-- [ ] **LQ-4 — Disclose or delete the $0.50 membership fee.**
-      `MEMBERSHIP_FEE_CENTS` at `src/lib/stripe.ts:12` is undisclosed and
-      contradicts the "only fee" clause.
+- [ ] **LQ-4 — Membership fee: Operator Agreement still says $0.50.**
+      2026-10-08 (Cam): the fee is now 1% of the dues, added to what the member
+      pays (`membershipFeeCents()`, `src/lib/stripe.ts`). /terms (v2026-10-08)
+      and /for-courses say 1%. The signed Operator Agreement v2026-08 still says
+      "$0.50 on each membership-dues payment … added to what the member pays".
+      Courses are not worse off (the member pays it on top of the dues), but
+      the contract names the wrong number. NEEDS CAM: approve a v2026-10 agreement
+      with "1% of each membership-dues payment" and decide whether existing
+      courses must re-accept (bumping `CURRENT_AGREEMENT_VERSION` triggers that).
       → Findings L-4 · Register PM-4
 
 - [ ] **LQ-5 — Form the entity.** ⚖️ optional but cheap

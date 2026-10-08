@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { stripe, chargeOnConnectedAccount, MEMBERSHIP_FEE_CENTS } from '@/lib/stripe';
+import { stripe, chargeOnConnectedAccount, membershipFeeCents } from '@/lib/stripe';
 import { sendMembershipReceiptEmail } from '@/lib/email';
 import { rateLimit } from '@/lib/rate-limit';
 
@@ -28,7 +28,10 @@ function amountsDue(m: { lastPaidAt: Date | null; tier: { annualFeeCents: number
   // silent failure the rename exists to make impossible.
   const annualCents = m.tier?.annualFeeCents ?? 0;
   const initiationCents = m.lastPaidAt ? 0 : (m.tier?.initiationFeeCents ?? 0);
-  return { annualCents, initiationCents };
+  const duesCents = annualCents + initiationCents;
+  // The 1% rides on top: the course receives its full dues, the member pays dues + fee.
+  const feeCents = membershipFeeCents(duesCents);
+  return { annualCents, initiationCents, duesCents, feeCents, totalCents: duesCents + feeCents };
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -36,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const m = await authorize(id, req.nextUrl.searchParams.get('token'));
   if (!m) return NextResponse.json({ error: 'Invalid or expired payment link.' }, { status: 404 });
 
-  const { annualCents, initiationCents } = amountsDue(m);
+  const { annualCents, initiationCents, feeCents, totalCents } = amountsDue(m);
   return NextResponse.json({
     memberName: m.golferId ? undefined : m.inviteName,
     name: m.inviteName,
@@ -46,7 +49,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     termMonths: m.tier?.termMonths ?? 12,
     annual: annualCents / 100,
     initiation: initiationCents / 100,
-    total: (annualCents + initiationCents) / 100,
+    serviceFee: feeCents / 100,
+    total: totalCents / 100,
     paymentStatus: m.paymentStatus,
     alreadyPaid: m.paymentStatus === 'paid' || m.paymentStatus === 'paid_offline',
     expiresAt: m.expiresAt,
@@ -69,9 +73,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'This course is not set up for online payments yet — please pay at the pro shop.' }, { status: 422 });
   }
 
-  const { annualCents, initiationCents } = amountsDue(m);
-  const totalCents = annualCents + initiationCents;
-  if (totalCents <= 0) return NextResponse.json({ error: 'Nothing due on this membership.' }, { status: 409 });
+  const { duesCents, feeCents, totalCents } = amountsDue(m);
+  if (duesCents <= 0) return NextResponse.json({ error: 'Nothing due on this membership.' }, { status: 409 });
 
   // A paid membership can only be paid again once it's within its renewal
   // window (30 days of expiry) — protects against double-pays from old emails.
@@ -95,7 +98,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       paymentMethodId,
       connectedAccountId: m.course.stripeAccountId,
       amountCents: totalCents,
-      applicationFeeCents: MEMBERSHIP_FEE_CENTS,
+      applicationFeeCents: feeCents,
       description: `Membership dues - ${m.tier?.name ?? m.membershipType} - ${m.course.name}`,
       idempotencyKey: `membership-${m.id}-${paymentMethodId}`,
     });
@@ -130,6 +133,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     courseName: m.course.name,
     tierName: m.tier?.name ?? m.membershipType,
     amountPaid: totalCents / 100,
+    serviceFee: feeCents / 100,
     expiresAt: updated.expiresAt,
   }).catch(console.error));
 

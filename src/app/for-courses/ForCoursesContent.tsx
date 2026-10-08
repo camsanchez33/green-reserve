@@ -563,7 +563,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
                 ))}
               </div>
               <p className="text-ink-soft text-xs leading-relaxed">
-                You set your green fee; the golfer pays it plus our $1.50 per player in one card payment to your own Stripe account. Stripe&apos;s standard processing fee (currently 2.9% + 30¢ per payment) comes out of that payment, as with any card you take — GreenReserve charges you nothing on top of it. Our $1.50 per player is then passed to GreenReserve. That, plus 50¢ on each membership-dues payment collected through GreenReserve, is our only revenue: no setup fee, no monthly fee, no commission on your green fees.
+                You set your green fee; the golfer pays it plus our $1.50 per player in one card payment to your own Stripe account. Stripe&apos;s standard processing fee (currently 2.9% + 30¢ per payment) comes out of that payment, as with any card you take — GreenReserve charges you nothing on top of it. Our $1.50 per player is then passed to GreenReserve. That, plus 1% of each membership-dues payment collected through GreenReserve, is our only revenue: no setup fee, no monthly fee, no commission on your green fees.
               </p>
             </div>
           </aside>

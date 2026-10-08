@@ -16,6 +16,8 @@ type DuesInfo = {
   termMonths: number;
   annual: number;
   initiation: number;
+  /** GreenReserve's 1% of the dues, added on top. */
+  serviceFee: number;
   total: number;
   alreadyPaid: boolean;
   expiresAt: string | null;
@@ -165,6 +167,12 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
                 <span className="text-ink-soft">{info.tierName} dues</span>
                 <span className="font-medium text-ink">${info.annual.toFixed(2)}</span>
               </div>
+              {info.serviceFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-ink-soft">GreenReserve service fee (1% of dues)</span>
+                  <span className="font-medium text-ink">${info.serviceFee.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-line pt-1.5 font-semibold text-ink text-base">
                 <span>Total</span>
                 <span>${info.total.toFixed(2)}</span>

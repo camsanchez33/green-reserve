@@ -24,14 +24,14 @@ export default function TermsOfServicePage() {
                 <a href="/operator-agreement" className={navIdle}>Operator Agreement</a>
               </nav>
               <p className="mt-6 pl-3 text-xs text-ink-soft leading-relaxed">
-                Version v2026-09-29<br />Last updated September 29, 2026
+                Version v2026-10-08<br />Last updated October 8, 2026
               </p>
             </div>
           </aside>
 
           <div>
             <h1 className="text-3xl sm:text-4xl font-serif font-semibold tracking-tight text-ink mb-3">Terms of Service</h1>
-            <p className="text-ink-soft text-sm mb-10">Version v2026-08 — last updated August 2026</p>
+            <p className="text-ink-soft text-sm mb-10">Version v2026-10-08 — last updated October 8, 2026</p>
 
             {/* Plain-English summary */}
             <div className="bg-white rounded-lg shadow-card p-6 mb-12">
@@ -82,8 +82,8 @@ export default function TermsOfServicePage() {
                   card, GreenReserve charges the <strong className="text-ink">$1.50 per-player service fee on its own</strong> to
                   the card saved at booking; if the golfer later checks in and pays by card after all, that separate fee is
                   refunded. Where a course collects
-                  membership dues through GreenReserve, a <strong className="text-ink">$0.50 fee per dues payment</strong>{' '}
-                  applies in the same way. GreenReserve charges courses no listing, subscription, or commission fees.
+                  membership dues through GreenReserve, a <strong className="text-ink">GreenReserve service fee of 1% of the dues</strong>{' '}
+                  is added to each dues payment the member makes. GreenReserve charges courses no listing, subscription, or commission fees.
                   Stripe&apos;s processing fees apply to each payment under the course&apos;s own Stripe agreement.
                 </p>
               </section>
@@ -167,8 +167,12 @@ export default function TermsOfServicePage() {
 
               <section className="pt-6 border-t border-line">
                 <h3 className="font-semibold text-sm text-ink mb-2">Changes to these terms</h3>
+                <p className="text-sm mb-2">
+                  <strong className="text-ink">v2026-10-08 (current):</strong> the fee on membership-dues payments
+                  is now 1% of the dues, added to what the member pays (it was $0.50 per payment).
+                </p>
                 <p className="text-sm">
-                  <strong className="text-ink">v2026-08 (current):</strong> added explicit card-authorization language
+                  <strong className="text-ink">v2026-08:</strong> added explicit card-authorization language
                   for late-cancellation fees, a communications-consent section, a governing-law/arbitration clause, and
                   moved course-operator terms to the dedicated Operator Agreement.
                 </p>

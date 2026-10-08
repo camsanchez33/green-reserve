@@ -1,7 +1,7 @@
 # GreenReserve — Claude Code Context
 
 ## What this is
-GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list for free, golfers book online. Revenue model: $1.50/player service fee charged to the golfer at booking; courses keep 100% of green fees.
+GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list for free, golfers book online. Revenue model: $1.50/player service fee charged to the golfer at booking; courses keep 100% of green fees. Membership dues paid through GreenReserve carry a 1% fee added to what the member pays (Cam 2026-10-08, `membershipFeeCents()` in `src/lib/stripe.ts`; was a flat 50¢ from the course's side).
 
 **Live URL:** https://greenreserve.app  
 **Stack:** Next.js 15 (App Router), TypeScript, Prisma (PostgreSQL), Stripe Connect, Resend (email), Vercel
