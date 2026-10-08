@@ -20,6 +20,7 @@ the first live course's feedback re-orders this list.
 | 6 | OUT-1 Tournaments & outings + invoices | spec | — |
 | 7 | FB-1 Food & beverage | after POS-1 | — |
 | 8 | PWA-1 "Add to Home Screen" booking app | small, any time | — |
+| 9 | SHEET-2 Board view of the tee sheet (drag to move) | after ACT-1 | — |
 | — | Employee scheduling, maintenance spend, native app per course | parked | see "Parked" |
 
 ---
@@ -150,6 +151,18 @@ Instead of a native app per course (an App Store submission, review and update
 cycle for every course): a web-app manifest and icon per course so regulars
 can save the course's booking page to their phone, with a saved golfer account
 for one-tap rebooking. Small; can ship any time.
+
+## 9. SHEET-2 — a board view of the tee sheet (Cam 2026-10-07, "noted for later")
+
+Cam: "in almost a calendar type style … each was a box on the page that can
+easily be moved around." A second view beside today's list: each tee time is a
+card in a grid (a column per hour, cards down the column), a group is a chip
+inside its card, and dragging a group onto another card IS the ACT-1 move —
+same checks, same price and window notes, same confirm. Builds on ACT-1, so it
+comes after it. Guardrails: the list stays (a full day is 50–60 times; the
+counter scans the list fastest), drag needs a tap-to-move fallback for touch
+and keyboard, nothing moves without the confirm, and the homepage demo
+mirrors whichever view is the default (CLAUDE.md: change one, check the other).
 
 ## Parked (and why)
 
