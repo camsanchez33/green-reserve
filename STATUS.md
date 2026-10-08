@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 02:02 UTC · branch `claude/sheet2-board` · HEAD `adcddbb` · working tree **7 dirty file(s)**
+Generated 2026-10-08 02:08 UTC · branch `claude/sheet2-board` · HEAD `9482db8` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,27 +12,14 @@ Generated 2026-10-08 02:02 UTC · branch `claude/sheet2-board` · HEAD `adcddbb`
 
 | commit | date | subject |
 |---|---|---|
-| `adcddbb` | 2026-10-08 | Regenerate code map and status board |
-| `1e44ba5` | 2026-10-08 | Refuse moving a checked-in round from an earlier day |
-| `99c9f2c` | 2026-10-08 | Staff can move a group that has already checked in |
+| `9482db8` | 2026-10-08 | SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view |
+| `a9fd5f5` | 2026-10-08 | SHEET-2: board view of the tee sheet |
+| `2707e36` | 2026-10-07 | Move a group after they've checked in (#96) |
 | `fef4012` | 2026-10-07 | MSG-1: courses message the golfers booked on a day (#95) |
 | `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (7 file(s))
-
-- `M CLAUDE.md`
-- `M PLATFORM_ROADMAP_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/MoveGroupModal.tsx`
-- `?? src/components/dashboard/TeeSheetBoard.tsx`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -210,9 +197,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `adcddbb` 2026-10-08 — Regenerate code map and status board
-- `1e44ba5` 2026-10-08 — Refuse moving a checked-in round from an earlier day
-- `99c9f2c` 2026-10-08 — Staff can move a group that has already checked in
+- `9482db8` 2026-10-08 — SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view
+- `a9fd5f5` 2026-10-08 — SHEET-2: board view of the tee sheet
+- `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
 - `fef4012` 2026-10-07 — MSG-1: courses message the golfers booked on a day (#95)
 - `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
 - `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)

@@ -1,41 +1,33 @@
 {
-  "generatedAt": "2026-10-08T02:02:40.476Z",
+  "generatedAt": "2026-10-08T02:08:11.157Z",
   "repo": {
-    "head": "adcddbb",
+    "head": "9482db8",
     "branch": "claude/sheet2-board",
-    "dirtyCount": 7,
-    "dirty": [
-      "M CLAUDE.md",
-      " M PLATFORM_ROADMAP_SPEC.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/dashboard/page.tsx",
-      " M src/components/dashboard/MoveGroupModal.tsx",
-      "?? src/components/dashboard/TeeSheetBoard.tsx"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "adcddbb",
-        "date": "2026-10-08T01:46:25+00:00",
-        "subject": "Regenerate code map and status board",
+        "h": "9482db8",
+        "date": "2026-10-08T02:07:15+00:00",
+        "subject": "SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view",
         "ids": [],
         "matches": []
       },
       {
-        "h": "1e44ba5",
-        "date": "2026-10-08T01:45:20+00:00",
-        "subject": "Refuse moving a checked-in round from an earlier day",
+        "h": "a9fd5f5",
+        "date": "2026-10-08T02:03:24+00:00",
+        "subject": "SHEET-2: board view of the tee sheet",
         "ids": [],
         "matches": []
       },
       {
-        "h": "99c9f2c",
-        "date": "2026-10-08T01:43:30+00:00",
-        "subject": "Staff can move a group that has already checked in",
+        "h": "2707e36",
+        "date": "2026-10-07T22:03:04-04:00",
+        "subject": "Move a group after they've checked in (#96)",
         "ids": [],
         "matches": []
       },
@@ -773,19 +765,19 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "adcddbb",
+      "h": "9482db8",
       "date": "2026-10-08",
-      "subject": "Regenerate code map and status board"
+      "subject": "SHEET-2: review follow-ups — no nested buttons, peek keeps the saved view"
     },
     {
-      "h": "1e44ba5",
+      "h": "a9fd5f5",
       "date": "2026-10-08",
-      "subject": "Refuse moving a checked-in round from an earlier day"
+      "subject": "SHEET-2: board view of the tee sheet"
     },
     {
-      "h": "99c9f2c",
-      "date": "2026-10-08",
-      "subject": "Staff can move a group that has already checked in"
+      "h": "2707e36",
+      "date": "2026-10-07",
+      "subject": "Move a group after they've checked in (#96)"
     },
     {
       "h": "fef4012",
