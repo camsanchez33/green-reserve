@@ -9,13 +9,19 @@
 // agreement check and validation are the control, not this file.
 //
 // Allowlist (Cam): schedule edits (first/last tee, interval, days, rates,
-// running/paused), block a day, unblock a day. Never money movement, refunds,
-// the cancellation policy, Stripe or staff — there is no tool for those, and
-// the system prompt tells Birdie to say so.
+// running/paused), block a day, unblock a day. ACT-2 (PLATFORM_ROADMAP_SPEC §3,
+// Cam 2026-10-07: "able to move around stuff … not just a chat bot"): move a
+// group, block or open tee times, add a phone booking or walk-in, send a pay
+// link. Never money movement, refunds, cancelling (waits on Cam), the
+// cancellation policy, Stripe or staff — there is no tool for those, the
+// widget refuses any card body asking for them (proposal-types BODY_RULES),
+// and the system prompt tells Birdie to say so.
 import type Anthropic from '@anthropic-ai/sdk';
 import { prisma } from '../prisma';
 import { listSchedules } from '../schedule-service';
 import { todayIn } from '../course-time';
+import { moveBooking } from '../move-booking';
+import { isPlaceholderEmail } from '../email';
 import type { ToolContext, ToolOutcome } from './tools';
 
 import type { ProposalCard } from './proposal-types';
@@ -69,6 +75,73 @@ export const PROPOSE_TOOLS: Anthropic.Beta.BetaTool[] = [
       type: 'object',
       properties: { date: { type: 'string', description: 'The blocked day, YYYY-MM-DD.' } },
       required: ['date'],
+      additionalProperties: false,
+    },
+  },  {
+    name: 'propose_move_group',
+    description:
+      "Draft moving ONE booked group to another tee time, for the operator to confirm. Identify the group by its current day, tee time and golfer name (from get_tee_sheet). The price they booked stays the same; the golfer is emailed the new time. This does NOT change anything — it shows a confirm card.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', description: 'The group’s current day, YYYY-MM-DD.' },
+        time: { type: 'string', description: 'The group’s current tee time, 24-hour HH:MM.' },
+        golfer: { type: 'string', description: 'The golfer name on the booking (as get_tee_sheet shows it).' },
+        toDate: { type: 'string', description: 'The new day, YYYY-MM-DD. Omit for the same day.' },
+        toTime: { type: 'string', description: 'The new tee time, 24-hour HH:MM.' },
+      },
+      required: ['date', 'time', 'golfer', 'toTime'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'propose_block_times',
+    description:
+      "Draft blocking (or reopening) the tee times on one day from one time to another, for the operator to confirm. Blocking stops new bookings on those times; groups already booked on them stay booked — nobody is cancelled. This does NOT change anything — it shows a confirm card.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', description: 'The day, YYYY-MM-DD, today or later.' },
+        from: { type: 'string', description: 'First tee time to change, 24-hour HH:MM.' },
+        to: { type: 'string', description: 'Last tee time to change, 24-hour HH:MM. Omit for just the one time.' },
+        block: { type: 'boolean', description: 'true to block, false to reopen blocked times.' },
+      },
+      required: ['date', 'from', 'block'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'propose_add_booking',
+    description:
+      "Draft adding a phone booking or a walk-in onto an open tee time, for the operator to confirm. They pay at the counter. This does NOT change anything — it shows a confirm card.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', description: 'The day, YYYY-MM-DD, today or later.' },
+        time: { type: 'string', description: 'The tee time, 24-hour HH:MM.' },
+        golfer: { type: 'string', description: 'The golfer’s name.' },
+        players: { type: 'integer', description: 'Players in the group, 1 to 4.' },
+        source: { type: 'string', enum: ['phone', 'walk_in'], description: 'How they booked.' },
+        phone: { type: 'string', description: 'Their mobile number, if given.' },
+        email: { type: 'string', description: 'Their email, if given.' },
+      },
+      required: ['date', 'time', 'golfer', 'players', 'source'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'propose_send_pay_link',
+    description:
+      "Draft sending a booked group their link to check in and pay on their own phone (Apple Pay, Google Pay or card), by text or email, for the operator to confirm. This does NOT send anything — it shows a confirm card.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', description: 'The group’s day, YYYY-MM-DD.' },
+        time: { type: 'string', description: 'The group’s tee time, 24-hour HH:MM.' },
+        golfer: { type: 'string', description: 'The golfer name on the booking.' },
+        via: { type: 'string', enum: ['sms', 'email'], description: 'Text or email.' },
+      },
+      required: ['date', 'time', 'golfer', 'via'],
       additionalProperties: false,
     },
   },
@@ -186,6 +259,145 @@ async function unblockDay(input: Record<string, unknown>, ctx: ToolContext): Pro
   });
 }
 
+// ── ACT-2: the tee sheet ────────────────────────────────────────────────────
+const nameOk = (v: unknown) => typeof v === 'string' && v.trim().length >= 2 && v.trim().length <= 120;
+
+/** The one confirmed group at date + time whose name matches, or an error. */
+async function findGroup(ctx: ToolContext, date: unknown, time: unknown, golfer: unknown) {
+  if (typeof date !== 'string' || !DATE.test(date)) return { error: 'The day must be YYYY-MM-DD.' };
+  if (typeof time !== 'string' || !HHMM.test(time)) return { error: 'The tee time must be HH:MM, 24-hour.' };
+  if (!nameOk(golfer)) return { error: 'Give the golfer’s name as the tee sheet shows it.' };
+  const slot = await prisma.teeTime.findFirst({ where: { courseId: ctx.courseId, date, time }, select: { id: true } });
+  if (!slot) return { error: `There’s no ${fmtTime(time)} tee time on ${fmtDate(date)}. Call get_tee_sheet for that day.` };
+  const groups = await prisma.booking.findMany({
+    where: { courseId: ctx.courseId, teeTimeId: slot.id, status: 'confirmed' },
+    select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, stripePaymentMethodId: true, checkInToken: true, accessFeeTotal: true },
+  });
+  const want = String(golfer).trim().toLowerCase();
+  // An exact name always wins ("Alan Smith" isn't ambiguous just because "Al" is also booked).
+  const exact = groups.filter(g => g.golferName.toLowerCase() === want);
+  if (exact.length === 1) return { group: exact[0] };
+  const hits = groups.filter(g => g.golferName.toLowerCase().includes(want) || want.includes(g.golferName.toLowerCase()));
+  if (hits.length === 0) return { error: `No booked group called “${String(golfer).trim()}” at ${fmtTime(time)} on ${fmtDate(date)}.${groups.length ? ` That time has: ${groups.map(g => g.golferName).join(', ')}.` : ''}` };
+  if (hits.length > 1) return { error: `More than one group matches at ${fmtTime(time)}: ${hits.map(g => g.golferName).join(', ')}. Ask which one.` };
+  return { group: hits[0] };
+}
+
+async function moveGroup(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
+  if (!ctx.can('sheet.move')) return err("This login can't move groups — the course owner decides that under Settings → Staff & permissions.");
+  const found = await findGroup(ctx, input.date, input.time, input.golfer);
+  if ('error' in found) return err(found.error as string);
+  const toDate = input.toDate === undefined ? String(input.date) : input.toDate;
+  if (typeof toDate !== 'string' || !DATE.test(toDate)) return err('The new day must be YYYY-MM-DD.');
+  if (typeof input.toTime !== 'string' || !HHMM.test(input.toTime)) return err('The new tee time must be HH:MM, 24-hour.');
+  const target = await prisma.teeTime.findFirst({ where: { courseId: ctx.courseId, date: toDate, time: input.toTime }, select: { id: true } });
+  if (!target) return err(`There’s no ${fmtTime(input.toTime)} tee time on ${fmtDate(toDate)}.`);
+  // The real move's own checks and price, run as a dry run: nothing changes.
+  const r = await moveBooking({ bookingId: found.group.id, newTeeTimeId: target.id, courseId: ctx.courseId, pricing: 'keep', actor: { type: 'staff' }, dryRun: true });
+  if (!r.ok) return err(r.message);
+  const g = found.group;
+  const emailable = !!g.golferEmail && !isPlaceholderEmail(g.golferEmail);
+  const notes = [
+    ctx.can('money.payments') ? `The price stays ${money(r.totals.totalAmount / 100)}.` : 'The price stays what they booked.',
+    emailable ? 'They’re emailed the new time.' : 'There’s no email on file, so let them know.',
+  ];
+  if (r.holdDueCents > 0) notes.push(`The new time is already inside the free-cancellation window, so their ${money(r.holdDueCents / 100)} hold is charged within the hour (refunded at check-in).`);
+  return shown({
+    id: cardId(),
+    title: `Move ${g.golferName} (${g.players})`,
+    changes: [{ label: 'Tee time', from: `${fmtDate(String(input.date))} · ${fmtTime(String(input.time))}`, to: `${fmtDate(toDate)} · ${fmtTime(input.toTime)}` }],
+    note: notes.join(' '),
+    call: { method: 'PATCH', path: '/api/operator/bookings', body: { id: g.id, action: 'move', newTeeTimeId: target.id } },
+  });
+}
+
+async function blockTimes(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
+  if (!ctx.can('sheet.block')) return err("This login can't block tee times — the course owner decides that under Settings → Staff & permissions.");
+  const date = typeof input.date === 'string' ? input.date : '';
+  if (!DATE.test(date)) return err('The day must be YYYY-MM-DD.');
+  if (date < todayIn(ctx.timezone)) return err('That day has already gone by.');
+  if (typeof input.from !== 'string' || !HHMM.test(input.from)) return err('The first time must be HH:MM, 24-hour.');
+  const to = input.to === undefined ? input.from : input.to;
+  if (typeof to !== 'string' || !HHMM.test(to)) return err('The last time must be HH:MM, 24-hour.');
+  if (to < input.from) return err('The last time is before the first.');
+  if (typeof input.block !== 'boolean') return err('block must be true or false.');
+  const block = input.block;
+  const slots = await prisma.teeTime.findMany({
+    where: { courseId: ctx.courseId, date, time: { gte: input.from, lte: to } },
+    orderBy: { time: 'asc' },
+    select: { id: true, time: true, status: true, playersBooked: true },
+  });
+  const change = slots.filter(t => block ? t.status !== 'blocked' : t.status === 'blocked');
+  if (slots.length === 0) return err(`There are no tee times from ${fmtTime(input.from)} to ${fmtTime(to)} on ${fmtDate(date)}.`);
+  if (change.length === 0) return err(`Those times are already ${block ? 'blocked' : 'open'}.`);
+  if (change.length > 60) return err('That’s more than 60 tee times — block the whole day instead.');
+  const booked = change.filter(t => t.playersBooked > 0).length;
+  const span = change.length === 1 ? fmtTime(change[0].time) : `${fmtTime(change[0].time)} – ${fmtTime(change[change.length - 1].time)}`;
+  const calls = change.map(t => ({ method: 'PATCH' as const, path: '/api/operator/tee-times' as const, body: { id: t.id, status: block ? 'blocked' : 'available' } }));
+  return shown({
+    id: cardId(),
+    title: `${block ? 'Block' : 'Reopen'} ${change.length} tee time${change.length === 1 ? '' : 's'} on ${fmtDate(date)}`,
+    changes: [{ label: span, from: block ? 'Open' : 'Blocked', to: block ? 'Blocked' : 'Open' }],
+    note: block
+      ? (booked ? `${booked} of these already ${booked === 1 ? 'has a booked group' : 'have booked groups'} — they stay booked; nobody is cancelled. New bookings stop.` : 'Nobody is booked on these times. New bookings stop.')
+      : 'Golfers can book these times again.',
+    call: calls[0],
+    calls,
+  });
+}
+
+async function addBooking(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
+  if (!ctx.can('sheet.walkin')) return err("This login can't add bookings — the course owner decides that under Settings → Staff & permissions.");
+  const date = typeof input.date === 'string' ? input.date : '';
+  if (!DATE.test(date)) return err('The day must be YYYY-MM-DD.');
+  if (date < todayIn(ctx.timezone)) return err('That day has already gone by.');
+  if (typeof input.time !== 'string' || !HHMM.test(input.time)) return err('The tee time must be HH:MM, 24-hour.');
+  if (!nameOk(input.golfer)) return err('Give the golfer’s name.');
+  const players = Number(input.players);
+  if (!Number.isInteger(players) || players < 1 || players > 4) return err('Players must be 1 to 4.');
+  const source = input.source === 'phone' ? 'phone' : input.source === 'walk_in' ? 'walk_in' : null;
+  if (!source) return err('source must be phone or walk_in.');
+  const email = typeof input.email === 'string' ? input.email.trim().toLowerCase().slice(0, 200) : '';
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err('That email doesn’t look right.');
+  const phone = typeof input.phone === 'string' ? input.phone.trim().slice(0, 40) : '';
+  const slot = await prisma.teeTime.findFirst({
+    where: { courseId: ctx.courseId, date, time: input.time },
+    select: { id: true, status: true, playersAvailable: true, playersBooked: true, greenFeeCents: true },
+  });
+  if (!slot) return err(`There’s no ${fmtTime(input.time)} tee time on ${fmtDate(date)}.`);
+  if (slot.status === 'blocked') return err(`${fmtTime(input.time)} is blocked.`);
+  const open = slot.playersAvailable - slot.playersBooked;
+  if (open < players) return err(`${fmtTime(input.time)} has room for ${open}, not ${players}.`);
+  const name = String(input.golfer).trim();
+  return shown({
+    id: cardId(),
+    title: `Add ${name} (${players}) at ${fmtTime(input.time)}`,
+    changes: [{ label: `${fmtDate(date)} · ${fmtTime(input.time)}`, from: `${open} open`, to: `${name} · ${players} (${source === 'phone' ? 'phone' : 'walk-in'})` }],
+    note: `They pay at the counter${ctx.can('money.payments') ? ` — green fee ${money(slot.greenFeeCents * players / 100)}` : ''}. No booking fee on a counter booking.`,
+    call: { method: 'POST', path: '/api/operator/bookings', body: { teeTimeId: slot.id, golferName: name, players, source, ...(phone ? { golferPhone: phone } : {}), ...(email ? { golferEmail: email } : {}) } },
+  });
+}
+
+async function sendPayLink(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
+  if (!ctx.can('sheet.checkin')) return err("This login can't send pay links — the course owner decides that under Settings → Staff & permissions.");
+  const via = input.via === 'sms' ? 'sms' : input.via === 'email' ? 'email' : null;
+  if (!via) return err('via must be sms or email.');
+  const found = await findGroup(ctx, input.date, input.time, input.golfer);
+  if ('error' in found) return err(found.error as string);
+  const g = found.group;
+  if (g.stripePaymentMethodId) return err(`${g.golferName} already has a card on file — they’re charged when they check in, so there’s no pay link to send.`);
+  if (via === 'sms' && (g.golferPhone || '').replace(/\D/g, '').length < 10) return err(`There’s no mobile number on ${g.golferName}’s booking — try email, or take payment at the counter.`);
+  if (via === 'email' && (!g.golferEmail || isPlaceholderEmail(g.golferEmail))) return err(`There’s no email on ${g.golferName}’s booking — try a text, or take payment at the counter.`);
+  if (via === 'email' && !g.checkInToken) return err(`${g.golferName}’s booking has no pay link — send it by text instead, or check them in at the counter.`);
+  return shown({
+    id: cardId(),
+    title: `${via === 'sms' ? 'Text' : 'Email'} ${g.golferName} their pay link`,
+    changes: [{ label: `${fmtDate(String(input.date))} · ${fmtTime(String(input.time))}`, from: 'Not paid', to: `Pay link ${via === 'sms' ? 'texted' : 'emailed'}` }],
+    note: `They check in and pay on their own phone — Apple Pay, Google Pay or card.${g.accessFeeTotal > 0 ? ' The booking fee is collected with the round.' : ''}`,
+    call: { method: 'PATCH', path: '/api/operator/bookings', body: { id: g.id, action: 'send_pay_link', via } },
+  });
+}
+
 /** Runs one propose_* call. Bad input comes back as an error, never a card. */
 export async function runProposeTool(name: string, input: unknown, ctx: ToolContext): Promise<ProposalOutcome> {
   const args = input && typeof input === 'object' && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
@@ -193,6 +405,10 @@ export async function runProposeTool(name: string, input: unknown, ctx: ToolCont
     case 'propose_schedule_change': return scheduleChange(args, ctx);
     case 'propose_block_day': return blockDay(args, ctx);
     case 'propose_unblock_day': return unblockDay(args, ctx);
+    case 'propose_move_group': return moveGroup(args, ctx);
+    case 'propose_block_times': return blockTimes(args, ctx);
+    case 'propose_add_booking': return addBooking(args, ctx);
+    case 'propose_send_pay_link': return sendPayLink(args, ctx);
     default: return err(`There is no tool called ${name}.`);
   }
 }

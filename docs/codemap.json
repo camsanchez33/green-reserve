@@ -7396,7 +7396,7 @@
     },
     {
       "path": "src/components/birdie/ConfirmCard.tsx",
-      "lines": 85,
+      "lines": 96,
       "purpose": "BIRDIE_AI_SPEC B4b — a change Birdie drafted, waiting on the operator.",
       "brain": [],
       "exports": [
@@ -9273,10 +9273,14 @@
     },
     {
       "path": "src/lib/birdie/proposal-types.ts",
-      "lines": 30,
+      "lines": 61,
       "purpose": "BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call).",
       "brain": [],
       "exports": [
+        {
+          "name": "cardCalls",
+          "kind": "fn"
+        },
         {
           "name": "isProposalCard",
           "kind": "fn"
@@ -9309,7 +9313,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 201,
+      "lines": 417,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [
@@ -9341,6 +9345,8 @@
       "guard": null,
       "imports": [
         "../course-time",
+        "../email",
+        "../move-booking",
         "../prisma",
         "../schedule-service",
         "./proposal-types",
@@ -11439,6 +11445,7 @@
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
@@ -12584,6 +12591,7 @@
       "usedBy": [
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/frost-delay.ts"
       ]
     },
@@ -17188,6 +17196,7 @@
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/lib/analytics.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/frost-delay.ts",
         "src/lib/public-tee-times.ts",

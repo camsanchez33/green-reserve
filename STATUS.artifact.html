@@ -117,15 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-08 00:30 UTC</span><span>claude/act1-move-group @ c5493ee</span>
-    <span>8 uncommitted</span>
+    <span>2026-10-08 00:46 UTC</span><span>claude/act2-birdie-acts @ 912e5f7</span>
+    <span>6 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">1 run has shipped that the queue doesn't know about</div>
+<div class="lede">2 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-07. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">c5493ee</span><span>ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay</span></li>
+<li><span class="h">912e5f7</span><span>ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link</span></li>
+<li><span class="h">90e1375</span><span>ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)</span></li>
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">238</span><span class="l">Done</span></div>
@@ -138,7 +139,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M PLATFORM_ROADMAP_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/move-booking-test.ts</code></li><li><code>M src/app/api/manage/[bookingId]/swap-time/route.ts</code></li><li><code>M src/app/api/operator/tiers/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/lib/move-booking.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/birdie-isolation-test.ts</code></li><li><code>M scripts/birdie-sheet-drafts-test.ts</code></li><li><code>M src/lib/birdie/proposal-types.ts</code></li><li><code>M src/lib/birdie/proposals.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -267,7 +268,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">c5493ee</td><td class="num">2026-10-08</td><td>ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay</td></tr>
+<tr><td class="num">912e5f7</td><td class="num">2026-10-08</td><td>ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link</td></tr>
+<tr><td class="num">90e1375</td><td class="num">2026-10-07</td><td>ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)</td></tr>
 <tr><td class="num">14b40dd</td><td class="num">2026-10-07</td><td>BI-1: monthly AI review of each course's previous month (#92)</td></tr>
 <tr><td class="num">0a54482</td><td class="num">2026-10-06</td><td>Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)</td></tr>
 <tr><td class="num">2d1a02c</td><td class="num">2026-10-06</td><td>No-show charges taken at the course's midnight, not when marked (#90)</td></tr>
@@ -278,7 +280,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">a075be8</td><td class="num">2026-10-06</td><td>Booking and course pages say what the policy really charges (#85)</td></tr>
 <tr><td class="num">384b502</td><td class="num">2026-10-06</td><td>Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)</td></tr>
 <tr><td class="num">f5b2bb8</td><td class="num">2026-10-06</td><td>G8: hourly cron sends every pay link and cutoff warning (#83)</td></tr>
-<tr><td class="num">c0c4cea</td><td class="num">2026-10-06</td><td>G13: signed-in golfers can use a booking's emailed manage link (#82)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -1,18 +1,16 @@
 {
-  "generatedAt": "2026-10-08T00:30:07.105Z",
+  "generatedAt": "2026-10-08T00:46:06.365Z",
   "repo": {
-    "head": "c5493ee",
-    "branch": "claude/act1-move-group",
-    "dirtyCount": 8,
+    "head": "912e5f7",
+    "branch": "claude/act2-birdie-acts",
+    "dirtyCount": 6,
     "dirty": [
-      "M PLATFORM_ROADMAP_SPEC.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/move-booking-test.ts",
-      " M src/app/api/manage/[bookingId]/swap-time/route.ts",
-      " M src/app/api/operator/tiers/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/lib/move-booking.ts"
+      " M scripts/birdie-isolation-test.ts",
+      " M scripts/birdie-sheet-drafts-test.ts",
+      " M src/lib/birdie/proposal-types.ts",
+      " M src/lib/birdie/proposals.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -20,9 +18,16 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "c5493ee",
-        "date": "2026-10-08T00:22:38+00:00",
-        "subject": "ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay",
+        "h": "912e5f7",
+        "date": "2026-10-08T00:40:02+00:00",
+        "subject": "ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "90e1375",
+        "date": "2026-10-07T20:35:28-04:00",
+        "subject": "ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)",
         "ids": [],
         "matches": []
       }
@@ -739,9 +744,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "c5493ee",
+      "h": "912e5f7",
       "date": "2026-10-08",
-      "subject": "ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay"
+      "subject": "ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link"
+    },
+    {
+      "h": "90e1375",
+      "date": "2026-10-07",
+      "subject": "ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)"
     },
     {
       "h": "14b40dd",
@@ -792,11 +802,6 @@
       "h": "f5b2bb8",
       "date": "2026-10-06",
       "subject": "G8: hourly cron sends every pay link and cutoff warning (#83)"
-    },
-    {
-      "h": "c0c4cea",
-      "date": "2026-10-06",
-      "subject": "G13: signed-in golfers can use a booking's emailed manage link (#82)"
     }
   ]
 }

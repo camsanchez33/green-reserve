@@ -4,28 +4,27 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 00:30 UTC · branch `claude/act1-move-group` · HEAD `c5493ee` · working tree **8 dirty file(s)**
+Generated 2026-10-08 00:46 UTC · branch `claude/act2-birdie-acts` · HEAD `912e5f7` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 1 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 2 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `c5493ee` | 2026-10-08 | ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay |
+| `912e5f7` | 2026-10-08 | ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link |
+| `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (6 file(s))
 
-- `M PLATFORM_ROADMAP_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/move-booking-test.ts`
-- `M src/app/api/manage/[bookingId]/swap-time/route.ts`
-- `M src/app/api/operator/tiers/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/lib/move-booking.ts`
+- `M scripts/birdie-isolation-test.ts`
+- `M scripts/birdie-sheet-drafts-test.ts`
+- `M src/lib/birdie/proposal-types.ts`
+- `M src/lib/birdie/proposals.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -206,7 +205,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `c5493ee` 2026-10-08 — ACT-1: move a group to another tee time; one shared move for staff, golfer swap and frost delay
+- `912e5f7` 2026-10-08 — ACT-2: Birdie drafts tee-sheet changes — move a group, block/reopen times, add a counter booking, send a pay link
+- `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)
 - `2d1a02c` 2026-10-06 — No-show charges taken at the course's midnight, not when marked (#90)
@@ -217,7 +217,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
 - `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
-- `c0c4cea` 2026-10-06 — G13: signed-in golfers can use a booking's emailed manage link (#82)
 
 ---
 

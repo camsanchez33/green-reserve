@@ -120,6 +120,40 @@ check('widget: a card aimed at another route is refused', !isProposalCard({ ...g
 check('widget: a disallowed method on an allowed route is refused', !isProposalCard({ ...goodCard, call: { method: 'DELETE', path: '/api/operator/schedule', body: {} } }));
 check('widget: junk is refused', !isProposalCard('nope') && !isProposalCard({ ...goodCard, changes: [{ label: 1 }] }));
 
+// 7. ACT-2 tee-sheet drafts: permission first, the session's course only, and the
+//    bookings route only ever for move / send a pay link / a counter booking.
+const sheetTools: [string, string, Record<string, unknown>][] = [
+  ['propose_move_group', 'sheet.move', { date: '2030-01-01', time: '08:00', golfer: 'Ann', toTime: '09:00' }],
+  ['propose_block_times', 'sheet.block', { date: '2030-01-01', from: '08:00', block: true }],
+  ['propose_add_booking', 'sheet.walkin', { date: '2030-01-01', time: '08:00', golfer: 'Ann', players: 2, source: 'phone' }],
+  ['propose_send_pay_link', 'sheet.checkin', { date: '2030-01-01', time: '08:00', golfer: 'Ann', via: 'sms' }],
+];
+for (const [name, key, args] of sheetTools) {
+  const denied = await runProposeTool(name, args, { ...noEdit, can: k => k !== key });
+  check(`${name}: a login without ${key} gets an error, never a card`, denied.isError && !denied.card, denied.content);
+  const elsewhere = await runProposeTool(name, args, canEdit); // a course with no tee times
+  check(`${name}: nothing outside the session's course is found`, elsewhere.isError && !elsewhere.card, elsewhere.content);
+}
+const badTime = await runProposeTool('propose_block_times', { date: '2030-01-01', from: '8am', block: true }, canEdit);
+check('propose_block_times: a malformed time is refused', badTime.isError && !badTime.card);
+const pastBlock = await runProposeTool('propose_block_times', { date: '2001-01-01', from: '08:00', block: true }, canEdit);
+check('propose_block_times: a past day is refused', pastBlock.isError && !pastBlock.card);
+const tooMany = await runProposeTool('propose_add_booking', { date: '2030-01-01', time: '08:00', golfer: 'Ann', players: 9, source: 'phone' }, canEdit);
+check('propose_add_booking: more than 4 players is refused', tooMany.isError && !tooMany.card);
+const bk = (body: Record<string, unknown>, method = 'PATCH') => ({ ...goodCard, call: { method, path: '/api/operator/bookings', body } });
+check('widget: a move card passes', isProposalCard(bk({ id: 'b', action: 'move', newTeeTimeId: 't' })));
+check('widget: a pay-link card passes', isProposalCard(bk({ id: 'b', action: 'send_pay_link', via: 'sms' })));
+check('widget: a move card carrying extra fields is refused', !isProposalCard(bk({ id: 'b', action: 'move', newTeeTimeId: 't', reprice: true })));
+check('widget: a cancel on the bookings route is refused', !isProposalCard(bk({ id: 'b', action: 'cancel' })));
+check('widget: a check-in on the bookings route is refused', !isProposalCard(bk({ id: 'b', action: 'checkin' })));
+check('widget: paid-at-counter is refused', !isProposalCard(bk({ id: 'b', action: 'paid_offline' })));
+check('widget: a counter booking passes', isProposalCard(bk({ teeTimeId: 't', golferName: 'Ann', players: 2, source: 'walk_in' }, 'POST')));
+check('widget: a counter booking checked in on the spot is refused', !isProposalCard(bk({ teeTimeId: 't', golferName: 'Ann', players: 2, source: 'walk_in', checkInNow: true }, 'POST')));
+const tt = (status: unknown) => ({ ...goodCard, call: { method: 'PATCH', path: '/api/operator/tee-times', body: { id: 't', status } } });
+check('widget: blocking a time passes', isProposalCard(tt('blocked')));
+check('widget: any other tee-time change is refused', !isProposalCard(tt('deleted')));
+check('widget: one bad call in a multi-call card refuses the card', !isProposalCard({ ...tt('blocked'), calls: [tt('blocked').call, bk({ id: 'b', action: 'cancel' }).call] }));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
 })();
