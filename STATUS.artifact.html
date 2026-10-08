@@ -117,16 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-08 01:03 UTC</span><span>claude/msg1-golfer-messages @ 27ff9ab</span>
-    <span>4 uncommitted</span>
+    <span>2026-10-08 01:46 UTC</span><span>claude/move-checked-in @ 1e44ba5</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">4 runs have shipped that the queue doesn't know about</div>
+<div class="lede">5 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-07. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">27ff9ab</span><span>MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate</span></li>
-<li><span class="h">3058152</span><span>MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)</span></li>
+<li><span class="h">1e44ba5</span><span>Refuse moving a checked-in round from an earlier day</span></li>
+<li><span class="h">99c9f2c</span><span>Staff can move a group that has already checked in</span></li>
+<li><span class="h">fef4012</span><span>MSG-1: courses message the golfers booked on a day (#95)</span></li>
 <li><span class="h">f4b4a0b</span><span>ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)</span></li>
 <li><span class="h">90e1375</span><span>ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)</span></li>
 </ul></div>
@@ -139,9 +140,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/golfer-messages-test.ts</code></li><li><code>M src/lib/golfer-messages.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -202,7 +203,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age">38d</span><span class="where">7246a62</span></div>
+<div class="row"><span class="t">MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin</span><span class="age">39d</span><span class="where">7246a62</span></div>
 <div class="row"><span class="t">MP-1</span><span class="age">38d</span><span class="where">41f5ea8</span></div>
 <div class="row"><span class="t">MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until</span><span class="age">38d</span><span class="where">4ef11dd</span></div>
 <div class="row"><span class="t">MP-2</span><span class="age">38d</span><span class="where">958f229</span></div>
@@ -233,7 +234,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">7</td><td class="num">2026-10-07 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">7</td><td class="num">2026-10-08 &middot; 0d</td></tr>
 <tr><td><code>ARCHITECTURE.md</code></td><td class="num">4</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">2</td><td class="num">2026-10-04 &middot; 3d</td></tr>
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">2</td><td class="num">2026-10-01 &middot; 6d</td></tr>
@@ -270,8 +271,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">27ff9ab</td><td class="num">2026-10-08</td><td>MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate</td></tr>
-<tr><td class="num">3058152</td><td class="num">2026-10-08</td><td>MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)</td></tr>
+<tr><td class="num">1e44ba5</td><td class="num">2026-10-08</td><td>Refuse moving a checked-in round from an earlier day</td></tr>
+<tr><td class="num">99c9f2c</td><td class="num">2026-10-08</td><td>Staff can move a group that has already checked in</td></tr>
+<tr><td class="num">fef4012</td><td class="num">2026-10-07</td><td>MSG-1: courses message the golfers booked on a day (#95)</td></tr>
 <tr><td class="num">f4b4a0b</td><td class="num">2026-10-07</td><td>ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)</td></tr>
 <tr><td class="num">90e1375</td><td class="num">2026-10-07</td><td>ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)</td></tr>
 <tr><td class="num">14b40dd</td><td class="num">2026-10-07</td><td>BI-1: monthly AI review of each course's previous month (#92)</td></tr>
@@ -281,7 +283,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">f541b7c</td><td class="num">2026-10-06</td><td>A hold not yet taken is charged when the golfer cancels late (#87)</td></tr>
 <tr><td class="num">bc65c9f</td><td class="num">2026-10-06</td><td>Receipt shows what actually reached the golfer's card (#88)</td></tr>
 <tr><td class="num">d19d5cb</td><td class="num">2026-10-06</td><td>Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)</td></tr>
-<tr><td class="num">a075be8</td><td class="num">2026-10-06</td><td>Booking and course pages say what the policy really charges (#85)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

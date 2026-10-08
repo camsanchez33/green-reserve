@@ -4,30 +4,29 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 01:03 UTC · branch `claude/msg1-golfer-messages` · HEAD `27ff9ab` · working tree **4 dirty file(s)**
+Generated 2026-10-08 01:46 UTC · branch `claude/move-checked-in` · HEAD `1e44ba5` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 4 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 5 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `27ff9ab` | 2026-10-08 | MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate |
-| `3058152` | 2026-10-08 | MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up) |
+| `1e44ba5` | 2026-10-08 | Refuse moving a checked-in round from an earlier day |
+| `99c9f2c` | 2026-10-08 | Staff can move a group that has already checked in |
+| `fef4012` | 2026-10-07 | MSG-1: courses message the golfers booked on a day (#95) |
 | `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/golfer-messages-test.ts`
-- `M src/lib/golfer-messages.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -47,7 +46,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 38d | `7246a62` | `RUN_QUEUE.md:984` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 39d | `7246a62` | `RUN_QUEUE.md:984` |
 | MP-1 | 2026-08-29 | 38d | `41f5ea8` | `RUN_QUEUE.md:1014` |
 | MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 38d | `4ef11dd` | `RUN_QUEUE.md:1049` |
 | MP-2 | 2026-08-29 | 38d | `958f229` | `RUN_QUEUE.md:1090` |
@@ -167,7 +166,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 3d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
@@ -205,8 +204,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `27ff9ab` 2026-10-08 — MSG-1 review fixes: texts never cut short (refused when too long, limit shown), send logged before it starts and updated as it goes, 240s budget names who was missed, 5xx tells the sender to check before resending, subject sanitised, reply copy accurate
-- `3058152` 2026-10-08 — MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)
+- `1e44ba5` 2026-10-08 — Refuse moving a checked-in round from an earlier day
+- `99c9f2c` 2026-10-08 — Staff can move a group that has already checked in
+- `fef4012` 2026-10-07 — MSG-1: courses message the golfers booked on a day (#95)
 - `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
 - `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
@@ -216,7 +216,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `f541b7c` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late (#87)
 - `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
 - `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
-- `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
 
 ---
 

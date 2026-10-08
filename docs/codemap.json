@@ -10753,6 +10753,7 @@
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
         "src/lib/monthly-review.ts",
+        "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -12681,7 +12682,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 198,
+      "lines": 204,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -12714,6 +12715,7 @@
       "imports": [
         "./booking-events",
         "./cancel-policy",
+        "./course-time",
         "./prisma",
         "./tier-rates",
         "@prisma/client"
