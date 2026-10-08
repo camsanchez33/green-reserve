@@ -16,7 +16,7 @@ type Slot = { id: string; time: string; status: string; playersAvailable: number
 type Totals = { greenFeeTotal: number; cartFeeTotal: number; totalAmount: number };
 type Preview = {
   to: { teeTimeId: string; date: string; time: string };
-  players: number; cutoffPassed: boolean; holdDue: boolean; holdDueCents?: number; priceChanged: boolean;
+  players: number; checkedIn?: boolean; cutoffPassed: boolean; holdDue: boolean; holdDueCents?: number; priceChanged: boolean;
   totals?: Totals & { rangeBallsTotal: number; accessFeeTotal: number };
   newSlotTotals?: Totals;
 };
@@ -25,7 +25,8 @@ const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
 export default function MoveGroupModal({ booking, fromTeeTimeId, date, today, nowHM, onClose, onMoved }: {
   /** emailable: false = no email on file (a counter booking), so nobody is emailed. */
-  booking: { id: string; golferName: string; players: number; emailable: boolean };
+  /** checkedIn: already checked in (paid) — the price stays, no rate choice. */
+  booking: { id: string; golferName: string; players: number; emailable: boolean; checkedIn?: boolean };
   fromTeeTimeId: string;
   /** The day the sheet is showing — the default day to move within. */
   date: string;
@@ -88,7 +89,7 @@ export default function MoveGroupModal({ booking, fromTeeTimeId, date, today, no
           <h3 className="font-serif font-semibold text-ink text-[17px]">Move {booking.golferName}</h3>
           <button onClick={onClose} disabled={busy} className="text-ink-muted hover:text-ink disabled:opacity-40" aria-label="Close"><X className="w-5 h-5" /></button>
         </div>
-        <p className="text-[13px] text-ink-soft mb-4">{booking.players} player{booking.players === 1 ? '' : 's'}. Pick a time with room for the whole group.</p>
+        <p className="text-[13px] text-ink-soft mb-4">{booking.players} player{booking.players === 1 ? '' : 's'}{booking.checkedIn ? ', already checked in' : ''}. Pick a time with room for the whole group.</p>
 
         <label className="block text-[13px] font-medium text-ink mb-1" htmlFor="move-day">Day</label>
         <input id="move-day" type="date" value={day} min={today} onChange={e => e.target.value && setDay(e.target.value)} className={INPUT + ' w-full mb-4'} />
@@ -113,9 +114,10 @@ export default function MoveGroupModal({ booking, fromTeeTimeId, date, today, no
         {preview && (
           <div className="bg-paper/70 rounded-md px-3 py-3 mb-4 text-[13px] text-ink space-y-1.5">
             <p><b className="font-semibold">{formatTeeDay(preview.to.date)} · {formatTeeTime(preview.to.time)}</b> — {booking.emailable ? 'they’ll get an email with the new time.' : 'there’s no email on file, so let them know.'}</p>
-            {keptTotal != null && <p>Price stays {usd(keptTotal)}.</p>}
+            {preview.checkedIn && <p>They&apos;ve already checked in and paid, so nothing is charged or refunded{keptTotal != null ? ` — the price stays ${usd(keptTotal)}` : ''}.</p>}
+            {!preview.checkedIn && keptTotal != null && <p>Price stays {usd(keptTotal)}.</p>}
             {reprice && preview.totals && <p>New price {usd(preview.totals.totalAmount)} at this time&apos;s rate.</p>}
-            {preview.newSlotTotals && preview.totals && (rateDiffers || reprice) && (
+            {!preview.checkedIn && preview.newSlotTotals && preview.totals && (rateDiffers || reprice) && (
               <label className="flex items-center gap-2 pt-1 cursor-pointer">
                 <input type="checkbox" checked={reprice} className="accent-pine" onChange={e => { setReprice(e.target.checked); choose(pick!, e.target.checked); }} />
                 Charge this time&apos;s rate instead

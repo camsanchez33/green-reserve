@@ -59,6 +59,14 @@ async function main() {
   const partial = await runProposeTool('propose_move_group', { date: DAY, time: '09:30', golfer: 'smith', toTime: '09:10' }, ctx);
   check('move: a partial name that fits one group resolves', /Alan Smith/.test(partial.card?.title ?? ''), partial.content);
 
+  // A checked-in group can be moved too (staff only — the route passes allowCheckedIn).
+  const t940 = await slot('09:40', { booked: 2 });
+  await prisma.booking.create({ data: { teeTimeId: t940.id, courseId: course.id, golferName: 'Dee Online', golferEmail: `${TAG}@test.local`, players: 2, greenFeeTotal: 10000, cartFeeTotal: 0, accessFeeTotal: 300, totalAmount: 10300, status: 'completed', checkedInAt: new Date(), paymentStatus: 'paid' } });
+  const ciMove = await runProposeTool('propose_move_group', { date: DAY, time: '09:40', golfer: 'Dee Online', toTime: '09:10' }, ctx);
+  check('move: a checked-in group gets a card', !!ciMove.card && /already checked in and paid/.test(ciMove.card.note ?? ''), ciMove.content);
+  const ciPay = await runProposeTool('propose_send_pay_link', { date: DAY, time: '09:40', golfer: 'Dee Online', via: 'sms' }, ctx);
+  check('pay link: a checked-in group is not offered one', ciPay.isError && !ciPay.card);
+
   // Block a run of times
   const block = await runProposeTool('propose_block_times', { date: DAY, from: '08:00', to: '09:20', block: true }, ctx);
   const calls = block.card ? cardCalls(block.card) : [];

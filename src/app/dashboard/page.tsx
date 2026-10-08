@@ -118,7 +118,7 @@ function DashboardPageInner() {
   // MSG-1: the message-the-day's-golfers dialog.
   const [messageOpen, setMessageOpen] = useState(false);
   // ACT-1: the group being moved to another time.
-  const [moveTarget, setMoveTarget] = useState<{ booking: { id: string; golferName: string; players: number; emailable: boolean }; fromTeeTimeId: string } | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{ booking: { id: string; golferName: string; players: number; emailable: boolean; checkedIn: boolean }; fromTeeTimeId: string } | null>(null);
   const [showConditions, setShowConditions]   = useState(false);
   const [expandedId, setExpandedId]           = useState<string | null>(null);
   const [conditions, setConditions]       = useState('');
@@ -892,8 +892,8 @@ function DashboardPageInner() {
                                 ) : (
                                   <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
                                 )}
-                                {b.status === 'confirmed' && !b.noShowAt && access.can('sheet.move') && (
-                                  <button onClick={e => { e.stopPropagation(); setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app') }, fromTeeTimeId: tt.id }); }}
+                                {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
+                                  <button onClick={e => { e.stopPropagation(); setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: b.status === 'completed' }, fromTeeTimeId: tt.id }); }}
                                     className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1">Move</button>
                                 )}
                                 {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (

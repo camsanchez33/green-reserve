@@ -18,10 +18,17 @@
 // the tee time. A hold already charged stays charged (refunded at check-in, as
 // always). `cutoffPassed` tells the caller the new time's free-cancellation
 // window is already closed, so the hourly cron will take the hold.
+//
+// A group that has already checked in (online, at the counter, or "paid at
+// counter") can be moved by STAFF only (`allowCheckedIn`, Cam 2026-10-08:
+// "people are going to check in online"). The round is paid by then, so its
+// price always stays, and no hold can fall due (the crons only touch
+// confirmed bookings). The golfer's own swap and the frost delay still refuse.
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
+import { todayIn } from './course-time';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 
 export type MovePricing = 'keep' | 'new_slot';
@@ -37,21 +44,24 @@ export type MoveOk = {
   /** What the round would cost at the new slot's own rate, for the "charge the new rate" choice. */
   newSlotTotals: { greenFeeTotal: number; cartFeeTotal: number; totalAmount: number };
   priceChanged: boolean;
+  /** The group had already checked in — paid, so the price stayed. */
+  checkedIn: boolean;
   /** The new time's free-cancellation window has already closed. */
   cutoffPassed: boolean;
   /** …and the booking's policy holds a fee at the cutoff that hasn't been taken:
    *  the hourly cron will charge this many cents. 0 = nothing will be charged. */
   holdDueCents: number;
 };
-export type MoveCode = 'NO_SHOW' | 'MOVED' | 'NOT_FOUND' | 'WRONG_COURSE' | 'NOT_CONFIRMED' | 'CHECKED_IN' | 'SAME' | 'SLOT_GONE' | 'BLOCKED' | 'PAST' | 'FULL' | 'CONFLICT';
+export type MoveCode = 'PLAYED' | 'NO_SHOW' | 'MOVED' | 'NOT_FOUND' | 'WRONG_COURSE' | 'NOT_CONFIRMED' | 'CHECKED_IN' | 'SAME' | 'SLOT_GONE' | 'BLOCKED' | 'PAST' | 'FULL' | 'CONFLICT';
 export type MoveFail = { ok: false; code: MoveCode; message: string; spotsLeft?: number };
 
 const MESSAGES: Record<MoveCode, string> = {
+  PLAYED: 'That round was on an earlier day — it has already been played.',
   NO_SHOW: 'This group is marked as a no-show. Mark them “Still coming” first, then move them.',
   MOVED: 'This group was already moved.',
   NOT_FOUND: 'That booking no longer exists.',
   WRONG_COURSE: 'That tee time belongs to a different course.',
-  NOT_CONFIRMED: 'Only a confirmed booking can be moved.',
+  NOT_CONFIRMED: 'Only a confirmed or checked-in booking can be moved.',
   CHECKED_IN: 'This group has already checked in.',
   SAME: 'That is the group’s current tee time.',
   SLOT_GONE: 'That tee time is no longer available.',
@@ -81,6 +91,8 @@ export async function moveBooking(opts: {
   /** The slot the caller saw the booking on — a booking that has moved since
    *  is MOVED, so two overlapping batches can't double-count a slot. */
   expectFromTeeTimeId?: string;
+  /** Staff only: a checked-in (completed) group may be moved too. */
+  allowCheckedIn?: boolean;
   /** Validate and price, change nothing. */
   dryRun?: boolean;
   now?: Date;
@@ -100,8 +112,13 @@ export async function moveBooking(opts: {
         },
       });
       if (!b || (opts.courseId && b.courseId !== opts.courseId)) throw new MoveError('NOT_FOUND');
-      if (b.status !== 'confirmed') throw new MoveError('NOT_CONFIRMED');
-      if (b.checkedInAt) throw new MoveError('CHECKED_IN');
+      const checkedIn = !!b.checkedInAt;
+      if (checkedIn && !opts.allowCheckedIn) throw new MoveError('CHECKED_IN');
+      if (b.status !== (checkedIn ? 'completed' : 'confirmed')) throw new MoveError('NOT_CONFIRMED');
+      // Day-level, so a group that checked in online and turns up late can still
+      // go to a later time today — but a round from an earlier day was played,
+      // and moving it would carry its revenue into another day (Analytics, BI-1).
+      if (checkedIn && b.teeTime.date < todayIn(b.course.timezone, now)) throw new MoveError('PLAYED');
       // A no-show may already carry its charges (taken at the course's midnight);
       // "Still coming" is the path that refunds them. Moving would leave them.
       if (b.noShowAt) throw new MoveError('NO_SHOW');
@@ -139,7 +156,7 @@ export async function moveBooking(opts: {
       // A round already paid (admin "collect payment" before check-in) keeps its
       // price: the charge is done, and repricing would leave the ledger and the
       // golfer's "due at check-in" disagreeing with what was taken.
-      const paid = b.paymentStatus === 'paid' || !!b.roundPaymentIntentId;
+      const paid = checkedIn || b.paymentStatus === 'paid' || !!b.roundPaymentIntentId;
       const keep = opts.pricing === 'keep' || paid;
       const greenFeeTotal = keep ? Math.round(b.greenFeeTotal) : newGreen;
       const cartFeeTotal = keep ? Math.round(b.cartFeeTotal) : newCart;
@@ -147,14 +164,14 @@ export async function moveBooking(opts: {
       const priceChanged = greenFeeTotal !== Math.round(b.greenFeeTotal) || cartFeeTotal !== Math.round(b.cartFeeTotal);
       const windowHours = bookingWindowHours(b, b.course);
       const cutoffPassed = teeAt.getTime() - windowHours * 3600_000 <= now.getTime();
-      const holdDueCents = cutoffPassed && holdsAtCutoff(b) && !b.cancellationFeeChargeId ? Math.round(b.cancellationFeeTotal) : 0;
+      const holdDueCents = !checkedIn && cutoffPassed && holdsAtCutoff(b) && !b.cancellationFeeChargeId ? Math.round(b.cancellationFeeTotal) : 0;
 
       const result: MoveOk = {
         ok: true, bookingId: b.id, players: b.players,
         from: { teeTimeId: b.teeTime.id, date: b.teeTime.date, time: b.teeTime.time },
         to: { teeTimeId: slot.id, date: slot.date, time: slot.time, holes: slot.holes },
         totals, newSlotTotals: paid ? { greenFeeTotal, cartFeeTotal, totalAmount: totals.totalAmount } : { greenFeeTotal: newGreen, cartFeeTotal: newCart, totalAmount: newGreen + newCart + range + access },
-        priceChanged, cutoffPassed, holdDueCents,
+        priceChanged, checkedIn, cutoffPassed, holdDueCents,
       };
       if (opts.dryRun) throw new DryRun(result);
 
@@ -172,7 +189,7 @@ export async function moveBooking(opts: {
       await recordBookingEvent(tx, {
         bookingId: b.id, courseId: b.courseId, type: 'booking_moved', actor: opts.actor,
         playerCount: b.players, teeTimeAt: teeAt,
-        metadata: { from: `${b.teeTime.date} ${b.teeTime.time}`, to: `${slot.date} ${slot.time}`, pricing: opts.pricing, priceChanged },
+        metadata: { from: `${b.teeTime.date} ${b.teeTime.time}`, to: `${slot.date} ${slot.time}`, pricing: opts.pricing, priceChanged, ...(checkedIn ? { checkedIn: true } : {}) },
       });
       return result;
     }, { isolationLevel: 'Serializable' });

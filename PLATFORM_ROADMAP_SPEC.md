@@ -99,6 +99,12 @@ Build ONE `moveBooking()` (src/lib/move-booking.ts) that all three use:
 - Tee sheet: expanded row → Move → day picker + times with room, price and
   window notes, Confirm. Toast "{name} moved to 8:16 AM."
 
+**Checked-in groups (Cam 2026-10-08, "people are going to check in online"):**
+staff — and Birdie's move draft — can move a group that has already checked
+in. The round is paid, so the price always stays and nothing is charged or
+refunded; the move email drops "Check In & Pay" and reads the total as already
+paid. The golfer's own swap and the frost delay still refuse checked-in groups.
+
 ## 3. ACT-2 — Birdie acts on the tee sheet
 
 Cam: "integrated into the tee sheet able to move around stuff cancel stuff etc
