@@ -11293,7 +11293,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1871,
+      "lines": 1876,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11550,6 +11550,7 @@
       "imports": [
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
+        "@/lib/stripe",
         "resend"
       ],
       "usedBy": [
@@ -14015,6 +14016,7 @@
         "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/email.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
         "src/lib/refund-booking.ts"

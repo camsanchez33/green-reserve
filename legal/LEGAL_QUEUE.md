@@ -37,7 +37,7 @@ attempted. `⚖️` cannot be closed by a Claude session.
       pays (`membershipFeeCents()`, `src/lib/stripe.ts`). /terms (v2026-10-08)
       and /for-courses say 1%. The signed Operator Agreement v2026-08 still says
       "$0.50 on each membership-dues payment … added to what the member pays".
-      Courses are not worse off (the member pays it, dues arrive in full), but
+      Courses are not worse off (the member pays it on top of the dues), but
       the contract names the wrong number. NEEDS CAM: approve a v2026-10 agreement
       with "1% of each membership-dues payment" and decide whether existing
       courses must re-accept (bumping `CURRENT_AGREEMENT_VERSION` triggers that).

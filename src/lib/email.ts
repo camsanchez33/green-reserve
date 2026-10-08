@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { afterCutoffLine, policyMoney } from '@/lib/cancel-policy';
+import { membershipFeeCents } from '@/lib/stripe';
 
 let _resend: Resend | null = null;
 function getResend() {
@@ -1570,7 +1571,10 @@ export async function sendMembershipPaymentLinkEmail(data: {
   name: string; email: string; courseName: string; tierName: string;
   annualFee: number; initiationFee: number; payLink: string; isRenewal?: boolean;
 }) {
-  const total = data.annualFee + data.initiationFee;
+  // Same rule the pay page charges (amountsDue() in api/membership/[id]): dues + GreenReserve's 1%.
+  const dues = data.annualFee + data.initiationFee;
+  const serviceFee = membershipFeeCents(Math.round(dues * 100)) / 100;
+  const total = dues + serviceFee;
   const html = baseTemplate(`
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 14px;border-radius:3px;">${data.isRenewal ? 'Membership renewal' : 'Membership dues'}</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">${data.isRenewal ? `Time to renew, ${data.name}.` : `Complete your membership, ${data.name}.`}</h1>
@@ -1582,13 +1586,14 @@ export async function sendMembershipPaymentLinkEmail(data: {
     <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:14px;color:#374151;">
       ${data.initiationFee > 0 ? `<tr><td style="padding:6px 0;">One-time initiation fee</td><td style="text-align:right;font-weight:700;">$${data.initiationFee.toFixed(2)}</td></tr>` : ''}
       <tr><td style="padding:6px 0;">${data.tierName} dues</td><td style="text-align:right;font-weight:700;">$${data.annualFee.toFixed(2)}</td></tr>
+      ${serviceFee > 0 ? `<tr><td style="padding:6px 0;">GreenReserve service fee (1% of dues)</td><td style="text-align:right;font-weight:700;">$${serviceFee.toFixed(2)}</td></tr>` : ''}
       <tr><td style="padding:10px 0;border-top:1px solid #e5e7eb;font-weight:800;color:#111827;">Total due</td><td style="text-align:right;border-top:1px solid #e5e7eb;font-weight:700;color:#111827;">$${total.toFixed(2)}</td></tr>
     </table>
     <a href="${data.payLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">
       Pay Membership Dues &rarr;
     </a>
     <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Payment goes directly to ${data.courseName}. Paying at the pro shop instead? Just let the course know.
+      Your dues go directly to ${data.courseName}. Paying at the pro shop instead? Just let the course know.
     </p>
   `);
   await getResend().emails.send({
