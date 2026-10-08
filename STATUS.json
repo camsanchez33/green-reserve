@@ -1,30 +1,29 @@
 {
-  "generatedAt": "2026-10-08T00:57:53.549Z",
+  "generatedAt": "2026-10-08T01:01:53.249Z",
   "repo": {
-    "head": "f4b4a0b",
+    "head": "3058152",
     "branch": "claude/msg1-golfer-messages",
-    "dirtyCount": 14,
+    "dirtyCount": 6,
     "dirty": [
-      "M PLATFORM_ROADMAP_SPEC.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/design-guard.baseline.json",
-      " M src/app/dashboard/page.tsx",
+      " M src/app/api/operator/golfer-messages/route.ts",
+      " M src/components/dashboard/GolferMessageModal.tsx",
       " M src/lib/email.ts",
-      " M src/lib/staff-permissions.ts",
-      " M src/lib/twilio.ts",
-      "?? prisma/migrations/20261008005120_course_message/",
-      "?? scripts/golfer-messages-test.ts",
-      "?? src/app/api/operator/golfer-messages/",
-      "?? src/components/dashboard/GolferMessageModal.tsx",
-      "?? src/lib/golfer-messages.ts"
+      " M src/lib/golfer-messages.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
+      {
+        "h": "3058152",
+        "date": "2026-10-08T00:57:54+00:00",
+        "subject": "MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f4b4a0b",
         "date": "2026-10-07T20:50:25-04:00",
@@ -565,7 +564,7 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-07",
+      "lastTouched": "2026-10-08",
       "ageDays": 0
     },
     {
@@ -752,6 +751,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "3058152",
+      "date": "2026-10-08",
+      "subject": "MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)"
+    },
+    {
       "h": "f4b4a0b",
       "date": "2026-10-07",
       "subject": "ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)"
@@ -805,11 +809,6 @@
       "h": "384b502",
       "date": "2026-10-06",
       "subject": "Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)"
-    },
-    {
-      "h": "f5b2bb8",
-      "date": "2026-10-06",
-      "subject": "G8: hourly cron sends every pay link and cutoff warning (#83)"
     }
   ]
 }

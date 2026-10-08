@@ -1862,7 +1862,7 @@ export async function sendCourseNoticeEmail(data: {
     <p style="margin:22px 0 0;color:#6b7280;font-size:13px;">Questions? Reply to this email to reach ${escHtml(data.courseName)}.</p>
   `);
   await getResend().emails.send({
-    from: FROM, to: data.to, subject: `${data.courseName}: about your ${data.teeTime} tee time`, html,
+    from: FROM, to: data.to, subject: subj(`${data.courseName}: about your ${data.teeTime} tee time`), html,
     ...(data.replyTo ? { replyTo: data.replyTo } : {}),
   });
 }

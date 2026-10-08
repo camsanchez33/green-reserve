@@ -12,7 +12,11 @@ import { normalizePhone } from './golfer-otp';
 import { formatTeeTime, formatTeeDay } from './format';
 
 export const MAX_MESSAGE_CHARS = 600;
-const SMS_CHARS = 300;
+/** A text carries "{course}: {message}" in this many characters, then the STOP line. */
+export const SMS_CHARS = 300;
+export const smsRoom = (courseName: string) => SMS_CHARS - courseName.length - 2;
+/** Stop well inside the route's maxDuration so a run always finishes and logs. */
+const BUDGET_MS = 240_000;
 
 export type Window = { date: string; from?: string | null; to?: string | null };
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -63,10 +67,28 @@ export async function sendCourseMessage(opts: {
   const dateLabel = formatTeeDay(opts.window.date);
   const failed: { name: string; how: 'email' | 'sms'; error: string }[] = [];
   let sentEmail = 0, sentSms = 0;
-  const text = `${course.name}: ${opts.body}`.slice(0, SMS_CHARS) + ' Reply STOP to opt out.';
+  // The route refuses a text that wouldn't fit; never cut one short here.
+  const text = `${course.name}: ${opts.body} Reply STOP to opt out.`;
+  // Logged BEFORE sending and updated as it goes, so a run that dies part-way
+  // still shows under "Recently sent" with what actually went out.
+  const log = await prisma.courseMessage.create({ data: {
+    courseId: opts.courseId, date: opts.window.date, fromTime: opts.window.from || null, toTime: opts.window.to || null,
+    body: opts.body, sentBy: opts.sentBy,
+  } });
+  const save = () => prisma.courseMessage.update({ where: { id: log.id }, data: { sentEmail, sentSms, failed: failed.length } });
+  const start = Date.now();
   // Sequential: a day's sheet is at most a few hundred golfers, and Resend and
   // Twilio both rate-limit bursts. Every send is awaited (CLAUDE.md gotcha 6).
-  for (const r of list) {
+  for (let i = 0; i < list.length; i++) {
+    const r = list[i];
+    if (Date.now() - start > BUDGET_MS) {
+      // Out of time: say exactly who was not reached instead of dying silently.
+      for (const left of list.slice(i)) {
+        if (left.email) failed.push({ name: left.name, how: 'email', error: 'Ran out of time — not sent' });
+        if (doSms && left.phone) failed.push({ name: left.name, how: 'sms', error: 'Ran out of time — not sent' });
+      }
+      break;
+    }
     if (r.email) {
       try {
         await sendCourseNoticeEmail({ to: r.email, golferName: r.name, courseName: course.name, replyTo: course.operator?.email ?? null, dateLabel, teeTime: formatTeeTime(r.teeTime), body: opts.body });
@@ -77,11 +99,9 @@ export async function sendCourseMessage(opts: {
       try { await sendSms(normalizePhone(r.phone), text); sentSms++; }
       catch (err) { failed.push({ name: r.name, how: 'sms', error: err instanceof Error ? err.message : String(err) }); }
     }
+    if ((i + 1) % 20 === 0) await save();
   }
   const unreachable = list.filter(r => !r.email && !(doSms && r.phone)).length;
-  await prisma.courseMessage.create({ data: {
-    courseId: opts.courseId, date: opts.window.date, fromTime: opts.window.from || null, toTime: opts.window.to || null,
-    body: opts.body, sentEmail, sentSms, failed: failed.length, sentBy: opts.sentBy,
-  } });
+  await save();
   return { sentEmail, sentSms, failed, unreachable };
 }

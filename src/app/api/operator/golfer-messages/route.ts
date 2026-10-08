@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { rateLimit } from '@/lib/rate-limit';
 import { smsConfigured } from '@/lib/twilio';
-import { audience, reach, checkWindow, sendCourseMessage, MAX_MESSAGE_CHARS } from '@/lib/golfer-messages';
+import { audience, reach, checkWindow, sendCourseMessage, smsRoom, MAX_MESSAGE_CHARS } from '@/lib/golfer-messages';
 
 // MSG-1 (PLATFORM_ROADMAP_SPEC §5): message the golfers booked on a day.
 // GET  ?date&from&to → who it would reach (counts only) + the last messages sent.
@@ -23,11 +23,12 @@ export async function GET(req: NextRequest) {
   const w = win({ date: sp.get('date'), from: sp.get('from'), to: sp.get('to') });
   const bad = checkWindow(w);
   if (bad) return NextResponse.json({ error: bad }, { status: 400 });
-  const [list, recent] = await Promise.all([
+  const [list, recent, course] = await Promise.all([
     audience(session.courseId, w),
     prisma.courseMessage.findMany({ where: { courseId: session.courseId }, orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, date: true, fromTime: true, toTime: true, body: true, sentEmail: true, sentSms: true, failed: true, createdAt: true } }),
+    prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true } }),
   ]);
-  return NextResponse.json({ reach: reach(list), smsAvailable: smsConfigured(), recent }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ reach: reach(list), smsAvailable: smsConfigured(), smsMaxChars: smsRoom(course?.name ?? ''), recent }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(req: NextRequest) {
@@ -42,6 +43,11 @@ export async function POST(req: NextRequest) {
   const body = typeof b.body === 'string' ? b.body.trim() : '';
   if (body.length < 3) return NextResponse.json({ error: 'Write the message first.' }, { status: 400 });
   if (body.length > MAX_MESSAGE_CHARS) return NextResponse.json({ error: `Keep it under ${MAX_MESSAGE_CHARS} characters.` }, { status: 400 });
+  if (b.sms === true && smsConfigured()) {
+    const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true } });
+    const room = smsRoom(course?.name ?? '');
+    if (body.length > room) return NextResponse.json({ error: `A text fits ${room} characters — shorten the message or untick the text box.` }, { status: 400 });
+  }
   // A course can't flood its golfers by accident: six notices an hour.
   if (!(await rateLimit(`golfer-msg:${session.courseId}`, 6, 3600))) {
     return NextResponse.json({ error: 'That’s six messages in the last hour — wait a bit before sending another.' }, { status: 429 });

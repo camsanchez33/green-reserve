@@ -4,35 +4,28 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 00:57 UTC · branch `claude/msg1-golfer-messages` · HEAD `f4b4a0b` · working tree **14 dirty file(s)**
+Generated 2026-10-08 01:01 UTC · branch `claude/msg1-golfer-messages` · HEAD `3058152` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 2 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 3 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `3058152` | 2026-10-08 | MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up) |
 | `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (14 file(s))
+### Uncommitted working tree (6 file(s))
 
-- `M PLATFORM_ROADMAP_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/design-guard.baseline.json`
-- `M src/app/dashboard/page.tsx`
+- `M src/app/api/operator/golfer-messages/route.ts`
+- `M src/components/dashboard/GolferMessageModal.tsx`
 - `M src/lib/email.ts`
-- `M src/lib/staff-permissions.ts`
-- `M src/lib/twilio.ts`
-- `?? prisma/migrations/20261008005120_course_message/`
-- `?? scripts/golfer-messages-test.ts`
-- `?? src/app/api/operator/golfer-messages/`
-- `?? src/components/dashboard/GolferMessageModal.tsx`
-- `?? src/lib/golfer-messages.ts`
+- `M src/lib/golfer-messages.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -179,7 +172,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 3d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-07 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 8d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 0d |
@@ -213,6 +206,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `3058152` 2026-10-08 — MSG-1: courses message the golfers booked on a day (email; text when Twilio is set up)
 - `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
 - `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
@@ -224,7 +218,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `d19d5cb` 2026-10-06 — Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)
 - `a075be8` 2026-10-06 — Booking and course pages say what the policy really charges (#85)
 - `384b502` 2026-10-06 — Cancellation warning email states the booking's own policy (R-CRON-004, R-GOLF-009) (#84)
-- `f5b2bb8` 2026-10-06 — G8: hourly cron sends every pay link and cutoff warning (#83)
 
 ---
 

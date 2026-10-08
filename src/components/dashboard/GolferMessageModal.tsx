@@ -20,7 +20,7 @@ export default function GolferMessageModal({ date, onClose }: { date: string; on
   const [to, setTo] = useState('10:00');
   const [body, setBody] = useState('');
   const [sms, setSms] = useState(false);
-  const [info, setInfo] = useState<{ reach: Reach; smsAvailable: boolean; recent: Recent[] } | null>(null);
+  const [info, setInfo] = useState<{ reach: Reach; smsAvailable: boolean; smsMaxChars: number; recent: Recent[] } | null>(null);
   const [loadErr, setLoadErr] = useState('');
   const [sending, setSending] = useState(false);
   const [sendErr, setSendErr] = useState('');
@@ -29,7 +29,7 @@ export default function GolferMessageModal({ date, onClose }: { date: string; on
   const qs = new URLSearchParams({ date, ...(whole ? {} : { from, to }) }).toString();
   const load = useCallback(async () => {
     setLoadErr('');
-    const r = await dfetch<{ reach: Reach; smsAvailable: boolean; recent: Recent[] }>(`/api/operator/golfer-messages?${qs}`);
+    const r = await dfetch<{ reach: Reach; smsAvailable: boolean; smsMaxChars: number; recent: Recent[] }>(`/api/operator/golfer-messages?${qs}`);
     if (r.ok && r.data) setInfo(r.data); else setLoadErr(r.error);
   }, [qs]);
   useEffect(() => { load(); }, [load]);
@@ -41,9 +41,14 @@ export default function GolferMessageModal({ date, onClose }: { date: string; on
       body: JSON.stringify({ date, ...(whole ? {} : { from, to }), body, sms }),
     });
     setSending(false);
-    if (r.ok && r.data) setResult(r.data); else setSendErr(r.error);
+    if (r.ok && r.data) { setResult(r.data); return; }
+    // A dropped or timed-out request may have sent some messages already —
+    // never coach a blind resend.
+    if (r.status === 0 || r.status >= 500) { setSendErr('The send may have partly gone out. Check “Recently sent” below (refresh it with Retry) before sending again.'); load(); return; }
+    setSendErr(r.error);
   };
 
+  const tooLongForText = sms && !!info?.smsAvailable && body.length > info.smsMaxChars;
   const reachLine = info ? (info.reach.golfers === 0
     ? `Nobody is booked ${whole ? 'that day' : 'in that window'}.`
     : `${info.reach.golfers} golfer${info.reach.golfers === 1 ? '' : 's'} booked — ${info.reach.email} by email${info.smsAvailable && sms ? `, ${info.reach.sms} by text` : ''}.${info.reach.unreachable ? ` ${info.reach.unreachable} ha${info.reach.unreachable === 1 ? 's' : 've'} no email${info.smsAvailable ? ' or mobile' : ''} on file.` : ''}`) : '';
@@ -70,7 +75,7 @@ export default function GolferMessageModal({ date, onClose }: { date: string; on
           </div>
         ) : (
           <>
-            <p className="text-[13px] text-ink-soft mb-4">Goes to everyone booked {whole ? 'that day' : 'in the window'}. Replies come to your email.</p>
+            <p className="text-[13px] text-ink-soft mb-4">Goes to everyone booked {whole ? 'that day' : 'in the window'}. Replies go to the course owner’s email.</p>
             <div className="grid grid-cols-2 gap-1 p-1 bg-paper rounded-md mb-3" role="tablist">
               {([[true, 'Whole day'], [false, 'A window']] as const).map(([v, l]) => (
                 <button key={l} role="tab" aria-selected={whole === v} onClick={() => setWhole(v)}
@@ -90,7 +95,9 @@ export default function GolferMessageModal({ date, onClose }: { date: string; on
             <textarea id="msg-body" rows={4} maxLength={MAX} value={body} onChange={e => setBody(e.target.value)}
               placeholder="Frost delay this morning — first tee is now 9:00. Your time moves back by the same amount."
               className={INPUT + ' w-full resize-y'} />
-            <div className="text-right text-[11.5px] text-ink-muted mb-2">{body.length}/{MAX}</div>
+            <div className={'text-right text-[11.5px] mb-2 ' + (tooLongForText ? 'text-bad' : 'text-ink-muted')}>
+              {sms && info?.smsAvailable ? `${body.length}/${info.smsMaxChars} — a text fits ${info.smsMaxChars}` : `${body.length}/${MAX}`}
+            </div>
             {info?.smsAvailable && (
               <label className="flex items-center gap-2 text-[13px] text-ink mb-3 cursor-pointer">
                 <input type="checkbox" checked={sms} onChange={e => setSms(e.target.checked)} className="accent-pine" /> Also text golfers with a mobile number
@@ -102,7 +109,7 @@ export default function GolferMessageModal({ date, onClose }: { date: string; on
             {sendErr && <p className="text-[13px] text-bad mb-3">{sendErr}</p>}
             <div className="flex gap-2">
               <button onClick={onClose} disabled={sending} className="flex-1 py-2.5 rounded-md border border-line text-[13.5px] font-medium text-ink hover:bg-paper disabled:opacity-50">Cancel</button>
-              <button onClick={send} disabled={sending || !info || info.reach.golfers === 0 || body.trim().length < 3}
+              <button onClick={send} disabled={sending || !info || info.reach.golfers === 0 || body.trim().length < 3 || tooLongForText}
                 className="flex-1 py-2.5 rounded-md bg-pine hover:bg-pine-hover text-white text-[13.5px] font-semibold disabled:opacity-50">
                 {sending ? 'Sending…' : 'Send'}
               </button>

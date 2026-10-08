@@ -4462,7 +4462,7 @@
     },
     {
       "path": "src/app/api/operator/golfer-messages/route.ts",
-      "lines": 53,
+      "lines": 59,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7566,7 +7566,7 @@
     },
     {
       "path": "src/components/dashboard/GolferMessageModal.tsx",
-      "lines": 129,
+      "lines": 136,
       "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5):",
       "brain": [],
       "exports": [
@@ -11783,7 +11783,7 @@
     },
     {
       "path": "src/lib/golfer-messages.ts",
-      "lines": 88,
+      "lines": 108,
       "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -11805,6 +11805,14 @@
         },
         {
           "name": "sendCourseMessage",
+          "kind": "fn"
+        },
+        {
+          "name": "SMS_CHARS",
+          "kind": "const"
+        },
+        {
+          "name": "smsRoom",
           "kind": "fn"
         },
         {
@@ -15742,6 +15750,7 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
