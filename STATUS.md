@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 03:42 UTC · branch `claude/sheet-fit-cancel` · HEAD `fadcf67` · working tree **9 dirty file(s)**
+Generated 2026-10-08 03:58 UTC · branch `claude/analytics-rework` · HEAD `7f79a3a` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 6 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 9 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `9e2ff56` | 2026-10-08 | AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value |
+| `b7079ea` | 2026-10-07 | Tee sheet: one board that fits the page, cancel from the sheet (#99) |
+| `3c3c337` | 2026-10-08 | AN-2: Analytics reworked so it reads plainly |
 | `fadcf67` | 2026-10-07 | SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98) |
 | `ea2d17b` | 2026-10-07 | SHEET-2: board view of the tee sheet (#97) |
 | `2707e36` | 2026-10-07 | Move a group after they've checked in (#96) |
@@ -20,21 +23,6 @@ Generated 2026-10-08 03:42 UTC · branch `claude/sheet-fit-cancel` · HEAD `fadc
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (9 file(s))
-
-- `M CLAUDE.md`
-- `M PLATFORM_ROADMAP_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/api/operator/tee-times/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/TeeSheetBoard.tsx`
-- `M src/components/dashboard/money/CancellationsPanel.tsx`
-- `?? src/lib/cancel-confirm.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -174,7 +162,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-07 | 0d |
+| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 8d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 3d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 6d |
@@ -212,6 +200,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `9e2ff56` 2026-10-08 — AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value
+- `b7079ea` 2026-10-07 — Tee sheet: one board that fits the page, cancel from the sheet (#99)
+- `3c3c337` 2026-10-08 — AN-2: Analytics reworked so it reads plainly
 - `fadcf67` 2026-10-07 — SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)
 - `ea2d17b` 2026-10-07 — SHEET-2: board view of the tee sheet (#97)
 - `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
@@ -221,9 +212,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 - `0a54482` 2026-10-06 — Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)
 - `2d1a02c` 2026-10-06 — No-show charges taken at the course's midnight, not when marked (#90)
-- `41e61b3` 2026-10-06 — Manage page says what cancelling costs right now (#89)
-- `f541b7c` 2026-10-06 — A hold not yet taken is charged when the golfer cancels late (#87)
-- `bc65c9f` 2026-10-06 — Receipt shows what actually reached the golfer's card (#88)
 
 ---
 

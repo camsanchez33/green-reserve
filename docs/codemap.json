@@ -5934,8 +5934,8 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 479,
-      "purpose": "AN-1 (Cam 2026-10-01):",
+      "lines": 525,
+      "purpose": "AN-2 (Cam 2026-10-08:",
       "brain": [],
       "exports": [
         {
@@ -5953,7 +5953,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
         "@/lib/analytics",
         "@/lib/dashboard-fetch",
         "lucide-react",
@@ -8139,7 +8139,6 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
-        "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
@@ -8306,6 +8305,7 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/courses/[slug]/account/AccountPortalClient.tsx",
         "src/app/courses/[slug]/member/page.tsx",
+        "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/login/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/onboarding/page.tsx",

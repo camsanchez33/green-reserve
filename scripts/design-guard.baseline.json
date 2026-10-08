@@ -127,7 +127,6 @@
     "card": 1
   },
   "src/app/dashboard/analytics/page.tsx": {
-    "uppercase": 11,
     "lucide": 1
   },
   "src/app/dashboard/forgot-password/page.tsx": {

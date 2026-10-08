@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-08 03:42 UTC</span><span>claude/sheet-fit-cancel @ fadcf67</span>
-    <span>9 uncommitted</span>
+    <span>2026-10-08 03:58 UTC</span><span>claude/analytics-rework @ 7f79a3a</span>
+    <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">6 runs have shipped that the queue doesn't know about</div>
+<div class="lede">9 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-07. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">9e2ff56</span><span>AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value</span></li>
+<li><span class="h">b7079ea</span><span>Tee sheet: one board that fits the page, cancel from the sheet (#99)</span></li>
+<li><span class="h">3c3c337</span><span>AN-2: Analytics reworked so it reads plainly</span></li>
 <li><span class="h">fadcf67</span><span>SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)</span></li>
 <li><span class="h">ea2d17b</span><span>SHEET-2: board view of the tee sheet (#97)</span></li>
 <li><span class="h">2707e36</span><span>Move a group after they've checked in (#96)</span></li>
@@ -140,11 +143,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">15</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M PLATFORM_ROADMAP_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/operator/tee-times/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/dashboard/TeeSheetBoard.tsx</code></li><li><code>M src/components/dashboard/money/CancellationsPanel.tsx</code></li><li><code>?? src/lib/cancel-confirm.ts</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 </span><span class="where">:29</span></div>
@@ -235,7 +233,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">7</td><td class="num">2026-10-07 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">7</td><td class="num">2026-10-08 &middot; 0d</td></tr>
 <tr><td><code>ARCHITECTURE.md</code></td><td class="num">4</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">2</td><td class="num">2026-10-04 &middot; 3d</td></tr>
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">2</td><td class="num">2026-10-01 &middot; 6d</td></tr>
@@ -272,6 +270,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">9e2ff56</td><td class="num">2026-10-08</td><td>AN-2: review fixes — card vs no-card, who cancelled, rounded deltas, costly-not-emptiest, cancellation value</td></tr>
+<tr><td class="num">b7079ea</td><td class="num">2026-10-07</td><td>Tee sheet: one board that fits the page, cancel from the sheet (#99)</td></tr>
+<tr><td class="num">3c3c337</td><td class="num">2026-10-08</td><td>AN-2: Analytics reworked so it reads plainly</td></tr>
 <tr><td class="num">fadcf67</td><td class="num">2026-10-07</td><td>SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)</td></tr>
 <tr><td class="num">ea2d17b</td><td class="num">2026-10-07</td><td>SHEET-2: board view of the tee sheet (#97)</td></tr>
 <tr><td class="num">2707e36</td><td class="num">2026-10-07</td><td>Move a group after they've checked in (#96)</td></tr>
@@ -281,9 +282,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">14b40dd</td><td class="num">2026-10-07</td><td>BI-1: monthly AI review of each course's previous month (#92)</td></tr>
 <tr><td class="num">0a54482</td><td class="num">2026-10-06</td><td>Homepage rebuilt to Cam's layout, accurate demo, new /teesheet page (#91)</td></tr>
 <tr><td class="num">2d1a02c</td><td class="num">2026-10-06</td><td>No-show charges taken at the course's midnight, not when marked (#90)</td></tr>
-<tr><td class="num">41e61b3</td><td class="num">2026-10-06</td><td>Manage page says what cancelling costs right now (#89)</td></tr>
-<tr><td class="num">f541b7c</td><td class="num">2026-10-06</td><td>A hold not yet taken is charged when the golfer cancels late (#87)</td></tr>
-<tr><td class="num">bc65c9f</td><td class="num">2026-10-06</td><td>Receipt shows what actually reached the golfer's card (#88)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
