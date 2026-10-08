@@ -58,17 +58,18 @@ function downloadCsv(name: string, header: string[], rows: (string | number | nu
 function Change({ now, prev, unit, goodWhenUp = true }: { now: number | null; prev: number | null | undefined; unit: 'pct' | 'pts'; goodWhenUp?: boolean }) {
   if (now == null || prev == null) return null;
   const diff = now - prev;
-  if (Math.abs(diff) < 0.05) return <span className="text-ink-muted">Same as before</span>;
-  if (unit === 'pct' && prev === 0) return <span className="text-ink-muted">None before</span>;
+  if (unit === 'pct' && prev === 0) return diff === 0 ? <span className="text-ink-muted">Same as before</span> : <span className="text-ink-muted">None before</span>;
   const up = diff > 0;
-  const pts = Math.abs(Math.round(diff));
-  const text = unit === 'pts' ? `${pts} pt${pts === 1 ? '' : 's'}` : `${Math.abs(Math.round((diff / prev) * 100))}%`;
+  // Rounded first, so a change too small to show never reads as "↑ 0%".
+  const n = unit === 'pts' ? Math.abs(Math.round(diff)) : Math.abs(Math.round((diff / prev) * 100));
+  if (n === 0) return <span className="text-ink-muted">Same as before</span>;
+  const text = unit === 'pts' ? `${n} pt${n === 1 ? '' : 's'}` : `${n}%`;
   return <span className={'font-semibold ' + (up === goodWhenUp ? 'text-ok' : 'text-bad')}>{up ? '↑' : '↓'} {text}</span>;
 }
 
 function Big({ label, value, explain, change }: { label: string; value: string; explain: string; change?: React.ReactNode }) {
   return (
-    <div className="min-w-0 px-5 py-4">
+    <div className="min-w-0 bg-white px-5 py-4">
       <div className="text-[13px] font-semibold text-ink">{label}</div>
       <div className="mt-1.5 text-[30px] leading-none font-semibold text-ink tabular-nums">{value}</div>
       {change && <div className="mt-2 text-[12.5px]">{change} <span className="text-ink-muted">vs before</span></div>}
@@ -137,7 +138,7 @@ function insights(d: Data): { tone: 'ok' | 'warn' | 'bad' | 'neutral'; text: str
   if (d.behavior.bookings === 0 && d.revenue.collectedCents === 0) return [{ tone: 'neutral', text: 'No bookings in these dates yet, so there is nothing to read into.' }];
   const worstDay = d.unfilled.worstDays[0];
   const worstHour = d.unfilled.worstHours[0];
-  if (worstDay && worstHour && d.unfilled.lostCents > 0) out.push({ tone: 'warn', text: `Your emptiest times are ${DAY_NAME[worstDay.dow] ?? worstDay.dow}s and around ${fmtHour(worstHour.hour)}: unsold spots there were worth ${usd(worstDay.lostCents)} and ${usd(worstHour.lostCents)}.` });
+  if (worstDay && worstHour && d.unfilled.lostCents > 0) out.push({ tone: 'warn', text: `Your most costly empty spots are on ${DAY_NAME[worstDay.dow] ?? worstDay.dow}s and around ${fmtHour(worstHour.hour)}: unsold spots there were worth ${usd(worstDay.lostCents)} and ${usd(worstHour.lostCents)}.` });
   const busiest = [...d.utilization.byDow].filter(r => r.fillPct != null && r.sale > 0).sort((a, b) => (b.fillPct ?? 0) - (a.fillPct ?? 0))[0];
   if (busiest && (busiest.fillPct ?? 0) > 0) out.push({ tone: 'ok', text: `${DAY_NAME[busiest.dow] ?? busiest.dow} is your busiest day — ${pctS(busiest.fillPct)} of spots booked.` });
   if (d.noShows.count > 0) {
@@ -210,7 +211,7 @@ function MoneyTab({ d }: { d: Data }) {
   const rangeBalls = Math.max(0, d.revenue.collectedCents - d.revenue.greenCents - d.revenue.cartCents);
   return (
     <div className="space-y-8">
-      <Panel title={`Money collected each ${per}`} action={<Download onClick={() => downloadCsv(`money-${d.range.from}-${d.range.to}`, [per === 'week' ? 'Week of' : 'Date', 'Played (value)', 'Collected', 'Not collected'], d.revenue.series.map(r => [r.key, r.expectedCents / 100, r.collectedCents / 100, r.gapCents / 100]))} />}>
+      <Panel title={`Money collected each ${per}`} action={<Download onClick={() => downloadCsv(`money-${d.range.from}-${d.range.to}`, [per === 'week' ? 'Week of' : 'Date', 'Booked (tee time passed)', 'Collected', 'Not collected'], d.revenue.series.map(r => [r.key, r.expectedCents / 100, r.collectedCents / 100, r.gapCents / 100]))} />}>
         {d.revenue.series.length === 0 ? <p className="text-[13px] text-ink-soft">No rounds played in these dates yet.</p> : (<>
           <div className="flex items-end gap-[3px] h-36 border-b border-line">
             {d.revenue.series.map(r => (
@@ -253,7 +254,8 @@ function MoneyTab({ d }: { d: Data }) {
       <Panel title="Booked and still to come">
         <div className="divide-y divide-line-soft max-w-xl">
           <Line label="Upcoming bookings" sub={plural(d.revenue.pipeline.upcomingBookings, 'booking')} value={usd(d.revenue.upcomingCents)} />
-          <Line label="With a card saved" sub={plural(d.revenue.pipeline.cardOnFile.bookings, 'booking')} value={`about ${usd(d.revenue.pipeline.cardOnFile.cents)}`} />
+          {d.revenue.pipeline.cardOnFile.bookings - d.revenue.pipeline.cardOnFile.noCardRequired > 0 && <Line label="With a card saved" value={plural(d.revenue.pipeline.cardOnFile.bookings - d.revenue.pipeline.cardOnFile.noCardRequired, 'booking')} />}
+          {d.revenue.pipeline.cardOnFile.noCardRequired > 0 && <Line label="No card needed" sub="they get a pay link before the round" value={plural(d.revenue.pipeline.cardOnFile.noCardRequired, 'booking')} />}
           {d.revenue.holdsHeldCents > 0 && <Line label="Cancellation holds taken" sub="refunded when they check in" value={usd(d.revenue.holdsHeldCents)} />}
         </div>
       </Panel>
@@ -295,7 +297,7 @@ function BusyTab({ d }: { d: Data }) {
 
       <Panel title="Tee times that went out with empty spots" action={<Download onClick={() => downloadCsv(`empty-spots-${d.range.from}-${d.range.to}`, ['Date', 'Time', 'Spots open', 'Worth'], d.unfilled.rows.map(r => [r.date, r.time, r.open, r.lostCents / 100]))} />}>
         <p className="text-[12.5px] text-ink-soft -mt-1 mb-3">{plural(d.unfilled.slots, 'tee time')} with {plural(d.unfilled.openSpots, 'open spot')}, worth {usd(d.unfilled.lostCents)} at their green fee. The biggest are first.</p>
-        <Table head={['Day', 'Time', 'Spots open', 'Worth']} empty="Every tee time in these dates went out full."
+        <Table head={['Day', 'Time', 'Spots open', 'Worth']} empty="No tee time in these dates went out with empty spots."
           rows={emptiest.map(r => [fmtDay(r.date), fmtTime(r.time), r.open, usd(r.lostCents)])} />
       </Panel>
     </div>
@@ -313,7 +315,7 @@ function MissesTab({ d }: { d: Data }) {
         <Table head={['Golfer', 'Times']} empty="Nobody missed more than once." rows={d.noShows.repeat.map(r => [r.name, r.count])} />
       </Panel>
       <Panel title="Cancellations" action={<Download onClick={() => downloadCsv(`cancellations-${d.range.from}-${d.range.to}`, ['Date', 'Time', 'Golfer', 'Players', 'Worth', 'Cancelled at', 'Cancelled by'], c.rows.map(r => [r.date, r.time, r.name, r.players, r.valueCents / 100, r.cancelledAt, r.by ?? 'not tracked']))} />}>
-        <p className="text-[13.5px] text-ink mb-5">{c.count === 0 ? 'No cancellations.' : <>{plural(c.count, 'booking')} cancelled ({pctS(c.ratePct)}). {usd(c.lateFeesKeptCents)} in late fees kept{c.rebookedPct != null ? `; ${pctS(c.rebookedPct)} of those times were booked again` : ''}.</>}</p>
+        <p className="text-[13.5px] text-ink mb-5">{c.count === 0 ? 'No cancellations.' : <>{plural(c.count, 'booking')} cancelled ({pctS(c.ratePct)}), worth {usd(c.lostCents)} after the {usd(c.lateFeesKeptCents)} in late fees kept{c.rebookedPct != null ? `; ${pctS(c.rebookedPct)} of those times were booked again` : ''}.</>}</p>
         {c.count > 0 && (<>
           <h4 className="text-[13px] font-semibold text-ink mb-2">How long before the tee time</h4>
           <div className="space-y-2 mb-5">
@@ -323,7 +325,7 @@ function MissesTab({ d }: { d: Data }) {
           {c.byCustomer + c.byStaff === 0 ? <p className="text-[12.5px] text-ink-muted">Tracked from {fmtDay(d.eventLogStart)} on.</p> : (
             <div className="divide-y divide-line-soft">
               <Line label="The golfer" value={String(c.byCustomer)} />
-              <Line label="Your staff" value={String(c.byStaff)} />
+              <Line label="Your staff or GreenReserve" value={String(c.byStaff)} />
               {c.actorUnknown > 0 && <Line label="Before we tracked it" value={String(c.actorUnknown)} />}
             </div>
           )}
@@ -463,7 +465,8 @@ function AnalyticsInner() {
           {d && (
             <div className={'space-y-5 ' + (loading ? 'opacity-60 pointer-events-none' : '')}>
               {/* 1. The four numbers */}
-              <Card className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-line">
+              <Card className="overflow-hidden">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-line">
                 <Big label="Money collected" value={usd(d.revenue.collectedCents)}
                   change={<Change now={d.headline.collectedCents} prev={prev?.collectedCents} unit="pct" />}
                   explain="green fees, carts and range balls paid to you" />
@@ -476,6 +479,7 @@ function AnalyticsInner() {
                 <Big label="Empty spots" value={usd(d.unfilled.lostCents)}
                   change={<Change now={d.headline.lostCents} prev={prev?.lostCents} unit="pct" goodWhenUp={false} />}
                   explain="what tee times that went out unsold would have earned" />
+              </div>
               </Card>
 
               {/* 2. What to look at */}
