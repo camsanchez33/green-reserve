@@ -5,7 +5,7 @@
 // new time's free-cancellation window has already closed) → Confirm. The move
 // itself is lib/move-booking.ts behind PATCH /api/operator/bookings
 // { action: 'move' } (permission sheet.move). Nothing moves until Confirm.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
@@ -23,11 +23,13 @@ type Preview = {
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
-export default function MoveGroupModal({ booking, fromTeeTimeId, date, today, nowHM, onClose, onMoved }: {
+export default function MoveGroupModal({ booking, fromTeeTimeId, initialPickId, date, today, nowHM, onClose, onMoved }: {
   /** emailable: false = no email on file (a counter booking), so nobody is emailed. */
   /** checkedIn: already checked in (paid) — the price stays, no rate choice. */
   booking: { id: string; golferName: string; players: number; emailable: boolean; checkedIn?: boolean };
   fromTeeTimeId: string;
+  /** SHEET-2: the time the group was dropped on — priced straight away. */
+  initialPickId?: string;
   /** The day the sheet is showing — the default day to move within. */
   date: string;
   /** Course-local today and time, so today's past times aren't offered. */
@@ -50,6 +52,18 @@ export default function MoveGroupModal({ booking, fromTeeTimeId, date, today, no
     if (r.ok) setSlots(r.data ?? []); else setLoadErr(r.error);
   }, []);
   useEffect(() => { load(day); }, [day, load]);
+  // The preview sits under the time grid — bring it into view once it arrives.
+  const previewRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (preview) previewRef.current?.scrollIntoView({ block: 'nearest' }); }, [preview]);
+  // The board's drop: run the same dry run as tapping that time here would.
+  const [usedInitial, setUsedInitial] = useState(false);
+  useEffect(() => {
+    if (usedInitial || !initialPickId || !slots || day !== date) return;
+    setUsedInitial(true);
+    const s = slots.find(x => x.id === initialPickId);
+    if (s) choose(s, false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots]);
 
   const choose = async (s: Slot, withNewRate: boolean) => {
     setPick(s); setPreview(null); setPreviewErr('');
@@ -112,7 +126,7 @@ export default function MoveGroupModal({ booking, fromTeeTimeId, date, today, no
         {pick && !preview && !previewErr && <div className="py-3 text-center text-ink-muted"><Loader2 className="w-4 h-4 animate-spin mx-auto" /></div>}
         {previewErr && <p className="text-[13px] text-bad mb-3">{previewErr}</p>}
         {preview && (
-          <div className="bg-paper/70 rounded-md px-3 py-3 mb-4 text-[13px] text-ink space-y-1.5">
+          <div ref={previewRef} className="bg-paper/70 rounded-md px-3 py-3 mb-4 text-[13px] text-ink space-y-1.5">
             <p><b className="font-semibold">{formatTeeDay(preview.to.date)} · {formatTeeTime(preview.to.time)}</b> — {booking.emailable ? 'they’ll get an email with the new time.' : 'there’s no email on file, so let them know.'}</p>
             {preview.checkedIn && <p>They&apos;ve already checked in and paid, so nothing is charged or refunded{keptTotal != null ? ` — the price stays ${usd(keptTotal)}` : ''}.</p>}
             {!preview.checkedIn && keptTotal != null && <p>Price stays {usd(keptTotal)}.</p>}

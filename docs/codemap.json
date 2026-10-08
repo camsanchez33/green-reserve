@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 396,
+    "files": 397,
     "routes": 208,
     "libs": 116,
     "models": 37,
@@ -6197,7 +6197,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1390,
+      "lines": 1423,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6217,6 +6217,7 @@
         "@/components/dashboard/GolferMessageModal",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/MoveGroupModal",
+        "@/components/dashboard/TeeSheetBoard",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
         "@/components/ui/MonthPicker",
@@ -7619,7 +7620,7 @@
     },
     {
       "path": "src/components/dashboard/MoveGroupModal.tsx",
-      "lines": 140,
+      "lines": 154,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2):",
       "brain": [],
       "exports": [
@@ -7753,6 +7754,40 @@
         "lucide-react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/components/dashboard/TeeSheetBoard.tsx",
+      "lines": 153,
+      "purpose": "SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BoardGroup",
+          "kind": "type"
+        },
+        {
+          "name": "BoardSlot",
+          "kind": "type"
+        },
+        {
+          "name": "default (TeeSheetBoard)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/format",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
     },
     {
       "path": "src/components/dashboard/Toast.tsx",
@@ -8012,7 +8047,8 @@
         "src/app/dashboard/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
-        "src/components/admin/OwnerTwoFactorCard.tsx"
+        "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/TeeSheetBoard.tsx"
       ]
     },
     {
@@ -8279,6 +8315,7 @@
         "src/components/dashboard/GettingStartedChecklist.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -11704,6 +11741,7 @@
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/lib/frost-delay.ts",

@@ -20,7 +20,7 @@ the first live course's feedback re-orders this list.
 | 6 | OUT-1 Tournaments & outings + invoices | spec | — |
 | 7 | FB-1 Food & beverage | after POS-1 | — |
 | 8 | PWA-1 "Add to Home Screen" booking app | small, any time | — |
-| 9 | SHEET-2 Board view of the tee sheet (drag to move) | after ACT-1 | — |
+| 9 | SHEET-2 Board view of the tee sheet (drag to move) | built (PR) | — |
 | — | Employee scheduling, maintenance spend, native app per course | parked | see "Parked" |
 
 ---
@@ -187,6 +187,15 @@ comes after it. Guardrails: the list stays (a full day is 50–60 times; the
 counter scans the list fastest), drag needs a tap-to-move fallback for touch
 and keyboard, nothing moves without the confirm, and the homepage demo
 mirrors whichever view is the default (CLAUDE.md: change one, check the other).
+
+**Shipped (2026-10-08):** Tee sheet → **List | Board** toggle in the date bar
+(remembered per browser; List stays the default, so the homepage demo is
+unchanged). `src/components/dashboard/TeeSheetBoard.tsx`: a column per hour,
+cards per time, a chip per group (checked-in groups carry the green dot).
+Drag a chip onto a card, or tap the chip then the card (touch/keyboard; Esc
+cancels), and the ACT-1 dialog opens with that time already priced; nothing
+moves until "Move group". Tapping a card with nothing picked opens that time
+in the list. Groups move under the same rules as the list's Move link.
 
 ## Parked (and why)
 

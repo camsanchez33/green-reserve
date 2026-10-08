@@ -1,18 +1,30 @@
 {
-  "generatedAt": "2026-10-08T01:46:24.322Z",
+  "generatedAt": "2026-10-08T02:02:40.476Z",
   "repo": {
-    "head": "1e44ba5",
-    "branch": "claude/move-checked-in",
-    "dirtyCount": 2,
+    "head": "adcddbb",
+    "branch": "claude/sheet2-board",
+    "dirtyCount": 7,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M CLAUDE.md",
+      " M PLATFORM_ROADMAP_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M src/app/dashboard/page.tsx",
+      " M src/components/dashboard/MoveGroupModal.tsx",
+      "?? src/components/dashboard/TeeSheetBoard.tsx"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
+      {
+        "h": "adcddbb",
+        "date": "2026-10-08T01:46:25+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "1e44ba5",
         "date": "2026-10-08T01:45:20+00:00",
@@ -88,7 +100,7 @@
       "line": 1014,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 38
+      "ageDays": 39
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
@@ -761,6 +773,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "adcddbb",
+      "date": "2026-10-08",
+      "subject": "Regenerate code map and status board"
+    },
+    {
       "h": "1e44ba5",
       "date": "2026-10-08",
       "subject": "Refuse moving a checked-in round from an earlier day"
@@ -814,11 +831,6 @@
       "h": "bc65c9f",
       "date": "2026-10-06",
       "subject": "Receipt shows what actually reached the golfer's card (#88)"
-    },
-    {
-      "h": "d19d5cb",
-      "date": "2026-10-06",
-      "subject": "Self check-in speaks to the golfer and handles cancelled and cash rounds (R-GOLF-011) (#86)"
     }
   ]
 }
