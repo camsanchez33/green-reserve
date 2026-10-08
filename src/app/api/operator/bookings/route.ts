@@ -6,7 +6,8 @@ import type { PermissionKey } from '@/lib/staff-permissions';
 import { performCancellation } from '@/lib/cancel-booking';
 import { performCheckIn } from '@/lib/checkin-booking';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
-import { sendBookingConfirmation, sendCheckInAvailableEmail, isPlaceholderEmail } from '@/lib/email';
+import { sendBookingConfirmation, sendCheckInAvailableEmail, sendBookingModifiedEmail, isPlaceholderEmail } from '@/lib/email';
+import { moveBooking } from '@/lib/move-booking';
 import { todayIn, isPastIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { chargeAccessFeeSeparately, refundSeparateAccessFee, liveSeparateFee, type FeeChargeResult } from '@/lib/access-fee';
@@ -71,17 +72,17 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'paid_offline', 'send_pay_link'];
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'paid_offline', 'send_pay_link', 'move'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
   // SP-A: each counter action is its own permission.
-  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin' };
+  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', move: 'sheet.move' };
   const deniedAction = requirePermission(session, NEEDS[action]);
   if (deniedAction) return deniedAction;
   // SP-A: cancelling WITHOUT the late fee refunds a hold already taken — its own permission.
@@ -108,6 +109,34 @@ export async function PATCH(req: NextRequest) {
   // EV-1: every counter action below is DB-only, so its event is written in the
   // same transaction as the state change.
   const staff: EventActor = { type: 'staff', id: session.staffId ?? session.operatorId };
+  // ACT-1 (PLATFORM_ROADMAP_SPEC §2): move the group to another tee time.
+  // `dryRun` returns what the move would do (price both ways, whether the new
+  // time's free-cancellation window has closed) so the sheet can show it
+  // before Confirm. The price is kept unless staff ask for the new time's rate.
+  if (action === 'move') {
+    if (typeof newTeeTimeId !== 'string' || !newTeeTimeId) return NextResponse.json({ error: 'Pick a tee time to move to.' }, { status: 400 });
+    const r = await moveBooking({ bookingId: id, newTeeTimeId, courseId: session.courseId, pricing: reprice === true ? 'new_slot' : 'keep', actor: staff, dryRun: dryRun === true });
+    if (!r.ok) return NextResponse.json({ error: r.message, code: r.code }, { status: r.code === 'NOT_FOUND' ? 404 : 409 });
+    const seesPay = can(session, 'money.payments');
+    const view = {
+      ok: true, dryRun: dryRun === true, to: r.to, players: r.players, cutoffPassed: r.cutoffPassed, holdDue: r.holdDueCents > 0, priceChanged: r.priceChanged,
+      ...(seesPay ? { totals: r.totals, newSlotTotals: r.newSlotTotals, holdDueCents: r.holdDueCents } : {}),
+    };
+    if (dryRun === true) return NextResponse.json(view);
+    // Tell the golfer. Never fails the move — the sheet is told instead.
+    let emailed: boolean | null = null;
+    const moved = await prisma.booking.findUnique({ where: { id }, include: { teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } }, course: { select: { name: true, slug: true } } } });
+    if (moved && !isPlaceholderEmail(moved.golferEmail)) {
+      emailed = await sendBookingModifiedEmail({
+        golferName: moved.golferName, golferEmail: moved.golferEmail, courseName: moved.course.name, courseSlug: moved.course.slug,
+        date: moved.teeTime.date, time: moved.teeTime.time, holes: moved.teeTime.holes, productLabel: moved.teeTime.product?.label ?? null,
+        players: moved.players, greenFeeTotal: moved.greenFeeTotal, cartFeeTotal: moved.cartFeeTotal, rangeBallsTotal: moved.rangeBallsTotal,
+        accessFeeTotal: moved.accessFeeTotal, totalAmount: moved.totalAmount, bookingId: moved.id, checkInToken: moved.checkInToken,
+      }).then(() => true, (err) => { console.error(JSON.stringify({ ev: 'move.email.fail', bookingId: id, error: err instanceof Error ? err.message : String(err) })); return false; });
+    }
+    return NextResponse.json({ ...view, emailed });
+  }
+
   const evBase = { bookingId: id as string, courseId: booking.courseId, actor: staff, teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time) };
   // SP-B (Cam 2026-10-05: "push them to the pay link"): a golfer who booked
   // without a card pays through their check-in link — the round and

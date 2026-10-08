@@ -253,6 +253,9 @@
     "card": 2,
     "lucide": 3
   },
+  "src/components/dashboard/MoveGroupModal.tsx": {
+    "lucide": 2
+  },
   "src/components/dashboard/SignAgreements.tsx": {
     "input": 1,
     "lucide": 1

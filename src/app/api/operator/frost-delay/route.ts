@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   if (plan.moves.length === 0 && plan.unplaced.length === 0 && plan.blockTeeTimeIds.length === 0) {
     return NextResponse.json({ error: `There are no tee times before ${newStart} on that day.` }, { status: 409 });
   }
-  const result = await applyFrostDelay(session.courseId, plan, course?.name ?? 'The course');
+  const result = await applyFrostDelay(session.courseId, plan, course?.name ?? 'The course', session.staffId ?? session.operatorId);
   console.log(JSON.stringify({ ev: 'frost_delay.applied', courseId: session.courseId, date, newStart, moved: result.moved.length, unplaced: result.unplaced.length, blocked: result.blocked, by: session.email }));
   return NextResponse.json(result);
 }

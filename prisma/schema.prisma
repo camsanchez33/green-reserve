@@ -850,6 +850,8 @@ enum BookingEventType {
   no_show_cleared
   fee_charged
   fee_refunded
+  /// ACT-1: a group moved to another tee time (metadata: from/to, by whom).
+  booking_moved
 }
 
 enum EventActorType {

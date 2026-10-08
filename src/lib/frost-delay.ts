@@ -11,6 +11,7 @@
 // Prices are not changed: the group pays what it booked. Checked-in or cancelled
 // bookings are never touched.
 import { prisma } from './prisma';
+import { moveBooking } from './move-booking';
 import { sendFrostDelayEmail, PLACEHOLDER_EMAIL_DOMAIN } from './email';
 import { formatTeeTime, formatTeeDate } from './format';
 
@@ -51,29 +52,21 @@ export async function planFrostDelay(courseId: string, date: string, newStart: s
 }
 
 /**
- * Apply a plan. Each move is its own Serializable transaction that re-checks the
+ * Apply a plan. Each move is its own Serializable transaction (moveBooking) that re-checks the
  * target still has room (a golfer may have booked it since the preview), so a
  * race turns that group into "unplaced", never an overbooked slot.
  */
-export async function applyFrostDelay(courseId: string, plan: FrostPlan, courseName: string) {
+export async function applyFrostDelay(courseId: string, plan: FrostPlan, courseName: string, actorId?: string | null) {
   const moved: (FrostMove & { emailed: boolean | null })[] = [];
   const unplaced = [...plan.unplaced];
   for (const m of plan.moves) {
-    try {
-      await prisma.$transaction(async (tx) => {
-        const b = await tx.booking.findFirst({ where: { id: m.bookingId, courseId, status: 'confirmed' }, select: { teeTimeId: true, players: true } });
-        const to = await tx.teeTime.findFirst({ where: { id: m.toTeeTimeId, courseId }, select: { playersAvailable: true, playersBooked: true, status: true } });
-        // Review (security MEDIUM): the booking must still be on the slot the
-        // plan moved it FROM — a second, overlapping apply that already moved it
-        // would otherwise decrement the target and re-add it, inflating the count.
-        if (!b || b.teeTimeId !== m.fromTeeTimeId || b.teeTimeId === m.toTeeTimeId) throw new Error('already moved');
-        if (!to || to.status === 'blocked' || to.playersAvailable - to.playersBooked < b.players) throw new Error('no room');
-        await tx.booking.update({ where: { id: m.bookingId }, data: { teeTimeId: m.toTeeTimeId } });
-        await tx.teeTime.update({ where: { id: b.teeTimeId }, data: { playersBooked: { decrement: b.players } } });
-        const booked = to.playersBooked + b.players;
-        await tx.teeTime.update({ where: { id: m.toTeeTimeId }, data: { playersBooked: booked, status: booked >= to.playersAvailable ? 'full' : 'available' } });
-      }, { isolationLevel: 'Serializable' });
-    } catch {
+    // ACT-1: the shared move (lib/move-booking) — same Serializable claim and
+    // release, the price kept, and the move logged on the booking.
+    const r = await moveBooking({
+      bookingId: m.bookingId, newTeeTimeId: m.toTeeTimeId, courseId, pricing: 'keep',
+      expectFromTeeTimeId: m.fromTeeTimeId, actor: { type: 'staff', id: actorId ?? null },
+    }).catch(() => null);
+    if (!r || !r.ok) {
       unplaced.push({ bookingId: m.bookingId, name: m.name, players: m.players, time: m.fromTime });
       continue;
     }

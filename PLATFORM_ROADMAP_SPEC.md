@@ -12,8 +12,8 @@ the first live course's feedback re-orders this list.
 
 | # | Item | Status | Waiting on Cam |
 |---|---|---|---|
-| 1 | BI-1 Monthly AI review | built (PR) | — |
-| 2 | ACT-1 Move a group (staff) | spec | — |
+| 1 | BI-1 Monthly AI review | shipped (#92) | — |
+| 2 | ACT-1 Move a group (staff) | built (PR) | — |
 | 3 | ACT-2 Birdie acts on the tee sheet | spec | confirm the rule change (below) |
 | 4 | POS-1 Pro shop sales | spec | hardware + fee decision |
 | 5 | MSG-1 Reminders + messages to golfers | spec | Twilio A2P registration (SMS only) |
