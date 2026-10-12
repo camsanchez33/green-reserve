@@ -323,7 +323,7 @@ async function chargeBooking(
         return { error: 'This round is being charged right now from another screen — wait a moment and refresh.', status: 409 } as const;
       }
       if (/idempotent|idempotency/i.test(message)) {
-        return { error: 'The total changed since your first attempt (a cart or a shop item was added or removed). Refresh the page and try once more.', status: 409 } as const;
+        return { error: 'The total changed since the first attempt with this card (a cart or a shop item was added or removed). Put the total back as it was, or use a different card.', status: 409 } as const;
       }
       return { error: `Payment failed: ${message}. Collect payment in person and contact support.`, status: 402 } as const;
     }

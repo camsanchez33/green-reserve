@@ -1779,7 +1779,7 @@
     },
     {
       "path": "src/app/api/admin/golfers/route.ts",
-      "lines": 246,
+      "lines": 250,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1805,6 +1805,7 @@
         "@/lib/cancel-booking",
         "@/lib/email",
         "@/lib/prisma",
+        "@/lib/shop",
         "next/server"
       ],
       "usedBy": []
@@ -2199,7 +2200,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 329,
+      "lines": 331,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2223,6 +2224,7 @@
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
+        "@/lib/shop",
         "@/lib/stripe-errors",
         "next/server"
       ],
@@ -2475,7 +2477,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 87,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2494,13 +2496,14 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/prisma",
+        "@/lib/shop",
         "next/server"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/api/admin/transactions/route.ts",
-      "lines": 140,
+      "lines": 141,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2520,6 +2523,7 @@
         "@/lib/admin-session",
         "@/lib/money",
         "@/lib/prisma",
+        "@/lib/shop",
         "@prisma/client",
         "next/server"
       ],
@@ -4286,7 +4290,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 342,
+      "lines": 344,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14210,6 +14214,10 @@
         "@prisma/client"
       ],
       "usedBy": [
+        "src/app/api/admin/golfers/route.ts",
+        "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/transactions/export/route.ts",
+        "src/app/api/admin/transactions/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/operator/shop-items/route.ts",

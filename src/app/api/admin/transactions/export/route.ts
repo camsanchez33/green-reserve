@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 
 // MP-6c: a transaction-level export for an accountant. One row per money
 // event across every course in the period: round charges (placed by
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
   const bookingSelect = {
     id: true, golferName: true, golferEmail: true, players: true,
     totalAmount: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, cancellationFeeTotal: true,
+    shopTotalCents: true, shopFeeCents: true, roundChargedCents: true,
     checkedInAt: true, cancellationFeeChargedAt: true, roundPaymentIntentId: true, cancellationFeeChargeId: true,
     course: { select: { name: true } }, teeTime: { select: { date: true, time: true } },
   } as const;
@@ -53,7 +55,8 @@ export async function GET(req: NextRequest) {
   const rows: Row[] = [];
   for (const b of charges) {
     rows.push({ at: b.checkedInAt as Date, kind: 'round_charge', course: b.course.name, golfer: b.golferName, email: b.golferEmail, teeDate: b.teeTime.date, teeTime: b.teeTime.time, players: b.players,
-      gross: b.totalAmount, green: b.greenFeeTotal, cart: b.cartFeeTotal, range: b.rangeBallsTotal, grFee: b.accessFeeTotal, courseNet: b.totalAmount - b.accessFeeTotal, stripeRef: b.roundPaymentIntentId, note: '', bookingId: b.id });
+      // POS-1a: the round's charge also carried any pro-shop items (and their fee).
+      gross: roundChargedTotal(b), green: b.greenFeeTotal, cart: b.cartFeeTotal, range: b.rangeBallsTotal, grFee: roundApplicationFeeCents(b), courseNet: roundChargedTotal(b) - roundApplicationFeeCents(b), stripeRef: b.roundPaymentIntentId, note: b.shopTotalCents > 0 ? `includes pro-shop items $${(b.shopTotalCents / 100).toFixed(2)}` : '', bookingId: b.id });
   }
   for (const b of lateFees) {
     rows.push({ at: b.cancellationFeeChargedAt as Date, kind: 'late_cancellation_fee', course: b.course.name, golfer: b.golferName, email: b.golferEmail, teeDate: b.teeTime.date, teeTime: b.teeTime.time, players: b.players,
@@ -62,7 +65,8 @@ export async function GET(req: NextRequest) {
   for (const r of refunds) {
     const b = r.booking;
     // GreenReserve's fee reverses pro rata on a refund (refund_application_fee).
-    const feeShare = b.totalAmount > 0 ? Math.round(r.amountCents * (b.accessFeeTotal / b.totalAmount)) : 0;
+    const charged = roundChargedTotal(b);
+    const feeShare = charged > 0 ? Math.round(r.amountCents * (roundApplicationFeeCents(b) / charged)) : 0;
     rows.push({ at: r.createdAt, kind: 'refund', course: b.course.name, golfer: b.golferName, email: b.golferEmail, teeDate: b.teeTime.date, teeTime: b.teeTime.time, players: b.players,
       gross: -r.amountCents, green: 0, cart: 0, range: 0, grFee: -feeShare, courseNet: -(r.amountCents - feeShare), stripeRef: r.stripeId, note: `${r.actor}${r.actorName ? ' ' + r.actorName : ''}: ${r.detail}`.slice(0, 200), bookingId: b.id });
   }

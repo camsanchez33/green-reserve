@@ -216,7 +216,9 @@ export async function PATCH(req: NextRequest) {
     await prisma.$transaction(async (tx) => {
       await tx.booking.update({
         where: { id },
-        data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
+        data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}),
+          // POS-1a: shop items are paid at the counter too; GreenReserve's shop fee is never collected in cash.
+          shopFeeCents: 0 },
       });
       await recordBookingEvent(tx, { ...evBase, type: 'checked_in', amountCents: booking.totalAmount, playerCount: cip ?? booking.players, metadata: { paidOffline: true } });
     });
