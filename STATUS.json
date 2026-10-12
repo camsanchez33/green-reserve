@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-08T17:09:42.987Z",
+  "generatedAt": "2026-10-12T01:34:57.251Z",
   "repo": {
-    "head": "650d7ea",
-    "branch": "claude/membership-fee",
+    "head": "3ef419c",
+    "branch": "claude/agreement-live",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -11,16 +11,30 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "650d7ea",
-        "date": "2026-10-08T17:06:36+00:00",
-        "subject": "Membership fee: pay-link email shows the 1% and the real total; for-courses copy matches LQ-2",
+        "h": "3ef419c",
+        "date": "2026-10-12T01:34:57+00:00",
+        "subject": "Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test",
         "ids": [],
         "matches": []
       },
       {
-        "h": "aede463",
-        "date": "2026-10-08T17:03:18+00:00",
-        "subject": "Membership fee: 1% of dues, paid by the member on top",
+        "h": "f52b027",
+        "date": "2026-10-12T01:29:22+00:00",
+        "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fa1e1df",
+        "date": "2026-10-08T14:15:45-04:00",
+        "subject": "Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4165bc8",
+        "date": "2026-10-08T13:14:07-04:00",
+        "subject": "Membership fee: 1% of dues, paid by the member (#102)",
         "ids": [],
         "matches": []
       },
@@ -120,56 +134,56 @@
       "line": 984,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
-      "ageDays": 39
+      "ageDays": 43
     },
     {
       "title": "MP-1",
       "line": 1014,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 39
+      "ageDays": 42
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "line": 1049,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 39
+      "ageDays": 42
     },
     {
       "title": "MP-2",
       "line": 1090,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 39
+      "ageDays": 42
     },
     {
       "title": "MP-2b",
       "line": 1127,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
-      "ageDays": 39
+      "ageDays": 42
     },
     {
       "title": "MP-2c",
       "line": 1176,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 39
+      "ageDays": 42
     },
     {
       "title": "MP-2d",
       "line": 1224,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 39
+      "ageDays": 42
     },
     {
       "title": "MP-2e",
       "line": 1266,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
-      "ageDays": 39
+      "ageDays": 42
     },
     {
       "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
@@ -590,224 +604,234 @@
       "file": "CLAUDE.md",
       "openRefs": 7,
       "lastTouched": "2026-10-08",
-      "ageDays": 0
+      "ageDays": 3
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 4,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-04",
-      "ageDays": 3
+      "ageDays": 7
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-01",
-      "ageDays": 7
+      "ageDays": 10
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-08",
-      "ageDays": 0
+      "ageDays": 3
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
+    },
+    {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-12",
+      "ageDays": 0
     },
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-06",
-      "ageDays": 1
+      "ageDays": 4
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
-      "ageDays": 2
+      "ageDays": 6
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
-      "ageDays": 2
+      "ageDays": 6
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 9
+      "ageDays": 12
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "650d7ea",
-      "date": "2026-10-08",
-      "subject": "Membership fee: pay-link email shows the 1% and the real total; for-courses copy matches LQ-2"
+      "h": "3ef419c",
+      "date": "2026-10-12",
+      "subject": "Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test"
     },
     {
-      "h": "aede463",
+      "h": "f52b027",
+      "date": "2026-10-12",
+      "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam"
+    },
+    {
+      "h": "fa1e1df",
       "date": "2026-10-08",
-      "subject": "Membership fee: 1% of dues, paid by the member on top"
+      "subject": "Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103)"
+    },
+    {
+      "h": "4165bc8",
+      "date": "2026-10-08",
+      "subject": "Membership fee: 1% of dues, paid by the member (#102)"
     },
     {
       "h": "2eae475",
@@ -848,16 +872,6 @@
       "h": "f4b4a0b",
       "date": "2026-10-07",
       "subject": "ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)"
-    },
-    {
-      "h": "90e1375",
-      "date": "2026-10-07",
-      "subject": "ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)"
-    },
-    {
-      "h": "14b40dd",
-      "date": "2026-10-07",
-      "subject": "BI-1: monthly AI review of each course's previous month (#92)"
     }
   ]
 }

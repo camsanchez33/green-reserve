@@ -32,6 +32,10 @@ export type DocumentMeta = {
   draft: boolean;
   /** AG-3: the date counsel reviewed this version, from front matter; '' if absent. */
   counselReviewed: string;
+  /** AG-3: Cam's recorded decision to ship a re-acceptance bump WITHOUT counsel
+   *  (front matter `counselWaived: <date> by <who>`); '' if absent. Kept apart
+   *  from counselReviewed so the file never claims a review that did not happen. */
+  counselWaived: string;
   /** AG-3: what changed in this version, for the day-0 notice; '' if absent. */
   changeSummary: string;
 };
@@ -99,6 +103,7 @@ export function loadDocument(document: AgreementDocument, version: string = curr
     summary: Array.isArray(meta.summary) ? (meta.summary as string[]) : [],
     draft: meta.draft === true || /<!--[^>]*COUNSEL:[^>]*not reviewed/i.test(body),
     counselReviewed: typeof meta.counselReviewed === 'string' ? meta.counselReviewed : '',
+    counselWaived: typeof meta.counselWaived === 'string' ? meta.counselWaived : '',
     changeSummary: typeof meta.changeSummary === 'string' ? meta.changeSummary : '',
     markdown: body,
     html,
@@ -114,4 +119,15 @@ export function currentDocuments(): LoadedDocument[] {
 /** AG-2: the documents an operator is asked to sign — every current version that is not a draft. */
 export function signableDocuments(): LoadedDocument[] {
   return currentDocuments().filter(d => !d.draft);
+}
+
+/** AG-3: why the seed must refuse this version, or null. A re-acceptance bump
+ *  needs counsel's review date OR Cam's recorded waiver, and must not be a draft. */
+export function seedGateError(doc: Pick<DocumentMeta, 'document' | 'version' | 'reacceptRequired' | 'counselReviewed' | 'counselWaived' | 'draft'>): string | null {
+  if (!doc.reacceptRequired) return null;
+  if (!doc.counselReviewed && !doc.counselWaived) {
+    return `${doc.document} ${doc.version}: reacceptRequired is set but the front matter has neither a counselReviewed date nor a counselWaived record — not seeding a re-acceptance bump counsel has not reviewed.`;
+  }
+  if (doc.draft) return `${doc.document} ${doc.version}: still marked as a draft — remove the draft marker before seeding a re-acceptance bump.`;
+  return null;
 }

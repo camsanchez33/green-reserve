@@ -32,28 +32,17 @@ attempted. `⚖️` cannot be closed by a Claude session.
       Agreement. The contract currently says one thing and the code does another.
       → Findings L-3 · Register PM-5
 
-- [ ] **LQ-4 — Membership fee: Operator Agreement v2026-10 (1%), courses re-accept.**
-      2026-10-08 (Cam): fee is 1% of dues, member-paid, NO cap (#102 live);
-      existing courses must re-accept ("Yup they should no cap").
-      Draft: `legal/drafts/operator-agreement-2026-10.md` — only the two fee
-      sentences change; front matter `reacceptRequired: true` + changeSummary.
-      It sits OUTSIDE legal/documents/ on purpose: the newest file there is what
-      /operator-agreement shows and what every new course signs the moment it
-      deploys — before counsel (the AG-3 gate lives only in the seed script),
-      and with no re-accept window for existing courses until the seed runs.
-      AG-3 gate: the seed REFUSES a re-acceptance bump without
-      `counselReviewed: <date>` in the front matter. To ship: counsel reads the
-      draft → add `counselReviewed: YYYY-MM-DD` and set `effectiveAt` to the
-      real ship date (the pages display it; the file is immutable once seeded)
-      → move it to `legal/documents/operator-agreement/2026-10.md` → merge →
-      ONLY AFTER the deploy is live, run `scripts/seed-agreement-versions.ts`
-      against prod from the merged main checkout. The 30-day window starts at
-      seed time. The day-0 notice is sent by the `hourly` cron
-      (`sendAgreementBumpNotices()`) at its next run, reading title and
-      changeSummary from the file on PROD's disk — seeded before the deploy,
-      it emails every course a notice with no "What changed" and stamps
-      `noticeSentAt`, so it cannot be re-sent without a DB edit.
-      NEEDS CAM: counsel review, or an explicit decision to drop the gate.
+- [ ] **LQ-4 — Membership fee 1%: Operator Agreement v2026-10 shipped WITHOUT counsel.**
+      2026-10-12 (Cam): "skip the lawyer for now, push it live". v2026-10 is in
+      `legal/documents/operator-agreement/2026-10.md` with `reacceptRequired: true`
+      and `counselWaived:` recording that decision (the seed now accepts a
+      recorded waiver; it never writes a fake counselReviewed date). Still open:
+      counsel should read v2026-10 (and 2026-08) when GreenReserve engages one —
+      a counsel-requested change becomes a new version, not an edit.
+      Seed step (once, after the deploy is live — see AGREEMENT_SPEC AG-3):
+      `npx dotenv -e .env.local -- npx tsx scripts/seed-agreement-versions.ts`
+      with prod's DATABASE_URL. The 30-day window starts then; the `hourly` cron
+      sends the day-0 notice at its next run.
       → Findings L-4 · Register PM-4
 
 - [ ] **LQ-5 — Form the entity.** ⚖️ optional but cheap

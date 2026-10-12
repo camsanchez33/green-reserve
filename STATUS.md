@@ -4,16 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-08 17:09 UTC · branch `claude/membership-fee` · HEAD `650d7ea` · working tree clean
+Generated 2026-10-12 01:34 UTC · branch `claude/agreement-live` · HEAD `3ef419c` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 11 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 13 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `650d7ea` | 2026-10-08 | Membership fee: pay-link email shows the 1% and the real total; for-courses copy matches LQ-2 |
-| `aede463` | 2026-10-08 | Membership fee: 1% of dues, paid by the member on top |
+| `3ef419c` | 2026-10-12 | Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test |
+| `f52b027` | 2026-10-12 | Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam |
+| `fa1e1df` | 2026-10-08 | Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103) |
+| `4165bc8` | 2026-10-08 | Membership fee: 1% of dues, paid by the member (#102) |
 | `2eae475` | 2026-10-08 | Homepage demo shows the board (#101) |
 | `718522c` | 2026-10-08 | AN-2: Analytics reworked so it reads plainly (#100) |
 | `b7079ea` | 2026-10-07 | Tee sheet: one board that fits the page, cancel from the sheet (#99) |
@@ -44,14 +46,14 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 39d | `7246a62` | `RUN_QUEUE.md:984` |
-| MP-1 | 2026-08-29 | 39d | `41f5ea8` | `RUN_QUEUE.md:1014` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 39d | `4ef11dd` | `RUN_QUEUE.md:1049` |
-| MP-2 | 2026-08-29 | 39d | `958f229` | `RUN_QUEUE.md:1090` |
-| MP-2b | 2026-08-29 | 39d | `a134af5` | `RUN_QUEUE.md:1127` |
-| MP-2c | 2026-08-29 | 39d | `e5b5413` | `RUN_QUEUE.md:1176` |
-| MP-2d | 2026-08-29 | 39d | `22d0f68` | `RUN_QUEUE.md:1224` |
-| MP-2e | 2026-08-30 | 39d | `bf3bcb2` | `RUN_QUEUE.md:1266` |
+| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 43d | `7246a62` | `RUN_QUEUE.md:984` |
+| MP-1 | 2026-08-29 | 42d | `41f5ea8` | `RUN_QUEUE.md:1014` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 42d | `4ef11dd` | `RUN_QUEUE.md:1049` |
+| MP-2 | 2026-08-29 | 42d | `958f229` | `RUN_QUEUE.md:1090` |
+| MP-2b | 2026-08-29 | 42d | `a134af5` | `RUN_QUEUE.md:1127` |
+| MP-2c | 2026-08-29 | 42d | `e5b5413` | `RUN_QUEUE.md:1176` |
+| MP-2d | 2026-08-29 | 42d | `22d0f68` | `RUN_QUEUE.md:1224` |
+| MP-2e | 2026-08-30 | 42d | `bf3bcb2` | `RUN_QUEUE.md:1266` |
 | SD-8d — browser Back still discards unsaved Settings edits (from the | — | — | — | `RUN_QUEUE.md:819` |
 | SD-8e — status is rendered as bare coloured text where the design | — | — | — | `RUN_QUEUE.md:845` |
 | SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | — | — | — | `RUN_QUEUE.md:922` |
@@ -164,46 +166,48 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-08 | 0d |
-| `ARCHITECTURE.md` | 4 | 2026-09-29 | 9d |
-| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 3d |
-| `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 7d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 0d |
-| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 9d |
-| `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 9d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 1d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 2d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 2d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 9d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 9d |
+| `CLAUDE.md` | 7 | 2026-10-08 | 3d |
+| `ARCHITECTURE.md` | 4 | 2026-09-29 | 12d |
+| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 7d |
+| `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 10d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 3d |
+| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 12d |
+| `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 12d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-12 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 4d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 6d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 6d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 12d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 12d |
 
 ## Recent commits
 
-- `650d7ea` 2026-10-08 — Membership fee: pay-link email shows the 1% and the real total; for-courses copy matches LQ-2
-- `aede463` 2026-10-08 — Membership fee: 1% of dues, paid by the member on top
+- `3ef419c` 2026-10-12 — Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test
+- `f52b027` 2026-10-12 — Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam
+- `fa1e1df` 2026-10-08 — Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103)
+- `4165bc8` 2026-10-08 — Membership fee: 1% of dues, paid by the member (#102)
 - `2eae475` 2026-10-08 — Homepage demo shows the board (#101)
 - `718522c` 2026-10-08 — AN-2: Analytics reworked so it reads plainly (#100)
 - `b7079ea` 2026-10-07 — Tee sheet: one board that fits the page, cancel from the sheet (#99)
@@ -212,8 +216,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
 - `fef4012` 2026-10-07 — MSG-1: courses message the golfers booked on a day (#95)
 - `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
-- `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
-- `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 
 ---
 

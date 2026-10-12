@@ -3,7 +3,7 @@
 // row for the same version: versions are immutable — bump instead.
 // Run: npx dotenv -e .env.local -- npx tsx scripts/seed-agreement-versions.ts
 import { prisma } from '../src/lib/prisma';
-import { DOCUMENT_DIR, listVersions, loadDocument, type AgreementDocument } from '../src/lib/agreements';
+import { DOCUMENT_DIR, listVersions, loadDocument, seedGateError, type AgreementDocument } from '../src/lib/agreements';
 
 async function main() {
   let inserted = 0, unchanged = 0;
@@ -18,15 +18,13 @@ async function main() {
         unchanged++; continue;
       }
       // AG-3 §1: a bump that requires re-acceptance is a legal event — it
-      // refuses to seed until counsel has reviewed it (front matter
-      // `counselReviewed: <date>`), and it takes effect NOW with a 30-day
-      // window, whatever the file's effectiveAt says.
-      if (doc.reacceptRequired && !doc.counselReviewed) {
-        throw new Error(`${document} ${version}: reacceptRequired is set but the front matter has no counselReviewed date — not seeding a re-acceptance bump counsel has not reviewed.`);
-      }
-      if (doc.reacceptRequired && doc.draft) {
-        throw new Error(`${document} ${version}: still marked as a draft — remove the draft marker before seeding a re-acceptance bump.`);
-      }
+      // refuses to seed until counsel has reviewed it (`counselReviewed: <date>`)
+      // or Cam has recorded a waiver (`counselWaived: <date> by <who>` — never a
+      // fake review date), and it takes effect NOW with a 30-day window,
+      // whatever the file's effectiveAt says.
+      const gate = seedGateError(doc);
+      if (gate) throw new Error(gate);
+      if (doc.reacceptRequired && !doc.counselReviewed) console.warn(`${document} ${version}: seeding WITHOUT counsel review — waived: ${doc.counselWaived}`);
       const now = new Date();
       const effectiveAt = doc.reacceptRequired ? now : new Date(doc.effectiveAt + 'T00:00:00.000Z');
       await prisma.agreementVersion.create({
