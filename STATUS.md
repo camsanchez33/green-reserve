@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-12 01:29 UTC · branch `claude/agreement-live` · HEAD `fa1e1df` · working tree **7 dirty file(s)**
+Generated 2026-10-12 01:34 UTC · branch `claude/agreement-live` · HEAD `3ef419c` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 11 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 13 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `3ef419c` | 2026-10-12 | Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test |
+| `f52b027` | 2026-10-12 | Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam |
 | `fa1e1df` | 2026-10-08 | Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103) |
 | `4165bc8` | 2026-10-08 | Membership fee: 1% of dues, paid by the member (#102) |
 | `2eae475` | 2026-10-08 | Homepage demo shows the board (#101) |
@@ -25,19 +27,6 @@ Generated 2026-10-12 01:29 UTC · branch `claude/agreement-live` · HEAD `fa1e1d
 | `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (7 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M legal/LEGAL_QUEUE.md`
-- `D  legal/drafts/operator-agreement-2026-10.md`
-- `M scripts/seed-agreement-versions.ts`
-- `M src/lib/agreements.ts`
-- `?? legal/documents/operator-agreement/2026-10.md`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -184,6 +173,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 3d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 12d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 12d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-12 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 4d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 6d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 6d |
@@ -191,7 +181,6 @@ This is the distinction a raw checkbox count gets wrong.
 | `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 12d |
 | `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 12d |
 | `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 12d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-09-29 | 12d |
 | `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 12d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 12d |
 | `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 12d |
@@ -215,6 +204,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `3ef419c` 2026-10-12 — Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test
+- `f52b027` 2026-10-12 — Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam
 - `fa1e1df` 2026-10-08 — Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103)
 - `4165bc8` 2026-10-08 — Membership fee: 1% of dues, paid by the member (#102)
 - `2eae475` 2026-10-08 — Homepage demo shows the board (#101)
@@ -225,8 +216,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
 - `fef4012` 2026-10-07 — MSG-1: courses message the golfers booked on a day (#95)
 - `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
-- `90e1375` 2026-10-07 — ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)
-- `14b40dd` 2026-10-07 — BI-1: monthly AI review of each course's previous month (#92)
 
 ---
 

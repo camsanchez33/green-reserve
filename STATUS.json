@@ -1,23 +1,29 @@
 {
-  "generatedAt": "2026-10-12T01:29:21.239Z",
+  "generatedAt": "2026-10-12T01:34:57.251Z",
   "repo": {
-    "head": "fa1e1df",
+    "head": "3ef419c",
     "branch": "claude/agreement-live",
-    "dirtyCount": 7,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M legal/LEGAL_QUEUE.md",
-      "D  legal/drafts/operator-agreement-2026-10.md",
-      " M scripts/seed-agreement-versions.ts",
-      " M src/lib/agreements.ts",
-      "?? legal/documents/operator-agreement/2026-10.md"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
+      {
+        "h": "3ef419c",
+        "date": "2026-10-12T01:34:57+00:00",
+        "subject": "Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f52b027",
+        "date": "2026-10-12T01:29:22+00:00",
+        "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "fa1e1df",
         "date": "2026-10-08T14:15:45-04:00",
@@ -637,6 +643,12 @@
       "ageDays": 12
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-12",
+      "ageDays": 0
+    },
+    {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-06",
@@ -674,12 +686,6 @@
     },
     {
       "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 12
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
       "ageDays": 12
@@ -808,6 +814,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "3ef419c",
+      "date": "2026-10-12",
+      "subject": "Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test"
+    },
+    {
+      "h": "f52b027",
+      "date": "2026-10-12",
+      "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam"
+    },
+    {
       "h": "fa1e1df",
       "date": "2026-10-08",
       "subject": "Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103)"
@@ -856,16 +872,6 @@
       "h": "f4b4a0b",
       "date": "2026-10-07",
       "subject": "ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)"
-    },
-    {
-      "h": "90e1375",
-      "date": "2026-10-07",
-      "subject": "ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93)"
-    },
-    {
-      "h": "14b40dd",
-      "date": "2026-10-07",
-      "subject": "BI-1: monthly AI review of each course's previous month (#92)"
     }
   ]
 }
