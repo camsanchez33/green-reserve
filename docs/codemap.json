@@ -1,14 +1,15 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 398,
-    "routes": 208,
-    "libs": 117,
+    "files": 401,
+    "routes": 209,
+    "libs": 118,
     "models": 37,
     "orphans": 10,
     "ungatedRoutes": 3
   },
   "brain": {
+    "agreement-publishing": "src/lib/agreement-publish.ts",
     "agreement-versions": "src/lib/agreements.ts",
     "call-agenda": "src/lib/inquiry-call.ts",
     "course-events": "src/lib/course-timeline.ts",
@@ -1001,7 +1002,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 536,
+      "lines": 540,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1017,6 +1018,7 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
+        "@/components/admin/AgreementVersionsCard",
         "@/components/ui/Card",
         "@/components/ui/ErrorState",
         "@/components/ui/Eyebrow",
@@ -1052,6 +1054,37 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/money",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/agreement-versions/route.ts",
+      "lines": 52,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/agreement-versions",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/agreement-publish",
         "@/lib/prisma",
         "next/server"
       ],
@@ -7273,6 +7306,36 @@
       ]
     },
     {
+      "path": "src/components/admin/AgreementVersionsCard.tsx",
+      "lines": 117,
+      "purpose": "AG-3 — Admin → System → Agreement versions (Cam 2026-10-12:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (AgreementVersionsCard)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/ErrorState",
+        "@/components/ui/Modal",
+        "@/components/ui/StatusDot",
+        "@/lib/admin-fetch",
+        "@/lib/agreement-publish",
+        "@/lib/format",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/system/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/admin/CommandPalette.tsx",
       "lines": 236,
       "purpose": "",
@@ -8051,6 +8114,7 @@
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
+        "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
@@ -8090,7 +8154,8 @@
         "src/app/admin/employees/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/messages/page.tsx",
-        "src/app/admin/system/page.tsx"
+        "src/app/admin/system/page.tsx",
+        "src/components/admin/AgreementVersionsCard.tsx"
       ]
     },
     {
@@ -8175,7 +8240,8 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/revenue/page.tsx",
-        "src/app/admin/system/page.tsx"
+        "src/app/admin/system/page.tsx",
+        "src/components/admin/AgreementVersionsCard.tsx"
       ]
     },
     {
@@ -8314,6 +8380,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/birdie/ConfirmCard.tsx",
         "src/components/dashboard/AgreementNotice.tsx",
@@ -8523,6 +8590,7 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/system/page.tsx",
+        "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/ui/ErrorState.tsx",
         "src/lib/admin-session-context.tsx",
         "src/lib/use-resource.ts"
@@ -8681,6 +8749,7 @@
       "usedBy": [
         "src/app/admin/layout.tsx",
         "src/app/api/admin/activity/route.ts",
+        "src/app/api/admin/agreement-versions/route.ts",
         "src/app/api/admin/archive-course/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
@@ -8811,6 +8880,53 @@
       ],
       "usedBy": [
         "src/lib/agreement-sign.ts"
+      ]
+    },
+    {
+      "path": "src/lib/agreement-publish.ts",
+      "lines": 87,
+      "purpose": "AG-3 — publishing an agreement version:",
+      "brain": [
+        "agreement-publishing"
+      ],
+      "exports": [
+        {
+          "name": "agreementVersionsOverview",
+          "kind": "fn"
+        },
+        {
+          "name": "publishAgreementVersion",
+          "kind": "fn"
+        },
+        {
+          "name": "publishDates",
+          "kind": "fn"
+        },
+        {
+          "name": "PublishResult",
+          "kind": "type"
+        },
+        {
+          "name": "REACCEPT_WINDOW_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "VersionRow",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./agreements",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/agreement-versions/route.ts",
+        "src/components/admin/AgreementVersionsCard.tsx"
       ]
     },
     {
@@ -9004,6 +9120,7 @@
         "src/app/operator-agreement/page.tsx",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-pdf.tsx",
+        "src/lib/agreement-publish.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts"
       ]
@@ -11779,6 +11896,7 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
@@ -13094,6 +13212,7 @@
       ],
       "usedBy": [
         "src/app/api/admin/activity/route.ts",
+        "src/app/api/admin/agreement-versions/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/bootstrap/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
@@ -13225,6 +13344,7 @@
         "src/lib/access-fee.ts",
         "src/lib/admin-session.ts",
         "src/lib/agreement-gate.ts",
+        "src/lib/agreement-publish.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
@@ -14528,6 +14648,7 @@
         }
       ],
       "writers": [
+        "src/app/api/admin/agreement-versions/route.ts",
         "src/app/api/admin/company-documents/route.ts"
       ],
       "readers": []
@@ -14760,10 +14881,12 @@
         }
       ],
       "writers": [
+        "src/lib/agreement-publish.ts",
         "src/lib/agreement-required.ts"
       ],
       "readers": [
         "src/lib/agreement-gate.ts",
+        "src/lib/agreement-publish.ts",
         "src/lib/agreement-required.ts"
       ]
     },

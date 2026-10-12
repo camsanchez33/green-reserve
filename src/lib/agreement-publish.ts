@@ -1,4 +1,4 @@
-// @brain agreement-versions
+// @brain agreement-publishing
 // AG-3 — publishing an agreement version: one AgreementVersion row per
 // (document, version) on disk. Shared by Admin → System's Publish button
 // (Cam 2026-10-12: "build the admin button") and scripts/seed-agreement-versions.ts,
