@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-12T01:34:57.251Z",
+  "generatedAt": "2026-10-12T01:47:23.670Z",
   "repo": {
-    "head": "3ef419c",
-    "branch": "claude/agreement-live",
+    "head": "44de3bf",
+    "branch": "claude/agreement-publish",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -11,16 +11,16 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "3ef419c",
-        "date": "2026-10-12T01:34:57+00:00",
-        "subject": "Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test",
+        "h": "44de3bf",
+        "date": "2026-10-12T01:47:23+00:00",
+        "subject": "Admin → System: publish agreement versions (owner with 2FA, audited)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "f52b027",
-        "date": "2026-10-12T01:29:22+00:00",
-        "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam",
+        "h": "47e7320",
+        "date": "2026-10-11T21:40:19-04:00",
+        "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104)",
         "ids": [],
         "matches": []
       },
@@ -814,14 +814,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "3ef419c",
+      "h": "44de3bf",
       "date": "2026-10-12",
-      "subject": "Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test"
+      "subject": "Admin → System: publish agreement versions (owner with 2FA, audited)"
     },
     {
-      "h": "f52b027",
-      "date": "2026-10-12",
-      "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam"
+      "h": "47e7320",
+      "date": "2026-10-11",
+      "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104)"
     },
     {
       "h": "fa1e1df",
