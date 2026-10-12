@@ -1,6 +1,6 @@
 // AG-3: the operator-agreement version on disk and the seed's re-acceptance gate.
 import { loadDocument, currentVersion, signableDocuments, seedGateError } from '../src/lib/agreements';
-import { publishDates, REACCEPT_WINDOW_DAYS } from '../src/lib/agreement-publish';
+import { publishDates, REACCEPT_WINDOW_DAYS, reacceptPublishError } from '../src/lib/agreement-publish';
 
 let failed = 0;
 function check(name: string, ok: boolean, detail = '') {
@@ -33,6 +33,11 @@ check('a re-accept bump takes effect at publish time, not the file date', bump.e
 check('a re-accept bump gets a 30-day window', REACCEPT_WINDOW_DAYS === 30 && bump.reacceptBy?.toISOString() === '2026-11-11T15:00:00.000Z', String(bump.reacceptBy?.toISOString()));
 const minor = publishDates({ reacceptRequired: false, effectiveAt: '2026-09-01' }, now);
 check('a minor version keeps its file date and has no window', minor.effectiveAt.toISOString() === '2026-09-01T00:00:00.000Z' && minor.reacceptBy === null);
+
+check('re-accept: current operator agreement may publish', reacceptPublishError('operator_agreement', '2026-10', true, '2026-10') === null);
+check('re-accept: an older operator agreement may not', reacceptPublishError('operator_agreement', '2026-08', true, '2026-10') !== null);
+check('re-accept: other documents may not', reacceptPublishError('brand_license', '2026-09', true, '2026-09') !== null);
+check('no re-accept: any version may publish', reacceptPublishError('brand_license', '2026-01', false, '2026-09') === null);
 
 if (failed) { console.error(`${failed} failed`); process.exit(1); }
 console.log('agreement-versions: all passed');

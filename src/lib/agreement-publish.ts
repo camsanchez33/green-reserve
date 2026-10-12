@@ -9,7 +9,7 @@
 // (sendAgreementBumpNotices) always finds the title and change summary.
 // Server only.
 import { prisma } from './prisma';
-import { DOCUMENT_DIR, listVersions, loadDocument, seedGateError, type AgreementDocument, type LoadedDocument } from './agreements';
+import { DOCUMENT_DIR, currentVersion, listVersions, loadDocument, seedGateError, type AgreementDocument, type LoadedDocument } from './agreements';
 
 const DAY_MS = 86_400_000;
 export const REACCEPT_WINDOW_DAYS = 30;
@@ -19,6 +19,14 @@ export const REACCEPT_WINDOW_DAYS = 30;
 export function publishDates(doc: Pick<LoadedDocument, 'reacceptRequired' | 'effectiveAt'>, now: Date): { effectiveAt: Date; reacceptBy: Date | null } {
   const effectiveAt = doc.reacceptRequired ? now : new Date(doc.effectiveAt + 'T00:00:00.000Z');
   return { effectiveAt, reacceptBy: doc.reacceptRequired ? new Date(effectiveAt.getTime() + REACCEPT_WINDOW_DAYS * DAY_MS) : null };
+}
+
+/** Why a re-acceptance version cannot be published, or null. */
+export function reacceptPublishError(document: AgreementDocument, version: string, reacceptRequired: boolean, current: string): string | null {
+  if (!reacceptRequired) return null;
+  if (document !== 'operator_agreement') return 'Only the Operator Agreement supports re-acceptance. Publish this version without reacceptRequired.';
+  if (version !== current) return `${version} is not the current version (${current}). Only the current version can start a re-sign window.`;
+  return null;
 }
 
 export type VersionRow = {
@@ -41,7 +49,7 @@ export async function agreementVersionsOverview(): Promise<VersionRow[]> {
         document, version, title: doc.title, current: i === 0,
         reacceptRequired: doc.reacceptRequired, counselReviewed: doc.counselReviewed, counselWaived: doc.counselWaived,
         changeSummary: doc.changeSummary,
-        blocked: seedGateError(doc) ?? '',
+        blocked: seedGateError(doc) ?? reacceptPublishError(document, version, doc.reacceptRequired, listVersions(document)[0]) ?? '',
         published: row ? {
           effectiveAt: row.effectiveAt.toISOString(), reacceptBy: row.reacceptBy?.toISOString() ?? null,
           noticeSentAt: row.noticeSentAt?.toISOString() ?? null, hashMatches: row.textHash === doc.hash,
@@ -61,7 +69,7 @@ export type PublishResult =
  *  text is `created: false`; one whose file changed since is refused (versions
  *  are immutable — bump instead). */
 export async function publishAgreementVersion(document: string, version: string, now: Date = new Date()): Promise<PublishResult> {
-  if (!(document in DOCUMENT_DIR)) return { ok: false, status: 400, error: 'Unknown document.' };
+  if (!Object.hasOwn(DOCUMENT_DIR, document)) return { ok: false, status: 400, error: 'Unknown document.' };
   const d = document as AgreementDocument;
   if (!listVersions(d).includes(version)) return { ok: false, status: 404, error: `No ${version} file for that document on this deployment. Merge it and wait for the deploy, then try again.` };
   const doc = loadDocument(d, version);
@@ -74,6 +82,12 @@ export async function publishAgreementVersion(document: string, version: string,
   }
   const gate = seedGateError(doc);
   if (gate) return { ok: false, status: 409, error: gate };
+  // The re-acceptance machinery (window, 428 gate, banner) reads only the
+  // CURRENT operator agreement, but the hourly notice emails for any row with a
+  // deadline — so a re-accept bump of anything else would email every course a
+  // deadline nothing enforces. Refuse it.
+  const reacceptBlock = reacceptPublishError(d, version, doc.reacceptRequired, currentVersion(d));
+  if (reacceptBlock) return { ok: false, status: 409, error: reacceptBlock };
   const { effectiveAt, reacceptBy } = publishDates(doc, now);
   try {
     await prisma.agreementVersion.create({ data: { document: d, version, textHash: doc.hash, effectiveAt, reacceptBy } });

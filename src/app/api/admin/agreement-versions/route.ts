@@ -25,6 +25,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const g = await gate();
   if ('res' in g) return g.res;
+  // Irreversible and mass-emailing: accept only a JSON request (a cross-site form
+  // POST cannot send this content type without a CORS preflight).
+  if (!(req.headers.get('content-type') ?? '').toLowerCase().startsWith('application/json')) {
+    return NextResponse.json({ error: 'Send this request as JSON.' }, { status: 415 });
+  }
   const body = await req.json().catch(() => null) as { document?: unknown; version?: unknown } | null;
   const document = typeof body?.document === 'string' ? body.document : '';
   const version = typeof body?.version === 'string' ? body.version : '';

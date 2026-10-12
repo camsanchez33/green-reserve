@@ -1061,7 +1061,7 @@
     },
     {
       "path": "src/app/api/admin/agreement-versions/route.ts",
-      "lines": 52,
+      "lines": 57,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8884,7 +8884,7 @@
     },
     {
       "path": "src/lib/agreement-publish.ts",
-      "lines": 87,
+      "lines": 101,
       "purpose": "AG-3 — publishing an agreement version:",
       "brain": [
         "agreement-publishing"
@@ -8909,6 +8909,10 @@
         {
           "name": "REACCEPT_WINDOW_DAYS",
           "kind": "const"
+        },
+        {
+          "name": "reacceptPublishError",
+          "kind": "fn"
         },
         {
           "name": "VersionRow",
