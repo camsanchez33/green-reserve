@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL") // pooled (-pooler) endpoint — serverless-safe
-  directUrl = env("DIRECT_URL")   // direct endpoint — used for migrations only
+  directUrl = env("DIRECT_URL") // direct endpoint — used for migrations only
 }
 
 model CourseOperator {
@@ -37,137 +37,138 @@ model CourseOperator {
 }
 
 model Course {
-  id                    String             @id @default(cuid())
-  slug                  String             @unique
-  name                  String
-  type                  String             @default("public")
-  city                  String             @default("")
-  state                 String             @default("")
-  zipCode               String             @default("")
-  address               String             @default("")
-  phone                 String             @default("")
-  website               String             @default("")
-  bookingUrl            String             @default("")
-  holes                 Int                @default(18)
-  par                   Int                @default(72)
-  yardage               Int                @default(0)
-  slope                 Int                @default(0)
-  courseRating          Float              @default(0)
-  description           String             @default("")
-  amenities             String[]
-  walkingAllowed        String             @default("always")
-  walkingNote           String             @default("")
-  cartRequired          Boolean            @default(false)
-  dresscode             String[]
-  minPlayers            Int                @default(1)
-  maxPlayers            Int                @default(4)
-  cancellationHours     Int                @default(24)
-  checkInWindowHours    Int                @default(3)
+  id                         String                @id @default(cuid())
+  slug                       String                @unique
+  name                       String
+  type                       String                @default("public")
+  city                       String                @default("")
+  state                      String                @default("")
+  zipCode                    String                @default("")
+  address                    String                @default("")
+  phone                      String                @default("")
+  website                    String                @default("")
+  bookingUrl                 String                @default("")
+  holes                      Int                   @default(18)
+  par                        Int                   @default(72)
+  yardage                    Int                   @default(0)
+  slope                      Int                   @default(0)
+  courseRating               Float                 @default(0)
+  description                String                @default("")
+  amenities                  String[]
+  walkingAllowed             String                @default("always")
+  walkingNote                String                @default("")
+  cartRequired               Boolean               @default(false)
+  dresscode                  String[]
+  minPlayers                 Int                   @default(1)
+  maxPlayers                 Int                   @default(4)
+  cancellationHours          Int                   @default(24)
+  checkInWindowHours         Int                   @default(3)
   // MP-3 run B2b: Course money -> integer cents, renamed so a stale reader is
   // a compile error rather than a silent 100x. lateCancellationFee in
   // particular was DOLLARS while Booking.cancellationFeeTotal was CENTS —
   // the same fee in two units in one schema, which is what made a blanket
   // conversion dangerous. Both are cents now.
   // courseRating and rating below are NOT money and stay Float.
-  lateCancellationFeeCents Int             @default(1000)
+  lateCancellationFeeCents   Int                   @default(1000)
   /// SP-B (STAFF_POLICY_SPEC Part B): the course's cancellation & card policy.
   /// Card at booking is derived: required only when a late or no-show fee is set.
-  lateFeeBasis          String             @default("booking") // "booking" | "player"
-  lateFeeTiming         String             @default("hold_at_cutoff") // "hold_at_cutoff" | "late_cancel" | "late_cancel_or_no_show"
-  noShowFeeCents        Int                @default(0)
-  noShowFeeBasis        String             @default("booking") // "booking" | "player"
+  lateFeeBasis               String                @default("booking") // "booking" | "player"
+  lateFeeTiming              String                @default("hold_at_cutoff") // "hold_at_cutoff" | "late_cancel" | "late_cancel_or_no_show"
+  noShowFeeCents             Int                   @default(0)
+  noShowFeeBasis             String                @default("booking") // "booking" | "player"
   /// Minutes after the tee time with nobody checked in before a booking is marked a no-show automatically. Null = off.
-  autoNoShowMinutes     Int?
-  timezone              String             @default("America/New_York")
-  rainCheckPolicy       String             @default("")
-  publicAdvanceDays     Int                @default(7)
-  memberAdvanceDays     Int                @default(14)
-  hasMemberPricing      Boolean            @default(false)
-  hasResidentPricing    Boolean            @default(false)
-  residentCounty        String             @default("")
-  residentState         String             @default("")
-  residentProofRequired Boolean            @default(false)
-  hasCaddies            Boolean            @default(false)
-  caddieType            String             @default("")
-  caddieLooperRateCents Int                @default(0)
-  caddieForeRateCents   Int                @default(0)
-  caddieNote            String             @default("")
-  hasDrivingRange       Boolean            @default(false)
-  drivingRangeType      String             @default("")
-  rangeBallsFree        Boolean            @default(true)
-  rangeBallsSmallPriceCents  Int           @default(0)
-  rangeBallsMediumPriceCents Int           @default(0)
-  rangeBallsLargePriceCents  Int           @default(0)
-  hasPuttingGreen       Boolean            @default(false)
-  hasShortGameArea      Boolean            @default(false)
-  hasProShop            Boolean            @default(false)
-  proShopPhone          String             @default("")
-  restaurantType        String             @default("none")
-  hasCartGirl           Boolean            @default(false)
-  tournamentFrequency   String             @default("")
-  hasLessons            Boolean            @default(false)
-  hasClubRental         Boolean            @default(false)
-  clubRentalRateCents   Int                @default(0)
-  hasPushCartRental     Boolean            @default(false)
-  pushCartRateCents     Int                @default(0)
-  hasBagStorage         Boolean            @default(false)
-  hasLockerRoom         Boolean            @default(false)
-  hasGpsCarts           Boolean            @default(false)
-  hasTournaments        Boolean            @default(false)
-  stripeAccountId       String             @default("")
-  stripeAccountActive   Boolean            @default(false)
-  rating                Float              @default(4.5)
-  reviewCount           Int                @default(0)
-  imageGradient         String             @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
-  brandColor            String             @default("#24513B")
-  establishedYear       Int?
-  logoUrl               String             @default("")
-  heroImageUrl          String             @default("")
+  autoNoShowMinutes          Int?
+  timezone                   String                @default("America/New_York")
+  rainCheckPolicy            String                @default("")
+  publicAdvanceDays          Int                   @default(7)
+  memberAdvanceDays          Int                   @default(14)
+  hasMemberPricing           Boolean               @default(false)
+  hasResidentPricing         Boolean               @default(false)
+  residentCounty             String                @default("")
+  residentState              String                @default("")
+  residentProofRequired      Boolean               @default(false)
+  hasCaddies                 Boolean               @default(false)
+  caddieType                 String                @default("")
+  caddieLooperRateCents      Int                   @default(0)
+  caddieForeRateCents        Int                   @default(0)
+  caddieNote                 String                @default("")
+  hasDrivingRange            Boolean               @default(false)
+  drivingRangeType           String                @default("")
+  rangeBallsFree             Boolean               @default(true)
+  rangeBallsSmallPriceCents  Int                   @default(0)
+  rangeBallsMediumPriceCents Int                   @default(0)
+  rangeBallsLargePriceCents  Int                   @default(0)
+  hasPuttingGreen            Boolean               @default(false)
+  hasShortGameArea           Boolean               @default(false)
+  hasProShop                 Boolean               @default(false)
+  proShopPhone               String                @default("")
+  restaurantType             String                @default("none")
+  hasCartGirl                Boolean               @default(false)
+  tournamentFrequency        String                @default("")
+  hasLessons                 Boolean               @default(false)
+  hasClubRental              Boolean               @default(false)
+  clubRentalRateCents        Int                   @default(0)
+  hasPushCartRental          Boolean               @default(false)
+  pushCartRateCents          Int                   @default(0)
+  hasBagStorage              Boolean               @default(false)
+  hasLockerRoom              Boolean               @default(false)
+  hasGpsCarts                Boolean               @default(false)
+  hasTournaments             Boolean               @default(false)
+  stripeAccountId            String                @default("")
+  stripeAccountActive        Boolean               @default(false)
+  rating                     Float                 @default(4.5)
+  reviewCount                Int                   @default(0)
+  imageGradient              String                @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
+  brandColor                 String                @default("#24513B")
+  establishedYear            Int?
+  logoUrl                    String                @default("")
+  heroImageUrl               String                @default("")
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
-  confirmationNote      String?
-  featured              Boolean            @default(false)
-  active                Boolean            @default(false)
-  liveStatus            String             @default("draft")
+  confirmationNote           String?
+  featured                   Boolean               @default(false)
+  active                     Boolean               @default(false)
+  liveStatus                 String                @default("draft")
   // MP-3: welcomeEmailSentAt was doing double duty as "has this course ever
   // been live", which corrupts health states — a course taken offline looks
   // like one that never launched. These record the two facts separately.
-  firstWentLiveAt       DateTime?
-  offlineAt             DateTime?
-  welcomeEmailSentAt    DateTime?
-  adminNotes            String             @default("")
-  archivedAt            DateTime?
-  archivedBy            String?
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
-  operatorId            String?
-  operator              CourseOperator?    @relation(fields: [operatorId], references: [id])
-  conditions            String             @default("")
-  conditionsUpdatedAt   DateTime?
-  giftCardUrl           String             @default("")
-  heroPhotoUrl          String             @default("")
-  teeTimes              TeeTime[]
-  bookings              Booking[]
-  schedules             TeeTimeSchedule[]
-  blackouts             Blackout[]
-  memberships           CourseMembership[]
-  membershipTiers       MembershipTier[]
-  staff                 CourseStaff[]
-  teeSets               TeeSet[]
-  thread                MessageThread?
-  photos                CoursePhoto[]
-  teeTimeAlerts         TeeTimeAlert[]
-  nines                 Nine[]
+  firstWentLiveAt            DateTime?
+  offlineAt                  DateTime?
+  welcomeEmailSentAt         DateTime?
+  adminNotes                 String                @default("")
+  archivedAt                 DateTime?
+  archivedBy                 String?
+  createdAt                  DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
+  operatorId                 String?
+  operator                   CourseOperator?       @relation(fields: [operatorId], references: [id])
+  conditions                 String                @default("")
+  conditionsUpdatedAt        DateTime?
+  giftCardUrl                String                @default("")
+  heroPhotoUrl               String                @default("")
+  teeTimes                   TeeTime[]
+  bookings                   Booking[]
+  schedules                  TeeTimeSchedule[]
+  blackouts                  Blackout[]
+  memberships                CourseMembership[]
+  membershipTiers            MembershipTier[]
+  staff                      CourseStaff[]
+  teeSets                    TeeSet[]
+  thread                     MessageThread?
+  photos                     CoursePhoto[]
+  teeTimeAlerts              TeeTimeAlert[]
+  nines                      Nine[]
   /// IC-1 / CS-1: when we next call the course; null = never scheduled.
-  nextCheckInAt         DateTime?
-  calls                 Call[]
+  nextCheckInAt              DateTime?
+  calls                      Call[]
   /// AG-1: the name the signer binds ("Hollow Creek Golf Club LLC") — NOT
   /// GreenReserve's entity name, which stays a placeholder per legal README.
-  legalName             String             @default("")
-  agreements            AgreementAcceptance[]
-  courseProducts        CourseProduct[]
-  monthlyReviews        MonthlyReview[]
-  golferMessages        CourseMessage[]
+  legalName                  String                @default("")
+  agreements                 AgreementAcceptance[]
+  courseProducts             CourseProduct[]
+  monthlyReviews             MonthlyReview[]
+  golferMessages             CourseMessage[]
+  shopItems                  ShopItem[]
 
   @@index([operatorId])
 }
@@ -185,30 +186,30 @@ model CoursePhoto {
 // markers just have one row here; courses with multiple tee options list them
 // all so golfers/admin can see yardage/rating/slope per tee, not one flat number.
 model TeeSet {
-  id        String   @id @default(cuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
-  name      String
-  yardage   Int      @default(0)
-  rating    Float    @default(0)
-  slope     Int      @default(0)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  nineYardages    TeeSetNine[]
-  productRatings  CourseProductTeeSet[]
+  id             String                @id @default(cuid())
+  courseId       String
+  course         Course                @relation(fields: [courseId], references: [id])
+  name           String
+  yardage        Int                   @default(0)
+  rating         Float                 @default(0)
+  slope          Int                   @default(0)
+  sortOrder      Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  nineYardages   TeeSetNine[]
+  productRatings CourseProductTeeSet[]
 }
 
 // A named nine (North/South/West...) on a multi-nine course. Simple 18-hole
 // courses never create these — Course's flat holes/par/yardage stay their
 // display fallback (COURSE_LAYOUT_SPEC L1, no forced backfill).
 model Nine {
-  id        String   @id @default(cuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  name      String
-  par       Int      @default(36)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  id             String       @id @default(cuid())
+  courseId       String
+  course         Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name           String
+  par            Int          @default(36)
+  sortOrder      Int          @default(0)
+  createdAt      DateTime     @default(now())
   teeSetYardages TeeSetNine[]
 
   @@index([courseId])
@@ -220,19 +221,19 @@ model Nine {
 // (TeeTimeSchedule/TeeTime) get product scoping in COURSE_LAYOUT_SPEC L2 —
 // this phase is the model + dashboard tab only.
 model CourseProduct {
-  id        String   @id @default(cuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  label     String
-  holes     Int      @default(18)
-  nineIds   String[]
-  active    Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  id            String                @id @default(cuid())
+  courseId      String
+  course        Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  label         String
+  holes         Int                   @default(18)
+  nineIds       String[]
+  active        Boolean               @default(true)
+  sortOrder     Int                   @default(0)
+  createdAt     DateTime              @default(now())
   teeSetRatings CourseProductTeeSet[]
   /// L2: schedules and generated slots scoped to this product.
-  schedules TeeTimeSchedule[]
-  teeTimes  TeeTime[]
+  schedules     TeeTimeSchedule[]
+  teeTimes      TeeTime[]
 
   @@index([courseId])
 }
@@ -318,11 +319,11 @@ model GolferAccount {
 }
 
 model MembershipTier {
-  id                 String             @id @default(cuid())
-  courseId           String
-  course             Course             @relation(fields: [courseId], references: [id])
-  name               String // "Full Member", "Junior", "Senior Associate"
-  color              String             @default("#1b4332")
+  id                   String             @id @default(cuid())
+  courseId             String
+  course               Course             @relation(fields: [courseId], references: [id])
+  name                 String // "Full Member", "Junior", "Senior Associate"
+  color                String             @default("#1b4332")
   // Pricing — flat rate overrides, INTEGER CENTS. null = fall back to
   // discountPct or the standard rate.
   //
@@ -334,90 +335,89 @@ model MembershipTier {
   // into an exhaustive one. It also disambiguates greenFeeWeekday, which exists
   // on BOTH this model and TeeTimeSchedule (still dollars, run B2d).
   // Convention matches Expense.amountCents, already in this schema.
-  greenFeeWeekdayCents  Int?
-  greenFeeWeekendCents  Int?
-  cartFeeWeekdayCents   Int?
-  cartFeeWeekendCents   Int?
+  greenFeeWeekdayCents Int?
+  greenFeeWeekendCents Int?
+  cartFeeWeekdayCents  Int?
+  cartFeeWeekendCents  Int?
   // Alternative: percentage off the standard rate (0–100). NOT money — stays a
   // Float and must never be scaled by 100.
-  discountPct        Float?
+  discountPct          Float?
   // Access privileges
-  advanceBookingDays Int                @default(14)
-  guestPassesPerYear Int                @default(0)
+  advanceBookingDays   Int                @default(14)
+  guestPassesPerYear   Int                @default(0)
   // Informational
-  annualFeeCents     Int                @default(0)
-  initiationFeeCents Int                @default(0) // one-time, charged with the first dues payment
-  termMonths         Int                @default(12)
-  notes              String             @default("")
-  active             Boolean            @default(true)
-  createdAt          DateTime           @default(now())
-  memberships        CourseMembership[]
+  annualFeeCents       Int                @default(0)
+  initiationFeeCents   Int                @default(0) // one-time, charged with the first dues payment
+  termMonths           Int                @default(12)
+  notes                String             @default("")
+  active               Boolean            @default(true)
+  createdAt            DateTime           @default(now())
+  memberships          CourseMembership[]
 }
 
 model CourseMembership {
-  id             String          @id @default(cuid())
-  golferId       String?
-  golfer         GolferAccount?  @relation(fields: [golferId], references: [id])
-  courseId       String
-  course         Course          @relation(fields: [courseId], references: [id])
-  tierId         String?
-  tier           MembershipTier? @relation(fields: [tierId], references: [id])
+  id                  String          @id @default(cuid())
+  golferId            String?
+  golfer              GolferAccount?  @relation(fields: [golferId], references: [id])
+  courseId            String
+  course              Course          @relation(fields: [courseId], references: [id])
+  tierId              String?
+  tier                MembershipTier? @relation(fields: [tierId], references: [id])
   // Fallback name when no tier selected, or for non-golfer-account members
-  membershipType String          @default("member")
+  membershipType      String          @default("member")
   // For members without a GolferAccount — invite flow
-  inviteEmail    String          @default("")
-  inviteName     String          @default("")
-  invitePhone    String          @default("")
-  inviteAccepted Boolean         @default(false)
-  status         String          @default("active")
-  addedBy        String          @default("operator")
-  expiresAt      DateTime?
-  startedAt      DateTime?
+  inviteEmail         String          @default("")
+  inviteName          String          @default("")
+  invitePhone         String          @default("")
+  inviteAccepted      Boolean         @default(false)
+  status              String          @default("active")
+  addedBy             String          @default("operator")
+  expiresAt           DateTime?
+  startedAt           DateTime?
   // Dues: unpaid | paid | paid_offline (cash/check at the shop) | comped
-  paymentStatus  String          @default("unpaid")
-  payToken       String          @default("")
-  lastPaidAt     DateTime?
-  lastPaymentIntentId String     @default("")
+  paymentStatus       String          @default("unpaid")
+  payToken            String          @default("")
+  lastPaidAt          DateTime?
+  lastPaymentIntentId String          @default("")
   renewalRemindedAt   DateTime?
-  notes          String          @default("")
-  createdAt      DateTime        @default(now())
+  notes               String          @default("")
+  createdAt           DateTime        @default(now())
 
   @@unique([golferId, courseId])
-
   // MP-10 schema half: the overdue-dues surfaces filter by course + last payment.
   @@index([courseId, lastPaidAt])
 }
 
 model TeeTime {
-  id               String     @id @default(cuid())
-  courseId         String
-  course           Course     @relation(fields: [courseId], references: [id])
-  date             String
-  time             String
-  holes            Int        @default(18)
-  playersAvailable Int        @default(4)
-  playersBooked    Int        @default(0)
+  id                String         @id @default(cuid())
+  courseId          String
+  course            Course         @relation(fields: [courseId], references: [id])
+  date              String
+  time              String
+  holes             Int            @default(18)
+  playersAvailable  Int            @default(4)
+  playersBooked     Int            @default(0)
   // MP-3 runs B2c+B2d: integer cents, renamed *Cents so a stale reader is a
   // compile error. TeeTime and TeeTimeSchedule convert in the SAME migration
   // because tee-sheet-engine copies schedule rates straight onto generated tee
   // times — converting one alone would need a x100 in the middle of that copy,
   // which is precisely the kind of stray multiplication this whole exercise is
   // meant to delete.
-  greenFeeCents    Int
-  memberRateCents  Int?
+  greenFeeCents     Int
+  memberRateCents   Int?
   residentRateCents Int?
-  cartFeeCents     Int        @default(0)
-  walkingAllowed   Boolean    @default(true)
-  tierName         String     @default("standard")
-  status           String     @default("available")
-  createdAt        DateTime   @default(now())
-  bookings         Booking[]
-  teeTimeAlerts    TeeTimeAlert[]
+  cartFeeCents      Int            @default(0)
+  walkingAllowed    Boolean        @default(true)
+  tierName          String         @default("standard")
+  status            String         @default("available")
+  createdAt         DateTime       @default(now())
+  bookings          Booking[]
+  teeTimeAlerts     TeeTimeAlert[]
   /// L2: the product this slot sells (null on simple courses). One row per
   /// product per time — two products may share a start time when their nines
   /// do not overlap.
-  productId        String?
-  product          CourseProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId         String?
+  product           CourseProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([productId])
   @@index([courseId, date])
@@ -426,18 +426,18 @@ model TeeTime {
 }
 
 model Booking {
-  id                       String         @id @default(cuid())
-  teeTimeId                String
-  teeTime                  TeeTime        @relation(fields: [teeTimeId], references: [id])
-  courseId                 String
-  course                   Course         @relation(fields: [courseId], references: [id])
-  golferAccountId          String?
-  golferAccount            GolferAccount? @relation(fields: [golferAccountId], references: [id])
-  golferName               String
-  golferEmail              String
-  golferPhone              String         @default("")
-  players                  Int
-  appliedRate              String         @default("standard")
+  id                         String            @id @default(cuid())
+  teeTimeId                  String
+  teeTime                    TeeTime           @relation(fields: [teeTimeId], references: [id])
+  courseId                   String
+  course                     Course            @relation(fields: [courseId], references: [id])
+  golferAccountId            String?
+  golferAccount              GolferAccount?    @relation(fields: [golferAccountId], references: [id])
+  golferName                 String
+  golferEmail                String
+  golferPhone                String            @default("")
+  players                    Int
+  appliedRate                String            @default("standard")
   // MP-3 run B1: these six were ALREADY cents, stored in a Float — the worst of
   // both worlds, and the direct cause of the x100 resend-email bug (MP-1 #1),
   // where a caller assumed dollars. Now Int, so the unit is in the type. Every
@@ -447,62 +447,69 @@ model Booking {
   // Dollar-denominated money elsewhere (TeeTime, TeeTimeSchedule, Course,
   // MembershipTier) is NOT converted here — that is a 64-file render sweep and
   // is its own run. Do not mix the two.
-  greenFeeTotal            Int
-  cartFeeTotal             Int            @default(0)
-  cartSelected             Boolean        @default(false)
-  rangeBallsSize           String         @default("")
-  rangeBallsTotal          Int            @default(0)
-  accessFeeTotal           Int
-  totalAmount              Int
+  greenFeeTotal              Int
+  cartFeeTotal               Int               @default(0)
+  cartSelected               Boolean           @default(false)
+  rangeBallsSize             String            @default("")
+  rangeBallsTotal            Int               @default(0)
+  accessFeeTotal             Int
+  totalAmount                Int
   // Card-on-file, deferred-payment flow — nothing is charged at booking time.
-  stripeCustomerId         String         @default("")
-  stripePaymentMethodId    String         @default("")
-  stripePaymentIntentId    String         @default("")
-  cancellationFeeTotal     Int            @default(0)
-  cancellationFeeChargeId  String         @default("")
-  cancellationFeeChargedAt DateTime?
-  cancelledAt              DateTime?
+  stripeCustomerId           String            @default("")
+  stripePaymentMethodId      String            @default("")
+  stripePaymentIntentId      String            @default("")
+  cancellationFeeTotal       Int               @default(0)
+  cancellationFeeChargeId    String            @default("")
+  cancellationFeeChargedAt   DateTime?
+  cancelledAt                DateTime?
   // Check-in / round-charge flow (Phase 2) — direct charge on the course's
   // connected Stripe account, refunding the cancellation fee above if one was
   // already taken. checkInToken lets a golfer check in from the reminder
   // email on a fresh device without needing to be logged in.
-  checkInToken             String?        @unique // generated explicitly in app code at booking creation, not a DB default —
+  checkInToken               String?           @unique // generated explicitly in app code at booking creation, not a DB default —
   // existing rows added before this column existed will be null and just won't have a self-checkin link (staff can still check them in manually)
-  checkedInAt              DateTime?
-  roundPaymentIntentId     String         @default("")
-  checkInFailReason        String         @default("")
-  paymentStatus            String         @default("card_on_file")
-  status                   String         @default("confirmed")
+  checkedInAt                DateTime?
+  roundPaymentIntentId       String            @default("")
+  checkInFailReason          String            @default("")
+  paymentStatus              String            @default("card_on_file")
+  status                     String            @default("confirmed")
   // Booking terms consent — recorded at the moment of booking, never backfilled.
-  termsAcceptedAt          DateTime?
-  termsVersion             String?
+  termsAcceptedAt            DateTime?
+  termsVersion               String?
   // MP-3: set at the cutoff crossing. Distinguishes "fee was owed and is
   // collectable" from "fee was stamped at booking but the golfer cancelled
   // free" — MP-1 #6 clears the amount on a free cancel, which fixed the
   // symptom; this records the state instead of inferring it from a zero.
-  cancellationFeeApplies   Boolean        @default(false)
+  cancellationFeeApplies     Boolean           @default(false)
   /// SP-B: the course's policy copied at booking — a later policy change never reaches this booking.
   /// Null (bookings made before SP-B) behaves as "hold_at_cutoff", exactly as before.
-  lateFeeTimingAtBooking   String?
-  noShowFeeTotal           Int            @default(0)
+  lateFeeTimingAtBooking     String?
+  noShowFeeTotal             Int               @default(0)
   autoNoShowMinutesAtBooking Int?
   /// SD-5 lifecycle: 'online' | 'walk_in' | 'phone' — walk-ins and phone
   /// bookings are entered at the counter and pay there (paymentStatus 'manual').
-  source                   String         @default("online")
+  source                     String            @default("online")
   /// SD-5: how many of `players` actually showed (partial-party check-in); null = all
-  checkedInPlayers         Int?
+  checkedInPlayers           Int?
   /// SD-5: the counter marked the group a no-show (booking stays confirmed for the fee cron)
-  noShowAt                 DateTime?
+  noShowAt                   DateTime?
   /// SD-5: paid at the counter, not through Stripe — never counted as platform-collected
-  paidOffline              Boolean        @default(false)
+  paidOffline                Boolean           @default(false)
   /// SD-5: the course's cancellation window at the moment of booking, so a later policy change never moves this golfer's deadline
   cancellationHoursAtBooking Int?
   /// MP-6c schema half: when the round was actually paid (the charge
   /// succeeded, or the counter took it) — the Revenue window reads this,
   /// not checkedInAt, so a collect-then-check-in lands on the day the money moved.
-  paidAt                   DateTime?
-  createdAt                DateTime       @default(now())
-  paymentEvents            PaymentEvent[]
+  paidAt                     DateTime?
+  /// POS-1a: pro-shop items added to the round (sum of BookingShopItem lines),
+  /// charged WITH the round — never part of totalAmount, which stays the round's own price.
+  shopTotalCents             Int               @default(0)
+  /// POS-1a: GreenReserve's fee on those items — $0.50 per sale (once per booking
+  /// with items, Cam 2026-10-08), paid by the golfer, taken as application fee.
+  shopFeeCents               Int               @default(0)
+  createdAt                  DateTime          @default(now())
+  paymentEvents              PaymentEvent[]
+  shopItems                  BookingShopItem[]
 
   // MP-3: Booking had ZERO indexes. Every admin money surface scans the table.
   @@index([courseId, createdAt])
@@ -515,15 +522,15 @@ model Booking {
 }
 
 model TeeTimeSchedule {
-  id                  String   @id @default(cuid())
-  courseId            String
-  course              Course   @relation(fields: [courseId], references: [id])
-  tierName            String   @default("standard")
-  daysOfWeek          Int[]
-  startTime           String
-  endTime             String
-  intervalMinutes     Int      @default(8)
-  holes               Int      @default(18)
+  id                       String         @id @default(cuid())
+  courseId                 String
+  course                   Course         @relation(fields: [courseId], references: [id])
+  tierName                 String         @default("standard")
+  daysOfWeek               Int[]
+  startTime                String
+  endTime                  String
+  intervalMinutes          Int            @default(8)
+  holes                    Int            @default(18)
   // MP-3 run B2d — integer cents. NOTE greenFeeWeekdayCents also exists on
   // MembershipTier (B2a); both are cents now, so mixing them is a semantic
   // error rather than a silent unit error.
@@ -533,14 +540,14 @@ model TeeTimeSchedule {
   memberRateWeekendCents   Int?
   residentRateWeekdayCents Int?
   residentRateWeekendCents Int?
-  cartFeeCents             Int  @default(0)
-  walkingAllowed      Boolean  @default(true)
-  active              Boolean  @default(true)
-  createdAt           DateTime @default(now())
+  cartFeeCents             Int            @default(0)
+  walkingAllowed           Boolean        @default(true)
+  active                   Boolean        @default(true)
+  createdAt                DateTime       @default(now())
   /// L2: which bookable product this schedule generates slots for. Null = the
   /// simple case (one product, the course as a whole) — unchanged behaviour.
-  productId           String?
-  product             CourseProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId                String?
+  product                  CourseProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([productId])
 }
@@ -559,11 +566,11 @@ model TeeTimeAlert {
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   email       String
   name        String    @default("")
-  date        String    // YYYY-MM-DD
+  date        String // YYYY-MM-DD
   windowStart String    @default("") // HH:MM, empty = any time
   windowEnd   String    @default("") // HH:MM, empty = any time
   players     Int       @default(1)
-  teeTimeId   String?   // null = criteria alert; set = full-slot alert
+  teeTimeId   String? // null = criteria alert; set = full-slot alert
   teeTime     TeeTime?  @relation(fields: [teeTimeId], references: [id], onDelete: SetNull)
   token       String    @unique @default(cuid())
   notifiedAt  DateTime?
@@ -573,9 +580,9 @@ model TeeTimeAlert {
 }
 
 model CourseInquiry {
-  id                   String   @id @default(cuid())
-  firstName            String   @default("")
-  lastName             String   @default("")
+  id                   String               @id @default(cuid())
+  firstName            String               @default("")
+  lastName             String               @default("")
   contactName          String
   contactTitle         String
   email                String
@@ -585,24 +592,24 @@ model CourseInquiry {
   city                 String
   state                String
   zipCode              String
-  website              String   @default("")
+  website              String               @default("")
   courseType           String
-  currentBookingMethod String   @default("")
+  currentBookingMethod String               @default("")
   teeTimesPerDay       Int?
-  greenFeeRange        String   @default("")
-  hasResidentPricing   Boolean  @default(false)
-  hasMemberPricing     Boolean  @default(false)
-  hasCaddies           Boolean  @default(false)
-  pricingNotes         String   @default("")
-  facilitiesNotes      String   @default("")
+  greenFeeRange        String               @default("")
+  hasResidentPricing   Boolean              @default(false)
+  hasMemberPricing     Boolean              @default(false)
+  hasCaddies           Boolean              @default(false)
+  pricingNotes         String               @default("")
+  facilitiesNotes      String               @default("")
   lookingFor           String[]
-  additionalNotes      String   @default("")
-  needsJson            String   @default("")
-  status               String   @default("pending")
-  adminNotes           String   @default("")
+  additionalNotes      String               @default("")
+  needsJson            String               @default("")
+  status               String               @default("pending")
+  adminNotes           String               @default("")
   builtCourseId        String?
-  detailsToken         String?  @unique
-  detailsJson          String   @default("")
+  detailsToken         String?              @unique
+  detailsJson          String               @default("")
   reviewStartedAt      DateTime?
   wentLiveAt           DateTime?
   // MP-3 growth columns. Cheap now, unanswerable later:
@@ -617,8 +624,8 @@ model CourseInquiry {
   closedReason         String?
   snoozeUntil          DateTime?
   nextFollowUpAt       DateTime?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
   events               InquiryStatusEvent[]
   changeRequests       ChangeRequest[]
   /// IC-1 (A1): build without a call, with a reason on record.
@@ -626,7 +633,7 @@ model CourseInquiry {
   calls                Call[]
   /// SC-1: token for the public "pick a call time" page. Same pattern as
   /// detailsToken — unique, generated in app code, regenerated on resend.
-  callInviteToken      String?   @unique
+  callInviteToken      String?              @unique
   callInviteSentAt     DateTime?
   callInviteExpiresAt  DateTime?
 
@@ -639,38 +646,38 @@ model CourseInquiry {
 /// inquiryId / courseId is set (enforced in the API, not the DB).
 /// COURSES_SHEET_SPEC CS-1 reads the same rows — do NOT add a second model.
 model Call {
-  id           String         @id @default(cuid())
+  id             String         @id @default(cuid())
   /// 'discovery' (inquiry) | 'checkin' (course)
-  kind         String
-  inquiryId    String?
-  inquiry      CourseInquiry? @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
-  courseId     String?
-  course       Course?        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  scheduledAt  DateTime
-  durationMin  Int            @default(30)
+  kind           String
+  inquiryId      String?
+  inquiry        CourseInquiry? @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  courseId       String?
+  course         Course?        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  scheduledAt    DateTime
+  durationMin    Int            @default(30)
   /// 'we_call' | 'they_call'
-  direction    String         @default("we_call")
-  phone        String         @default("")
+  direction      String         @default("we_call")
+  phone          String         @default("")
   /// JSON string: string[] of agenda item keys checked for this call
-  agendaJson   String         @default("[]")
+  agendaJson     String         @default("[]")
   /// free text the admin adds for this course ("Tuesday league")
-  agendaExtra  String         @default("")
+  agendaExtra    String         @default("")
   /// 'scheduled' | 'talked' | 'no_answer' | 'not_a_fit' | 'cancelled'
-  outcome      String         @default("scheduled")
+  outcome        String         @default("scheduled")
   /// JSON string: Record<agendaKey, string> — what was said, per item
-  answersJson  String         @default("{}")
-  notes        String         @default("")
-  followUpAt   DateTime?
-  completedAt  DateTime?
-  createdBy    String         @default("")
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  answersJson    String         @default("{}")
+  notes          String         @default("")
+  followUpAt     DateTime?
+  completedAt    DateTime?
+  createdBy      String         @default("")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   /// SC-2: set when the COURSE booked this slot itself, rather than an admin
   /// scheduling it. Distinguishes "they chose this" from "we told them".
-  bookedByCourse Boolean      @default(false)
+  bookedByCourse Boolean        @default(false)
   /// Google Calendar event id, so reschedule/cancel can move or delete it.
   /// Null when the calendar write failed — the call still stands.
-  gcalEventId  String?
+  gcalEventId    String?
 
   @@index([inquiryId, scheduledAt])
   @@index([courseId, scheduledAt])
@@ -681,7 +688,7 @@ model InquiryStatusEvent {
   inquiryId  String
   fromStatus String
   toStatus   String
-  trigger    String        // 'system' | 'admin'
+  trigger    String // 'system' | 'admin'
   actorName  String?
   createdAt  DateTime      @default(now())
   inquiry    CourseInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
@@ -699,27 +706,27 @@ model RateLimit {
 }
 
 model AdminUser {
-  id                     String    @id @default(cuid())
-  email                  String    @unique
+  id                     String          @id @default(cuid())
+  email                  String          @unique
   name                   String
   passwordHash           String
-  role                   String    @default("manager") // "owner" | "manager" | "support" | "viewer"
-  active                 Boolean   @default(true)
-  mustChangePassword     Boolean   @default(false)
+  role                   String          @default("manager") // "owner" | "manager" | "support" | "viewer"
+  active                 Boolean         @default(true)
+  mustChangePassword     Boolean         @default(false)
   lastLoginAt            DateTime?
-  createdAt              DateTime  @default(now())
-  setPasswordToken       String?   @unique
+  createdAt              DateTime        @default(now())
+  setPasswordToken       String?         @unique
   setPasswordTokenExpiry DateTime?
   twoFactorCode          String?
   twoFactorCodeExpiry    DateTime?
-  twoFactorAttempts      Int       @default(0)
+  twoFactorAttempts      Int             @default(0)
   /// OWNER TOTP 2FA: base32 secret for the authenticator app; null = not
   /// enrolled, the email-code path stays in force (lockout safety).
   twoFactorSecret        String?
   twoFactorEnrolledAt    DateTime?
   /// bcrypt hashes of the ten single-use recovery codes; a used one is removed
-  twoFactorRecoveryCodes String[]  @default([])
-  failedLoginAttempts    Int       @default(0)
+  twoFactorRecoveryCodes String[]        @default([])
+  failedLoginAttempts    Int             @default(0)
   lockoutUntil           DateTime?
   // MP-3. NOTE: the spec justified this as the fix for "deactivating an admin
   // doesn't end their session". MP-2 already fixed that with a per-request
@@ -728,7 +735,7 @@ model AdminUser {
   // save the query — you would read the row to get the version. What remains
   // is a deliberate "sign out everywhere" lever: bump it to invalidate every
   // outstanding token for this admin at once. Added while migrations are cheap.
-  sessionVersion         Int       @default(0)
+  sessionVersion         Int             @default(0)
   auditLogs              AdminAuditLog[]
 }
 
@@ -769,7 +776,7 @@ model MessageThread {
 model Message {
   id          String        @id @default(cuid())
   threadId    String
-  senderType  String        // "admin" | "operator"
+  senderType  String // "admin" | "operator"
   senderId    String
   senderName  String
   body        String
@@ -789,15 +796,15 @@ model Message {
 // into whatever period the revenue page is showing; endedAt lets a cost
 // stop counting without deleting its history.
 model Expense {
-  id         String    @id @default(cuid())
-  name       String
-  category   String    @default("other") // "infra" | "tools" | "legal" | "other"
+  id          String    @id @default(cuid())
+  name        String
+  category    String    @default("other") // "infra" | "tools" | "legal" | "other"
   amountCents Int
-  cadence    String    @default("monthly") // "monthly" | "annual" | "one-time"
-  startedAt  DateTime  @default(now())
-  endedAt    DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  cadence     String    @default("monthly") // "monthly" | "annual" | "one-time"
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([startedAt])
 }
@@ -817,19 +824,19 @@ model Expense {
 /// amountCents is ALWAYS integer cents, independent of the Float→cents
 /// conversion in run B — new money data starts correct.
 model PaymentEvent {
-  id              String   @id @default(cuid())
-  bookingId       String
-  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  kind            String
-  amountCents     Int
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  kind        String
+  amountCents Int
   /// Stripe PaymentIntent / Refund id, when the event corresponds to one.
-  stripeId        String   @default("")
+  stripeId    String   @default("")
   /// Who or what caused it: 'cron' | 'admin' | 'operator' | 'golfer' | 'stripe'
-  actor           String   @default("system")
-  actorName       String?
+  actor       String   @default("system")
+  actorName   String?
   /// Free-text detail — a decline reason, a dispute code, a note.
-  detail          String   @default("")
-  createdAt       DateTime @default(now())
+  detail      String   @default("")
+  createdAt   DateTime @default(now())
 
   @@index([bookingId])
   @@index([kind, createdAt])
@@ -908,15 +915,15 @@ model ChangeRequest {
 /// they ran, so a silently dead cron is invisible until someone notices money
 /// stopped moving. The System page turns red off this.
 model CronRunLog {
-  id          String    @id @default(cuid())
-  job         String
-  startedAt   DateTime  @default(now())
-  finishedAt  DateTime?
+  id         String    @id @default(cuid())
+  job        String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
   /// 'ok' | 'error'
-  outcome     String    @default("ok")
+  outcome    String    @default("ok")
   /// Whatever the job wants to record — counts, ids, a decline summary.
-  detail      String    @default("")
-  error       String    @default("")
+  detail     String    @default("")
+  error      String    @default("")
 
   @@index([job, startedAt])
   @@index([startedAt])
@@ -925,15 +932,15 @@ model CronRunLog {
 /// Admin audit trail. Cannot be backfilled, so the column has to exist before
 /// the first action worth auditing.
 model AdminAuditLog {
-  id        String    @id @default(cuid())
-  adminId   String
-  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  action    String
+  id         String    @id @default(cuid())
+  adminId    String
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action     String
   /// What was acted on: 'course' | 'inquiry' | 'booking' | 'admin' | ...
-  targetType String   @default("")
-  targetId  String    @default("")
-  detail    String    @default("")
-  createdAt DateTime  @default(now())
+  targetType String    @default("")
+  targetId   String    @default("")
+  detail     String    @default("")
+  createdAt  DateTime  @default(now())
 
   @@index([adminId, createdAt])
   @@index([createdAt])
@@ -1016,21 +1023,60 @@ model MonthlyReview {
 /// booked on one day (or a window of it) — "frost delay, first tee 9:00".
 /// Operational only: it goes to people booked that day, never a marketing list.
 model CourseMessage {
-  id         String   @id @default(cuid())
-  courseId   String
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   /// YYYY-MM-DD, course-local
-  date       String
+  date      String
   /// HH:MM window, inclusive; null = the whole day
-  fromTime   String?
-  toTime     String?
-  body       String
-  sentEmail  Int      @default(0)
-  sentSms    Int      @default(0)
-  failed     Int      @default(0)
+  fromTime  String?
+  toTime    String?
+  body      String
+  sentEmail Int      @default(0)
+  sentSms   Int      @default(0)
+  failed    Int      @default(0)
   /// "staff:<id>" / "op:<id>"
-  sentBy     String
-  createdAt  DateTime @default(now())
+  sentBy    String
+  createdAt DateTime @default(now())
 
   @@index([courseId, createdAt])
+}
+
+/// POS-1a (PLATFORM_ROADMAP_SPEC §4): a course's pro-shop catalog — apparel,
+/// balls, range buckets, rentals. Name and price only; stock is not tracked yet.
+model ShopItem {
+  id         String            @id @default(cuid())
+  courseId   String
+  course     Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name       String
+  category   String            @default("")
+  priceCents Int
+  /// Hidden from "Add to round" but kept, so past sales still name it.
+  active     Boolean           @default(true)
+  sortOrder  Int               @default(0)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  sales      BookingShopItem[]
+
+  @@index([courseId])
+}
+
+/// POS-1a: one line of shop items added to a booking. Name and price are copied
+/// at the moment it is added, so a later catalog edit never changes what a
+/// golfer was charged.
+model BookingShopItem {
+  id             String    @id @default(cuid())
+  bookingId      String
+  booking        Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  shopItemId     String?
+  shopItem       ShopItem? @relation(fields: [shopItemId], references: [id], onDelete: SetNull)
+  name           String
+  unitPriceCents Int
+  quantity       Int       @default(1)
+  /// Who added it (staff/owner email).
+  addedBy        String    @default("")
+  createdAt      DateTime  @default(now())
+
+  @@index([bookingId])
+  @@index([shopItemId])
 }

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { receiptCharges, chargedNowCents } from '@/lib/receipt-charges';
+import { roundChargeCents, shopLinesFor } from '@/lib/shop';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -55,7 +56,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
-    totalAmount: booking.totalAmount,
+    // POS-1a: pro-shop items charged with the round, and the total with them.
+    shopLines: booking.shopTotalCents > 0 ? (await shopLinesFor(booking.id)).map(({ name, unitPriceCents, quantity }) => ({ name, unitPriceCents, quantity })) : [],
+    shopFeeCents: booking.shopFeeCents,
+    totalAmount: roundChargeCents(booking),
     status: booking.status,
     cancellationFeeTotal: booking.cancellationFeeTotal,
     cancellationFeeCharged: !!booking.cancellationFeeChargeId,

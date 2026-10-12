@@ -151,6 +151,22 @@ Removes the "what about my POS?" objection. Not a full retail system:
     sheet panel; items are charged with the round (check-in, pay link) with the
     50¢ fee. Touches every round-charge path (check-in, pay link, partial party,
     move, refunds, receipts) — overseer-only, schema change.
+    **Built 2026-10-12** (lib/shop.ts): ShopItem catalog in Settings → Pro shop
+    (`shop.catalog`), "Add shop item" on each group in the tee-sheet panel
+    (`shop.sell`, Front desk preset). Items are BookingShopItem lines with the
+    name and price copied in; Booking.shopTotalCents / shopFeeCents sit beside
+    totalAmount, which stays the round's own price. The card charge is
+    roundChargeCents() (round + items + fee) with roundApplicationFeeCents()
+    (booking fee + shop fee); refunds, receipts, the pay link page, the manage
+    page and the moved-booking email read the same helpers. Items lock once the
+    round is paid / checked in / cancelled — a later sale is POS-1b. Partial
+    party: the round is prorated, the items are not. Paid at the counter: items
+    are collected there, no shop fee. Stock is not tracked yet.
+    **The 50¢ fee ships OFF** (`SHOP_FEE_ON` in lib/booking-fees.ts): Operator
+    Agreement v2026-10 lists GreenReserve's fees as $1.50 + 1% of dues and
+    /for-courses says "our only revenue". Turning it on needs a new agreement
+    version naming it (re-accept), /terms and LQ-2 copy — best done together
+    with POS-1b's counter fee. Waiting on Cam.
   - POS-1b: counter sale with the reader (Stripe Terminal location + reader
     registration in Settings, sale screen, card_present PaymentIntent with the
     application fee, refunds). Needs Cam to order a reader and Stripe Terminal

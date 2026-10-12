@@ -71,6 +71,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
     totalAmount: booking.totalAmount,
+    // POS-1a: pro-shop items the course added, with GreenReserve's fee on them.
+    shopChargeCents: booking.shopTotalCents + booking.shopFeeCents,
     cancellationHours: windowHours,
     cancellationFeeTotal: booking.cancellationFeeTotal,
     cancellationFeeCharged: booking.paymentStatus === 'cancellation_fee_charged',

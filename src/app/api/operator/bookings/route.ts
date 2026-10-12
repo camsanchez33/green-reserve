@@ -132,6 +132,7 @@ export async function PATCH(req: NextRequest) {
         date: moved.teeTime.date, time: moved.teeTime.time, holes: moved.teeTime.holes, productLabel: moved.teeTime.product?.label ?? null,
         players: moved.players, greenFeeTotal: moved.greenFeeTotal, cartFeeTotal: moved.cartFeeTotal, rangeBallsTotal: moved.rangeBallsTotal,
         accessFeeTotal: moved.accessFeeTotal, totalAmount: moved.totalAmount, bookingId: moved.id, checkInToken: moved.checkInToken,
+        shopTotalCents: moved.shopTotalCents, shopFeeCents: moved.shopFeeCents,
         checkedIn: r.checkedIn,
       }).then(() => true, (err) => { console.error(JSON.stringify({ ev: 'move.email.fail', bookingId: id, error: err instanceof Error ? err.message : String(err) })); return false; });
     }

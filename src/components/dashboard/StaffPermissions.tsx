@@ -28,7 +28,7 @@ const PRESET_LABEL: Record<string, string> = {
   starter: 'Starter', front_desk: 'Front desk', manager: 'Manager', custom: 'Custom',
   legacy: 'Original staff access',
 };
-const GROUPS = ['Tee sheet', 'Money', 'Members', 'Schedule', 'Course'] as const;
+const GROUPS = ['Tee sheet', 'Money', 'Members', 'Schedule', 'Pro shop', 'Course'] as const;
 
 export function StaffPermissions({ onCount }: { onCount?: (n: number) => void }) {
   const [staff, setStaff] = useState<StaffRow[] | null>(null);

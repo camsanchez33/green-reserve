@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
+import { serviceFeeLabel, hoursLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { afterCutoffLine, policyMoney } from '@/lib/cancel-policy';
 import { membershipFeeCents } from '@/lib/stripe';
 
@@ -346,7 +346,14 @@ export async function sendBookingModifiedEmail(data: {
   accessFeeTotal: number; totalAmount: number; bookingId: string; checkInToken: string | null;
   /** Already checked in (and paid): no "Check In & Pay", the total reads as paid. */
   checkedIn?: boolean;
+  /** POS-1a: pro-shop items on the booking and GreenReserve's fee on them — added to the total. */
+  shopTotalCents?: number; shopFeeCents?: number;
 }) {
+  const shopRows = (data.shopTotalCents ?? 0) > 0
+    ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Pro-shop items</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${((data.shopTotalCents ?? 0) / 100).toFixed(2)}</span></td></tr>`
+      + ((data.shopFeeCents ?? 0) > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">${SHOP_FEE_LABEL}</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${((data.shopFeeCents ?? 0) / 100).toFixed(2)}</span></td></tr>` : '')
+    : '';
+  const grandTotal = data.totalAmount + (data.shopTotalCents ?? 0) + (data.shopFeeCents ?? 0);
   const portalUrl = data.courseSlug
     ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
     : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
@@ -364,7 +371,8 @@ export async function sendBookingModifiedEmail(data: {
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
         ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</span></td></tr>` : ''}
         <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">${serviceFeeLabel(data.players)}</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
-        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">${data.checkedIn ? 'Total (already paid)' : 'New total at check-in'}</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>
+        ${shopRows}
+        <tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">${data.checkedIn ? 'Total (already paid)' : 'New total at check-in'}</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(grandTotal / 100).toFixed(2)}</span></td></tr>
       </table>
     </div>
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
@@ -401,7 +409,11 @@ export async function sendFrostDelayEmail(data: {
 export async function sendCheckInReceiptEmail(data: {
   golferName: string; golferEmail: string; courseName: string; courseSlug?: string;
   date: string; time: string; players: number;
-  greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
+  greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
+  /** The whole charge: the round plus any pro-shop items and their fee (POS-1a roundChargeCents). */
+  totalAmount: number;
+  shopLines?: { name: string; unitPriceCents: number; quantity: number }[];
+  shopFeeCents?: number;
   feeRefunded: boolean; feeRefundAmount: number;
   /** SD review: a fee was owed back and the automatic refund failed — say so, do not go quiet. */
   feeRefundFailed?: boolean;
@@ -419,6 +431,8 @@ export async function sendCheckInReceiptEmail(data: {
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
         ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</td></tr>` : ''}
         <tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">${serviceFeeLabel(data.players)}</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
+        ${(data.shopLines ?? []).map(l => `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">${escapeHtml(l.name)}${l.quantity > 1 ? ` &times; ${l.quantity}` : ''}</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(l.unitPriceCents * l.quantity / 100).toFixed(2)}</td></tr>`).join('')}
+        ${data.shopFeeCents ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:13px;">${SHOP_FEE_LABEL}</td><td style="padding:4px 0;text-align:right;color:#111827;font-size:13px;font-weight:600;">$${(data.shopFeeCents / 100).toFixed(2)}</td></tr>` : ''}
         <tr><td style="padding:10px 0 0;color:#111827;font-size:14px;font-weight:700;border-top:1px solid #e5e7eb;">Total Charged</td><td style="padding:10px 0 0;text-align:right;color:#111827;font-size:18px;font-weight:700;border-top:1px solid #e5e7eb;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>
       </table>
     </div>

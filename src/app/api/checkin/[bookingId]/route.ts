@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { performCheckIn, cartAddOnCentsFor } from '@/lib/checkin-booking';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { golferCheckInError } from '@/lib/checkin-errors';
+import { roundChargeCents, shopLinesFor } from '@/lib/shop';
 
 // Public, token-gated check-in endpoint — the golfer doesn't need to be
 // logged in (they may be checking in from a different device than they
@@ -49,7 +50,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     status: booking.status,
     // R-GOLF-011: a round paid in cash at the counter is never "charged to your card".
     paidOffline: booking.paidOffline,
-    totalAmount: booking.totalAmount,
+    // POS-1a: what the card will be charged — the round plus any pro-shop items
+    // the course added and their fee — with those lines listed.
+    totalAmount: roundChargeCents(booking),
+    shopLines: booking.shopTotalCents > 0 ? (await shopLinesFor(booking.id)).map(({ name, unitPriceCents, quantity }) => ({ name, unitPriceCents, quantity })) : [],
+    shopFeeCents: booking.shopFeeCents,
     greenFeeTotal: booking.greenFeeTotal,
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,

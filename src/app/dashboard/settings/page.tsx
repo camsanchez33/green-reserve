@@ -8,6 +8,7 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
+import { ShopCatalog } from '@/components/dashboard/ShopCatalog';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { describePolicy, policyFrom, LATE_FEE_TIMINGS } from '@/lib/cancel-policy';
 import { toast } from '@/components/dashboard/Toast';
@@ -32,12 +33,13 @@ const SECTIONS = [
   'Booking rules',
   'Pricing & cancellation',
   'Facilities',
+  'Pro shop',
   'Staff & account',
 ] as const;
 type Section = typeof SECTIONS[number];
 // Sections whose contents save themselves (staff, password, 2FA) — the
 // header Save button is hidden on these.
-const NO_SAVE_BUTTON: Section[] = ['Staff & account'];
+const NO_SAVE_BUTTON: Section[] = ['Pro shop', 'Staff & account'];
 // SP-A: the cancellation policy is the owner's alone — a staff login with
 // "Edit course settings" never sends these (the API refuses them too).
 const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes'];
@@ -67,6 +69,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
     'hasTournaments', 'tournamentFrequency', 'restaurantType', 'hasCartGirl',
     'hasCaddies', 'caddieType', 'caddieLooperRate', 'caddieForeRate', 'caddieNote', 'amenities',
   ],
+  'Pro shop': [],
   'Staff & account': [],
 };
 
@@ -893,6 +896,15 @@ function SettingsPageInner() {
                     <Field label="Caddie note"><FInput value={form.caddieNote as string} onChange={v=>set('caddieNote',v)} placeholder="e.g. Must request 48hrs in advance"/></Field>
                   </>
                 )}
+              </SectionCard>
+            </div>
+          )}
+
+          {/* ── Pro shop (POS-1a) ── items save themselves. */}
+          {active==='Pro shop' && (
+            <div className="space-y-5">
+              <SectionCard title="Pro shop">
+                <ShopCatalog />
               </SectionCard>
             </div>
           )}
