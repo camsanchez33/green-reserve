@@ -40,6 +40,14 @@ export type AgreementDocStatus = {
   acceptedAt: Date | null;
   acceptedVersion: string | null;
   legacy: boolean;
+  /**
+   * The signer must sign THIS version now: there is no row for it, and either
+   * nothing older counts or a re-acceptance was asked for it. An older row still
+   * inside its window keeps `signed` true (the course is not gated yet) but does
+   * not make the new version signed — that was the "banner never goes away" bug
+   * (Cam 2026-10-12): signing was a no-op because the older row looked current.
+   */
+  needsSigning: boolean;
 };
 
 export type AgreementStatus = {
@@ -79,6 +87,7 @@ export async function agreementStatus(courseId: string): Promise<AgreementStatus
     return {
       document: d.document, version: d.version, title: d.title,
       signed: !!hit, acceptedAt: hit?.acceptedAt ?? null, acceptedVersion: hit?.version ?? null, legacy: hit?.legacy ?? false,
+      needsSigning: !current && (!olderOk || !!due),
     };
   });
   return {

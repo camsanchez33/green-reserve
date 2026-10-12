@@ -5085,7 +5085,7 @@
     },
     {
       "path": "src/app/api/operator/sign/route.ts",
-      "lines": 103,
+      "lines": 105,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8943,7 +8943,7 @@
     },
     {
       "path": "src/lib/agreement-gate.ts",
-      "lines": 91,
+      "lines": 100,
       "purpose": "AG-1:",
       "brain": [],
       "exports": [
@@ -9152,7 +9152,7 @@
     },
     {
       "path": "src/lib/agreement-sign.ts",
-      "lines": 203,
+      "lines": 206,
       "purpose": "AGREEMENT_SPEC AG-2 — the signing service.",
       "brain": [],
       "exports": [

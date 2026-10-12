@@ -55,7 +55,10 @@ export async function recordSigning(input: SignInput): Promise<SignResult> {
   const docs = signableDocuments();
   if (docs.length === 0) return { ok: false, status: 503, error: 'No agreements are ready to sign right now. Contact thegreenreserve@outlook.com.' };
   const status = await agreementStatus(input.courseId);
-  const alreadyCurrent = status.documents.filter(d => d.signed).map(d => d.document);
+  // A document is signed now when the course has no row for its current
+  // version and needs one — including a re-acceptance bump, where an older row
+  // still counts as "signed" for the gate but is not this version.
+  const alreadyCurrent = status.documents.filter(d => !d.needsSigning).map(d => d.document);
   const toSign = docs.filter(d => !alreadyCurrent.includes(d.document));
 
   for (const d of toSign) {
