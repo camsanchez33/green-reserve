@@ -130,17 +130,33 @@ Removes the "what about my POS?" objection. Not a full retail system:
 - **Add to the round:** staff add items to a group's booking on the tee sheet;
   they're charged with the round at check-in or on the golfer's pay link — this
   works with what exists today, no hardware.
-- **Counter sale** (no booking): needs a card reader. **Decision for Cam:**
-  Stripe Terminal smart readers (server-driven, work from the web dashboard,
-  ~$250–350 each) vs Tap to Pay on iPhone (no hardware, but needs a native app,
-  which we don't have). Recommendation: server-driven reader first.
-- **Decided (Cam 2026-10-08): GreenReserve takes $0.50 on pro shop
-  purchases.** Still open before building: per sale or per item (recommended:
-  per sale, one charge however many items); who pays it (recommended: the
-  course, taken as the Stripe application fee, so the shop's prices stay what
-  the tag says; adding 50¢ to a golfer's $4 sleeve of tees at the register
-  reads badly); whether cash sales count (they can't be collected, like
-  PAY-2). Golfer- or course-facing fee wording still goes through legal/LQ-2.
+- **Counter sale** (no booking): a **Stripe Terminal smart reader** (Cam
+  2026-10-08: "I would do reader"). Server-driven: staff ring the sale up on the
+  dashboard, the reader on the counter takes tap / chip / swipe. Tap to Pay is
+  out — it only works inside a native app.
+- **GreenReserve's fee (Cam 2026-10-08):** $0.50 **per sale** (not per item),
+  **paid by the golfer** ("our whole thing is free for course"), collected as
+  the Stripe application fee on the sale.
+  - **Open, needs legal (LQ-2) before the counter fee ships:** a fee added only
+    when a golfer pays by card at a register is a card *surcharge* under card
+    network rules (credit only, capped as a % of the sale — 50¢ on a $4 item is
+    12.5% — advance notice, receipt disclosure) and some states restrict or ban
+    surcharges. Items added to a round ride the existing booking-fee model and
+    are not affected. Until legal answers, counter sales are built with the fee
+    as a setting that defaults OFF.
+  - Note: GreenReserve's existing 50¢ on membership dues is taken from the
+    course's side (application fee inside the dues), the opposite of this rule.
+- **Build order:**
+  - POS-1a: shop catalog (Settings → Pro shop) + "Add to round" from the tee
+    sheet panel; items are charged with the round (check-in, pay link) with the
+    50¢ fee. Touches every round-charge path (check-in, pay link, partial party,
+    move, refunds, receipts) — overseer-only, schema change.
+  - POS-1b: counter sale with the reader (Stripe Terminal location + reader
+    registration in Settings, sale screen, card_present PaymentIntent with the
+    application fee, refunds). Needs Cam to order a reader and Stripe Terminal
+    enabled on the connected accounts; built against Stripe's simulated reader
+    in test mode.
+  - POS-1c: shop sales on Analytics (Money tab) and in the monthly review.
 - Daily sales on Analytics; feeds BI-1.
 
 ## 5. MSG-1 — reminders and messages to golfers
