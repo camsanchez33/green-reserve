@@ -32,6 +32,10 @@ export type DocumentMeta = {
   draft: boolean;
   /** AG-3: the date counsel reviewed this version, from front matter; '' if absent. */
   counselReviewed: string;
+  /** AG-3: Cam's recorded decision to ship a re-acceptance bump WITHOUT counsel
+   *  (front matter `counselWaived: <date> by <who>`); '' if absent. Kept apart
+   *  from counselReviewed so the file never claims a review that did not happen. */
+  counselWaived: string;
   /** AG-3: what changed in this version, for the day-0 notice; '' if absent. */
   changeSummary: string;
 };
@@ -99,6 +103,7 @@ export function loadDocument(document: AgreementDocument, version: string = curr
     summary: Array.isArray(meta.summary) ? (meta.summary as string[]) : [],
     draft: meta.draft === true || /<!--[^>]*COUNSEL:[^>]*not reviewed/i.test(body),
     counselReviewed: typeof meta.counselReviewed === 'string' ? meta.counselReviewed : '',
+    counselWaived: typeof meta.counselWaived === 'string' ? meta.counselWaived : '',
     changeSummary: typeof meta.changeSummary === 'string' ? meta.changeSummary : '',
     markdown: body,
     html,

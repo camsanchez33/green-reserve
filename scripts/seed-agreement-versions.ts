@@ -21,9 +21,12 @@ async function main() {
       // refuses to seed until counsel has reviewed it (front matter
       // `counselReviewed: <date>`), and it takes effect NOW with a 30-day
       // window, whatever the file's effectiveAt says.
-      if (doc.reacceptRequired && !doc.counselReviewed) {
-        throw new Error(`${document} ${version}: reacceptRequired is set but the front matter has no counselReviewed date — not seeding a re-acceptance bump counsel has not reviewed.`);
+      // Cam may ship one without counsel by recording it (`counselWaived:
+      // <date> by <who>`) — an explicit, visible waiver, never a fake review date.
+      if (doc.reacceptRequired && !doc.counselReviewed && !doc.counselWaived) {
+        throw new Error(`${document} ${version}: reacceptRequired is set but the front matter has neither a counselReviewed date nor a counselWaived record — not seeding a re-acceptance bump counsel has not reviewed.`);
       }
+      if (doc.reacceptRequired && !doc.counselReviewed) console.warn(`${document} ${version}: seeding WITHOUT counsel review — waived: ${doc.counselWaived}`);
       if (doc.reacceptRequired && doc.draft) {
         throw new Error(`${document} ${version}: still marked as a draft — remove the draft marker before seeding a re-acceptance bump.`);
       }

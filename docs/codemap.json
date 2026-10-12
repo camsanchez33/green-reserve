@@ -8939,7 +8939,7 @@
     },
     {
       "path": "src/lib/agreements.ts",
-      "lines": 118,
+      "lines": 123,
       "purpose": "AGREEMENT_SPEC AG-1 §2 — versioned agreement documents.",
       "brain": [
         "agreement-versions"
