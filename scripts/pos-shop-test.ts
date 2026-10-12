@@ -9,7 +9,7 @@ import { refundBooking } from '../src/lib/refund-booking';
 import { receiptCharges } from '../src/lib/receipt-charges';
 import {
   addItemToBooking, removeLineFromBooking, shopFeeFor, roundChargeCents, roundApplicationFeeCents,
-  shopLockedReason, validItemInput, SHOP_SALE_FEE_CENTS, SHOP_FEE_ON,
+  shopLockedReason, validItemInput, SHOP_SALE_FEE_CENTS, SHOP_FEE_ON, MAX_BOOKING_SHOP_CENTS,
 } from '../src/lib/shop';
 
 // The fee the database flow below expects: 50¢ once SHOP_FEE_ON is turned on, 0 until then.
@@ -28,7 +28,15 @@ let piSeq = 0;
 const s = stripe as unknown as Record<string, Record<string, unknown>>;
 s.paymentMethods.create = async () => ({ id: 'pm_clone_test' });
 s.paymentIntents.search = async () => ({ data: [] });
-s.paymentIntents.create = async (p: { amount: number; application_fee_amount?: number }) => { sent.charges.push(p); return { id: `pi_${TAG}_${++piSeq}`, amount: p.amount, created: Math.floor(Date.now() / 1000) }; };
+// failNext: 'decline' = Stripe says no money moved; 'timeout' = it may have.
+let failNext: '' | 'decline' | 'timeout' = '';
+s.paymentIntents.create = async (p: { amount: number; application_fee_amount?: number }) => {
+  if (failNext) {
+    const kind = failNext; failNext = '';
+    throw Object.assign(new Error(kind === 'decline' ? 'Your card was declined.' : 'Request timed out'), { type: kind === 'decline' ? 'StripeCardError' : 'StripeConnectionError' });
+  }
+  sent.charges.push(p); return { id: `pi_${TAG}_${++piSeq}`, amount: p.amount, created: Math.floor(Date.now() / 1000) };
+};
 s.refunds.create = async (p: { amount?: number; refund_application_fee?: boolean }) => { sent.refunds.push(p); return { id: `re_${TAG}_${sent.refunds.length}`, amount: p.amount ?? 0 }; };
 
 async function cleanup() {
@@ -62,6 +70,8 @@ async function main() {
   check('checked in: locked', shopLockedReason({ ...open, status: 'completed' }) !== null);
   check('paid at the counter: locked', shopLockedReason({ ...open, paidOffline: true }) !== null);
   check('cancelled: locked', shopLockedReason({ ...open, status: 'cancelled' }) !== null);
+  check('refunded round: locked', shopLockedReason({ ...open, paymentStatus: 'refunded', roundPaymentIntentId: 'pi_x' }) !== null);
+  check('a charge attempt started: locked', shopLockedReason({ ...open, shopLockedAt: new Date() }) !== null);
   check('item needs a name', typeof validItemInput({ name: ' ', priceCents: 100 }) === 'string');
   check('item needs a price above $0', typeof validItemInput({ name: 'Balls', priceCents: 0 }) === 'string' && typeof validItemInput({ name: 'Balls', priceCents: 12.5 }) === 'string');
   check('a valid item passes', JSON.stringify(validItemInput({ name: ' Balls ', category: 'Balls', priceCents: 1200 })) === JSON.stringify({ name: 'Balls', category: 'Balls', priceCents: 1200 }));
@@ -123,6 +133,38 @@ async function main() {
   await addItemToBooking(course.id, p.id, tee.id, 1, 'x');
   const pci = await performCheckIn(p.id, { type: 'staff', id: op.id }, { checkedInPlayers: 2 });
   check('2 of 4 showed: half the round, all of the items', 'success' in pci && sent.charges.at(-1)?.amount === 5300 + 400 + FEE && sent.charges.at(-1)?.application_fee_amount === 300 + FEE, { pci, charge: sent.charges.at(-1) });
+
+  // Security review: two adds at the same moment both count.
+  const race = await booking(1);
+  const adds = await Promise.all([1, 2, 3, 4, 5].map(() => addItemToBooking(course.id, race.id, tee.id, 1, 'x')));
+  const raced = await prisma.booking.findUnique({ where: { id: race.id } });
+  check('five adds at once: all five lines and all five in the total', adds.every(a => a.ok) && raced?.shopTotalCents === 2000 && (await prisma.bookingShopItem.count({ where: { bookingId: race.id } })) === 5, { adds, total: raced?.shopTotalCents });
+
+  // A declined card unlocks the items; a timeout (money may have moved) keeps them frozen.
+  const dec = await booking(1);
+  await addItemToBooking(course.id, dec.id, tee.id, 1, 'x');
+  failNext = 'decline';
+  const decRes = await performCheckIn(dec.id, { type: 'staff', id: op.id });
+  check('a decline is reported', 'error' in decRes, decRes);
+  check('after a decline the items can still change', (await addItemToBooking(course.id, dec.id, tee.id, 1, 'x')).ok);
+  const tmo = await booking(1);
+  await addItemToBooking(course.id, tmo.id, tee.id, 1, 'x');
+  failNext = 'timeout';
+  await performCheckIn(tmo.id, { type: 'staff', id: op.id });
+  const tmoAdd = await addItemToBooking(course.id, tmo.id, tee.id, 1, 'x');
+  check('after a timeout the items are frozen (the charge may have gone through)', !tmoAdd.ok && tmoAdd.status === 409, tmoAdd);
+
+  // The stored charge, not a recomputed one, caps the refund.
+  const stored = await prisma.booking.findUnique({ where: { id: b.id } });
+  check('the charged amount is stored on the booking', stored?.roundChargedCents === 7700 + FEE, stored?.roundChargedCents);
+
+  // The per-booking cap.
+  const big = await booking(1);
+  const pricey = await prisma.shopItem.create({ data: { courseId: course.id, name: 'Cart', priceCents: 900_000 } });
+  check('one $9,000 item is allowed', (await addItemToBooking(course.id, big.id, pricey.id, 1, 'x')).ok);
+  const over = await addItemToBooking(course.id, big.id, pricey.id, 1, 'x');
+  check('going over $10,000 on one booking is refused cleanly', !over.ok && over.status === 409 && MAX_BOOKING_SHOP_CENTS === 1_000_000, over);
+  check('the refused add left no line behind', (await prisma.bookingShopItem.count({ where: { bookingId: big.id } })) === 1);
 
   // No items: unchanged behaviour.
   const plain = await booking(1);

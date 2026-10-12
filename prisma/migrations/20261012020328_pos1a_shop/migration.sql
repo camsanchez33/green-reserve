@@ -1,5 +1,7 @@
 -- AlterTable
-ALTER TABLE "Booking" ADD COLUMN     "shopFeeCents" INTEGER NOT NULL DEFAULT 0,
+ALTER TABLE "Booking" ADD COLUMN     "roundChargedCents" INTEGER,
+ADD COLUMN     "shopFeeCents" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "shopLockedAt" TIMESTAMP(3),
 ADD COLUMN     "shopTotalCents" INTEGER NOT NULL DEFAULT 0;
 
 -- CreateTable

@@ -15,7 +15,7 @@ import Stripe from 'stripe';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { sendRefundEmail } from './email';
-import { roundChargeCents } from './shop';
+import { roundChargedTotal } from './shop';
 
 export type PaymentEventKind =
   | 'refund' | 'refund_failed'
@@ -78,7 +78,7 @@ export async function refundBooking(bookingId: string, opts: {
 
   const alreadyRefunded = booking.paymentEvents.reduce((s, e) => s + e.amountCents, 0);
   // POS-1a: the round's charge also carried any shop items and their fee.
-  const charged = roundChargeCents(booking);
+  const charged = roundChargedTotal(booking);
   const remaining = charged - alreadyRefunded;
   if (remaining <= 0) return { ok: false, error: 'This round has already been refunded in full.', status: 409 };
 

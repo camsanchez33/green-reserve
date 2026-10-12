@@ -507,6 +507,13 @@ model Booking {
   /// POS-1a: GreenReserve's fee on those items — $0.50 per sale (once per booking
   /// with items, Cam 2026-10-08), paid by the golfer, taken as application fee.
   shopFeeCents               Int               @default(0)
+  /// POS-1a (security review): set the moment a round charge is attempted —
+  /// shop items cannot change after it, so the charge and the record agree.
+  /// Cleared only when Stripe says, definitively, no money moved.
+  shopLockedAt               DateTime?
+  /// What the round's PaymentIntent actually took (round + shop items + fee).
+  /// Refunds and receipts cap against this, never a recomputed figure.
+  roundChargedCents          Int?
   createdAt                  DateTime          @default(now())
   paymentEvents              PaymentEvent[]
   shopItems                  BookingShopItem[]

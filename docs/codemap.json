@@ -3077,7 +3077,7 @@
     },
     {
       "path": "src/app/api/checkin/[bookingId]/route.ts",
-      "lines": 89,
+      "lines": 99,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5772,7 +5772,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 369,
+      "lines": 373,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6306,7 +6306,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1382,
+      "lines": 1384,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10572,7 +10572,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 410,
+      "lines": 428,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14128,7 +14128,7 @@
     },
     {
       "path": "src/lib/shop.ts",
-      "lines": 111,
+      "lines": 137,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [
         "pro-shop"
@@ -14137,6 +14137,10 @@
         {
           "name": "addItemToBooking",
           "kind": "fn"
+        },
+        {
+          "name": "MAX_BOOKING_SHOP_CENTS",
+          "kind": "const"
         },
         {
           "name": "MAX_ITEM_PRICE_CENTS",
@@ -14156,6 +14160,10 @@
         },
         {
           "name": "roundChargeCents",
+          "kind": "fn"
+        },
+        {
+          "name": "roundChargedTotal",
           "kind": "fn"
         },
         {
@@ -15434,6 +15442,14 @@
         {
           "name": "shopFeeCents",
           "type": "Int"
+        },
+        {
+          "name": "shopLockedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "roundChargedCents",
+          "type": "Int?"
         },
         {
           "name": "createdAt",

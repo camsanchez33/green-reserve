@@ -56,6 +56,9 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseNa
   // after that, so it reads the latest choice from here.
   const addCartRef = useRef(addCart);
   addCartRef.current = addCart;
+  // The total on screen — the server refuses to charge a different one.
+  const totalRef = useRef(totalAmount);
+  totalRef.current = totalAmount;
 
   /** One charge path for the card form and the wallet. True when it went through. */
   async function charge(paymentMethodId: string): Promise<boolean> {
@@ -63,7 +66,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseNa
       const res = await fetch(`/api/checkin/${bookingId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, paymentMethodId, addCart: addCartRef.current }),
+        body: JSON.stringify({ token, paymentMethodId, addCart: addCartRef.current, expectedTotalCents: totalRef.current }),
       });
       const data = await res.json();
       if (!res.ok) { onError(data.error || 'Check-in failed.'); return false; }
@@ -181,7 +184,8 @@ function CheckInPageInner() {
     setError('');
     try {
       const res = await fetch(`/api/checkin/${bookingId}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, addCart }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, addCart, ...(info ? { expectedTotalCents: info.totalAmount + (addCart ? (info.cartAddOnCents ?? 0) : 0) } : {}) }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Check-in failed.'); setCheckingIn(false); return; }

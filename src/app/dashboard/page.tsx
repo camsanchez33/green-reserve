@@ -60,6 +60,8 @@ type Booking = {
   shopFeeCents?: number;
   /** The round's card charge went through (items lock then). */
   roundPaid?: boolean;
+  /** A round charge has been attempted — items are frozen (lib/shop shopLockedReason). */
+  shopLocked?: boolean;
 };
 /** POS-1a: what the card is charged beyond the round itself. */
 const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0);
@@ -600,7 +602,7 @@ function DashboardPageInner() {
         )}
         {/* POS-1a: pro-shop items charged with this round. Same lock as the server (lib/shop shopLockedReason). */}
         <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0}
-          editable={b.status === 'confirmed' && !b.paidOffline && !(b.paymentStatus === 'paid' && b.roundPaid)}
+          editable={b.status === 'confirmed' && !b.paidOffline && !b.shopLocked && !(b.roundPaid && (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded'))}
           canSell={access.can('shop.sell')} showMoney={access.can('money.payments')}
           onChanged={() => loadTimes(selectedDate)} />
       </div>
