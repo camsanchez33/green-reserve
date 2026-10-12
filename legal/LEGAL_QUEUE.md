@@ -39,8 +39,9 @@ attempted. `⚖️` cannot be closed by a Claude session.
       recorded waiver; it never writes a fake counselReviewed date). Still open:
       counsel should read v2026-10 (and 2026-08) when GreenReserve engages one —
       a counsel-requested change becomes a new version, not an edit.
-      Seed step (once, after the deploy is live — see AGREEMENT_SPEC AG-3):
-      `npx dotenv -e .env.local -- npx tsx scripts/seed-agreement-versions.ts`
+      Publish step (once, after the deploy is live — see AGREEMENT_SPEC AG-3):
+      Admin → System → Agreement versions → "Publish 2026-10" (owner with 2FA),
+      or `npx dotenv -e .env.local -- npx tsx scripts/seed-agreement-versions.ts`
       with prod's DATABASE_URL. The 30-day window starts then; the `hourly` cron
       sends the day-0 notice at its next run.
       → Findings L-4 · Register PM-4

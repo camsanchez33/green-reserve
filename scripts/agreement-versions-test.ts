@@ -1,5 +1,6 @@
 // AG-3: the operator-agreement version on disk and the seed's re-acceptance gate.
 import { loadDocument, currentVersion, signableDocuments, seedGateError } from '../src/lib/agreements';
+import { publishDates, REACCEPT_WINDOW_DAYS } from '../src/lib/agreement-publish';
 
 let failed = 0;
 function check(name: string, ok: boolean, detail = '') {
@@ -25,6 +26,13 @@ check('gate accepts a recorded waiver', seedGateError({ ...base, counselWaived: 
 check('gate refuses a draft even when waived', seedGateError({ ...base, counselWaived: 'x', draft: true }) !== null);
 check('no gate when re-acceptance is not required', seedGateError({ ...base, reacceptRequired: false }) === null);
 check('v2026-08 still loads (old signers\' PDFs)', loadDocument('operator_agreement', '2026-08').version === '2026-08');
+
+const now = new Date('2026-10-12T15:00:00.000Z');
+const bump = publishDates({ reacceptRequired: true, effectiveAt: '2026-10-01' }, now);
+check('a re-accept bump takes effect at publish time, not the file date', bump.effectiveAt.getTime() === now.getTime());
+check('a re-accept bump gets a 30-day window', REACCEPT_WINDOW_DAYS === 30 && bump.reacceptBy?.toISOString() === '2026-11-11T15:00:00.000Z', String(bump.reacceptBy?.toISOString()));
+const minor = publishDates({ reacceptRequired: false, effectiveAt: '2026-09-01' }, now);
+check('a minor version keeps its file date and has no window', minor.effectiveAt.toISOString() === '2026-09-01T00:00:00.000Z' && minor.reacceptBy === null);
 
 if (failed) { console.error(`${failed} failed`); process.exit(1); }
 console.log('agreement-versions: all passed');
