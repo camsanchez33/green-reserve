@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 401,
-    "routes": 209,
-    "libs": 118,
-    "models": 37,
+    "files": 406,
+    "routes": 211,
+    "libs": 119,
+    "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -18,6 +18,7 @@
     "inquiry-statuses": "src/lib/inquiry-status.ts",
     "money-movement": "src/lib/stripe.ts",
     "private-file-storage": "src/lib/private-blob.ts",
+    "pro-shop": "src/lib/shop.ts",
     "separate-booking-fee": "src/lib/access-fee.ts",
     "still-need-from-them": "src/lib/inquiry-needs.ts",
     "whose-move-is-it": "src/lib/inquiry-status.ts"
@@ -1778,7 +1779,7 @@
     },
     {
       "path": "src/app/api/admin/golfers/route.ts",
-      "lines": 246,
+      "lines": 250,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1804,6 +1805,7 @@
         "@/lib/cancel-booking",
         "@/lib/email",
         "@/lib/prisma",
+        "@/lib/shop",
         "next/server"
       ],
       "usedBy": []
@@ -2198,7 +2200,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 329,
+      "lines": 331,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2222,6 +2224,7 @@
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
+        "@/lib/shop",
         "@/lib/stripe-errors",
         "next/server"
       ],
@@ -2474,7 +2477,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 87,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2493,13 +2496,14 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/prisma",
+        "@/lib/shop",
         "next/server"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/api/admin/transactions/route.ts",
-      "lines": 140,
+      "lines": 141,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2519,6 +2523,7 @@
         "@/lib/admin-session",
         "@/lib/money",
         "@/lib/prisma",
+        "@/lib/shop",
         "@prisma/client",
         "next/server"
       ],
@@ -3076,7 +3081,7 @@
     },
     {
       "path": "src/app/api/checkin/[bookingId]/route.ts",
-      "lines": 84,
+      "lines": 102,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3102,6 +3107,7 @@
         "@/lib/checkin-errors",
         "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/shop",
         "next/server"
       ],
       "usedBy": []
@@ -3811,7 +3817,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 87,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3841,7 +3847,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
-      "lines": 48,
+      "lines": 50,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4284,7 +4290,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 341,
+      "lines": 344,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4328,6 +4334,36 @@
         "@/lib/stripe",
         "@/lib/twilio",
         "crypto",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/bookings/shop/route.ts",
+      "lines": 43,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DELETE",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/bookings/shop",
+      "kind": "api",
+      "methods": [
+        "DELETE",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/session",
+        "@/lib/shop",
         "next/server"
       ],
       "usedBy": []
@@ -5006,6 +5042,48 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/shop-items/route.ts",
+      "lines": 83,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DELETE",
+          "kind": "route"
+        },
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/shop-items",
+      "kind": "api",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "NONE FOUND for POST/PATCH/DELETE",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/prisma",
+        "@/lib/session",
+        "@/lib/shop",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/sign/route.ts",
       "lines": 105,
       "purpose": "",
@@ -5210,7 +5288,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 138,
+      "lines": 140,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5496,7 +5574,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 69,
+      "lines": 73,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5517,6 +5595,7 @@
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/receipt-charges",
+        "@/lib/shop",
         "next/server"
       ],
       "usedBy": []
@@ -5697,7 +5776,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 362,
+      "lines": 373,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5714,6 +5793,7 @@
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/GolferExitLinks",
+        "@/lib/booking-fees",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
         "lucide-react",
@@ -6230,7 +6310,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1365,
+      "lines": 1384,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6250,6 +6330,7 @@
         "@/components/dashboard/GolferMessageModal",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/MoveGroupModal",
+        "@/components/dashboard/ShopItemsForGroup",
         "@/components/dashboard/TeeSheetBoard",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
@@ -6348,7 +6429,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 991,
+      "lines": 1003,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6366,6 +6447,7 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/CourseLayoutTab",
         "@/components/dashboard/CoursePreview",
+        "@/components/dashboard/ShopCatalog",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
@@ -6622,7 +6704,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 560,
+      "lines": 565,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6836,7 +6918,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 236,
+      "lines": 250,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7711,6 +7793,62 @@
       ]
     },
     {
+      "path": "src/components/dashboard/ShopCatalog.tsx",
+      "lines": 135,
+      "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ShopCatalog",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/field",
+        "@/lib/booking-fees",
+        "@/lib/dashboard-fetch",
+        "@/lib/use-dashboard-access",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/ShopItemsForGroup.tsx",
+      "lines": 131,
+      "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (ShopItemsForGroup)",
+          "kind": "component"
+        },
+        {
+          "name": "ShopLine",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/booking-fees",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/SignAgreements.tsx",
       "lines": 221,
       "purpose": "AGREEMENT_SPEC AG-2 §1 — the \"Sign\" step.",
@@ -8437,6 +8575,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx"
       ]
     },
@@ -9002,6 +9141,7 @@
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
@@ -9686,7 +9826,7 @@
     },
     {
       "path": "src/lib/booking-fees.ts",
-      "lines": 11,
+      "lines": 24,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9705,6 +9845,18 @@
         {
           "name": "serviceFeeLabel",
           "kind": "fn"
+        },
+        {
+          "name": "SHOP_FEE_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "SHOP_FEE_ON",
+          "kind": "const"
+        },
+        {
+          "name": "SHOP_SALE_FEE_CENTS",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -9716,11 +9868,15 @@
       "usedBy": [
         "src/app/api/admin/system/route.ts",
         "src/app/book/BookClient.tsx",
+        "src/app/checkin/[bookingId]/page.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/components/dashboard/ShopCatalog.tsx",
+        "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/components/home/TeeSheetDemo.tsx",
-        "src/lib/email.ts"
+        "src/lib/email.ts",
+        "src/lib/shop.ts"
       ]
     },
     {
@@ -10420,7 +10576,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 398,
+      "lines": 446,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10447,6 +10603,7 @@
         "./booking-events",
         "./email",
         "./prisma",
+        "./shop",
         "./stripe"
       ],
       "usedBy": [
@@ -11315,6 +11472,8 @@
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/ShopCatalog.tsx",
+        "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
@@ -11418,7 +11577,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1876,
+      "lines": 1890,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13326,6 +13485,7 @@
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
@@ -13383,6 +13543,7 @@
         "src/lib/schedule-service.ts",
         "src/lib/session.ts",
         "src/lib/sheet-token.ts",
+        "src/lib/shop.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/two-factor.ts",
@@ -13559,7 +13720,7 @@
     },
     {
       "path": "src/lib/receipt-charges.ts",
-      "lines": 93,
+      "lines": 94,
       "purpose": "R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt.",
       "brain": [],
       "exports": [
@@ -13585,7 +13746,8 @@
         "./access-fee",
         "./cancel-policy",
         "./no-show-fee",
-        "./prisma"
+        "./prisma",
+        "./shop"
       ],
       "usedBy": [
         "src/app/api/receipt/[bookingId]/route.ts"
@@ -13593,7 +13755,7 @@
     },
     {
       "path": "src/lib/refund-booking.ts",
-      "lines": 133,
+      "lines": 136,
       "purpose": "MP-6b.",
       "brain": [],
       "exports": [
@@ -13626,6 +13788,7 @@
       "imports": [
         "./email",
         "./prisma",
+        "./shop",
         "./stripe",
         "stripe"
       ],
@@ -13835,6 +13998,7 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
@@ -13854,6 +14018,7 @@
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
@@ -13966,6 +14131,103 @@
       ]
     },
     {
+      "path": "src/lib/shop.ts",
+      "lines": 137,
+      "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
+      "brain": [
+        "pro-shop"
+      ],
+      "exports": [
+        {
+          "name": "addItemToBooking",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_BOOKING_SHOP_CENTS",
+          "kind": "const"
+        },
+        {
+          "name": "MAX_ITEM_PRICE_CENTS",
+          "kind": "const"
+        },
+        {
+          "name": "MAX_LINE_QUANTITY",
+          "kind": "const"
+        },
+        {
+          "name": "removeLineFromBooking",
+          "kind": "fn"
+        },
+        {
+          "name": "roundApplicationFeeCents",
+          "kind": "fn"
+        },
+        {
+          "name": "roundChargeCents",
+          "kind": "fn"
+        },
+        {
+          "name": "roundChargedTotal",
+          "kind": "fn"
+        },
+        {
+          "name": "SHOP_FEE_ON",
+          "kind": "reexport"
+        },
+        {
+          "name": "SHOP_SALE_FEE_CENTS",
+          "kind": "reexport"
+        },
+        {
+          "name": "shopFeeFor",
+          "kind": "fn"
+        },
+        {
+          "name": "ShopLine",
+          "kind": "type"
+        },
+        {
+          "name": "shopLinesFor",
+          "kind": "fn"
+        },
+        {
+          "name": "shopLockedReason",
+          "kind": "fn"
+        },
+        {
+          "name": "ShopWriteResult",
+          "kind": "type"
+        },
+        {
+          "name": "validItemInput",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-fees",
+        "./prisma",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/admin/golfers/route.ts",
+        "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/transactions/export/route.ts",
+        "src/app/api/admin/transactions/route.ts",
+        "src/app/api/checkin/[bookingId]/route.ts",
+        "src/app/api/operator/bookings/shop/route.ts",
+        "src/app/api/operator/shop-items/route.ts",
+        "src/app/api/receipt/[bookingId]/route.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/receipt-charges.ts",
+        "src/lib/refund-booking.ts"
+      ]
+    },
+    {
       "path": "src/lib/staff-fonts.ts",
       "lines": 10,
       "purpose": "U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here:",
@@ -13989,7 +14251,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 131,
+      "lines": 135,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -14486,6 +14748,7 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/OperatorSidebar.tsx",
+        "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffNotice.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx"
       ]
@@ -15181,12 +15444,32 @@
           "type": "DateTime?"
         },
         {
+          "name": "shopTotalCents",
+          "type": "Int"
+        },
+        {
+          "name": "shopFeeCents",
+          "type": "Int"
+        },
+        {
+          "name": "shopLockedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "roundChargedCents",
+          "type": "Int?"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
         {
           "name": "paymentEvents",
           "type": "PaymentEvent[]"
+        },
+        {
+          "name": "shopItems",
+          "type": "BookingShopItem[]"
         }
       ],
       "writers": [
@@ -15300,6 +15583,55 @@
         "src/lib/analytics.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"
+      ]
+    },
+    {
+      "name": "BookingShopItem",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "bookingId",
+          "type": "String"
+        },
+        {
+          "name": "booking",
+          "type": "Booking"
+        },
+        {
+          "name": "shopItemId",
+          "type": "String?"
+        },
+        {
+          "name": "shopItem",
+          "type": "ShopItem?"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "unitPriceCents",
+          "type": "Int"
+        },
+        {
+          "name": "quantity",
+          "type": "Int"
+        },
+        {
+          "name": "addedBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [],
+      "readers": [
+        "src/lib/shop.ts"
       ]
     },
     {
@@ -15914,6 +16246,10 @@
         {
           "name": "golferMessages",
           "type": "CourseMessage[]"
+        },
+        {
+          "name": "shopItems",
+          "type": "ShopItem[]"
         }
       ],
       "writers": [
@@ -17379,6 +17715,61 @@
       ],
       "writers": [],
       "readers": []
+    },
+    {
+      "name": "ShopItem",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "category",
+          "type": "String"
+        },
+        {
+          "name": "priceCents",
+          "type": "Int"
+        },
+        {
+          "name": "active",
+          "type": "Boolean"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "sales",
+          "type": "BookingShopItem[]"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/shop-items/route.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/shop-items/route.ts"
+      ]
     },
     {
       "name": "StaffPermissionChange",

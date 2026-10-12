@@ -132,6 +132,7 @@ export async function PATCH(req: NextRequest) {
         date: moved.teeTime.date, time: moved.teeTime.time, holes: moved.teeTime.holes, productLabel: moved.teeTime.product?.label ?? null,
         players: moved.players, greenFeeTotal: moved.greenFeeTotal, cartFeeTotal: moved.cartFeeTotal, rangeBallsTotal: moved.rangeBallsTotal,
         accessFeeTotal: moved.accessFeeTotal, totalAmount: moved.totalAmount, bookingId: moved.id, checkInToken: moved.checkInToken,
+        shopTotalCents: moved.shopTotalCents, shopFeeCents: moved.shopFeeCents,
         checkedIn: r.checkedIn,
       }).then(() => true, (err) => { console.error(JSON.stringify({ ev: 'move.email.fail', bookingId: id, error: err instanceof Error ? err.message : String(err) })); return false; });
     }
@@ -215,7 +216,9 @@ export async function PATCH(req: NextRequest) {
     await prisma.$transaction(async (tx) => {
       await tx.booking.update({
         where: { id },
-        data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}) },
+        data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}),
+          // POS-1a: shop items are paid at the counter too; GreenReserve's shop fee is never collected in cash.
+          shopFeeCents: 0 },
       });
       await recordBookingEvent(tx, { ...evBase, type: 'checked_in', amountCents: booking.totalAmount, playerCount: cip ?? booking.players, metadata: { paidOffline: true } });
     });

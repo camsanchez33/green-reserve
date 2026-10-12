@@ -12,6 +12,7 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { dfetch } from '@/lib/dashboard-fetch';
+import ShopItemsForGroup, { type ShopLine } from '@/components/dashboard/ShopItemsForGroup';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
@@ -53,7 +54,17 @@ type Booking = {
   hasCard?: boolean;
   /** PAY-1: a textable number is on file (sent even to logins that can't see it). */
   hasPhone?: boolean;
+  /** POS-1a: pro-shop items charged with the round, and GreenReserve's fee on them. */
+  shopItems?: ShopLine[];
+  shopTotalCents?: number;
+  shopFeeCents?: number;
+  /** The round's card charge went through (items lock then). */
+  roundPaid?: boolean;
+  /** A round charge has been attempted — items are frozen (lib/shop shopLockedReason). */
+  shopLocked?: boolean;
 };
+/** POS-1a: what the card is charged beyond the round itself. */
+const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0);
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 // SD-3: "today" is the COURSE's today (see courseTz inside the component) —
 // this module-level fallback only seeds state before the course has loaded.
@@ -222,7 +233,9 @@ function DashboardPageInner() {
       // the full total here would charge the golfer the fee twice.
       const who = checkedInPlayers ?? b.players;
       const fee = Math.round((b.accessFeeTotal ?? 0) * who / b.players);
-      const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players);
+      // POS-1a: shop items on the booking are collected at the counter too (no
+      // GreenReserve shop fee on a counter payment, like the booking fee in cash).
+      const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players) + (b.shopTotalCents ?? 0);
       const feeLine = fee > 0 ? ` GreenReserve's $${(fee / 100).toFixed(2)} booking fee is charged to their saved card — don't collect it at the counter.` : ' No card will be charged.';
       if (!confirm(`Mark ${b.golferName} checked in — ${who} of ${b.players} players, paid $${(owed / 100).toFixed(2)} at the counter?${feeLine}`)) return;
     }
@@ -262,8 +275,9 @@ function DashboardPageInner() {
     const showed = askHeadcount(b);
     if (showed === null) return;
     const partial = showed < b.players ? showed : undefined;
-    const amount = partial ? Math.round(b.totalAmount * partial / b.players) : b.totalAmount;
-    if (!confirm(`Check in ${b.golferName}${partial ? ` (${partial} of ${b.players} players)` : ''} and charge their card $${(amount / 100).toFixed(2)} for the round?`)) return;
+    // POS-1a: shop items and their fee are never prorated — they ride whole.
+    const amount = (partial ? Math.round(b.totalAmount * partial / b.players) : b.totalAmount) + shopExtra(b);
+    if (!confirm(`Check in ${b.golferName}${partial ? ` (${partial} of ${b.players} players)` : ''} and charge their card $${(amount / 100).toFixed(2)} for the round${(b.shopTotalCents ?? 0) > 0 ? ' and shop items' : ''}?`)) return;
     setCheckingInId(b.id);
     let res: Response; let data: Record<string, unknown> & { error?: string; totalCharged: number };
     try {
@@ -586,6 +600,11 @@ function DashboardPageInner() {
           <button onClick={e => { e.stopPropagation(); cancelGroup(b, true); }} disabled={rowBusy === b.id}
             className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">Cancel, no fee</button>
         )}
+        {/* POS-1a: pro-shop items charged with this round. Same lock as the server (lib/shop shopLockedReason). */}
+        <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0}
+          editable={b.status === 'confirmed' && !b.paidOffline && !b.shopLocked && !(b.roundPaid && (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded'))}
+          canSell={access.can('shop.sell')} showMoney={access.can('money.payments')}
+          onChanged={() => loadTimes(selectedDate)} />
       </div>
     );
   };
@@ -1336,7 +1355,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-serif font-semibold text-ink text-[17px]">{reason ? 'Retry with a new card' : 'Check in'} — {booking.golferName}</h3>
-          <p className="text-xs text-ink-soft mt-0.5">Enter golfer&apos;s card to charge ${(booking.totalAmount / 100).toFixed(2)}</p>
+          <p className="text-xs text-ink-soft mt-0.5">Enter golfer&apos;s card to charge ${((booking.totalAmount + shopExtra(booking)) / 100).toFixed(2)}</p>
         </div>
         <button onClick={onCancel} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
       </div>
@@ -1354,7 +1373,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
       {error && <p className="text-bad text-xs mb-3">{error}</p>}
       <button onClick={handleCharge} disabled={loading || !stripe}
         className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md text-[12.5px] font-medium disabled:opacity-50 flex items-center justify-center gap-2 mb-2 transition-colors">
-        {loading ? <><Loader2 className="w-4 h-4 animate-spin"/>Charging…</> : `Charge $${(booking.totalAmount / 100).toFixed(2)}`}
+        {loading ? <><Loader2 className="w-4 h-4 animate-spin"/>Charging…</> : `Charge $${((booking.totalAmount + shopExtra(booking)) / 100).toFixed(2)}`}
       </button>
       <div className="flex items-center justify-center gap-1.5 text-ink-muted text-xs">
         <span>Powered by Stripe</span>

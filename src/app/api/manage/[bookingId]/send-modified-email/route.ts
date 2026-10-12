@@ -39,6 +39,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
     totalAmount: booking.totalAmount,
+    shopTotalCents: booking.shopTotalCents,
+    shopFeeCents: booking.shopFeeCents,
     bookingId: booking.id,
     checkInToken: booking.checkInToken,
   }).catch(console.error);

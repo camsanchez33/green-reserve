@@ -7,6 +7,7 @@ import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useEleme
 import type { PaymentRequest } from '@stripe/stripe-js';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
+import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -21,6 +22,8 @@ type CheckInInfo = {
   golferName: string; courseName: string; courseSlug: string; courseAddress: string; brandColor: string; heroImageUrl?: string; logoUrl?: string;
   date: string; time: string; players: number; holes: number; productLabel?: string | null; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
+  /** POS-1a: pro-shop items the course added to the round; totalAmount includes them and their fee. */
+  shopLines?: { name: string; unitPriceCents: number; quantity: number }[]; shopFeeCents?: number;
   hasCard: boolean;
   /** Paid in cash at the counter — never "charged to your card". */
   paidOffline?: boolean;
@@ -53,6 +56,9 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseNa
   // after that, so it reads the latest choice from here.
   const addCartRef = useRef(addCart);
   addCartRef.current = addCart;
+  // The total on screen — the server refuses to charge a different one.
+  const totalRef = useRef(totalAmount);
+  totalRef.current = totalAmount;
 
   /** One charge path for the card form and the wallet. True when it went through. */
   async function charge(paymentMethodId: string): Promise<boolean> {
@@ -60,7 +66,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseNa
       const res = await fetch(`/api/checkin/${bookingId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, paymentMethodId, addCart: addCartRef.current }),
+        body: JSON.stringify({ token, paymentMethodId, addCart: addCartRef.current, expectedTotalCents: totalRef.current }),
       });
       const data = await res.json();
       if (!res.ok) { onError(data.error || 'Check-in failed.'); return false; }
@@ -178,7 +184,8 @@ function CheckInPageInner() {
     setError('');
     try {
       const res = await fetch(`/api/checkin/${bookingId}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, addCart }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, addCart, ...(info ? { expectedTotalCents: info.totalAmount + (addCart ? (info.cartAddOnCents ?? 0) : 0) } : {}) }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Check-in failed.'); setCheckingIn(false); return; }
@@ -275,6 +282,10 @@ function CheckInPageInner() {
         {cartCents > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>${(cartCents / 100).toFixed(2)}</span></div>}
         {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
         <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
+        {(info.shopLines ?? []).map((l, i) => (
+          <div key={i} className="flex justify-between text-ink-soft"><span>{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span><span>${(l.unitPriceCents * l.quantity / 100).toFixed(2)}</span></div>
+        ))}
+        {(info.shopFeeCents ?? 0) > 0 && <div className="flex justify-between text-ink-soft"><span>{SHOP_FEE_LABEL}</span><span>${((info.shopFeeCents ?? 0) / 100).toFixed(2)}</span></div>}
         {/* The number they're about to pay is the biggest thing on the card. */}
         <div className="flex justify-between items-baseline border-t border-line pt-3">
           <span className="font-medium text-ink">Total</span>

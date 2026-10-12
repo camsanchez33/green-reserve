@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { serviceFeeLabel } from '@/lib/booking-fees';
+import { serviceFeeLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -12,6 +12,8 @@ type ReceiptData = {
   date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; status: string;
+  /** POS-1a: pro-shop items charged with the round; totalAmount includes them. */
+  shopLines?: { name: string; unitPriceCents: number; quantity: number }[]; shopFeeCents?: number;
   cancellationFeeTotal: number; cancellationFeeCharged: boolean; createdAt: string;
   /** R-GOLF-010: what actually reached the card — from lib/receipt-charges. */
   paidOffline?: boolean;
@@ -167,6 +169,18 @@ function ReceiptPageInner() {
                   <span className="text-ink-soft">{serviceFeeLabel(data.players)}</span>
                   <span className="font-medium text-ink">{dollars(data.accessFeeTotal)}</span>
                 </div>
+                {(data.shopLines ?? []).map((l, i) => (
+                  <div key={i} className="flex justify-between px-4 py-3">
+                    <span className="text-ink-soft">{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span>
+                    <span className="font-medium text-ink">{dollars(l.unitPriceCents * l.quantity)}</span>
+                  </div>
+                ))}
+                {(data.shopFeeCents ?? 0) > 0 && (
+                  <div className="flex justify-between px-4 py-3">
+                    <span className="text-ink-soft">{SHOP_FEE_LABEL}</span>
+                    <span className="font-medium text-ink">{dollars(data.shopFeeCents ?? 0)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
                   <span className="font-medium text-ink">{totalLabel}</span>
                   <span className="font-serif font-semibold text-ink text-xl leading-none">{dollars(data.totalAmount)}</span>

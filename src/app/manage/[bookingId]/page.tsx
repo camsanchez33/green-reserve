@@ -26,6 +26,8 @@ type BookingInfo = {
   rangeBallsTotal: number;
   accessFeeTotal: number;
   totalAmount: number;
+  /** POS-1a: pro-shop items the course added plus GreenReserve's fee on them. */
+  shopChargeCents?: number;
   cancellationHours: number;
   cancellationFeeTotal: number;
   cancellationFeeCharged: boolean;
@@ -61,9 +63,11 @@ function fmtDate(d: string) {
 }
 function dollars(cents: number) { return `$${(cents / 100).toFixed(2)}`; }
 
-function PriceBreakdown({ greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFeeTotal, totalAmount, players }: {
+function PriceBreakdown({ greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFeeTotal, totalAmount, players, shopChargeCents = 0 }: {
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; players: number;
+  /** POS-1a: pro-shop items the course added plus GreenReserve's fee on them. */
+  shopChargeCents?: number;
 }) {
   return (
     <div className="space-y-1.5 text-sm">
@@ -71,8 +75,9 @@ function PriceBreakdown({ greenFeeTotal, cartFeeTotal, rangeBallsTotal, accessFe
       {cartFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>{dollars(cartFeeTotal)}</span></div>}
       {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>{dollars(rangeBallsTotal)}</span></div>}
       <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {players})</span><span>{dollars(accessFeeTotal)}</span></div>
+      {shopChargeCents > 0 && <div className="flex justify-between text-ink-soft"><span>Pro-shop items added by the course</span><span>{dollars(shopChargeCents)}</span></div>}
       <div className="flex justify-between font-semibold text-ink text-base border-t border-line pt-2">
-        <span>Total due at check-in</span><span>{dollars(totalAmount)}</span>
+        <span>Total due at check-in</span><span>{dollars(totalAmount + shopChargeCents)}</span>
       </div>
     </div>
   );
@@ -480,7 +485,7 @@ function ManagePageInner() {
             <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{info.players} player{info.players !== 1 ? 's' : ''}</span></div>
             <div className="flex items-start gap-2.5 text-sm"><span className="text-ink-soft">{info.courseAddress}</span></div>
             <div className="border-t border-line pt-3">
-              <PriceBreakdown greenFeeTotal={info.greenFeeTotal} cartFeeTotal={info.cartFeeTotal} rangeBallsTotal={info.rangeBallsTotal} accessFeeTotal={info.accessFeeTotal} totalAmount={info.totalAmount} players={info.players} />
+              <PriceBreakdown greenFeeTotal={info.greenFeeTotal} cartFeeTotal={info.cartFeeTotal} rangeBallsTotal={info.rangeBallsTotal} accessFeeTotal={info.accessFeeTotal} totalAmount={info.totalAmount} players={info.players} shopChargeCents={info.shopChargeCents ?? 0} />
             </div>
           </div>
 

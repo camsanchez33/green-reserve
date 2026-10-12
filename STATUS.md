@@ -4,18 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-12 01:51 UTC · branch `claude/agreement-publish` · HEAD `f07c4b4` · working tree clean
+Generated 2026-10-12 02:28 UTC · branch `claude/pos-1a` · HEAD `f0d53a7` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 16 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 17 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `f07c4b4` | 2026-10-12 | Agreement publish: true lockout wording in the confirm; DB-backed publish test |
-| `aa2141e` | 2026-10-12 | Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check |
-| `80e3cad` | 2026-10-12 | codemap: agreement-publish gets its own @brain name |
-| `44de3bf` | 2026-10-12 | Admin → System: publish agreement versions (owner with 2FA, audited) |
+| `f0d53a7` | 2026-10-12 | POS-1a review: admin money screens and export show what the card is charged; counter pay zeroes the shop fee |
+| `1b06bb5` | 2026-10-12 | POS-1a: a lock is lifted only by the attempt that set it; shown total checked after the freeze |
+| `eceacf5` | 2026-10-12 | POS-1a security review: freeze shop items once a charge starts; row lock; stored charge |
+| `6635644` | 2026-10-12 | POS-1a: pro-shop catalog and items charged with the round |
+| `5ed62ea` | 2026-10-11 | Admin → System: publish agreement versions (owner with 2FA) (#105) |
 | `47e7320` | 2026-10-11 | Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104) |
 | `fa1e1df` | 2026-10-08 | Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103) |
 | `4165bc8` | 2026-10-08 | Membership fee: 1% of dues, paid by the member (#102) |
@@ -50,9 +51,9 @@ This is the distinction a raw checkbox count gets wrong.
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
 | MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 43d | `7246a62` | `RUN_QUEUE.md:984` |
-| MP-1 | 2026-08-29 | 42d | `41f5ea8` | `RUN_QUEUE.md:1014` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 42d | `4ef11dd` | `RUN_QUEUE.md:1049` |
-| MP-2 | 2026-08-29 | 42d | `958f229` | `RUN_QUEUE.md:1090` |
+| MP-1 | 2026-08-29 | 43d | `41f5ea8` | `RUN_QUEUE.md:1014` |
+| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 43d | `4ef11dd` | `RUN_QUEUE.md:1049` |
+| MP-2 | 2026-08-29 | 43d | `958f229` | `RUN_QUEUE.md:1090` |
 | MP-2b | 2026-08-29 | 42d | `a134af5` | `RUN_QUEUE.md:1127` |
 | MP-2c | 2026-08-29 | 42d | `e5b5413` | `RUN_QUEUE.md:1176` |
 | MP-2d | 2026-08-29 | 42d | `22d0f68` | `RUN_QUEUE.md:1224` |
@@ -169,14 +170,14 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-08 | 3d |
+| `CLAUDE.md` | 7 | 2026-10-12 | 0d |
 | `ARCHITECTURE.md` | 4 | 2026-09-29 | 12d |
 | `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 7d |
 | `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 10d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-08 | 3d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-12 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 12d |
 | `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 12d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-12 | 0d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 4d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 6d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 6d |
@@ -207,15 +208,15 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `f07c4b4` 2026-10-12 — Agreement publish: true lockout wording in the confirm; DB-backed publish test
-- `aa2141e` 2026-10-12 — Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check
-- `4d0855a` 2026-10-12 — queue/spec update
-- `80e3cad` 2026-10-12 — codemap: agreement-publish gets its own @brain name
-- `09f0ae9` 2026-10-12 — queue/spec update
-- `44de3bf` 2026-10-12 — Admin → System: publish agreement versions (owner with 2FA, audited)
+- `f0d53a7` 2026-10-12 — POS-1a review: admin money screens and export show what the card is charged; counter pay zeroes the shop fee
+- `1b06bb5` 2026-10-12 — POS-1a: a lock is lifted only by the attempt that set it; shown total checked after the freeze
+- `eceacf5` 2026-10-12 — POS-1a security review: freeze shop items once a charge starts; row lock; stored charge
+- `6635644` 2026-10-12 — POS-1a: pro-shop catalog and items charged with the round
+- `5ed62ea` 2026-10-11 — Admin → System: publish agreement versions (owner with 2FA) (#105)
 - `47e7320` 2026-10-11 — Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104)
 - `fa1e1df` 2026-10-08 — Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103)
 - `4165bc8` 2026-10-08 — Membership fee: 1% of dues, paid by the member (#102)
+- `10b58e5` 2026-10-08 — queue/spec update
 - `2eae475` 2026-10-08 — Homepage demo shows the board (#101)
 - `718522c` 2026-10-08 — AN-2: Analytics reworked so it reads plainly (#100)
 - `b7079ea` 2026-10-07 — Tee sheet: one board that fits the page, cancel from the sheet (#99)

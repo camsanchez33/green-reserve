@@ -15,11 +15,12 @@ export type PermissionKey =
   | 'money.cancellations' | 'money.payments' | 'money.refund' | 'money.charge_fee' | 'money.payouts'
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
-  | 'analytics.view' | 'messages.use' | 'settings.edit';
+  | 'analytics.view' | 'messages.use' | 'settings.edit'
+  | 'shop.sell' | 'shop.catalog';
 
 export interface PermissionDef {
   key: PermissionKey;
-  group: 'Tee sheet' | 'Money' | 'Members' | 'Schedule' | 'Course';
+  group: 'Tee sheet' | 'Money' | 'Members' | 'Schedule' | 'Pro shop' | 'Course';
   label: string;
   /** One plain line under the toggle. */
   help: string;
@@ -55,6 +56,9 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'members.edit', group: 'Members', label: 'Manage members', help: 'Add and edit members and send dues reminders.', requires: ['members.view'] },
   { key: 'schedule.view', group: 'Schedule', label: 'See the schedule', help: 'Schedules, intervals, rates and blocked days.' },
   { key: 'schedule.edit', group: 'Schedule', label: 'Edit the schedule', help: 'Change schedules and rates, block whole days, rebuild the sheet.', requires: ['schedule.view'] },
+  // POS-1a (Cam 2026-10-08): pro-shop items charged with the round.
+  { key: 'shop.sell', group: 'Pro shop', label: 'Add shop items to a round', help: 'Add pro-shop items to a group’s booking before they pay; they’re charged with the round.' },
+  { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop.', requires: ['settings.edit'] },
   { key: 'analytics.view', group: 'Course', label: 'See analytics', help: 'Revenue, utilization, no-shows and customers.' },
   { key: 'messages.use', group: 'Course', label: 'Message GreenReserve', help: 'Send and read messages with the GreenReserve team.' },
   { key: 'settings.edit', group: 'Course', label: 'Edit course settings', help: 'Course details, booking rules and facilities. Never staff, Stripe, the agreement or the cancellation policy.' },
@@ -69,8 +73,8 @@ export type PresetKey = 'starter' | 'front_desk' | 'manager';
 export const PRESETS: { key: PresetKey; label: string; help: string; keys: PermissionKey[] }[] = [
   { key: 'starter', label: 'Starter', help: 'Sees the sheet, checks groups in, marks no-shows.',
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use'] },
-  { key: 'front_desk', label: 'Front desk', help: 'Runs the counter: payments, walk-ins, cancellations, blocking.',
-    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'money.cancellations'] },
+  { key: 'front_desk', label: 'Front desk', help: 'Runs the counter: payments, walk-ins, cancellations, blocking, shop items.',
+    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'money.cancellations', 'shop.sell'] },
   { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given.', keys: [...ALL_KEYS] },
 ];
 

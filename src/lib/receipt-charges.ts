@@ -7,6 +7,7 @@ import { prisma } from './prisma';
 import { liveNoShowCharge } from './no-show-fee';
 import { liveSeparateFee } from './access-fee';
 import { holdsAtCutoff } from './cancel-policy';
+import { roundChargedTotal } from './shop';
 
 export type ReceiptCharge = { label: string; amountCents: number; refunded: boolean };
 
@@ -14,7 +15,7 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
   const b = await prisma.booking.findUnique({
     where: { id: bookingId },
     select: {
-      totalAmount: true, paymentStatus: true, roundPaymentIntentId: true, paidOffline: true,
+      totalAmount: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true, paymentStatus: true, roundPaymentIntentId: true, paidOffline: true,
       cancellationFeeTotal: true, cancellationFeeChargeId: true, lateFeeTimingAtBooking: true,
       status: true, noShowAt: true,
     },
@@ -32,10 +33,10 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
   // A round refunded by an admin or from the Stripe dashboard keeps its PI and
   // shows as charged here; the refund is its own row below.
   if ((b.paymentStatus === 'paid' || b.paymentStatus === 'refunded') && b.roundPaymentIntentId && !b.paidOffline) {
-    out.push({ label: 'Your round', amountCents: b.totalAmount, refunded: false });
+    out.push({ label: b.shopTotalCents > 0 ? 'Your round and shop items' : 'Your round', amountCents: roundChargedTotal(b), refunded: false });
   } else {
     const roundRefund = refundedFor(['round_refunded_on_cancel']);
-    if (roundRefund) out.push({ label: 'Your round', amountCents: roundRefund.amountCents ?? b.totalAmount, refunded: true });
+    if (roundRefund) out.push({ label: b.shopTotalCents > 0 ? 'Your round and shop items' : 'Your round', amountCents: roundRefund.amountCents ?? roundChargedTotal(b), refunded: true });
   }
 
   // The late-cancellation hold or fee.

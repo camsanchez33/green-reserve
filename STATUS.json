@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-12T01:51:45.545Z",
+  "generatedAt": "2026-10-12T02:28:53.167Z",
   "repo": {
-    "head": "f07c4b4",
-    "branch": "claude/agreement-publish",
+    "head": "f0d53a7",
+    "branch": "claude/pos-1a",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -11,30 +11,37 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "f07c4b4",
-        "date": "2026-10-12T01:51:45+00:00",
-        "subject": "Agreement publish: true lockout wording in the confirm; DB-backed publish test",
+        "h": "f0d53a7",
+        "date": "2026-10-12T02:28:52+00:00",
+        "subject": "POS-1a review: admin money screens and export show what the card is charged; counter pay zeroes the shop fee",
         "ids": [],
         "matches": []
       },
       {
-        "h": "aa2141e",
-        "date": "2026-10-12T01:49:15+00:00",
-        "subject": "Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check",
+        "h": "1b06bb5",
+        "date": "2026-10-12T02:26:29+00:00",
+        "subject": "POS-1a: a lock is lifted only by the attempt that set it; shown total checked after the freeze",
         "ids": [],
         "matches": []
       },
       {
-        "h": "80e3cad",
-        "date": "2026-10-12T01:47:32+00:00",
-        "subject": "codemap: agreement-publish gets its own @brain name",
+        "h": "eceacf5",
+        "date": "2026-10-12T02:23:56+00:00",
+        "subject": "POS-1a security review: freeze shop items once a charge starts; row lock; stored charge",
         "ids": [],
         "matches": []
       },
       {
-        "h": "44de3bf",
-        "date": "2026-10-12T01:47:23+00:00",
-        "subject": "Admin → System: publish agreement versions (owner with 2FA, audited)",
+        "h": "6635644",
+        "date": "2026-10-12T02:17:36+00:00",
+        "subject": "POS-1a: pro-shop catalog and items charged with the round",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5ed62ea",
+        "date": "2026-10-11T21:58:17-04:00",
+        "subject": "Admin → System: publish agreement versions (owner with 2FA) (#105)",
         "ids": [],
         "matches": []
       },
@@ -162,21 +169,21 @@
       "line": 1014,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 42
+      "ageDays": 43
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "line": 1049,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 42
+      "ageDays": 43
     },
     {
       "title": "MP-2",
       "line": 1090,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 42
+      "ageDays": 43
     },
     {
       "title": "MP-2b",
@@ -624,8 +631,8 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-08",
-      "ageDays": 3
+      "lastTouched": "2026-10-12",
+      "ageDays": 0
     },
     {
       "file": "ARCHITECTURE.md",
@@ -648,8 +655,8 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-08",
-      "ageDays": 3
+      "lastTouched": "2026-10-12",
+      "ageDays": 0
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -666,7 +673,7 @@
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-12",
+      "lastTouched": "2026-10-11",
       "ageDays": 0
     },
     {
@@ -835,34 +842,29 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "f07c4b4",
+      "h": "f0d53a7",
       "date": "2026-10-12",
-      "subject": "Agreement publish: true lockout wording in the confirm; DB-backed publish test"
+      "subject": "POS-1a review: admin money screens and export show what the card is charged; counter pay zeroes the shop fee"
     },
     {
-      "h": "aa2141e",
+      "h": "1b06bb5",
       "date": "2026-10-12",
-      "subject": "Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check"
+      "subject": "POS-1a: a lock is lifted only by the attempt that set it; shown total checked after the freeze"
     },
     {
-      "h": "4d0855a",
+      "h": "eceacf5",
       "date": "2026-10-12",
-      "subject": "queue/spec update"
+      "subject": "POS-1a security review: freeze shop items once a charge starts; row lock; stored charge"
     },
     {
-      "h": "80e3cad",
+      "h": "6635644",
       "date": "2026-10-12",
-      "subject": "codemap: agreement-publish gets its own @brain name"
+      "subject": "POS-1a: pro-shop catalog and items charged with the round"
     },
     {
-      "h": "09f0ae9",
-      "date": "2026-10-12",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "44de3bf",
-      "date": "2026-10-12",
-      "subject": "Admin → System: publish agreement versions (owner with 2FA, audited)"
+      "h": "5ed62ea",
+      "date": "2026-10-11",
+      "subject": "Admin → System: publish agreement versions (owner with 2FA) (#105)"
     },
     {
       "h": "47e7320",
@@ -878,6 +880,11 @@
       "h": "4165bc8",
       "date": "2026-10-08",
       "subject": "Membership fee: 1% of dues, paid by the member (#102)"
+    },
+    {
+      "h": "10b58e5",
+      "date": "2026-10-08",
+      "subject": "queue/spec update"
     },
     {
       "h": "2eae475",
