@@ -51,7 +51,9 @@ export async function GET(req: NextRequest) {
       return {
         document: d.document, version: d.version, title: d.title, effectiveAt: d.effectiveAt,
         summary: d.summary, html: d.html, hash: d.hash,
-        signed: st?.signed ?? false, acceptedAt: st?.acceptedAt?.toISOString() ?? null, acceptedVersion: st?.acceptedVersion ?? null,
+        // The signing screen asks for every version that needs signing now —
+        // a re-acceptance bump included, even while the older row still counts.
+        signed: st ? !st.needsSigning : false, acceptedAt: st?.acceptedAt?.toISOString() ?? null, acceptedVersion: st?.acceptedVersion ?? null,
       };
     }),
   });
