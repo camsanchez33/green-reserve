@@ -206,6 +206,9 @@ and passes the gate. Re-opening onboarding does not create duplicates.
    `counselWaived: <date> by <who>`, Cam's recorded decision to ship without
    counsel (2026-10-12, v2026-10: "skip the lawyer for now"). A waiver never
    writes a counselReviewed date (`seedGateError()` in lib/agreements.ts).
+   Publishing is Admin → System → Agreement versions (owner with 2FA, audited;
+   Cam 2026-10-12) or the seed script — both call `publishAgreementVersion()`
+   in lib/agreement-publish.ts.
 2. **Notice (day 0):** `noticeSentAt` null → send every live/offline course's
    operator an email: what changed (the front matter's `changeSummary`), the
    deadline, a link to sign. Write `noticeSentAt`. Admin gets one summary email.

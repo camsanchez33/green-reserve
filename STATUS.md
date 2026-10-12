@@ -4,16 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-12 01:34 UTC · branch `claude/agreement-live` · HEAD `3ef419c` · working tree clean
+Generated 2026-10-12 01:51 UTC · branch `claude/agreement-publish` · HEAD `f07c4b4` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 13 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-07**. 16 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `3ef419c` | 2026-10-12 | Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test |
-| `f52b027` | 2026-10-12 | Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam |
+| `f07c4b4` | 2026-10-12 | Agreement publish: true lockout wording in the confirm; DB-backed publish test |
+| `aa2141e` | 2026-10-12 | Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check |
+| `80e3cad` | 2026-10-12 | codemap: agreement-publish gets its own @brain name |
+| `44de3bf` | 2026-10-12 | Admin → System: publish agreement versions (owner with 2FA, audited) |
+| `47e7320` | 2026-10-11 | Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104) |
 | `fa1e1df` | 2026-10-08 | Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103) |
 | `4165bc8` | 2026-10-08 | Membership fee: 1% of dues, paid by the member (#102) |
 | `2eae475` | 2026-10-08 | Homepage demo shows the board (#101) |
@@ -204,18 +207,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `3ef419c` 2026-10-12 — Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test
-- `f52b027` 2026-10-12 — Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam
+- `f07c4b4` 2026-10-12 — Agreement publish: true lockout wording in the confirm; DB-backed publish test
+- `aa2141e` 2026-10-12 — Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check
+- `4d0855a` 2026-10-12 — queue/spec update
+- `80e3cad` 2026-10-12 — codemap: agreement-publish gets its own @brain name
+- `09f0ae9` 2026-10-12 — queue/spec update
+- `44de3bf` 2026-10-12 — Admin → System: publish agreement versions (owner with 2FA, audited)
+- `47e7320` 2026-10-11 — Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104)
 - `fa1e1df` 2026-10-08 — Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103)
 - `4165bc8` 2026-10-08 — Membership fee: 1% of dues, paid by the member (#102)
 - `2eae475` 2026-10-08 — Homepage demo shows the board (#101)
 - `718522c` 2026-10-08 — AN-2: Analytics reworked so it reads plainly (#100)
 - `b7079ea` 2026-10-07 — Tee sheet: one board that fits the page, cancel from the sheet (#99)
-- `fadcf67` 2026-10-07 — SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)
-- `ea2d17b` 2026-10-07 — SHEET-2: board view of the tee sheet (#97)
-- `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
-- `fef4012` 2026-10-07 — MSG-1: courses message the golfers booked on a day (#95)
-- `f4b4a0b` 2026-10-07 — ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)
 
 ---
 

@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-12T01:34:57.251Z",
+  "generatedAt": "2026-10-12T01:51:45.545Z",
   "repo": {
-    "head": "3ef419c",
-    "branch": "claude/agreement-live",
+    "head": "f07c4b4",
+    "branch": "claude/agreement-publish",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -11,16 +11,37 @@
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "3ef419c",
-        "date": "2026-10-12T01:34:57+00:00",
-        "subject": "Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test",
+        "h": "f07c4b4",
+        "date": "2026-10-12T01:51:45+00:00",
+        "subject": "Agreement publish: true lockout wording in the confirm; DB-backed publish test",
         "ids": [],
         "matches": []
       },
       {
-        "h": "f52b027",
-        "date": "2026-10-12T01:29:22+00:00",
-        "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam",
+        "h": "aa2141e",
+        "date": "2026-10-12T01:49:15+00:00",
+        "subject": "Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "80e3cad",
+        "date": "2026-10-12T01:47:32+00:00",
+        "subject": "codemap: agreement-publish gets its own @brain name",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "44de3bf",
+        "date": "2026-10-12T01:47:23+00:00",
+        "subject": "Admin → System: publish agreement versions (owner with 2FA, audited)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "47e7320",
+        "date": "2026-10-11T21:40:19-04:00",
+        "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104)",
         "ids": [],
         "matches": []
       },
@@ -814,14 +835,39 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "3ef419c",
+      "h": "f07c4b4",
       "date": "2026-10-12",
-      "subject": "Agreement v2026-10: its own changelog entry; seed gate as seedGateError() with a test"
+      "subject": "Agreement publish: true lockout wording in the confirm; DB-backed publish test"
     },
     {
-      "h": "f52b027",
+      "h": "aa2141e",
       "date": "2026-10-12",
-      "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept required), counsel waived by Cam"
+      "subject": "Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check"
+    },
+    {
+      "h": "4d0855a",
+      "date": "2026-10-12",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "80e3cad",
+      "date": "2026-10-12",
+      "subject": "codemap: agreement-publish gets its own @brain name"
+    },
+    {
+      "h": "09f0ae9",
+      "date": "2026-10-12",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "44de3bf",
+      "date": "2026-10-12",
+      "subject": "Admin → System: publish agreement versions (owner with 2FA, audited)"
+    },
+    {
+      "h": "47e7320",
+      "date": "2026-10-11",
+      "subject": "Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104)"
     },
     {
       "h": "fa1e1df",
@@ -847,31 +893,6 @@
       "h": "b7079ea",
       "date": "2026-10-07",
       "subject": "Tee sheet: one board that fits the page, cancel from the sheet (#99)"
-    },
-    {
-      "h": "fadcf67",
-      "date": "2026-10-07",
-      "subject": "SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)"
-    },
-    {
-      "h": "ea2d17b",
-      "date": "2026-10-07",
-      "subject": "SHEET-2: board view of the tee sheet (#97)"
-    },
-    {
-      "h": "2707e36",
-      "date": "2026-10-07",
-      "subject": "Move a group after they've checked in (#96)"
-    },
-    {
-      "h": "fef4012",
-      "date": "2026-10-07",
-      "subject": "MSG-1: courses message the golfers booked on a day (#95)"
-    },
-    {
-      "h": "f4b4a0b",
-      "date": "2026-10-07",
-      "subject": "ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94)"
     }
   ]
 }

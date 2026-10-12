@@ -11,6 +11,7 @@ import { formatDateTime as fmtDate, formatMoney as fmtMoney } from '@/lib/format
 import { Modal } from '@/components/ui/Modal';
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
+import AgreementVersionsCard from '@/components/admin/AgreementVersionsCard';
 
 interface SystemData {
   lastStripeTouch: { courseName: string; updatedAt: string } | null;
@@ -443,6 +444,9 @@ export default function AdminSystemPage() {
                 </div>
               )}
             </SystemCard>
+
+            {/* AG-3: publish agreement versions (owner with 2FA; the route enforces it). */}
+            {isOwner && <AgreementVersionsCard />}
 
             <SystemCard title="Backups">
               <div className="flex items-center gap-2 mb-2">
