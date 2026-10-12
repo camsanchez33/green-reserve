@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-12T01:47:32.548Z",
+  "generatedAt": "2026-10-12T01:51:45.545Z",
   "repo": {
-    "head": "80e3cad",
+    "head": "f07c4b4",
     "branch": "claude/agreement-publish",
     "dirtyCount": 0,
     "dirty": [],
@@ -10,6 +10,20 @@
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
+      {
+        "h": "f07c4b4",
+        "date": "2026-10-12T01:51:45+00:00",
+        "subject": "Agreement publish: true lockout wording in the confirm; DB-backed publish test",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "aa2141e",
+        "date": "2026-10-12T01:49:15+00:00",
+        "subject": "Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "80e3cad",
         "date": "2026-10-12T01:47:32+00:00",
@@ -821,6 +835,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f07c4b4",
+      "date": "2026-10-12",
+      "subject": "Agreement publish: true lockout wording in the confirm; DB-backed publish test"
+    },
+    {
+      "h": "aa2141e",
+      "date": "2026-10-12",
+      "subject": "Agreement publish: re-accept only for the current Operator Agreement; JSON-only POST; own-key document check"
+    },
+    {
+      "h": "4d0855a",
+      "date": "2026-10-12",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "80e3cad",
       "date": "2026-10-12",
       "subject": "codemap: agreement-publish gets its own @brain name"
@@ -864,21 +893,6 @@
       "h": "b7079ea",
       "date": "2026-10-07",
       "subject": "Tee sheet: one board that fits the page, cancel from the sheet (#99)"
-    },
-    {
-      "h": "fadcf67",
-      "date": "2026-10-07",
-      "subject": "SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)"
-    },
-    {
-      "h": "ea2d17b",
-      "date": "2026-10-07",
-      "subject": "SHEET-2: board view of the tee sheet (#97)"
-    },
-    {
-      "h": "2707e36",
-      "date": "2026-10-07",
-      "subject": "Move a group after they've checked in (#96)"
     }
   ]
 }
