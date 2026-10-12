@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 
 const PAGE_SIZE = 50;
 // MP-10: same shape as /api/admin/activity — two sources merged by date, each
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
       where: bookingWhere,
       select: {
         id: true, golferName: true, golferEmail: true, players: true,
-        totalAmount: true, accessFeeTotal: true, cancellationFeeTotal: true,
+        totalAmount: true, accessFeeTotal: true, cancellationFeeTotal: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true,
         paymentStatus: true, status: true, createdAt: true,
         teeTime: { select: { date: true, time: true } },
       },
@@ -105,8 +106,8 @@ export async function GET(req: NextRequest) {
       type: 'booking' as const,
       golferName: b.golferName,
       golferEmail: b.golferEmail,
-      amount: b.cancellationFeeTotal > 0 && b.status === 'cancelled' ? b.cancellationFeeTotal / 100 : b.totalAmount / 100,
-      platformFee: b.accessFeeTotal / 100,
+      amount: b.cancellationFeeTotal > 0 && b.status === 'cancelled' ? b.cancellationFeeTotal / 100 : roundChargedTotal(b) / 100,
+      platformFee: roundApplicationFeeCents(b) / 100,
       status: bookingStatus(b),
       date: b.teeTime.date,
       detail: b.cancellationFeeTotal > 0 && b.status === 'cancelled'

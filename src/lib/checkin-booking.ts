@@ -3,6 +3,7 @@ import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './st
 import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { sendCheckInReceiptEmail } from './email';
 import { refundSeparateAccessFee } from './access-fee';
+import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop';
 
 /**
  * Charging a round, and checking a golfer in, are two different things.
@@ -19,8 +20,10 @@ import { refundSeparateAccessFee } from './access-fee';
  *   performCheckIn()  — take the money AND record the arrival + receipt.
  *
  * Charges the full round total (green + cart + range balls + the GreenReserve
- * access fee) as a direct charge on the course's connected Stripe account,
- * with the access fee taken as the application fee on that same charge. If the
+ * access fee, plus any pro-shop items added to the round and their 50¢ fee —
+ * POS-1a, lib/shop.ts roundChargeCents) as a direct charge on the course's
+ * connected Stripe account, with the access fee (and shop fee) taken as the
+ * application fee on that same charge. If the
  * golfer already had the late-cancellation fee charged (they crossed the
  * cutoff but never cancelled, then showed up anyway), that fee is refunded in
  * full since they did end up paying for the round.
@@ -42,6 +45,9 @@ type ChargeOpts = {
   /** B-5: add a cart at check-in for a booking that has none — priced at the
    *  tee time's cart fee × players, written to the booking before the charge. */
   addCart?: boolean;
+  /** POS-1a: the total the golfer was shown. Checked after the shop items are
+   *  frozen, so the charge can never differ from it. */
+  expectedTotalCents?: number;
 };
 
 /**
@@ -163,6 +169,8 @@ async function chargeBooking(
   let feeRefundOk = false;
   let feeRefundError = '';
   let paymentIntentId = booking.roundPaymentIntentId;
+  /** What this attempt's PaymentIntent took (null when no new charge was made). */
+  let chargedCents: number | null = null;
 
   // ── Money ────────────────────────────────────────────────────────────────
   // Skipped entirely when a prior collectPayment() already took it; this is
@@ -205,6 +213,24 @@ async function chargeBooking(
 
     const ev = mode.recordCheckIn ? 'checkin' : 'collect';
 
+    // POS-1a (security review): from here a charge may move money, so the
+    // shop items freeze — set the lock, then read them again. A shop write
+    // holding the row (lib/shop.ts lockBooking) finishes first and is seen;
+    // any later one is refused. The lock is lifted only on a definite non-charge.
+    // The stamp is this attempt's: only this attempt may lift it, so an
+    // overlapping attempt's decline never unfreezes a charge still in flight.
+    const lockStamp = new Date();
+    {
+      const locked = await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: lockStamp }, select: { shopTotalCents: true, shopFeeCents: true } });
+      booking.shopTotalCents = locked.shopTotalCents;
+      booking.shopFeeCents = locked.shopFeeCents;
+    }
+    const unlock = () => prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: lockStamp }, data: { shopLockedAt: null } });
+    if (opts?.expectedTotalCents != null && Number(opts.expectedTotalCents) !== roundChargeCents(booking)) {
+      await unlock();
+      return { error: 'The total changed since this page loaded — the course updated the round. Refresh to see the new total, then pay.', status: 409 } as const;
+    }
+
     // Review (security, MEDIUM): a new card changes the idempotency key. If
     // the FIRST attempt actually succeeded at Stripe but the response never
     // reached us (timeout), a retry with a new card — or, since B-5, a retry
@@ -228,13 +254,24 @@ async function chargeBooking(
           // Reconcile the booking to what Stripe actually took, not to what
           // this attempt assumed: base+cart if the earlier attempt had the
           // cart, base if it did not, and the exact figure otherwise.
+          // POS-1a: the charge also carries any shop items and their fee, which
+          // live in their own columns — compare with them added, and never fold
+          // them into the round's totalAmount.
           const base = preCart.totalAmount;
-          const money = prior.amount === base + cartAddedCents && cartAddedCents > 0
-            ? { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: prior.amount }
-            : prior.amount === base
+          const shopExtra = roundChargeCents({ totalAmount: 0, shopTotalCents: booking.shopTotalCents, shopFeeCents: booking.shopFeeCents });
+          const matchesCart = prior.amount === base + cartAddedCents + shopExtra && cartAddedCents > 0;
+          const matchesBase = prior.amount === base + shopExtra;
+          if (!matchesCart && !matchesBase && shopExtra > 0) {
+            // The stored PaymentIntent amount below is what refunds and receipts
+            // use; never invent a round total from a figure that does not add up.
+            console.error(JSON.stringify({ ev: `${ev}.charge.prior_amount_mismatch`, bookingId, priorAmount: prior.amount, base, cartAddedCents, shopExtra }));
+          }
+          const money = matchesCart
+            ? { cartSelected: true, cartFeeTotal: cartAddedCents, totalAmount: base + cartAddedCents }
+            : matchesBase
               ? preCart
-              : { totalAmount: prior.amount };
-          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, paymentStatus: 'paid', paidAt: new Date(prior.created * 1000), checkInFailReason: '', ...money } });
+              : shopExtra > 0 ? {} : { totalAmount: prior.amount };
+          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, roundChargedCents: prior.amount, paymentStatus: 'paid', paidAt: new Date(prior.created * 1000), checkInFailReason: '', ...money } });
           return { error: 'This round was already charged on an earlier attempt (the confirmation was lost in transit). It is now recorded as paid — refresh and check in without a card.', status: 409 } as const;
         }
       } catch (err) {
@@ -244,13 +281,13 @@ async function chargeBooking(
     }
 
     try {
-      console.log(JSON.stringify({ ev: `${ev}.charge.attempt`, bookingId, amountCents: Math.round(booking.totalAmount) }));
+      console.log(JSON.stringify({ ev: `${ev}.charge.attempt`, bookingId, amountCents: roundChargeCents(booking), shopCents: booking.shopTotalCents + booking.shopFeeCents }));
       const paymentIntent = await chargeOnConnectedAccount({
         customerId: chargeCustomerId,
         paymentMethodId: chargePaymentMethodId,
         connectedAccountId: booking.course.stripeAccountId as string,
-        amountCents: Math.round(booking.totalAmount),
-        applicationFeeCents: Math.round(booking.accessFeeTotal),
+        amountCents: roundChargeCents(booking),
+        applicationFeeCents: roundApplicationFeeCents(booking),
         description: `Round charge - ${booking.course.name} - booking ${booking.id}`,
         metadata: { bookingId: booking.id },
         // Unchanged on purpose: the key is the booking + payment method, NOT
@@ -266,7 +303,8 @@ async function chargeBooking(
         idempotencyKey: `checkin-${booking.id}-${chargePaymentMethodId}`,
       });
       paymentIntentId = paymentIntent.id;
-      console.log(JSON.stringify({ ev: `${ev}.charge.ok`, bookingId, paymentIntentId, amountCents: Math.round(booking.totalAmount) }));
+      chargedCents = paymentIntent.amount;
+      console.log(JSON.stringify({ ev: `${ev}.charge.ok`, bookingId, paymentIntentId, amountCents: roundChargeCents(booking) }));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Card could not be charged.';
       const errType = (err as { type?: string })?.type ?? '';
@@ -274,11 +312,18 @@ async function chargeBooking(
       // reused idempotency key with different params (the total changed since
       // the first attempt). Anything else — a timeout, a dropped connection —
       // may have charged, so the cart stays on the booking for reconciliation.
-      const definite = errType === 'StripeCardError' || errType === 'StripeIdempotencyError' || /idempotent|idempotency/i.test(message);
+      // Stripe's "another in-progress request using this key" means a twin
+      // attempt is charging right now — not a definite no-charge.
+      const inProgress = /in[- ]progress/i.test(message);
+      const definite = !inProgress && (errType === 'StripeCardError' || errType === 'StripeIdempotencyError' || /idempotent|idempotency/i.test(message));
       console.error(JSON.stringify({ ev: `${ev}.charge.fail`, bookingId, errType, definite, error: message }));
       await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 && definite ? preCart : {}), ...(partialApplied && definite ? { ...prePartial, checkedInPlayers: null } : {}) } });
+      if (definite) await unlock();
+      if (inProgress) {
+        return { error: 'This round is being charged right now from another screen — wait a moment and refresh.', status: 409 } as const;
+      }
       if (/idempotent|idempotency/i.test(message)) {
-        return { error: 'The total changed since your first attempt (a cart was added or removed). Refresh the page and try once more.', status: 409 } as const;
+        return { error: 'The total changed since the first attempt with this card (a cart or a shop item was added or removed). Put the total back as it was, or use a different card.', status: 409 } as const;
       }
       return { error: `Payment failed: ${message}. Collect payment in person and contact support.`, status: 402 } as const;
     }
@@ -328,6 +373,7 @@ async function chargeBooking(
         paymentStatus: 'paid',
         ...(alreadyPaid ? {} : { paidAt: new Date() }),
         roundPaymentIntentId: paymentIntentId,
+        ...(chargedCents != null ? { roundChargedCents: chargedCents } : {}),
         checkInFailReason: '',
         // Only a real check-in completes the booking and stamps the arrival.
         // NS-EOD: a group that arrives after being flagged a no-show is no longer one.
@@ -340,7 +386,7 @@ async function chargeBooking(
         amountCents: booking.totalAmount, playerCount: partialApplied ? (showed as number) : booking.players,
         teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
         stripeId: paymentIntentId || null,
-        metadata: { paidOffline: false, alreadyPaid, cartAddedCents },
+        metadata: { paidOffline: false, alreadyPaid, cartAddedCents, shopCents: booking.shopTotalCents, shopFeeCents: booking.shopFeeCents },
       });
     }
   }
@@ -358,7 +404,9 @@ async function chargeBooking(
       cartFeeTotal: booking.cartFeeTotal,
       rangeBallsTotal: booking.rangeBallsTotal,
       accessFeeTotal: booking.accessFeeTotal,
-      totalAmount: booking.totalAmount,
+      totalAmount: chargedCents ?? booking.roundChargedCents ?? roundChargeCents(booking),
+      shopLines: booking.shopTotalCents > 0 ? await shopLinesFor(bookingId) : [],
+      shopFeeCents: booking.shopFeeCents,
       feeRefunded: feeRefundOk,
       feeRefundFailed: refundPendingFee && !feeRefundOk,
       feeRefundAmount: booking.cancellationFeeTotal,
@@ -369,7 +417,7 @@ async function chargeBooking(
 
   return {
     success: true,
-    totalCharged: booking.totalAmount,
+    totalCharged: chargedCents ?? booking.roundChargedCents ?? roundChargeCents(booking),
     /** The late-cancellation fee was actually refunded. */
     feeRefunded: feeRefundOk,
     /** A fee was owed back and the refund FAILED — someone must issue it in Stripe. */

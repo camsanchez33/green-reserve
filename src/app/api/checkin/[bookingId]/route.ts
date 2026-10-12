@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { performCheckIn, cartAddOnCentsFor } from '@/lib/checkin-booking';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { golferCheckInError } from '@/lib/checkin-errors';
+import { roundChargeCents, roundChargedTotal, shopLinesFor } from '@/lib/shop';
 
 // Public, token-gated check-in endpoint — the golfer doesn't need to be
 // logged in (they may be checking in from a different device than they
@@ -49,7 +50,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     status: booking.status,
     // R-GOLF-011: a round paid in cash at the counter is never "charged to your card".
     paidOffline: booking.paidOffline,
-    totalAmount: booking.totalAmount,
+    // POS-1a: what the card will be charged — the round plus any pro-shop items
+    // the course added and their fee — with those lines listed.
+    totalAmount: roundChargedTotal(booking),
+    shopLines: booking.shopTotalCents > 0 ? (await shopLinesFor(booking.id)).map(({ name, unitPriceCents, quantity }) => ({ name, unitPriceCents, quantity })) : [],
+    shopFeeCents: booking.shopFeeCents,
     greenFeeTotal: booking.greenFeeTotal,
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,
@@ -67,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   if (!(await rateLimit('checkin:post:' + bookingId, 10, 300)) || !(await rateLimit('checkin:post:ip:' + clientIp(req), 100, 300))) {
     return NextResponse.json({ error: 'Too many attempts — wait a few minutes, or check in at the pro shop.' }, { status: 429 });
   }
-  const { token, paymentMethodId, addCart } = await req.json().catch(() => ({ token: null, paymentMethodId: undefined, addCart: false }));
+  const { token, paymentMethodId, addCart, expectedTotalCents } = await req.json().catch(() => ({ token: null, paymentMethodId: undefined, addCart: false, expectedTotalCents: undefined }));
   const booking = await authorize(bookingId, token);
   if (!booking) return NextResponse.json({ error: 'Invalid or expired check-in link.' }, { status: 404 });
   // B-5: a cart cannot be added online once the round is paid — say so rather
@@ -76,7 +81,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     return NextResponse.json({ error: 'A cart can\'t be added to this booking online — ask at the pro shop and check in there.' }, { status: 409 });
   }
 
-  const result = await performCheckIn(bookingId, { type: 'golfer' }, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true });
+  // POS-1a (security review): the golfer pays the total they were shown. The
+  // charge path checks it again AFTER freezing the shop items (no gap); this
+  // early check just answers before any card work. The cart add-on is part of
+  // what they were shown and of the charge (it is on the booking by then).
+  let expectedRound: number | undefined;
+  if (expectedTotalCents != null && booking.status === 'confirmed' && !(booking.paymentStatus === 'paid' && booking.roundPaymentIntentId)) {
+    const cartCents = addCart === true ? await cartAddOnCentsFor(booking) : 0;
+    if (Number(expectedTotalCents) !== roundChargeCents(booking) + cartCents) {
+      return NextResponse.json({ error: 'Your total changed since this page loaded — the course updated your round. Refresh to see the new total, then pay.' }, { status: 409 });
+    }
+    expectedRound = Number(expectedTotalCents);
+  }
+
+  const result = await performCheckIn(bookingId, { type: 'golfer' }, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true, expectedTotalCents: expectedRound });
   if ('error' in result) return NextResponse.json({ error: golferCheckInError(result.error ?? 'Check-in failed.') }, { status: result.status });
   return NextResponse.json(result);
 }

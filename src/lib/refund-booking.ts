@@ -15,6 +15,7 @@ import Stripe from 'stripe';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { sendRefundEmail } from './email';
+import { roundChargedTotal } from './shop';
 
 export type PaymentEventKind =
   | 'refund' | 'refund_failed'
@@ -76,7 +77,9 @@ export async function refundBooking(bookingId: string, opts: {
   if (!booking.course.stripeAccountId) return { ok: false, error: 'The course has no connected Stripe account — the charge cannot be refunded from here.', status: 409 };
 
   const alreadyRefunded = booking.paymentEvents.reduce((s, e) => s + e.amountCents, 0);
-  const remaining = booking.totalAmount - alreadyRefunded;
+  // POS-1a: the round's charge also carried any shop items and their fee.
+  const charged = roundChargedTotal(booking);
+  const remaining = charged - alreadyRefunded;
   if (remaining <= 0) return { ok: false, error: 'This round has already been refunded in full.', status: 409 };
 
   const amountCents = opts.amountCents === undefined ? remaining : Math.round(opts.amountCents);
@@ -106,7 +109,7 @@ export async function refundBooking(bookingId: string, opts: {
     return { ok: false, error: `Stripe refused the refund: ${message}`, status: 502 };
   }
 
-  const full = alreadyRefunded + amountCents >= booking.totalAmount;
+  const full = alreadyRefunded + amountCents >= charged;
   await prisma.$transaction([
     prisma.paymentEvent.create({
       data: { bookingId, kind: 'refund', amountCents, stripeId: refund.id, actor: opts.actor, actorName: opts.actorName, detail: reason },

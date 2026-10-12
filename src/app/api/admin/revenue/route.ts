@@ -7,6 +7,7 @@ import { fetchStripeFeeWindow } from '@/lib/platform-stripe';
 import { friendlyStripeError } from '@/lib/stripe-errors';
 import { FAILED_CHARGE_WHERE, missedCheckInWhere, openDisputes } from '@/lib/money-problems';
 import { counterFeesUncollected } from '@/lib/access-fee';
+import { roundChargeCents, roundApplicationFeeCents } from '@/lib/shop';
 
 // REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker
 // (day / week / month-to-date / custom) drives the ENTIRE page. Support+ sees
@@ -125,18 +126,18 @@ export async function GET(req: NextRequest) {
     prisma.booking.groupBy({ by: ['courseId'], where: FAILED_CHARGE_WHERE, _count: { id: true } }),
     prisma.booking.findMany({
       where: FAILED_CHARGE_WHERE,
-      select: { id: true, golferName: true, golferEmail: true, checkInFailReason: true, totalAmount: true, accessFeeTotal: true, createdAt: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, golferName: true, golferEmail: true, checkInFailReason: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true, createdAt: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { createdAt: 'desc' }, take: 100,
     }),
     prisma.booking.findMany({
       where: missedCheckInWhere(todayStr),
-      select: { id: true, golferName: true, golferEmail: true, players: true, accessFeeTotal: true, totalAmount: true, paymentStatus: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, golferName: true, golferEmail: true, players: true, accessFeeTotal: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true, paymentStatus: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { teeTime: { date: 'desc' } }, take: 100,
     }),
     prisma.booking.aggregate({ where: missedCheckInWhere(todayStr), _sum: { accessFeeTotal: true }, _count: { id: true } }),
     prisma.booking.findMany({
       where: { status: 'confirmed', checkedInAt: null, teeTime: { date: { in: [todayStr, tomorrowStr] } } },
-      select: { id: true, golferName: true, players: true, accessFeeTotal: true, totalAmount: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, golferName: true, players: true, accessFeeTotal: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { teeTime: { time: 'asc' } }, take: 200,
     }),
     // Charged fees only. The old list also showed "pending" for any cancelled
@@ -208,13 +209,14 @@ export async function GET(req: NextRequest) {
     golferName: b.golferName, golferEmail: b.golferEmail,
     reason: friendlyStripeError(b.checkInFailReason),
     teeDate: b.teeTime.date, teeTime: b.teeTime.time,
-    amount: b.totalAmount / 100, ourTake: b.accessFeeTotal / 100,
+    // POS-1a: what collectPayment() will actually charge — the round plus any shop items.
+    amount: roundChargeCents(b) / 100, ourTake: roundApplicationFeeCents(b) / 100,
   }));
   const missedCheckIn = missedRaw.map(b => ({
     bookingId: b.id, courseId: b.course.id, courseName: b.course.name,
     golferName: b.golferName, golferEmail: b.golferEmail, players: b.players,
     teeDate: b.teeTime.date, teeTime: b.teeTime.time,
-    amount: b.totalAmount / 100, ourTake: b.accessFeeTotal / 100,
+    amount: roundChargeCents(b) / 100, ourTake: roundApplicationFeeCents(b) / 100,
     // The cutoff cron already took the course's no-show fee — so this one is
     // a no-show the course was paid for, not a forgotten check-in.
     noShowFeeCharged: b.paymentStatus === 'cancellation_fee_charged',
@@ -225,7 +227,7 @@ export async function GET(req: NextRequest) {
     bookingId: b.id, courseId: b.course.id, courseName: b.course.name,
     golferName: b.golferName, players: b.players,
     teeDate: b.teeTime.date, teeTime: b.teeTime.time,
-    ourTake: b.accessFeeTotal / 100, total: b.totalAmount / 100,
+    ourTake: roundApplicationFeeCents(b) / 100, total: roundChargeCents(b) / 100,
   }));
   // Late-cancellation fees are 100% COURSE revenue — the cron charges them
   // with applicationFeeCents: 0 — and a charged fee is refunded in full if the

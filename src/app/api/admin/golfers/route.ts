@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
 import { sendBookingConfirmation, sendCheckInReceiptEmail } from '@/lib/email';
 import { performCancellation } from '@/lib/cancel-booking';
+import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 
 // MP-6d: the Golfers record page. Search finds accounts AND guest bookings by
 // name / email / phone; the record is identity + a trust strip (rounds,
@@ -12,6 +13,7 @@ import { performCancellation } from '@/lib/cancel-booking';
 const BOOKING_SELECT = {
   id: true, status: true, paymentStatus: true,
   players: true, totalAmount: true, accessFeeTotal: true,
+  shopTotalCents: true, shopFeeCents: true, roundChargedCents: true,
   greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, cancellationFeeTotal: true,
   checkedInAt: true, cancelledAt: true, checkInFailReason: true, cancellationFeeChargedAt: true,
   roundPaymentIntentId: true, stripePaymentMethodId: true, golferAccountId: true,
@@ -26,7 +28,7 @@ const BOOKING_SELECT = {
 } as const;
 
 type BookingRow = {
-  id: string; status: string; paymentStatus: string; players: number; totalAmount: number; accessFeeTotal: number;
+  id: string; status: string; paymentStatus: string; players: number; totalAmount: number; accessFeeTotal: number; shopTotalCents: number; shopFeeCents: number; roundChargedCents: number | null;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; cancellationFeeTotal: number;
   checkedInAt: Date | null; cancelledAt: Date | null; checkInFailReason: string; cancellationFeeChargedAt: Date | null;
   roundPaymentIntentId: string; stripePaymentMethodId: string; golferAccountId: string | null;
@@ -44,7 +46,9 @@ function shapeBooking(b: BookingRow, today: string) {
   return {
     id: b.id, status: b.status, paymentStatus: b.paymentStatus,
     players: b.players,
-    totalAmount: b.totalAmount / 100, accessFeeTotal: b.accessFeeTotal / 100,
+    // POS-1a: what the card is (or was) charged — the round plus any shop items —
+    // so the refund dialog's "charged" and "left to refund" match Stripe.
+    totalAmount: roundChargedTotal(b) / 100, accessFeeTotal: roundApplicationFeeCents(b) / 100,
     greenFeeTotal: b.greenFeeTotal / 100, cartFeeTotal: b.cartFeeTotal / 100,
     cancellationFeeTotal: b.cancellationFeeTotal / 100,
     refundedTotal: refunded / 100,
