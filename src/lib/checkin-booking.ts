@@ -45,6 +45,9 @@ type ChargeOpts = {
   /** B-5: add a cart at check-in for a booking that has none — priced at the
    *  tee time's cart fee × players, written to the booking before the charge. */
   addCart?: boolean;
+  /** POS-1a: the total the golfer was shown. Checked after the shop items are
+   *  frozen, so the charge can never differ from it. */
+  expectedTotalCents?: number;
 };
 
 /**
@@ -214,10 +217,18 @@ async function chargeBooking(
     // shop items freeze — set the lock, then read them again. A shop write
     // holding the row (lib/shop.ts lockBooking) finishes first and is seen;
     // any later one is refused. The lock is lifted only on a definite non-charge.
+    // The stamp is this attempt's: only this attempt may lift it, so an
+    // overlapping attempt's decline never unfreezes a charge still in flight.
+    const lockStamp = new Date();
     {
-      const locked = await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: new Date() }, select: { shopTotalCents: true, shopFeeCents: true } });
+      const locked = await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: lockStamp }, select: { shopTotalCents: true, shopFeeCents: true } });
       booking.shopTotalCents = locked.shopTotalCents;
       booking.shopFeeCents = locked.shopFeeCents;
+    }
+    const unlock = () => prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: lockStamp }, data: { shopLockedAt: null } });
+    if (opts?.expectedTotalCents != null && Number(opts.expectedTotalCents) !== roundChargeCents(booking)) {
+      await unlock();
+      return { error: 'The total changed since this page loaded — the course updated the round. Refresh to see the new total, then pay.', status: 409 } as const;
     }
 
     // Review (security, MEDIUM): a new card changes the idempotency key. If
@@ -301,9 +312,16 @@ async function chargeBooking(
       // reused idempotency key with different params (the total changed since
       // the first attempt). Anything else — a timeout, a dropped connection —
       // may have charged, so the cart stays on the booking for reconciliation.
-      const definite = errType === 'StripeCardError' || errType === 'StripeIdempotencyError' || /idempotent|idempotency/i.test(message);
+      // Stripe's "another in-progress request using this key" means a twin
+      // attempt is charging right now — not a definite no-charge.
+      const inProgress = /in[- ]progress/i.test(message);
+      const definite = !inProgress && (errType === 'StripeCardError' || errType === 'StripeIdempotencyError' || /idempotent|idempotency/i.test(message));
       console.error(JSON.stringify({ ev: `${ev}.charge.fail`, bookingId, errType, definite, error: message }));
-      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(definite ? { shopLockedAt: null } : {}), ...(cartAddedCents > 0 && definite ? preCart : {}), ...(partialApplied && definite ? { ...prePartial, checkedInPlayers: null } : {}) } });
+      await prisma.booking.update({ where: { id: bookingId }, data: { checkInFailReason: message, ...(cartAddedCents > 0 && definite ? preCart : {}), ...(partialApplied && definite ? { ...prePartial, checkedInPlayers: null } : {}) } });
+      if (definite) await unlock();
+      if (inProgress) {
+        return { error: 'This round is being charged right now from another screen — wait a moment and refresh.', status: 409 } as const;
+      }
       if (/idempotent|idempotency/i.test(message)) {
         return { error: 'The total changed since your first attempt (a cart or a shop item was added or removed). Refresh the page and try once more.', status: 409 } as const;
       }

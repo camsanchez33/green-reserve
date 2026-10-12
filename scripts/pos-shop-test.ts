@@ -154,6 +154,15 @@ async function main() {
   const tmoAdd = await addItemToBooking(course.id, tmo.id, tee.id, 1, 'x');
   check('after a timeout the items are frozen (the charge may have gone through)', !tmoAdd.ok && tmoAdd.status === 409, tmoAdd);
 
+  // The golfer's shown total is checked after the items freeze.
+  const shown = await booking(1);
+  await addItemToBooking(course.id, shown.id, tee.id, 1, 'x');
+  const stale = await performCheckIn(shown.id, { type: 'golfer' }, { expectedTotalCents: 2650 });
+  check('a charge at a total the golfer was not shown is refused', 'error' in stale && stale.status === 409, stale);
+  check('…and that refusal unfreezes the items', (await addItemToBooking(course.id, shown.id, tee.id, 1, 'x')).ok);
+  const okShown = await performCheckIn(shown.id, { type: 'golfer' }, { expectedTotalCents: 2650 + 800 + FEE });
+  check('the shown total goes through', 'success' in okShown && sent.charges.at(-1)?.amount === 2650 + 800 + FEE, okShown);
+
   // The stored charge, not a recomputed one, caps the refund.
   const stored = await prisma.booking.findUnique({ where: { id: b.id } });
   check('the charged amount is stored on the booking', stored?.roundChargedCents === 7700 + FEE, stored?.roundChargedCents);

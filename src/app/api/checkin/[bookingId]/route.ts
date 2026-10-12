@@ -81,17 +81,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     return NextResponse.json({ error: 'A cart can\'t be added to this booking online — ask at the pro shop and check in there.' }, { status: 409 });
   }
 
-  // POS-1a (security review): the golfer pays the total they were shown. If the
-  // course added or removed a shop item since the page loaded, say so instead
-  // of charging a different amount.
+  // POS-1a (security review): the golfer pays the total they were shown. The
+  // charge path checks it again AFTER freezing the shop items (no gap); this
+  // early check just answers before any card work. The cart add-on is part of
+  // what they were shown and of the charge (it is on the booking by then).
+  let expectedRound: number | undefined;
   if (expectedTotalCents != null && booking.status === 'confirmed' && !(booking.paymentStatus === 'paid' && booking.roundPaymentIntentId)) {
-    const due = roundChargeCents(booking) + (addCart === true ? await cartAddOnCentsFor(booking) : 0);
-    if (Number(expectedTotalCents) !== due) {
+    const cartCents = addCart === true ? await cartAddOnCentsFor(booking) : 0;
+    if (Number(expectedTotalCents) !== roundChargeCents(booking) + cartCents) {
       return NextResponse.json({ error: 'Your total changed since this page loaded — the course updated your round. Refresh to see the new total, then pay.' }, { status: 409 });
     }
+    expectedRound = Number(expectedTotalCents);
   }
 
-  const result = await performCheckIn(bookingId, { type: 'golfer' }, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true });
+  const result = await performCheckIn(bookingId, { type: 'golfer' }, { externalPaymentMethodId: paymentMethodId || undefined, addCart: addCart === true, expectedTotalCents: expectedRound });
   if ('error' in result) return NextResponse.json({ error: golferCheckInError(result.error ?? 'Check-in failed.') }, { status: result.status });
   return NextResponse.json(result);
 }
