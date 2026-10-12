@@ -120,3 +120,14 @@ export function currentDocuments(): LoadedDocument[] {
 export function signableDocuments(): LoadedDocument[] {
   return currentDocuments().filter(d => !d.draft);
 }
+
+/** AG-3: why the seed must refuse this version, or null. A re-acceptance bump
+ *  needs counsel's review date OR Cam's recorded waiver, and must not be a draft. */
+export function seedGateError(doc: Pick<DocumentMeta, 'document' | 'version' | 'reacceptRequired' | 'counselReviewed' | 'counselWaived' | 'draft'>): string | null {
+  if (!doc.reacceptRequired) return null;
+  if (!doc.counselReviewed && !doc.counselWaived) {
+    return `${doc.document} ${doc.version}: reacceptRequired is set but the front matter has neither a counselReviewed date nor a counselWaived record — not seeding a re-acceptance bump counsel has not reviewed.`;
+  }
+  if (doc.draft) return `${doc.document} ${doc.version}: still marked as a draft — remove the draft marker before seeding a re-acceptance bump.`;
+  return null;
+}

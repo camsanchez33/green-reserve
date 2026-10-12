@@ -3,7 +3,7 @@
 // row for the same version: versions are immutable — bump instead.
 // Run: npx dotenv -e .env.local -- npx tsx scripts/seed-agreement-versions.ts
 import { prisma } from '../src/lib/prisma';
-import { DOCUMENT_DIR, listVersions, loadDocument, type AgreementDocument } from '../src/lib/agreements';
+import { DOCUMENT_DIR, listVersions, loadDocument, seedGateError, type AgreementDocument } from '../src/lib/agreements';
 
 async function main() {
   let inserted = 0, unchanged = 0;
@@ -18,18 +18,13 @@ async function main() {
         unchanged++; continue;
       }
       // AG-3 §1: a bump that requires re-acceptance is a legal event — it
-      // refuses to seed until counsel has reviewed it (front matter
-      // `counselReviewed: <date>`), and it takes effect NOW with a 30-day
-      // window, whatever the file's effectiveAt says.
-      // Cam may ship one without counsel by recording it (`counselWaived:
-      // <date> by <who>`) — an explicit, visible waiver, never a fake review date.
-      if (doc.reacceptRequired && !doc.counselReviewed && !doc.counselWaived) {
-        throw new Error(`${document} ${version}: reacceptRequired is set but the front matter has neither a counselReviewed date nor a counselWaived record — not seeding a re-acceptance bump counsel has not reviewed.`);
-      }
+      // refuses to seed until counsel has reviewed it (`counselReviewed: <date>`)
+      // or Cam has recorded a waiver (`counselWaived: <date> by <who>` — never a
+      // fake review date), and it takes effect NOW with a 30-day window,
+      // whatever the file's effectiveAt says.
+      const gate = seedGateError(doc);
+      if (gate) throw new Error(gate);
       if (doc.reacceptRequired && !doc.counselReviewed) console.warn(`${document} ${version}: seeding WITHOUT counsel review — waived: ${doc.counselWaived}`);
-      if (doc.reacceptRequired && doc.draft) {
-        throw new Error(`${document} ${version}: still marked as a draft — remove the draft marker before seeding a re-acceptance bump.`);
-      }
       const now = new Date();
       const effectiveAt = doc.reacceptRequired ? now : new Date(doc.effectiveAt + 'T00:00:00.000Z');
       await prisma.agreementVersion.create({

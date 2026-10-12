@@ -8939,7 +8939,7 @@
     },
     {
       "path": "src/lib/agreements.ts",
-      "lines": 123,
+      "lines": 134,
       "purpose": "AGREEMENT_SPEC AG-1 §2 — versioned agreement documents.",
       "brain": [
         "agreement-versions"
@@ -8976,6 +8976,10 @@
         {
           "name": "LoadedDocument",
           "kind": "type"
+        },
+        {
+          "name": "seedGateError",
+          "kind": "fn"
         },
         {
           "name": "signableDocuments",
