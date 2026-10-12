@@ -98,8 +98,8 @@ export default function AgreementVersionsCard() {
         <Modal title={`Publish ${confirm.title} ${confirm.version}?`} onClose={() => { if (!busy) setConfirm(null); }} dismissable={!busy}>
           {confirm.reacceptRequired ? (
             <div className="text-sm text-ink space-y-2">
-              <p>Every course still on an older version gets an email with the next hourly run and has 30 days to re-sign.</p>
-              <p>After the 30 days, a course that has not re-signed cannot change anything in its dashboard until it signs. Golfers can still book the whole time.</p>
+              <p>Every live course still on an older version gets an email with the next hourly run and has 30 days to re-sign.</p>
+              <p>After the 30 days, a course that has not re-signed cannot change its course settings until it signs. Its tee sheet, check-ins and bookings keep working, and golfers can still book the whole time.</p>
               {confirm.changeSummary && <p className="text-ink-soft">What changed: {confirm.changeSummary}</p>}
               {!confirm.counselReviewed && confirm.counselWaived && <p className="text-ink-soft">Counsel review waived: {confirm.counselWaived}</p>}
               <p>This cannot be undone.</p>
