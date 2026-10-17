@@ -20,6 +20,24 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] Admin Phase 7: cross-course activity feed — 83a41c5
 - [x] ADMIN_V2 Phase 0: banner-on-login bug, golfer stat removed, clickable overview — 5c1230b
 
+## Shipped 2026-10-07..12 (recorded 2026-10-17)
+
+- [x] ACT-1 (90e1375, #93) — move a group to another tee time; one lib/move-booking.ts for staff, golfer swap and frost delay; event booking_moved
+- [x] ACT-2 (f4b4a0b, #94) — Birdie drafts tee-sheet changes: move, block/reopen times, add booking or walk-in, pay link; cancels wait on Cam
+- [x] MSG-1 (fef4012, #95) — courses message the golfers booked on a day (email; SMS needs Twilio A2P)
+- [x] Move checked-in group (2707e36, #96) — staff can move a completed group; price kept, nothing charged or refunded
+- [x] SHEET-2 board (ea2d17b, #97) — board view of the tee sheet
+- [x] SHEET-2 board is the tee sheet (fadcf67, #98) — squares, paid/booked edges, Next up, action panel; list view gone
+- [x] SHEET-2 fit + cancel (b7079ea, #99) — hour columns wrap to fit the page; cancel from the sheet via lib/cancel-confirm.ts
+- [x] AN-2 (718522c, #100) — Analytics reads top to bottom: four numbers, What to look at, monthly review, tabs
+- [x] HOME demo board (2eae475, #101) — homepage TeeSheetDemo mirrors the board and its panel
+- [x] Membership fee 1% (4165bc8, #102) — 1% of dues added to what the member pays (membershipFeeCents)
+- [x] Operator Agreement v2026-10 draft (fa1e1df, #103) — 1% membership fee, held for counsel
+- [x] Operator Agreement v2026-10 live (47e7320, #104) — re-accept required; counsel waived by Cam
+- [x] Agreement publish (5ed62ea, #105) — Admin → System publishes agreement versions (owner with 2FA)
+- [x] POS-1a (c4800f7, #106) — pro-shop catalog; items ride the round's charge; SHOP_FEE_ON = false
+- [x] Fix re-sign banner (9e4bf52, #107) — banner clears after signing the new Operator Agreement
+
 ## In progress
 
 (nothing running)
@@ -27,8 +45,19 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 ## Queue (run in this order)
 
 - [ ] ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 Birdie acts on the tee sheet → POS-1 pro shop → MSG-1 messaging → OUT-1 outings + invoices → FB-1 food & beverage → PWA-1. Parked: employee scheduling, maintenance spend, native app per course.
-- [ ] CARD-1 (BUILT 2026-10-05) — Cam 2026-10-05: "there still isnt a way for the course to not require a card at checkout ... they dont get the pay link until whatever time they set before the tee time". Settings → Pricing & cancellation gets an explicit "Card at booking" choice: Ask for a card / No card at booking. "No card" = both fees $0 (SP-B's cardRequired() rule, unchanged — a fee with no card would have nothing to charge), fee controls hidden, and "Pay link (hours before the round)" (checkInWindowHours, default 3) sets when the link goes out. No schema change.
-- [ ] PERS-1 (MERGED #65) · BIRDIE-B4b (BUILT 2026-10-05 — proposals.ts + ConfirmCard, allow-listed routes, birdie.applied log, 14 more isolation checks) · BIRDIE-B4a (MERGED #66, BUILT 2026-10-05 — tools.ts read tools, Haiku→Opus 5.5 escalation on the first tool call, NDJSON stream, isolation tests extended; not yet run against the live model) · PERS-1 detail (BUILT 2026-10-05 — CourseHeaderBar photo+logo on book/confirmation/check-in/manage; Course.confirmationNote migration 20261005170000, Settings field, confirmation screen + all three confirmation-email senders) + BIRDIE-B4 — Cam 2026-10-05 ("golfer facing pages that belong to the
+  PARTIALLY BUILT — shipped: BI-1 #92, ACT-1 #93, ACT-2 #94, MSG-1 v1 #95, SHEET-2 #97–99, POS-1a #106. Now: POS-1b. After launch: OUT-1, FB-1, PWA-1.
+- [ ] WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).
+  SP-B with real cards (late fee, no-show fee, pay link) · SP-A one login per preset ·
+  WX-1 cancel times (email + hold refund) · Birdie B4a/B4b and ACT-2 against the live
+  model · SD-8d Settings Back prompt · SD-11 "Are you trying to sign in?" + code ·
+  SD-9c staff Forgot password · MP-5e Overview feed + "First went live" ·
+  CAL-2 Admin → System → Call booking says On + webhook secret set ·
+  MP-8b /admin/system crons green a day after deploy.
+- [ ] RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against the code).
+  Open groups: G9 (time/party changes have no server rules), G11 (private-club members can't book online), G12 (/book uses the public window for members), G14 ("still coming" state guard).
+  Cam decisions: G3 (no-show fee on late check-in), G6 (fee-basis column), R-AUTH-005, R-AUTH-009 (member cookie 7d vs CLAUDE.md 90d), R-GOLF-014 (perf budget misses).
+- [x] CARD-1 (2e7f6fc, #68) — Cam 2026-10-05: "there still isnt a way for the course to not require a card at checkout ... they dont get the pay link until whatever time they set before the tee time". Settings → Pricing & cancellation gets an explicit "Card at booking" choice: Ask for a card / No card at booking. "No card" = both fees $0 (SP-B's cardRequired() rule, unchanged — a fee with no card would have nothing to charge), fee controls hidden, and "Pay link (hours before the round)" (checkInWindowHours, default 3) sets when the link goes out. No schema change.
+- [x] PERS-1 (17267d1, #65) · BIRDIE-B4a (e65d5db, #66) · BIRDIE-B4b (10d853c, #67) — detail: PERS-1 (MERGED #65) · BIRDIE-B4b (BUILT 2026-10-05 — proposals.ts + ConfirmCard, allow-listed routes, birdie.applied log, 14 more isolation checks) · BIRDIE-B4a (MERGED #66, BUILT 2026-10-05 — tools.ts read tools, Haiku→Opus 5.5 escalation on the first tool call, NDJSON stream, isolation tests extended; not yet run against the live model) · PERS-1 detail (BUILT 2026-10-05 — CourseHeaderBar photo+logo on book/confirmation/check-in/manage; Course.confirmationNote migration 20261005170000, Settings field, confirmation screen + all three confirmation-email senders) + BIRDIE-B4 — Cam 2026-10-05 ("golfer facing pages that belong to the
   course can be personalized … the ai should be capable of making changes for the
   course"). Decisions (Cam picked all three recommendations):
   (a) PERS-1 personalization = REUSE what the course already uploads — hero photo,
@@ -56,7 +85,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   variables), globals.css (@theme fonts + `.font-serif` base rule), home.module.css
   (`.display`). Zero behavior. The Design canvas that chose it (Cam's /design
   brief, "not AI slop"): https://claude.ai/artifact/D7PTUPXsdE4AGK2mXKst1x
-- [ ] TYPE-2 — strip the AI tells Cam listed 2026-10-05, zero behavior, one run per
+- [x] TYPE-2 — strip the AI tells Cam listed 2026-10-05, zero behavior, one run per
   area (homepage → golfer pages → /dashboard → /admin): (a) delete the small
   uppercase label above headings (`<Eyebrow>` / `EYEBROW`, 177 uses) unless it is
   a real form label or table header; (b) sentences in full ink — `text-ink-muted`
@@ -104,16 +133,16 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     on /call moved under the heading; labels sentence case; helper sentences
     ink-soft. Emails and the agreement PDF are out of scope (own template, no
     web fonts). TYPE-2 complete across the site.
-- [ ] TYPE-3 — icons only where they do a job (Cam approved 2026-10-05: "Ok
+- [x] TYPE-3 — icons only where they do a job (Cam approved 2026-10-05: "Ok
   continue", "you have to do all the other pages as well").
   - [x] golfer + public pages and shared components — BUILT 2026-10-05: icons
     next to text, icon tiles and empty-state icons removed; small status icons
     → StatusDot. Kept: icon-only buttons with aria-label, spinners, close,
     search, external link, steppers, disclosure, ratings. CLAUDE.md rule,
     design-auditor and a design-guard lucide-import ratchet added.
-  - [ ] /dashboard — folded into the CLUB-3 shell rebuild (below).
-  - [ ] /admin
-- [ ] CLUB — the "club direction" (Cam 2026-10-05, after clubup.com: "see now
+  - [x] /dashboard — done in CLUB-3c (56cdf9c, #61)
+  - [x] /admin — done in CLUB-4a (dd0c049, #62)
+- [x] CLUB — the "club direction" (Cam 2026-10-05, after clubup.com: "see now
   that is a lot better"). Canvas: https://claude.ai/artifact/D7PTUPXsdE4AGK2mXKst1x
   (row "Club direction — after ClubUp"). Decisions: the homepage LEADS with
   what GreenReserve is ("GreenReserve is the online tee sheet and booking page
@@ -207,6 +236,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   2026-09-29, Rockland County). Put the legal name into the Terms and operator
   agreement. Waiting on Cam: which business address to publish, and confirming
   the Terms' governing law moves from New Jersey to New York (LLC is NY).
+  Also: the v2026-10 operator agreement (legal/documents/operator-agreement/2026-10.md) carries the {{COMPANY_LEGAL_NAME}} placeholder too, as does 2026-08; changing it means a new agreement version.
 - [x] SEC-blob-host — done 2026-10-01: `isBlobStoreUrl()` in lib/private-blob.ts
   (https + *.blob.vercel-storage.com) now gates course-documents download AND
   record (record also handed a client URL to the SDK with the token), and
@@ -240,7 +270,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (live courses only; only announcements sent after the course went live); the banner shows only the NEWEST
   one and never falls back to an older unseen one (the "keeps popping up" cause); X / opening one marks it and
   everything older as seen.
-- [ ] SP-A — staff permissions (STAFF_POLICY_SPEC.md Part A). Cam 2026-10-04: course owner decides,
+- [x] SP-A (747476a, #44) — staff permissions (STAFF_POLICY_SPEC.md Part A). Cam 2026-10-04: course owner decides,
   per person with presets, "needs to be very extensive". One additive migration (CourseStaff.permissions /
   preset / permissionsSetAt + StaffPermissionChange audit). Closes the /gr-review 2026-10-04 HIGH (staff
   could waive/refund fees via Weather). Legacy staff keep today's powers minus weather-cancel and waive.
@@ -249,7 +279,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   line), sidebar / tee sheet / Weather tabs / Money tabs follow the login, denied pages explain which toggle
   to ask for, admin course Overview shows each person's access. Verified locally (migration from scratch +
   zero diff; full 200/403 matrix per preset). Box open until a live walk.
-- [ ] SP-B — cancellation & card policy (STAFF_POLICY_SPEC.md Part B): fee basis per booking/player,
+- [x] SP-B (b913739, #45; d0bbb4f, #46) — cancellation & card policy (STAFF_POLICY_SPEC.md Part B): fee basis per booking/player,
   when the late fee is taken (hold at cutoff / late cancel / late cancel or no-show / manual), no-show
   fee, one describePolicy() for every golfer surface. The card-off switch WAITS ON CAM (spec §B0:
   every booking saves a card today because GreenReserve's $1.50 fee is collected from it).
@@ -259,12 +289,12 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   spec's "Built — Part B"). Counter gap DECIDED Cam 2026-10-05 "push them to the pay link": BUILT — golfer
   copy leads with the link; tee sheet "Send pay link" on no-card bookings (send_pay_link action, sheet.checkin).
   Box open until a live walk with real cards.
-- [ ] WX-1 — Weather button on the Tee Sheet (Cam 2026-10-01: "do the weather button with both
+- [x] WX-1 (39cefdd, #41) — Weather button on the Tee Sheet (Cam 2026-10-01: "do the weather button with both
   options", then "remove close a day"). Frost delay → Weather: Cancel times (whole day or a window,
   fee waived, golfers emailed, times blocked; today's started times left alone) + Delay start (B-9).
   Schedule's "Close the day" option and the blackouts closeDay branch deleted. PR #41. Box open until
   a live walk (cancellation email + hold refund need real Resend/Stripe). Detail: UI_REVISE_SPEC B-9.
-- [ ] AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (box reopened by
+- [x] AN-1 (af425f9, #38; reworked by AN-2 718522c, #100) — dashboard refactor + full Analytics tab — built 2026-10-01 (box reopened by
   /gr-review 2026-10-01: built + reviewed, every finding fixed in the review-fix PR; box closes
   after a live walk) (Cam's brief, no
   migrations by Cam's OK). Part 0 audit answered in chat. /dashboard/analytics (owner only):
@@ -305,7 +335,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   there is past the demo stage); /for-courses still shows "$1.50", "About a week" and
   "30 days' notice" — the homepage's no-fee/no-duration/no-contract rules were not
   applied to it.
-- [ ] CAM — Cal.com: add a booking question with identifier `courseName` ("Golf
+- [ ] CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf
   course name") to the demo event, so homepage demo inquiries arrive with the
   course named (the webhook reads it; without it the inquiry's course is blank).
 
@@ -703,10 +733,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     CAM MUST CHECK: https://greenreserve.app/sitemap.xml returns XML;
     https://greenreserve.app/opengraph-image renders the card; paste the
     homepage URL into iMessage/Slack and see a card. NEEDS REVIEW.
-  - [ ] SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into
-    public/screenshots/ (empty, so the homepage shows three grey placeholder
-    boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empty, so the
-    Live-demo section says "coming soon"). Nothing to build until both exist.
+  - [x] SD-7b — DROPPED 2026-10-17: superseded by HOME-2 (the in-page TeeSheetDemo replaced the screenshots; DEMO_COURSE_SLUGS stays [])
   - [x] SD-8/9a (8effd59) — the CORRECTNESS half of SD-8 + SD-9, pulled out so
     the UI restructures could wait (Cam 2026-09-07: function first, looks
     later). Stripe connect + dashboard-link resolved the course with an
@@ -816,7 +843,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     should name the section; Cancel keeps you put. Repeat on mobile, on the
     active Settings item itself, and on "Course alert".
 
-  - [ ] SD-8d — browser Back still discards unsaved Settings edits (from the
+  - [x] SD-8d — browser Back still discards unsaved Settings edits (from the
     SD-8b review, 2026-09-16). SD-8b closed the sidebar; the App Router pops
     on back/forward without firing beforeunload and without consulting
     setLeaveGuard, so Back is now the only silent loss path left on Settings.
@@ -841,8 +868,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     prompt names the section; Cancel keeps the edit on screen; Back again →
     OK leaves. Then edit, Save, press Back once → leaves with no prompt.
     Open Birdie, ask something that returns a link, click it while dirty.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-  - [ ] SD-8e — status is rendered as bare coloured text where the design
+  - [x] SD-8e — status is rendered as bare coloured text where the design
     system says StatusDot (from the SD-8c design audit, 2026-09-16). Both live
     callers of getBookingStatus — the payments table and the tee sheet — render
     `<span className={statusToneText(tone)}>`, but CLAUDE.md's rule for both
@@ -875,6 +903,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     CAM TO WALK: /dashboard (tee sheet) and /dashboard/money → Payments: a
     booking with a card on file shows a hollow green ring, a checked-in paid
     one a solid green dot, a charged fee amber, a kept fee red.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
   - [x] SD-8c (fa3d7bf) — SHIPPED + REVIEWED 2026-09-16, 7/7 spec claims MET,
     no scope creep. Both local tone maps deleted for lib/booking-status.ts's
@@ -919,11 +948,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     (now that CAL-1 exists, it can link the invite); persist step position; stop
     optional qualifiers silently gating whole sections. 1,868-line page — needs
     Cam's call on what "required core" is before building. (medium-large)
-  - [ ] SD-9c — auth: (1) staff password recovery — CourseStaff has no reset
-    path; doable WITHOUT schema via a short-lived JWT reset token that embeds a
-    hash of the current password (single-use by construction). (2) operator 2FA
-    backup codes — needs a column (SCHEMA CHANGE) → blocked while previews are
-    broken (see EV-1). Build (1) alone first. (small / blocked)
+  - [x] SD-9c (1) — staff password recovery, SHIPPED 0d84aaf, 2026-09-29. Part (2), operator 2FA backup codes, is parked under Ideas.
     (1) SHIPPED 0d84aaf, 2026-09-29 — box open until /gr-review (and (2) is still
     open). lib/auth.ts signStaffResetToken / verifyStaffResetToken (Web Crypto
     fingerprint of the current hash, type 'staff_reset', 1h);
@@ -939,8 +964,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     CAM TO WALK: /dashboard/login → Forgot password → a STAFF email → the link
     arrives, sets a new password, logs in; clicking the same link again says
     expired.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-  - [ ] BUG: 56 of 59 email senders report success when Resend rejects the send
+  - [x] BUG: 56 of 59 email senders report success when Resend rejects the send
     (found during SD-9c, 2026-09-29). Resend SDK 6.x RETURNS { data: null, error }
     instead of throwing (verified directly against the installed SDK); only three
     senders in lib/email.ts check `r.error`. So a bad API key, an unverified
@@ -969,6 +995,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     operator's password (it used to leave the working password dead when the
     email failed) and answers 502 JSON; owner-login 2FA send caught; owner-login
     + inquiry pages parse error bodies safely (no more false "Network error").
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
 - ADMIN MASTER PLAN — full spec in ADMIN_MASTER_PLAN.md; the ADMIN_V4 phases it
   does NOT cover survive as MP-9/10/11/12 and their detail stays in
@@ -981,7 +1008,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   again → a $50 green fee resends as $5,000) and fix-now #8 (broadcasts:38,
   employees:35 and :64 all use `session.role !== 'owner'`, bypassing
   requireOwner and therefore NOT asserting the mfa claim b07c6d0 built).
-  - [ ] MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin
+  - [x] MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin
     + /dashboard (64px dead band on every screen), course-detail 165px
     horizontal overflow + scrollable tab strip, two overflow-hidden table
     wrappers → overflow-x-auto, CLAUDE.md dark-theme correction (small)
@@ -1011,7 +1038,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
         local state regardless, so a failed feature-toggle silently appears to
         succeed. This run only relocated the button; the no-silent-failures
         violation predates it.
-  - [ ] MP-1 — SHIPPED 41f5ea8, box stays open until /gr-review MP-1 passes.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
+  - [x] MP-1 — SHIPPED 41f5ea8, box stays open until /gr-review MP-1 passes.
     All 7 fix-now items + the ET day boundary built. Cam's calls at the restate
     step: #3 = age guard only (synthetic-inquiry rebuild stays in MP-4);
     #5 = shared collectPayment() rather than a second endpoint.
@@ -1046,7 +1074,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     Activity page's 30-day default has the same bug and is why its steady state
     is "No events found" even when events exist. This is a correctness bug, not
     part of the Overview redesign (medium)
-  - [ ] MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
+  - [x] MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until
     reviewed. Closed 4 review blockers + 1 pre-existing critical:
     B1 (CRITICAL, introduced by MP-1) collectPayment created confirmed+paid
       bookings that performCancellation would cancel without refunding — slot
@@ -1086,8 +1115,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
         One-line update, pending Cam's approval for a prod write.
       - ARCHITECTURE.md is 31 routes stale and missing every money route —
         re-run scripts/route-inventory.ts.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-  - [ ] MP-2 — SHIPPED 958f229, box open until /gr-review MP-2 passes.
+  - [x] MP-2 — SHIPPED 958f229, box open until /gr-review MP-2 passes.
     Cam's call at restate: KEEP TWO DOORS — the "one-door login with inline 2FA"
     sub-item is deliberately NOT built and should be struck from this item, not
     carried forward. Reason: one door challenging for 2FA only on owner accounts
@@ -1124,7 +1154,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     verificationToken/setupLink to any session; inquiries GET returning
     detailsToken) + one-door login with inline 2FA step + tokens out of URL query
     strings + role gates on messages GET / employees GET / palette search (medium)
-  - [ ] MP-2b — SHIPPED a134af5, box open until reviewed. Queued as a sweep of
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
+  - [x] MP-2b — SHIPPED a134af5, box open until reviewed. Queued as a sweep of
     nine small follow-ups; the MP-2 review landed mid-run and displaced most of
     them with 6 blockers + 1 pre-existing HIGH. Those were done instead:
       - MP-2 REGRESSION: every admin Receipt link was dead (dual-auth landed on
@@ -1172,8 +1203,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       - MP-1 #2's "test that archives then restores" still unbuildable — no
         test runner exists.
       - Phantom $10 backfill still pending Cam's approval for a prod write.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-  - [ ] MP-2c — SHIPPED e5b5413, box open until reviewed. STRUCTURAL, not a
+  - [x] MP-2c — SHIPPED e5b5413, box open until reviewed. STRUCTURAL, not a
     sweep: MP-2b's surface-by-surface approach failed measurably (2 fixes
     unreachable, 1 self-erasing, 3 new instances created), so this builds the
     single implementation instead.
@@ -1220,8 +1252,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       - No test runner exists, so MP-1 #2's archive-then-restore test remains
         unbuildable.
       - Phantom $10 backfill still pending Cam's approval for a prod write.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-  - [ ] MP-2d — SHIPPED 22d0f68, box open until reviewed. Finishes MP-2c: the
+  - [x] MP-2d — SHIPPED 22d0f68, box open until reviewed. Finishes MP-2c: the
     shared classifier was adopted for GET loads only, so every mutation still
     had the original defect. All 6 MP-2c review blockers closed:
       B1 broadcasts read "Send to 0 operators" and mailed all of them (non-2xx
@@ -1262,8 +1295,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
         requireRole" — verify that is true after MP-2d before trusting it.
       - No test runner exists; MP-1 #2's archive-then-restore test unbuildable.
       - Phantom $10 backfill still pending Cam's approval for a prod write.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-  - [ ] MP-2e — SHIPPED bf3bcb2, box open until reviewed. CLOSES THE MP-2 SERIES.
+  - [x] MP-2e — SHIPPED bf3bcb2, box open until reviewed. CLOSES THE MP-2 SERIES.
     All 6 MP-2d blockers fixed, plus the queue items from that review:
       - The viewer Overview crash MP-2d shipped (null money to an unconverted
         consumer; fmtMoney(null) threw, no error.tsx, and the interface lied so
@@ -1310,6 +1344,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
         other four crons fail closed). Pre-existing, worth its own small item.
       - No test runner exists; MP-1 #2's archive-then-restore test unbuildable.
       - Phantom $10 backfill still pending Cam's approval for a prod write.
+    Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
   - [x] MP-3 — SHIPPED AND LIVE. Ran as FIVE migrations, not one, on Cam's call.
     Every money column in the schema is now integer cents; the only remaining
@@ -1381,14 +1416,14 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
         CLAUDE.md's env list should say vars are per-environment.
       - Delete the mp3-cents Neon branch; rotate the neondb_owner password.
 
-  - [ ] MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) —
+  - MP-3 original spec (reference only; superseded by MP-3 above):
     ADMIN_MASTER_PLAN §5: money Float → integer cents (+ full codebase sweep),
     PaymentEvent ledger, Booking/Message/InquiryStatusEvent/CourseInquiry/TeeTime
     indexes, inquiry growth columns (source/closedReason/snoozeUntil/
     nextFollowUpAt), real ChangeRequest table, Course.firstWentLiveAt, CronRunLog
     + admin audit-log writes + CourseOperator.lastLoginAt, cancellationFeeApplies,
     AdminUser.sessionVersion (SCHEMA CHANGE, ATTENDED)
-  - [ ] MP-4 — pipeline reshape (split into 4a/4b/4c)
+  - [x] MP-4 — pipeline reshape (split into 4a/4b/4c)
     - [x] MP-4a — the logic, no UI rebuild (7b6d5c2): days-in-stage derived from
       the event ledger (`stageEnteredAt`, ignores self-loop marker events so a
       "Preview sent" can't restart the clock) and shared by the list AND detail
@@ -1471,19 +1506,6 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       stops calling it your move once dealt with, and a LATER re-submission
       asks again. Legacy bare markers still count. adminNotes untouched — it
       is the founder's own writing. 20 assertions passed. NEEDS REVIEW.
-    - [ ] MP-4f — retire the JSON-in-actorName pattern. Three separate things
-      now encode structured data into `InquiryStatusEvent.actorName`:
-      `CHANGES_REQUESTED::`, `CHANGE_ADDRESSED::` and MP-4e's `RESUBMIT::`.
-      The schema already carries a real `ChangeRequest` table for the first
-      two (unused). One reworded log line breaks any of them. Migrate all
-      three onto real rows (SCHEMA CHANGE, ATTENDED).
-      BLOCKED (assessed 2026-09-29): RESUBMIT:: has no table → real schema
-      change → blocked on Vercel previews (see EV-1). The two change-request
-      encodings COULD move onto ChangeRequest without a migration, but 10+
-      readers (computeOpenChanges, isSendPreviewGated, queueSignal, overview)
-      parse the strings and existing rows need a prod backfill (Cam's approval);
-      a half-move means dual-reading on the approval gate for no user-visible
-      gain with zero live courses. Do all three together once previews build.
     - [x] MP-4d (6a5a3dd) — Overview stops deriving "whose move is it" for
       itself. It built FOUR overlapping amber sources in SQL over `updatedAt`
       with its own 3/5/7-day thresholds (waitingOnUs, sheetNoResponse,
@@ -1500,7 +1522,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       three dead SQL thresholds and MP-4c's snooze stopgap go with them.
       Per-row affordances preserved (resend_sheet, resend_preview, the
       changes-requested category list). 20 assertions passed. NEEDS REVIEW.
-  - [ ] MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong
+  - [x] MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong
     today rather than by spec order)
     - [x] MP-5a — the lies and the leak (4232820). Five confirmed findings,
       no schema. (1) Deleting a tee-time schedule left every slot it had
@@ -1579,11 +1601,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       `/api/courses` left in place — verified it leaks nothing (live,
       non-archived courses; public card data) and it is the natural data
       source for the directory if it is ever built. NEEDS REVIEW.
-    - [ ] Golfer course directory (`/courses`) — NOT scheduled. If Cam wants
-      browse/search, this is the feature: index page, search + filters, cards,
-      and it must be added to the perf-audit page list. `/api/courses` already
-      serves exactly the right payload. Featuring comes back with it.
-    - [ ] MP-5e part 3 — the Overview relationship feed (notes + settings
+    - [x] MP-5e part 3 — the Overview relationship feed (notes + settings
       changes + messages + status events all exist, none rendered as one
       chronological timeline), operator engagement (last dashboard login),
       an all-time "this course has earned GR $X" line, and real
@@ -1597,6 +1615,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       no backfill). Verified on local Postgres via the real admin page.
       CAM TO WALK: /admin/courses/<any course> → Overview: Relationship feed and
       Engagement card show; set a course live → "First went live" fills in.
+      Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
     - [x] MP-5d (87a9695) — detail tabs 9 -> 6 (the "10" counted Contact,
       folded in earlier): Overview · Money · Records · Messages · Operate ·
       Setup. Staff tab gone — resend-login sits on the Overview staff card;
@@ -1616,7 +1635,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       no test DB; verified by reading both routes against the service and by
       tsc. Cam must walk edit + delete on a course with a live schedule.
       NEEDS REVIEW.
-  - [ ] MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)
+  - [x] MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today)
     - [x] MP-6a (c2c35dc) — the numbers on /admin/revenue stop lying. Headline
       is fees COLLECTED (paid rounds, placed by checkedInAt) — the old one
       summed every confirmed booking by createdAt, so a no-show counted as
@@ -1688,7 +1707,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       record. NOT done: card-update link — no golfer page exists to swap a
       booking's card (feature, queue it if wanted); admin audit log of support
       actions still console-only. NEEDS REVIEW.
-  - [ ] MP-7 — comms merge (split into 7a–7b)
+  - [x] MP-7 — comms merge (split into 7a–7b)
     - [x] MP-7a (6c94836) — Messages says who is waiting; Broadcasts stops lying
       about delivery. NEW `lib/thread-signal.ts` is THE derivation for
       "waiting on us / for how long": the Overview action queue had its own
@@ -1706,7 +1725,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       removed, palette repointed. GET role gate was already SUPPORT_PLUS
       (MP-2) — met, nothing to do. 9 assertions
       (scripts/thread-signal-test.ts). NEEDS REVIEW.
-    - [ ] MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE,
+    - [x] MP-7b (037dcf0, #43) — announcement storage + thread lifecycle (SCHEMA CHANGE,
       ATTENDED): store an announcement ONCE with per-course read state instead
       of N copied Message rows (which reorder the whole inbox and overwrite
       every preview with "[Announcement]…"); thread close/reopen with a
@@ -1728,7 +1747,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       signed-in admin, records nothing; a failure is shown. Verified locally end to end
       (no Message rows on broadcast; close → Closed group; operator reply reopens).
       Box open until a live look after deploy.
-  - [ ] MP-8 — chrome + System (split into 8a–8b)
+  - [x] MP-8 — chrome + System (split into 8a–8b)
     - [x] MP-8a (4eb1c9d, fix 892af22) — sidebar nav items are real <Link>s (middle/cmd-click
       work); ONE /api/admin/nav-badges fetch feeds inquiries + messages + money
       badges (inquiries used to render only when the Overview passed the prop,
@@ -1745,7 +1764,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
       modal). "Demotions" (Employees → utility cluster as "Team & access") NOT
       done — Employees still sits in main nav; that is a one-line move once
       Cam agrees. NEEDS REVIEW.
-    - [ ] MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table
+    - [x] MP-8b (b0a1139, #42) — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table
       (path, startedAt, finishedAt, ok, error, counts) written by every
       /api/cron/* route; System's Crons card turns red when a scheduled run is
       missing or failed — the first card on that page that can. Also: webhook
@@ -1826,7 +1845,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
     still .catch(() => {}) (LOW, page-load not click). Boxes MP-6b, SD-11,
     MP-6d, L3, MP-6c, MP-10 pass review; SD-10 and viewer bug pass with these
     fixes.
-  - [ ] MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)
+  - [x] MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b)
     - [x] MP-11a (341161a) — LAW rule 2 made real. `admin/layout.tsx` is a server
       component that resolves the session ONCE and hands it down via
       `lib/admin-session-context.tsx` (AdminSessionProvider + useAdminSession).
@@ -1932,7 +1951,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [x] Tiny run: /for-courses drops the white nav (no migration) — Nav.tsx returns null for pathname.startsWith('/for-courses') (same return-null pattern as admin/dashboard/course-world/booking-mode). MainOffset updated to match (no pt-16, avoiding the 64px gap the last two runs already had to account for elsewhere). The pine hero's cream lockup now links to / and a small "← Back" text link sits in the hero's top-left, on both /for-courses and /for-courses/details — without either, a visitor arriving here directly would have no way back to the marketing site. Footer untouched. Verified via tsc + babel parse-check + live dev-server check (0 <nav> tags on both pages, back link + cream lockup present in /for-courses' raw HTML; /for-courses/details' hero only renders after a client-side fetch resolves — same limitation as /book earlier this session — but the JSX is byte-identical to the verified ForCoursesContent pattern) — 6f47cac
 
-- [ ] Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + /privacy with "TheGreenReserve LLC" + formation state (CAM: confirm the state before this runs — e.g. "TheGreenReserve LLC, a New York limited liability company"). Bump "Last updated" dates. Attorney-review HTML comment stays.
+- [x] Tiny run: legal entity name fill-in — DROPPED 2026-10-17: superseded by LEGAL-ENTITY (same work)
 
 - [x] EXPENSE TRACKER / real P&L — BUILT (migration 4911cb1, backend 5f2b954,
   wired into /admin/revenue by A-06 below). Additive Expense table migrated
@@ -2335,39 +2354,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      inquiries at the API level (not just hidden buttons) — one-sided
      deletion must be impossible even by accident or old client code.
 
-- [ ] BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET
-  FULLY VERIFIED — see below before checking this off.
-  LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course
-  that's already archived + carries the [ORPHAN] flag — it used to keep
-  reporting it forever because "no linked inquiry" never becomes false on
-  its own. New listAcknowledgedOrphans() surfaces already-handled orphans
-  passively (no banner) on /admin/courses instead of hiding them outright.
-  FORCE-DELETE OVERRIDE (built, NOT YET RUN): new forceDeleteOrphan() +
-  a "Force delete permanently" button per acknowledged orphan — owner-only,
-  typed name confirm, server re-verifies the course is still an orphan
-  before touching anything (refuses if it turns out to have a real inquiry
-  link — this can never be used to route around the doctrine for a real
-  course). This is the mechanism for Cam's DaisyLinks exception, but I have
-  NOT executed it against DaisyLinks yet:
-  - Last session's raw Prisma script (a read-only check confirming Fake
-    Fairways existed) got blocked by this sandbox's auto-mode classifier as
-    a potential production-database access outside the app's own
-    authenticated API. That block is almost certainly the intended, correct
-    behavior — a raw script has no place touching real course/booking/
-    operator data, authorized or not — so I did NOT retry it, and built the
-    override into the sanctioned admin API instead, per the tool's own
-    guidance ("stop and explain, let the user decide").
-  - I have no admin login credentials to trigger the sanctioned API myself
-    either (no seed/bootstrap admin account exists in this repo).
-  - So: the button exists and is ready, but DaisyLinks has NOT actually
-    been deleted. Cam (or Cowork with real admin access) needs to open
-    /admin/courses, find DaisyLinks under "acknowledged orphans," type its
-    name, and click Force delete permanently — or explicitly grant a Bash
-    permission rule if script-based execution is preferred instead.
-  STILL TO VERIFY once that click happens: DaisyLinks gone from courses,
-  Revenue, Activity, and Overview; banner gone; reload ×3 → still gone; a
-  genuinely new orphan still triggers the banner (this part follows
-  directly from the loop fix above and should already hold).
+- [ ] BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)
+  Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] courses; listAcknowledgedOrphans() shows them. Force delete (forceDeleteOrphan(), owner-only, typed-name confirm, refuses any course with a real inquiry link) is built but NOT run on DaisyLinks: a prod delete only the owner login should do.
+  After the click, verify DaisyLinks is gone from courses, Revenue, Activity and Overview, the banner stays gone over 3 reloads, and a genuinely new orphan still triggers it.
 
 - [x] AGREEMENT = GO-LIVE GATE — BUILT (9109e50):
   hasAcceptedAgreement() (course-timeline.ts) is the one brain both the
@@ -2496,7 +2485,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   walls. The attorney-review comment stays: "drafted without counsel;
   review before scale."
 
-- [ ] UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure, homepage prototype approved). U-0 SHIPPED a3c1bea, H-1 SHIPPED 767d81c (boxes open until review + live walk). Reskin batch 2026-09-11 + behavior items B-1/2/4/5/6/8/10 MERGED TO MAIN 525b32a on 2026-09-14 at Cam's instruction (reviewed; live walk pending — see UI_REVISE_SPEC §3/§4 notes). H-2a shipped 57b9150 + webm a4fd2b1. Run order U-0 → H-1 → U-G → B-1 → B-2 → U-O → B-6 → U-A → U-M. Reskin runs are ZERO behavior; behavior items are separate. Doc file: commit, never discard.
+- [x] UI REVISE — DROPPED 2026-10-17: superseded by FLOW-1 + TYPE-1/2/3 + CLUB + HOME-2 (the "two looks by audience" decision is retired)
 
 - [x] INQUIRY_CALL_SPEC Phase IC-1 (5bd0a85) — SHIPPED via migration `calls` (additive, applied by the prod build's migrate deploy — Neon rehearsal waived by Cam). Lib + API + test script (12/12). NEEDS REVIEW; post-deploy: /api/health 200 + migrate status up to date. ORIGINAL: ONE `Call` model (kind discovery|checkin; inquiryId OR courseId) + CourseInquiry.callSkippedReason + Course.nextCheckInAt (SCHEMA CHANGE, attended, additive — also the schema for COURSES_SHEET_SPEC), src/lib/inquiry-call.ts agenda catalog + src/lib/inquiry-needs.ts 'still need from them' + queueSignal learns about calls + schedule/reschedule/log/skip_call actions + build gate (call_required 409). Decision record 2026-09-13 in the spec header; mockup = canvas 'Inquiries Call Sheet'.
 - [x] INQUIRY_CALL_SPEC Phase IC-2 (4af4399) — SHIPPED: src/components/admin/InquiryCallCards.tsx (Set-up-call + Log-the-call), header call chip, build-gate notice (client pre-check + API 409), Lead 'From the call', Activity calls block, details API callAnswers + sheet hints, easternToIso. NEEDS REVIEW + the §6 browser walk (three fake inquiries). ORIGINAL: inquiry detail: Set-up-call card (date/time/length/direction/number, agenda pre-checked from form gaps, confirmation email, skip-with-reason) + Log-the-call card (outcome, answers per agenda item, notes, follow-up, 'Save + send pre-filled sheet') + call answers as hints on the course's details sheet + build gate UI (no migration, medium).
@@ -2538,7 +2527,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 - [x] INQUIRY_CALL_SPEC Phase IC-5 (spec block 598d2f7 written by the run — REVIEW §1 FIELD CATALOG; build 25baf6b; review fixes 189f23b; REVIEWED 2026-09-15: spec 35/37 → all met after fixes; security 0 crit/0 high, 3 low fixed; admin-ux 2 high fixed (autosave race, recap false-positive) + 1 medium fixed; design clean; scripts/call-answers-test.ts 34/34) — SHIPPED: lib/call-answers.ts field catalog (money in integer cents; season = months, walking = the sheet's options), v2 answersJson with the old prose readable, Log card real inputs collapsed per item + autosave with status/retry, log_call validates + optional recap email, sheet pre-fills empty keys only and says so, build reads the call only for keys the sheet never touched and flags them for review, Still-need names missing fields. Cam to walk: log a call with 3 fields, reload (held), Save + send sheet → prefilled + editable, submit one change → build → sheet wins; recap email. ORIGINAL: the call captures STRUCTURED answers, not prose (Cam 2026-09-15, overrules assumption A3). New src/lib/call-answers.ts field spec per agenda item (money in INTEGER CENTS, time, date, days, bool, enum, rows) each naming the setup-sheet key it pre-fills; Log-the-call card renders real inputs, collapsed per item, one note box each, autosaved; answersJson becomes structured (no migration — JSON column, but the reader must tolerate the old flat shape). Buys: stillNeed names missing FIELDS not topics; 'Save + send pre-filled sheet' sends VALUES not hints; the draft course build becomes mechanical; a recap email of what was captured. GOVERNING RULE: a call answer is a PROPOSAL — what the course submits always wins, nothing is written straight onto a live Course. RUN ADJACENT TO IF-1 (both touch the sheet's pre-fill + branching).
 
-- [ ] SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED
+- [x] SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED
   2026-09-16. STILL OPEN, and its remaining walk MOVED TO SD-11: checks 11-14
   of the sign-off walk test the built-course resubmit screen, and SD-11
   (cfeb2e1) replaces that screen with the ask-then-code flow. Walking the old
@@ -2584,6 +2573,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      beyond a server log line. A locked-out GM who uses the form instead of
      replying vanishes silently. Say the word and a passive activity-ledger
      event (no diff to apply) becomes a queue item.
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
 - [x] UI_REVISE_SPEC H-2g §1 ONLY (76968ff; review fix fb7263b) — SHIPPED +
   REVIEWED 2026-09-16, design audit 2 findings, 0 blocking, both closed.
@@ -2651,7 +2641,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   5. Lighthouse mobile on `/` — CLS no worse than H-1's recorded number (§5's
      own bar). The lockup moved near the top of the fold, which is the risk.
 
-- [ ] SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box
+- [x] SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box
   OPEN pending Cam's walk below. "Are you trying to sign in?" + a code, instead of a sign-in button
   (Cam 2026-09-16, answering the review question on the SECURITY follow-on):
   "the response to the sign up should be are you trying to sign in at x course?
@@ -2744,6 +2734,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   that is exactly the hole that review closed. Small/medium, no migration
   unless the code needs its own table (check whether an existing verification
   model fits before adding one).
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
 - [x] UI_REVISE_SPEC H-2h (8e0b692) — SHIPPED, REVIEWED and WALKED
   2026-09-17: shadows back, cream dissolves out, all five checks passed.
@@ -2854,7 +2845,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
      by guarded APIs today, so nothing is exposed — but nothing stops a future
      edit from putting real data in them either.
 
-- [ ] BUG: inquiry submissions send no emails — SHIPPED 8b9a046, 2026-09-28,
+- [x] BUG: inquiry submissions send no emails — SHIPPED 8b9a046, 2026-09-28,
   box open until /gr-review. Cam: "after submitting an inquiry they aren't
   getting sent an email." /api/inquiries started every send without awaiting
   and returned; Vercel freezes the function once the response is sent, so the
@@ -2878,8 +2869,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   /for-courses (existing inquiry) → code arrives; admin → Send Sheet on an
   inquiry → setup-sheet email arrives; add a member from /dashboard/members →
   invite arrives.
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-- [ ] BUG: perf audit crashed on every page — SHIPPED dd7056a, 2026-09-29, box
+- [x] BUG: perf audit crashed on every page — SHIPPED dd7056a, 2026-09-29, box
   open until /gr-review. perf-audit.yml's first-ever run failed with "__name is
   not defined" on all four pages before measuring anything: tsx's esbuild
   keepNames wraps Lighthouse's page-side functions in __name(). Now runs under
@@ -2889,8 +2881,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   REVIEWED 2026-09-29: PARTIAL — docs/SHIPPING.md still gave the tsx command.
   FIXED 02c5cac. First real run (PR #2) measured production: every audited page
   over budget (Home 63 / TBT 1301ms; For Courses CLS 0.265; Booking LCP 5.07s).
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-- [ ] RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).
+- [x] RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM).
   /api/auth/forgot-password has no rate limit: anyone can loop a victim's email
   and flood their inbox (operators, and staff since SD-9c), burning Resend quota.
   It also leaks which emails have accounts (500 for a known email whose send
@@ -2900,7 +2893,8 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   the account exists. (small, no migration)
   SHIPPED f57f269, 2026-09-29 — box open until /gr-review. 10/h per IP (429), 3/h per
   address (silent success), lookups+send in after(). Tested on local Postgres.
-- [ ] RV-2 — review follow-ups, small (from /gr-review 2026-09-29):
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
+- [x] RV-2 — review follow-ups, small (from /gr-review 2026-09-29):
   (a) staff-setup resend on admin/courses/[id]/page.tsx (~927) shows "Error
   sending email" and drops the route's reason — show d.error; (b) Overview action
   queue "Resend preview" (admin/page.tsx ~270-287) shows "Failed — retry" with no
@@ -2914,6 +2908,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   call/[token]/route.ts). (small, no migration)
   SHIPPED 0eab366, 2026-09-29 — box open until /gr-review. All six (a)-(f); (c) tested
   with two simultaneous submits, (e) at 320px.
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 - [x] FB-1 (f361e89, 1871e32) — BUILT: sections, street address, Public/Private
   everywhere, thanks page links the inquiry's own call page (was a dead Calendly
   URL), honeypot renamed (autofill filled 'Website' and the API silently
@@ -2995,20 +2990,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   ~2.5s). It is byte-bound on slow 4G (fonts + CSS + JS before first paint).
   Un-preloading the hero mockup photo did not help (reverted). Next lever: drop
   an unused font weight / subset, once the CI median shows whether it is needed.
-- [ ] PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29:
-  private clubs pay GreenReserve (subscription, or $1.50/round billed monthly and
-  capped at the subscription price); members pay $0. BLOCKED on Cam's prices and on
-  previews building again (schema change). Ship the member-fee removal WITH billing,
-  never before. (large, money, attended)
-- [ ] SETUP (Cam 2026-09-29: "we need to do blob storage, birdie ai … we also need
-  to set up twilio"). All three are BUILT; each needs Cam's account + Vercel env
-  vars, then a redeploy. Blob: Vercel → Storage → Blob store connected to the
-  project (sets BLOB_READ_WRITE_TOKEN; photo/document/sheet uploads). Birdie:
-  ANTHROPIC_API_KEY + BIRDIE_ENABLED=true, spend limit on the Anthropic console [BIRDIE LIVE + tested by Cam 2026-09-30]
-  (PASSWORD_CHECKLIST 7c; model claude-haiku-4-5). Twilio: TWILIO_ACCOUNT_SID,
-  TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER (golfer SMS login codes + 2FA) — US SMS
-  needs A2P 10DLC registration or a verified toll-free number or carriers drop
-  it. Verify each on /admin/system.
+- [ ] SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.
 - [x] BLOB-2 (Cam 2026-09-29: Blob connected, "everything is working but the
   uploading of the pdf"). The store Cam created is PUBLIC (photos must be
   viewable); a public store refuses access:'private' writes, so contract uploads
@@ -3121,7 +3103,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   with the Lighthouse report per page first; fix the largest contributors; the
   perf-audit check must go green. (medium, no migration)
 
-- [ ] CAL-2 — Cal.com is the ONLY call scheduler — SHIPPED e082dd0, 2026-09-29, box
+- [x] CAL-2 — Cal.com is the ONLY call scheduler — SHIPPED e082dd0, 2026-09-29, box
   open until /gr-review + Cam's live walk. Cam: "there should be no google calendar
   thing" and, after setting both env vars and redeploying, "it is just the same as
   before". Built: Google path deleted (lib/google-calendar, lib/call-availability,
@@ -3152,8 +3134,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   ROOT CAUSE of blank embed + 405: CALCOM_BOOKING_URL held the WEBHOOK url
   (greenreserve.app/api/calcom/webhook). Cam to set it to the Cal.com event link.
   Guard 56a52c7: a booking URL pointing at this site is 'invalid' with that reason.
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-- [ ] BUG: hello@greenreserve.app takes no mail — SHIPPED 371ffff, 2026-09-29, box
+- [x] BUG: hello@greenreserve.app takes no mail — SHIPPED 371ffff, 2026-09-29, box
   open until /gr-review. Cam: "all emails need to go to thegreenreserve@outlook.com,
   the other one doesn't take replies." Every visible contact address, admin alert
   recipient and hard-coded replyTo in src/ now uses the Outlook inbox (97
@@ -3170,8 +3153,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   and fires the send without await/after() — both CLAUDE.md gotchas 6 and 7 —
   so the staff-login email can die silently. Three-line fix.
   FIXED 0c5bcf2 (2026-09-29): awaited, r.error checked, 502 with the reason.
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-- [ ] CAL-1 — Cal.com as the call scheduler — SHIPPED a5ed9d7, 2026-09-29, box open
+- [x] CAL-1 — Cal.com as the call scheduler — SHIPPED a5ed9d7, 2026-09-29, box open
   until /gr-review. Cam: invite link showed "I can't show my calendar right now".
   Cause: SC-1's Google Calendar env vars were never set (PASSWORD_CHECKLIST 7b
   all open) — and Cam's calendar is personal Outlook.com, which the Google
@@ -3194,8 +3178,9 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   the contract was read from calcom/cal.com source.
   CAM TO DO: PASSWORD_CHECKLIST Phase 7a (account, Outlook, event type, webhook,
   two env vars, redeploy), then its 7a.8 walk.
+  Closed 2026-10-17 (Cam's launch plan): signed off by the 2026-10-05 full-site review + weeks in prod; the Oct 29 pre-launch security/money audit re-covers money and auth.
 
-- [ ] EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)
+- [x] EV-1 (1111104, #37) — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED)
   BUILT 2026-10-01 (Cam: "keep going with whatever is next"). Migration
   20261001051815_booking_event_log is purely additive (2 enums, 1 table, 4 indexes).
   Helper: src/lib/booking-events.ts (recordBookingEvent = INSERT … ON CONFLICT DO
@@ -3369,14 +3354,6 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   Confirm every amountCents and playerCount matches the booking it came from.
   `grep -rn 'bookingEvent\.\(update\|delete\|upsert\)' src` must be empty.
 
-- [ ] EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET
-  NOTE 2026-10-01 (/gr-review): AN-1 (Cam's brief) now reads BookingEvent for one metric —
-  "who cancelled" — on /dashboard/analytics. Everything else EV-2 describes is still unbuilt.
-
-  BLOCKED BY DESIGN, not by dependency. EV-1 captures the data; the reports wait
-  until a live course says what it opens on a Monday morning. Building reports
-  from guesses with zero live courses is how you build six charts nobody opens.
-  Unblock condition: one live operator names the questions. Then spec it.
 
 ## Ideas / not yet specced
 
@@ -3426,3 +3403,21 @@ role a real boundary rather than a display preference.
 - Product walkthrough video for homepage (SHOW_VIDEO flag ready after public site run)
 - Dashboard screenshots → public/screenshots/dashboard-1/2/3.png (Cam captures — retake AFTER Clubhouse sweep)
 - Course hero photos: upload flow for course pages (D3 adds the slot)
+
+- Employees → Team & access nav move (from MP-8b)
+- calcomUid column / atomic Cal.com dedupe (from CAL-2)
+
+### MP-4f — actorName strings onto real rows (parked 2026-10-17 — TRIGGER: after launch, with Cam present for the backfill)
+Move CHANGES_REQUESTED::, CHANGE_ADDRESSED:: and RESUBMIT:: off InquiryStatusEvent.actorName onto real rows (SCHEMA CHANGE, ATTENDED; existing rows need a prod backfill).
+
+### Golfer course directory /courses (parked — TRIGGER: Cam wants browse/search)
+Index page, search + filters, cards; add to the perf-audit page list. /api/courses already serves the payload.
+
+### PB — private-club billing (parked 2026-10-17 — TRIGGER: Cam sets prices AND first private club signs)
+PRIVATE_BILLING_SPEC.md: clubs pay GreenReserve (subscription, or $1.50/round capped at the subscription); members pay $0. Ship the member-fee removal WITH billing. Large, money, attended.
+
+### EV-2 — operator analytics reports (parked — TRIGGER: a live operator names the questions)
+Reports over the BookingEvent log (EV-1); do not build from guesses with zero live courses.
+
+### Operator 2FA backup codes + staff sessionVersion (parked 2026-10-17 — TRIGGER: after launch, attended migration)
+One additive migration. The "blocked on previews" blocker is gone; preview rule dropped 2026-09-29. A staff password reset does not yet sign out their other sessions.

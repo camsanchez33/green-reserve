@@ -4,49 +4,25 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-17 16:09 UTC · branch `claude/pos-1b` · HEAD `9e4bf52` · working tree **1 dirty file(s)**
+Generated 2026-10-17 16:29 UTC · branch `claude/pos-1b` · HEAD `176583e` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-07**. 15 commit(s) since then are not mentioned anywhere in it:
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-| commit | date | subject |
-|---|---|---|
-| `9e4bf52` | 2026-10-11 | Fix: re-sign banner stays after signing the new Operator Agreement (#107) |
-| `c4800f7` | 2026-10-11 | POS-1a: pro-shop catalog, items charged with the round (#106) |
-| `5ed62ea` | 2026-10-11 | Admin → System: publish agreement versions (owner with 2FA) (#105) |
-| `47e7320` | 2026-10-11 | Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104) |
-| `fa1e1df` | 2026-10-08 | Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103) |
-| `4165bc8` | 2026-10-08 | Membership fee: 1% of dues, paid by the member (#102) |
-| `2eae475` | 2026-10-08 | Homepage demo shows the board (#101) |
-| `718522c` | 2026-10-08 | AN-2: Analytics reworked so it reads plainly (#100) |
-| `b7079ea` | 2026-10-07 | Tee sheet: one board that fits the page, cancel from the sheet (#99) |
-| `fadcf67` | 2026-10-07 | SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98) |
-| `ea2d17b` | 2026-10-07 | SHEET-2: board view of the tee sheet (#97) |
-| `2707e36` | 2026-10-07 | Move a group after they've checked in (#96) |
-| `fef4012` | 2026-10-07 | MSG-1: courses message the golfers booked on a day (#95) |
-| `f4b4a0b` | 2026-10-07 | ACT-2: Birdie drafts tee-sheet changes (move, block times, add booking, pay link) (#94) |
-| `90e1375` | 2026-10-07 | ACT-1: move a group to another tee time (one shared move for staff, golfer swap, frost delay) (#93) |
+### Uncommitted working tree (3 file(s))
 
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (1 file(s))
-
-- `M PLATFORM_ROADMAP_SPEC.md`
+- `M RUN_QUEUE.md`
+- `M STATUS.json`
+- `M STATUS.md`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
 
 ## In flight
 
-- **BUG: orphan banner loops forever — PARTIALLY BUILT (b88c8bf), NOT YET** — `RUN_QUEUE.md:2338`
-  - FULLY VERIFIED — see below before checking this off. LOOP FIX (done, code-verified): sweepOrphanCourses now skips any course that's already archived + carries the [ORPHAN] flag — it used to keep reporting it forever because "no linked inquiry" never becomes false on its own. New listAcknowledgedOrphans() surfaces already-handled orphans passively (no banner) on /admin/courses instead of hiding the
-  - Last session's raw Prisma script (a read-only check confirming Fake
-  - Fairways existed) got blocked by this sandbox's auto-mode classifier as a potential production-database access outside the app's own authenticated API. That block is almost certainly the intended, correct behavior — a raw script has no place touching real course/booking/ operator data, authorized or not — so I did NOT retry it, and built the override into the sanctioned admin API instead, per the 
-  - I have no admin login credentials to trigger the sanctioned API myself
-  - either (no seed/bootstrap admin account exists in this repo).
-  - So: the button exists and is ready, but DaisyLinks has NOT actually
-  - been deleted. Cam (or Cowork with real admin access) needs to open /admin/courses, find DaisyLinks under "acknowledged orphans," type its name, and click Force delete permanently — or explicitly grant a Bash permission rule if script-based execution is preferred instead. STILL TO VERIFY once that click happens: DaisyLinks gone from courses, Revenue, Activity, and Overview; banner gone; reload ×3 →
+- **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
+  - PARTIALLY BUILT — shipped: BI-1 #92, ACT-1 #93, ACT-2 #94, MSG-1 v1 #95, SHEET-2 #97–99, POS-1a #106. Now: POS-1b. After launch: OUT-1, FB-1, PWA-1.
 
 ## Built but not signed off
 
@@ -55,83 +31,24 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| MP-0 — shell fixes (was ADMIN_V4 V4-1): MainOffset one-liner for /admin | 2026-08-29 | 48d | `7246a62` | `RUN_QUEUE.md:984` |
-| MP-1 | 2026-08-29 | 48d | `41f5ea8` | `RUN_QUEUE.md:1014` |
-| MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until | 2026-08-29 | 48d | `4ef11dd` | `RUN_QUEUE.md:1049` |
-| MP-2 | 2026-08-29 | 48d | `958f229` | `RUN_QUEUE.md:1090` |
-| MP-2b | 2026-08-29 | 48d | `a134af5` | `RUN_QUEUE.md:1127` |
-| MP-2c | 2026-08-29 | 48d | `e5b5413` | `RUN_QUEUE.md:1176` |
-| MP-2d | 2026-08-29 | 48d | `22d0f68` | `RUN_QUEUE.md:1224` |
-| MP-2e | 2026-08-30 | 47d | `bf3bcb2` | `RUN_QUEUE.md:1266` |
-| SD-8d — browser Back still discards unsaved Settings edits (from the | — | — | — | `RUN_QUEUE.md:819` |
-| SD-8e — status is rendered as bare coloured text where the design | — | — | — | `RUN_QUEUE.md:845` |
-| SD-9c — auth: (1) staff password recovery — CourseStaff has no reset | — | — | — | `RUN_QUEUE.md:922` |
-| BUG: 56 of 59 email senders report success when Resend rejects the send | — | — | — | `RUN_QUEUE.md:943` |
-| MP-5e part 3 — the Overview relationship feed (notes + settings | — | — | — | `RUN_QUEUE.md:1586` |
-| UI REVISE — see UI_REVISE_SPEC.md (decision record 2026-09-04/05: two looks by audience, Clubhouse structure,  | — | — | — | `RUN_QUEUE.md:2499` |
-| BUG: inquiry submissions send no emails | — | — | — | `RUN_QUEUE.md:2857` |
-| BUG: perf audit crashed on every page | — | — | — | `RUN_QUEUE.md:2882` |
-| RV-1 — forgot-password abuse (from /gr-review 2026-09-29, security MEDIUM). | — | — | — | `RUN_QUEUE.md:2893` |
-| RV-2 — review follow-ups, small (from /gr-review 2026-09-29): | — | — | — | `RUN_QUEUE.md:2903` |
-| CAL-2 — Cal.com is the ONLY call scheduler | — | — | — | `RUN_QUEUE.md:3124` |
-| BUG: hello@greenreserve.app takes no mail | — | — | — | `RUN_QUEUE.md:3156` |
-| CAL-1 — Cal.com as the call scheduler | — | — | — | `RUN_QUEUE.md:3174` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 86d | `b88c8bf` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
-1. ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 m — `RUN_QUEUE.md:29`
-2. CARD-1 (BUILT 2026-10-05) — Cam 2026-10-05: "there still isnt a way for the course to not require a card at checkout ... they dont get the pay link until whatever time they set bef — `RUN_QUEUE.md:30`
-3. PERS-1 (MERGED #65) · BIRDIE-B4b (BUILT 2026-10-05 — proposals.ts + ConfirmCard, allow-listed routes, birdie.applied log, 14 more isolation checks) · BIRDIE-B4a (MERGED #66, BUILT  — `RUN_QUEUE.md:31`
-4. TYPE-2 — strip the AI tells Cam listed 2026-10-05, zero behavior, one run per — `RUN_QUEUE.md:59`
-5. TYPE-3 — icons only where they do a job (Cam approved 2026-10-05: "Ok — `RUN_QUEUE.md:107`
-6. /dashboard — folded into the CLUB-3 shell rebuild (below). — `RUN_QUEUE.md:114`
-7. /admin — `RUN_QUEUE.md:115`
-8. CLUB — the "club direction" (Cam 2026-10-05, after clubup.com: "see now — `RUN_QUEUE.md:116`
-9. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:206`
-10. SP-A — staff permissions (STAFF_POLICY_SPEC.md Part A). Cam 2026-10-04: course owner decides, — `RUN_QUEUE.md:243`
-11. SP-B — cancellation & card policy (STAFF_POLICY_SPEC.md Part B): fee basis per booking/player, — `RUN_QUEUE.md:252`
-12. WX-1 — Weather button on the Tee Sheet (Cam 2026-10-01: "do the weather button with both — `RUN_QUEUE.md:262`
-13. AN-1 — dashboard refactor + full Analytics tab — built 2026-10-01 (box reopened by — `RUN_QUEUE.md:267`
-14. CAM — Cal.com: add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:308`
-15. SD-7b — assets, BLOCKED ON CAM: three real dashboard screenshots into — `RUN_QUEUE.md:706`
-16. MP-3 ORIGINAL SPEC (superseded by the above, kept for reference) — — `RUN_QUEUE.md:1384`
-17. MP-4 — pipeline reshape (split into 4a/4b/4c) — `RUN_QUEUE.md:1391`
-18. MP-4f — retire the JSON-in-actorName pattern. Three separate things — `RUN_QUEUE.md:1474`
-19. MP-5 — courses reshape (split into 5a–5e, ordered by what is wrong — `RUN_QUEUE.md:1503`
-20. Golfer course directory (`/courses`) — NOT scheduled. If Cam wants — `RUN_QUEUE.md:1582`
-21. MP-6 — money reshape (split into 6a–6d, ordered by what is wrong today) — `RUN_QUEUE.md:1619`
-22. MP-7 — comms merge (split into 7a–7b) — `RUN_QUEUE.md:1691`
-23. MP-7b — announcement storage + thread lifecycle (SCHEMA CHANGE, — `RUN_QUEUE.md:1709`
-24. MP-8 — chrome + System (split into 8a–8b) — `RUN_QUEUE.md:1731`
-25. MP-8b — live cron dots (SCHEMA CHANGE, ATTENDED): CronRunLog table — `RUN_QUEUE.md:1748`
-26. MP-11 — auth guard into the layout (was ADMIN_V4 V4-7; split 11a–11b) — `RUN_QUEUE.md:1829`
-27. Tiny run: legal entity name fill-in (no migration) — Cam 2026-09-15: SKIP until counsel confirms the formation state. — replace the {{COMPANY_LEGAL_NAME}} placeholder in /terms + / — `RUN_QUEUE.md:1935`
-28. SECURITY follow-on (951433d; review fixes 30385cd) — BUILT + REVIEWED — `RUN_QUEUE.md:2541`
-29. SD-11 (cfeb2e1; review fixes 2432aa8) — BUILT + REVIEWED 2026-09-17, box — `RUN_QUEUE.md:2654`
-30. PB — private-club billing (PRIVATE_BILLING_SPEC.md). DECIDED Cam 2026-09-29: — `RUN_QUEUE.md:2998`
-31. SETUP (Cam 2026-09-29: "we need to do blob storage, birdie ai … we also need — `RUN_QUEUE.md:3003`
-32. EV-1 — BookingEvent append-only event log (SCHEMA CHANGE, ATTENDED) — `RUN_QUEUE.md:3198`
-33. EV-2 — operator analytics reports — NOT SCHEDULED, DO NOT BUILD YET — `RUN_QUEUE.md:3372`
+1. WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone). — `RUN_QUEUE.md:49`
+2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
+3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
+4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
+5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
-- Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) — `RUN_QUEUE.md:206`
-- CAM: three real dashboard screenshots into public/screenshots/ (empty, so the homepage shows three grey placeholder boxes) and a seeded demo course slug for DEMO_COURSE_SLUGS (empt — `RUN_QUEUE.md:706`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:1049`
-- Cam's approval for a prod backfill — `RUN_QUEUE.md:1090`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:1127`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:1176`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:1224`
-- pending Cam's approval for a prod write — `RUN_QUEUE.md:1266`
-- Cam's approval) — `RUN_QUEUE.md:1474`
-- Cam: "keep going with the queue") — `RUN_QUEUE.md:1709`
-- CAM: confirm the state before this runs — e — `RUN_QUEUE.md:1935`
-- pending Cam's walk below — `RUN_QUEUE.md:2654`
-- Cam: "after submitting an inquiry they aren't getting sent an email — `RUN_QUEUE.md:2857`
-- Cam: "there should be no google calendar thing" and, after setting both env vars and redeploying, "it is just the same as before" — `RUN_QUEUE.md:3124`
-- Cam: "all emails need to go to thegreenreserve@outlook — `RUN_QUEUE.md:3156`
-- Cam: invite link showed "I can't show my calendar right now" — `RUN_QUEUE.md:3174`
-- Cam: "keep going with whatever is next") — `RUN_QUEUE.md:3198`
+- CAM: live walks before launch (code merged — `RUN_QUEUE.md:49`
+- Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th — `RUN_QUEUE.md:56`
+- Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) — `RUN_QUEUE.md:235`
+- CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf course name") to the demo event, so homepage demo inquiries arrive  — `RUN_QUEUE.md:338`
+- CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c — `RUN_QUEUE.md:2357`
+- CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars — `RUN_QUEUE.md:2993`
 
 ## Revise campaign (page-by-page pass)
 
@@ -150,6 +67,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 - Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)
 - Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)
+- MP-4f — actorName strings onto real rows (parked 2026-10-17 — TRIGGER: after launch, with Cam present for the backfill)
+- Golfer course directory /courses (parked — TRIGGER: Cam wants browse/search)
+- PB — private-club billing (parked 2026-10-17 — TRIGGER: Cam sets prices AND first private club signs)
+- EV-2 — operator analytics reports (parked — TRIGGER: a live operator names the questions)
+- Operator 2FA backup codes + staff sessionVersion (parked 2026-10-17 — TRIGGER: after launch, attended migration)
 
 ## Ideas — not specced, not queued
 
@@ -168,6 +90,8 @@ This is the distinction a raw checkbox count gets wrong.
 - Product walkthrough video for homepage (SHOW_VIDEO flag ready after public site run)
 - Dashboard screenshots → public/screenshots/dashboard-1/2/3.png (Cam captures — retake AFTER Clubhouse sweep)
 - Course hero photos: upload flow for course pages (D3 adds the slot)
+- Employees → Team & access nav move (from MP-8b)
+- calcomUid column / atomic Cal.com dedupe (from CAL-2)
 
 ## Spec inventory
 
@@ -175,21 +99,20 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 7 | 2026-10-11 | 5d |
-| `ARCHITECTURE.md` | 4 | 2026-09-29 | 17d |
-| `STAFF_POLICY_SPEC.md` | 2 | 2026-10-04 | 12d |
-| `UI_REVISE_SPEC.md` | 2 | 2026-10-01 | 16d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-11 | 5d |
-| `ADMIN_MASTER_PLAN.md` | 1 | 2026-09-29 | 17d |
-| `PRIVATE_BILLING_SPEC.md` | 1 | 2026-09-29 | 17d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-11 | 5d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 5d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 10d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 11d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 11d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 12d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 16d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 17d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 17d |
+| `ARCHITECTURE.md` | 0 | 2026-09-29 | 17d |
 | `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 17d |
@@ -206,6 +129,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 17d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 17d |
 | `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 17d |
@@ -213,6 +137,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `176583e` 2026-10-17 — queue/spec update
 - `9e4bf52` 2026-10-11 — Fix: re-sign banner stays after signing the new Operator Agreement (#107)
 - `c4800f7` 2026-10-11 — POS-1a: pro-shop catalog, items charged with the round (#106)
 - `5ed62ea` 2026-10-11 — Admin → System: publish agreement versions (owner with 2FA) (#105)
@@ -224,8 +149,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `b7079ea` 2026-10-07 — Tee sheet: one board that fits the page, cancel from the sheet (#99)
 - `fadcf67` 2026-10-07 — SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)
 - `ea2d17b` 2026-10-07 — SHEET-2: board view of the tee sheet (#97)
-- `2707e36` 2026-10-07 — Move a group after they've checked in (#96)
 
 ---
 
-**Totals:** 238 done · 21 awaiting review · 1 in flight · 33 not started · 8 revise pages open · 15 ideas · 2 parked.
+**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 8 revise pages open · 17 ideas · 7 parked.
