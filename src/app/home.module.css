@@ -166,14 +166,17 @@
 
 /* HERO — one full-screen photo; the nav floats over it (Nav.tsx home variant). */
 .hero { position: relative; min-height: 100svh; max-height: 1100px; display: flex; flex-direction: column; align-items: center; color: #F6F4EC; overflow: hidden; background: #2B3A2E; }
-.heroImg { object-fit: cover; object-position: center 60%; z-index: 0; }
+.heroImg { object-fit: cover; object-position: 38% 30%; z-index: 0; }
+/* CC BY 2.0 credit for the hero photo — small, out of the way, still legible. */
+.heroCredit { position: absolute; z-index: 2; right: max(12px, env(safe-area-inset-right, 0px)); bottom: 4px; padding: 8px 0; line-height: 1.2; font-size: 11px; color: rgba(246,244,236,.7) !important; text-decoration: none; }
+.heroCredit:hover { text-decoration: underline; }
 /* The scrim: darker at the top where the logo and nav sit, light over the course. */
-.hero::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(10,14,11,.55) 0%, rgba(10,14,11,.25) 45%, rgba(10,14,11,.35) 100%); }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(10,14,11,.38) 0%, rgba(10,14,11,.12) 45%, rgba(10,14,11,.28) 100%); }
 .heroIn { position: relative; z-index: 2; padding: clamp(120px, 20vh, 220px) 24px 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .heroLogo { margin: 0; line-height: 0; }
 .heroLogoImg { width: clamp(260px, 46vw, 680px); height: auto; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .heroLine { margin: 22px 0 0; font-size: clamp(20px, 2.1vw, 30px); line-height: 1.2; max-width: 22em; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
-.heroNext { position: absolute; z-index: 2; bottom: 28px; left: 50%; transform: translateX(-50%); color: #F6F4EC !important; font-size: 15px; font-weight: 600; text-decoration: none; padding: 8px 12px; }
+.heroNext { position: absolute; z-index: 2; bottom: 44px; left: 50%; transform: translateX(-50%); color: #F6F4EC !important; font-size: 15px; font-weight: 600; text-decoration: none; padding: 8px 12px; }
 .heroNext:hover { text-decoration: underline; text-decoration-color: var(--fairway); text-underline-offset: 5px; }
 
 /* WHAT IT IS */

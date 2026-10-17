@@ -166,7 +166,9 @@ Removes the "what about my POS?" objection. Not a full retail system:
     Agreement v2026-10 lists GreenReserve's fees as $1.50 + 1% of dues and
     /for-courses says "our only revenue". Turning it on needs a new agreement
     version naming it (re-accept), /terms and LQ-2 copy — best done together
-    with POS-1b's counter fee. Waiting on Cam.
+    with POS-1b's counter fee. **Decided (Cam 2026-10-17): "keep it off,
+    bundle it with the reader"** — one agreement version names both shop fees
+    (round add-ons and counter sales) when POS-1b ships, one re-sign round.
   - POS-1b: counter sale with the reader (Stripe Terminal location + reader
     registration in Settings, sale screen, card_present PaymentIntent with the
     application fee, refunds). Needs Cam to order a reader and Stripe Terminal
