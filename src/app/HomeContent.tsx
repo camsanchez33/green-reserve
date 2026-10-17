@@ -46,8 +46,6 @@ export default function HomeContent() {
           <p className={`${s.display} ${s.heroLine}`}>The online tee sheet and booking page for golf courses.</p>
         </div>
         <a href="#about" className={s.heroNext}>What it does <span aria-hidden="true">↓</span></a>
-        {/* The photo is CC BY 2.0 — the licence requires this credit (placeholder until a partner course's own photo). */}
-        <a href="https://www.flickr.com/photos/prayitnophotography/8466564921/" target="_blank" rel="noopener noreferrer" className={s.heroCredit}>Photo: Prayitno, CC BY 2.0</a>
       </section>
 
       {/* WHAT IT IS — the headline, the paragraph, the list, then the way on. */}
