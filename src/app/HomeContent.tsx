@@ -38,7 +38,7 @@ export default function HomeContent() {
     <div data-home-root="" className={s.root}>
       {/* HERO — the logo over the coast, and one line that says what we are (CLUB-1). */}
       <section className={s.hero}>
-        <Image src="/home/hero-coast.jpg" alt="" fill priority sizes="100vw" quality={50} className={s.heroImg} />
+        <Image src="/home/hero-coast.jpg" alt="" fill priority sizes="(max-width: 768px) 250vw, 100vw" quality={50} className={s.heroImg} />
         <div className={s.heroIn}>
           <h1 className={s.heroLogo}>
             <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={1530} height={286} priority className={s.heroLogoImg} />
@@ -46,6 +46,8 @@ export default function HomeContent() {
           <p className={`${s.display} ${s.heroLine}`}>The online tee sheet and booking page for golf courses.</p>
         </div>
         <a href="#about" className={s.heroNext}>What it does <span aria-hidden="true">↓</span></a>
+        {/* The photo is CC BY 2.0 — the licence requires this credit (placeholder until a partner course's own photo). */}
+        <a href="https://www.flickr.com/photos/prayitnophotography/8466564921/" target="_blank" rel="noopener noreferrer" className={s.heroCredit}>Photo: Prayitno, CC BY 2.0</a>
       </section>
 
       {/* WHAT IT IS — the headline, the paragraph, the list, then the way on. */}
