@@ -1,40 +1,28 @@
 {
-  "generatedAt": "2026-10-12T02:28:53.167Z",
+  "generatedAt": "2026-10-17T16:09:42.804Z",
   "repo": {
-    "head": "f0d53a7",
-    "branch": "claude/pos-1a",
-    "dirtyCount": 0,
-    "dirty": [],
+    "head": "9e4bf52",
+    "branch": "claude/pos-1b",
+    "dirtyCount": 1,
+    "dirty": [
+      "M PLATFORM_ROADMAP_SPEC.md"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-07T20:05:42-04:00",
     "unrecorded": [
       {
-        "h": "f0d53a7",
-        "date": "2026-10-12T02:28:52+00:00",
-        "subject": "POS-1a review: admin money screens and export show what the card is charged; counter pay zeroes the shop fee",
+        "h": "9e4bf52",
+        "date": "2026-10-11T22:42:31-04:00",
+        "subject": "Fix: re-sign banner stays after signing the new Operator Agreement (#107)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "1b06bb5",
-        "date": "2026-10-12T02:26:29+00:00",
-        "subject": "POS-1a: a lock is lifted only by the attempt that set it; shown total checked after the freeze",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "eceacf5",
-        "date": "2026-10-12T02:23:56+00:00",
-        "subject": "POS-1a security review: freeze shop items once a charge starts; row lock; stored charge",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "6635644",
-        "date": "2026-10-12T02:17:36+00:00",
-        "subject": "POS-1a: pro-shop catalog and items charged with the round",
+        "h": "c4800f7",
+        "date": "2026-10-11T22:37:18-04:00",
+        "subject": "POS-1a: pro-shop catalog, items charged with the round (#106)",
         "ids": [],
         "matches": []
       },
@@ -162,56 +150,56 @@
       "line": 984,
       "hash": "7246a62",
       "shipDate": "2026-08-29",
-      "ageDays": 43
+      "ageDays": 48
     },
     {
       "title": "MP-1",
       "line": 1014,
       "hash": "41f5ea8",
       "shipDate": "2026-08-29",
-      "ageDays": 43
+      "ageDays": 48
     },
     {
       "title": "MP-1b — HOTFIX after /gr-review MP-1, SHIPPED 4ef11dd. Box open until",
       "line": 1049,
       "hash": "4ef11dd",
       "shipDate": "2026-08-29",
-      "ageDays": 43
+      "ageDays": 48
     },
     {
       "title": "MP-2",
       "line": 1090,
       "hash": "958f229",
       "shipDate": "2026-08-29",
-      "ageDays": 43
+      "ageDays": 48
     },
     {
       "title": "MP-2b",
       "line": 1127,
       "hash": "a134af5",
       "shipDate": "2026-08-29",
-      "ageDays": 42
+      "ageDays": 48
     },
     {
       "title": "MP-2c",
       "line": 1176,
       "hash": "e5b5413",
       "shipDate": "2026-08-29",
-      "ageDays": 42
+      "ageDays": 48
     },
     {
       "title": "MP-2d",
       "line": 1224,
       "hash": "22d0f68",
       "shipDate": "2026-08-29",
-      "ageDays": 42
+      "ageDays": 48
     },
     {
       "title": "MP-2e",
       "line": 1266,
       "hash": "bf3bcb2",
       "shipDate": "2026-08-30",
-      "ageDays": 42
+      "ageDays": 47
     },
     {
       "title": "SD-8d — browser Back still discards unsaved Settings edits (from the",
@@ -631,235 +619,225 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 7,
-      "lastTouched": "2026-10-12",
-      "ageDays": 0
+      "lastTouched": "2026-10-11",
+      "ageDays": 5
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 4,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-04",
-      "ageDays": 7
+      "ageDays": 12
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 2,
       "lastTouched": "2026-10-01",
-      "ageDays": 10
+      "ageDays": 16
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-12",
-      "ageDays": 0
+      "lastTouched": "2026-10-11",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-11",
-      "ageDays": 0
+      "ageDays": 5
     },
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-06",
-      "ageDays": 4
+      "ageDays": 10
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
-      "ageDays": 6
+      "ageDays": 11
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
-      "ageDays": 6
+      "ageDays": 11
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 12
+      "ageDays": 17
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "f0d53a7",
-      "date": "2026-10-12",
-      "subject": "POS-1a review: admin money screens and export show what the card is charged; counter pay zeroes the shop fee"
+      "h": "9e4bf52",
+      "date": "2026-10-11",
+      "subject": "Fix: re-sign banner stays after signing the new Operator Agreement (#107)"
     },
     {
-      "h": "1b06bb5",
-      "date": "2026-10-12",
-      "subject": "POS-1a: a lock is lifted only by the attempt that set it; shown total checked after the freeze"
-    },
-    {
-      "h": "eceacf5",
-      "date": "2026-10-12",
-      "subject": "POS-1a security review: freeze shop items once a charge starts; row lock; stored charge"
-    },
-    {
-      "h": "6635644",
-      "date": "2026-10-12",
-      "subject": "POS-1a: pro-shop catalog and items charged with the round"
+      "h": "c4800f7",
+      "date": "2026-10-11",
+      "subject": "POS-1a: pro-shop catalog, items charged with the round (#106)"
     },
     {
       "h": "5ed62ea",
@@ -882,11 +860,6 @@
       "subject": "Membership fee: 1% of dues, paid by the member (#102)"
     },
     {
-      "h": "10b58e5",
-      "date": "2026-10-08",
-      "subject": "queue/spec update"
-    },
-    {
       "h": "2eae475",
       "date": "2026-10-08",
       "subject": "Homepage demo shows the board (#101)"
@@ -900,6 +873,21 @@
       "h": "b7079ea",
       "date": "2026-10-07",
       "subject": "Tee sheet: one board that fits the page, cancel from the sheet (#99)"
+    },
+    {
+      "h": "fadcf67",
+      "date": "2026-10-07",
+      "subject": "SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)"
+    },
+    {
+      "h": "ea2d17b",
+      "date": "2026-10-07",
+      "subject": "SHEET-2: board view of the tee sheet (#97)"
+    },
+    {
+      "h": "2707e36",
+      "date": "2026-10-07",
+      "subject": "Move a group after they've checked in (#96)"
     }
   ]
 }
