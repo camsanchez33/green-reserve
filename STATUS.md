@@ -4,20 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-17 16:29 UTC · branch `claude/pos-1b` · HEAD `176583e` · working tree **3 dirty file(s)**
+Generated 2026-10-17 16:37 UTC · branch `claude/hero-photo` · HEAD `806a8cd` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
-
-### Uncommitted working tree (3 file(s))
-
-- `M RUN_QUEUE.md`
-- `M STATUS.json`
-- `M STATUS.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -101,8 +92,8 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 0d |
 | `CLAUDE.md` | 1 | 2026-10-11 | 5d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-17 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 5d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-06 | 10d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 11d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 11d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 12d |
@@ -137,7 +128,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `176583e` 2026-10-17 — queue/spec update
+- `806a8cd` 2026-10-17 — queue/spec update
+- `21193df` 2026-10-17 — queue/spec update
+- `0f5d200` 2026-10-17 — Homepage hero: real sunset photo in place of the AI image
 - `9e4bf52` 2026-10-11 — Fix: re-sign banner stays after signing the new Operator Agreement (#107)
 - `c4800f7` 2026-10-11 — POS-1a: pro-shop catalog, items charged with the round (#106)
 - `5ed62ea` 2026-10-11 — Admin → System: publish agreement versions (owner with 2FA) (#105)
@@ -147,8 +140,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2eae475` 2026-10-08 — Homepage demo shows the board (#101)
 - `718522c` 2026-10-08 — AN-2: Analytics reworked so it reads plainly (#100)
 - `b7079ea` 2026-10-07 — Tee sheet: one board that fits the page, cancel from the sheet (#99)
-- `fadcf67` 2026-10-07 — SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)
-- `ea2d17b` 2026-10-07 — SHEET-2: board view of the tee sheet (#97)
 
 ---
 

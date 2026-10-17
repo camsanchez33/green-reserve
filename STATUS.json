@@ -1,18 +1,14 @@
 {
-  "generatedAt": "2026-10-17T16:29:50.972Z",
+  "generatedAt": "2026-10-17T16:37:46.128Z",
   "repo": {
-    "head": "176583e",
-    "branch": "claude/pos-1b",
-    "dirtyCount": 3,
-    "dirty": [
-      "M RUN_QUEUE.md",
-      " M STATUS.json",
-      " M STATUS.md"
-    ],
+    "head": "806a8cd",
+    "branch": "claude/hero-photo",
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-10-07T20:05:42-04:00",
+    "queueLastCommit": "2026-10-17T16:37:45+00:00",
     "unrecorded": []
   },
   "counts": {
@@ -191,16 +187,16 @@
       "ageDays": 5
     },
     {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-17",
+      "ageDays": 0
+    },
+    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-11",
       "ageDays": 5
-    },
-    {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-06",
-      "ageDays": 10
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
@@ -392,9 +388,19 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "176583e",
+      "h": "806a8cd",
       "date": "2026-10-17",
       "subject": "queue/spec update"
+    },
+    {
+      "h": "21193df",
+      "date": "2026-10-17",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "0f5d200",
+      "date": "2026-10-17",
+      "subject": "Homepage hero: real sunset photo in place of the AI image"
     },
     {
       "h": "9e4bf52",
@@ -440,16 +446,6 @@
       "h": "b7079ea",
       "date": "2026-10-07",
       "subject": "Tee sheet: one board that fits the page, cancel from the sheet (#99)"
-    },
-    {
-      "h": "fadcf67",
-      "date": "2026-10-07",
-      "subject": "SHEET-2: the board is the tee sheet — squares, paid/booked colours, Next up, action panel (#98)"
-    },
-    {
-      "h": "ea2d17b",
-      "date": "2026-10-07",
-      "subject": "SHEET-2: board view of the tee sheet (#97)"
     }
   ]
 }
