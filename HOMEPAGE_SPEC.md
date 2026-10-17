@@ -15,8 +15,8 @@ below conflict with this section, THIS section wins; they stay as history.
 
 **Homepage, top to bottom:**
 1. **Hero:** ONE full-screen photo (`public/home/hero-coast.jpg`: since 2026-10-17 a
-   real photo, sun breaking through pines over a green and pond, Unsplash
-   photo-1709525617237, free under the Unsplash License (no credit required);
+   real photo, a links green above the ocean at dusk, flag on the horizon,
+   Unsplash photo-1646204221936 (Cam picked it from 18), free under the Unsplash License (no credit required);
    a placeholder until a partner course's own photo, Cam 2026-10-17) with the cream logo
    centred in the upper third and one line under it that says what we are
    (CLUB-1 still holds): "The online tee sheet and booking page for golf
