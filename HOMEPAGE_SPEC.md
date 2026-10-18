@@ -43,6 +43,16 @@ suggestion save this information". Decisions go here as they are made.
     on it (support), a golfer with a booking (contact your course; their
     booking email has the course's details). Open: phone number? branded inbox?
 
+12. **Operator login (/dashboard/login).** Cam: straightforward but can look
+    better and say different things; rethink it. Today: "Sign in / Your tee
+    sheet, your bookings and your settings.", email, password, Forgot password,
+    "Ask a question →".
+13. **The email link in the nav (thegreenreserve@outlook.com)** just opens an
+    email — same as /contact; Cam agrees with the /contact proposal (11).
+14. **How Cam wants to work these notes:** not through the punch-list sheet —
+    Claude asks questions in the session, and the answers decide what changes,
+    what gets added, what stays.
+
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
 Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3
