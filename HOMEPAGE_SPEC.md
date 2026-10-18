@@ -28,6 +28,13 @@ suggestion save this information". Decisions go here as they are made.
 7. **Ending.** Likes the logo at the bottom with a tagline and the footer below.
 8. **Section dividers.** Dislikes the line that separates the sections ("in
    between each page there is like a line").
+9. **/teesheet ("Overview", the product page).** Same question as the
+   homepage: what it should say and what information it shows; whether it needs
+   pictures (screenshots of the tee sheet etc.). Dislikes the dividing lines
+   here too.
+10. **Feature pages (idea).** Cam: maybe an information page for everything we
+    provide (analytics, the AI assistant, …), or all of it on one page —
+    "something to think about". Undecided.
 
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
