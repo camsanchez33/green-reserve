@@ -53,6 +53,35 @@ suggestion save this information". Decisions go here as they are made.
     Claude asks questions in the session, and the answers decide what changes,
     what gets added, what stays.
 
+**Decisions, round 1 (Cam 2026-10-19):**
+- Audience: course owners and GMs ("our only product is the tee sheet and the
+  things that come with it").
+- Tagline: simple and clear, makes the reader want to read on; highlight that
+  it's FREE and that it has a ton of helpful features — lean on what's big now (AI).
+- Top bar: Operator login + Book a demo only.
+- "Free" is LOUD — e.g. "Free tee sheet. Stop spending money to run your sheet."
+  Cam: "it is so important this is our whole business". (Fee sentences still
+  come from legal/LQ-2_FEE_COPY.md.)
+
+**Decisions, round 2 (Cam 2026-10-19):**
+- Hero: logo, tagline, and a Book a demo button right there.
+- Features to show off: Birdie (AI assistant), the AI monthly review +
+  analytics, payments (text-to-pay, Apple Pay / Google Pay, card-protected
+  late/no-show fees). Memberships were NOT picked for the homepage.
+- About section: combine "the problem, then the fix" with "what it is, plainly".
+- Pictures: real product screenshots in device frames; no stock photos.
+
+**Decisions, round 3 (Cam 2026-10-19):**
+- See how it works: fine as is; make the golfer side look a bit more like a
+  phone, or size it better.
+- "Or ask a question" becomes "Not ready for a call? Send us a note" — a short
+  form (name, course, role, message) that lands in admin inquiries.
+- /teesheet: ONE page, "very in depth and explained" — a section per feature.
+- /contact: split into 3 paths (interested course / existing course / golfer
+  with a booking, sent to their course); a phone number on the site; a branded
+  support@greenreserve.app address forwarding to the Outlook inbox. (No
+  separate contact form picked — the "send us a note" form covers it.)
+
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
 Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3
