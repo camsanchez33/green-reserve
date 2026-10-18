@@ -36,6 +36,13 @@ suggestion save this information". Decisions go here as they are made.
     provide (analytics, the AI assistant, …), or all of it on one page —
     "something to think about". Undecided.
 
+11. **/contact.** Cam: is "Get in touch" + one email button enough, should it
+    look different or have a different button; look at how other companies do
+    it. Claude's proposal (2026-10-19, not built): three paths — a course
+    thinking about GreenReserve (Book a demo + a short form), a course already
+    on it (support), a golfer with a booking (contact your course; their
+    booking email has the course's details). Open: phone number? branded inbox?
+
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
 Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3
