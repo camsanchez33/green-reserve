@@ -28,7 +28,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { token, password, firstName, lastName, phone } = await req.json();
+  // No phone here (launch security review 2026-10-18): a phone on a GolferAccount
+  // is trusted by phone sign-in, so it is only ever set by a verified text code.
+  const { token, password, firstName, lastName } = await req.json();
   const payload = await verifyMemberInviteToken(token);
   if (!payload) return NextResponse.json({ error: 'This invite link is invalid or expired.' }, { status: 400 });
   if (!password || password.length < 8) return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
@@ -47,11 +49,11 @@ export async function POST(req: NextRequest) {
     const hashed = await bcrypt.hash(password, 12);
     try {
       golfer = await prisma.golferAccount.create({
-        data: { email: payload.email, password: hashed, firstName: firstName.trim(), lastName: lastName.trim(), phone: phone ? String(phone).trim() : null },
+        data: { email: payload.email, password: hashed, firstName: firstName.trim(), lastName: lastName.trim() },
       });
     } catch (err) {
       if (err && typeof err === 'object' && 'code' in err && err.code === 'P2002') {
-        return NextResponse.json({ error: 'That phone number is already on another account.' }, { status: 409 });
+        return NextResponse.json({ error: 'An account with this email already exists. Just log in.' }, { status: 409 });
       }
       throw err;
     }

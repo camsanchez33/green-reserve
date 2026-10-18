@@ -23,7 +23,6 @@ function AcceptInviteInner() {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName]   = useState('');
-  const [phone, setPhone]         = useState('');
   const [password, setPassword]   = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -55,7 +54,7 @@ function AcceptInviteInner() {
       const res = await fetch('/api/golfer/auth/accept-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password, firstName, lastName, phone }),
+        body: JSON.stringify({ token, password, firstName, lastName }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong.'); setSubmitting(false); return; }
@@ -111,11 +110,6 @@ function AcceptInviteInner() {
                   <input value={lastName} onChange={e => setLastName(e.target.value)}
                     className={iCls} />
                 </div>
-              </div>
-              <div>
-                <label className={lCls}>Phone (optional)</label>
-                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                  className={iCls} />
               </div>
               <div>
                 <label className={lCls}>Password</label>

@@ -2955,7 +2955,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 356,
+      "lines": 374,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2987,6 +2987,7 @@
         "@/lib/member-session",
         "@/lib/money",
         "@/lib/prisma",
+        "@/lib/rate-limit",
         "@/lib/stripe",
         "@/lib/tee-time-utils",
         "@/lib/terms",
@@ -3396,7 +3397,7 @@
     },
     {
       "path": "src/app/api/golfer/auth/accept-invite/route.ts",
-      "lines": 76,
+      "lines": 78,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3789,7 +3790,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/change-players/route.ts",
-      "lines": 101,
+      "lines": 125,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3807,6 +3808,8 @@
       "guard": "file",
       "imports": [
         "@/lib/auth",
+        "@/lib/booking-events",
+        "@/lib/cancel-policy",
         "@/lib/manage-access",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -5918,7 +5921,7 @@
     },
     {
       "path": "src/app/courses/[slug]/account/accept-invite/page.tsx",
-      "lines": 150,
+      "lines": 144,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9814,6 +9817,7 @@
       "usedBy": [
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
+        "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
@@ -10442,6 +10446,7 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
+        "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
@@ -13042,7 +13047,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 204,
+      "lines": 218,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -13693,6 +13698,7 @@
         "src/app/api/auth/login/route.ts",
         "src/app/api/auth/resend-verification/route.ts",
         "src/app/api/bookings/cancel/route.ts",
+        "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
