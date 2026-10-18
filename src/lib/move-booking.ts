@@ -24,6 +24,12 @@
 // "people are going to check in online"). The round is paid by then, so its
 // price always stays, and no hold can fall due (the crons only touch
 // confirmed bookings). The golfer's own swap and the frost delay still refuse.
+//
+// The golfer's own swap (actor 'golfer', launch security review 2026-10-18)
+// stays on the same day, and is refused once the booking's own cutoff has
+// passed at a course with a late/hold fee: otherwise a golfer inside the window
+// could move weeks out and cancel free (lateness is judged on the tee time the
+// booking holds at cancel), or step past the advance-booking window.
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
@@ -52,10 +58,12 @@ export type MoveOk = {
    *  the hourly cron will charge this many cents. 0 = nothing will be charged. */
   holdDueCents: number;
 };
-export type MoveCode = 'PLAYED' | 'NO_SHOW' | 'MOVED' | 'NOT_FOUND' | 'WRONG_COURSE' | 'NOT_CONFIRMED' | 'CHECKED_IN' | 'SAME' | 'SLOT_GONE' | 'BLOCKED' | 'PAST' | 'FULL' | 'CONFLICT';
+export type MoveCode = 'CUTOFF' | 'OTHER_DAY' | 'PLAYED' | 'NO_SHOW' | 'MOVED' | 'NOT_FOUND' | 'WRONG_COURSE' | 'NOT_CONFIRMED' | 'CHECKED_IN' | 'SAME' | 'SLOT_GONE' | 'BLOCKED' | 'PAST' | 'FULL' | 'CONFLICT';
 export type MoveFail = { ok: false; code: MoveCode; message: string; spotsLeft?: number };
 
 const MESSAGES: Record<MoveCode, string> = {
+  CUTOFF: 'The free-change window for this booking has closed. Call the course to change it.',
+  OTHER_DAY: 'You can change to another time on the same day. To play a different day, cancel and book again.',
   PLAYED: 'That round was on an earlier day — it has already been played.',
   NO_SHOW: 'This group is marked as a no-show. Mark them “Still coming” first, then move them.',
   MOVED: 'This group was already moved.',
@@ -124,6 +132,11 @@ export async function moveBooking(opts: {
       if (b.noShowAt) throw new MoveError('NO_SHOW');
       if (opts.expectFromTeeTimeId && b.teeTimeId !== opts.expectFromTeeTimeId) throw new MoveError('MOVED');
       if (b.teeTimeId === opts.newTeeTimeId) throw new MoveError('SAME');
+      const golferMove = opts.actor.type === 'golfer';
+      if (golferMove && b.cancellationFeeTotal > 0) {
+        const fromAt = teeTimeInstant(b.course.timezone, b.teeTime.date, b.teeTime.time);
+        if (!fromAt || fromAt.getTime() - bookingWindowHours(b, b.course) * 3600_000 <= now.getTime()) throw new MoveError('CUTOFF');
+      }
 
       const slot = await tx.teeTime.findUnique({
         where: { id: opts.newTeeTimeId },
@@ -131,6 +144,7 @@ export async function moveBooking(opts: {
       });
       if (!slot) throw new MoveError('SLOT_GONE');
       if (slot.courseId !== b.courseId) throw new MoveError('WRONG_COURSE');
+      if (golferMove && slot.date !== b.teeTime.date) throw new MoveError('OTHER_DAY');
       if (slot.status === 'blocked') throw new MoveError('BLOCKED');
       const teeAt = teeTimeInstant(b.course.timezone, slot.date, slot.time);
       if (!teeAt || teeAt.getTime() <= now.getTime()) throw new MoveError('PAST');

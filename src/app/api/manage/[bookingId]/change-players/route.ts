@@ -4,6 +4,8 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
+import { bookingWindowHours } from '@/lib/cancel-policy';
+import { teeTimeInstant } from '@/lib/booking-events';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -29,7 +31,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
         select: {
           id: true, checkInToken: true, golferAccountId: true, teeTimeId: true, players: true,
           status: true, cartSelected: true, rangeBallsTotal: true,
-          greenFeeTotal: true, cartFeeTotal: true,
+          greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true,
+          cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
+          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true,
+          teeTime: { select: { date: true, time: true } },
+          course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true } },
         },
       });
 
@@ -38,6 +44,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       if (!authorized) throw Object.assign(new Error(), { code: 'INVALID' });
       if (booking.status !== 'confirmed') throw Object.assign(new Error(), { code: 'NOT_CONFIRMED' });
       if (booking.players === newPlayers) throw Object.assign(new Error(), { code: 'SAME' });
+      // A payment taken or started carries the old party's price.
+      if (booking.paymentStatus === 'paid' || booking.roundPaymentIntentId || booking.shopLockedAt) throw Object.assign(new Error(), { code: 'PAID' });
+      // Launch security review 2026-10-18: once the cutoff has passed at a course
+      // with a late/no-show fee, the party is what the fee was set on — dropping
+      // players late would give seats back free, and a hold may already be taken.
+      if (booking.cancellationFeeTotal > 0 || booking.noShowFeeTotal > 0) {
+        const teeAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
+        if (!teeAt || teeAt.getTime() - bookingWindowHours(booking, booking.course) * 3600_000 <= Date.now()) throw Object.assign(new Error(), { code: 'CUTOFF' });
+      }
 
       const slot = await tx.teeTime.findUnique({
         where: { id: booking.teeTimeId },
@@ -55,7 +70,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       // Recompute fees at the same per-player rate as the original booking
       const perPlayerGreen = booking.players > 0 ? booking.greenFeeTotal / booking.players : 0;
       const perPlayerCart = (booking.cartSelected && booking.players > 0) ? booking.cartFeeTotal / booking.players : 0;
-      const perPlayerAccess = 150;
+      // The booking fee keeps its per-player amount: a counter booking that
+      // carries none (0) never gains one (PAY-2).
+      const perPlayerAccess = booking.players > 0 ? Math.round(booking.accessFeeTotal / booking.players) : 0;
+      // Fees copied at booking scale with the party when the course charges them
+      // per player (the basis isn't stored on the booking; the course's is used).
+      const scale = (total: number, basis: string) => basis === 'player' && booking.players > 0 ? Math.round(total / booking.players * newPlayers) : total;
+      const cancellationFeeTotal = scale(booking.cancellationFeeTotal, booking.course.lateFeeBasis);
+      const noShowFeeTotal = scale(booking.noShowFeeTotal, booking.course.noShowFeeBasis);
 
       const greenFeeTotal = Math.round(perPlayerGreen * newPlayers);
       const cartFeeTotal = Math.round(perPlayerCart * newPlayers);
@@ -66,7 +88,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       await tx.booking.update({
         where: { id: bookingId },
         data: {
-          players: newPlayers, greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount,
+          players: newPlayers, greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount, cancellationFeeTotal, noShowFeeTotal,
           termsAcceptedAt: new Date(), termsVersion: CURRENT_TERMS_VERSION,
         },
       });
@@ -89,6 +111,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     const e = err as { code?: string; max?: number };
     if (e.code === 'INVALID') return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
     if (e.code === 'NOT_CONFIRMED') return NextResponse.json({ error: 'This booking cannot be modified' }, { status: 409 });
+    if (e.code === 'PAID') return NextResponse.json({ error: 'This round has already been paid. Ask the course to change the party size.' }, { status: 409 });
+    if (e.code === 'CUTOFF') return NextResponse.json({ error: 'The free-change window for this booking has closed. Call the course to change the party size.' }, { status: 409 });
     if (e.code === 'SAME') return NextResponse.json({ error: 'Party size is already set to that' }, { status: 409 });
     if (e.code === 'FULL') return NextResponse.json({ error: `Only ${e.max} spot${e.max === 1 ? '' : 's'} available for this tee time` }, { status: 409 });
     if ((err as { code?: string }).code === 'P2034') {
