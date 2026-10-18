@@ -3790,7 +3790,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/change-players/route.ts",
-      "lines": 125,
+      "lines": 121,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10347,7 +10347,7 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 221,
+      "lines": 240,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
@@ -10434,6 +10434,10 @@
         {
           "name": "policyMoney",
           "kind": "const"
+        },
+        {
+          "name": "rescalePartyFees",
+          "kind": "fn"
         }
       ],
       "route": null,
