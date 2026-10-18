@@ -15,6 +15,7 @@ import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { windowFor, withinWindow } from '@/lib/booking-window';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -33,6 +34,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'You must agree to the Terms of Service to book.' }, { status: 400 });
   }
 
+  // Launch security review 2026-10-18: no limit let one script book a course's
+  // whole sheet (no card is needed at a no-fee course) and send a confirmation
+  // email to any address. Per IP and per email, like setup-intent.
+  if (!(await rateLimit(`booking:${clientIp(req)}`, 30, 3600))
+    || !(await rateLimit(`booking-email:${String(golferEmail).trim().toLowerCase()}`, 10, 3600))) {
+    return NextResponse.json({ error: 'Too many bookings in a short time. Wait a while and try again, or call the course.' }, { status: 429 });
+  }
+
   const golferSession = await getGolferSession();
   let appliedRate = 'standard';
   let appliedTierName = 'standard';
@@ -47,6 +56,10 @@ export async function POST(req: NextRequest) {
     },
   });
   if (!teeTimeFull) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
+  // Same visibility as the public course page (loadPublicCourse): a course being
+  // built, paused or archived takes no online bookings.
+  const c0 = teeTimeFull.course;
+  if (!c0.active || c0.liveStatus !== 'live' || c0.archivedAt) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
 
   // Private clubs: public online booking is blocked server-side
   if (teeTimeFull.course.type === 'private') {
@@ -173,6 +186,11 @@ export async function POST(req: NextRequest) {
     const pm = si.payment_method && typeof si.payment_method !== 'string' ? si.payment_method : null;
     if (si.status !== 'succeeded' || !siCustomer || !pm) {
       return NextResponse.json({ error: 'Your card was not saved. Please enter it again.' }, { status: 402 });
+    }
+    // One saved card holds one booking: the page makes a new SetupIntent for
+    // every booking, so a second use is a script reusing one (empty) card.
+    if (!(await rateLimit(`booking-seti:${si.id}`, 1, 30 * 86400))) {
+      return NextResponse.json({ error: 'Please enter your card again to hold this tee time.' }, { status: 402 });
     }
     // A confirmed SetupIntent with a customer attaches the card itself; attach
     // only if Stripe has not (never onto a different customer).

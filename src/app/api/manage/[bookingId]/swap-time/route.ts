@@ -11,7 +11,7 @@ import { moveBooking } from '@/lib/move-booking';
 // chose the new time, so it is priced at the new slot (a member keeps their
 // tier rate; the booking fee keeps its per-player amount), and the new price
 // re-stamps terms consent.
-const STATUS: Record<string, number> = { NO_SHOW: 409, NOT_FOUND: 404, WRONG_COURSE: 400, SAME: 409, NOT_CONFIRMED: 409, CHECKED_IN: 409, SLOT_GONE: 409, BLOCKED: 409, PAST: 409, FULL: 409, CONFLICT: 409 };
+const STATUS: Record<string, number> = { CUTOFF: 409, OTHER_DAY: 400, NO_SHOW: 409, NOT_FOUND: 404, WRONG_COURSE: 400, SAME: 409, NOT_CONFIRMED: 409, CHECKED_IN: 409, SLOT_GONE: 409, BLOCKED: 409, PAST: 409, FULL: 409, CONFLICT: 409 };
 const COPY: Record<string, string> = {
   NO_SHOW: 'This booking cannot be modified', NOT_FOUND: 'Invalid link', NOT_CONFIRMED: 'This booking cannot be modified', CHECKED_IN: 'This booking cannot be modified',
   SAME: 'That is your current tee time', SLOT_GONE: 'That tee time is no longer available', BLOCKED: 'That tee time is no longer available',

@@ -71,6 +71,25 @@ export function noShowTotalCents(p: CancelPolicy, players: number): number {
   return 0;
 }
 
+/**
+ * A booking's late and no-show totals after its party changes from `from` to
+ * `to` players. The totals were copied at booking; only a per-player fee moves
+ * with the party. The no-show total follows its own basis when the course has a
+ * no-show fee, else the late fee's (noShowTotalCents falls back to the late fee).
+ * The basis isn't stored on the booking, so the course's current one is used.
+ */
+export function rescalePartyFees(
+  totals: { cancellationFeeTotal: number; noShowFeeTotal: number },
+  course: { lateFeeBasis: string; noShowFeeBasis: string; noShowFeeCents: number },
+  from: number, to: number,
+): { cancellationFeeTotal: number; noShowFeeTotal: number } {
+  const scale = (total: number, basis: string) => basis === 'player' && from > 0 ? Math.round(total / from * to) : total;
+  return {
+    cancellationFeeTotal: scale(totals.cancellationFeeTotal, course.lateFeeBasis),
+    noShowFeeTotal: scale(totals.noShowFeeTotal, course.noShowFeeCents > 0 ? course.noShowFeeBasis : course.lateFeeBasis),
+  };
+}
+
 /** SP-B: does this booking take its late fee as a hold at the cutoff? Bookings made
  *  before SP-B carry no timing and behave exactly as before (yes). */
 export const holdsAtCutoff = (b: { lateFeeTimingAtBooking?: string | null }) =>

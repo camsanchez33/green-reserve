@@ -8,6 +8,41 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
 
 ---
 
+## 0a. Cam's homepage notes — 2026-10-18 (launch walk 1) — OPEN, nothing changed yet
+
+Cam walked greenreserve.app and wrote these. Cam: "dont make changes make
+suggestion save this information". Decisions go here as they are made.
+
+1. **Hero ("first slide").** Keep the logo and a tagline, but the tagline itself
+   and what else sits there are undecided. Likes Operator login in the corner;
+   Book a demo there "maybe, maybe not". Unsure the photo is the right one (the
+   links-green-at-dusk photo, picked 2026-10-17).
+2. **Top bar?** Open question: a bar with About / information etc., or leave it plain.
+3. **About section (first scroll).** Likes the format and look. Open: what it
+   should say, and whether it should have pictures.
+4. **"What your course gets."** Open: the wording, and what else belongs in it.
+5. **"See how it works."** Really likes the look. Open: wording. Idea: make the
+   golfer side look like a phone.
+6. **Book a demo / Ask a question.** Likes the Book a demo section. Asks whether
+   "Ask a question" is needed, or should be an inquiry form or similar.
+7. **Ending.** Likes the logo at the bottom with a tagline and the footer below.
+8. **Section dividers.** Dislikes the line that separates the sections ("in
+   between each page there is like a line").
+9. **/teesheet ("Overview", the product page).** Same question as the
+   homepage: what it should say and what information it shows; whether it needs
+   pictures (screenshots of the tee sheet etc.). Dislikes the dividing lines
+   here too.
+10. **Feature pages (idea).** Cam: maybe an information page for everything we
+    provide (analytics, the AI assistant, …), or all of it on one page —
+    "something to think about". Undecided.
+
+11. **/contact.** Cam: is "Get in touch" + one email button enough, should it
+    look different or have a different button; look at how other companies do
+    it. Claude's proposal (2026-10-19, not built): three paths — a course
+    thinking about GreenReserve (Book a demo + a short form), a course already
+    on it (support), a golfer with a booking (contact your course; their
+    booking email has the course's details). Open: phone number? branded inbox?
+
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
 Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3

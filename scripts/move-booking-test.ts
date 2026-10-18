@@ -84,7 +84,7 @@ async function main() {
   const m1 = await slot(c.id, '2026-10-22', '08:00');           // Thu, $50
   const m2 = await slot(c.id, '2026-10-24', '08:00', { green: 8000 }); // Sat, $80
   const member = await book(c.id, m1.id, { green: 4000, rate: 'Gold' });
-  await moveBooking({ bookingId: member.id, newTeeTimeId: m2.id, courseId: c.id, pricing: 'new_slot', actor: { type: 'golfer' }, now: NOW });
+  await moveBooking({ bookingId: member.id, newTeeTimeId: m2.id, courseId: c.id, pricing: 'new_slot', actor: STAFF, now: NOW });
   check('a member is repriced at their tier rate, not the public one', (await bk(member.id))?.greenFeeTotal === 6400 * 2, String((await bk(member.id))?.greenFeeTotal));
 
   // 3b. Tier lookup: an inactive tier of the same name is ignored; the oldest active wins.
@@ -186,6 +186,34 @@ async function main() {
   await prisma.booking.update({ where: { id: mover.id }, data: { lateFeeTimingAtBooking: 'late_cancel', cancellationFeeChargeId: '' } });
   const dryLate = await moveBooking({ bookingId: mover.id, newTeeTimeId: soon.id, courseId: c.id, pricing: 'keep', actor: STAFF, now: NOW, dryRun: true });
   check('a late-cancel policy takes nothing at the cutoff', dryLate.ok && dryLate.holdDueCents === 0);
+
+  // 8. The golfer's own swap (launch security review 2026-10-18): same day only,
+  // and not once the booking's own cutoff has passed at a course with a fee —
+  // else move weeks out, then cancel free.
+  const GOLFER = { type: 'golfer' as const, id: null };
+  const gFrom = await slot(c.id, '2026-10-09', '07:00'); // 19h after NOW: inside the 24h window
+  const gSame = await slot(c.id, '2026-10-09', '15:00');
+  const gLater = await slot(c.id, '2026-11-20', '08:00');
+  const gb = await book(c.id, gFrom.id);
+  await prisma.booking.update({ where: { id: gb.id }, data: { cancellationFeeTotal: 2500 } });
+  const gCut = await moveBooking({ bookingId: gb.id, newTeeTimeId: gLater.id, courseId: c.id, pricing: 'new_slot', actor: GOLFER, now: NOW });
+  check('a golfer inside the window at a fee course → CUTOFF', !gCut.ok && gCut.code === 'CUTOFF');
+  const gCut2 = await moveBooking({ bookingId: gb.id, newTeeTimeId: gSame.id, courseId: c.id, pricing: 'new_slot', actor: GOLFER, now: NOW });
+  check('…even to a later time the same day', !gCut2.ok && gCut2.code === 'CUTOFF');
+  const sCut = await moveBooking({ bookingId: gb.id, newTeeTimeId: gSame.id, courseId: c.id, pricing: 'keep', actor: STAFF, now: NOW, dryRun: true });
+  check('staff can still move it', sCut.ok);
+  await prisma.booking.update({ where: { id: gb.id }, data: { cancellationFeeTotal: 0 } });
+  const gFree = await moveBooking({ bookingId: gb.id, newTeeTimeId: gSame.id, courseId: c.id, pricing: 'new_slot', actor: GOLFER, now: NOW, dryRun: true });
+  check('with no fee on the booking the golfer can still change the time', gFree.ok);
+  const gOut = await slot(c.id, '2026-10-30', '08:00');
+  const gOutTo = await slot(c.id, '2026-10-31', '08:00');
+  const gSame2 = await slot(c.id, '2026-10-30', '12:00');
+  const gb2 = await book(c.id, gOut.id);
+  await prisma.booking.update({ where: { id: gb2.id }, data: { cancellationFeeTotal: 2500 } });
+  const gDay = await moveBooking({ bookingId: gb2.id, newTeeTimeId: gOutTo.id, courseId: c.id, pricing: 'new_slot', actor: GOLFER, now: NOW });
+  check('a golfer cannot move to another day → OTHER_DAY', !gDay.ok && gDay.code === 'OTHER_DAY');
+  const gOk = await moveBooking({ bookingId: gb2.id, newTeeTimeId: gSame2.id, courseId: c.id, pricing: 'new_slot', actor: GOLFER, now: NOW });
+  check('outside the window, the same day, a golfer can move', gOk.ok);
 
   await cleanup();
   console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
