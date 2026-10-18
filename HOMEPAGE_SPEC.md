@@ -8,6 +8,27 @@ Live mockup: https://claude.ai/artifact/XBgbV4HHBTuDM4B6sRQEHq
 
 ---
 
+## 0a. Cam's homepage notes — 2026-10-18 (launch walk 1) — OPEN, nothing changed yet
+
+Cam walked greenreserve.app and wrote these. Cam: "dont make changes make
+suggestion save this information". Decisions go here as they are made.
+
+1. **Hero ("first slide").** Keep the logo and a tagline, but the tagline itself
+   and what else sits there are undecided. Likes Operator login in the corner;
+   Book a demo there "maybe, maybe not". Unsure the photo is the right one (the
+   links-green-at-dusk photo, picked 2026-10-17).
+2. **Top bar?** Open question: a bar with About / information etc., or leave it plain.
+3. **About section (first scroll).** Likes the format and look. Open: what it
+   should say, and whether it should have pictures.
+4. **"What your course gets."** Open: the wording, and what else belongs in it.
+5. **"See how it works."** Really likes the look. Open: wording. Idea: make the
+   golfer side look like a phone.
+6. **Book a demo / Ask a question.** Likes the Book a demo section. Asks whether
+   "Ask a question" is needed, or should be an inquiry form or similar.
+7. **Ending.** Likes the logo at the bottom with a tagline and the footer below.
+8. **Section dividers.** Dislikes the line that separates the sections ("in
+   between each page there is like a line").
+
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
 Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3
