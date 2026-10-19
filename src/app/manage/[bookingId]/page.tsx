@@ -120,6 +120,10 @@ function ManagePageInner() {
   const [errorMsg, setErrorMsg] = useState('');
   const [expired, setExpired] = useState(false);
   const [view, setView] = useState<View>('main');
+  // Cam 2026-10-19: a change to the booking (new time or party size) is agreed by
+  // ticking a box, like booking itself — the routes re-stamp consent on it.
+  const [agreed, setAgreed] = useState(false);
+  useEffect(() => { setAgreed(false); }, [view]);
 
   // Cancel state
   const [cancelling, setCancelling] = useState(false);
@@ -190,7 +194,7 @@ function ManagePageInner() {
     try {
       const res = await fetch(`/api/manage/${bookingId}/swap-time`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newTeeTimeId: selectedSlot.id, termsAccepted: true }),
+        body: JSON.stringify({ token, newTeeTimeId: selectedSlot.id, termsAccepted: agreed }),
       });
       const data = await res.json();
       if (!res.ok) { setSwapError(data.error || 'Could not change tee time.'); setSwapping(false); return; }
@@ -212,7 +216,7 @@ function ManagePageInner() {
     try {
       const res = await fetch(`/api/manage/${bookingId}/change-players`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, newPlayers: selectedPlayers, termsAccepted: true }),
+        body: JSON.stringify({ token, newPlayers: selectedPlayers, termsAccepted: agreed }),
       });
       const data = await res.json();
       if (!res.ok) { setPlayersError(data.error || 'Could not update party size.'); setChangingPlayers(false); return; }
@@ -380,12 +384,13 @@ function ManagePageInner() {
                   </div>
                 </div>
                 {swapError && <p className="text-bad text-xs">{swapError}</p>}
-                <p className="text-[11px] text-ink text-center leading-snug">
-                  By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
-                </p>
+                <label className="flex items-start gap-2.5 text-[13px] text-ink leading-snug cursor-pointer select-none">
+                  <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: info.brandColor }} />
+                  <span>I agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a> and to this course&apos;s cancellation policy for the changed booking.</span>
+                </label>
                 <button
                   onClick={handleSwapTime}
-                  disabled={swapping}
+                  disabled={swapping || !agreed}
                   style={{ backgroundColor: info.brandColor }}
                   className="w-full py-3 rounded-md text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
                 >
@@ -448,12 +453,13 @@ function ManagePageInner() {
 
             {playersError && <p className="text-bad text-sm mb-3">{playersError}</p>}
 
-            <p className="text-[11px] text-ink text-center leading-snug mb-3">
-              By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
-            </p>
+            <label className="flex items-start gap-2.5 text-[13px] text-ink leading-snug cursor-pointer select-none mb-3">
+              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: info.brandColor }} />
+              <span>I agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a> and to this course&apos;s cancellation policy for the changed booking.</span>
+            </label>
             <button
               onClick={handleChangePlayers}
-              disabled={changingPlayers || selectedPlayers === info.players}
+              disabled={changingPlayers || selectedPlayers === info.players || !agreed}
               style={{ backgroundColor: info.brandColor }}
               className="w-full py-3 rounded-md text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
             >
