@@ -152,6 +152,12 @@ model Course {
   blackouts                  Blackout[]
   memberships                CourseMembership[]
   residents                  CourseResident[]
+  /// GRP-1 (Cam 2026-10-19, after golfbergencounty.com): a course run alongside
+  /// others (a county, a club with several courses). Groups are made in Admin
+  /// only. A group has one golfer page listing its courses, and one resident
+  /// list: a resident at any of its courses gets the resident rate at all of them.
+  groupId                    String?
+  group                      CourseGroup?          @relation(fields: [groupId], references: [id], onDelete: SetNull)
   membershipTiers            MembershipTier[]
   staff                      CourseStaff[]
   teeSets                    TeeSet[]
@@ -173,6 +179,7 @@ model Course {
   shopSales                  ShopSale[]
 
   @@index([operatorId])
+  @@index([groupId])
 }
 
 model CoursePhoto {
@@ -355,6 +362,18 @@ model MembershipTier {
   active               Boolean            @default(true)
   createdAt            DateTime           @default(now())
   memberships          CourseMembership[]
+}
+
+/// GRP-1: several courses run together (e.g. Bergen County's six). See Course.groupId.
+model CourseGroup {
+  id          String   @id @default(cuid())
+  name        String
+  /// The group's golfer page: /g/{slug}.
+  slug        String   @unique
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  courses     Course[]
 }
 
 /// RES-1 (Cam 2026-10-19): a golfer who showed the pro shop their resident

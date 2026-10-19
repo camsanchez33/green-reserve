@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 436,
-    "routes": 221,
-    "libs": 133,
-    "models": 42,
+    "files": 440,
+    "routes": 224,
+    "libs": 134,
+    "models": 43,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -544,7 +544,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 522,
+      "lines": 523,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -692,6 +692,36 @@
         "@/lib/format",
         "lucide-react",
         "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/admin/groups/page.tsx",
+      "lines": 208,
+      "purpose": "GRP-1 (Cam 2026-10-19, after golfbergencounty.com):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (AdminGroupsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/groups",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/ErrorState",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/admin-fetch",
+        "@/lib/admin-roles",
+        "@/lib/admin-session-context",
+        "next/link",
         "react"
       ],
       "usedBy": []
@@ -1497,6 +1527,48 @@
         "@/lib/admin-session",
         "@/lib/private-blob",
         "@vercel/blob/client",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/course-groups/route.ts",
+      "lines": 100,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DELETE",
+          "kind": "route"
+        },
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/course-groups",
+      "kind": "api",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/course-timeline",
+        "@/lib/prisma",
+        "@prisma/client",
         "next/server"
       ],
       "usedBy": []
@@ -5055,7 +5127,7 @@
     },
     {
       "path": "src/app/api/operator/residents/route.ts",
-      "lines": 76,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5087,6 +5159,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/course-group",
         "@/lib/prisma",
         "@/lib/residents",
         "@/lib/session",
@@ -6110,7 +6183,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1806,
+      "lines": 1820,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6972,6 +7045,38 @@
       "usedBy": []
     },
     {
+      "path": "src/app/g/[slug]/page.tsx",
+      "lines": 133,
+      "purpose": "GRP-1 (Cam 2026-10-19, after golfbergencounty.com/tee-times):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (GroupPage)",
+          "kind": "component"
+        },
+        {
+          "name": "generateMetadata",
+          "kind": "fn"
+        }
+      ],
+      "route": "/g/[slug]",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/components/ui/Card",
+        "@/lib/course-time",
+        "@/lib/format",
+        "@/lib/prisma",
+        "@/lib/public-tee-times",
+        "next",
+        "next/link",
+        "next/navigation"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/layout.tsx",
       "lines": 63,
       "purpose": "",
@@ -7714,6 +7819,7 @@
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
+        "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
@@ -8450,7 +8556,7 @@
     },
     {
       "path": "src/components/dashboard/members/ResidentsCard.tsx",
-      "lines": 166,
+      "lines": 169,
       "purpose": "RES-1 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -8782,6 +8888,7 @@
         "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/golfers/page.tsx",
+        "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
@@ -8800,6 +8907,7 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/app/g/[slug]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
@@ -8846,6 +8954,7 @@
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
+        "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/system/page.tsx",
@@ -9055,6 +9164,7 @@
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
+        "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
@@ -9120,6 +9230,7 @@
         "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/golfers/page.tsx",
+        "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/login/page.tsx",
         "src/app/admin/messages/page.tsx",
@@ -9289,6 +9400,7 @@
         "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
+        "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/system/page.tsx",
@@ -9329,6 +9441,7 @@
       "imports": [],
       "usedBy": [
         "src/app/admin/golfers/page.tsx",
+        "src/app/admin/groups/page.tsx",
         "src/app/admin/page.tsx",
         "src/components/admin/AdminSidebar.tsx",
         "src/lib/admin-session.ts"
@@ -9370,6 +9483,7 @@
       "usedBy": [
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
+        "src/app/admin/groups/page.tsx",
         "src/app/admin/layout.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/page.tsx",
@@ -9465,6 +9579,7 @@
         "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-documents/upload/route.ts",
+        "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
@@ -11558,6 +11673,30 @@
       ]
     },
     {
+      "path": "src/lib/course-group.ts",
+      "lines": 13,
+      "purpose": "GRP-1 (Cam 2026-10-19, after golfbergencounty.com):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "groupCourseIds",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/residents/route.ts",
+        "src/lib/member-session.ts"
+      ]
+    },
+    {
       "path": "src/lib/course-metrics.ts",
       "lines": 219,
       "purpose": "THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ GR-fees/period math defined ONCE.",
@@ -11778,6 +11917,7 @@
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/app/g/[slug]/page.tsx",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
@@ -11925,6 +12065,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
@@ -12782,6 +12923,7 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/g/[slug]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
@@ -13602,7 +13744,7 @@
     },
     {
       "path": "src/lib/member-session.ts",
-      "lines": 108,
+      "lines": 109,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13642,6 +13784,7 @@
       "guard": null,
       "imports": [
         "./auth",
+        "./course-group",
         "./prisma",
         "./residents",
         "jose",
@@ -14202,6 +14345,7 @@
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
@@ -14326,6 +14470,7 @@
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/app/courses/[slug]/page.tsx",
+        "src/app/g/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
         "src/lib/access-fee.ts",
@@ -14348,6 +14493,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
         "src/lib/course-closure.ts",
+        "src/lib/course-group.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cron-log.ts",
         "src/lib/frost-delay.ts",
@@ -14474,7 +14620,8 @@
       ],
       "usedBy": [
         "src/app/api/courses/[slug]/tee-times/route.ts",
-        "src/app/book/page.tsx"
+        "src/app/book/page.tsx",
+        "src/app/g/[slug]/page.tsx"
       ]
     },
     {
@@ -17381,6 +17528,14 @@
           "type": "CourseResident[]"
         },
         {
+          "name": "groupId",
+          "type": "String?"
+        },
+        {
+          "name": "group",
+          "type": "CourseGroup?"
+        },
+        {
           "name": "membershipTiers",
           "type": "MembershipTier[]"
         },
@@ -17448,6 +17603,7 @@
       "writers": [
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/operator/conditions/route.ts",
@@ -17466,6 +17622,7 @@
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
@@ -17524,6 +17681,7 @@
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/course-closure.ts",
+        "src/lib/course-group.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
@@ -17533,6 +17691,46 @@
         "src/lib/schedule-preview.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "name": "CourseGroup",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "slug",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "courses",
+          "type": "Course[]"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/course-groups/route.ts"
+      ],
+      "readers": [
+        "src/app/api/admin/course-groups/route.ts",
+        "src/app/g/[slug]/page.tsx"
       ]
     },
     {

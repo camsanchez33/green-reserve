@@ -204,6 +204,9 @@ export default function CourseDetailPage({
     return [1, 2, 3, 4].includes(p) ? p : 2;
   });
   const [selectedTime, setSelectedTime] = useState<TeeTime | null>(null);
+  // GRP-1: a group page (/g/[slug]) links a time as ?tt={id}; it is picked once
+  // the day's times load, if it still has room for the group.
+  const pendingPick = useRef(searchParams.get('tt'));
   const [withCart, setWithCart] = useState(!!initialCourse?.cart_required);
   const [todFilter, setTodFilter] = useState<TimeOfDay>(() => {
     const t = searchParams.get('tod');
@@ -307,7 +310,18 @@ export default function CourseDetailPage({
     fetch(url)
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) { setTeeTimes(data); setWindowNotice(null); return; }
+        if (Array.isArray(data)) {
+          setTeeTimes(data); setWindowNotice(null);
+          const pick = pendingPick.current && (data as TeeTime[]).find(t => String(t.id) === pendingPick.current);
+          pendingPick.current = null;
+          // A time with fewer spots than the default group size is still the one
+          // they tapped: shrink the group to fit rather than drop the pick.
+          if (pick && pick.players_available > 0) {
+            if (pick.players_available < players) setPlayers(pick.players_available);
+            setSelectedTime(pick);
+          }
+          return;
+        }
         setTeeTimes([]);
         setWindowNotice(data && data.error === 'outside_window' ? data as WindowNotice : null);
       })
