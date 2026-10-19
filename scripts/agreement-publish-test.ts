@@ -11,7 +11,7 @@ function check(name: string, ok: boolean, detail = '') {
 }
 
 const KEYS = [
-  { document: 'operator_agreement', version: '2026-10' },
+  { document: 'operator_agreement', version: '2026-11' },
   { document: 'operator_agreement', version: '2026-08' },
 ];
 
@@ -21,16 +21,16 @@ async function main() {
   await prisma.agreementVersion.deleteMany({ where: { OR: KEYS } });
   try {
     const now = new Date('2026-10-12T15:00:00.000Z');
-    const r = await publishAgreementVersion('operator_agreement', '2026-10', now);
+    const r = await publishAgreementVersion('operator_agreement', '2026-11', now);
     check('publishes the current version', r.ok && r.created === true, JSON.stringify(r));
-    const row = await prisma.agreementVersion.findUnique({ where: { document_version: { document: 'operator_agreement', version: '2026-10' } } });
-    check('stores the file hash', row?.textHash === loadDocument('operator_agreement', '2026-10').hash);
+    const row = await prisma.agreementVersion.findUnique({ where: { document_version: { document: 'operator_agreement', version: '2026-11' } } });
+    check('stores the file hash', row?.textHash === loadDocument('operator_agreement', '2026-11').hash);
     check('takes effect at publish time with a 30-day window',
       row?.effectiveAt.toISOString() === now.toISOString() && row?.reacceptBy?.toISOString() === '2026-11-11T15:00:00.000Z',
       `${row?.effectiveAt.toISOString()} ${row?.reacceptBy?.toISOString()}`);
     check('a waived publish says so', r.ok && r.created === true && r.waived === true);
 
-    const again = await publishAgreementVersion('operator_agreement', '2026-10');
+    const again = await publishAgreementVersion('operator_agreement', '2026-11');
     check('publishing again creates nothing', again.ok && again.created === false, JSON.stringify(again));
 
     const race = await Promise.all([1, 2, 3].map(() => publishAgreementVersion('operator_agreement', '2026-08')));
@@ -41,7 +41,7 @@ async function main() {
     const changed = await publishAgreementVersion('operator_agreement', '2026-08');
     check('a file changed after publishing is refused', !changed.ok && changed.status === 409, JSON.stringify(changed));
 
-    const bogusDoc = await publishAgreementVersion('toString', '2026-10');
+    const bogusDoc = await publishAgreementVersion('toString', '2026-11');
     check('an unknown document is a 400, not a crash', !bogusDoc.ok && bogusDoc.status === 400, JSON.stringify(bogusDoc));
     const bogusVersion = await publishAgreementVersion('operator_agreement', '../../etc/passwd');
     check('a version not on disk is a 404', !bogusVersion.ok && bogusVersion.status === 404, JSON.stringify(bogusVersion));
