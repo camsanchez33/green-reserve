@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const g = await prisma.courseGroup.findUnique({ where: { slug }, select: { name: true, description: true, courses: { select: { name: true } } } });
   if (!g) return { title: 'Book Tee Times' };
   const title = `${g.name} — Book Tee Times`;
-  const description = g.description || `Book tee times at ${g.courses.map(c => c.name).join(', ')}.`;
+  const description = g.description || (g.courses.length ? `Book tee times at ${g.courses.map(c => c.name).join(', ')}.` : `Book tee times with ${g.name}.`);
   return { title, description, alternates: { canonical: `/g/${slug}` } };
 }
 

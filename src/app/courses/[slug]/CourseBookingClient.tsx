@@ -314,7 +314,12 @@ export default function CourseDetailPage({
           setTeeTimes(data); setWindowNotice(null);
           const pick = pendingPick.current && (data as TeeTime[]).find(t => String(t.id) === pendingPick.current);
           pendingPick.current = null;
-          if (pick && pick.players_available >= players) setSelectedTime(pick);
+          // A time with fewer spots than the default group size is still the one
+          // they tapped: shrink the group to fit rather than drop the pick.
+          if (pick && pick.players_available > 0) {
+            if (pick.players_available < players) setPlayers(pick.players_available);
+            setSelectedTime(pick);
+          }
           return;
         }
         setTeeTimes([]);
