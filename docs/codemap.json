@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 414,
-    "routes": 214,
+    "files": 413,
+    "routes": 213,
     "libs": 122,
     "models": 39,
     "orphans": 10,
@@ -4258,7 +4258,7 @@
     },
     {
       "path": "src/app/api/operator/blackouts/route.ts",
-      "lines": 60,
+      "lines": 47,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4286,10 +4286,8 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
-        "@/lib/course-time",
         "@/lib/prisma",
         "@/lib/session",
-        "@/lib/tee-sheet-engine",
         "next/server"
       ],
       "usedBy": []
@@ -4992,31 +4990,6 @@
         "@/lib/rate-limit",
         "@/lib/session",
         "@/lib/submit-change-request",
-        "next/server"
-      ],
-      "usedBy": []
-    },
-    {
-      "path": "src/app/api/operator/schedule/preview/route.ts",
-      "lines": 24,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "POST",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/operator/schedule/preview",
-      "kind": "api",
-      "methods": [
-        "POST"
-      ],
-      "auth": "operator",
-      "guard": "file",
-      "imports": [
-        "@/lib/schedule-preview",
-        "@/lib/session",
         "next/server"
       ],
       "usedBy": []
@@ -6288,7 +6261,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 193,
+      "lines": 195,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6307,7 +6280,6 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "lucide-react",
@@ -6400,7 +6372,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1414,
+      "lines": 1429,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6433,6 +6405,7 @@
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
@@ -6490,8 +6463,8 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 520,
-      "purpose": "Schedule rework (Cam 2026-10-19:",
+      "lines": 457,
+      "purpose": "",
       "brain": [],
       "exports": [
         {
@@ -6509,11 +6482,11 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
-        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/use-dashboard-access",
-        "next/link",
+        "lucide-react",
         "react"
       ],
       "usedBy": []
@@ -7648,7 +7621,7 @@
     },
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
-      "lines": 207,
+      "lines": 222,
       "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
       "brain": [],
       "exports": [
@@ -8431,7 +8404,6 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
-        "src/app/dashboard/schedules/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -8524,7 +8496,6 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
@@ -8696,6 +8667,7 @@
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/page.tsx",
+        "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
@@ -11321,7 +11293,6 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/money/overview/route.ts",
@@ -11338,7 +11309,6 @@
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/public-tee-times.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -13770,7 +13740,6 @@
         "src/lib/rate-limit.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/session.ts",
         "src/lib/sheet-token.ts",
@@ -14067,48 +14036,6 @@
       ]
     },
     {
-      "path": "src/lib/schedule-preview.ts",
-      "lines": 110,
-      "purpose": "Schedule rework (Cam 2026-10-19:",
-      "brain": [],
-      "exports": [
-        {
-          "name": "diffDay",
-          "kind": "fn"
-        },
-        {
-          "name": "PREVIEW_DAYS",
-          "kind": "const"
-        },
-        {
-          "name": "previewScheduleChange",
-          "kind": "fn"
-        },
-        {
-          "name": "ScheduleChange",
-          "kind": "type"
-        },
-        {
-          "name": "SchedulePreview",
-          "kind": "type"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "./course-time",
-        "./prisma",
-        "./schedule-wire",
-        "./tee-sheet-engine"
-      ],
-      "usedBy": [
-        "src/app/api/operator/schedule/preview/route.ts"
-      ]
-    },
-    {
       "path": "src/lib/schedule-service.ts",
       "lines": 216,
       "purpose": "MP-5d.",
@@ -14202,7 +14129,6 @@
       ],
       "usedBy": [
         "src/app/api/operator/tee-times/route.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
     },
@@ -14325,7 +14251,6 @@
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/request-changes/route.ts",
-        "src/app/api/operator/schedule/preview/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
@@ -14757,18 +14682,10 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 229,
+      "lines": 208,
       "purpose": "",
       "brain": [],
       "exports": [
-        {
-          "name": "DesiredSlot",
-          "kind": "type"
-        },
-        {
-          "name": "desiredSlots",
-          "kind": "fn"
-        },
         {
           "name": "generateForAllCourses",
           "kind": "fn"
@@ -14779,14 +14696,6 @@
         },
         {
           "name": "regenerateUpcoming",
-          "kind": "fn"
-        },
-        {
-          "name": "ScheduleForSlots",
-          "kind": "type"
-        },
-        {
-          "name": "slotKey",
           "kind": "fn"
         }
       ],
@@ -14803,11 +14712,34 @@
       "usedBy": [
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/cron/generate-tee-times/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
+      ]
+    },
+    {
+      "path": "src/lib/tee-time-fit.ts",
+      "lines": 19,
+      "purpose": "Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FIT_WINDOW_MIN",
+          "kind": "const"
+        },
+        {
+          "name": "timesTooClose",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
       ]
     },
     {
@@ -15589,7 +15521,6 @@
         "src/app/api/operator/blackouts/route.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -16627,7 +16558,6 @@
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/approve-page/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
@@ -16665,7 +16595,6 @@
         "src/lib/monthly-review.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -17306,7 +17235,6 @@
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/lib/birdie/course-context.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -18344,7 +18272,6 @@
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/public-tee-times.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -18520,7 +18447,6 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
