@@ -48,6 +48,20 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   });
 
+  // Cam 2026-10-19: each member's last round here — their latest checked-in
+  // booking, matched by account or by the email on the membership.
+  const golferIds = memberships.map(m => m.golferId).filter((x): x is string => !!x);
+  const emails = memberships.flatMap(m => [m.inviteEmail, m.golfer?.email ?? '']).map(e => e.toLowerCase()).filter(Boolean);
+  const rounds = golferIds.length + emails.length === 0 ? [] : await prisma.booking.findMany({
+    where: { courseId: session.courseId, status: 'completed', OR: [{ golferAccountId: { in: golferIds } }, { golferEmail: { in: emails, mode: 'insensitive' } }] },
+    select: { golferAccountId: true, golferEmail: true, teeTime: { select: { date: true } } },
+  });
+  const lastBy = new Map<string, string>();
+  const note = (k: string, d: string) => { if (k && (!lastBy.has(k) || lastBy.get(k)! < d)) lastBy.set(k, d); };
+  for (const r of rounds) { note(r.golferAccountId ?? '', r.teeTime.date); note(r.golferEmail.toLowerCase(), r.teeTime.date); }
+  const lastRound = (m: (typeof memberships)[number]) =>
+    [m.golferId ?? '', m.inviteEmail.toLowerCase(), (m.golfer?.email ?? '').toLowerCase()].map(k => lastBy.get(k) ?? '').sort().pop() || null;
+
   const normalized = memberships.map(m => ({
     id:             m.id,
     golferId:       m.golferId,
@@ -68,6 +82,7 @@ export async function GET() {
     notes:          m.notes,
     createdAt:      m.createdAt,
     linked:         !!m.golferId,
+    lastRound:      lastRound(m),
   }));
 
   return NextResponse.json(normalized);
