@@ -1886,3 +1886,22 @@ export async function sendCourseNoticeEmail(data: {
     ...(data.replyTo ? { replyTo: data.replyTo } : {}),
   });
 }
+
+/** POS-2: a walk-up pro-shop sale's pay link (Apple Pay, Google Pay or card on the customer's phone). */
+export async function sendShopSalePayLinkEmail(data: {
+  email: string; name: string; courseName: string; totalCents: number;
+  lines: { name: string; unitPriceCents: number; quantity: number }[]; payUrl: string;
+}) {
+  const rows = data.lines.map(l => `<tr><td style="padding:6px 0;border-bottom:1px solid #f3f4f6;color:#141814;font-size:14px;">${escapeHtml(l.name)}${l.quantity > 1 ? ` &times; ${l.quantity}` : ''}</td><td style="padding:6px 0;border-bottom:1px solid #f3f4f6;color:#141814;font-size:14px;text-align:right;">$${((l.unitPriceCents * l.quantity) / 100).toFixed(2)}</td></tr>`).join('');
+  const html = baseTemplate(`
+    <h1 style="margin:16px 0 4px;color:#141814;font-size:24px;font-weight:700;">Your pro shop total</h1>
+    <p style="margin:0 0 20px;color:#5f655e;font-size:15px;">${data.name ? `Hi ${escapeHtml(data.name)}, here` : 'Here'}&rsquo;s what you picked up at ${escapeHtml(data.courseName)}.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">${rows}
+      <tr><td style="padding:10px 0 0;color:#141814;font-size:15px;font-weight:700;">Total</td><td style="padding:10px 0 0;color:#141814;font-size:15px;font-weight:700;text-align:right;">$${(data.totalCents / 100).toFixed(2)}</td></tr>
+    </table>
+    <a href="${data.payUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin:16px 0;">Pay $${(data.totalCents / 100).toFixed(2)} &rarr;</a>
+    <p style="margin:0;color:#5f655e;font-size:12px;text-align:center;">Apple Pay, Google Pay or card. The charge comes from ${escapeHtml(data.courseName)}.</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.email, subject: `Pay for your pro shop items — ${data.courseName}`, html });
+}
+

@@ -169,6 +169,7 @@ model Course {
   monthlyReviews             MonthlyReview[]
   golferMessages             CourseMessage[]
   shopItems                  ShopItem[]
+  shopSales                  ShopSale[]
 
   @@index([operatorId])
 }
@@ -1050,7 +1051,7 @@ model CourseMessage {
 }
 
 /// POS-1a (PLATFORM_ROADMAP_SPEC §4): a course's pro-shop catalog — apparel,
-/// balls, range buckets, rentals. Name and price only; stock is not tracked yet.
+/// balls, range buckets, rentals. POS-2 (Cam 2026-10-19): optional stock count.
 model ShopItem {
   id         String            @id @default(cuid())
   courseId   String
@@ -1061,11 +1062,59 @@ model ShopItem {
   /// Hidden from "Add to round" but kept, so past sales still name it.
   active     Boolean           @default(true)
   sortOrder  Int               @default(0)
+  /// POS-2: how many are on the shelf; null = not counted. Paid walk-up sales
+  /// and items added to a round take from it. Never blocks a sale.
+  stockCount Int?
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
   sales      BookingShopItem[]
+  saleLines  ShopSaleLine[]
 
   @@index([courseId])
+}
+
+/// POS-2 (Cam 2026-10-19): a walk-up pro-shop sale with no round attached —
+/// paid in cash at the counter, or by a pay link the customer opens on their
+/// phone (a direct charge on the course's Stripe account, like a round).
+model ShopSale {
+  id              String         @id @default(cuid())
+  courseId        String
+  course          Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// open (pay link sent, not paid) | paid_cash | paid_card | void
+  status          String         @default("open")
+  totalCents      Int
+  customerName    String         @default("")
+  customerPhone   String         @default("")
+  customerEmail   String         @default("")
+  /// The pay link's secret (open sales only); '' for cash.
+  payToken        String         @default("")
+  paymentIntentId String         @default("")
+  /// Set while a card charge is in flight (status 'paying'); a void waits for it.
+  chargeStartedAt DateTime?
+  paidAt          DateTime?
+  voidedAt        DateTime?
+  /// Who rang it up (staff/owner email).
+  soldBy          String         @default("")
+  createdAt       DateTime       @default(now())
+  lines           ShopSaleLine[]
+
+  @@index([courseId, createdAt])
+}
+
+/// POS-2: one line of a walk-up sale. Name and price are copied when it is
+/// rung up, so a catalog edit never changes a receipt.
+model ShopSaleLine {
+  id             String    @id @default(cuid())
+  saleId         String
+  sale           ShopSale  @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  shopItemId     String?
+  shopItem       ShopItem? @relation(fields: [shopItemId], references: [id], onDelete: SetNull)
+  name           String
+  unitPriceCents Int
+  quantity       Int       @default(1)
+
+  @@index([saleId])
+  @@index([shopItemId])
 }
 
 /// POS-1a: one line of shop items added to a booking. Name and price are copied

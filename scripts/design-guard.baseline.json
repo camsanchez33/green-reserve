@@ -197,6 +197,9 @@
   "src/app/operator-agreement/page.tsx": {
     "card": 1
   },
+  "src/app/pay/shop/[id]/page.tsx": {
+    "lucide": 1
+  },
   "src/app/privacy/page.tsx": {
     "card": 1
   },
@@ -216,7 +219,7 @@
     "lucide": 2
   },
   "src/components/OperatorSidebar.tsx": {
-    "lucide": 11
+    "lucide": 12
   },
   "src/components/admin/AdminSidebar.tsx": {
     "lucide": 16

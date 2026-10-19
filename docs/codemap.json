@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 416,
-    "routes": 214,
-    "libs": 123,
-    "models": 39,
+    "files": 421,
+    "routes": 218,
+    "libs": 124,
+    "models": 41,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -5101,7 +5101,7 @@
     },
     {
       "path": "src/app/api/operator/shop-items/route.ts",
-      "lines": 83,
+      "lines": 97,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5137,6 +5137,46 @@
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/shop",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/shop-sales/route.ts",
+      "lines": 108,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/shop-sales",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/email",
+        "@/lib/golfer-otp",
+        "@/lib/prisma",
+        "@/lib/session",
+        "@/lib/shop-sales",
+        "@/lib/twilio",
         "next/server"
       ],
       "usedBy": []
@@ -5680,6 +5720,36 @@
         "@/lib/rate-limit",
         "@/lib/receipt-charges",
         "@/lib/shop",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/shop-sale/[id]/route.ts",
+      "lines": 30,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/shop-sale/[id]",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "token",
+      "imports": [
+        "@/lib/rate-limit",
+        "@/lib/shop-sales",
         "next/server"
       ],
       "usedBy": []
@@ -6561,6 +6631,35 @@
       "usedBy": []
     },
     {
+      "path": "src/app/dashboard/shop/page.tsx",
+      "lines": 222,
+      "purpose": "POS-2 (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (ShopPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/shop",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/OperatorSidebar",
+        "@/components/dashboard/StaffNotice",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/use-dashboard-access",
+        "next/link",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/dashboard/sign/page.tsx",
       "lines": 26,
       "purpose": "AGREEMENT_SPEC AG-2 — the standalone signing page for courses that are past onboarding:",
@@ -6959,6 +7058,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/pay/shop/[id]/page.tsx",
+      "lines": 140,
+      "purpose": "POS-2 (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (PayShopPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/pay/shop/[id]",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "token",
+      "imports": [
+        "@/components/CourseHeaderBar",
+        "@/components/ui/Card",
+        "@stripe/react-stripe-js",
+        "@stripe/stripe-js",
+        "lucide-react",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/preview/[courseId]/page.tsx",
       "lines": 58,
       "purpose": "",
@@ -7213,6 +7339,7 @@
         "src/app/checkin/[bookingId]/page.tsx",
         "src/app/courses/[slug]/account/accept-invite/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
+        "src/app/pay/shop/[id]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx"
       ]
     },
@@ -7346,7 +7473,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 264,
+      "lines": 267,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7385,6 +7512,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
         "src/app/dashboard/tournaments/page.tsx",
         "src/lib/dashboard-visits.ts"
       ]
@@ -7931,7 +8059,7 @@
     },
     {
       "path": "src/components/dashboard/ShopCatalog.tsx",
-      "lines": 135,
+      "lines": 174,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -8035,7 +8163,8 @@
       "usedBy": [
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
-        "src/app/dashboard/settings/page.tsx"
+        "src/app/dashboard/settings/page.tsx",
+        "src/app/dashboard/shop/page.tsx"
       ]
     },
     {
@@ -8465,6 +8594,8 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
+        "src/app/pay/shop/[id]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -8730,6 +8861,7 @@
         "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
@@ -8788,6 +8920,7 @@
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
@@ -9361,6 +9494,7 @@
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
@@ -11732,6 +11866,7 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
@@ -11840,7 +11975,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1889,
+      "lines": 1908,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12077,6 +12212,10 @@
           "kind": "fn"
         },
         {
+          "name": "sendShopSalePayLinkEmail",
+          "kind": "fn"
+        },
+        {
           "name": "sendSignedAgreementsEmail",
           "kind": "fn"
         },
@@ -12133,6 +12272,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/send/route.ts",
         "src/lib/agreement-required.ts",
@@ -12520,6 +12660,7 @@
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/lib/golfer-messages.ts"
       ]
     },
@@ -13750,6 +13891,7 @@
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
@@ -13809,6 +13951,7 @@
         "src/lib/schedule-service.ts",
         "src/lib/session.ts",
         "src/lib/sheet-token.ts",
+        "src/lib/shop-sales.ts",
         "src/lib/shop.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -13981,6 +14124,7 @@
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/request-changes/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
+        "src/app/api/shop-sale/[id]/route.ts",
         "src/lib/birdie/guardrails.ts",
         "src/lib/call-invite.ts"
       ]
@@ -14364,6 +14508,7 @@
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
@@ -14477,8 +14622,67 @@
       ]
     },
     {
+      "path": "src/lib/shop-sales.ts",
+      "lines": 208,
+      "purpose": "POS-2 (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "chargeSale",
+          "kind": "fn"
+        },
+        {
+          "name": "createSale",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_SALE_CENTS",
+          "kind": "const"
+        },
+        {
+          "name": "MAX_SALE_LINES",
+          "kind": "const"
+        },
+        {
+          "name": "saleForPayPage",
+          "kind": "fn"
+        },
+        {
+          "name": "SaleLineInput",
+          "kind": "type"
+        },
+        {
+          "name": "saleView",
+          "kind": "fn"
+        },
+        {
+          "name": "SaleView",
+          "kind": "type"
+        },
+        {
+          "name": "settleOpenSale",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./shop",
+        "./stripe",
+        "crypto"
+      ],
+      "usedBy": [
+        "src/app/api/operator/shop-sales/route.ts",
+        "src/app/api/shop-sale/[id]/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/shop.ts",
-      "lines": 137,
+      "lines": 150,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [
         "pro-shop"
@@ -14545,6 +14749,10 @@
           "kind": "type"
         },
         {
+          "name": "takeStock",
+          "kind": "fn"
+        },
+        {
           "name": "validItemInput",
           "kind": "fn"
         }
@@ -14570,7 +14778,8 @@
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/receipt-charges.ts",
-        "src/lib/refund-booking.ts"
+        "src/lib/refund-booking.ts",
+        "src/lib/shop-sales.ts"
       ]
     },
     {
@@ -14756,7 +14965,8 @@
         "src/lib/email.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
-        "src/lib/refund-booking.ts"
+        "src/lib/refund-booking.ts",
+        "src/lib/shop-sales.ts"
       ]
     },
     {
@@ -15041,6 +15251,7 @@
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/two-factor.ts"
       ]
@@ -15137,6 +15348,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/app/dashboard/shop/page.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffNotice.tsx"
@@ -16640,6 +16852,10 @@
         {
           "name": "shopItems",
           "type": "ShopItem[]"
+        },
+        {
+          "name": "shopSales",
+          "type": "ShopSale[]"
         }
       ],
       "writers": [
@@ -16699,6 +16915,7 @@
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
@@ -18146,6 +18363,10 @@
           "type": "Int"
         },
         {
+          "name": "stockCount",
+          "type": "Int?"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -18156,14 +18377,134 @@
         {
           "name": "sales",
           "type": "BookingShopItem[]"
+        },
+        {
+          "name": "saleLines",
+          "type": "ShopSaleLine[]"
         }
       ],
       "writers": [
         "src/app/api/operator/shop-items/route.ts"
       ],
       "readers": [
-        "src/app/api/operator/shop-items/route.ts"
+        "src/app/api/operator/shop-items/route.ts",
+        "src/lib/shop-sales.ts"
       ]
+    },
+    {
+      "name": "ShopSale",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "totalCents",
+          "type": "Int"
+        },
+        {
+          "name": "customerName",
+          "type": "String"
+        },
+        {
+          "name": "customerPhone",
+          "type": "String"
+        },
+        {
+          "name": "customerEmail",
+          "type": "String"
+        },
+        {
+          "name": "payToken",
+          "type": "String"
+        },
+        {
+          "name": "paymentIntentId",
+          "type": "String"
+        },
+        {
+          "name": "chargeStartedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "paidAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "voidedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "soldBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "lines",
+          "type": "ShopSaleLine[]"
+        }
+      ],
+      "writers": [
+        "src/lib/shop-sales.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/shop-sales.ts"
+      ]
+    },
+    {
+      "name": "ShopSaleLine",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "saleId",
+          "type": "String"
+        },
+        {
+          "name": "sale",
+          "type": "ShopSale"
+        },
+        {
+          "name": "shopItemId",
+          "type": "String?"
+        },
+        {
+          "name": "shopItem",
+          "type": "ShopItem?"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "unitPriceCents",
+          "type": "Int"
+        },
+        {
+          "name": "quantity",
+          "type": "Int"
+        }
+      ],
+      "writers": [],
+      "readers": []
     },
     {
       "name": "StaffPermissionChange",

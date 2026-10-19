@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
-  Trophy, PartyPopper, DollarSign, MessageSquare,
+  Trophy, PartyPopper, DollarSign, MessageSquare, ShoppingBag,
 } from 'lucide-react';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
@@ -15,7 +15,7 @@ import { Toaster, toast } from '@/components/dashboard/Toast';
 
 export type OperatorNavKey =
   | 'teesheet' | 'analytics' | 'money' | 'tournaments' | 'outings'
-  | 'schedule' | 'members' | 'settings' | 'messages';
+  | 'schedule' | 'members' | 'settings' | 'messages' | 'shop';
 
 interface CourseIdentity {
   id?: string; name: string; type: string; brandColor: string; establishedYear?: number | null;
@@ -127,6 +127,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     { key: 'money',         label: moneyOnlyCancellations ? 'Cancellations' : 'Money',
       href: moneyOnlyCancellations ? '/dashboard/money?tab=cancellations' : '/dashboard/money',
       icon: moneyOnlyCancellations ? <XCircle className="w-4 h-4"/> : <DollarSign className="w-4 h-4"/> },
+    // POS-2 (Cam 2026-10-19): ring up walk-up sales — cash or a pay link.
+    { key: 'shop',          label: 'Pro shop',     href: '/dashboard/shop',          icon: <ShoppingBag className="w-4 h-4"/> },
     { key: 'messages',      label: 'Messages',     href: '/dashboard/messages',      icon: <MessageSquare className="w-4 h-4"/> },
     { key: 'settings',      label: 'Settings',     href: '/dashboard/settings',      icon: <Settings className="w-4 h-4"/> },
   ];
@@ -142,6 +144,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     members: access.can('members.view'),
     money: access.can('money.cancellations') || access.can('money.payments') || access.can('money.payouts'),
     messages: access.can('messages.use'),
+    shop: access.can('shop.sell'),
     settings: access.can('settings.edit'),
   } as Record<string, boolean>)[k] !== false;
 
