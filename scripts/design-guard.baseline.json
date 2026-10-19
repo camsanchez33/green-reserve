@@ -143,7 +143,6 @@
     "lucide": 10
   },
   "src/app/dashboard/messages/page.tsx": {
-    "uppercase": 1,
     "input": 1,
     "lucide": 1
   },
