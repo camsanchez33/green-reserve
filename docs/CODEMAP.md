@@ -147,7 +147,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/courses/[slug]/account` | golfer | file | GET | `src/app/api/courses/[slug]/account/route.ts` | 86 |
 | `/api/courses/[slug]/tee-times` | public | public | GET | `src/app/api/courses/[slug]/tee-times/route.ts` | 15 |
 | `/api/cron/cancellation-cutoff` | cron | file | GET | `src/app/api/cron/cancellation-cutoff/route.ts` | 145 |
-| `/api/cron/chase-onboarding` | cron | file | GET | `src/app/api/cron/chase-onboarding/route.ts` | 110 |
+| `/api/cron/chase-onboarding` | cron | file | GET | `src/app/api/cron/chase-onboarding/route.ts` | 115 |
 | `/api/cron/generate-tee-times` | cron | file | GET | `src/app/api/cron/generate-tee-times/route.ts` | 17 |
 | `/api/cron/hourly` | cron | file | GET | `src/app/api/cron/hourly/route.ts` | 236 |
 | `/api/cron/monthly-review` | cron | file | GET | `src/app/api/cron/monthly-review/route.ts` | 51 |

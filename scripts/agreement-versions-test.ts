@@ -1,6 +1,7 @@
 // AG-3: the operator-agreement version on disk and the seed's re-acceptance gate.
 import { loadDocument, currentVersion, signableDocuments, seedGateError } from '../src/lib/agreements';
 import { publishDates, REACCEPT_WINDOW_DAYS, reacceptPublishError } from '../src/lib/agreement-publish';
+import { readFileSync } from 'fs';
 
 let failed = 0;
 function check(name: string, ok: boolean, detail = '') {
@@ -46,6 +47,9 @@ check('re-accept: current operator agreement may publish', reacceptPublishError(
 check('re-accept: an older operator agreement may not', reacceptPublishError('operator_agreement', '2026-10', true, '2026-11') !== null);
 check('re-accept: other documents may not', reacceptPublishError('brand_license', '2026-09', true, '2026-09') !== null);
 check('no re-accept: any version may publish', reacceptPublishError('brand_license', '2026-01', false, '2026-09') === null);
+
+const chase = readFileSync('src/app/api/cron/chase-onboarding/route.ts', 'utf8');
+check('a live course missing only the Brand License is not chased as "still waiting to go live"', chase.includes("const oa = agreements.documents.find(d => d.document === 'operator_agreement');") && chase.includes('if (!oa || oa.signed) continue;') && !chase.includes('if (agreements.missing.length === 0) continue;'));
 
 if (failed) { console.error(`${failed} failed`); process.exit(1); }
 console.log('agreement-versions: all passed');

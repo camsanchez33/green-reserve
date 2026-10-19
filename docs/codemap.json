@@ -3246,7 +3246,7 @@
     },
     {
       "path": "src/app/api/cron/chase-onboarding/route.ts",
-      "lines": 110,
+      "lines": 115,
       "purpose": "",
       "brain": [],
       "exports": [
