@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 413,
+    "files": 415,
     "routes": 213,
-    "libs": 121,
+    "libs": 123,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5547,7 +5547,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/route.ts",
-      "lines": 60,
+      "lines": 64,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5913,7 +5913,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1766,
+      "lines": 1797,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5935,6 +5935,7 @@
         "@/lib/change-requests",
         "@/lib/courses-data",
         "@/lib/demo-courses",
+        "@/lib/tee-colour",
         "@/lib/tee-time-utils",
         "lucide-react",
         "next/image",
@@ -6493,7 +6494,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1052,
+      "lines": 1055,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7707,8 +7708,8 @@
     },
     {
       "path": "src/components/dashboard/CourseLayoutTab.tsx",
-      "lines": 469,
-      "purpose": "",
+      "lines": 500,
+      "purpose": "Settings rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
         {
@@ -7722,8 +7723,10 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
-        "lucide-react",
+        "@/lib/course-rounds",
+        "@/lib/tee-colour",
         "next/link",
         "react"
       ],
@@ -8438,6 +8441,7 @@
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -11238,6 +11242,35 @@
       ]
     },
     {
+      "path": "src/lib/course-rounds.ts",
+      "lines": 20,
+      "purpose": "Settings rework (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CandidateRound",
+          "kind": "type"
+        },
+        {
+          "name": "candidateRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "sameNines",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/CourseLayoutTab.tsx"
+      ]
+    },
+    {
       "path": "src/lib/course-setup.ts",
       "lines": 52,
       "purpose": "COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes through before it is live.",
@@ -13378,7 +13411,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 71,
+      "lines": 81,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13823,7 +13856,7 @@
     },
     {
       "path": "src/lib/public-course.ts",
-      "lines": 29,
+      "lines": 31,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
@@ -14711,6 +14744,28 @@
       "usedBy": [
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/preview/[courseId]/request-changes/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/tee-colour.ts",
+      "lines": 22,
+      "purpose": "Settings rework (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "teeColour",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/components/dashboard/CourseLayoutTab.tsx"
       ]
     },
     {

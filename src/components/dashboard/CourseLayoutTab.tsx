@@ -11,8 +11,10 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { teeColour } from '@/lib/tee-colour';
+import { candidateRounds, sameNines } from '@/lib/course-rounds';
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iBase = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const iCls = 'w-full ' + iBase;
 const smallBtn = 'text-[12.5px] font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-3 py-1.5 transition-colors disabled:opacity-50';
 const primaryBtn = 'bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors';
 
@@ -53,17 +55,6 @@ function ErrorLine({ msg }: { msg: string }) {
   if (!msg) return null;
   return <p className="text-[12.5px] text-bad flex items-center gap-1.5" role="alert"><StatusDot status="bad" />{msg}</p>;
 }
-
-/** Every pair of nines as an 18-hole round, then each nine on its own as a 9. */
-function candidateRounds(nines: Nine[]): { label: string; holes: number; nineIds: string[] }[] {
-  const out: { label: string; holes: number; nineIds: string[] }[] = [];
-  for (let i = 0; i < nines.length; i++)
-    for (let j = i + 1; j < nines.length; j++)
-      out.push({ label: `${nines[i].name} + ${nines[j].name}`, holes: 18, nineIds: [nines[i].id, nines[j].id] });
-  for (const n of nines) out.push({ label: `${n.name} only`, holes: 9, nineIds: [n.id] });
-  return out;
-}
-const sameNines = (a: string[], b: string[]) => a.length === b.length && a.every(id => b.includes(id));
 
 export default function CourseLayoutTab({ holes, par, readOnly, onCourseSaved }: {
   holes: number | null;
@@ -137,6 +128,8 @@ function HolesStep({ n, holes, par, readOnly, onSaved }: { n: number; holes: num
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState('');
   const dirty = h !== holes || Number(p) !== par;
+  // The settings form can arrive after this mounts; follow it until edited.
+  useEffect(() => { setH(holes || 18); setP(par ? String(par) : ''); }, [holes, par]);
 
   async function save() {
     const parN = Number(p);
@@ -228,10 +221,10 @@ function NinesStep({ n, needed, nines, setNines, readOnly, locked }: {
             {nines.map((nine, i) => (
               <div key={nine.id} className="flex items-center gap-2">
                 <span className="w-16 shrink-0 text-[12.5px] text-ink-muted">Nine {i + 1}</span>
-                <input defaultValue={nine.name} aria-label={`Nine ${i + 1} name`} className={iCls + ' flex-1'}
+                <input defaultValue={nine.name} aria-label={`Nine ${i + 1} name`} className={iBase + ' flex-1 min-w-0'}
                   onBlur={e => { const v = e.target.value.trim(); if (v && v !== nine.name) update(nine, { name: v }); }} />
                 <span className="text-[12.5px] text-ink-muted">Par</span>
-                <input type="number" defaultValue={nine.par} aria-label={`Nine ${i + 1} par`} className={iCls + ' w-16'}
+                <input type="number" defaultValue={nine.par} aria-label={`Nine ${i + 1} par`} className={iBase + ' w-16'}
                   onBlur={e => { const v = Number(e.target.value); if (v && v !== nine.par) update(nine, { par: v }); }} />
                 {busy === nine.id ? <span className="text-xs text-ink-faint w-14">Saving…</span>
                   : i >= needed ? <button onClick={() => remove(nine)} className="text-[12.5px] text-ink-muted hover:text-bad w-14">Remove</button>
@@ -242,10 +235,10 @@ function NinesStep({ n, needed, nines, setNines, readOnly, locked }: {
               <div key={`d${i}`} className="flex items-center gap-2">
                 <span className="w-16 shrink-0 text-[12.5px] text-ink-muted">Nine {nines.length + i + 1}</span>
                 <input value={d.name} onChange={e => setDrafts(ds => ds.map((x, j) => j === i ? { ...x, name: e.target.value } : x))}
-                  placeholder={['North', 'South', 'West', 'East'][nines.length + i] ?? 'Name'} aria-label={`Nine ${nines.length + i + 1} name`} className={iCls + ' flex-1'} />
+                  placeholder={['North', 'South', 'West', 'East'][nines.length + i] ?? 'Name'} aria-label={`Nine ${nines.length + i + 1} name`} className={iBase + ' flex-1 min-w-0'} />
                 <span className="text-[12.5px] text-ink-muted">Par</span>
                 <input type="number" value={d.par} onChange={e => setDrafts(ds => ds.map((x, j) => j === i ? { ...x, par: e.target.value } : x))}
-                  aria-label={`Nine ${nines.length + i + 1} par`} className={iCls + ' w-16'} />
+                  aria-label={`Nine ${nines.length + i + 1} par`} className={iBase + ' w-16'} />
                 <span className="w-14" />
               </div>
             ))}
@@ -392,7 +385,7 @@ function TeesStep({ n, teeSets, setTeeSets, nines, products, readOnly, locked }:
                       return (
                         <label key={nine.id} className="flex items-center gap-1.5 text-[12.5px] text-ink-muted">
                           {nine.name} yards
-                          <input type="number" defaultValue={row?.yardage || ''} placeholder="0" className={iCls + ' w-20 py-1 text-xs'}
+                          <input type="number" defaultValue={row?.yardage || ''} placeholder="0" className={iBase + ' w-20 py-1 text-xs'}
                             onBlur={e => { const v = Number(e.target.value) || 0; if (v !== (row?.yardage ?? 0)) setNineYardage(t, nine.id, v); }} />
                         </label>
                       );
@@ -405,9 +398,9 @@ function TeesStep({ n, teeSets, setTeeSets, nines, products, readOnly, locked }:
                         return (
                           <span key={p.id} className="flex items-center gap-1.5 text-[12.5px] text-ink-muted">
                             {p.label}
-                            <input type="number" step="0.1" defaultValue={row?.rating || ''} placeholder="Rating" aria-label={`${t.name} ${p.label} rating`} className={iCls + ' w-20 py-1 text-xs'}
+                            <input type="number" step="0.1" defaultValue={row?.rating || ''} placeholder="Rating" aria-label={`${t.name} ${p.label} rating`} className={iBase + ' w-20 py-1 text-xs'}
                               onBlur={e => { const v = Number(e.target.value) || 0; if (v !== (row?.rating ?? 0)) setRoundRating(t, p.id, 'rating', v); }} />
-                            <input type="number" defaultValue={row?.slope || ''} placeholder="Slope" aria-label={`${t.name} ${p.label} slope`} className={iCls + ' w-20 py-1 text-xs'}
+                            <input type="number" defaultValue={row?.slope || ''} placeholder="Slope" aria-label={`${t.name} ${p.label} slope`} className={iBase + ' w-20 py-1 text-xs'}
                               onBlur={e => { const v = Number(e.target.value) || 0; if (v !== (row?.slope ?? 0)) setRoundRating(t, p.id, 'slope', v); }} />
                           </span>
                         );

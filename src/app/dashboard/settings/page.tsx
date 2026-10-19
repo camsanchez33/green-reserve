@@ -48,9 +48,9 @@ const SECTION_ALIASES: Record<string, Section> = {
   'Pricing & cancellation': 'Prices & fees',
   'Staff & account': 'Staff',
 };
-// Sections whose contents save themselves (shop, staff, password, 2FA) —
-// the header Save button is hidden on these.
-const NO_SAVE_BUTTON: Section[] = ['Pro shop', 'Staff', 'Your account'];
+// Sections whose contents save themselves (layout, shop, staff, password,
+// 2FA) — the header Save button is hidden on these.
+const NO_SAVE_BUTTON: Section[] = ['Course layout', 'Pro shop', 'Staff', 'Your account'];
 // SP-A: the cancellation policy is the owner's alone — a staff login with
 // "Edit course settings" never sends these (the API refuses them too).
 const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes'];
@@ -63,7 +63,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
   'Your course': [
     'brandColor', 'phone', 'website', 'type', 'establishedYear', 'description', 'giftCardUrl', 'confirmationNote',
   ],
-  'Course layout': ['holes', 'par', 'yardage', 'slope', 'courseRating'],
+  'Course layout': [],
   'Booking rules': [
     'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'minPlayers', 'maxPlayers', 'dresscode',
     'walkingAllowed', 'walkingNote', 'cartRequired',
@@ -195,6 +195,7 @@ function SettingsPageInner() {
   // Money rework (Cam 2026-10-19): other pages link straight to a section, e.g. ?section=Pricing+%26+cancellation.
   const sectionParam = searchParams.get('section') ?? '';
   const [active, setActive] = useState<Section>(() => (SECTIONS as readonly string[]).includes(sectionParam) ? sectionParam as Section : SECTION_ALIASES[sectionParam] ?? 'Your course');
+  const [teeSetCount, setTeeSetCount] = useState<number | null>(null);
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -264,6 +265,14 @@ function SettingsPageInner() {
     return () => window.removeEventListener('focus', refreshForm);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // "Finish setting up" asks whether any tee exists; re-read on every section
+  // change so adding one under Course layout clears the item. Null (unknown or
+  // failed) never shows the item.
+  useEffect(() => {
+    fetch('/api/operator/tee-sets').then(r => r.ok ? r.json() : null)
+      .then(d => { if (Array.isArray(d)) setTeeSetCount(d.length); }).catch(() => {});
+  }, [active]);
 
   async function uploadGalleryPhoto(file: File | null) {
     if (!file) return;
@@ -432,6 +441,7 @@ function SettingsPageInner() {
     missing(form.description) && { key: 'description', title: 'Describe your course', why: 'A few sentences golfers read before they book.', action: 'Write it', onClick: () => goTo('Your course') },
     missing(form.phone) && { key: 'phone', title: 'Add your phone number', why: 'Golfers call it with questions about their booking.', action: 'Add phone', onClick: () => goTo('Your course') },
     photosLoaded && photos.length === 0 && { key: 'gallery', title: 'Add gallery photos', why: 'Up to 8 photos in the Photos section of your booking page.', action: 'Add photos', onClick: () => goTo('Your course') },
+    teeSetCount === 0 && { key: 'teesets', title: 'Add your tees', why: 'Golfers see each tee’s yardage, rating and slope on your booking page.', action: 'Add tees', onClick: () => goTo('Course layout') },
     (!form.holes || !form.par) && { key: 'holes', title: 'Say how many holes and the par', why: 'Shown at the top of your booking page.', action: 'Set it', onClick: () => goTo('Course layout') },
   ].filter((i): i is SetupItem => !!i);
 
@@ -598,21 +608,14 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Course details ── */}
+          {/* ── Course layout ── guided steps; each saves itself (CourseLayoutTab). */}
           {active==='Course layout' && (
-            <div className="space-y-5">
-              <SectionCard title="Course details">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Field label="Holes"><FInput value={form.holes as number} onChange={v=>set('holes',Number(v))} type="number"/></Field>
-                  <Field label="Par"><FInput value={form.par as number} onChange={v=>set('par',Number(v))} type="number"/></Field>
-                  <Field label="Yardage"><FInput value={form.yardage as number} onChange={v=>set('yardage',Number(v))} type="number"/></Field>
-                  <Field label="Slope"><FInput value={form.slope as number} onChange={v=>set('slope',Number(v))} type="number"/></Field>
-                  <Field label="Course Rating"><FInput value={form.courseRating as number} onChange={v=>set('courseRating',Number(v))} type="number" step="0.1"/></Field>
-                </div>
-                <p className="text-xs text-ink-soft">The whole course, as golfers see it on your page. If you have more than 18 holes, name each nine and set what golfers can book below.</p>
-              </SectionCard>
-              <CourseLayoutTab />
-            </div>
+            <CourseLayoutTab
+              holes={typeof form.holes === 'number' ? form.holes : null}
+              par={typeof form.par === 'number' ? form.par : null}
+              readOnly={isStaffLogin}
+              onCourseSaved={patch => setForm(f => ({ ...f, ...patch }))}
+            />
           )}
 
           {/* ── Photos ── */}
