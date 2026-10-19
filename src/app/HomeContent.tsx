@@ -36,14 +36,16 @@ const HIGHLIGHTS = [
 export default function HomeContent() {
   return (
     <div data-home-root="" className={s.root}>
-      {/* HERO — the logo over the coast, and one line that says what we are (CLUB-1). */}
+      {/* HERO — the logo over the photo, the line, what it is and why it's free, Book a demo (Cam 2026-10-19). */}
       <section className={s.hero}>
         <Image src="/home/hero-coast.jpg" alt="" fill priority sizes="(max-width: 768px) 250vw, 100vw" quality={50} className={s.heroImg} />
         <div className={s.heroIn}>
           <h1 className={s.heroLogo}>
             <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={1530} height={286} priority className={s.heroLogoImg} />
           </h1>
-          <p className={`${s.display} ${s.heroLine}`}>The online tee sheet and booking page for golf courses.</p>
+          <p className={`${s.display} ${s.heroLine}`}>The tee sheet your course deserves.</p>
+          <p className={s.heroSub}>Online booking, payments and an AI assistant that knows your course. GreenReserve charges your course nothing: golfers pay a small booking fee instead.</p>
+          <a className={`${s.btn} ${s.heroBtn}`} href={DEMO}>Book a demo <Arrow /></a>
         </div>
         <a href="#about" className={s.heroNext}>What it does <span aria-hidden="true">↓</span></a>
       </section>
@@ -106,7 +108,7 @@ export default function HomeContent() {
       {/* END — the logo again, with the line. */}
       <section className={s.end}>
         <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={1530} height={286} loading="lazy" className={s.endLogo} />
-        <p className={s.display}>The tee sheet your course deserves.</p>
+        <p className={s.display}>Ready when your course is.</p>
       </section>
     </div>
   );
