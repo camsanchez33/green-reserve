@@ -29,7 +29,9 @@ export function groupTone(g: BoardGroup): Tone {
   return 'warn';
 }
 const TONE_LABEL: Record<Tone, string> = { ok: 'Paid', warn: 'Booked, not paid yet', bad: 'Needs attention' };
-const EDGE: Record<Tone, string> = { ok: 'border-l-[3px] border-ok', warn: 'border-l-[3px] border-warn', bad: 'border-l-[3px] border-bad' };
+// Cam 2026-10-19: the whole square takes the color (a light wash) as well as
+// its 3px edge — the dots alone were too small to read across the room.
+const EDGE: Record<Tone, string> = { ok: 'border-l-[3px] border-ok !bg-ok/[0.08]', warn: 'border-l-[3px] border-warn !bg-warn/[0.09]', bad: 'border-l-[3px] border-bad !bg-bad/[0.08]' };
 
 function slotTone(groups: BoardGroup[]): Tone | null {
   if (groups.length === 0) return null;
@@ -154,10 +156,8 @@ export default function TeeSheetBoard({ slots, isPast, nextUpId, selectedId, can
           </section>
         ))}
       </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-[12.5px] text-ink-soft">
-        {(['ok', 'warn', 'bad'] as const).map(t => <StatusDot key={t} status={t} label={TONE_LABEL[t]} />)}
-        <span className="text-ink-muted">Tap a time to check in, take payment or move a group{canMove ? ', or drag a group onto another time' : ''}.</span>
-      </div>
+      {/* The color key sits in the bar above the sheet (Cam 2026-10-19). */}
+      <p className="mt-1 text-[12.5px] text-ink-muted">Tap a time to check in, take payment or move a group{canMove ? ', or drag a group onto another time' : ''}.</p>
     </div>
   );
 }
