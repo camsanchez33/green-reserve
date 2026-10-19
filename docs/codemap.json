@@ -6493,7 +6493,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1060,
+      "lines": 1052,
       "purpose": "",
       "brain": [],
       "exports": [

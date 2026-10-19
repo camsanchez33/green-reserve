@@ -48,8 +48,8 @@ const SECTION_ALIASES: Record<string, Section> = {
   'Pricing & cancellation': 'Prices & fees',
   'Staff & account': 'Staff',
 };
-// Sections whose contents save themselves (layout, shop, staff, password,
-// 2FA) — the header Save button is hidden on these.
+// Sections whose contents save themselves (shop, staff, password, 2FA) —
+// the header Save button is hidden on these.
 const NO_SAVE_BUTTON: Section[] = ['Pro shop', 'Staff', 'Your account'];
 // SP-A: the cancellation policy is the owner's alone — a staff login with
 // "Edit course settings" never sends these (the API refuses them too).
@@ -195,7 +195,6 @@ function SettingsPageInner() {
   // Money rework (Cam 2026-10-19): other pages link straight to a section, e.g. ?section=Pricing+%26+cancellation.
   const sectionParam = searchParams.get('section') ?? '';
   const [active, setActive] = useState<Section>(() => (SECTIONS as readonly string[]).includes(sectionParam) ? sectionParam as Section : SECTION_ALIASES[sectionParam] ?? 'Your course');
-  const [teeSetCount, setTeeSetCount] = useState<number | null>(null);
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -237,6 +236,8 @@ function SettingsPageInner() {
   const [changeSending, setChangeSending] = useState(false);
   const [changeSent, setChangeSent] = useState(false);
   const [photos, setPhotos] = useState<{ id: string; url: string; sortOrder: number }[]>([]);
+  // "Finish setting up" must not call a course photo-less before the list has loaded.
+  const [photosLoaded, setPhotosLoaded] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoErr, setPhotoErr] = useState('');
 
@@ -250,7 +251,7 @@ function SettingsPageInner() {
     .catch((e: Error) => { setFormError(e.message || 'Network error loading your settings.'); });
 
   // SD-10: `{error}` into setPhotos crashed the Photos tab on `.map`.
-  const refreshPhotos = () => fetch('/api/operator/photos').then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d)) setPhotos(d); else setPhotoErr('Could not load your photos — reload to try again.'); }).catch(() => setPhotoErr('Network error loading photos.'));
+  const refreshPhotos = () => fetch('/api/operator/photos').then(r => r.ok ? r.json() : null).then(d => { if (Array.isArray(d)) { setPhotos(d); setPhotosLoaded(true); } else setPhotoErr('Could not load your photos — reload to try again.'); }).catch(() => setPhotoErr('Network error loading photos.'));
 
   useEffect(() => {
     refreshForm();
@@ -263,13 +264,6 @@ function SettingsPageInner() {
     return () => window.removeEventListener('focus', refreshForm);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // "Finish setting up" asks whether any tee set exists; re-read on every
-  // section change so adding one under Course layout clears the item.
-  useEffect(() => {
-    fetch('/api/operator/tee-sets').then(r => r.ok ? r.json() : null)
-      .then(d => { if (Array.isArray(d)) setTeeSetCount(d.length); }).catch(() => {});
-  }, [active]);
 
   async function uploadGalleryPhoto(file: File | null) {
     if (!file) return;
@@ -437,9 +431,8 @@ function SettingsPageInner() {
     missing(form.heroImageUrl) && { key: 'hero', title: 'Add a course photo', why: 'The wide banner at the top of your booking page.', action: 'Add photo', onClick: () => goTo('Your course') },
     missing(form.description) && { key: 'description', title: 'Describe your course', why: 'A few sentences golfers read before they book.', action: 'Write it', onClick: () => goTo('Your course') },
     missing(form.phone) && { key: 'phone', title: 'Add your phone number', why: 'Golfers call it with questions about their booking.', action: 'Add phone', onClick: () => goTo('Your course') },
-    photos.length === 0 && { key: 'gallery', title: 'Add gallery photos', why: 'Up to 8 photos in the Photos tab of your booking page.', action: 'Add photos', onClick: () => goTo('Your course') },
+    photosLoaded && photos.length === 0 && { key: 'gallery', title: 'Add gallery photos', why: 'Up to 8 photos in the Photos section of your booking page.', action: 'Add photos', onClick: () => goTo('Your course') },
     (!form.holes || !form.par) && { key: 'holes', title: 'Say how many holes and the par', why: 'Shown at the top of your booking page.', action: 'Set it', onClick: () => goTo('Course layout') },
-    teeSetCount === 0 && { key: 'teesets', title: 'Add your tee sets', why: 'Golfers see each tee’s yardage, rating and slope.', action: 'Add tees', onClick: () => goTo('Course layout') },
   ].filter((i): i is SetupItem => !!i);
 
   return (
@@ -447,8 +440,7 @@ function SettingsPageInner() {
       <OperatorSidebar active="settings"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="these settings" edit="settings.edit" />
-        {/* U-O (§1b): page header = serif title + one sentence carrying this
-            page's own numbers, read off state the page already loads. */}
+        {/* Settings rework: the serif title alone — what is missing is the Finish setting up list below. */}
         <div className="bg-white border-b border-line px-6 py-4 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
           <div className="min-w-0">
             <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Settings</h1>
@@ -627,7 +619,7 @@ function SettingsPageInner() {
           {active==='Your course' && (
             <div className="space-y-5">
               <SectionCard title="Gallery Photos">
-                <p className="text-sm text-ink-soft -mt-1">Add up to 8 photos of your course. These appear in the Photos tab on your booking page. Uploads save immediately.</p>
+                <p className="text-sm text-ink-soft -mt-1">Add up to 8 photos of your course. These appear in the Photos section of your booking page. Uploads save immediately.</p>
                 {photoErr && (
                   <div className="flex items-center gap-2 bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">
                     <StatusDot status="bad" />{photoErr}
