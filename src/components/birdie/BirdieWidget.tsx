@@ -10,6 +10,7 @@ import { X, Send, ArrowRight } from 'lucide-react';
 import { confirmLeave } from '@/lib/unsaved-guard';
 import { ConfirmCard } from './ConfirmCard';
 import { isProposalCard, type ProposalCard } from '@/lib/birdie/proposal-types';
+import { ASK_EVENT, markBirdieReady } from '@/lib/birdie/ask';
 
 type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean; status?: string; cards?: ProposalCard[] };
 type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string };
@@ -70,6 +71,23 @@ export default function BirdieWidget() {
 
   const close = useCallback(() => { setOpen(false); try { localStorage.removeItem(OPEN_KEY); } catch { /* ignore */ } }, []);
   const show = () => { setOpen(true); try { localStorage.setItem(OPEN_KEY, '1'); } catch { /* ignore */ } };
+
+  // AN-3 (Cam 2026-10-19): "Ask Birdie" links on other pages open the panel with
+  // the question typed in (askBirdie() in lib/birdie/ask.ts). Nothing is sent
+  // until the person presses Send, and pages only show the link once Birdie says it's on.
+  useEffect(() => {
+    if (!meta) return;
+    markBirdieReady();
+    const onAsk = (e: Event) => {
+      const q = (e as CustomEvent<{ question?: string }>).detail?.question;
+      if (typeof q !== 'string' || !q.trim()) return;
+      setOpen(true); try { localStorage.setItem(OPEN_KEY, '1'); } catch { /* ignore */ }
+      setInput(q.slice(0, 500));
+      setTimeout(() => inputRef.current?.focus(), 0);
+    };
+    window.addEventListener(ASK_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_EVENT, onAsk);
+  }, [meta]);
 
   // Escape closes the panel, and opening it puts the caret where you type.
   useEffect(() => {
