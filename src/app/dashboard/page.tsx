@@ -78,26 +78,6 @@ const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0
 const todayFallback = () => todayIn(DEFAULT_TZ);
 const addDays = (d: string, n: number) => { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + n); return dt.toISOString().split('T')[0]; };
 
-// FLOW-1: the demo's status column — "Checked in", "2 left", "Full",
-// "4 spots open", or a muted italic "Blocked".
-function slotStatus(tt: TeeTime) {
-  if (tt.status === 'blocked') return <span className="italic text-ink-muted">Blocked</span>;
-  const bs = tt.bookings ?? [];
-  if (bs.length === 0 && (tt.playersBooked ?? 0) === 0) return <span className="text-ink-muted">{tt.playersAvailable} spots open</span>;
-  if (bs.length > 0 && bs.every(b => b.status === 'completed')) {
-    return <span className="inline-flex items-center gap-1.5 font-semibold text-pine"><span className="w-1.5 h-1.5 rounded-full bg-ok"/>Checked in</span>;
-  }
-  return slotBadge(tt);
-}
-function slotBadge(tt: TeeTime) {
-  if (tt.status === 'blocked') return <span className="text-xs text-ink-muted">Blocked</span>;
-  const booked = tt.playersBooked ?? 0;
-  const avail  = tt.playersAvailable - booked;
-  if (avail === 0) return <span className="text-xs font-medium text-bad">Full</span>;
-  if (booked > 0)  return <span className="text-xs font-medium text-warn">{avail} left</span>;
-  return <span className="text-xs font-medium text-ok">{avail} open</span>;
-}
-
 /* ─── Main Page ─────────────────────────────────────────────────────────── */
 function DashboardPageInner() {
   const router = useRouter();
@@ -357,7 +337,6 @@ function DashboardPageInner() {
   const awaitingCheckIn = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'confirmed' && !b.noShowAt).length ?? 0), 0);
   // The rate ("18 holes · $70 +$10 cart") lives in the time's own panel, where
   // staff need it at the counter — not in the header (Cam 2026-10-19).
-  const rateLabel = (t: TeeTime) => `${t.product?.label ? `${t.product.label} · ` : ''}${t.holes} holes · $${t.greenFee}${t.cartFee > 0 ? ` +$${t.cartFee} cart` : ''}`;
 
   const loadTimes = useCallback(async (date: string) => {
     setLoading(true);
@@ -572,101 +551,104 @@ function DashboardPageInner() {
     return () => window.removeEventListener('keydown', esc);
   }, [panelId, moveTarget, walkInSlot, cardModalBooking]);
   const panelSlot = panelId ? teeTimes.find(t => t.id === panelId) ?? null : null;
-  // One group's line and its buttons, in the board's panel (narrow, so the name
-  // sits on its own line above the buttons).
+  // One group in the time's card (TT-CARD, Cam 2026-10-19 "do your idea"):
+  // who, how many, where the money stands, then the actions in one line —
+  // the main one first, the rest as plain links, cancel last.
   const groupRow = (b: Booking, tt: TeeTime) => {
     const bStatus = getBookingStatus(b.status, b.paymentStatus);
+    const declined = b.status === 'confirmed' && !!b.checkInFailReason;
+    const late = b.status === 'confirmed' && !b.noShowAt && (selectedDate < today() || (selectedDate === today() && tt.time < nowHM));
+    const link = 'text-[13px] font-medium text-ink-soft hover:text-ink disabled:opacity-50';
+    const primary = 'px-3 min-h-[36px] rounded-md text-[13px] font-medium text-white disabled:opacity-50 transition-colors ';
+    const due = (b.totalAmount ?? 0) + shopExtra(b);
     return (
-      <div key={b.id} className={'flex flex-wrap items-center justify-between text-[13.5px] bg-paper/60 rounded-md px-3 py-2 gap-2 ' + (b.checkInFailReason && b.status === 'confirmed' ? 'shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
-        <div className="basis-full min-w-0">
-          <span className="font-medium text-ink">{b.golferName}</span>
-          <span className="text-ink-muted ml-2">{b.players} player{b.players!==1?'s':''}</span>
-          {(b.residentPlayers ?? 0) > 0 && <span className="text-ink-muted"> · {b.residentPlayers} resident{b.residentPlayers === 1 ? '' : 's'}</span>}
-          {(b.source === 'walk_in' || b.source === 'phone') && (
-            <span className="ml-2 text-[12px] font-medium text-ink-muted">{b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>
-          )}
-          {b.noShowAt && b.status === 'confirmed' && (
-            <span className="ml-2 text-[12px] font-medium text-bad">No-show</span>
-          )}
-          {access.can('sheet.golfer_contact') && <div className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'no contact on file') : b.golferEmail}</div>}
+      <li key={b.id} className={'py-3.5 ' + (declined ? 'pl-3 shadow-[inset_3px_0_0_var(--color-bad)]' : '')}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[14.5px] text-ink">
+              <span className="font-semibold">{b.golferName}</span>
+              <span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span>
+              {(b.residentPlayers ?? 0) > 0 && <span className="text-ink-muted"> · {b.residentPlayers} resident{b.residentPlayers === 1 ? '' : 's'}</span>}
+              {(b.source === 'walk_in' || b.source === 'phone') && <span className="text-ink-muted"> · {b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>}
+            </p>
+            {access.can('sheet.golfer_contact') && <p className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'No contact on file') : b.golferEmail}</p>}
+          </div>
+          {access.can('money.payments') && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(due / 100).toFixed(2)}</span>}
         </div>
-        {b.status === 'confirmed' && b.checkInFailReason ? (
-          <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink" title={b.checkInFailReason}><StatusDot status="bad" />Card declined</span>
-        ) : (
-          <span className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
-        )}
-        {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
-          <button onClick={e => { e.stopPropagation(); setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: b.status === 'completed' }, fromTeeTimeId: tt.id }); }}
-            className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1">Move</button>
-        )}
-        {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
-          <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'still_coming'); }} disabled={rowBusy === b.id}
-            className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? '…' : 'Still coming'}</button>
-        )}
-        {/* A group past its time and not checked in: the actions the old late
-            cards above the sheet carried (review 2026-10-19) — "Still coming"
-            clears it from the bar's late list for now; "Mark no-show" records it
-            (and is the counter's path to the no-show fee). */}
-        {b.status === 'confirmed' && !b.noShowAt && (selectedDate < today() || (selectedDate === today() && tt.time < nowHM)) && (<>
-          {selectedDate === today() && !stillComing.has(b.id) && (
-            <button onClick={e => { e.stopPropagation(); setStillComing(prev => new Set(prev).add(b.id)); }}
-              className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1">Still coming</button>
+        <p className="mt-1 flex items-baseline gap-1.5 text-[13px] text-ink">
+          {b.noShowAt && b.status === 'confirmed'
+            ? <><StatusDot status="bad" /><span>No-show</span></>
+            : declined
+              ? <><StatusDot status="bad" /><span>Card declined<span className="text-ink-muted"> · {b.checkInFailReason}</span></span></>
+              : <><StatusDot {...statusDot(bStatus.tone)} /><span>{bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}</span></>}
+        </p>
+
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2" onClick={e => e.stopPropagation()}>
+          {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
+            <button onClick={() => bookingLifecycle(b, 'paid_offline')} disabled={rowBusy === b.id} className={primary + 'bg-pine hover:bg-pine-hover'}>
+              {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
+            </button>
           )}
-          {access.can('sheet.no_show') && (
-            <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'no_show'); }} disabled={rowBusy === b.id}
-              className="shrink-0 text-xs text-bad hover:bg-bad/5 px-2 py-1 rounded-md disabled:opacity-50">{rowBusy === b.id ? '…' : 'Mark no-show'}</button>
+          {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
+            <button onClick={() => { if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
+              disabled={checkingInId === b.id} className={primary + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
+              {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in'}
+            </button>
           )}
-        </>)}
-        {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
-          <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'paid_offline'); }} disabled={rowBusy === b.id}
-            className="shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors bg-pine hover:bg-pine-hover">
-            {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
-          </button>
-        )}
-        {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && (
-          <button onClick={e => { e.stopPropagation(); sendPayLink(b, 'sms'); }} disabled={rowBusy === b.id}
-            title="Text them a link to pay on their phone (Apple Pay, Google Pay or card); the booking fee is collected with the round"
-            className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
-        )}
-        {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && (
-          <button onClick={e => { e.stopPropagation(); sendPayLink(b); }} disabled={rowBusy === b.id}
-            title="Email them their link to check in and pay online — the booking fee is collected with the round"
-            className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? 'Sending…' : 'Email pay link'}</button>
-        )}
-        {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
-          <button
-            onClick={e => { e.stopPropagation(); if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
-            disabled={checkingInId===b.id}
-            className={'shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors ' + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
-            {checkingInId===b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in'}
-          </button>
-        )}
-        {b.status === 'confirmed' && access.can('sheet.cancel') && (
-          <button onClick={e => { e.stopPropagation(); cancelGroup(b, false); }} disabled={rowBusy === b.id}
-            className="shrink-0 text-xs text-bad hover:bg-bad/5 px-2 py-1 rounded-md disabled:opacity-50">{rowBusy === b.id ? '…' : 'Cancel booking'}</button>
-        )}
-        {b.status === 'confirmed' && access.can('sheet.cancel') && access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
-          <button onClick={e => { e.stopPropagation(); cancelGroup(b, true); }} disabled={rowBusy === b.id}
-            className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">Cancel, no fee</button>
-        )}
+          {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && (
+            <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={link}
+              title="Text them a link to pay on their phone (Apple Pay, Google Pay or card); the booking fee is collected with the round">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
+          )}
+          {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && (
+            <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={link}
+              title="Email them their link to check in and pay online — the booking fee is collected with the round">{rowBusy === b.id ? 'Sending…' : 'Email pay link'}</button>
+          )}
+          {((b.status === 'confirmed' && !b.noShowAt) || (b.status === 'completed' && selectedDate >= today())) && access.can('sheet.move') && (
+            <button onClick={() => setMoveTarget({ booking: { id: b.id, golferName: b.golferName, players: b.players, emailable: !b.golferEmail.endsWith('@noemail.greenreserve.app'), checkedIn: b.status === 'completed' }, fromTeeTimeId: tt.id })}
+              className={link}>Move</button>
+          )}
+          {b.status === 'confirmed' && b.noShowAt && access.can('sheet.no_show') && (
+            <button onClick={() => bookingLifecycle(b, 'still_coming')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? '…' : 'Still coming'}</button>
+          )}
+          {/* A group past its time and not checked in: "Still coming" clears it
+              from the bar's late list for now; "Mark no-show" records it (and is
+              the counter's path to the no-show fee). */}
+          {late && selectedDate === today() && !stillComing.has(b.id) && (
+            <button onClick={() => setStillComing(prev => new Set(prev).add(b.id))} className={link}>Still coming</button>
+          )}
+          {late && access.can('sheet.no_show') && (
+            <button onClick={() => bookingLifecycle(b, 'no_show')} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Mark no-show'}</button>
+          )}
+          {b.status === 'confirmed' && access.can('sheet.cancel') && (
+            <span className="ml-auto flex items-center gap-x-4">
+              {access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
+                <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={link}>Cancel, no fee</button>
+              )}
+              <button onClick={() => cancelGroup(b, false)} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Cancel booking'}</button>
+            </span>
+          )}
+        </div>
+
         {/* RES-1: residents in the group, while the round's price can still change. */}
         {b.status === 'confirmed' && tt.residentRateCents != null && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid'
           && (!b.appliedRate || b.appliedRate === 'standard' || b.appliedRate === 'resident') && access.can('sheet.counter_payment') && (
-          <label className="shrink-0 inline-flex items-center gap-1.5 text-xs text-ink-soft" onClick={e => e.stopPropagation()}>
-            Residents
+          <label className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-ink-soft" onClick={e => e.stopPropagation()}>
+            Residents in this group
             <select value={b.residentPlayers ?? 0} disabled={rowBusy === b.id} onChange={e => setResidents(b, Number(e.target.value))}
-              title={`Players who showed a resident card pay $${(tt.residentRateCents / 100).toFixed(2)}`}
-              className="bg-paper border border-line rounded-md px-1.5 py-1 text-xs text-ink disabled:opacity-50">
+              className="bg-paper border border-line rounded-md px-2 py-1 text-[13px] text-ink disabled:opacity-50">
               {Array.from({ length: b.players + 1 }, (_, i) => <option key={i} value={i}>{i}</option>)}
             </select>
+            <span className="text-ink-muted">${(tt.residentRateCents / 100).toFixed(2)} each with a resident card</span>
           </label>
         )}
         {/* POS-1a: pro-shop items charged with this round. Same lock as the server (lib/shop shopLockedReason). */}
-        <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0}
-          editable={b.status === 'confirmed' && !b.paidOffline && !b.shopLocked && !(b.roundPaid && (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded'))}
-          canSell={access.can('shop.sell')} showMoney={access.can('money.payments')}
-          onChanged={() => loadTimes(selectedDate)} />
-      </div>
+        <div className="mt-2.5" onClick={e => e.stopPropagation()}>
+          <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0}
+            editable={b.status === 'confirmed' && !b.paidOffline && !b.shopLocked && !(b.roundPaid && (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded'))}
+            canSell={access.can('shop.sell')} showMoney={access.can('money.payments')}
+            onChanged={() => loadTimes(selectedDate)} />
+        </div>
+      </li>
     );
   };
 
@@ -866,7 +848,7 @@ function DashboardPageInner() {
                   Status columns, check-in on the row, and a count underneath. */}
               {/* No overflow-hidden: it would clip the date picker's popover. */}
               <div className={CARD}>
-                <div className="flex items-center gap-4 px-4 py-2.5 border-b border-line">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 border-b border-line">
                   <div className="flex items-center gap-2 text-[13.5px] text-ink">
                     {/* SD-3: back is never clamped — yesterday's sheet must stay reachable. */}
                     <button onClick={() => setSelectedDate(addDays(selectedDate, -1))} aria-label="Previous day"
@@ -961,39 +943,60 @@ function DashboardPageInner() {
       {/* ── MSG-1: message the day's golfers ── */}
       {messageOpen && <GolferMessageModal date={selectedDate} onClose={() => setMessageOpen(false)} />}
 
-      {/* ── SHEET-2: the board's open square ── */}
-      {panelSlot && (
-        <div className="fixed inset-0 z-40 flex justify-end" onClick={() => setPanelId(null)}>
-          <div className="absolute inset-0 bg-ink/10" aria-hidden="true" />
-          <aside role="dialog" aria-label={`${fmtTime(panelSlot.time)} tee time`} onClick={e => e.stopPropagation()}
-            className="relative bg-white w-full sm:w-[420px] h-full overflow-y-auto shadow-card px-5 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-            <div className="flex items-start justify-between gap-3 mb-1">
-              <div>
-                <h2 className="font-sans font-bold text-ink text-[24px] leading-tight tabular-nums">{fmtTime(panelSlot.time)}</h2>
-                <p className="text-[13px] text-ink-soft">{fmtDate(selectedDate)} · {panelSlot.playersBooked} of {panelSlot.playersAvailable} players · {rateLabel(panelSlot)}{panelSlot.id === nextUpId ? ' · Next up' : ''}</p>
+      {/* ── TT-CARD (Cam 2026-10-19, "do your idea"): the time's card. On a
+          laptop it sits beside the sheet with no backdrop, so staff still see
+          who's next, can tap another time or drag a group; on a phone it is a
+          full sheet that slides up. Everything for the time in one place. ── */}
+      {panelSlot && (() => {
+        const groups = panelSlot.bookings ?? [];
+        const open = panelSlot.playersAvailable - panelSlot.playersBooked;
+        const past = selectedDate < today() || (selectedDate === today() && panelSlot.time < nowHM);
+        return (
+          <div className="fixed inset-0 z-40 md:inset-auto md:top-28 md:right-4 md:bottom-4 md:w-[min(520px,calc(100vw-2rem))]">
+            <div className="absolute inset-0 bg-ink/20 md:hidden" aria-hidden="true" onClick={() => setPanelId(null)} />
+            <aside role="dialog" aria-label={`${fmtTime(panelSlot.time)} tee time`}
+              className="tt-card absolute inset-x-0 bottom-0 top-12 md:static md:h-full flex flex-col bg-white rounded-t-lg md:rounded-lg shadow-card overflow-hidden">
+              <div className="px-5 pt-4 pb-3 border-b border-line-soft">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="font-sans font-bold text-ink text-[26px] leading-none tabular-nums">
+                      {fmtTime(panelSlot.time)}
+                      {panelSlot.id === nextUpId && <span className="ml-2 align-middle text-[12.5px] font-semibold text-pine">Next up</span>}
+                    </h2>
+                    <p className="text-[13px] text-ink-soft mt-1.5">{fmtDate(selectedDate)}</p>
+                  </div>
+                  <button onClick={() => setPanelId(null)} className="shrink-0 -mr-1 p-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-paper" aria-label="Close"><X className="w-5 h-5" /></button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-ink">
+                  <span>{panelSlot.status === 'blocked' ? <span className="italic text-ink-muted">Blocked</span> : <>{panelSlot.playersBooked} of {panelSlot.playersAvailable} players · {open <= 0 ? <span className="text-bad font-medium">Full</span> : `${open} open`}</>}</span>
+                  <span className="text-ink-soft">{panelSlot.product?.label ? `${panelSlot.product.label} · ` : ''}{panelSlot.holes} holes · ${panelSlot.greenFee.toFixed(2)} a player{panelSlot.cartFee > 0 ? ` + $${panelSlot.cartFee.toFixed(2)} cart` : ''}</span>
+                  {panelSlot.residentRateCents != null && <span className="text-ink-soft">Residents ${(panelSlot.residentRateCents / 100).toFixed(2)}</span>}
+                </div>
               </div>
-              <button onClick={() => setPanelId(null)} className="text-ink-muted hover:text-ink p-1" aria-label="Close"><X className="w-5 h-5" /></button>
-            </div>
-            <div className="text-[13px] mb-4">{slotStatus(panelSlot)}</div>
-            {(panelSlot.bookings ?? []).length > 0
-              ? <div className="space-y-1.5 mb-5">{(panelSlot.bookings ?? []).map(b => groupRow(b, panelSlot))}</div>
-              : <p className="text-[13.5px] text-ink-soft mb-5">No bookings yet.</p>}
-            <div className="flex flex-wrap gap-2 border-t border-line pt-4">
-              {panelSlot.status !== 'blocked' && panelSlot.playersBooked < panelSlot.playersAvailable && access.can('sheet.walkin') && (
-                <button onClick={() => setWalkInSlot(panelSlot)} className="px-3.5 py-2 rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper">Walk-in or phone booking</button>
-              )}
-              {access.can('sheet.block') && (
-                <button onClick={() => toggleBlock(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 py-2 rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">
-                  {slotBusy === panelSlot.id ? '…' : panelSlot.status === 'blocked' ? 'Unblock' : 'Block'}
-                </button>
-              )}
-              {access.can('sheet.edit_times') && !(selectedDate < today() || (selectedDate === today() && panelSlot.time < nowHM)) && (
-                <button onClick={() => deleteTime(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 py-2 rounded-md text-[13px] font-medium text-ink-muted hover:text-bad hover:bg-bad/5 disabled:opacity-50">Delete time</button>
-              )}
-            </div>
-          </aside>
-        </div>
-      )}
+
+              <div className="flex-1 overflow-y-auto px-5">
+                {groups.length > 0
+                  ? <ul className="divide-y divide-line-soft">{groups.map(b => groupRow(b, panelSlot))}</ul>
+                  : <p className="py-6 text-[13.5px] text-ink-soft">{panelSlot.status === 'blocked' ? 'This time is blocked — golfers can’t book it.' : 'Nobody is booked yet.'}</p>}
+              </div>
+
+              <div className="px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-line-soft flex flex-wrap items-center gap-2">
+                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (
+                  <button onClick={() => setWalkInSlot(panelSlot)} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add a walk-in or phone booking</button>
+                )}
+                {access.can('sheet.block') && (
+                  <button onClick={() => toggleBlock(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">
+                    {slotBusy === panelSlot.id ? '…' : panelSlot.status === 'blocked' ? 'Unblock' : 'Block this time'}
+                  </button>
+                )}
+                {access.can('sheet.edit_times') && !past && (
+                  <button onClick={() => deleteTime(panelSlot)} disabled={slotBusy === panelSlot.id} className="ml-auto px-2 min-h-[36px] rounded-md text-[13px] font-medium text-ink-muted hover:text-bad disabled:opacity-50">Delete time</button>
+                )}
+              </div>
+            </aside>
+          </div>
+        );
+      })()}
 
       {/* ── ACT-1: move a group to another time ── */}
       {moveTarget && (

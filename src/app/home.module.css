@@ -97,11 +97,16 @@
 .pnl { position: absolute; top: 0; right: 0; bottom: 0; width: min(300px, 80%); z-index: 3; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.08), 0 1px 2px rgba(20,24,20,.05); padding: 14px 14px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 .pnlHd { display: flex; justify-content: space-between; align-items: flex-start; }
 .pnlHd b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
-.pnlHd span { font-size: 12px; color: #4A4F49; }
+.pnlHd span { display: block; font-size: 12px; color: #4A4F49; }
+.pnlHd b em { font-style: normal; font-size: 11px; font-weight: 600; color: var(--forest); margin-left: 6px; vertical-align: middle; }
+.pnlFacts { margin-top: 6px; color: var(--ink) !important; }
 .pnlHd button { font: inherit; font-size: 20px; line-height: 1; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0 2px; }
-.pnlG { background: rgba(246,247,243,.9); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; }
+.pnlG { border-top: 1px solid var(--line); padding: 9px 0 2px; font-size: 12.5px; }
+.pnlWho { display: flex; justify-content: space-between; gap: 8px; }
+.pnlWho > b { font-variant-numeric: tabular-nums; }
 .pnlAct { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
-.pnlSt { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; margin-right: auto; }
+.pnlSt { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; }
+.pnlAct .cx { margin-left: auto; }
 .pnlSlot { display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
 .pnl .ci, .pnl .wk { width: auto; padding: 5px 9px; }
 .cx { font: inherit; font-size: 12px; font-weight: 600; color: #A3452F; background: none; border: 0; padding: 5px 4px; cursor: pointer; }
