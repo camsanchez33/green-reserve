@@ -164,7 +164,8 @@ export async function PATCH(req: NextRequest) {
       const to = normalizePhone(b.golferPhone);
       const url = `${process.env.NEXT_PUBLIC_URL}/checkin/${id}?token=${token}`;
       try {
-        await sendSms(to, `${b.course.name}: check in and pay for your ${formatTeeTime(b.teeTime.time)} tee time here (Apple Pay, Google Pay or card): ${url}`);
+        // Every non-code text carries the opt-out line (legal rewrite 2026-10-19).
+        await sendSms(to, `${b.course.name}: check in and pay for your ${formatTeeTime(b.teeTime.time)} tee time here (Apple Pay, Google Pay or card): ${url} Reply STOP to opt out.`);
       } catch (err) {
         return NextResponse.json({ error: `The text didn’t send (${err instanceof Error ? err.message : 'SMS error'}) — try email, or take payment at the counter.` }, { status: 502 });
       }
