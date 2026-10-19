@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
   Trophy, PartyPopper, DollarSign, MessageSquare,
@@ -24,13 +24,33 @@ interface CourseIdentity {
 interface MyCourse { id: string; name: string; slug: string; active: boolean; liveStatus: string; }
 
 
+// Cam 2026-10-19: switching tabs flashed the bar pine for a moment — every page
+// mounts its own sidebar, which started on the default colour until the course
+// loaded. The last identity is kept for the tab's lifetime (module) and across a
+// reload (sessionStorage), and is cleared when the course is switched.
+const IDENTITY_KEY = 'gr:op-identity';
+let cachedIdentity: CourseIdentity | null = null;
+function readIdentity(): CourseIdentity | null {
+  if (cachedIdentity) return cachedIdentity;
+  try { const raw = sessionStorage.getItem(IDENTITY_KEY); if (raw) cachedIdentity = JSON.parse(raw) as CourseIdentity; } catch { /* storage unavailable */ }
+  return cachedIdentity;
+}
+function saveIdentity(i: CourseIdentity | null) {
+  cachedIdentity = i;
+  try { if (i) sessionStorage.setItem(IDENTITY_KEY, JSON.stringify(i)); else sessionStorage.removeItem(IDENTITY_KEY); } catch { /* storage unavailable */ }
+}
+
 export default function OperatorSidebar({ active, onAlertClick }: {
   active: OperatorNavKey;
   onAlertClick?: () => void;
 }) {
   const router = useRouter();
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [identity, setIdentity] = useState<CourseIdentity>({ name: '', type: 'public', brandColor: '#173B2A', establishedYear: null });
+  // The module cache is empty on a full page load, so the server and the first
+  // client render agree (no hydration mismatch); the layout effect then applies
+  // the stored colour before the browser paints.
+  const [identity, setIdentity] = useState<CourseIdentity>(() => cachedIdentity || { name: '', type: 'public', brandColor: '#173B2A', establishedYear: null });
+  useLayoutEffect(() => { if (!cachedIdentity) { const i = readIdentity(); if (i) setIdentity(i); } }, []);
   const [myCourses, setMyCourses] = useState<MyCourse[]>([]);
   const [switchingCourse, setSwitchingCourse] = useState(false);
   // SP-A: what this login may open — per person, set by the course owner.
@@ -51,7 +71,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       .then(r => r.ok ? r.json() : null)
       .then(c => {
         if (!c) return;
-        setIdentity({ id: c.id, name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#173B2A', establishedYear: c.establishedYear ?? null, slug: c.slug || '', logoUrl: c.logoUrl || '' });
+        const next = { id: c.id, name: c.name || '', type: c.type || 'public', brandColor: c.brandColor || '#173B2A', establishedYear: c.establishedYear ?? null, slug: c.slug || '', logoUrl: c.logoUrl || '' };
+        saveIdentity(next); setIdentity(next);
       })
       .catch(() => {});
     // Only ever returns >1 row for multi-course operators — staff and
@@ -73,6 +94,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       // SD-10: this reloaded whether or not the switch happened — you landed
       // back on the same course with no explanation.
       if (!r.ok) { const d = await r.json().catch(() => ({})); toast(d.error || 'Could not switch course.'); setSwitchingCourse(false); return; }
+      saveIdentity(null); // the next course has its own colour
       window.location.href = '/dashboard';
     } catch {
       toast('Network error — could not switch course.'); setSwitchingCourse(false);
@@ -83,11 +105,12 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     try {
       const r = await fetch('/api/auth/logout', { method: 'POST' });
       if (!r.ok) { toast('Sign-out did not go through — try again.'); return; }
+      saveIdentity(null);
       window.location.assign('/dashboard/login');
     } catch { toast('Network error — you are still signed in.'); }
   }
 
-  const { brandColor, name, type, establishedYear, slug, logoUrl } = identity;
+  const { brandColor, name, type, establishedYear, slug } = identity;
   const moneyOnlyCancellations = isStaff && !access.can('money.payments') && !access.can('money.payouts');
   const typeLabel = type === 'semi-private' ? 'Semi-private' : type === 'municipal' ? 'Municipal' : type === 'resort' ? 'Resort' : 'Public course';
   const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ');
@@ -189,10 +212,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <header className="hidden md:block shrink-0" style={{ backgroundColor: brandColor }}>
       <div className="flex items-end gap-8 px-6 lg:px-8 h-16 text-white">
         <div className="self-center flex items-center gap-3 min-w-0 shrink-0">
-          {logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" className="w-9 h-9 rounded-md bg-white object-contain p-0.5" />
-          )}
+          {/* The course logo box that sat here did nothing (Cam 2026-10-19) — the name carries it. */}
           <span className="font-serif text-[24px] leading-none truncate max-w-[260px]" title={meta}>{name || 'Your course'}</span>
         </div>
         <nav aria-label="Dashboard" className="flex items-end gap-1 min-w-0 overflow-x-auto">

@@ -328,5 +328,7 @@ export function headline(a: Analytics) {
     collectedCents: a.revenue.collectedCents, expectedCents: a.revenue.expectedCents, fillPct: a.utilization.fillPct,
     lostCents: a.unfilled.lostCents, noShowPct: a.noShows.ratePct, cancelPct: a.cancellations.ratePct,
     customers: a.customers.identified, returningPct: a.customers.returningPct, bookings: a.behavior.bookings, avgLeadDays: a.behavior.avgLeadDays,
+    // AN-3 (Cam 2026-10-19): the top four are revenue, filled, rounds played and average per round.
+    roundsPlayed: a.revenue.roundsPlayed, perRoundCents: a.revenue.perRoundCents,
   };
 }

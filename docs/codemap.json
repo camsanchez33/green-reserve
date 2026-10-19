@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 408,
+    "files": 410,
     "routes": 211,
-    "libs": 121,
+    "libs": 122,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -26,7 +26,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 117,
+      "lines": 116,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3246,7 +3246,7 @@
     },
     {
       "path": "src/app/api/cron/chase-onboarding/route.ts",
-      "lines": 110,
+      "lines": 115,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4151,7 +4151,7 @@
     },
     {
       "path": "src/app/api/operator/analytics/route.ts",
-      "lines": 35,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4294,7 +4294,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 340,
+      "lines": 341,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6053,8 +6053,8 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 525,
-      "purpose": "AN-2 (Cam 2026-10-08:",
+      "lines": 610,
+      "purpose": "AN-3 (Cam 2026-10-19, after AN-2):",
       "brain": [],
       "exports": [
         {
@@ -6069,11 +6069,13 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/DateRangeButton",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/analytics",
+        "@/lib/birdie/ask",
         "@/lib/dashboard-fetch",
         "lucide-react",
         "next/link",
@@ -6152,7 +6154,7 @@
     },
     {
       "path": "src/app/dashboard/login/page.tsx",
-      "lines": 91,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6316,7 +6318,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1400,
+      "lines": 1429,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6573,7 +6575,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 595,
+      "lines": 594,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6903,7 +6905,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 252,
+      "lines": 247,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7032,7 +7034,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 199,
+      "lines": 220,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7260,7 +7262,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 244,
+      "lines": 264,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7565,7 +7567,7 @@
     },
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
-      "lines": 189,
+      "lines": 207,
       "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
       "brain": [],
       "exports": [
@@ -7581,6 +7583,7 @@
       "guard": null,
       "imports": [
         "./ConfirmCard",
+        "@/lib/birdie/ask",
         "@/lib/birdie/proposal-types",
         "@/lib/unsaved-guard",
         "lucide-react",
@@ -7696,6 +7699,42 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/DateRangeButton.tsx",
+      "lines": 117,
+      "purpose": "AN-3 (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DateRange",
+          "kind": "type"
+        },
+        {
+          "name": "default (DateRangeButton)",
+          "kind": "component"
+        },
+        {
+          "name": "presets",
+          "kind": "fn"
+        },
+        {
+          "name": "rangeLabel",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/analytics/page.tsx"
       ]
     },
     {
@@ -8269,6 +8308,7 @@
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx"
       ]
     },
@@ -9286,7 +9326,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 333,
+      "lines": 335,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -9528,6 +9568,42 @@
         "src/app/api/operator/onboarding-complete/route.ts",
         "src/lib/member-session.ts",
         "src/lib/session.ts"
+      ]
+    },
+    {
+      "path": "src/lib/birdie/ask.ts",
+      "lines": 31,
+      "purpose": "AN-3 (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ASK_EVENT",
+          "kind": "const"
+        },
+        {
+          "name": "askBirdie",
+          "kind": "fn"
+        },
+        {
+          "name": "markBirdieReady",
+          "kind": "fn"
+        },
+        {
+          "name": "useBirdieReady",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
+        "src/components/birdie/BirdieWidget.tsx"
       ]
     },
     {
@@ -12963,7 +13039,7 @@
     },
     {
       "path": "src/lib/monthly-review.ts",
-      "lines": 256,
+      "lines": 255,
       "purpose": "BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -14590,7 +14666,7 @@
     },
     {
       "path": "src/lib/terms.ts",
-      "lines": 7,
+      "lines": 8,
       "purpose": "Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to.",
       "brain": [],
       "exports": [

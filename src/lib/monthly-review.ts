@@ -58,7 +58,7 @@ type Headline = ReturnType<typeof headline>;
 function money(h: Headline) {
   return {
     collectedDollars: dollars(h.collectedCents), expectedDollars: dollars(h.expectedCents),
-    fillPct: h.fillPct, unsoldTeeTimeLossDollars: dollars(h.lostCents),
+    fillPct: h.fillPct,
     noShowPct: h.noShowPct, cancelPct: h.cancelPct, bookings: h.bookings,
     customers: h.customers, returningCustomerPct: h.returningPct, avgDaysBookedAhead: h.avgLeadDays,
   };
@@ -67,7 +67,6 @@ function changes(cur: Headline, then: Headline) {
   return {
     collectedDollars: dollars(cur.collectedCents - then.collectedCents),
     fillPctPoints: diff(cur.fillPct, then.fillPct),
-    unsoldTeeTimeLossDollars: dollars(cur.lostCents - then.lostCents),
     noShowPctPoints: diff(cur.noShowPct, then.noShowPct),
     cancelPctPoints: diff(cur.cancelPct, then.cancelPct),
     bookings: cur.bookings - then.bookings,
@@ -91,8 +90,8 @@ export function buildFacts(
     revenueStillOwedDollars: dollars(a.revenue.gapCents),
     fillByDayOfWeek: a.utilization.byDow.filter(d => d.sale > 0).map(d => ({ day: d.dow, fillPct: d.fillPct })),
     fillByHour: a.utilization.byHour.filter(h => h.sale > 0).map(h => ({ hour: hourLabel(h.hour), fillPct: h.fillPct })),
-    worstUnsoldHours: a.unfilled.worstHours.map(h => ({ hour: hourLabel(h.hour), lostDollars: dollars(h.lostCents), openSpots: h.open })),
-    worstUnsoldDays: a.unfilled.worstDays.slice(0, 3).map(d => ({ day: d.dow, lostDollars: dollars(d.lostCents), openSpots: d.open })),
+    worstUnsoldHours: a.unfilled.worstHours.map(h => ({ hour: hourLabel(h.hour), openSpots: h.open })),
+    worstUnsoldDays: a.unfilled.worstDays.slice(0, 3).map(d => ({ day: d.dow, openSpots: d.open })),
     noShows: { count: a.noShows.count, lostDollars: dollars(a.noShows.impactCents), golfersWhoNoShowedMoreThanOnce: a.noShows.repeat.length },
     cancellations: { count: a.cancellations.count, lateFeesKeptDollars: dollars(a.cancellations.lateFeesKeptCents), rebookedPct: a.cancellations.rebookedPct },
     bookingsBy: { online: a.behavior.channel.online ?? 0, phone: a.behavior.channel.phone ?? 0, walkIn: a.behavior.channel.walk_in ?? 0 },
