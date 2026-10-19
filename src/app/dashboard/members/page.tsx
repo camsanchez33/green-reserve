@@ -11,6 +11,7 @@ import { formatMoney as fmtMoney, formatDate as fmtDate } from '@/lib/format';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Card } from '@/components/ui/Card';
 import { INPUT_COMPACT } from '@/components/ui/field';
+import { ImportMembers } from '@/components/dashboard/members/ImportMembers';
 import { ResidentsCard } from '@/components/dashboard/members/ResidentsCard';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -30,6 +31,10 @@ interface Member {
   status: string; linked: boolean; inviteAccepted: boolean;
   expiresAt: string | null; notes: string; createdAt: string;
   paymentStatus?: string; lastPaidAt?: string | null; annualFee?: number; initiationFee?: number;
+  /** YYYY-MM-DD of their latest checked-in round here, or null. */
+  lastRound?: string | null;
+  /** Imported members already belong: no joining fee in what they owe. */
+  initiationWaived?: boolean;
 }
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
@@ -55,7 +60,7 @@ function duesOf(m: Member, now: Date): Dues {
   if (m.status !== 'active') return { kind: 'inactive', label: 'Not active', tone: 'neutral' };
   // What they'd owe now — the same sum the dues pay link and the Remind button use.
   // A free membership owes nothing, whatever paymentStatus still says (it defaults to 'unpaid').
-  const owed = (m.annualFee ?? 0) + (m.lastPaidAt ? 0 : (m.initiationFee ?? 0));
+  const owed = (m.annualFee ?? 0) + ((m.lastPaidAt || m.initiationWaived) ? 0 : (m.initiationFee ?? 0));
   if (m.paymentStatus === 'comped' || owed <= 0) return { kind: 'comped', label: 'No dues', tone: 'ok' };
   if (m.paymentStatus === 'unpaid') return { kind: 'unpaid', label: `Dues unpaid · ${fmtMoney(owed)}`, tone: 'bad' };
   if (m.expiresAt && new Date(m.expiresAt) < now) return { kind: 'expired', label: `Expired ${fmtDate(m.expiresAt)}`, tone: 'bad' };
@@ -104,6 +109,7 @@ export default function MembersPage() {
   const [createdTier, setCreatedTier] = useState<Tier | null>(null);
 
   const [addOpen, setAddOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [memberForm, setMemberForm] = useState(emptyMember());
   const [memberSaving, setMemberSaving] = useState(false);
   const [memberError, setMemberError] = useState('');
@@ -504,12 +510,18 @@ export default function MembersPage() {
                     {remindingOverdue ? 'Sending…' : `Remind ${unpaid} unpaid`}
                   </button>
                 )}
+                {tiers.some(t => t.active) && (
+                  <button onClick={() => { setImportOpen(true); setAddOpen(false); }}
+                    className="bg-white border border-line hover:border-line-strong text-ink rounded-md text-[13px] font-medium px-4 py-2">Import a list</button>
+                )}
                 <button onClick={() => tiers.length ? startAddMember() : openWizard()}
                   className="bg-pine hover:bg-pine-hover text-white rounded-md text-[13px] font-medium px-4 py-2">{tiers.length ? 'Add a member' : 'Set up a membership'}</button>
               </div>
             )}
           </div>
           {loadError && <LoadError message={loadError} onRetry={loadAll} />}
+
+          {importOpen && <ImportMembers tiers={tiers} onClose={() => setImportOpen(false)} onImported={loadAll} />}
 
           {/* Add member */}
           {addOpen && (
@@ -585,19 +597,21 @@ export default function MembersPage() {
                     return (
                       <li key={m.id} className={m.status !== 'active' ? 'text-ink-soft' : ''}>
                         <button onClick={() => setExpanded(openRow ? null : m.id)} aria-expanded={openRow}
-                          className="w-full grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,1fr)] gap-x-4 gap-y-0.5 px-4 py-3 text-left hover:bg-paper/60">
+                          className="w-full grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.7fr)] gap-x-4 gap-y-0.5 px-4 py-3 text-left hover:bg-paper/60">
                           <span className="min-w-0">
                             <span className="block text-[14px] font-medium text-ink truncate">{m.name || m.email}</span>
                             <span className="block text-[12.5px] text-ink-muted truncate">{m.email}{m.phone ? ` · ${m.phone}` : ''}</span>
                           </span>
                           <span className="hidden sm:inline-flex items-center gap-2 text-[13.5px] text-ink min-w-0"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.tierColor }}/><span className="truncate">{m.tierName}</span></span>
                           <span className="inline-flex items-center gap-1.5 text-[13.5px] text-ink justify-end sm:justify-start"><StatusDot status={d.tone} />{d.label}</span>
+                          <span className="hidden lg:block text-[13px] text-ink-muted">{m.lastRound ? `Last round ${fmtDate(m.lastRound + 'T12:00:00')}` : 'No rounds yet'}</span>
                         </button>
                         {openRow && (
                           <div className="px-4 pb-4 -mt-1 grid sm:grid-cols-[1fr_auto] gap-3 items-end">
                             <div className="text-[13px] text-ink-soft space-y-0.5">
                               <p>{m.linked ? 'Account linked — member rates apply when they book online.' : m.inviteAccepted ? 'Invite accepted.' : 'Invite sent; they haven’t linked an account yet, so online bookings don’t get member rates.'}</p>
                               {m.lastPaidAt && <p>Last paid {fmtDate(m.lastPaidAt)}.</p>}
+                              <p>{m.lastRound ? `Last round here ${fmtDate(m.lastRound + 'T12:00:00')}.` : 'No rounds here yet.'}</p>
                               {m.notes && <p>Note: {m.notes}</p>}
                             </div>
                             {canEdit && (

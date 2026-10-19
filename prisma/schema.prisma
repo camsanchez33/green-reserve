@@ -404,6 +404,10 @@ model CourseMembership {
   lastPaidAt          DateTime?
   lastPaymentIntentId String          @default("")
   renewalRemindedAt   DateTime?
+  /// Members import (Cam 2026-10-19): an existing member brought over from the
+  /// course's own list has already joined, so no dues payment adds the tier's
+  /// one-time initiation fee and their history shows none.
+  initiationWaived    Boolean         @default(false)
   notes               String          @default("")
   createdAt           DateTime        @default(now())
 

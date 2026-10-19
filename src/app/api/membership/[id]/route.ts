@@ -21,13 +21,14 @@ async function authorize(id: string, token: string | null) {
   return m;
 }
 
-/** Initiation is only owed on the first payment ever. */
-function amountsDue(m: { lastPaidAt: Date | null; tier: { annualFeeCents: number; initiationFeeCents: number } | null }) {
+/** Initiation is only owed on the first payment ever — never by a member who
+ *  joined before the course came to GreenReserve (imported, initiationWaived). */
+function amountsDue(m: { lastPaidAt: Date | null; initiationWaived: boolean; tier: { annualFeeCents: number; initiationFeeCents: number } | null }) {
   // MP-3 B2a: this used to multiply dollars by 100 to reach cents. The columns
   // ARE cents now, so that multiplication would have charged 100x — exactly the
   // silent failure the rename exists to make impossible.
   const annualCents = m.tier?.annualFeeCents ?? 0;
-  const initiationCents = m.lastPaidAt ? 0 : (m.tier?.initiationFeeCents ?? 0);
+  const initiationCents = m.lastPaidAt || m.initiationWaived ? 0 : (m.tier?.initiationFeeCents ?? 0);
   const duesCents = annualCents + initiationCents;
   // The 1% rides on top: the course receives its full dues, the member pays dues + fee.
   const feeCents = membershipFeeCents(duesCents);
