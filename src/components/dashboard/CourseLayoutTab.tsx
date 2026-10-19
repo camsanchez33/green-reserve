@@ -179,8 +179,10 @@ function NinesStep({ n, needed, nines, setNines, readOnly, locked }: {
   const [err, setErr] = useState('');
   useEffect(() => { setDrafts(Array.from({ length: missing }, () => ({ name: '', par: '36' }))); }, [missing]);
 
+  const parOk = (v: number) => v >= 27 && v <= 40;
   async function saveNew() {
     if (drafts.some(d => !d.name.trim())) { setErr('Give every nine a name — North, South, West, or whatever your course calls them.'); return; }
+    if (drafts.some(d => !parOk(Number(d.par)))) { setErr('Each nine’s par is usually 34 to 37.'); return; }
     setBusy('new'); setErr('');
     let next = [...nines];
     for (const d of drafts) {
@@ -225,7 +227,7 @@ function NinesStep({ n, needed, nines, setNines, readOnly, locked }: {
                   onBlur={e => { const v = e.target.value.trim(); if (v && v !== nine.name) update(nine, { name: v }); }} />
                 <span className="text-[12.5px] text-ink-muted">Par</span>
                 <input type="number" defaultValue={nine.par} aria-label={`Nine ${i + 1} par`} className={iBase + ' w-16'}
-                  onBlur={e => { const v = Number(e.target.value); if (v && v !== nine.par) update(nine, { par: v }); }} />
+                  onBlur={e => { const v = Number(e.target.value); if (!v || v === nine.par) return; if (!parOk(v)) { setErr('Each nine’s par is usually 34 to 37.'); e.target.value = String(nine.par); return; } update(nine, { par: v }); }} />
                 {busy === nine.id ? <span className="text-xs text-ink-faint w-14">Saving…</span>
                   : i >= needed ? <button onClick={() => remove(nine)} className="text-[12.5px] text-ink-muted hover:text-bad w-14">Remove</button>
                   : <span className="w-14" />}
@@ -465,7 +467,8 @@ function RoundsStep({ n, multi, holes, nines, products, setProducts, readOnly, l
 
   const offered = rows.filter(r => r.product?.active);
   const noSchedule = offered.filter(r => !(r.product?.scheduleCount && r.product.scheduleCount > 0));
-  const shown = offered.length ? `${offered.map(r => r.label).join(', ')} when they pick a tee time.` : 'nothing bookable yet.';
+  // A course can still run schedules with no round attached; those times show as the whole course.
+  const shown = offered.length ? `${offered.map(r => r.label).join(', ')} when they pick a tee time.` : 'no named rounds yet — your schedule’s times show without one.';
 
   return (
     <Step n={n} title="What golfers can book" golfersSee={shown} locked={locked}>
