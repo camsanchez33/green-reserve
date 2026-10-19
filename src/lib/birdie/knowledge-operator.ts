@@ -31,11 +31,11 @@ export const OPERATOR_KNOWLEDGE = `
 - Twilight or early-bird pricing: add a second schedule with a different tier name and its own hours.
 - Blocked days: the "Blocked days" box on Schedule stops generation for a date (holiday, outing).
 - Booking windows (how far ahead the public and members can book) are on Schedule too.
-- Courses with more than one bookable round (for example a 27-hole course selling "North + South" and "South + West"): every schedule belongs to one round; two rounds that share a nine cannot run at the same time and the save will say so. Rounds themselves are set up under Settings → Course & Layout.
+- Courses with more than one bookable round (for example a 27-hole course selling "North + South" and "South + West"): every schedule belongs to one round; two rounds that share a nine cannot run at the same time and the save will say so. Rounds themselves are set up under Settings → Course layout.
 - "Apply to Tee Sheet" rebuilds the next 8 days of open times from the schedules right now.
 
 ## Cancellation policy (/dashboard/settings)
-- Settings → Pricing & cancellation → "Cancellation & card" (owner login only) sets the policy, with a live preview of exactly what golfers read:
+- Settings → Prices & fees → "Cancellation & card" (owner login only) sets the policy, with a live preview of exactly what golfers read:
   - Late-cancellation fee: off, or an amount per booking or per player, and the free-cancel window in hours.
   - When the late fee is taken: "Hold at the cutoff, refunded at check-in" (charged when the window closes, refunded when they check in), "Only if they cancel late" (charged the moment they cancel inside the window), or "If they cancel late or don't show".
   - No-show fee: an optional separate amount per booking or per player. "Mark no-shows automatically" marks a group not checked in N minutes after its tee time (checked hourly); "Still coming" on the Tee Sheet undoes it and refunds what it charged.
@@ -55,7 +55,7 @@ export const OPERATOR_KNOWLEDGE = `
 - Create membership tiers (dues, per-round rate, advance-booking days). Members sign in on the course's own page and see member pricing. Add a member by email; they get an invite.
 
 ## Settings (/dashboard/settings)
-- Course info (name, address, holes, par), photos and brand colour (the golfer page wears it), cancellation policy, check-in window, walking policy, staff logins and what each person can do (Settings → Staff & permissions — per person, with Starter / Front desk / Manager presets), and Course & Layout for nines and bookable rounds.
+- Sections in setup order: Your course (logo, colour, photos, description, contact; name and address change by asking GreenReserve), Course layout (holes, par, nines, tee sets, bookable rounds), Booking rules, Prices & fees (member and resident pricing, cancellation policy, check-in window), Facilities, Pro shop, Staff (logins and what each person can do — per person, with Starter / Front desk / Manager presets) and Your account (sign-in email, password, two-step sign-in). A "Finish setting up" list at the top names what is still missing from the course page.
 - The course goes live when GreenReserve flips it after the preview is approved and Stripe is connected.
 
 ## Messages (/dashboard/messages)

@@ -18,6 +18,7 @@ import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/pass
 import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
 
 type Course = Record<string, unknown>;
 // U-O (UI_REVISE_SPEC §3, "Settings: sub-nav on the left naming the existing
@@ -28,18 +29,28 @@ type Course = Record<string, unknown>;
 // SD-8: twelve sub-tabs became five. Nothing was deleted — the same forms are
 // grouped by the question an operator is actually asking. Payouts left
 // entirely: getting paid is money, and it lives on /dashboard/money now.
+// Settings rework (Cam 2026-10-19): the sections in the order a course sets
+// itself up. Staff (people and what each may do) and Your account (this
+// login's email, password, two-step) were one muddled section; now two.
 const SECTIONS = [
   'Your course',
+  'Course layout',
   'Booking rules',
-  'Pricing & cancellation',
+  'Prices & fees',
   'Facilities',
   'Pro shop',
-  'Staff & account',
+  'Staff',
+  'Your account',
 ] as const;
 type Section = typeof SECTIONS[number];
-// Sections whose contents save themselves (staff, password, 2FA) — the
-// header Save button is hidden on these.
-const NO_SAVE_BUTTON: Section[] = ['Pro shop', 'Staff & account'];
+// Old ?section= names still land somewhere sensible.
+const SECTION_ALIASES: Record<string, Section> = {
+  'Pricing & cancellation': 'Prices & fees',
+  'Staff & account': 'Staff',
+};
+// Sections whose contents save themselves (layout, shop, staff, password,
+// 2FA) — the header Save button is hidden on these.
+const NO_SAVE_BUTTON: Section[] = ['Pro shop', 'Staff', 'Your account'];
 // SP-A: the cancellation policy is the owner's alone — a staff login with
 // "Edit course settings" never sends these (the API refuses them too).
 const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes'];
@@ -51,13 +62,13 @@ const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindo
 const SECTION_FIELDS: Record<Section, string[]> = {
   'Your course': [
     'brandColor', 'phone', 'website', 'type', 'establishedYear', 'description', 'giftCardUrl', 'confirmationNote',
-    'holes', 'par', 'yardage', 'slope', 'courseRating',
   ],
+  'Course layout': ['holes', 'par', 'yardage', 'slope', 'courseRating'],
   'Booking rules': [
     'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'minPlayers', 'maxPlayers', 'dresscode',
     'walkingAllowed', 'walkingNote', 'cartRequired',
   ],
-  'Pricing & cancellation': [
+  'Prices & fees': [
     'hasMemberPricing', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired',
     'cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy',
     'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes',
@@ -70,7 +81,8 @@ const SECTION_FIELDS: Record<Section, string[]> = {
     'hasCaddies', 'caddieType', 'caddieLooperRate', 'caddieForeRate', 'caddieNote', 'amenities',
   ],
   'Pro shop': [],
-  'Staff & account': [],
+  'Staff': [],
+  'Your account': [],
 };
 
 // SD-8: the course's identity is what GreenReserve listed and what golfers
@@ -181,8 +193,9 @@ function SettingsPageInner() {
   }, [stripeParam, router]);
 
   // Money rework (Cam 2026-10-19): other pages link straight to a section, e.g. ?section=Pricing+%26+cancellation.
-  const sectionParam = searchParams.get('section');
-  const [active, setActive] = useState<Section>(() => (SECTIONS as readonly string[]).includes(sectionParam ?? '') ? sectionParam as Section : 'Your course');
+  const sectionParam = searchParams.get('section') ?? '';
+  const [active, setActive] = useState<Section>(() => (SECTIONS as readonly string[]).includes(sectionParam) ? sectionParam as Section : SECTION_ALIASES[sectionParam] ?? 'Your course');
+  const [teeSetCount, setTeeSetCount] = useState<number | null>(null);
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -198,7 +211,6 @@ function SettingsPageInner() {
   // SD-8 review: blank fields and a failed load used to look identical.
   const [formLoaded, setFormLoaded] = useState(false);
   const [formError, setFormError] = useState('');
-  const [staffCount, setStaffCount] = useState(0);
   const isStaffLogin = useDashboardAccess().isStaff;
   // SP-B: the policy as currently on screen, in golfers' words.
   const cents = (v: unknown) => Math.round(Number(v || 0) * 100);
@@ -213,6 +225,7 @@ function SettingsPageInner() {
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState('');
   const [pwError, setPwError] = useState('');
+  const [pwOpen, setPwOpen] = useState(false);
   const [operatorEmail, setOperatorEmail] = useState('');
   const [emailingReset, setEmailingReset] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
@@ -250,6 +263,13 @@ function SettingsPageInner() {
     return () => window.removeEventListener('focus', refreshForm);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // "Finish setting up" asks whether any tee set exists; re-read on every
+  // section change so adding one under Course layout clears the item.
+  useEffect(() => {
+    fetch('/api/operator/tee-sets').then(r => r.ok ? r.json() : null)
+      .then(d => { if (Array.isArray(d)) setTeeSetCount(d.length); }).catch(() => {});
+  }, [active]);
 
   async function uploadGalleryPhoto(file: File | null) {
     if (!file) return;
@@ -399,7 +419,7 @@ function SettingsPageInner() {
         body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok) { setPwMsg('Password updated.'); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }
+      if (res.ok) { setPwMsg('Password updated.'); setPwOpen(false); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }
       else setPwError(data.error || 'Something went wrong.');
     } catch {
       setPwError('Network error — your password was not changed. Check your connection and try again.');
@@ -410,6 +430,18 @@ function SettingsPageInner() {
 
   const dresscodes = (form.dresscode as string[])||[];
 
+  const goTo = (sec: Section) => { setActive(sec); document.querySelector('main')?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); };
+  const missing = (v: unknown) => !String(v ?? '').trim();
+  const setupItems: SetupItem[] = [
+    missing(form.logoUrl) && { key: 'logo', title: 'Add your logo', why: 'It sits beside your name on your booking page and every email.', action: 'Add logo', onClick: () => goTo('Your course') },
+    missing(form.heroImageUrl) && { key: 'hero', title: 'Add a course photo', why: 'The wide banner at the top of your booking page.', action: 'Add photo', onClick: () => goTo('Your course') },
+    missing(form.description) && { key: 'description', title: 'Describe your course', why: 'A few sentences golfers read before they book.', action: 'Write it', onClick: () => goTo('Your course') },
+    missing(form.phone) && { key: 'phone', title: 'Add your phone number', why: 'Golfers call it with questions about their booking.', action: 'Add phone', onClick: () => goTo('Your course') },
+    photos.length === 0 && { key: 'gallery', title: 'Add gallery photos', why: 'Up to 8 photos in the Photos tab of your booking page.', action: 'Add photos', onClick: () => goTo('Your course') },
+    (!form.holes || !form.par) && { key: 'holes', title: 'Say how many holes and the par', why: 'Shown at the top of your booking page.', action: 'Set it', onClick: () => goTo('Course layout') },
+    teeSetCount === 0 && { key: 'teesets', title: 'Add your tee sets', why: 'Golfers see each tee’s yardage, rating and slope.', action: 'Add tees', onClick: () => goTo('Course layout') },
+  ].filter((i): i is SetupItem => !!i);
+
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="settings"/>
@@ -419,12 +451,7 @@ function SettingsPageInner() {
             page's own numbers, read off state the page already loads. */}
         <div className="bg-white border-b border-line px-6 py-4 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Settings</h1>
-            </div>
-            <p className="text-[13.5px] text-ink-soft mt-2">
-              {(form.name as string) || 'Your course'} · {(form.liveStatus as string) === 'live' ? 'live to golfers' : 'not live yet'} · {form.stripeAccountActive ? 'Stripe connected' : 'Stripe not connected'} · {staffCount} staff account{staffCount !== 1 ? 's' : ''} · {photos.length} photo{photos.length !== 1 ? 's' : ''}
-            </p>
+            <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Settings</h1>
           </div>
           {!NO_SAVE_BUTTON.includes(active) && (
             <button onClick={save} disabled={saving || !formLoaded || (!dirty && !saved)}
@@ -447,11 +474,7 @@ function SettingsPageInner() {
         )}
 
         <div className="max-w-5xl mx-auto px-6 py-6">
-          {/* SD-8 review: Payouts was a first-class sub-tab before this run, so
-              where it went is said once, above the rail, on every section. */}
-          <div className="bg-white border border-line border-l-[3px] border-l-pine rounded-lg px-4 py-3 mb-5 text-[13.5px] text-ink-soft">
-            Getting paid moved. Stripe, your payouts and what GreenReserve takes are on <a href="/dashboard/money?tab=payouts" className="text-pine font-medium underline">Money → Payouts</a>.
-          </div>
+          {formLoaded && <FinishSetup items={setupItems} />}
 
           <div className="flex flex-col md:flex-row gap-6">
             {/* U-O: the sub-nav moves to the left rail and names the sections
@@ -584,7 +607,7 @@ function SettingsPageInner() {
           )}
 
           {/* ── Course details ── */}
-          {active==='Your course' && (
+          {active==='Course layout' && (
             <div className="space-y-5">
               <SectionCard title="Course details">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -594,7 +617,7 @@ function SettingsPageInner() {
                   <Field label="Slope"><FInput value={form.slope as number} onChange={v=>set('slope',Number(v))} type="number"/></Field>
                   <Field label="Course Rating"><FInput value={form.courseRating as number} onChange={v=>set('courseRating',Number(v))} type="number" step="0.1"/></Field>
                 </div>
-                <p className="text-xs text-ink-soft">Standard fallback fields for a simple 18-hole (or 9-hole) course. For 27+ hole layouts with combos, set up Nines and Products below.</p>
+                <p className="text-xs text-ink-soft">The whole course, as golfers see it on your page. If you have more than 18 holes, name each nine and set what golfers can book below.</p>
               </SectionCard>
               <CourseLayoutTab />
             </div>
@@ -646,7 +669,7 @@ function SettingsPageInner() {
 
 
           {/* ── Member & resident pricing ── */}
-          {active==='Pricing & cancellation' && (
+          {active==='Prices & fees' && (
             <div className="space-y-5">
               <SectionCard title="Member pricing">
                 <Toggle label="Enable member pricing" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
@@ -724,7 +747,7 @@ function SettingsPageInner() {
           )}
 
           {/* ── Cancellation ── */}
-          {active==='Pricing & cancellation' && (
+          {active==='Prices & fees' && (
             <div className="space-y-5">
               {/* SP-B: the course's cancellation & card policy. The preview is
                   describePolicy() — word for word what golfers are shown. */}
@@ -912,82 +935,114 @@ function SettingsPageInner() {
           )}
 
           {/* ── Staff ── */}
-          {active==='Staff & account' && (
+          {active==='Staff' && (
             <div className="space-y-5">
               {/* SP-A: who works here and what each person may do — the owner's alone. */}
               <SectionCard title="Staff & permissions">
                 {isStaffLogin
                   ? <p className="text-sm text-ink-soft">Staff accounts and what each person can do are managed from the course owner&apos;s login.</p>
-                  : <StaffPermissions onCount={setStaffCount} />}
+                  : <StaffPermissions />}
               </SectionCard>
             </div>
           )}
 
-          {/* ── Account ── */}
-          {active==='Staff & account' && (
+          {/* ── Your account ── this login's email, password and two-step, top to bottom. */}
+          {active==='Your account' && (
             <div className="space-y-5">
-              <SectionCard title="Two-Factor Authentication">
-                <p className="text-sm text-ink-soft">Required on every login. Choose how you&apos;d like to receive your 6-digit code.</p>
+              <SectionCard title="Signing in">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-semibold text-ink">Email</div>
+                    <div className="text-sm text-ink break-all">{operatorEmail || '…'}</div>
+                  </div>
+                  <p className="text-[12.5px] text-ink-muted">{isStaffLogin ? 'To change it, ask the course owner.' : <>To change it, message us on <a href="/dashboard/messages" className="text-pine underline">Messages</a>.</>}</p>
+                </div>
+                {/* Staff logins are a separate account: the password and two-step
+                    routes here are the owner's only (both refuse staff). */}
+                {isStaffLogin && <p className="border-t border-line-soft pt-4 text-sm text-ink-soft">Your password and sign-in codes are set up by the course owner. Ask them if you need a new password.</p>}
+                {!isStaffLogin && <div className="border-t border-line-soft pt-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <div>
+                      <div className="text-[13px] font-semibold text-ink">Password</div>
+                      <p className="text-[12.5px] text-ink-muted">For your own login only. Staff keep their own passwords.</p>
+                    </div>
+                    {!pwOpen && (
+                      <button onClick={() => { setPwOpen(true); setPwMsg(''); }}
+                        className="text-[12.5px] font-medium text-pine border border-pine/30 hover:bg-pine/5 rounded-md px-3 py-1.5 transition-colors">
+                        Change password
+                      </button>
+                    )}
+                  </div>
+                  {pwMsg && (
+                    <div className="mt-3 bg-ok/5 border border-ok/20 text-ok rounded-md px-4 py-3 text-sm flex items-center gap-2">
+                      <StatusDot status="ok" />{pwMsg}
+                    </div>
+                  )}
+                  {pwOpen && (
+                    <div className="mt-3 space-y-3">
+                      {pwError && (
+                        <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm flex items-center gap-2">
+                          <StatusDot status="bad" />{pwError}
+                        </div>
+                      )}
+                      <Field label="Current password"><FInput type="password" value={pwForm.currentPassword} onChange={v=>setPwForm(f=>({...f,currentPassword:v}))}/></Field>
+                      <Field label="New password" hint={PASSWORD_REQUIREMENTS_HINT}>
+                        <FInput type="password" value={pwForm.newPassword} onChange={v=>setPwForm(f=>({...f,newPassword:v}))}/>
+                      </Field>
+                      <Field label="New password again"><FInput type="password" value={pwForm.confirmPassword} onChange={v=>setPwForm(f=>({...f,confirmPassword:v}))}/></Field>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button onClick={changePassword} disabled={pwSaving}
+                          className="bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
+                          {pwSaving ? 'Updating…' : 'Update password'}
+                        </button>
+                        <button onClick={() => { setPwOpen(false); setPwError(''); setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="text-[12.5px] text-ink-muted hover:text-ink">Cancel</button>
+                      </div>
+                      <div className="text-[12.5px] text-ink-soft">
+                        {resetEmailSent ? (
+                          <span className="flex items-center gap-2 text-ok"><StatusDot status="ok" />Check {operatorEmail} for a reset link.</span>
+                        ) : (
+                          <>Don&apos;t remember your current password?{' '}
+                            <button onClick={emailResetLinkInstead} disabled={emailingReset||!operatorEmail} className="font-medium text-pine hover:underline disabled:opacity-50">
+                              {emailingReset ? 'Sending…' : 'Email me a reset link'}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>}
+              </SectionCard>
+              {!isStaffLogin && <SectionCard title="Two-step sign-in">
+                <p className="text-sm text-ink-soft -mt-1">Every sign-in asks for a 6-digit code as well as your password. Choose where it&apos;s sent.</p>
                 {error2FA && (
                   <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm flex items-center gap-2">
                     <StatusDot status="bad" />{error2FA}
                   </div>
                 )}
-                <div className="flex gap-2">
-                  <button onClick={() => set('twoFactorMethod','email')}
-                    className={'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium border transition-colors ' + ((form.twoFactorMethod as string) !== 'sms' ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
-                    Email
-                  </button>
-                  <button onClick={() => set('twoFactorMethod','sms')}
-                    className={'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium border transition-colors ' + ((form.twoFactorMethod as string) === 'sms' ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
-                    SMS
-                  </button>
+                <div className="space-y-2">
+                  {([
+                    { key: 'email', label: 'Email', help: operatorEmail ? `Sent to ${operatorEmail}.` : 'Sent to your sign-in email.' },
+                    { key: 'sms', label: 'Text message', help: 'Sent to a mobile number you add below.' },
+                  ] as const).map(o => {
+                    const sel = ((form.twoFactorMethod as string) === 'sms' ? 'sms' : 'email') === o.key;
+                    return (
+                      <label key={o.key} className={'flex items-start gap-2.5 px-3 py-2.5 rounded-md border cursor-pointer bg-white ' + (sel ? 'border-pine/40' : 'border-line')}>
+                        <input type="radio" name="two-step" checked={sel} onChange={() => set('twoFactorMethod', o.key)} className="mt-0.5 accent-pine"/>
+                        <span><span className="block text-sm font-medium text-ink">{o.label}</span><span className="block text-xs text-ink-muted">{o.help}</span></span>
+                      </label>
+                    );
+                  })}
                 </div>
-                {!form.twoFactorPhone && <p className="text-xs text-ink-soft">Add a phone number to enable SMS verification.</p>}
                 {(form.twoFactorMethod as string) === 'sms' && (
-                  <Field label="Phone number for codes">
+                  <Field label="Mobile number for codes">
                     <FInput value={form.twoFactorPhone as string} onChange={v=>set('twoFactorPhone',v)} type="tel" placeholder="+1 (201) 555-0100"/>
                   </Field>
                 )}
-                <button onClick={save2FA} disabled={saving2FA}
-                  className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-                   {saving2FA ? 'Saving...' : saved2FA ? 'Saved' : 'Save 2FA settings'}
+                <button onClick={save2FA} disabled={saving2FA || (!dirtyFields.has('twoFactorMethod') && !dirtyFields.has('twoFactorPhone') && !saved2FA)}
+                  className="w-fit bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
+                  {saving2FA ? 'Saving…' : saved2FA ? 'Saved' : 'Save'}
                 </button>
-              </SectionCard>
-              <SectionCard title="Change Password">
-                <p className="text-sm text-ink-soft">Update the password for your own login. This doesn&apos;t affect staff accounts.</p>
-                {pwMsg && (
-                  <div className="bg-ok/5 border border-ok/20 text-ok rounded-md px-4 py-3 text-sm flex items-center gap-2">
-                    <StatusDot status="ok" />{pwMsg}
-                  </div>
-                )}
-                {pwError && (
-                  <div className="bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm flex items-center gap-2">
-                    <StatusDot status="bad" />{pwError}
-                  </div>
-                )}
-                <Field label="Current Password"><FInput type="password" value={pwForm.currentPassword} onChange={v=>setPwForm(f=>({...f,currentPassword:v}))}/></Field>
-                <Field label="New Password" hint={PASSWORD_REQUIREMENTS_HINT}>
-                  <FInput type="password" value={pwForm.newPassword} onChange={v=>setPwForm(f=>({...f,newPassword:v}))}/>
-                </Field>
-                <Field label="Confirm New Password"><FInput type="password" value={pwForm.confirmPassword} onChange={v=>setPwForm(f=>({...f,confirmPassword:v}))}/></Field>
-                <button onClick={changePassword} disabled={pwSaving}
-                  className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-                   {pwSaving ? 'Updating...' : 'Update password'}
-                </button>
-                <div className="border-t border-line-soft pt-4 text-center">
-                  {resetEmailSent ? (
-                    <p className="text-sm text-ok flex items-center justify-center gap-2"><StatusDot status="ok" />Check {operatorEmail} for a reset link.</p>
-                  ) : (
-                    <>
-                      <p className="text-xs text-ink-soft mb-2">Don&apos;t remember your current password?</p>
-                      <button onClick={emailResetLinkInstead} disabled={emailingReset||!operatorEmail} className="text-sm font-medium text-pine hover:underline disabled:opacity-50">
-                        {emailingReset ? 'Sending...' : 'Email me a reset link instead'}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </SectionCard>
+              </SectionCard>}
             </div>
           )}
 

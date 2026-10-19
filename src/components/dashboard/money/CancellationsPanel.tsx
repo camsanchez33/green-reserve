@@ -38,7 +38,7 @@ export function CancellationsPanel({ bookings, course }: { bookings: MoneyBookin
         <p className="text-[12.5px] text-ink-muted">
           Free cancellation until {course.cancellationHours} hours before
           {course.lateCancellationFee > 0 ? <>, then a ${course.lateCancellationFee.toFixed(2)} fee</> : ', no late fee'}.{' '}
-          <Link href="/dashboard/settings?section=Pricing+%26+cancellation" className="text-pine font-medium hover:underline">Change in Settings</Link>
+          <Link href="/dashboard/settings?section=Prices+%26+fees" className="text-pine font-medium hover:underline">Change in Settings</Link>
         </p>
       </div>
       {course.lateCancellationFee > 0 && !course.stripeAccountActive && (
