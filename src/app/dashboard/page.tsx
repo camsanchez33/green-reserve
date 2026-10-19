@@ -17,6 +17,7 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import { getBookingStatus, statusDot } from '@/lib/booking-status';
+import { INPUT_COMPACT } from '@/components/ui/field';
 import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
 import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
@@ -331,11 +332,11 @@ function DashboardPageInner() {
   // booked and checked-in groups. Every other figure lives on Analytics.
   const liveGroups = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status !== 'cancelled').length ?? 0), 0);
   const checkedIn = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').length ?? 0), 0);
-  // When every slot shares one rate the per-row "18 holes · $50 +$10 cart" is
-  // noise: say it once in the header and drop the column.
+  // Cam 2026-10-19: the header also says how many are still to check in.
+  const awaitingCheckIn = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'confirmed' && !b.noShowAt).length ?? 0), 0);
+  // The rate ("18 holes · $70 +$10 cart") lives in the time's own panel, where
+  // staff need it at the counter — not in the header (Cam 2026-10-19).
   const rateLabel = (t: TeeTime) => `${t.product?.label ? `${t.product.label} · ` : ''}${t.holes} holes · $${t.greenFee}${t.cartFee > 0 ? ` +$${t.cartFee} cart` : ''}`;
-  const rateLabels = new Set(teeTimes.map(rateLabel));
-  const commonRate = teeTimes.length > 0 && rateLabels.size === 1 ? [...rateLabels][0] : null;
 
   const loadTimes = useCallback(async (date: string) => {
     setLoading(true);
@@ -506,7 +507,7 @@ function DashboardPageInner() {
   const nowHM = clockIn(courseTz); // SD-3: the course's clock, not the browser's
   // B-8: a group is late when its tee time went off 10+ minutes ago today and
   // nobody in it is checked in. Read straight off the sheet already loaded.
-  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const nowMin = Number(nowHM.slice(0, 2)) * 60 + Number(nowHM.slice(3, 5)); // the course's clock, like nowHM
   const lateGroups = selectedDate === today()
     ? teeTimes.flatMap(tt => {
         const [h, m] = tt.time.split(':').map(Number);
@@ -772,15 +773,10 @@ function DashboardPageInner() {
                     {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                   </h1>
                   <p className="text-[14px] text-ink mt-2">
-                    {liveGroups} booked · {checkedIn} checked in{commonRate ? <span className="text-ink-muted"> · {commonRate}</span> : null}
+                    {liveGroups} booked · {checkedIn} checked in · {awaitingCheckIn} awaiting check-in
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find golfer..."
-                    className="w-36 sm:w-44 bg-white border border-line rounded-md px-3 py-1.5 text-[13.5px] text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none"/>
-                  <button onClick={() => loadTimes(selectedDate)} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-                    Refresh
-                  </button>
                   {selectedDate >= today() && wxTabs.length > 0 && (
                     <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
                       Weather
@@ -800,48 +796,6 @@ function DashboardPageInner() {
               </div>
 
               {sheetError && <LoadError message={sheetError} onRetry={() => loadTimes(selectedDate)} />}
-
-              {/* B-8: needs attention — late groups surface above the sheet. "Mark
-                  no-show" needs a place to record it (schema, attended); until then
-                  the two honest actions are the existing check-in and "Still coming". */}
-              {lateGroups.length > 0 && (
-                <div className="space-y-2 mb-4">
-                  {lateGroups.map(({ tt, b, ago }) => (
-                    <div key={b.id} className="bg-white border border-line border-l-[3px] border-l-warn px-4 py-3 flex flex-wrap items-center gap-3">
-                      <div className="flex-1 min-w-[220px] text-[13.5px] leading-snug text-ink">
-                        <b className="font-semibold">{fmtTime(tt.time)} group ({b.golferName}) hasn&apos;t checked in</b> — tee time was {ago} minute{ago === 1 ? '' : 's'} ago · {b.players} player{b.players === 1 ? '' : 's'}.
-                      </div>
-                      {!(b.paymentStatus === 'manual' ? access.can('sheet.counter_payment') : access.can('sheet.checkin')) ? null : b.paymentStatus === 'manual' ? (
-                        <button
-                          onClick={() => bookingLifecycle(b, 'paid_offline')}
-                          disabled={rowBusy === b.id}
-                          className="h-[34px] px-3 text-[12.5px] font-medium border border-ink text-ink hover:bg-paper disabled:opacity-50 transition-colors">
-                          {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => { if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
-                          disabled={checkingInId === b.id}
-                          className="h-[34px] px-3 text-[12.5px] font-medium border border-ink text-ink hover:bg-paper disabled:opacity-50 transition-colors">
-                          {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in now'}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setStillComing(prev => new Set(prev).add(b.id))}
-                        className="h-[34px] px-3 text-[12.5px] text-ink-soft hover:text-ink transition-colors">
-                        Still coming
-                      </button>
-                      {/* SD-5: recorded on the booking; the fee cron treats the booking as before. */}
-                      {access.can('sheet.no_show') && <button
-                        onClick={() => bookingLifecycle(b, 'no_show')}
-                        disabled={rowBusy === b.id}
-                        className="h-[34px] px-3 text-[12.5px] text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
-                        {rowBusy === b.id ? 'Saving…' : 'Mark no-show'}
-                      </button>}
-                    </div>
-                  ))}
-                </div>
-              )}
 
               {/* FLOW-1 (Cam 2026-10-01: "why does the dashboard not look like the
                   greenreserve.app demo"): the sheet IS the homepage demo now — one
@@ -865,6 +819,42 @@ function DashboardPageInner() {
                     {selectedDate !== today() && (
                       <button onClick={() => setSelectedDate(today())} className="ml-1 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Today</button>
                     )}
+                  </div>
+                  {/* Cam 2026-10-19: Find golfer sits in the sheet's own bar, and
+                      refresh is a small icon beside it instead of a button. */}
+                  <div className="ml-auto flex items-center gap-2">
+                    <label className="sr-only" htmlFor="sheet-search">Find golfer</label>
+                    <input id="sheet-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find golfer"
+                      className={INPUT_COMPACT + ' w-36 sm:w-56 py-1.5'}/>
+                    <button onClick={() => loadTimes(selectedDate)} aria-label="Refresh the sheet" title="Refresh the sheet"
+                      className="w-8 h-8 rounded-md border border-line inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">
+                      <span aria-hidden="true">↻</span>
+                    </button>
+                  </div>
+                </div>
+                {/* Cam 2026-10-19: the bar under the date says what needs doing now
+                    (groups past their time and not checked in — tap one to open its
+                    time and check in, mark still coming or no-show) and holds the
+                    color key, where it is seen. */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 border-b border-line text-[12.5px]">
+                  {lateGroups.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <StatusDot status="warn" label={`${lateGroups.length} group${lateGroups.length === 1 ? '' : 's'} past their time, not checked in:`} />
+                      {lateGroups.slice(0, 4).map(({ tt, b, ago }) => (
+                        <button key={b.id} type="button" onClick={() => setPanelId(tt.id)}
+                          className="rounded-md bg-warn/[0.08] px-2 py-1 text-ink hover:bg-warn/15 transition-colors">
+                          {fmtTime(tt.time)} {b.golferName} · {ago < 60 ? `${ago} min` : `${Math.floor(ago / 60)} h${ago % 60 ? ` ${ago % 60} min` : ''}`} ago
+                        </button>
+                      ))}
+                      {lateGroups.length > 4 && <span className="text-ink-muted">+{lateGroups.length - 4} more</span>}
+                    </div>
+                  ) : (
+                    <span className="text-ink-soft">{selectedDate === today() ? 'Nothing needs attention right now.' : 'Tap a time to see its groups.'}</span>
+                  )}
+                  <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-soft">
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/25 border-l-[3px] border-ok" />Paid</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-warn/25 border-l-[3px] border-warn" />Booked, not paid yet</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-bad/25 border-l-[3px] border-bad" />Needs attention</span>
                   </div>
                 </div>
               {loading ? (
@@ -917,7 +907,7 @@ function DashboardPageInner() {
             <div className="flex items-start justify-between gap-3 mb-1">
               <div>
                 <h2 className="font-sans font-bold text-ink text-[24px] leading-tight tabular-nums">{fmtTime(panelSlot.time)}</h2>
-                <p className="text-[13px] text-ink-soft">{fmtDate(selectedDate)} · {panelSlot.playersBooked} of {panelSlot.playersAvailable} players{!commonRate ? ` · ${rateLabel(panelSlot)}` : ''}{panelSlot.id === nextUpId ? ' · Next up' : ''}</p>
+                <p className="text-[13px] text-ink-soft">{fmtDate(selectedDate)} · {panelSlot.playersBooked} of {panelSlot.playersAvailable} players · {rateLabel(panelSlot)}{panelSlot.id === nextUpId ? ' · Next up' : ''}</p>
               </div>
               <button onClick={() => setPanelId(null)} className="text-ink-muted hover:text-ink p-1" aria-label="Close"><X className="w-5 h-5" /></button>
             </div>

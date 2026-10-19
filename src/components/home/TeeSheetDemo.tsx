@@ -29,7 +29,6 @@ type State = {
 };
 
 const CAP = 4;
-const HOLES = 18;
 // The sheet's "now" on the demo's today: 7:00 has teed off, 7:15 is next up.
 const NOW = '07:05';
 const GOLFER = { name: 'Alex Rivera', email: 'alex.rivera@example.com' };
@@ -119,7 +118,7 @@ function TeeSheet() {
       <div className={s.sheetHead}>
         <div>
           <div className={s.sheetTitle}>{d.long}</div>
-          <div className={s.sheetLine}>{groups.length} booked · {groups.filter(g => g.done).length} checked in <span className={s.dim}>· {HOLES} holes · ${d.rate}</span></div>
+          <div className={s.sheetLine}>{groups.length} booked · {groups.filter(g => g.done).length} checked in · {groups.filter(g => !g.done).length} awaiting check-in</div>
         </div>
         <input className={s.find} value={st.find} placeholder="Find golfer..." aria-label="Find golfer"
           onChange={e => { const v = e.target.value; update(x => ({ ...x, find: v })); }} />
@@ -131,6 +130,8 @@ function TeeSheet() {
         {!d.today && <button type="button" className={s.todayLink} onClick={() => step(-st.day)}>Today</button>}
       </div>
       <div className={s.bd}>
+        {/* The key sits above the sheet, as on the real board (Cam 2026-10-19). */}
+        <div className={s.lg}><span><i className={s.dOk} />Paid</span><span><i className={s.dWarn} />Booked, not paid yet</span><span><i className={s.dBad} />Needs attention</span></div>
         {hours.map(h => (
           <div key={h} className={s.bdRow}>
             <b className={s.bdHr}>{hourLabel(h)}</b>
@@ -153,7 +154,6 @@ function TeeSheet() {
           </div>
         ))}
         {!rows.length && <p className={s.dim}>No golfer matches “{st.find}”.</p>}
-        <div className={s.lg}><span><i className={s.dOk} />Paid</span><span><i className={s.dWarn} />Booked, not paid yet</span><span><i className={s.dBad} />Needs attention</span></div>
       </div>
 
       {panel && (
