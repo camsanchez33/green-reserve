@@ -87,7 +87,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     } catch { toast('Network error — you are still signed in.'); }
   }
 
-  const { brandColor, name, type, establishedYear, slug, logoUrl } = identity;
+  const { brandColor, name, type, establishedYear, slug } = identity;
   const moneyOnlyCancellations = isStaff && !access.can('money.payments') && !access.can('money.payouts');
   const typeLabel = type === 'semi-private' ? 'Semi-private' : type === 'municipal' ? 'Municipal' : type === 'resort' ? 'Resort' : 'Public course';
   const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ');
@@ -189,10 +189,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <header className="hidden md:block shrink-0" style={{ backgroundColor: brandColor }}>
       <div className="flex items-end gap-8 px-6 lg:px-8 h-16 text-white">
         <div className="self-center flex items-center gap-3 min-w-0 shrink-0">
-          {logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="" className="w-9 h-9 rounded-md bg-white object-contain p-0.5" />
-          )}
+          {/* The course logo box that sat here did nothing (Cam 2026-10-19) — the name carries it. */}
           <span className="font-serif text-[24px] leading-none truncate max-w-[260px]" title={meta}>{name || 'Your course'}</span>
         </div>
         <nav aria-label="Dashboard" className="flex items-end gap-1 min-w-0 overflow-x-auto">

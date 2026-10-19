@@ -6316,7 +6316,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1385,
+      "lines": 1414,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7259,7 +7259,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 244,
+      "lines": 241,
       "purpose": "",
       "brain": [],
       "exports": [
