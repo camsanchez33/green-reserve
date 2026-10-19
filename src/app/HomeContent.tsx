@@ -36,7 +36,8 @@ const HIGHLIGHTS = [
 export default function HomeContent() {
   return (
     <div data-home-root="" className={s.root}>
-      {/* HERO — the logo over the photo, the line, what it is and why it's free, Book a demo (Cam 2026-10-19). */}
+      {/* HERO — the logo over the photo, the line, what it is and why it's free, Learn more (Cam 2026-10-19:
+          a first visit isn't ready for a call; Book a demo stays top right and with the demo below). */}
       <section className={s.hero}>
         <Image src="/home/hero-coast.jpg" alt="" fill priority sizes="(max-width: 768px) 250vw, 100vw" quality={50} className={s.heroImg} />
         <div className={s.heroIn}>
@@ -45,9 +46,8 @@ export default function HomeContent() {
           </h1>
           <p className={`${s.display} ${s.heroLine}`}>The tee sheet your course deserves.</p>
           <p className={s.heroSub}>Online booking, payments and an AI assistant that knows your course. GreenReserve charges your course nothing: golfers pay a small booking fee instead.</p>
-          <a className={`${s.btn} ${s.heroBtn}`} href={DEMO}>Book a demo <Arrow /></a>
+          <a className={`${s.btn} ${s.heroBtn}`} href="#about">Learn more <span aria-hidden="true">↓</span></a>
         </div>
-        <a href="#about" className={s.heroNext}>What it does <span aria-hidden="true">↓</span></a>
       </section>
 
       {/* WHAT IT IS — the headline, the paragraph, the list, then the way on. */}
