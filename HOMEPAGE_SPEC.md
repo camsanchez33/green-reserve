@@ -82,6 +82,24 @@ suggestion save this information". Decisions go here as they are made.
   support@greenreserve.app address forwarding to the Outlook inbox. (No
   separate contact form picked — the "send us a note" form covers it.)
 
+**Legal decisions (Cam 2026-10-19):**
+- Entity: GreenReserve LLC, a New York LLC; governing law and venue New York.
+  Courses re-sign the agreement once.
+- 1% membership fee applies to dues AND initiation fees (keep the code; fix the
+  agreement wording).
+- No lawyer before launch: Claude makes Terms / Privacy / Operator Agreement
+  accurate to the product and flags what is unreviewed (texting consent,
+  card-on-file wording).
+- Cash at the counter: NO GreenReserve fee on cash, card on file or not (the
+  code must stop charging a saved card on "paid at counter"). Abuse is watched
+  on Admin → Revenue ("Not collected, paid at the counter", per course), not
+  prevented. Rejected: a $1 cash fee (it could only be billed to the course,
+  breaking "free for courses") and a cashless rule.
+
+**Operator login (Cam 2026-10-19):** keep it minimal; add a photo/brand panel
+beside the form (homepage feel; form only on phones) and a "Need help signing
+in?" line pointing to support. ("Ask a question" was not swapped for Book a demo.)
+
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
 Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3
