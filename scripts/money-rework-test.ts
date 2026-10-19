@@ -26,7 +26,7 @@ check('title says what it is, not "Money"', page.includes('>Payments and payouts
 check('Stripe dashboard is a button for owners, not a status line', page.includes('Open your Stripe dashboard') && page.includes('!treatAsStaff'));
 check('overview line: paid this week, not paid yet, next payout', ['Paid in the last 7 days', 'Not paid yet', 'Next payout'].every(x => page.includes(x)));
 check('Refresh is an icon', page.includes('aria-label="Refresh"') && page.includes('↻'));
-check('cancellation policy is not edited here', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Pricing+%26+cancellation'));
+check('cancellation policy is not edited here', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Prices+%26+fees'));
 check('no upcoming-bookings list on Money', !cx.includes('Upcoming bookings'));
 check('payments grouped by day, future rounds left to the tee sheet', pay.includes("s.group === 'upcoming') return false"));
 check('payouts come from Stripe, read-only, behind the payouts permission', readFileSync('src/app/api/operator/stripe/payouts/route.ts', 'utf8').includes("requirePermission(session, 'money.payouts')"));
