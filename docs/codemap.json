@@ -6183,7 +6183,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1815,
+      "lines": 1820,
       "purpose": "",
       "brain": [],
       "exports": [
