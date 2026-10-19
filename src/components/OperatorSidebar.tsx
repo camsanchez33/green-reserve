@@ -8,6 +8,7 @@ import {
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import BirdieWidget from '@/components/birdie/BirdieWidget';
+import { openBirdie, useBirdieReady } from '@/lib/birdie/ask';
 import { confirmLeave } from '@/lib/unsaved-guard';
 import AgreementNotice from '@/components/dashboard/AgreementNotice';
 import { recordTabVisit } from '@/lib/dashboard-visits';
@@ -52,6 +53,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const [identity, setIdentity] = useState<CourseIdentity>(() => cachedIdentity || { name: '', type: 'public', brandColor: '#173B2A', establishedYear: null });
   useLayoutEffect(() => { if (!cachedIdentity) { const i = readIdentity(); if (i) setIdentity(i); } }, []);
   const [myCourses, setMyCourses] = useState<MyCourse[]>([]);
+  const birdieOn = useBirdieReady();
   const [switchingCourse, setSwitchingCourse] = useState(false);
   // SP-A: what this login may open — per person, set by the course owner.
   const access = useDashboardAccess();
@@ -264,6 +266,11 @@ export default function OperatorSidebar({ active, onAlertClick }: {
                 <option key={c.id} value={c.id}>{c.name}{c.active && c.liveStatus === 'live' ? '' : ' (draft)'}</option>
               ))}
             </select>
+          )}
+          {/* Cam 2026-10-19: Birdie must be obvious, and never cover a page's buttons. */}
+          {birdieOn && (
+            <button type="button" onClick={openBirdie}
+              className="px-3 py-1 rounded-md border border-white/40 hover:bg-white/10 font-semibold transition-colors">Ask Birdie</button>
           )}
           {/* SD-8b: Settings passes no onAlertClick, so this navigates (guarded). */}
           <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
