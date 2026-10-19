@@ -78,11 +78,11 @@ const FEATURES: { h: string; p: string; items: string[] }[] = [
     ],
   },
   {
-    h: 'Birdie, your assistant',
+    h: 'Your AI assistant',
     p: 'Ask questions about your day in plain words.',
     items: [
       'Ask how today looks, find a golfer’s booking, or check a schedule',
-      'Birdie can draft a change to the sheet, and nothing changes until you confirm it',
+      'It can draft a change to the sheet, and nothing changes until you confirm it',
     ],
   },
   {
