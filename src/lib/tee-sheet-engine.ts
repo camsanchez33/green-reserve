@@ -43,22 +43,35 @@ export async function regenerateUpcoming(courseId: string, days = 8): Promise<vo
   }
 }
 
-export async function generateTeeTimes(courseId: string, dateStr: string): Promise<number> {
+export type ScheduleForSlots = {
+  daysOfWeek: number[]; productId: string | null; startTime: string; endTime: string; intervalMinutes: number; holes: number;
+  greenFeeWeekdayCents: number; greenFeeWeekendCents: number;
+  memberRateWeekdayCents: number | null; memberRateWeekendCents: number | null;
+  residentRateWeekdayCents: number | null; residentRateWeekendCents: number | null;
+  cartFeeCents: number; walkingAllowed: boolean; tierName: string; active?: boolean;
+};
+export type DesiredSlot = {
+  productId: string | null; time: string;
+  holes: number; greenFeeCents: number; memberRateCents: number | null; residentRateCents: number | null;
+  cartFeeCents: number; walkingAllowed: boolean; tierName: string;
+};
+export const slotKey = (productId: string | null, time: string) => `${productId ?? ''}|${time}`;
+
+/**
+ * The slots a day should have, from the course's ACTIVE schedules. Pure — shared
+ * by generateTeeTimes and the Schedule page's save preview (lib/schedule-preview.ts),
+ * so what the preview promises is exactly what a save does.
+ */
+export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], products: { id: string; holes: number; active: boolean }[]): Map<string, DesiredSlot> {
   const d = new Date(dateStr + 'T12:00:00');
   const dayOfWeek = d.getDay();
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-  const blackout = await prisma.blackout.findFirst({ where: { courseId, date: dateStr } });
-  if (blackout) return 0;
-
-  const schedules = await prisma.teeTimeSchedule.findMany({ where: { courseId, active: true } });
   // L2: a schedule scoped to a product generates that product's slots (with
   // the product's hole count); a schedule scoped to an INACTIVE product
   // generates nothing. Unscoped schedules are the simple course, as before.
-  const products = await prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true } });
   const productById = new Map(products.map(p => [p.id, p]));
   const applicable = schedules.filter(
-    s => (s.daysOfWeek.length === 0 || s.daysOfWeek.includes(dayOfWeek))
+    s => s.active !== false && (s.daysOfWeek.length === 0 || s.daysOfWeek.includes(dayOfWeek))
       && (!s.productId || productById.get(s.productId)?.active === true)
   );
 
@@ -69,12 +82,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   // MP-3 B2c+B2d: cents throughout. Because TeeTimeSchedule and TeeTime were
   // converted in the SAME migration, this copy stays a straight pass-through —
   // no x100 anywhere in the generation path.
-  const slotKey = (productId: string | null, time: string) => `${productId ?? ''}|${time}`;
-  const desired = new Map<string, {
-    productId: string | null; time: string;
-    holes: number; greenFeeCents: number; memberRateCents: number | null; residentRateCents: number | null;
-    cartFeeCents: number; walkingAllowed: boolean; tierName: string;
-  }>();
+  const desired = new Map<string, DesiredSlot>();
   for (const schedule of applicable) {
     const greenFeeCents     = isWeekend ? schedule.greenFeeWeekendCents     : schedule.greenFeeWeekdayCents;
     const memberRateCents   = isWeekend ? schedule.memberRateWeekendCents   : schedule.memberRateWeekdayCents;
@@ -82,6 +90,8 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     const productId = schedule.productId ?? null;
     const holes = productId ? (productById.get(productId)?.holes ?? schedule.holes) : schedule.holes;
 
+    // A zero or negative gap would never reach the last tee — skip it rather than loop forever.
+    if (!(schedule.intervalMinutes >= 1)) continue;
     let current = timeToMinutes(schedule.startTime);
     const end = timeToMinutes(schedule.endTime);
     while (current < end) {
@@ -99,6 +109,17 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
       current += schedule.intervalMinutes;
     }
   }
+
+  return desired;
+}
+
+export async function generateTeeTimes(courseId: string, dateStr: string): Promise<number> {
+  const blackout = await prisma.blackout.findFirst({ where: { courseId, date: dateStr } });
+  if (blackout) return 0;
+
+  const schedules = await prisma.teeTimeSchedule.findMany({ where: { courseId, active: true } });
+  const products = await prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true } });
+  const desired = desiredSlots(dateStr, schedules, products);
 
   const existing = await prisma.teeTime.findMany({
     where: { courseId, date: dateStr },
