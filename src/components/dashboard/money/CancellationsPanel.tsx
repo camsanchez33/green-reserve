@@ -1,171 +1,79 @@
 'use client';
-// SD-8 — the Cancellations half of the Money page. Behaviour is the old
-// /dashboard/cancellations page unchanged: the policy form still refuses to
-// save until the real policy has loaded (SD-10), cancelling still says
-// whether a fee was kept, and the history still carries the amber left edge.
-import { useEffect, useState } from 'react';
+// Money rework (Cam 2026-10-19: the policy "is here and not settings — that
+// makes zero sense", "an upcoming bookings tab — what?", "cancellation history
+// needs a complete rework"). History only: who cancelled, when, how far ahead,
+// and whether a fee was kept. The policy is edited in Settings; cancelling a
+// booking is done on the tee sheet (its panel uses lib/cancel-confirm.ts).
+import { useState } from 'react';
+import Link from 'next/link';
 import { StatusDot } from '@/components/ui/StatusDot';
-
-import { dfetch } from '@/lib/dashboard-fetch';
-import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
-import { toast } from '@/components/dashboard/Toast';
 import type { MoneyBooking, MoneyCourse } from './types';
-import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { formatStamp as fmtStamp, formatTeeTime as fmtTime, formatTeeDay as fmtDate } from '@/lib/format';
 
-const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
+const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const hoursAhead = (b: MoneyBooking) => {
+  if (!b.cancelledAt) return null;
+  const tee = Date.parse(`${b.teeTime.date}T${b.teeTime.time.slice(0, 5)}:00`); // browser-local; a label, not a rule
+  const h = (tee - Date.parse(b.cancelledAt)) / 3600000;
+  if (!Number.isFinite(h)) return null;
+  if (h < 0) return 'after the tee time';
+  if (h < 24) return `${Math.max(1, Math.round(h))} hour${Math.round(h) === 1 ? '' : 's'} before`;
+  const d = Math.round(h / 24);
+  return `${d} day${d === 1 ? '' : 's'} before`;
+};
 
-export function CancellationsPanel({ bookings, course, courseLoaded, isStaff, onChanged }: {
-  bookings: MoneyBooking[];
-  course: MoneyCourse;
-  /** False until the real policy has loaded — Save stays disabled (SD-10). */
-  courseLoaded: boolean;
-  /** Staff cancel bookings (that is the job); only the policy is the owner's. */
-  isStaff: boolean;
-  onChanged: () => void;
-}) {
-  const [policy, setPolicy] = useState({ cancellationHours: course.cancellationHours, lateCancellationFee: course.lateCancellationFee });
-  const [policyTouched, setPolicyTouched] = useState(false);
-  const [policySaving, setPolicySaving] = useState(false);
-  const [policySaved, setPolicySaved] = useState(false);
-  const [cancelingId, setCancelingId] = useState<string | null>(null);
-  // SP-A: cancelling and waiving the late fee are separate permissions.
-  const access = useDashboardAccess();
-  const canCancel = access.can('sheet.cancel');
-  const canWaive = access.can('sheet.waive_fee');
-
-  // Adopt the policy the page loaded — and any later refresh of it — but never
-  // over the top of an edit in progress (the SD-8 dirty rule, same as Settings).
-  useEffect(() => {
-    if (!policyTouched) setPolicy({ cancellationHours: course.cancellationHours, lateCancellationFee: course.lateCancellationFee });
-  }, [course.cancellationHours, course.lateCancellationFee, policyTouched]);
-
-  const setField = (k: 'cancellationHours' | 'lateCancellationFee', v: number) => {
-    setPolicyTouched(true);
-    setPolicy(p => ({ ...p, [k]: v }));
-  };
-
-  async function savePolicy() {
-    setPolicySaving(true);
-    // SD-10: "Saved" used to show on a 403 (staff) and a 400 alike.
-    const r = await dfetch('/api/operator/settings', { method: 'PATCH', body: JSON.stringify({ cancellationHours: Number(policy.cancellationHours), lateCancellationFee: Number(policy.lateCancellationFee) }) });
-    setPolicySaving(false);
-    if (!r.ok) { toast(r.error); return; }
-    setPolicySaved(true); setPolicyTouched(false); setTimeout(() => setPolicySaved(false), 2000);
-    onChanged();
-  }
-
-  async function cancelBooking(b: MoneyBooking, waive = false) {
-    if (!confirm(cancelConfirmText(b, waive, canWaive))) return;
-    setCancelingId(b.id);
-    const r = await dfetch<CancelResult>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'cancel', ...(waive ? { waiveFee: true } : {}) }) });
-    setCancelingId(null);
-    if (!r.ok) { toast(r.error); return; }
-    const out = cancelResultText(b, waive, r.data ?? {});
-    toast(out.text, out.tone);
-    onChanged();
-  }
-
-  const today = new Date().toISOString().split('T')[0];
-  const upcoming = bookings.filter(b => b.status === 'confirmed' && b.teeTime.date >= today)
-    .sort((a, b) => (a.teeTime.date + a.teeTime.time).localeCompare(b.teeTime.date + b.teeTime.time));
+export function CancellationsPanel({ bookings, course }: { bookings: MoneyBooking[]; course: MoneyCourse }) {
+  const [feesOnly, setFeesOnly] = useState(false);
   const cancelled = bookings.filter(b => b.status === 'cancelled')
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    .sort((a, b) => (b.cancelledAt ?? b.createdAt).localeCompare(a.cancelledAt ?? a.createdAt));
+  const withFee = cancelled.filter(b => b.paymentStatus === 'cancellation_fee_charged');
+  const rows = feesOnly ? withFee : cancelled;
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-card p-5">
-        <h2 className="text-[15px] font-medium text-ink mb-1">Cancellation policy</h2>
-        <p className="text-[13.5px] text-ink-soft mb-4">Golfers can cancel free until this many hours before their tee time. When the fee is taken, per-player fees, no-show fees and whether a card is saved are set in Settings → Pricing & cancellation.</p>
-        {/* §1b: attention = a 3px left border in the semantic colour on a white card. */}
-        {policy.lateCancellationFee > 0 && !course.stripeAccountActive && (
-          <div className="flex items-start gap-2 bg-white border border-line border-l-[3px] border-l-warn rounded-md px-3 py-2.5 mb-4 text-[12.5px] text-warn">
-            <span className="font-medium shrink-0">Paused —</span>
-            <span>your ${policy.lateCancellationFee.toFixed(2)} late-cancel fee can&apos;t be charged until you connect Stripe. Golfers can still book and cancel; no fee is being collected in the meantime.</span>
-          </div>
-        )}
-        <div className="flex flex-wrap items-end gap-3">
-          <div>
-            <label className="block text-[13px] font-semibold text-ink mb-1.5">Free cancel window (hours)</label>
-            <input type="number" min={0} value={policy.cancellationHours} disabled={isStaff}
-              onChange={e => setField('cancellationHours', Number(e.target.value))}
-              className={iCls + ' w-32 disabled:opacity-60'}/>
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-ink mb-1.5">Late-cancel fee ($)</label>
-            <input type="number" min={0} step="0.01" value={policy.lateCancellationFee} disabled={isStaff}
-              onChange={e => setField('lateCancellationFee', Number(e.target.value))}
-              className={iCls + ' w-32 disabled:opacity-60'}/>
-          </div>
-          <button onClick={savePolicy} disabled={policySaving || !courseLoaded || isStaff}
-            className="bg-pine hover:bg-pine-hover text-white text-[12.5px] font-medium px-4 py-2 rounded-md disabled:opacity-50 transition-colors">
-            {policySaved ? 'Saved' : policySaving ? 'Saving...' : 'Save policy'}
-          </button>
-          <span className="text-xs text-ink-muted pb-0.5">
-            {isStaff
-              ? 'Changing the policy needs the course operator’s login — you can still cancel bookings below.'
-              : 'Set the fee to $0 to turn late-cancellation fees off.'}
-          </span>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <p className="text-[13.5px] text-ink">
+          {cancelled.length === 0 ? 'No cancellations yet.' : 'Your latest cancellations, newest first.'}
+        </p>
+        <p className="text-[12.5px] text-ink-muted">
+          Free cancellation until {course.cancellationHours} hours before
+          {course.lateCancellationFee > 0 ? <>, then a ${course.lateCancellationFee.toFixed(2)} fee</> : ', no late fee'}.{' '}
+          <Link href="/dashboard/settings?section=Pricing+%26+cancellation" className="text-pine font-medium hover:underline">Change in Settings</Link>
+        </p>
+      </div>
+      {course.lateCancellationFee > 0 && !course.stripeAccountActive && (
+        <div className="bg-white border border-line border-l-[3px] border-l-warn rounded-md px-4 py-2.5 text-[13px] text-ink">
+          Your late-cancel fee can&apos;t be charged until Stripe is connected (Payouts tab). Golfers can still book and cancel.
         </div>
-      </div>
+      )}
 
-      <div>
-        <div className="text-[15px] font-semibold text-ink mb-3">Upcoming bookings ({upcoming.length})</div>
-        {upcoming.length === 0 ? (
-          <div className="text-center py-10 bg-white rounded-lg border border-dashed border-line text-ink-muted text-sm">No upcoming confirmed bookings.</div>
-        ) : (
-          <div className="space-y-2">
-            {upcoming.map(b => (
-              <div key={b.id} className="bg-white rounded-lg border border-line p-3 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-medium text-ink text-[13.5px]">{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
-                  <div className="text-[12.5px] text-ink-soft mt-0.5">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)} · {b.golferEmail}</div>
-                </div>
-                {canCancel && (
-                <div className="shrink-0 flex items-center gap-2">
-                  {canWaive && b.cancellationFeeTotal > 0 && (
-                    <button onClick={() => cancelBooking(b, true)} disabled={cancelingId === b.id}
-                      className="text-[12.5px] px-3 py-1.5 rounded-md text-ink-soft hover:text-ink hover:bg-paper disabled:opacity-50 transition-colors">
-                      Cancel, no fee
-                    </button>
-                  )}
-                  <button onClick={() => cancelBooking(b)} disabled={cancelingId === b.id}
-                    className="flex items-center gap-1.5 text-[12.5px] px-3 py-1.5 rounded-md border border-bad/30 text-bad hover:bg-bad/5 disabled:opacity-50 transition-colors">
-                    <StatusDot status="bad" />{cancelingId === b.id ? 'Cancelling...' : 'Cancel'}
-                  </button>
-                </div>
-                )}
-              </div>
+      {cancelled.length > 0 && (
+        <div className="bg-white rounded-lg shadow-card">
+          <div className="flex gap-5 px-4 pt-3 border-b border-line-soft" role="tablist" aria-label="Show">
+            {([[false, 'All'], [true, 'Fee kept']] as [boolean, string][]).map(([v, l]) => (
+              <button key={l} role="tab" aria-selected={feesOnly === v} onClick={() => setFeesOnly(v)}
+                className={'pb-2 -mb-px text-[13.5px] font-medium border-b-2 ' + (feesOnly === v ? 'text-ink border-fairway' : 'text-ink-soft border-transparent hover:text-ink')}>{l}</button>
             ))}
           </div>
-        )}
-      </div>
-
-      <div>
-        <div className="text-[15px] font-semibold text-ink mb-3">Cancellation history ({cancelled.length})</div>
-        {cancelled.length === 0 ? (
-          <div className="text-center py-10 bg-white rounded-lg border border-dashed border-line text-ink-muted text-sm">No cancellations yet.</div>
-        ) : (
-          <div className="space-y-2">
-            {/* U-O: history fades back; a row that carried a late fee keeps
-                an amber left edge so the money is findable at a glance. */}
-            {cancelled.map(b => (
-              <div key={b.id} className={'bg-white rounded-lg border border-line p-3 flex items-center justify-between ' + (b.paymentStatus === 'cancellation_fee_charged' ? 'border-l-[3px] border-l-warn' : 'opacity-70')}>
-                <div>
-                  <div className="font-medium text-ink text-[13.5px] flex items-center gap-1.5">{b.golferName} <span className="text-ink-muted font-normal">· {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
-                  <div className="text-[12.5px] text-ink-soft mt-0.5">Tee time: {fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}</div>
-                  <div className="text-[12.5px] mt-0.5">
-                    <span className="text-ink-muted">{b.cancelledAt ? `Cancelled ${fmtStamp(b.cancelledAt)}` : 'Cancelled'}</span>
-                    {b.paymentStatus === 'cancellation_fee_charged'
-                      ? <span className="text-warn font-medium"> · ${(b.cancellationFeeTotal / 100).toFixed(2)} fee charged{b.cancellationFeeChargedAt ? ` on ${fmtStamp(b.cancellationFeeChargedAt)}` : ''}</span>
-                      : <span className="text-ok"> · no fee — cancelled in time</span>}
+          <ul className="divide-y divide-line-soft">
+            {rows.map(b => {
+              const fee = b.paymentStatus === 'cancellation_fee_charged';
+              const ahead = hoursAhead(b);
+              return (
+                <li key={b.id} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-3 text-[13.5px]">
+                  <div className="min-w-0">
+                    <span className="font-medium text-ink">{b.golferName}</span><span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span>
+                    <div className="text-ink-soft">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}{b.cancelledAt ? <> · cancelled {fmtStamp(b.cancelledAt)}{ahead ? ` (${ahead})` : ''}</> : null}</div>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  <span className="inline-flex items-center gap-1.5 text-ink sm:justify-end">
+                    <StatusDot status={fee ? 'warn' : 'neutral'} />{fee ? `${usd(b.cancellationFeeTotal)} fee kept` : 'No fee'}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

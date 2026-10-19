@@ -180,7 +180,9 @@ function SettingsPageInner() {
     if (stripeParam) router.replace(`/dashboard/money?tab=payouts&stripe=${encodeURIComponent(stripeParam)}`);
   }, [stripeParam, router]);
 
-  const [active, setActive] = useState<Section>('Your course');
+  // Money rework (Cam 2026-10-19): other pages link straight to a section, e.g. ?section=Pricing+%26+cancellation.
+  const sectionParam = searchParams.get('section');
+  const [active, setActive] = useState<Section>(() => (SECTIONS as readonly string[]).includes(sectionParam ?? '') ? sectionParam as Section : 'Your course');
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
