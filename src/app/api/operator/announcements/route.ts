@@ -39,9 +39,11 @@ export async function GET(req: NextRequest) {
   if (!newest || newest.dismissals.length > 0) return NextResponse.json(null);
   // Cam 2026-10-19: an announcement about the agreement stayed up after the
   // course signed it. Once nothing is left to sign it has done its job.
-  if (/agreement/i.test(`${newest.title} ${newest.body}`)) {
+  // Keyed on the title only, so a mention of the agreement in an unrelated
+  // announcement's body never hides it (review 2026-10-19).
+  if (/agreement/i.test(newest.title)) {
     const st = await agreementStatus(session.courseId);
-    if (st.documents.every(d => !d.needsSigning)) return NextResponse.json(null);
+    if (st.total > 0 && st.documents.every(d => !d.needsSigning)) return NextResponse.json(null);
   }
   const { dismissals: _seen, ...announcement } = newest;
   return NextResponse.json(announcement);

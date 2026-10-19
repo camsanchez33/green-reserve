@@ -566,6 +566,20 @@ function DashboardPageInner() {
           <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'still_coming'); }} disabled={rowBusy === b.id}
             className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">{rowBusy === b.id ? '…' : 'Still coming'}</button>
         )}
+        {/* A group past its time and not checked in: the actions the old late
+            cards above the sheet carried (review 2026-10-19) — "Still coming"
+            clears it from the bar's late list for now; "Mark no-show" records it
+            (and is the counter's path to the no-show fee). */}
+        {b.status === 'confirmed' && !b.noShowAt && (selectedDate < today() || (selectedDate === today() && tt.time < nowHM)) && (<>
+          {selectedDate === today() && !stillComing.has(b.id) && (
+            <button onClick={e => { e.stopPropagation(); setStillComing(prev => new Set(prev).add(b.id)); }}
+              className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1">Still coming</button>
+          )}
+          {access.can('sheet.no_show') && (
+            <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'no_show'); }} disabled={rowBusy === b.id}
+              className="shrink-0 text-xs text-bad hover:bg-bad/5 px-2 py-1 rounded-md disabled:opacity-50">{rowBusy === b.id ? '…' : 'Mark no-show'}</button>
+          )}
+        </>)}
         {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
           <button onClick={e => { e.stopPropagation(); bookingLifecycle(b, 'paid_offline'); }} disabled={rowBusy === b.id}
             className="shrink-0 text-white px-2.5 min-h-[36px] md:min-h-0 py-1 rounded-md text-xs font-medium disabled:opacity-50 transition-colors bg-pine hover:bg-pine-hover">
@@ -852,9 +866,9 @@ function DashboardPageInner() {
                     <span className="text-ink-soft">{selectedDate === today() ? 'Nothing needs attention right now.' : 'Tap a time to see its groups.'}</span>
                   )}
                   <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-soft">
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/25 border-l-[3px] border-ok" />Paid</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-warn/25 border-l-[3px] border-warn" />Booked, not paid yet</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-bad/25 border-l-[3px] border-bad" />Needs attention</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/[0.08] border-l-[3px] border-ok" />Paid</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-warn/[0.09] border-l-[3px] border-warn" />Booked, not paid yet</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-bad/[0.08] border-l-[3px] border-bad" />Needs attention</span>
                   </div>
                 </div>
               {loading ? (

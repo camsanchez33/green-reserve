@@ -180,7 +180,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/active-course` | operator | file | POST | `src/app/api/operator/active-course/route.ts` | 30 |
 | `/api/operator/agreement` | operator | file | GET POST | `src/app/api/operator/agreement/route.ts` | 37 |
 | `/api/operator/analytics` | operator | file | GET | `src/app/api/operator/analytics/route.ts` | 35 |
-| `/api/operator/announcements` | operator | file | GET | `src/app/api/operator/announcements/route.ts` | 49 |
+| `/api/operator/announcements` | operator | file | GET | `src/app/api/operator/announcements/route.ts` | 51 |
 | `/api/operator/announcements/dismiss` | operator | file | POST | `src/app/api/operator/announcements/dismiss/route.ts` | 31 |
 | `/api/operator/approve-page` | operator | file | POST | `src/app/api/operator/approve-page/route.ts` | 65 |
 | `/api/operator/blackouts` | operator | file | DELETE GET POST | `src/app/api/operator/blackouts/route.ts` | 47 |
@@ -234,7 +234,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 843 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1371 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1385 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 99 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 525 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
