@@ -56,16 +56,19 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
       expiresAt: { not: null, lte: cutoff, gte: now },
       payToken: { not: '' },
     },
-    include: { tier: true, course: { select: { name: true, stripeAccountActive: true } } },
+    include: { tier: true, course: { select: { name: true, stripeAccountActive: true } }, golfer: { select: { email: true, firstName: true, lastName: true } } },
   });
 
   let renewalsSent = 0;
   for (const m of expiring) {
     if (!m.tier || m.tier.annualFeeCents <= 0 || !m.course.stripeAccountActive) continue;
+    // The account's email wins over the invite address (a self-joined member has no invite address).
+    const to = m.golfer?.email || m.inviteEmail;
+    if (!to) continue;
     try {
       await sendMembershipPaymentLinkEmail({
-        name: m.inviteName,
-        email: m.inviteEmail,
+        name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '),
+        email: to,
         courseName: m.course.name,
         tierName: m.tier.name,
         // MP-3 B2a: column is cents; sendMembershipPaymentLinkEmail renders
