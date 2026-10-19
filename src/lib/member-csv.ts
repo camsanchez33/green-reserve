@@ -5,26 +5,32 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 /** RFC-4180-ish CSV: commas or tabs, quoted fields with "" escapes, CRLF or LF. */
 export function parseCsv(text: string): string[][] {
+  return parseCsvLines(text).map(r => r.cells);
+}
+
+/** The same, with each row's line in the file (1-based), so a problem names the
+ *  line the course sees in their spreadsheet even after blank lines. */
+export function parseCsvLines(text: string): { line: number; cells: string[] }[] {
   const delim = (text.split(/\r?\n/, 1)[0] ?? '').includes('\t') && !(text.split(/\r?\n/, 1)[0] ?? '').includes(',') ? '\t' : ',';
-  const rows: string[][] = [];
-  let row: string[] = [], cell = '', quoted = false;
+  const rows: { line: number; cells: string[] }[] = [];
+  let row: string[] = [], cell = '', quoted = false, lineNo = 1, rowStart = 1;
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
     if (quoted) {
       if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
       else if (ch === '"') quoted = false;
-      else cell += ch;
+      else { if (ch === '\n') lineNo++; cell += ch; }
     } else if (ch === '"' && cell === '') quoted = true;
     else if (ch === delim) { row.push(cell); cell = ''; }
     else if (ch === '\n' || ch === '\r') {
       if (ch === '\r' && text[i + 1] === '\n') i++;
       row.push(cell); cell = '';
-      if (row.some(c => c.trim())) rows.push(row);
-      row = [];
+      if (row.some(c => c.trim())) rows.push({ line: rowStart, cells: row });
+      row = []; lineNo++; rowStart = lineNo;
     } else cell += ch;
   }
   row.push(cell);
-  if (row.some(c => c.trim())) rows.push(row);
+  if (row.some(c => c.trim())) rows.push({ line: rowStart, cells: row });
   return rows;
 }
 
@@ -63,7 +69,8 @@ const no = (v: string) => /^(n|no|unpaid|false|0)$/i.test(v.trim());
 
 /** Rows from the file, with each problem named by its line (1 = the header). */
 export function readMemberCsv(text: string): { rows: ImportRow[]; problems: ImportProblem[]; columns: string[] } {
-  const table = parseCsv(text);
+  const lines = parseCsvLines(text);
+  const table = lines.map(l => l.cells);
   const problems: ImportProblem[] = [];
   if (table.length < 2) return { rows: [], problems: [{ line: 1, message: 'The file needs a header row and at least one member.' }], columns: [] };
   const header = table[0].map(h => h.trim());
@@ -75,7 +82,7 @@ export function readMemberCsv(text: string): { rows: ImportRow[]; problems: Impo
   const rows: ImportRow[] = [];
   const seen = new Set<string>();
   body.slice(0, MAX_IMPORT_ROWS).forEach((r, i) => {
-    const line = i + 2;
+    const line = lines[i + 1].line;
     const get = (k: number) => (k >= 0 ? (r[k] ?? '').trim() : '');
     const email = get(idx.email).toLowerCase();
     const name = (get(idx.name) || [get(idx.first), get(idx.last)].filter(Boolean).join(' ')).slice(0, 120);

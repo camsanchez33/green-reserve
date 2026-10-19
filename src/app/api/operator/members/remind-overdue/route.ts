@@ -46,7 +46,7 @@ export async function POST() {
   const failed: string[] = [];
   for (const m of overdue) {
     if (!m.tier) { skippedFree++; continue; }
-    const initiationCents = m.lastPaidAt ? 0 : m.tier.initiationFeeCents;
+    const initiationCents = m.lastPaidAt || m.initiationWaived ? 0 : m.tier.initiationFeeCents;
     if (m.tier.annualFeeCents + initiationCents <= 0) { skippedFree++; continue; }
     // The account's current email wins over the invite address, as the list does.
     const to = m.golfer?.email || m.inviteEmail;

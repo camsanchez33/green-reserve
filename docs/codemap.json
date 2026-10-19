@@ -4088,7 +4088,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 157,
+      "lines": 158,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8419,7 +8419,7 @@
     },
     {
       "path": "src/components/dashboard/members/ImportMembers.tsx",
-      "lines": 123,
+      "lines": 124,
       "purpose": "Members → Import a list (Cam 2026-10-19).",
       "brain": [],
       "exports": [
@@ -13490,7 +13490,7 @@
     },
     {
       "path": "src/lib/member-csv.ts",
-      "lines": 94,
+      "lines": 101,
       "purpose": "Members → Import a list:",
       "brain": [],
       "exports": [
@@ -13508,6 +13508,10 @@
         },
         {
           "name": "parseCsv",
+          "kind": "fn"
+        },
+        {
+          "name": "parseCsvLines",
           "kind": "fn"
         },
         {
@@ -13533,7 +13537,7 @@
     },
     {
       "path": "src/lib/member-import.ts",
-      "lines": 61,
+      "lines": 65,
       "purpose": "Members → Import a list (Cam 2026-10-19, OPERATOR_REWORK_SPEC \"Members = list first … Add member and Import list at the top\").",
       "brain": [],
       "exports": [
@@ -17763,6 +17767,10 @@
         {
           "name": "renewalRemindedAt",
           "type": "DateTime?"
+        },
+        {
+          "name": "initiationWaived",
+          "type": "Boolean"
         },
         {
           "name": "notes",

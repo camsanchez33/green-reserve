@@ -46,13 +46,17 @@ export async function importMembers(courseId: string, rows: ImportRow[], opts: I
           status: 'active', addedBy: opts.addedBy || 'import', notes: 'Imported',
           inviteEmail: r.email, inviteName: name, invitePhone: r.phone || golfer?.phone || '',
           inviteAccepted: !!golfer, payToken: randomUUID(), expiresAt,
+          // Already a member of the course: no one-time initiation fee on their dues.
+          initiationWaived: true,
           ...(paid ? { paymentStatus: 'paid_offline', lastPaidAt: now, startedAt: now } : {}),
         },
       });
       taken.add(r.email);
       added++;
-    } catch {
-      // A second import racing this one (golferId_courseId unique): count it as already there.
+    } catch (err) {
+      // Only the unique key means "already there" (a second import racing this
+      // one); anything else fails the import so the page says so.
+      if ((err as { code?: string })?.code !== 'P2002') throw err;
       skipped.push({ line: r.line, email: r.email, reason: 'Already a member' });
     }
   }

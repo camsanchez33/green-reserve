@@ -44,7 +44,7 @@ export async function GET(
   }
 
   if (
-    membership.startedAt &&
+    membership.startedAt && !membership.initiationWaived &&
     membership.tier?.initiationFeeCents &&
     membership.tier.initiationFeeCents > 0
   ) {

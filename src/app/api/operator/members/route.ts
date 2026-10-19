@@ -19,7 +19,7 @@ async function maybeSendPayLink(membershipId: string, isRenewal = false) {
   if (!to) return;
   // MP-3 B2a: compare in cents, convert to dollars only for the email, which
   // renders $${annualFee.toFixed(2)}.
-  const initiationCents = m.lastPaidAt ? 0 : m.tier.initiationFeeCents;
+  const initiationCents = m.lastPaidAt || m.initiationWaived ? 0 : m.tier.initiationFeeCents;
   if (m.tier.annualFeeCents + initiationCents <= 0) return;
   if (!m.course.stripeAccountActive) return;
   await sendMembershipPaymentLinkEmail({

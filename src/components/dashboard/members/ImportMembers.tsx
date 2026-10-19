@@ -30,7 +30,8 @@ export function ImportMembers({ tiers, onClose, onImported }: { tiers: Tier[]; o
   async function pickFile(f: File | undefined) {
     if (!f) return;
     if (f.size > 1_000_000) { setError('That file is over 1 MB — split it into smaller files.'); return; }
-    setError(''); setResult(null); setFileName(f.name); setCsv(await f.text());
+    try { const text = await f.text(); setError(''); setResult(null); setFileName(f.name); setCsv(text); }
+    catch { setError('That file couldn’t be read. Save it as CSV from your spreadsheet and choose it again.'); }
   }
 
   async function runImport() {
@@ -50,7 +51,7 @@ export function ImportMembers({ tiers, onClose, onImported }: { tiers: Tier[]; o
       </div>
       {result ? (
         <div className="space-y-3 text-[13.5px] text-ink">
-          <p><span className="font-semibold">{result.added} member{result.added === 1 ? '' : 's'} added.</span> Nobody was emailed — they get member rates as soon as they sign in with the email on the list.</p>
+          <p><span className="font-semibold">{result.added} member{result.added === 1 ? '' : 's'} added.</span> Nobody was emailed — they get member rates as soon as they sign in with the email on the list. Paid members whose membership ends within 30 days get the usual renewal email the next morning.</p>
           {(result.skipped.length > 0 || result.problems.length > 0) && (
             <div>
               <p className="font-semibold">{result.skipped.length + result.problems.length} line{result.skipped.length + result.problems.length === 1 ? '' : 's'} not added:</p>
@@ -65,7 +66,7 @@ export function ImportMembers({ tiers, onClose, onImported }: { tiers: Tier[]; o
       ) : (
         <>
           <p className="text-[13px] text-ink-soft mb-4">
-            A spreadsheet saved as CSV, with a header row. Needed: <b className="font-semibold text-ink">Email</b> and <b className="font-semibold text-ink">Name</b> (or First name and Last name). Optional: Phone, Membership, Expires, Paid. Members already on your list are skipped, never changed. Nobody is emailed.
+            A spreadsheet saved as CSV, with a header row. Needed: <b className="font-semibold text-ink">Email</b> and <b className="font-semibold text-ink">Name</b> (or First name and Last name). Optional: Phone, Membership, Expires, Paid. Members already on your list are skipped, never changed. They already belong, so no joining fee is ever added to their dues. Nobody is emailed.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">

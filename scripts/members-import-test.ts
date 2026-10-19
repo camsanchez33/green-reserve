@@ -37,6 +37,8 @@ async function main() {
   check('headers by meaning; first + last joined; email lower-cased', read.rows[0].email === 'jane@x.com' && read.rows[0].name === 'Jane Smith' && read.rows[0].tier === 'Gold' && read.rows[0].expires === '2027-03-31' && read.rows[0].paid === true, read.rows[0]);
   check('bad email, duplicate and unreadable date are named by line', read.problems.map(p => p.line).join() === '3,4,5', read.problems);
   check('"no" in Paid reads as not paid', read.rows.find(r => r.email === 'ann@x.com')?.paid === false);
+  const gap = readMemberCsv('Email,Name\n\na@x.com,A\n\n\nbad,B');
+  check('line numbers count blank lines, as the spreadsheet does', gap.rows[0].line === 3 && gap.problems[0]?.line === 6, gap);
   check('no Email column: one clear message', /No "Email" column/.test(readMemberCsv('Name\nX').problems[0]?.message ?? ''));
 
   // ── Import ─────────────────────────────────────────────────────────────────
@@ -63,6 +65,7 @@ async function main() {
   check('added count', r.added === (acct ? 3 : 2), r);
   check('tier by name, case-insensitive; paid → paid_offline with the given expiry', a?.tierId === gold.id && a?.paymentStatus === 'paid_offline' && a?.expiresAt?.toISOString().startsWith('2027-03-31') === true, a);
   check('unknown tier → the default; not paid → unpaid, no expiry made up', b?.tierId === basic.id && b?.paymentStatus === 'unpaid' && b?.expiresAt === null, b);
+  check('imported members never owe the joining fee again', a?.initiationWaived === true && b?.initiationWaived === true);
   const old = await prisma.courseMembership.findUnique({ where: { id: already.id } });
   check('an existing member is skipped and never changed', r.skipped.some(s => s.email === `${TAG}-old@x.com` && s.reason === 'Already a member') && old?.inviteName === 'Old Member' && old?.notes === 'keep me');
   check('no name and no account → skipped with the reason', r.skipped.some(s => s.email === `${TAG}-noname@x.com`));
@@ -77,6 +80,12 @@ async function main() {
   // ── Source guards ──────────────────────────────────────────────────────────
   const route = readFileSync('src/app/api/operator/members/import/route.ts', 'utf8');
   check('the import route needs members.edit and reads the file itself', route.includes("requirePermission(session, 'members.edit')") && route.includes('readMemberCsv(csv)'));
+  check('every dues path skips the joining fee for imported members',
+    readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
+    && readFileSync('src/app/api/operator/members/remind-overdue/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
+    && readFileSync('src/app/api/membership/[id]/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
+    && readFileSync('src/app/api/member/[courseSlug]/payments/route.ts', 'utf8').includes('!membership.initiationWaived'));
+  check('only "already a member" is swallowed; other failures fail the import', readFileSync('src/lib/member-import.ts', 'utf8').includes("code !== 'P2002') throw err"));
   check('the import never emails', !/send\w*Email|sendSms/.test(route + readFileSync('src/lib/member-import.ts', 'utf8')));
   check('the members list returns each member\'s last round', readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('lastRound:      lastRound(m)'));
 
