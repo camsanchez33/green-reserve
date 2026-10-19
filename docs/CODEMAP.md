@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-412 source files · 213 routes · 121 libraries · 39 models
+413 source files · 213 routes · 122 libraries · 39 models
 
 ## Single sources of truth
 
@@ -236,14 +236,14 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 843 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1414 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1429 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 117 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 610 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 70 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 93 |
-| `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 668 |
-| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 193 |
+| `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 713 |
+| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 195 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 231 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 316 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 27 |
@@ -385,6 +385,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/golfer-messages.ts` | 1 | 110 | MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07: | `audience`, `checkWindow`, `MAX_MESSAGE_CHARS`, `reach`, `sendCourseMessage`, `SMS_CHARS`, `smsRoom`, `Window` |
 | `src/lib/receipt-charges.ts` | 1 | 94 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |
+| `src/lib/tee-time-fit.ts` | 1 | 19 | Cam 2026-10-19: | `FIT_WINDOW_MIN`, `timesTooClose` |
 | `src/lib/tier-wire.ts` | 1 | 43 |  | `tierToWire` |
 | `src/lib/use-resource.ts` | 1 | 40 | MP-11b (ADMIN_V4 V4-7 item 4). | `ResourceError`, `useResource` |
 | `src/lib/weather-cancel.ts` | 1 | 89 | WX-1 weather cancel (Cam 2026-10-01: | `applyWeatherCancel`, `isWeatherTime`, `planWeatherCancel`, `WeatherGroup`, `WeatherPlan`, `WeatherResult` |
@@ -401,9 +402,9 @@ Sorted the same way.
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
 | `src/components/ui/StatusDot.tsx` | 43 | 36 |  | `StatusDot` |
-| `src/components/ui/Card.tsx` | 36 | 17 |  | `Card`, `CARD` |
-| `src/components/ui/Eyebrow.tsx` | 27 | 19 |  | `Eyebrow`, `EYEBROW` |
-| `src/components/ui/field.ts` | 24 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
+| `src/components/ui/Card.tsx` | 35 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/Eyebrow.tsx` | 26 | 19 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/ui/field.ts` | 23 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 14 | 267 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 10 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 10 | 264 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
@@ -426,7 +427,7 @@ Sorted the same way.
 | `src/components/admin/InquiryCallCards.tsx` | 1 | 914 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
 | `src/components/admin/OwnerTwoFactorCard.tsx` | 1 | 159 | OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only). | `default (OwnerTwoFactorCard)` |
 | `src/components/AnnouncementBanner.tsx` | 1 | 51 |  | `default (AnnouncementBanner)` |
-| `src/components/birdie/BirdieWidget.tsx` | 1 | 207 | BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard. | `default (BirdieWidget)` |
+| `src/components/birdie/BirdieWidget.tsx` | 1 | 222 | BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard. | `default (BirdieWidget)` |
 | `src/components/birdie/ConfirmCard.tsx` | 1 | 96 | BIRDIE_AI_SPEC B4b — a change Birdie drafted, waiting on the operator. | `ConfirmCard` |
 | `src/components/dashboard/AgreementNotice.tsx` | 1 | 68 | AGREEMENT_SPEC AG-3 §3 — the re-acceptance banner and, after the deadline, the modal. | `AGREEMENT_REQUIRED_EVENT`, `default (AgreementNotice)` |
 | `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 469 |  | `default (CourseLayoutTab)` |

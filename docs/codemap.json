@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 412,
+    "files": 413,
     "routes": 213,
-    "libs": 121,
+    "libs": 122,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -6263,7 +6263,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 193,
+      "lines": 195,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6282,7 +6282,6 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "lucide-react",
@@ -6375,7 +6374,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1414,
+      "lines": 1429,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6408,6 +6407,7 @@
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
@@ -7623,7 +7623,7 @@
     },
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
-      "lines": 207,
+      "lines": 222,
       "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
       "brain": [],
       "exports": [
@@ -8499,7 +8499,6 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
@@ -14720,6 +14719,31 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/lib/schedule-service.ts"
+      ]
+    },
+    {
+      "path": "src/lib/tee-time-fit.ts",
+      "lines": 19,
+      "purpose": "Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FIT_WINDOW_MIN",
+          "kind": "const"
+        },
+        {
+          "name": "timesTooClose",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
       ]
     },
     {
