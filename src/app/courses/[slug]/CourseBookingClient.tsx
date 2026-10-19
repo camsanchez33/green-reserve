@@ -590,7 +590,7 @@ export default function CourseDetailPage({
                 <div className="mb-8">
                   <p className="text-[15px] font-semibold text-ink mb-3">Facilities</p>
                   <ul className="text-sm text-ink-soft list-disc pl-5 space-y-0.5">
-                    {amenities.map((a: string) => <li key={a}>{a}</li>)}
+                    {amenities.map((a: string, i: number) => <li key={i}>{a}</li>)}
                   </ul>
                 </div>
               )}
@@ -1576,7 +1576,8 @@ export default function CourseDetailPage({
                       { label: 'Course type', value: typeLabel },
                       { label: 'Holes', value: String(course.holes) },
                       { label: 'Par', value: String(course.par) },
-                      { label: 'Cart', value: course.cart_required ? 'Required' : 'Optional' },
+                      // A carts-only course says so under Walking; "Cart: Optional" beside it read as a contradiction.
+                      { label: 'Cart', value: course.walking_policy === 'never' ? '' : course.cart_required ? 'Required' : 'Optional' },
                       { label: 'State', value: course.state },
                     ].filter(f => f.value && f.value !== 'undefined' && f.value !== 'null').map(f => (
                       <div key={f.label}>
@@ -1596,7 +1597,7 @@ export default function CourseDetailPage({
                   {(course.dress_code?.length ?? 0) > 0 && (
                     <div>
                       <h2 className="font-serif text-ink text-[22px] leading-none mb-3">Dress code</h2>
-                      <ul className="text-ink list-disc pl-5 space-y-0.5">{course.dress_code!.map(l => <li key={l}>{l}</li>)}</ul>
+                      <ul className="text-ink list-disc pl-5 space-y-0.5">{course.dress_code!.map((l, i) => <li key={i}>{l}</li>)}</ul>
                     </div>
                   )}
                 </div>
@@ -1633,7 +1634,7 @@ export default function CourseDetailPage({
                   <div className="border-t border-line pt-5">
                     <h2 className="font-serif text-ink text-[22px] leading-none mb-4">Facilities</h2>
                     <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-ink list-disc pl-5">
-                      {amenities.map(a => <li key={a}>{a}</li>)}
+                      {amenities.map((a, i) => <li key={i}>{a}</li>)}
                     </ul>
                   </div>
                 )}

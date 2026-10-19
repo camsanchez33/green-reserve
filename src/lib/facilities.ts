@@ -37,8 +37,10 @@ export function facilityLines(f: FacilityFields): string[] {
   if (f.hasClubRental) out.push(withDetail('Club rental', usd(f.clubRentalRateCents)));
   if (f.hasPushCartRental) out.push(withDetail('Push carts', usd(f.pushCartRateCents)));
   if (f.hasCaddies) {
-    const looper = f.caddieType !== 'fore_caddie' && usd(f.caddieLooperRateCents);
-    const fore = f.caddieType !== 'looper' && usd(f.caddieForeRateCents);
+    // Unset type reads as "carry the bag", the same default Settings shows.
+    const type = f.caddieType || 'looper';
+    const looper = type !== 'fore_caddie' && usd(f.caddieLooperRateCents);
+    const fore = type !== 'looper' && usd(f.caddieForeRateCents);
     out.push(withDetail('Caddies', looper && `${looper} a bag`, fore && `fore caddie ${fore}`, f.caddieNote?.trim()));
   }
   if (f.hasGpsCarts) out.push('GPS in the carts');

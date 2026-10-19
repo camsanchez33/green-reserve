@@ -139,3 +139,9 @@ Decisions (Cam's picks):
 - Pro shop for launch: a proper catalog (categories, prices, stock, quick-add) and ringing items up onto a round or as a walk-up sale (pay link or cash). A card reader (Stripe Terminal) comes after launch. The 50¢ shop fee stays off until the agreement lists it.
 
 My calls (no question needed): course identity edits go to GreenReserve for approval, golfer-facing content saves straight away; Staff (people, permissions) and Your account (login email, password, two-factor) are separate sections; dress code and walking policy become plain text boxes with examples and a live preview of how golfers see them; Facilities becomes a checklist of what the course has, each with a short optional note, shown on the booking page.
+
+Shipped notes (2026-10-19):
+- Facilities has no separate note per item. Adding one would need a new column, and that migration waits until after launch. The existing detail fields (range type and balls, pro shop phone, rental prices, caddie type, rates and note, tournament frequency) do that job, and anything else goes in "Anything else" (one line each).
+- Tee colour comes from the tee's name (Blue, Black, Gold…); it is not stored. Par stays one number for the course; there is no par per tee.
+- Resident rates are saved on schedules but never charged: no booking or counter path applies them. Whether to build that or hide resident pricing until after launch is Cam's call.
+
