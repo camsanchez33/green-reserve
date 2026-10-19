@@ -26,7 +26,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 117,
+      "lines": 116,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6572,7 +6572,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 595,
+      "lines": 594,
       "purpose": "",
       "brain": [],
       "exports": [
