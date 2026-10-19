@@ -240,6 +240,10 @@ export async function PATCH(req: NextRequest) {
       status:    status    ?? membership.status,
       notes:     notes     ?? membership.notes,
       expiresAt: expiresAt !== undefined ? (expiresAt ? new Date(expiresAt) : null) : membership.expiresAt,
+      // A golfer's self-join has no pay link yet (api/golfer/memberships). Once
+      // staff put it on a tier, it can owe dues — mint the token so the pay
+      // link, the overdue reminder and the dues cron all reach it.
+      ...(!membership.payToken && (tierId ?? membership.tierId) ? { payToken: randomUUID() } : {}),
     },
     include: {
       golfer: { select: { firstName: true, lastName: true, email: true, phone: true } },
