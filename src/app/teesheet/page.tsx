@@ -46,7 +46,7 @@ const FEATURES: { h: string; p: string; items: string[] }[] = [
     p: 'Golfers pay with one card payment to your course’s own Stripe account.',
     items: [
       'The round is charged when the group checks in, not when they book',
-      'Text a golfer a pay link, and they pay on their own phone with Apple Pay, Google Pay or a card',
+      'Send a golfer a pay link, and they pay on their own phone with Apple Pay, Google Pay or a card',
       'Cash at the counter is marked paid from the tee sheet',
       'Staff can take a card at the counter when they need to',
     ],
