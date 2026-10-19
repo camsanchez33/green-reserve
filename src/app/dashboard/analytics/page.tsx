@@ -428,7 +428,7 @@ function GolfersTab({ d }: { d: Data }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <Fig label="Golfers" value={g.identified.toLocaleString()} sub={`${g.newCustomers} new, ${g.returning} came back`} />
         <Fig label="Came back" value={pctS(g.returningPct)} sub="booked with you more than once, counting past visits" />
-        <Fig label="Kept from before" value={pctS(g.retentionPct)} sub={`${g.retained} of ${g.previousCustomers} from the period before played again`} />
+        <Fig label="Kept from before" value={pctS(g.retentionPct)} sub={`${g.retained} of ${g.previousCustomers} from the period before booked with you again`} />
         <Fig label="Members" value={String(g.members.active)} sub={`active, of ${g.members.onFile} on file`} />
       </div>
 

@@ -35,5 +35,7 @@ check('Birdie fills the question but does not send it', w.includes('setInput(q.s
 check('no unsold-spot dollar figure reaches Birdie or the monthly review', !readFileSync('src/lib/monthly-review.ts', 'utf8').includes('unsoldTeeTimeLossDollars') && !readFileSync('src/lib/monthly-review.ts', 'utf8').includes('lostDollars: dollars(h.lostCents)') && !readFileSync('src/lib/birdie/tools.ts', 'utf8').includes('lostToEmptySpots'));
 check('a new sign-in forgets the last course’s top bar', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("sessionStorage.removeItem('gr:op-identity')"));
 check('tile wording matches the numbers', page.includes('of bookings whose tee time has passed') && page.includes('counting past visits'));
+check('sign-in is a full page load, so no cached course survives', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("window.location.assign(data.redirect || '/dashboard')"));
+check('“kept from before” says booked, not played', page.includes('from the period before booked with you again'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
