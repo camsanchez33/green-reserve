@@ -23,6 +23,7 @@ import { askBirdie, useBirdieReady, APPLIED_EVENT } from '@/lib/birdie/ask';
 import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityFields } from '@/lib/facilities';
 import { Card } from '@/components/ui/Card';
 import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
+import { WhoPaysWhat } from '@/components/dashboard/settings/WhoPaysWhat';
 
 type Course = Record<string, unknown>;
 // U-O (UI_REVISE_SPEC §3, "Settings: sub-nav on the left naming the existing
@@ -750,19 +751,19 @@ function SettingsPageInner() {
           {/* ── Member & resident pricing ── */}
           {active==='Prices & fees' && (
             <div className="space-y-5">
-              <SectionCard title="Member pricing">
-                <Toggle label="Enable member pricing" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
-                <div className="text-[12.5px] text-pine bg-pine/5 border border-pine/20 rounded-md px-3 py-2">Member rates are set per-schedule in your Schedule setup page. Member advance booking is set under Booking rules.</div>
-              </SectionCard>
-              <SectionCard title="Resident pricing">
-                <Toggle label="Enable resident pricing" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
+              {/* Cam 2026-10-19: member vs resident pricing confused people. One
+                  table of who pays what, read from Schedule and Members. */}
+              <WhoPaysWhat canSeeSchedule={access.can('schedule.view')} canSeeMembers={access.can('members.view')} />
+              <SectionCard title="Members and residents">
+                <Toggle label="We offer member prices" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
+                <Toggle label="We offer resident prices" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
                 {!!form.hasResidentPricing && (
                   <>
                     <div className="grid grid-cols-2 gap-3">
-                      <Field label="Resident County"><FInput value={form.residentCounty as string} onChange={v=>set('residentCounty',v)} placeholder="e.g. Bergen"/></Field>
-                      <Field label="Resident State"><FInput value={form.residentState as string} onChange={v=>set('residentState',v)} maxLength={2} placeholder="NJ"/></Field>
+                      <Field label="Who counts as a resident: county"><FInput value={form.residentCounty as string} onChange={v=>set('residentCounty',v)} placeholder="e.g. Bergen"/></Field>
+                      <Field label="State"><FInput value={form.residentState as string} onChange={v=>set('residentState',v)} maxLength={2} placeholder="NJ"/></Field>
                     </div>
-                    <Toggle label="Proof of residency required at check-in" checked={!!form.residentProofRequired} onChange={()=>tog('residentProofRequired')}/>
+                    <Toggle label="Residents show proof of residency at check-in" checked={!!form.residentProofRequired} onChange={()=>tog('residentProofRequired')}/>
                   </>
                 )}
               </SectionCard>
