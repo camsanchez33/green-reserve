@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 434,
-    "routes": 221,
-    "libs": 132,
+    "files": 432,
+    "routes": 220,
+    "libs": 131,
     "models": 42,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4088,7 +4088,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 158,
+      "lines": 157,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4602,34 +4602,6 @@
       "usedBy": []
     },
     {
-      "path": "src/app/api/operator/members/import/route.ts",
-      "lines": 35,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "POST",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/operator/members/import",
-      "kind": "api",
-      "methods": [
-        "POST"
-      ],
-      "auth": "operator",
-      "guard": "file",
-      "imports": [
-        "@/lib/agreement-required",
-        "@/lib/member-csv",
-        "@/lib/member-import",
-        "@/lib/rate-limit",
-        "@/lib/session",
-        "next/server"
-      ],
-      "usedBy": []
-    },
-    {
       "path": "src/app/api/operator/members/remind-overdue/route.ts",
       "lines": 76,
       "purpose": "",
@@ -4659,7 +4631,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 293,
+      "lines": 277,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6430,7 +6402,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 685,
+      "lines": 671,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6449,7 +6421,6 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
-        "@/components/dashboard/members/ImportMembers",
         "@/components/dashboard/members/ResidentsCard",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -6696,7 +6667,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1165,
+      "lines": 1166,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6719,6 +6690,7 @@
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/components/dashboard/settings/FinishSetup",
+        "@/components/dashboard/settings/WhoPaysWhat",
         "@/components/ui/Card",
         "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
@@ -8137,9 +8109,9 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
-        "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
-        "src/components/dashboard/money/PayoutsTable.tsx"
+        "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
     {
@@ -8418,35 +8390,6 @@
       ]
     },
     {
-      "path": "src/components/dashboard/members/ImportMembers.tsx",
-      "lines": 124,
-      "purpose": "Members → Import a list (Cam 2026-10-19).",
-      "brain": [],
-      "exports": [
-        {
-          "name": "ImportMembers",
-          "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "@/components/dashboard/LoadError",
-        "@/components/ui/Card",
-        "@/components/ui/field",
-        "@/lib/dashboard-fetch",
-        "@/lib/member-csv",
-        "lucide-react",
-        "react"
-      ],
-      "usedBy": [
-        "src/app/dashboard/members/page.tsx"
-      ]
-    },
-    {
       "path": "src/components/dashboard/members/ResidentsCard.tsx",
       "lines": 166,
       "purpose": "RES-1 (Cam 2026-10-19):",
@@ -8665,6 +8608,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/settings/WhoPaysWhat.tsx",
+      "lines": 97,
+      "purpose": "Settings → Prices & fees:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "WhoPaysWhat",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/lib/dashboard-fetch",
+        "@/lib/who-pays",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/home/TeeSheetDemo.tsx",
       "lines": 320,
       "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
@@ -8778,10 +8749,10 @@
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
-        "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
-        "src/components/dashboard/settings/FinishSetup.tsx"
+        "src/components/dashboard/settings/FinishSetup.tsx",
+        "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
     {
@@ -9107,7 +9078,6 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
       ]
     },
@@ -9666,7 +9636,6 @@
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
-        "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -12121,9 +12090,9 @@
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
-        "src/components/dashboard/money/PayoutsTable.tsx"
+        "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
     {
@@ -13489,86 +13458,6 @@
       ]
     },
     {
-      "path": "src/lib/member-csv.ts",
-      "lines": 101,
-      "purpose": "Members → Import a list:",
-      "brain": [],
-      "exports": [
-        {
-          "name": "ImportProblem",
-          "kind": "type"
-        },
-        {
-          "name": "ImportRow",
-          "kind": "type"
-        },
-        {
-          "name": "MAX_IMPORT_ROWS",
-          "kind": "const"
-        },
-        {
-          "name": "parseCsv",
-          "kind": "fn"
-        },
-        {
-          "name": "parseCsvLines",
-          "kind": "fn"
-        },
-        {
-          "name": "readMemberCsv",
-          "kind": "fn"
-        },
-        {
-          "name": "toYmd",
-          "kind": "fn"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [],
-      "usedBy": [
-        "src/app/api/operator/members/import/route.ts",
-        "src/components/dashboard/members/ImportMembers.tsx",
-        "src/lib/member-import.ts"
-      ]
-    },
-    {
-      "path": "src/lib/member-import.ts",
-      "lines": 65,
-      "purpose": "Members → Import a list (Cam 2026-10-19, OPERATOR_REWORK_SPEC \"Members = list first … Add member and Import list at the top\").",
-      "brain": [],
-      "exports": [
-        {
-          "name": "importMembers",
-          "kind": "fn"
-        },
-        {
-          "name": "ImportOptions",
-          "kind": "type"
-        },
-        {
-          "name": "ImportResult",
-          "kind": "type"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "./member-csv",
-        "./prisma",
-        "crypto"
-      ],
-      "usedBy": [
-        "src/app/api/operator/members/import/route.ts"
-      ]
-    },
-    {
       "path": "src/lib/member-session.ts",
       "lines": 108,
       "purpose": "",
@@ -14322,7 +14211,6 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
-        "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
         "src/lib/monthly-review.ts",
@@ -14505,7 +14393,6 @@
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/agreement/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
-        "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
@@ -14926,7 +14813,6 @@
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
-        "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -15670,7 +15556,8 @@
       "imports": [],
       "usedBy": [
         "src/app/api/bookings/route.ts",
-        "src/lib/move-booking.ts"
+        "src/lib/move-booking.ts",
+        "src/lib/who-pays.ts"
       ]
     },
     {
@@ -15947,6 +15834,49 @@
       ],
       "usedBy": [
         "src/app/api/operator/weather-cancel/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/who-pays.ts",
+      "lines": 104,
+      "purpose": "Settings → Prices & fees, \"Who pays what\" (Cam 2026-10-19, OPERATOR_REWORK_SPEC \"Settings — round 1\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "Cell",
+          "kind": "type"
+        },
+        {
+          "name": "Period",
+          "kind": "type"
+        },
+        {
+          "name": "Row",
+          "kind": "type"
+        },
+        {
+          "name": "whoPays",
+          "kind": "fn"
+        },
+        {
+          "name": "WireSchedule",
+          "kind": "type"
+        },
+        {
+          "name": "WireTier",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./tier-rates"
+      ],
+      "usedBy": [
+        "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
     {
@@ -16617,7 +16547,6 @@
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/operator/bookings/route.ts",
-        "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
@@ -17769,10 +17698,6 @@
           "type": "DateTime?"
         },
         {
-          "name": "initiationWaived",
-          "type": "Boolean"
-        },
-        {
           "name": "notes",
           "type": "String"
         },
@@ -17787,8 +17712,7 @@
         "src/app/api/golfer/memberships/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
-        "src/lib/lifecycle.ts",
-        "src/lib/member-import.ts"
+        "src/lib/lifecycle.ts"
       ],
       "readers": [
         "src/app/api/admin/activity/route.ts",
@@ -17812,7 +17736,6 @@
         "src/lib/analytics.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/lifecycle.ts",
-        "src/lib/member-import.ts",
         "src/lib/member-session.ts"
       ]
     },
@@ -18443,7 +18366,6 @@
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/golfer/profile/route.ts",
         "src/app/api/operator/members/route.ts",
-        "src/lib/member-import.ts",
         "src/lib/member-session.ts"
       ]
     },
@@ -18603,8 +18525,7 @@
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tiers/route.ts",
-        "src/lib/analytics.ts",
-        "src/lib/member-import.ts"
+        "src/lib/analytics.ts"
       ]
     },
     {
