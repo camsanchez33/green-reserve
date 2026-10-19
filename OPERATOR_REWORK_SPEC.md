@@ -124,4 +124,6 @@ Decisions (Cam's picks):
 - Money = an overview (this week's paid and not-yet-paid, next payout and its date, "Open your Stripe dashboard") + tabs Payments (grouped by day, plain statuses, search), Payouts (table of Stripe payouts), Cancellations (history only). The cancellation policy moves to Settings; "Upcoming bookings" is removed; Refresh becomes an icon site-wide.
 - Birdie can be tucked into a small edge tab, remembered per person, and sits clear of buttons and inputs on every page.
 
-Still to ask: Members layout, Messages response-time wording, twilight start (fixed time vs before sunset).
+- Members = list first: counts on top (active, unpaid, renewing this month), ONE searchable list (name, tier, dues status, last round) filtered by tier / unpaid, tiers in a smaller section beneath; Add member and Import list at the top.
+- Price periods are the course's own (Cam: "up to the course if they want twilight times and morning times, whatever they want"): any number of named periods by time of day, each with its own weekday/weekend/member/resident prices. No built-in "twilight" rule.
+- Messages promises: "We reply within one business day", plus Cam's cell for urgent mornings once he sends it.
