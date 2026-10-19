@@ -140,6 +140,11 @@ Decisions (Cam's picks):
 
 My calls (no question needed): course identity edits go to GreenReserve for approval, golfer-facing content saves straight away; Staff (people, permissions) and Your account (login email, password, two-factor) are separate sections; dress code and walking policy become plain text boxes with examples and a live preview of how golfers see them; Facilities becomes a checklist of what the course has, each with a short optional note, shown on the booking page.
 
+Shipped notes (2026-10-19):
+- Facilities has no separate note per item. Adding one would need a new column, and that migration waits until after launch. The existing detail fields (range type and balls, pro shop phone, rental prices, caddie type, rates and note, tournament frequency) do that job, and anything else goes in "Anything else" (one line each).
+- Tee colour comes from the tee's name (Blue, Black, Gold…); it is not stored. Par stays one number for the course; there is no par per tee.
+- Resident rates are saved on schedules but never charged: no booking or counter path applies them. Whether to build that or hide resident pricing until after launch is Cam's call.
+
 ## Pro shop — POS-2 (Cam 2026-10-19: "everything")
 
 Catalog in Settings → Pro shop: one-tap starter items, categories, optional stock count. Selling on a new Pro shop page (nav, for logins with "Sell from the pro shop"): tap items into a sale, then take cash or text/email a pay link; today's sales below with Send again / Took cash / Void for unpaid links. The customer pays on their phone (Apple Pay, Google Pay or card) as a direct charge on the course's Stripe account; GreenReserve takes nothing while the shop fee is off. Not yet: refunds of a paid walk-up sale from the dashboard (Stripe dashboard for now), a card reader (Stripe Terminal, after launch), sales reporting on Analytics.

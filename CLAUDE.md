@@ -219,7 +219,7 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 
 HOME-2 is Cam's own layout: one full-screen photo with the cream logo
 centred, "The tee sheet your course deserves.", one sentence on what it is and
-why it's free for courses, and Book a demo (Cam 2026-10-19; HOMEPAGE_SPEC §0a) → what it is
+why it's free for courses, and Learn more (Cam 2026-10-19: Book a demo came off the hero; it stays top right and after the demo) → what it is
 (paragraph, bullets, "See how it works" + "Learn more about the tee sheet"
 cards) → what your course gets (only features that exist today; pro-shop
 access waits until built) → the working demo (tee sheet on a laptop, golfer

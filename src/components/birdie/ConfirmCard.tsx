@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { isProposalCard, cardCalls, type ProposalCard } from '@/lib/birdie/proposal-types';
+import { APPLIED_EVENT } from '@/lib/birdie/ask';
 
 type State = { kind: 'idle' } | { kind: 'applying' } | { kind: 'done' } | { kind: 'error'; message: string } | { kind: 'dismissed' };
 
@@ -52,6 +53,8 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ applied: { title: card.title, method: card.call.method, path: card.call.path, ok, error: message, calls: calls.length, done } }),
     }).catch(() => undefined);
+    // A page showing what just changed (Settings' description) re-reads it.
+    if (ok) window.dispatchEvent(new CustomEvent(APPLIED_EVENT, { detail: { paths: calls.map(c => c.path) } }));
     setState(ok ? { kind: 'done' } : { kind: 'error', message });
   }
 
@@ -73,7 +76,7 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
       <p className="mt-1.5 text-[12px] text-ink leading-snug">{card.note}</p>
 
       {state.kind === 'done' ? (
-        <div className="mt-2"><StatusDot status="ok" label="Done — saved. Reload the page to see it." /></div>
+        <div className="mt-2"><StatusDot status="ok" label="Done — saved." /></div>
       ) : (
         <>
           {state.kind === 'error' && (

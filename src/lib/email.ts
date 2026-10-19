@@ -21,8 +21,20 @@ function getResend() {
       if (opts && typeof opts === 'object' && !('replyTo' in opts && opts.replyTo)) {
         (opts as { replyTo?: string }).replyTo = REPLY_TO;
       }
+      // Cam 2026-10-19 ("verification emails are not sending as quick"): one
+      // line per send — Resend's message id and how long Resend took to accept
+      // it — so a slow email can be traced in the Vercel logs and matched in
+      // Resend's dashboard. Only the recipient's domain is logged: subjects
+      // carry 2FA codes and addresses are personal data.
+      const started = Date.now();
+      const to = (opts as { to?: string | string[] } | undefined)?.to;
+      const domain = String(Array.isArray(to) ? to[0] : to ?? '').split('@')[1] ?? '?';
       const r = await send(opts, ...rest);
-      if (r.error) throw new Error(`Resend rejected the email: ${r.error.message || r.error.name || 'unknown error'}`);
+      if (r.error) {
+        console.error(`[email] rejected after ${Date.now() - started}ms to @${domain}: ${r.error.message || r.error.name}`);
+        throw new Error(`Resend rejected the email: ${r.error.message || r.error.name || 'unknown error'}`);
+      }
+      console.log(`[email] accepted by Resend in ${Date.now() - started}ms, id ${r.data?.id ?? '?'}, to @${domain}`);
       return r;
     }) as typeof send;
   }

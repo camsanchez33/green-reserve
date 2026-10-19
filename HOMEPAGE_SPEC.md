@@ -143,7 +143,7 @@ below conflict with this section, THIS section wins; they stay as history.
    as the headline sounded cheap): the line "The tee sheet your course
    deserves.", one sentence "Online booking, payments and an AI assistant that
    knows your course. GreenReserve charges your course nothing: golfers pay a
-   small booking fee instead." (LQ-2-safe wording), and a Book a demo button. A dark top-to-bottom scrim so the logo reads. The nav has no logo
+   small booking fee instead." (LQ-2-safe wording), and a Learn more button that scrolls to What it is (Cam 2026-10-19, later the same day: "Learn more only" — Book a demo came off the hero; it stays top right and after the demo). A dark top-to-bottom scrim so the logo reads. The nav has no logo
    on `/` (the hero's logo replaces it): Operator login + Book a demo, top right.
 2. **What it is** (`#about`): headline, one long paragraph, four bullets, and
    two cards: "See how it works" (scrolls to the demo) and "Learn more about the

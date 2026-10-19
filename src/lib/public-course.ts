@@ -13,6 +13,8 @@ export async function loadPublicCourse(slug: string) {
     include: {
       schedules: { where: { active: true }, select: { greenFeeWeekdayCents: true } },
       photos: { orderBy: { sortOrder: 'asc' as const } },
+      teeSets: { orderBy: { sortOrder: 'asc' as const }, select: { name: true, yardage: true, rating: true, slope: true } },
+      nines: { orderBy: { sortOrder: 'asc' as const }, select: { name: true, par: true } },
     },
   });
 
