@@ -506,9 +506,15 @@ function DashboardPageInner() {
     // the same Message golfers route (its own permission check and send log).
     if (alertEmail && conditionsInput.trim()) {
       setAlertEmail(false);
-      const m = await dfetch<{ sentEmail: number; unreachable: number }>('/api/operator/golfer-messages', { method: 'POST', body: JSON.stringify({ date: today(), body: `Course notice: ${conditionsInput.trim()}`, sms: false }) });
+      const m = await dfetch<{ sentEmail: number; unreachable: number; failed: { name: string; error: string }[] }>('/api/operator/golfer-messages', { method: 'POST', body: JSON.stringify({ date: today(), body: `Course notice: ${conditionsInput.trim()}`, sms: false }) });
       if (!m.ok) { toast(`Course alert saved, but the email to today’s golfers did not send — ${m.error}`); return; }
-      toast(`Course alert saved and emailed to ${m.data.sentEmail} golfer${m.data.sentEmail === 1 ? '' : 's'} booked today.`, 'ok');
+      // The route answers 200 even when some emails failed — never toast a partial send as success.
+      const d = m.data;
+      if (!d || !Array.isArray(d.failed) || d.failed.length) {
+        toast(`Course alert saved. Emailed ${d?.sentEmail ?? 0}; ${d?.failed?.length ?? 'some'} didn’t go through${d?.failed?.[0] ? ` — ${d.failed[0].name}: ${d.failed[0].error}` : ''}. Open Message today’s golfers to see who.`);
+        return;
+      }
+      toast(`Course alert saved and emailed to ${d.sentEmail} golfer${d.sentEmail === 1 ? '' : 's'} booked today${d.unreachable ? ` (${d.unreachable} with no email on file)` : ''}.`, 'ok');
       return;
     }
     toast(conditionsInput.trim() ? 'Course alert saved — golfers see it on your page.' : 'Course alert cleared.', 'ok');
@@ -633,7 +639,7 @@ function DashboardPageInner() {
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
-      <OperatorSidebar active={tab} onAlertClick={() => setShowConditions(true)}/>
+      <OperatorSidebar active={tab} onAlertClick={() => { setAlertEmail(false); setShowConditions(true); }}/>
 
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         {courseDraft && !courseArchived && (
@@ -723,7 +729,7 @@ function DashboardPageInner() {
         {conditions && (
           <div className="bg-warn/10 border-b border-warn/20 px-6 py-2 flex items-center gap-2 text-sm font-medium text-warn">
             <span>Course alert: {conditions}</span>
-            <button onClick={() => setShowConditions(true)} className="ml-auto underline text-xs">Update</button>
+            <button onClick={() => { setAlertEmail(false); setShowConditions(true); }} className="ml-auto underline text-xs">Update</button>
           </div>
         )}
 

@@ -14,5 +14,7 @@ check('the weather window offers two explained choices', page.includes("'Cancel 
 check('message golfers names whose day it is', page.includes('Message today’s golfers'));
 check('the course alert explains where it shows', page.includes('A short notice at the top of your booking page'));
 check('the course alert can email today’s golfers, behind the message permission', page.includes("access.can('sheet.message_golfers') && (") && page.includes('Also email everyone booked today') && page.includes("body: `Course notice: ${conditionsInput.trim()}`"));
+check('a partial alert email is never toasted as success (the route answers 200 with failed[])', page.includes('d.failed.length') && page.includes('didn’t go through'));
+check('the email box starts unticked each time the alert opens', (page.match(/setAlertEmail\(false\); setShowConditions\(true\)/g) || []).length >= 2);
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
