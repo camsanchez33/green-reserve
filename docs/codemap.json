@@ -6902,7 +6902,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 245,
+      "lines": 247,
       "purpose": "",
       "brain": [],
       "exports": [

@@ -259,7 +259,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/membership/[id]` | public | token | page | `src/app/membership/[id]/page.tsx` | 205 |
 | `/operator-agreement` | public | public | page | `src/app/operator-agreement/page.tsx` | 85 |
 | `/preview/[courseId]` | public | token | page | `src/app/preview/[courseId]/page.tsx` | 58 |
-| `/privacy` | public | public | page | `src/app/privacy/page.tsx` | 245 |
+| `/privacy` | public | public | page | `src/app/privacy/page.tsx` | 247 |
 | `/receipt/[bookingId]` | golfer | token | page | `src/app/receipt/[bookingId]/page.tsx` | 250 |
 | `/teesheet` | public | public | page | `src/app/teesheet/page.tsx` | 206 |
 | `/terms` | public | public | page | `src/app/terms/page.tsx` | 220 |

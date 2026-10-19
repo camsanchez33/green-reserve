@@ -104,7 +104,8 @@ export default function PrivacyPolicyPage() {
                 <p className="mt-3">
                   We also use service providers who process data only to run GreenReserve for us: Stripe (payments), Resend (email),
                   Twilio (text messages), Vercel (hosting and file storage), our database host, Sentry (error reports, which can
-                  include a recording of the page when an error happens, with text masked), Cal.com (booking calls with courses) and
+                  include a recording of the page when an error happens and, for a small sample of visits, a recording of the visit
+                  itself, with all text masked), Cal.com (booking calls with courses) and
                   Anthropic (the AI assistant in the course dashboard and the monthly review, which can see the course&apos;s bookings,
                   including golfer names, to answer staff questions).
                 </p>
@@ -125,8 +126,9 @@ export default function PrivacyPolicyPage() {
                   <span className="text-ink-faint font-normal mr-2">6.</span>Cookies
                 </h2>
                 <p>
-                  We use only the cookies needed to keep you signed in: a golfer sign-in (up to 90 days), a member sign-in for a course
-                  (90 days), and staff and admin sign-ins for the dashboards. We use no advertising or tracking cookies.
+                  We use only the cookies the service needs: a golfer sign-in (up to 90 days), a member sign-in for a course (90 days),
+                  staff and admin sign-ins for the dashboards, and a cookie remembering which course a staff login is viewing. When a
+                  payment form loads, Stripe sets its own fraud-prevention cookies. We use no advertising or tracking cookies.
                 </p>
               </section>
               <section>

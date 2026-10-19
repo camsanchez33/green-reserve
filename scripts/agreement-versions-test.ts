@@ -21,6 +21,10 @@ check('v2026-11: GreenReserve LLC under New York law, no placeholder or New Jers
 check('v2026-11: cash at the counter carries no fee', /No GreenReserve fee is charged when a golfer pays for the round in cash/.test(cur.markdown));
 check('v2026-11: signed, not "connected"', /By signing it/.test(cur.markdown) && !/By connecting/.test(cur.markdown));
 check('v2026-10 still loads (signers of the 1% version)', loadDocument('operator_agreement', '2026-10').version === '2026-10');
+const bl = loadDocument('brand_license');
+check('the Brand License the agreement points to is signable alongside it', currentVersion('brand_license') === '2026-11' && !bl.draft && signableDocuments().some(d => d.document === 'brand_license'));
+check('the Brand License names GreenReserve LLC and offers no settings opt-out that does not exist', /GreenReserve LLC/.test(bl.markdown) && !/dashboard settings/.test(bl.markdown));
+check('v2026-11: a no-show fee can also be charged on cancel', /or when the booking is cancelled if that is sooner/.test(cur.markdown));
 check('v2026-11 passes the seed gate', seedGateError(cur) === null, String(seedGateError(cur)));
 
 const base = { document: 'operator_agreement' as const, version: 'x', reacceptRequired: true, counselReviewed: '', counselWaived: '', draft: false };

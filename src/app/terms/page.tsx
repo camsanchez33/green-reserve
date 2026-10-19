@@ -120,7 +120,7 @@ export default function TermsOfServicePage() {
                 <p>
                   A booking that is not cancelled and not checked in may be marked a no-show by the course&apos;s staff, or
                   automatically a set number of minutes after the tee time if the course uses that setting. If the course charges for
-                  no-shows, the charge is made <strong className="text-ink">after the end of that day (midnight at the course)</strong>: if you arrive and check in
+                  no-shows, the charge is made <strong className="text-ink">after the end of that day (midnight at the course)</strong>, or when the booking is cancelled if that is sooner: if you arrive and check in
                   before then, you are not charged. If a no-show is marked in error, the course can reverse it and any no-show charge
                   and booking fee taken for it are refunded.
                 </p>
