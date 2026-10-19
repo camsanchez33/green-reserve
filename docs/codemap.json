@@ -4258,7 +4258,7 @@
     },
     {
       "path": "src/app/api/operator/blackouts/route.ts",
-      "lines": 54,
+      "lines": 60,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4286,6 +4286,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/course-time",
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/tee-sheet-engine",
@@ -6432,7 +6433,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 517,
+      "lines": 520,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11142,6 +11143,7 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
+        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
@@ -14571,7 +14573,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 223,
+      "lines": 229,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16442,6 +16444,7 @@
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/approve-page/route.ts",
+        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",

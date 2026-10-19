@@ -114,12 +114,15 @@ export default function SchedulesPage() {
 
   const activeProducts = products.filter(p => p.active);
   const multi = activeProducts.length > 0;
+  // A schedule for no round, or for a round that's switched off, still has to be
+  // findable (and deletable) — it gets its own "Other" tab.
+  const orphans = multi ? schedules.filter(s => !s.productId || !activeProducts.some(p => p.id === s.productId)) : [];
   const view = multi ? (productView || activeProducts[0]?.id || '') : '';
-  const inView = schedules.filter(s => !multi || s.productId === view);
+  const inView = schedules.filter(s => !multi || (view === 'other' ? orphans.includes(s) : s.productId === view));
   const showMember = hasMember || schedules.some(s => s.memberRateWeekday != null);
   const showResident = hasResident || schedules.some(s => s.residentRateWeekday != null);
 
-  function openAdd() { setForm({ ...emptyForm(), productId: view }); setEditId(null); setShowForm(true); }
+  function openAdd() { setForm({ ...emptyForm(), productId: view === 'other' ? '' : view }); setEditId(null); setShowForm(true); }
   function openEdit(s: Schedule) {
     if (!canEdit) return;
     setForm({ productId: s.productId ?? '', tierName: s.tierName === 'standard' ? '' : s.tierName, daysOfWeek: s.daysOfWeek, startTime: s.startTime, endTime: s.endTime, intervalMinutes: s.intervalMinutes, holes: s.holes, greenFeeWeekday: s.greenFeeWeekday, greenFeeWeekend: s.greenFeeWeekend, memberRateWeekday: s.memberRateWeekday?.toString() ?? '', memberRateWeekend: s.memberRateWeekend?.toString() ?? '', residentRateWeekday: s.residentRateWeekday?.toString() ?? '', residentRateWeekend: s.residentRateWeekend?.toString() ?? '', cartFee: s.cartFee, walkingAllowed: s.walkingAllowed });
@@ -256,7 +259,7 @@ export default function SchedulesPage() {
 
           {multi && (
             <div className="flex gap-5 border-b border-line" role="tablist" aria-label="Round">
-              {activeProducts.map(p => (
+              {[...activeProducts.map(p => ({ id: p.id, label: p.label })), ...(orphans.length ? [{ id: 'other', label: `Other (${orphans.length})` }] : [])].map(p => (
                 <button key={p.id} role="tab" aria-selected={view === p.id} onClick={() => setProductView(p.id)}
                   className={'pb-2 -mb-px text-[14px] font-semibold border-b-2 ' + (view === p.id ? 'text-ink border-fairway' : 'text-ink-soft border-transparent hover:text-ink')}>{p.label}</button>
               ))}
@@ -447,30 +450,30 @@ export default function SchedulesPage() {
                   {WEEK.map(d => <button key={d} type="button" onClick={() => toggleDay(d)} aria-pressed={form.daysOfWeek.includes(d)}
                     className={'w-12 py-2 rounded-md text-[13px] font-medium border ' + (form.daysOfWeek.includes(d) ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:border-line-strong')}>{DAYS[d]}</button>)}
                 </div></div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div><label className={lCls} htmlFor="f-start">First tee time</label><input id="f-start" type="time" value={form.startTime} onChange={e => set('startTime', e.target.value)} className={iCls} /></div>
                 <div><label className={lCls} htmlFor="f-end">Stop at</label><input id="f-end" type="time" value={form.endTime} onChange={e => set('endTime', e.target.value)} className={iCls} /></div>
                 <div><label className={lCls} htmlFor="f-int">Minutes apart</label><input id="f-int" type="number" min={1} value={form.intervalMinutes} onChange={e => set('intervalMinutes', Number(e.target.value))} className={iCls} /></div>
               </div>
               <p className="text-[12.5px] text-ink-muted -mt-2">The last tee time is the one before “Stop at”.</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div><label className={lCls} htmlFor="f-wd">Weekday price</label><input id="f-wd" type="number" min={0} value={form.greenFeeWeekday} onChange={e => set('greenFeeWeekday', Number(e.target.value))} className={iCls} /></div>
                 <div><label className={lCls} htmlFor="f-we">Weekend price</label><input id="f-we" type="number" min={0} value={form.greenFeeWeekend} onChange={e => set('greenFeeWeekend', Number(e.target.value))} className={iCls} /></div>
                 <div><label className={lCls} htmlFor="f-cart">Cart, per player</label><input id="f-cart" type="number" min={0} value={form.cartFee} onChange={e => set('cartFee', Number(e.target.value))} className={iCls} /></div>
               </div>
               {(hasMember || form.memberRateWeekday !== '') && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className={lCls} htmlFor="f-mwd">Member, weekday</label><input id="f-mwd" type="number" min={0} value={form.memberRateWeekday} onChange={e => set('memberRateWeekday', e.target.value)} placeholder="Same as public" className={iCls} /></div>
                   <div><label className={lCls} htmlFor="f-mwe">Member, weekend</label><input id="f-mwe" type="number" min={0} value={form.memberRateWeekend} onChange={e => set('memberRateWeekend', e.target.value)} placeholder="Same as public" className={iCls} /></div>
                 </div>
               )}
               {(hasResident || form.residentRateWeekday !== '') && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className={lCls} htmlFor="f-rwd">Resident, weekday</label><input id="f-rwd" type="number" min={0} value={form.residentRateWeekday} onChange={e => set('residentRateWeekday', e.target.value)} placeholder="Same as public" className={iCls} /></div>
                   <div><label className={lCls} htmlFor="f-rwe">Resident, weekend</label><input id="f-rwe" type="number" min={0} value={form.residentRateWeekend} onChange={e => set('residentRateWeekend', e.target.value)} placeholder="Same as public" className={iCls} /></div>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {!form.productId && <div><label className={lCls} htmlFor="f-holes">Holes</label><select id="f-holes" value={form.holes} onChange={e => set('holes', Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>}
                 <label className="flex items-center gap-2.5 text-[13.5px] text-ink self-end pb-2">
                   <input type="checkbox" checked={form.walkingAllowed} onChange={e => set('walkingAllowed', e.target.checked)} className="w-4 h-4 accent-pine" />Golfers can walk

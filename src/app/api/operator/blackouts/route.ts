@@ -3,6 +3,7 @@ import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
+import { todayIn } from '@/lib/course-time';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -21,7 +22,9 @@ export async function POST(req: NextRequest) {
   // Review (B-7): a booked tee time cannot be deleted (Booking.teeTime is a
   // required relation — the delete used to 500 on any day with a booking).
   // Open times go; booked ones are blocked in place and their bookings stay.
-  await prisma.teeTime.deleteMany({ where: { courseId: session.courseId, date, bookings: { none: { status: { in: ['confirmed', 'completed'] } } } } });
+  // Only rows with NO bookings at all can go — Booking.teeTime is required, so a
+  // row whose only bookings are cancelled must stay (it is blocked below).
+  await prisma.teeTime.deleteMany({ where: { courseId: session.courseId, date, bookings: { none: {} } } });
   await prisma.teeTime.updateMany({ where: { courseId: session.courseId, date }, data: { status: 'blocked' } });
   const blackout = await prisma.blackout.create({ data: { courseId: session.courseId, date, reason: reason || '' } });
 
@@ -47,6 +50,9 @@ export async function DELETE(req: NextRequest) {
   // Apply button). Reopening a day undoes what closing it did: the times it
   // blocked in place (they hold bookings) go back on sale, then the day is
   // rebuilt from the schedule. Booked times are never removed by the rebuild.
+  // A past day is history: reopening it only removes the block record.
+  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
+  if (blackout.date < todayIn(course?.timezone)) return NextResponse.json({ success: true, reopened: 0, created: 0 });
   const held = await prisma.teeTime.updateMany({ where: { courseId: session.courseId, date: blackout.date, status: 'blocked' }, data: { status: 'available' } });
   const created = await generateTeeTimes(session.courseId, blackout.date);
   return NextResponse.json({ success: true, reopened: held.count, created });
