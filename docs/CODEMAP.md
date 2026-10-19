@@ -457,7 +457,7 @@ Sorted the same way.
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 96 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/dashboard/MoveGroupModal.tsx` | 1 | 154 | ACT-1 (PLATFORM_ROADMAP_SPEC §2): | `default (MoveGroupModal)` |
 | `src/components/dashboard/settings/FinishSetup.tsx` | 1 | 54 | Settings rework (Cam 2026-10-19: | `FinishSetup`, `SetupItem` |
-| `src/components/dashboard/settings/WhoPaysWhat.tsx` | 1 | 96 | Settings → Prices & fees: | `WhoPaysWhat` |
+| `src/components/dashboard/settings/WhoPaysWhat.tsx` | 1 | 97 | Settings → Prices & fees: | `WhoPaysWhat` |
 | `src/components/dashboard/ShopCatalog.tsx` | 1 | 174 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `ShopCatalog` |
 | `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 131 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |

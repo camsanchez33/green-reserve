@@ -8609,7 +8609,7 @@
     },
     {
       "path": "src/components/dashboard/settings/WhoPaysWhat.tsx",
-      "lines": 96,
+      "lines": 97,
       "purpose": "Settings → Prices & fees:",
       "brain": [],
       "exports": [
