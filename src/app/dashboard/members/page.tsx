@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { Trash2, Edit2, Check, X, ArrowLeft, RefreshCw, UserCheck, UserX, ChevronDown, Mail } from 'lucide-react';
+import { Check, X, ArrowLeft, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
@@ -9,6 +9,8 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { formatMoney as fmtMoney, formatDate as fmtDate } from '@/lib/format';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { Card } from '@/components/ui/Card';
+import { INPUT_COMPACT } from '@/components/ui/field';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Tier {
@@ -26,6 +28,7 @@ interface Member {
   tierId: string | null; tierName: string; tierColor: string;
   status: string; linked: boolean; inviteAccepted: boolean;
   expiresAt: string | null; notes: string; createdAt: string;
+  paymentStatus?: string; lastPaidAt?: string | null; annualFee?: number; initiationFee?: number;
 }
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
@@ -43,6 +46,18 @@ const emptyTier = (): Partial<Tier> => ({
   initiationFee: 0, termMonths: 12, notes: '',
 });
 const emptyMember = () => ({ email: '', name: '', phone: '', tierId: '', notes: '', expiresAt: '' });
+
+/** One plain dues status per member (CourseMembership.paymentStatus + expiresAt — the same
+ *  "overdue" the Remind button uses: unpaid, or past expiry and not comped). */
+type Dues = { kind: 'comped' | 'unpaid' | 'expired' | 'renewing' | 'paid' | 'inactive'; label: string; tone: 'ok' | 'warn' | 'bad' | 'neutral' };
+function duesOf(m: Member, now: Date): Dues {
+  if (m.status !== 'active') return { kind: 'inactive', label: 'Not active', tone: 'neutral' };
+  if (m.paymentStatus === 'comped') return { kind: 'comped', label: 'No dues (comped)', tone: 'ok' };
+  if (m.paymentStatus === 'unpaid') return { kind: 'unpaid', label: m.annualFee ? `Dues unpaid · ${fmtMoney((m.annualFee ?? 0) + (m.lastPaidAt ? 0 : (m.initiationFee ?? 0)))}` : 'Dues unpaid', tone: 'bad' };
+  if (m.expiresAt && new Date(m.expiresAt) < now) return { kind: 'expired', label: `Expired ${fmtDate(m.expiresAt)}`, tone: 'bad' };
+  if (m.expiresAt && new Date(m.expiresAt).getTime() - now.getTime() < 30 * 86400000) return { kind: 'renewing', label: `Renews ${fmtDate(m.expiresAt)}`, tone: 'warn' };
+  return { kind: 'paid', label: m.expiresAt ? `Paid to ${fmtDate(m.expiresAt)}` : 'Paid', tone: 'ok' };
+}
 
 type PricingMode = 'flat' | 'pct';
 type View = 'list' | 'wizard' | 'complete';
@@ -94,6 +109,10 @@ export default function MembersPage() {
   const [editMemberTierId, setEditMemberTierId] = useState('');
   const [filterTier, setFilterTier] = useState('all');
   const [filterStatus, setFilterStatus] = useState('active');
+  const [search, setSearch] = useState('');
+  const [unpaidOnly, setUnpaidOnly] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const canEdit = pageAccess.can('members.edit');
 
   const loadAll = useCallback(async () => {
     const [tr, mb] = await Promise.all([dfetch<Tier[]>('/api/operator/tiers'), dfetch<Member[]>('/api/operator/members')]);
@@ -450,260 +469,194 @@ export default function MembersPage() {
     </div>
   );
 
-  /* ── List view ── */
+  /* ── List view ── Members rework (Cam 2026-10-19: list first). Counts on top,
+     one searchable list with each member's dues, tiers underneath. */
+  const now = new Date();
+  const q = search.trim().toLowerCase();
+  const shown = filteredMembers.filter(m => !q || (m.name ?? '').toLowerCase().includes(q) || (m.email ?? '').toLowerCase().includes(q) || (m.phone ?? '').includes(q))
+    .filter(m => !unpaidOnly || ['unpaid', 'expired'].includes(duesOf(m, now).kind));
+  const active = members.filter(m => m.status === 'active');
+  const unpaid = active.filter(m => ['unpaid', 'expired'].includes(duesOf(m, now).kind)).length;
+  const renewing = active.filter(m => duesOf(m, now).kind === 'renewing').length;
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" view="members.view" edit="members.edit" />
-        <div className="bg-white border-b border-line sticky top-0 z-10">
-          {/* U-O (§1b): serif title + one sentence of this page's numbers;
-              the tiers/members switch becomes two square chips. */}
-          <div className="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Members</h1>
-              </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 max-w-[46em]">
+              <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Members</h1>
+              <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">
+                {members.length === 0 ? 'Your members, what they pay and when they renew. Members book at their own rates and further ahead.'
+                  : <>{active.length} active · {unpaid} with dues unpaid · {renewing} renewing in the next 30 days</>}
+              </p>
             </div>
-            <div className="shrink-0 flex gap-1.5">
-              {(['tiers', 'members'] as const).map(p => (
-                <button key={p} onClick={() => setPanel(p)}
-                  aria-pressed={panel === p}
-                  className={'px-4 py-1.5 rounded-md text-[12.5px] font-medium capitalize border transition-colors ' + (panel === p ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:border-line-strong hover:text-ink')}>
-                  {p === 'tiers' ? `Tiers (${tiers.length})` : `Members (${members.filter(m => m.status === 'active').length})`}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-6 py-8">
-
-
-          {/* ── Tiers panel ── */}
-          {panel === 'tiers' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="text-[13px] font-semibold text-ink">Your tiers</div>
-                <button onClick={() => openWizard()}
-                  className="ml-auto bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors px-4 py-2 flex items-center gap-2">
-                  New membership tier
-                </button>
-              </div>
-
-              {tiers.length === 0 && (
-                <div className="bg-white rounded-lg border border-dashed border-line p-12 text-center">
-                  
-                  <div className="font-medium text-ink mb-1">No membership tiers yet</div>
-                  <p className="text-sm text-ink-soft mb-5">Create your first tier and we&apos;ll walk you through pricing, benefits, and adding members.</p>
-                  <button onClick={() => openWizard()} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors inline-flex items-center gap-2">
-                    Set up your first tier
+            {canEdit && (
+              <div className="flex gap-2 shrink-0">
+                {unpaid > 0 && (
+                  <button onClick={remindOverdue} disabled={remindingOverdue}
+                    title="Emails the dues link to every active member who is unpaid or past their expiry — at most once a week each"
+                    className="bg-white border border-line hover:border-line-strong text-ink rounded-md text-[13px] font-medium px-4 py-2 disabled:opacity-50">
+                    {remindingOverdue ? 'Sending…' : `Remind ${unpaid} unpaid`}
                   </button>
-                </div>
-              )}
-
-              <div className="grid lg:grid-cols-2 gap-4">
-                {tiers.map(t => (
-                  <div key={t.id} className="bg-white rounded-lg shadow-card p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full shrink-0" style={{ background: t.color }}/>
-                        <div>
-                          <div className="font-medium text-ink">{t.name}</div>
-                          <div className="text-xs text-ink-muted">{t._count?.memberships ?? 0} active member{(t._count?.memberships ?? 0) !== 1 ? 's' : ''}</div>
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <button onClick={() => openWizard(t)} className="p-1.5 text-ink-faint hover:text-pine transition-colors"><Edit2 className="w-3.5 h-3.5"/></button>
-                        <button onClick={() => deleteTier(t.id)} disabled={tierDeleting === t.id} className="p-1.5 text-ink-faint hover:text-bad transition-colors disabled:opacity-40" title={tierDeleting === t.id ? 'Deleting…' : 'Delete tier'}><Trash2 className="w-3.5 h-3.5"/></button>
-                      </div>
-                    </div>
-
-                    {t.discountPct != null ? (
-                      <div className="bg-ok/5 border border-ok/20 rounded-md px-4 py-2 text-sm text-ok font-medium">
-                        {t.discountPct}% off standard rate
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {[
-                          ['Green fee (weekday)', fmtMoney(t.greenFeeWeekday)],
-                          ['Green fee (weekend)', fmtMoney(t.greenFeeWeekend)],
-                          ['Cart fee (weekday)',  fmtMoney(t.cartFeeWeekday)],
-                          ['Cart fee (weekend)',  fmtMoney(t.cartFeeWeekend)],
-                        ].map(([label, val]) => (
-                          <div key={label} className="bg-paper border border-line-soft rounded-md px-3 py-2">
-                            <div className="text-ink-muted">{label}</div>
-                            <div className="font-medium text-ink mt-0.5 tabular-nums">{val}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-muted">
-                      <span>Book {t.advanceBookingDays}d ahead</span>
-                      {t.guestPassesPerYear > 0 && <span>{t.guestPassesPerYear} guest pass{t.guestPassesPerYear !== 1 ? 'es' : ''}/yr</span>}
-                      {t.annualFee > 0 && <span>${t.annualFee}/yr</span>}
-                      {t.notes && <span className="text-ink-faint italic">{t.notes}</span>}
-                    </div>
-
-                    <button onClick={() => startAddMember(t.id)}
-                      className="mt-4 w-full border border-line text-ink-soft hover:border-line-strong rounded-md text-xs font-medium py-2 flex items-center justify-center gap-1.5 transition-colors">
-                      Add member to {t.name}
-                    </button>
-                  </div>
-                ))}
+                )}
+                <button onClick={() => tiers.length ? startAddMember() : openWizard()}
+                  className="bg-pine hover:bg-pine-hover text-white rounded-md text-[13px] font-medium px-4 py-2">{tiers.length ? 'Add a member' : 'Set up a membership'}</button>
               </div>
-            </div>
+            )}
+          </div>
+          {loadError && <LoadError message={loadError} onRetry={loadAll} />}
+
+          {/* Add member */}
+          {addOpen && (
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-serif font-semibold text-ink text-[20px]">Add a member</h2>
+                <button onClick={() => { setAddOpen(false); setMemberError(''); }} aria-label="Close" className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
+              </div>
+              <p className="text-[13px] text-ink-soft -mt-2 mb-4">We email them an invite to link their GreenReserve account, so they get member rates when they book online.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2"><label className={lblCls} htmlFor="m-email">Email</label>
+                  <input id="m-email" className={iCls} value={memberForm.email} onChange={e => setMemberForm(f => ({ ...f, email: e.target.value }))} placeholder="member@email.com" type="email"/></div>
+                <div><label className={lblCls} htmlFor="m-name">Full name</label>
+                  <input id="m-name" className={iCls} value={memberForm.name} onChange={e => setMemberForm(f => ({ ...f, name: e.target.value }))} placeholder="Jane Smith"/></div>
+                <div><label className={lblCls} htmlFor="m-phone">Phone <span className="font-normal text-ink-muted">(optional)</span></label>
+                  <input id="m-phone" className={iCls} value={memberForm.phone} onChange={e => setMemberForm(f => ({ ...f, phone: e.target.value }))} placeholder="(201) 555-0100"/></div>
+                <div><label className={lblCls} htmlFor="m-tier">Membership</label>
+                  <select id="m-tier" className={iCls} value={memberForm.tierId} onChange={e => {
+                    const t = tiers.find(x => x.id === e.target.value);
+                    setMemberForm(f => ({ ...f, tierId: e.target.value, expiresAt: t ? addMonthsISO(t.termMonths || 12) : f.expiresAt }));
+                  }}>
+                    <option value="">Pick one…</option>
+                    {tiers.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select></div>
+                <div><label className={lblCls} htmlFor="m-exp">Membership runs until</label>
+                  <input id="m-exp" type="date" className={iCls} value={memberForm.expiresAt} onChange={e => setMemberForm(f => ({ ...f, expiresAt: e.target.value }))}/>
+                  <p className="text-[12.5px] text-ink-muted mt-1">Filled in from the membership&apos;s length — change it if needed.</p></div>
+                <div className="sm:col-span-2"><label className={lblCls} htmlFor="m-notes">Notes for your staff <span className="font-normal text-ink-muted">(optional)</span></label>
+                  <input id="m-notes" className={iCls} value={memberForm.notes} onChange={e => setMemberForm(f => ({ ...f, notes: e.target.value }))}/></div>
+              </div>
+              {memberError && <div className="mt-3"><LoadError message={memberError} onRetry={addMember} /></div>}
+              <div className="flex justify-end gap-2 mt-5">
+                <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="px-4 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Cancel</button>
+                <button onClick={addMember} disabled={memberSaving || !memberForm.email || !memberForm.tierId}
+                  className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50">{memberSaving ? 'Adding…' : 'Add member'}</button>
+              </div>
+            </Card>
           )}
 
-          {/* ── Members panel ── */}
-          {panel === 'members' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 flex-wrap">
-                <select value={filterTier} onChange={e => setFilterTier(e.target.value)}
-                  className="bg-white border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-pine/10 focus:border-pine/40">
-                  <option value="all">All tiers</option>
+          {/* The list */}
+          {tiers.length === 0 ? (
+            <Card className="p-10 text-center">
+              <p className="text-[15px] font-semibold text-ink">No memberships set up yet</p>
+              <p className="text-[13.5px] text-ink-soft mt-1 max-w-[36em] mx-auto">Set up a membership — its price, member rates and how far ahead members can book — then add your members to it.</p>
+              {canEdit && <button onClick={() => openWizard()} className="mt-4 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md text-[13px] font-medium">Set up a membership</button>}
+            </Card>
+          ) : (
+            <Card>
+              <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-line-soft">
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a member" aria-label="Find a member"
+                  className={INPUT_COMPACT + ' !w-56'}/>
+                <select value={filterTier} onChange={e => setFilterTier(e.target.value)} aria-label="Membership"
+                  className={INPUT_COMPACT + ' !w-auto'}>
+                  <option value="all">Every membership</option>
                   {tiers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
-                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                  className="bg-white border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-pine/10 focus:border-pine/40">
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} aria-label="Status"
+                  className={INPUT_COMPACT + ' !w-auto'}>
                   <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="all">All statuses</option>
+                  <option value="inactive">Not active</option>
+                  <option value="all">Everyone</option>
                 </select>
-                <span className="text-sm text-ink-muted">{filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''}</span>
-                <button onClick={remindOverdue} disabled={remindingOverdue || members.length === 0}
-                  title="Emails the dues link to every active member who is unpaid or past their expiry — at most once a week each"
-                  className="ml-auto bg-white border border-line hover:border-line-strong text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors disabled:opacity-40 px-4 py-2 flex items-center gap-2">
-                  <Mail className="w-4 h-4"/>{remindingOverdue ? 'Sending…' : 'Remind overdue members'}
-                </button>
-                <button onClick={() => startAddMember()} disabled={tiers.length === 0}
-                  className="bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium transition-colors disabled:opacity-40 px-4 py-2 flex items-center gap-2">
-                  Create new member
-                </button>
+                <label className="flex items-center gap-2 text-[13.5px] text-ink"><input type="checkbox" checked={unpaidOnly} onChange={e => setUnpaidOnly(e.target.checked)} className="w-4 h-4 accent-pine"/>Dues unpaid only</label>
+                <span className="ml-auto text-[12.5px] text-ink-muted">{shown.length} of {members.length}</span>
               </div>
-
-              {/* Add member form */}
-              {addOpen && (
-                <div className="bg-white border border-pine/30 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-serif font-semibold text-ink text-[17px]">Create new member</h3>
-                    <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <label className={lblCls}>Email *</label>
-                      <input className={iCls} value={memberForm.email} onChange={e => setMemberForm(f => ({ ...f, email: e.target.value }))} placeholder="member@email.com" type="email"/>
-                    </div>
-                    <div>
-                      <label className={lblCls}>Full name</label>
-                      <input className={iCls} value={memberForm.name} onChange={e => setMemberForm(f => ({ ...f, name: e.target.value }))} placeholder="Jane Smith"/>
-                    </div>
-                    <div>
-                      <label className={lblCls}>Phone</label>
-                      <input className={iCls} value={memberForm.phone} onChange={e => setMemberForm(f => ({ ...f, phone: e.target.value }))} placeholder="(201) 555-0100"/>
-                    </div>
-                    <div>
-                      <label className={lblCls}>Tier *</label>
-                      <select className={iCls} value={memberForm.tierId} onChange={e => {
-                        const t = tiers.find(x => x.id === e.target.value);
-                        setMemberForm(f => ({ ...f, tierId: e.target.value, expiresAt: t ? addMonthsISO(t.termMonths || 12) : f.expiresAt }));
-                      }}>
-                        <option value="">Select tier...</option>
-                        {tiers.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className={lblCls}>Expires</label>
-                      <input type="date" className={iCls} value={memberForm.expiresAt} onChange={e => setMemberForm(f => ({ ...f, expiresAt: e.target.value }))}/>
-                      <p className="text-xs text-ink-soft mt-1">Auto-set from the tier&apos;s term — adjust if needed.</p>
-                    </div>
-                    <div className="col-span-2">
-                      <label className={lblCls}>Internal notes</label>
-                      <input className={iCls} value={memberForm.notes} onChange={e => setMemberForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional"/>
-                    </div>
-                  </div>
-                  {memberError && (
-                    <div className="flex gap-2 items-center text-bad text-sm bg-bad/5 border border-bad/20 rounded-md px-4 py-2 mt-3">
-                      <StatusDot status="bad" />{memberError}
-                    </div>
-                  )}
-                  <div className="flex gap-3 mt-4">
-                    <button onClick={() => { setAddOpen(false); setMemberError(''); }} className="flex-1 border border-line text-ink-soft hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors py-2.5">Cancel</button>
-                    <button onClick={addMember} disabled={memberSaving || !memberForm.email || !memberForm.tierId}
-                      className="flex-1 bg-pine hover:bg-pine-hover text-white rounded-md text-[12.5px] font-medium disabled:opacity-40 transition-colors py-2.5">
-                      {memberSaving ? 'Adding...' : 'Add member'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {tiers.length === 0 && (
-                <div className="bg-warn/5 border border-warn/20 rounded-lg p-5 flex gap-3 items-center text-sm text-warn">
-                  <StatusDot status="bad" />
-                  You need at least one tier before adding members.
-                  <button onClick={() => openWizard()} className="underline font-medium ml-1">Set up a tier</button>
-                </div>
-              )}
-
-              {filteredMembers.length === 0 && tiers.length > 0 && (
-                <div className="bg-white rounded-lg border border-dashed border-line p-10 text-center text-ink-muted text-sm">
-                  No members match this filter.
-                </div>
-              )}
-
-              <div className="space-y-2">
-                {filteredMembers.map(m => (
-                  <div key={m.id} className={'bg-white rounded-lg border border-line px-5 py-4 flex items-center gap-4 ' + (m.status !== 'active' ? 'opacity-60' : '')}>
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center font-medium text-sm text-white shrink-0" style={{ background: m.tierColor }}>
-                      {m.name?.[0]?.toUpperCase() ?? '?'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-ink text-sm">{m.name || '—'}</span>
-                        {!m.linked && (
-                          <StatusDot status="warn" label="No account yet"/>
-                        )}
-                        {m.status !== 'active' && (
-                          <span className="text-xs text-ink-muted bg-paper border border-line px-2 py-0.5 rounded-md">Inactive</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-ink-muted truncate">{m.email}{m.phone ? ` · ${m.phone}` : ''}</div>
-                      {m.expiresAt && <div className="text-xs text-warn mt-0.5">Expires {fmtDate(m.expiresAt)}</div>}
-                      {m.notes && <div className="text-xs text-ink-faint italic mt-0.5">{m.notes}</div>}
-                    </div>
-
-                    <div className="shrink-0">
-                      {editMemberId === m.id ? (
-                        <div className="flex items-center gap-2">
-                          <select value={editMemberTierId} onChange={e => setEditMemberTierId(e.target.value)}
-                            className="bg-paper border border-line rounded-md px-2 py-1 text-xs text-ink outline-none focus:ring-2 focus:ring-pine/10 focus:border-pine/40">
-                            {tiers.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                          </select>
-                          <button onClick={() => updateMemberTier(m.id, editMemberTierId)} className="text-ok hover:text-ok/80"><Check className="w-4 h-4"/></button>
-                          <button onClick={() => setEditMemberId(null)} className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
-                        </div>
-                      ) : (
-                        <button onClick={() => { setEditMemberId(m.id); setEditMemberTierId(m.tierId ?? ''); }}
-                          className="flex items-center gap-1.5 text-xs font-medium text-ink-soft px-2.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-                          <span className="w-2 h-2 rounded-full" style={{ background: m.tierColor }}/>
-                          {m.tierName}
-                          <ChevronDown className="w-3 h-3 text-ink-faint"/>
+              {shown.length === 0 ? (
+                <p className="px-4 py-10 text-center text-[13.5px] text-ink-soft">{members.length === 0 ? 'No members yet. Add your first one above.' : 'Nobody matches that.'}</p>
+              ) : (
+                <ul className="divide-y divide-line-soft">
+                  {shown.map(m => {
+                    const d = duesOf(m, now);
+                    const openRow = expanded === m.id;
+                    return (
+                      <li key={m.id} className={m.status !== 'active' ? 'text-ink-soft' : ''}>
+                        <button onClick={() => setExpanded(openRow ? null : m.id)} aria-expanded={openRow}
+                          className="w-full grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,1fr)] gap-x-4 gap-y-0.5 px-4 py-3 text-left hover:bg-paper/60">
+                          <span className="min-w-0">
+                            <span className="block text-[14px] font-medium text-ink truncate">{m.name || m.email}</span>
+                            <span className="block text-[12.5px] text-ink-muted truncate">{m.email}{m.phone ? ` · ${m.phone}` : ''}</span>
+                          </span>
+                          <span className="hidden sm:inline-flex items-center gap-2 text-[13.5px] text-ink min-w-0"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.tierColor }}/><span className="truncate">{m.tierName}</span></span>
+                          <span className="inline-flex items-center gap-1.5 text-[13.5px] text-ink justify-end sm:justify-start"><StatusDot status={d.tone} />{d.label}</span>
                         </button>
-                      )}
-                    </div>
+                        {openRow && (
+                          <div className="px-4 pb-4 -mt-1 grid sm:grid-cols-[1fr_auto] gap-3 items-end">
+                            <div className="text-[13px] text-ink-soft space-y-0.5">
+                              <p>{m.linked ? 'Account linked — member rates apply when they book online.' : m.inviteAccepted ? 'Invite accepted.' : 'Invite sent; they haven’t linked an account yet, so online bookings don’t get member rates.'}</p>
+                              {m.lastPaidAt && <p>Last paid {fmtDate(m.lastPaidAt)}.</p>}
+                              {m.notes && <p>Note: {m.notes}</p>}
+                            </div>
+                            {canEdit && (
+                              <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+                                {editMemberId === m.id ? (
+                                  <>
+                                    <select value={editMemberTierId} onChange={e => setEditMemberTierId(e.target.value)} aria-label="New membership"
+                                      className="bg-paper border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink">
+                                      {tiers.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                    </select>
+                                    <button onClick={() => updateMemberTier(m.id, editMemberTierId)} className="text-[13px] font-medium text-pine hover:underline">Save</button>
+                                    <button onClick={() => setEditMemberId(null)} className="text-[13px] text-ink-soft hover:text-ink">Cancel</button>
+                                  </>
+                                ) : (
+                                  <button onClick={() => { setEditMemberId(m.id); setEditMemberTierId(m.tierId ?? ''); }} className="text-[13px] font-medium text-pine hover:underline">Change membership</button>
+                                )}
+                                <button onClick={() => toggleMemberStatus(m)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{m.status === 'active' ? 'Make not active' : 'Make active'}</button>
+                                <button onClick={() => removeMember(m.id, m.name)} className="text-[13px] font-medium text-bad hover:underline">Remove</button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </Card>
+          )}
 
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={() => toggleMemberStatus(m)} title={m.status === 'active' ? 'Deactivate' : 'Activate'}
-                        className={'p-1.5 rounded-md transition-colors ' + (m.status === 'active' ? 'text-ok hover:bg-bad/5 hover:text-bad' : 'text-ink-faint hover:bg-ok/5 hover:text-ok')}>
-                        {m.status === 'active' ? <UserCheck className="w-4 h-4"/> : <UserX className="w-4 h-4"/>}
-                      </button>
-                      <button onClick={() => removeMember(m.id, m.name)} className="p-1.5 text-ink-faint hover:text-bad rounded-md transition-colors"><Trash2 className="w-4 h-4"/></button>
-                    </div>
-                  </div>
-                ))}
+          {/* Memberships (tiers) */}
+          {tiers.length > 0 && (
+            <Card className="p-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <h2 className="text-[17px] font-semibold text-ink">Memberships you offer</h2>
+                {canEdit && <button onClick={() => openWizard()} className="text-[13px] font-medium text-pine hover:underline">Add a membership</button>}
               </div>
-            </div>
+              <ul className="mt-3 divide-y divide-line-soft">
+                {tiers.map(t => (
+                  <li key={t.id} className="py-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                    <span className="inline-flex items-center gap-2 text-[14px] font-medium text-ink min-w-[10em]"><span className="w-2.5 h-2.5 rounded-full" style={{ background: t.color }}/>{t.name}</span>
+                    <span className="text-[13px] text-ink-soft flex-1 min-w-0">
+                      {[
+                        t.annualFee > 0 ? `${fmtMoney(t.annualFee)} a ${t.termMonths === 12 ? 'year' : `${t.termMonths} months`}` : 'No dues',
+                        t.initiationFee > 0 ? `${fmtMoney(t.initiationFee)} to join` : null,
+                        t.discountPct != null ? `${t.discountPct}% off public rates` : (t.greenFeeWeekday != null ? `rounds ${fmtMoney(t.greenFeeWeekday)} weekdays, ${fmtMoney(t.greenFeeWeekend)} weekends` : null),
+                        `books ${t.advanceBookingDays} days ahead`,
+                        t.guestPassesPerYear > 0 ? `${t.guestPassesPerYear} guest pass${t.guestPassesPerYear === 1 ? '' : 'es'} a year` : null,
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                    <span className="text-[12.5px] text-ink-muted">{t._count?.memberships ?? 0} active</span>
+                    {canEdit && (
+                      <span className="flex gap-3">
+                        <button onClick={() => openWizard(t)} className="text-[13px] font-medium text-pine hover:underline">Edit</button>
+                        <button onClick={() => { if (confirm(`Delete the ${t.name} membership?`)) deleteTier(t.id); }} disabled={tierDeleting === t.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{tierDeleting === t.id ? 'Deleting…' : 'Delete'}</button>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[12.5px] text-ink-muted mt-2">When members pay dues through GreenReserve, a 1% fee is added to what they pay.</p>
+            </Card>
           )}
         </div>
       </main>
