@@ -113,3 +113,15 @@ Built (my calls, Cam said "think about it"):
 - Monthly review: one compact card; before the first review it says what it will contain and when.
 - Tabs: Revenue · Busy times · No-shows & cancellations · Golfers · How they book. Every block has a one-sentence "what this tells you". Golfers says where the data comes from and links the Privacy Policy.
 - The green flash: OperatorSidebar started on the default pine until the course loaded on each page; it now keeps the course's identity between tabs and clears it on course switch and sign-out.
+
+## Schedule, Members, Money, Messages — round 1 (Cam 2026-10-19)
+
+Cam's notes. Schedule: "this page sucks … think of what is needed to be known, ease and understanding and functionality … rework the whole thing." Members: straightforward, but needs a full rework to look good, make sense and be organised. Money: "Money" alone means nothing; "Stripe connected" is useless — say this is where you view Stripe; Payments shows every payment ever with random information; Cancellations holds the cancellation policy (belongs in Settings) and an "Upcoming bookings" list (makes no sense) and needs a rework; Payouts — keep the GreenReserve disclaimer but cleaner, and show a table of their payouts so we don't send them to Stripe for everything; Refresh should be an icon on every page. Messages: fine; a little design and wording, maybe an email option and an expected response time. Birdie gets in the way on Messages — should there be a way to move it away at all times?
+
+Decisions (Cam's picks):
+- Schedule = "Your week", visual: each day's first/last tee time, interval and price as bands; click to edit. Rates (public, twilight, member, resident; weekday/weekend) in their own table. Closed days and outings as a calendar on the same page.
+- Saving hours or prices applies to the tee sheet automatically: every future day updates, booked times are never touched, and the save first shows exactly what will change. No "Apply to tee sheet" button.
+- Money = an overview (this week's paid and not-yet-paid, next payout and its date, "Open your Stripe dashboard") + tabs Payments (grouped by day, plain statuses, search), Payouts (table of Stripe payouts), Cancellations (history only). The cancellation policy moves to Settings; "Upcoming bookings" is removed; Refresh becomes an icon site-wide.
+- Birdie can be tucked into a small edge tab, remembered per person, and sits clear of buttons and inputs on every page.
+
+Still to ask: Members layout, Messages response-time wording, twilight start (fixed time vs before sunset).
