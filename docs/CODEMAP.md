@@ -127,7 +127,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/alerts` | public | public | POST | `src/app/api/alerts/route.ts` | 52 |
 | `/api/alerts/unsubscribe/[token]` | public | public | GET | `src/app/api/alerts/unsubscribe/[token]/route.ts` | 53 |
 | `/api/auth/2fa/resend` | public | token | POST | `src/app/api/auth/2fa/resend/route.ts` | 32 |
-| `/api/auth/2fa/status` | public | token | GET | `src/app/api/auth/2fa/status/route.ts` | 21 |
+| `/api/auth/2fa/status` | public | token | GET | `src/app/api/auth/2fa/status/route.ts` | 29 |
 | `/api/auth/2fa/verify` | public | token | POST | `src/app/api/auth/2fa/verify/route.ts` | 69 |
 | `/api/auth/forgot-password` | public | entry | POST | `src/app/api/auth/forgot-password/route.ts` | 58 |
 | `/api/auth/login` | public | entry | POST | `src/app/api/auth/login/route.ts` | 81 |
@@ -235,7 +235,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 843 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1414 |
-| `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 99 |
+| `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 117 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 610 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 70 |

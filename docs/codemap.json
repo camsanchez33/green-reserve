@@ -2664,7 +2664,7 @@
     },
     {
       "path": "src/app/api/auth/2fa/status/route.ts",
-      "lines": 21,
+      "lines": 29,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6030,7 +6030,7 @@
     },
     {
       "path": "src/app/dashboard/2fa/page.tsx",
-      "lines": 99,
+      "lines": 117,
       "purpose": "",
       "brain": [],
       "exports": [
