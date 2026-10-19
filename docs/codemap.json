@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 411,
-    "routes": 212,
-    "libs": 122,
+    "files": 412,
+    "routes": 213,
+    "libs": 121,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -2664,7 +2664,7 @@
     },
     {
       "path": "src/app/api/auth/2fa/status/route.ts",
-      "lines": 21,
+      "lines": 29,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4258,7 +4258,7 @@
     },
     {
       "path": "src/app/api/operator/blackouts/route.ts",
-      "lines": 60,
+      "lines": 47,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4286,10 +4286,8 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
-        "@/lib/course-time",
         "@/lib/prisma",
         "@/lib/session",
-        "@/lib/tee-sheet-engine",
         "next/server"
       ],
       "usedBy": []
@@ -4682,6 +4680,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/money/overview/route.ts",
+      "lines": 28,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/money/overview",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/analytics",
+        "@/lib/course-time",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/monthly-reviews/route.ts",
       "lines": 29,
       "purpose": "",
@@ -4970,31 +4995,6 @@
       "usedBy": []
     },
     {
-      "path": "src/app/api/operator/schedule/preview/route.ts",
-      "lines": 24,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "POST",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/operator/schedule/preview",
-      "kind": "api",
-      "methods": [
-        "POST"
-      ],
-      "auth": "operator",
-      "guard": "file",
-      "imports": [
-        "@/lib/schedule-preview",
-        "@/lib/session",
-        "next/server"
-      ],
-      "usedBy": []
-    },
-    {
       "path": "src/app/api/operator/schedule/route.ts",
       "lines": 71,
       "purpose": "",
@@ -5260,6 +5260,32 @@
       "kind": "api",
       "methods": [
         "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/session",
+        "@/lib/stripe",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/stripe/payouts/route.ts",
+      "lines": 41,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/stripe/payouts",
+      "kind": "api",
+      "methods": [
+        "GET"
       ],
       "auth": "operator",
       "guard": "file",
@@ -5685,7 +5711,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 679,
+      "lines": 690,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6057,7 +6083,7 @@
     },
     {
       "path": "src/app/dashboard/2fa/page.tsx",
-      "lines": 99,
+      "lines": 117,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6265,7 +6291,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 183,
+      "lines": 231,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -6285,7 +6311,9 @@
         "@/components/dashboard/money/CancellationsPanel",
         "@/components/dashboard/money/PaymentsPanel",
         "@/components/dashboard/money/PayoutsPanel",
+        "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/money/types",
+        "@/components/ui/Card",
         "@/lib/dashboard-fetch",
         "@/lib/use-dashboard-access",
         "lucide-react",
@@ -6435,8 +6463,8 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 520,
-      "purpose": "Schedule rework (Cam 2026-10-19:",
+      "lines": 457,
+      "purpose": "",
       "brain": [],
       "exports": [
         {
@@ -6454,11 +6482,11 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
-        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/use-dashboard-access",
-        "next/link",
+        "lucide-react",
         "react"
       ],
       "usedBy": []
@@ -6741,7 +6769,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 565,
+      "lines": 571,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7839,7 +7867,8 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
-        "src/app/dashboard/schedules/page.tsx"
+        "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/money/PayoutsTable.tsx"
       ]
     },
     {
@@ -8112,14 +8141,13 @@
         "src/components/AnnouncementBanner.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
-        "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/money/CancellationsPanel.tsx"
+        "src/components/dashboard/StaffPermissions.tsx"
       ]
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 172,
-      "purpose": "SD-8 — the Cancellations half of the Money page.",
+      "lines": 80,
+      "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
         {
@@ -8134,12 +8162,9 @@
       "guard": null,
       "imports": [
         "./types",
-        "@/components/dashboard/Toast",
         "@/components/ui/StatusDot",
-        "@/lib/cancel-confirm",
-        "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/use-dashboard-access",
+        "next/link",
         "react"
       ],
       "usedBy": [
@@ -8148,13 +8173,17 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 124,
-      "purpose": "SD-8 — the Payments half of the Money page.",
+      "lines": 115,
+      "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
         {
           "name": "PaymentsPanel",
           "kind": "component"
+        },
+        {
+          "name": "paymentStatus",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -8164,8 +8193,8 @@
       "guard": null,
       "imports": [
         "./types",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
-        "@/lib/booking-status",
         "@/lib/format",
         "lucide-react",
         "react"
@@ -8176,7 +8205,7 @@
     },
     {
       "path": "src/components/dashboard/money/PayoutsPanel.tsx",
-      "lines": 126,
+      "lines": 96,
       "purpose": "SD-8 — the Stripe card, moved here out of Settings.",
       "brain": [],
       "exports": [
@@ -8191,6 +8220,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./PayoutsTable",
         "./types",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
@@ -8199,6 +8229,49 @@
       ],
       "usedBy": [
         "src/app/dashboard/money/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/money/PayoutsTable.tsx",
+      "lines": 73,
+      "purpose": "Money rework (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "fmtDay",
+          "kind": "fn"
+        },
+        {
+          "name": "Payout",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutsData",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutsTable",
+          "kind": "component"
+        },
+        {
+          "name": "usd",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/StatusDot",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/money/page.tsx",
+        "src/components/dashboard/money/PayoutsPanel.tsx"
       ]
     },
     {
@@ -8329,14 +8402,15 @@
         "src/app/admin/system/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/messages/page.tsx",
+        "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
-        "src/app/dashboard/schedules/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
-        "src/components/dashboard/TeeSheetBoard.tsx"
+        "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/money/PaymentsPanel.tsx"
       ]
     },
     {
@@ -8594,6 +8668,7 @@
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/page.tsx",
+        "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
@@ -8609,7 +8684,8 @@
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
-        "src/components/dashboard/money/PayoutsPanel.tsx"
+        "src/components/dashboard/money/PayoutsPanel.tsx",
+        "src/components/dashboard/money/PayoutsTable.tsx"
       ]
     },
     {
@@ -9399,6 +9475,7 @@
       ],
       "usedBy": [
         "src/app/api/operator/analytics/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
         "src/lib/monthly-review.ts"
@@ -10054,8 +10131,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/page.tsx",
-        "src/components/dashboard/money/PaymentsPanel.tsx"
+        "src/app/dashboard/page.tsx"
       ]
     },
     {
@@ -10455,8 +10531,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/page.tsx",
-        "src/components/dashboard/money/CancellationsPanel.tsx"
+        "src/app/dashboard/page.tsx"
       ]
     },
     {
@@ -11219,9 +11294,9 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
@@ -11235,7 +11310,6 @@
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/public-tee-times.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -11600,7 +11674,7 @@
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/money/CancellationsPanel.tsx"
+        "src/components/dashboard/money/PayoutsTable.tsx"
       ]
     },
     {
@@ -13600,6 +13674,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -13616,6 +13691,7 @@
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
+        "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/tiers/route.ts",
@@ -13665,7 +13741,6 @@
         "src/lib/rate-limit.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/session.ts",
         "src/lib/sheet-token.ts",
@@ -13962,48 +14037,6 @@
       ]
     },
     {
-      "path": "src/lib/schedule-preview.ts",
-      "lines": 110,
-      "purpose": "Schedule rework (Cam 2026-10-19:",
-      "brain": [],
-      "exports": [
-        {
-          "name": "diffDay",
-          "kind": "fn"
-        },
-        {
-          "name": "PREVIEW_DAYS",
-          "kind": "const"
-        },
-        {
-          "name": "previewScheduleChange",
-          "kind": "fn"
-        },
-        {
-          "name": "ScheduleChange",
-          "kind": "type"
-        },
-        {
-          "name": "SchedulePreview",
-          "kind": "type"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "./course-time",
-        "./prisma",
-        "./schedule-wire",
-        "./tee-sheet-engine"
-      ],
-      "usedBy": [
-        "src/app/api/operator/schedule/preview/route.ts"
-      ]
-    },
-    {
       "path": "src/lib/schedule-service.ts",
       "lines": 216,
       "purpose": "MP-5d.",
@@ -14097,7 +14130,6 @@
       ],
       "usedBy": [
         "src/app/api/operator/tee-times/route.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
     },
@@ -14210,6 +14242,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -14219,7 +14252,6 @@
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/request-changes/route.ts",
-        "src/app/api/operator/schedule/preview/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
@@ -14228,6 +14260,7 @@
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
+        "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/tiers/route.ts",
@@ -14606,6 +14639,7 @@
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
+        "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
@@ -14649,18 +14683,10 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 229,
+      "lines": 208,
       "purpose": "",
       "brain": [],
       "exports": [
-        {
-          "name": "DesiredSlot",
-          "kind": "type"
-        },
-        {
-          "name": "desiredSlots",
-          "kind": "fn"
-        },
         {
           "name": "generateForAllCourses",
           "kind": "fn"
@@ -14671,14 +14697,6 @@
         },
         {
           "name": "regenerateUpcoming",
-          "kind": "fn"
-        },
-        {
-          "name": "ScheduleForSlots",
-          "kind": "type"
-        },
-        {
-          "name": "slotKey",
           "kind": "fn"
         }
       ],
@@ -14695,10 +14713,8 @@
       "usedBy": [
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/cron/generate-tee-times/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
     },
@@ -14971,8 +14987,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
-        "src/components/dashboard/StaffNotice.tsx",
-        "src/components/dashboard/money/CancellationsPanel.tsx"
+        "src/components/dashboard/StaffNotice.tsx"
       ]
     },
     {
@@ -15482,7 +15497,6 @@
         "src/app/api/operator/blackouts/route.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -16520,13 +16534,13 @@
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/approve-page/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
@@ -16535,6 +16549,7 @@
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
+        "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/upload/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
@@ -16556,7 +16571,6 @@
         "src/lib/monthly-review.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -17197,7 +17211,6 @@
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/lib/birdie/course-context.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -18235,7 +18248,6 @@
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/public-tee-times.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -18411,7 +18423,6 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
-        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
       ]

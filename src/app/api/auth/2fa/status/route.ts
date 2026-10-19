@@ -12,9 +12,17 @@ export async function GET(req: NextRequest) {
   }
   const { operatorId } = payload as { operatorId: string };
 
-  const operator = await prisma.courseOperator.findUnique({ where: { id: operatorId }, select: { twoFactorMethod: true, phone: true } });
+  const operator = await prisma.courseOperator.findUnique({ where: { id: operatorId }, select: { twoFactorMethod: true, phone: true, email: true } });
   if (!operator) return NextResponse.json({ error: 'No pending login. Please sign in again.' }, { status: 401 });
 
   const method = operator.twoFactorMethod === 'sms' && operator.phone ? 'sms' : 'email';
-  return NextResponse.json({ method, phoneLast4: operator.phone ? operator.phone.slice(-4) : null });
+  // The page names where the code went; the address is masked (c•••@icloud.com),
+  // since this answers before the second factor is checked.
+  return NextResponse.json({ method, phoneLast4: operator.phone ? operator.phone.slice(-4) : null, emailHint: maskEmail(operator.email) });
+}
+
+function maskEmail(email: string): string {
+  const [user, domain] = email.split('@');
+  if (!user || !domain) return '';
+  return `${user[0]}•••@${domain}`;
 }

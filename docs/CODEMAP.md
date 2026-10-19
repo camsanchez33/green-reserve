@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-411 source files · 212 routes · 122 libraries · 39 models
+412 source files · 213 routes · 121 libraries · 39 models
 
 ## Single sources of truth
 
@@ -127,7 +127,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/alerts` | public | public | POST | `src/app/api/alerts/route.ts` | 52 |
 | `/api/alerts/unsubscribe/[token]` | public | public | GET | `src/app/api/alerts/unsubscribe/[token]/route.ts` | 53 |
 | `/api/auth/2fa/resend` | public | token | POST | `src/app/api/auth/2fa/resend/route.ts` | 32 |
-| `/api/auth/2fa/status` | public | token | GET | `src/app/api/auth/2fa/status/route.ts` | 21 |
+| `/api/auth/2fa/status` | public | token | GET | `src/app/api/auth/2fa/status/route.ts` | 29 |
 | `/api/auth/2fa/verify` | public | token | POST | `src/app/api/auth/2fa/verify/route.ts` | 69 |
 | `/api/auth/forgot-password` | public | entry | POST | `src/app/api/auth/forgot-password/route.ts` | 58 |
 | `/api/auth/login` | public | entry | POST | `src/app/api/auth/login/route.ts` | 81 |
@@ -183,7 +183,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/announcements` | operator | file | GET | `src/app/api/operator/announcements/route.ts` | 51 |
 | `/api/operator/announcements/dismiss` | operator | file | POST | `src/app/api/operator/announcements/dismiss/route.ts` | 31 |
 | `/api/operator/approve-page` | operator | file | POST | `src/app/api/operator/approve-page/route.ts` | 65 |
-| `/api/operator/blackouts` | operator | file | DELETE GET POST | `src/app/api/operator/blackouts/route.ts` | 60 |
+| `/api/operator/blackouts` | operator | file | DELETE GET POST | `src/app/api/operator/blackouts/route.ts` | 47 |
 | `/api/operator/bookings` | operator | file | GET PATCH POST | `src/app/api/operator/bookings/route.ts` | 341 |
 | `/api/operator/bookings/shop` | operator | file | DELETE POST | `src/app/api/operator/bookings/shop/route.ts` | 43 |
 | `/api/operator/change-password` | operator | file | POST | `src/app/api/operator/change-password/route.ts` | 40 |
@@ -195,6 +195,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 270 |
 | `/api/operator/members/remind-overdue` | operator | file | POST | `src/app/api/operator/members/remind-overdue/route.ts` | 76 |
 | `/api/operator/messages` | operator | file | GET PATCH POST | `src/app/api/operator/messages/route.ts` | 123 |
+| `/api/operator/money/overview` | operator | file | GET | `src/app/api/operator/money/overview/route.ts` | 28 |
 | `/api/operator/monthly-reviews` | operator | file | GET | `src/app/api/operator/monthly-reviews/route.ts` | 29 |
 | `/api/operator/my-courses` | operator | file | GET | `src/app/api/operator/my-courses/route.ts` | 33 |
 | `/api/operator/nines` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/nines/route.ts` | 82 |
@@ -206,7 +207,6 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/regenerate-tee-times` | operator | file | POST | `src/app/api/operator/regenerate-tee-times/route.ts` | 32 |
 | `/api/operator/request-changes` | operator | file | POST | `src/app/api/operator/request-changes/route.ts` | 32 |
 | `/api/operator/schedule` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/schedule/route.ts` | 71 |
-| `/api/operator/schedule/preview` | operator | file | POST | `src/app/api/operator/schedule/preview/route.ts` | 24 |
 | `/api/operator/settings` | operator | file | GET PATCH | `src/app/api/operator/settings/route.ts` | 123 |
 | `/api/operator/shop-items` | operator | NONE FOUND for POST/PATCH/DELETE | DELETE GET PATCH POST | `src/app/api/operator/shop-items/route.ts` | 83 |
 | `/api/operator/sign` | operator | file | GET POST | `src/app/api/operator/sign/route.ts` | 105 |
@@ -214,6 +214,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/stripe/callback` | operator | file | GET | `src/app/api/operator/stripe/callback/route.ts` | 42 |
 | `/api/operator/stripe/connect` | operator | file | GET | `src/app/api/operator/stripe/connect/route.ts` | 71 |
 | `/api/operator/stripe/dashboard-link` | operator | file | POST | `src/app/api/operator/stripe/dashboard-link/route.ts` | 29 |
+| `/api/operator/stripe/payouts` | operator | file | GET | `src/app/api/operator/stripe/payouts/route.ts` | 41 |
 | `/api/operator/tee-sets` | operator | file | DELETE GET PATCH POST PUT | `src/app/api/operator/tee-sets/route.ts` | 169 |
 | `/api/operator/tee-times` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/tee-times/route.ts` | 140 |
 | `/api/operator/tiers` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/tiers/route.ts` | 130 |
@@ -236,19 +237,19 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 843 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1414 |
-| `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 99 |
+| `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 117 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 610 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 70 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 93 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 713 |
 | `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 193 |
-| `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 183 |
+| `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 231 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 316 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 27 |
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 118 |
-| `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 520 |
+| `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 457 |
 | `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1005 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 27 |
@@ -256,7 +257,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/demo` | public | public | GET | `src/app/demo/route.ts` | 18 |
 | `/for-courses` | public | public | page | `src/app/for-courses/page.tsx` | 18 |
 | `/for-courses/details` | public | token | page | `src/app/for-courses/details/page.tsx` | 1946 |
-| `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 565 |
+| `/manage/[bookingId]` | golfer | token | page | `src/app/manage/[bookingId]/page.tsx` | 571 |
 | `/membership/[id]` | public | token | page | `src/app/membership/[id]/page.tsx` | 205 |
 | `/operator-agreement` | public | public | page | `src/app/operator-agreement/page.tsx` | 85 |
 | `/preview/[courseId]` | public | token | page | `src/app/preview/[courseId]/page.tsx` | 58 |
@@ -271,17 +272,17 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 175 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 176 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 53 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
 | `src/lib/email.ts` | 49 | 1889 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +53 more |
-| `src/lib/session.ts` | 41 | 99 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
+| `src/lib/session.ts` | 42 | 99 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
 | `src/lib/rate-limit.ts` | 35 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 32 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/money.ts` | 28 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
-| `src/lib/course-time.ts` | 23 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
+| `src/lib/course-time.ts` | 22 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/agreement-required.ts` | 21 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
-| `src/lib/stripe.ts` | 19 | 96 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
+| `src/lib/stripe.ts` | 20 | 96 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/change-requests.ts` | 16 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
 | `src/lib/cancel-policy.ts` | 14 | 240 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardRequired`, `chargesNoShow`, `chargesOnLateCancel` +14 more |
 | `src/lib/course-timeline.ts` | 13 | 165 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload`, `getCourseTimeline` +20 more |
@@ -294,32 +295,32 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/shop.ts` | 11 | 137 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +8 more |
 | `src/lib/staff-permissions.ts` | 10 | 135 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
 | `src/lib/agreements.ts` | 9 | 134 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +2 more |
-| `src/lib/use-dashboard-access.ts` | 9 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/admin-session-context.tsx` | 8 | 77 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/agreement-gate.ts` | 8 | 100 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement` |
 | `src/lib/course-metrics.ts` | 8 | 219 | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ GR-fees/period math defined ONCE. | `COMPLETED_BOOKING_STATUSES`, `computeCourseHealth`, `computeNetPnL`, `CourseHealth`, `CourseHealthInput`, `CourseHealthStatus`, `HEALTH_STATUS_DOT`, `HEALTH_STATUS_LABEL` +9 more |
 | `src/lib/cron-log.ts` | 8 | 136 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/private-blob.ts` | 8 | 33 | Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29). | `isBlobStoreUrl`, `PRIVATE_STORAGE_MISSING`, `privateBlobToken` |
 | `src/lib/tee-time-utils.ts` | 8 | 41 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
+| `src/lib/use-dashboard-access.ts` | 8 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
 | `src/lib/access-fee.ts` | 7 | 182 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/course-checkin.ts` | 7 | 106 | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. | `CHECKIN_AGENDA`, `CHECKIN_DUE_WINDOW_DAYS`, `CHECKIN_EVERY_DAYS`, `CHECKIN_FIRST_DAYS`, `CheckinAgendaItem`, `CheckinCallLike`, `CheckinCourseLike`, `checkInSignal` +8 more |
 | `src/lib/cron-auth.ts` | 7 | 39 |  | `cronAuthFailure` |
 | `src/lib/member-session.ts` | 7 | 89 |  | `getGolferMembership`, `getMemberSession`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
 | `src/lib/preview-token.ts` | 7 | 25 |  | `signPreviewToken`, `verifyPreviewToken` |
 | `src/lib/seo.ts` | 7 | 21 | Link previews (Walk 1, 2026-10-19). | `OG_BASE`, `previewFor` |
-| `src/lib/tee-sheet-engine.ts` | 7 | 229 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `ScheduleForSlots`, `slotKey` |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
 | `src/lib/cancel-booking.ts` | 6 | 273 |  | `CancellationOptions`, `performCancellation` |
 | `src/lib/manage-access.ts` | 6 | 17 | R-AUTH-003 / R-GOLF-003 (G13) — who may manage a booking from the golfer side. | `canManageBooking` |
 | `src/lib/password.ts` | 6 | 14 | Shared password strength rule — used on registration, reset, and in-dashboard change-password, both server-side (enforcement) and client-side (live hint). | `PASSWORD_REQUIREMENTS_HINT`, `validatePasswordStrength` |
 | `src/lib/schedule-service.ts` | 6 | 216 | MP-5d. | `createSchedule`, `deleteSchedule`, `listSchedules`, `ScheduleConflictError`, `ScheduleProductError`, `ScheduleScope`, `setTeeTimeBlocked`, `updateSchedule` |
+| `src/lib/analytics.ts` | 5 | 335 | AN-1 (Cam 2026-10-01): | `Analytics`, `computeAnalytics`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `previousRange`, `Range` |
 | `src/lib/approval-state.ts` | 5 | 41 |  | `ApprovalState`, `getApprovalState` |
 | `src/lib/no-show-fee.ts` | 5 | 194 | SP-B (STAFF_POLICY_SPEC Part B4). | `chargeNoShow`, `dueAutoNoShows`, `dueNoShowCharges`, `liveNoShowCharge`, `markNoShow`, `NoShowResult`, `refundNoShowFee` |
 | `src/lib/refund-booking.ts` | 5 | 136 | MP-6b. | `findBookingByStripeId`, `PaymentEventKind`, `recordPaymentEvent`, `refundBooking`, `RefundResult` |
+| `src/lib/tee-sheet-engine.ts` | 5 | 208 |  | `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming` |
 | `src/lib/twilio.ts` | 5 | 45 |  | `sendSms`, `sendSmsOtp`, `smsConfigured` |
 | `src/lib/admin-roles.ts` | 4 | 17 | Role lists, client-safe. | `MANAGER_PLUS`, `OWNER_ONLY`, `SUPPORT_PLUS`, `VIEWER_PLUS` |
-| `src/lib/analytics.ts` | 4 | 335 | AN-1 (Cam 2026-10-01): | `Analytics`, `computeAnalytics`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `previousRange`, `Range` |
 | `src/lib/birdie/proposal-types.ts` | 4 | 61 | BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call). | `cardCalls`, `isProposalCard`, `PROPOSAL_ROUTES`, `ProposalCall`, `ProposalCard` |
 | `src/lib/booking-window.ts` | 4 | 76 | BOOKING WINDOWS (RUN_QUEUE) — how far ahead each audience can see and book the tee sheet. | `dayOffset`, `DEFAULT_MEMBER_WINDOW_DAYS`, `DEFAULT_PUBLIC_WINDOW_DAYS`, `generationHorizonDays`, `lastBookableDate`, `MIN_GENERATION_DAYS`, `outsideWindowBody`, `utcToday` +4 more |
 | `src/lib/call-invite.ts` | 4 | 106 | CALL_SCHEDULING_SPEC SC-2 §1 — the "pick a call time" invite. | `deliverCallInvite`, `INVITE_DAYS`, `inviteAgendaLines`, `InviteSendResult`, `inviteUrl`, `issueCallInvite`, `sendCallInvite`, `sendCallReminders` |
@@ -341,7 +342,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/money-problems.ts` | 3 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
 | `src/lib/normalize-course.ts` | 3 | 71 |  | `normalizeDbCourse` |
 | `src/lib/public-course.ts` | 3 | 29 | PERF-1: | `loadPublicCourse` |
-| `src/lib/schedule-wire.ts` | 3 | 92 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
 | `src/lib/thread-signal.ts` | 3 | 52 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
 | `src/lib/unsaved-guard.ts` | 3 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/agreement-publish.ts` | 2 | 101 | AG-3 — publishing an agreement version: | `agreementVersionsOverview`, `publishAgreementVersion`, `publishDates`, `PublishResult`, `REACCEPT_WINDOW_DAYS`, `reacceptPublishError`, `VersionRow` |
@@ -350,9 +350,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/birdie/ask.ts` | 2 | 31 | AN-3 (Cam 2026-10-19: | `ASK_EVENT`, `askBirdie`, `markBirdieReady`, `useBirdieReady` |
 | `src/lib/birdie/guardrails.ts` | 2 | 74 | BIRDIE_AI_SPEC B1 — scope, caps and the kill switch. | `BIRDIE_MODEL`, `birdieEnabled`, `BirdieTurn`, `birdieUsageToday`, `checkCaps`, `logConversation`, `MAX_HISTORY_TURNS`, `MAX_REPLY_TOKENS` +4 more |
 | `src/lib/birdie/tools.ts` | 2 | 182 | BIRDIE_AI_SPEC B4a (Cam 2026-10-05) — live-data READ tools for the operator persona. | `READ_TOOLS`, `runReadTool`, `ToolContext`, `ToolOutcome` |
-| `src/lib/booking-status.ts` | 2 | 77 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusDot`, `StatusTone` |
 | `src/lib/calcom-url.ts` | 2 | 21 | The prefilled Cal.com booking link — no server-only imports, so the /for-courses thanks page can build it in the browser (FB-1 review) as well as the server routes (via lib/calcom.ts). | `calcomEmbedUrl` |
-| `src/lib/cancel-confirm.ts` | 2 | 38 | The words staff read before cancelling a booking — the tee sheet's panel and Money → Cancellations ask the same question the same way, so the fee outcome they promise matches what lib/cancel-bookin... | `cancelConfirmText`, `CancelResult`, `cancelResultText` |
 | `src/lib/course-closure.ts` | 2 | 128 | MP-5b. | `cancelFutureBookingsForClosure`, `closureImpact`, `ClosureImpact`, `ClosureResult`, `notifyOperatorOfClosure` |
 | `src/lib/courses-data.ts` | 2 | 320 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
 | `src/lib/image-resize.ts` | 2 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
@@ -363,6 +361,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/platform-stripe.ts` | 2 | 58 |  | `fetchStripeFeeWindow`, `fetchStripeProcessingCostCents`, `StripeFeeWindow` |
 | `src/lib/public-tee-times.ts` | 2 | 81 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
 | `src/lib/schedule-conflict.ts` | 2 | 78 | COURSE_LAYOUT_SPEC L2 — conflict detection for product-scoped schedules. | `ConflictNine`, `ConflictProduct`, `ConflictSchedule`, `findScheduleConflict` |
+| `src/lib/schedule-wire.ts` | 2 | 92 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
 | `src/lib/settings-validation.ts` | 2 | 141 | SD-1. | `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
 | `src/lib/sheet-token.ts` | 2 | 52 |  | `CLOSED_TO_SHEET`, `DETAILS_TOKEN_TTL_DAYS`, `gateSheetAccess`, `SheetGate` |
 | `src/lib/staff-fonts.ts` | 2 | 10 | U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here: | `STAFF_LOOK_CLASS` |
@@ -375,6 +374,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/birdie/course-context.ts` | 1 | 72 | BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course. | `describeCourseContext`, `operatorCourseContext`, `OperatorCourseContext` |
 | `src/lib/birdie/knowledge-operator.ts` | 1 | 64 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |
 | `src/lib/birdie/proposals.ts` | 1 | 419 | BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES. | `isProposeTool`, `ProposalCard`, `ProposalOutcome`, `PROPOSE_TOOLS`, `runProposeTool` |
+| `src/lib/booking-status.ts` | 1 | 77 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusDot`, `StatusTone` |
+| `src/lib/cancel-confirm.ts` | 1 | 38 | The words staff read before cancelling a booking — the tee sheet's panel and Money → Cancellations ask the same question the same way, so the fee outcome they promise matches what lib/cancel-bookin... | `cancelConfirmText`, `CancelResult`, `cancelResultText` |
 | `src/lib/checkin-errors.ts` | 1 | 15 | R-GOLF-011: | `golferCheckInError` |
 | `src/lib/course-action-queue.ts` | 1 | 37 | COURSES_SHEET_SPEC CS-1 §4 — the Overview action queue's course rows for check-in calls. | `buildCourseCheckInRows`, `QueueCourse` |
 | `src/lib/course-feed.ts` | 1 | 64 | MP-5e part 3 — the course's relationship feed: | `buildRelationshipFeed`, `FeedItem`, `FeedKind` |
@@ -383,7 +384,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/frost-delay.ts` | 1 | 100 | B-9 frost delay (Cam 2026-10-01: | `applyFrostDelay`, `FrostMove`, `FrostPlan`, `isFrostTime`, `planFrostDelay` |
 | `src/lib/golfer-messages.ts` | 1 | 110 | MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07: | `audience`, `checkWindow`, `MAX_MESSAGE_CHARS`, `reach`, `sendCourseMessage`, `SMS_CHARS`, `smsRoom`, `Window` |
 | `src/lib/receipt-charges.ts` | 1 | 94 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
-| `src/lib/schedule-preview.ts` | 1 | 110 | Schedule rework (Cam 2026-10-19: | `diffDay`, `PREVIEW_DAYS`, `previewScheduleChange`, `ScheduleChange`, `SchedulePreview` |
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |
 | `src/lib/tier-wire.ts` | 1 | 43 |  | `tierToWire` |
 | `src/lib/use-resource.ts` | 1 | 40 | MP-11b (ADMIN_V4 V4-7 item 4). | `ResourceError`, `useResource` |
@@ -400,16 +400,16 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/StatusDot.tsx` | 41 | 36 |  | `StatusDot` |
-| `src/components/ui/Card.tsx` | 34 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/StatusDot.tsx` | 43 | 36 |  | `StatusDot` |
+| `src/components/ui/Card.tsx` | 35 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/Eyebrow.tsx` | 27 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/ui/field.ts` | 23 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 14 | 267 |  | `AdminNavKey`, `default (AdminSidebar)` |
-| `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
+| `src/components/dashboard/Toast.tsx` | 10 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 10 | 264 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/ui/ErrorState.tsx` | 8 | 96 |  | `ErrorBanner`, `LoadFailure` |
+| `src/components/dashboard/LoadError.tsx` | 7 | 16 | SD-10. | `LoadError` |
 | `src/components/ui/Modal.tsx` | 7 | 141 | MP-9 (ADMIN_V4 V4-6 §4) — the one dialog. | `Modal`, `ModalActions` |
-| `src/components/dashboard/LoadError.tsx` | 6 | 16 | SD-10. | `LoadError` |
 | `src/components/CourseHeaderBar.tsx` | 5 | 46 | White-label rule: | `CourseHeaderBar` |
 | `src/components/dashboard/money/types.ts` | 4 | 18 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
 | `src/components/admin/CourseCheckInCard.tsx` | 3 | 364 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
@@ -418,6 +418,7 @@ Sorted the same way.
 | `src/components/EmptyState.tsx` | 3 | 22 |  | `EmptyState` |
 | `src/components/GolferExitLinks.tsx` | 3 | 24 |  | `GolferExitLinks` |
 | `src/components/PlainHeader.tsx` | 3 | 17 |  | `default (PlainHeader)` |
+| `src/components/dashboard/money/PayoutsTable.tsx` | 2 | 73 | Money rework (Cam 2026-10-19): | `fmtDay`, `Payout`, `PayoutsData`, `PayoutsTable`, `usd` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
 | `src/components/ui/Btn.tsx` | 2 | 27 |  | `Btn` |
 | `src/components/admin/AgreementVersionsCard.tsx` | 1 | 117 | AG-3 — Admin → System → Agreement versions (Cam 2026-10-12: | `default (AgreementVersionsCard)` |
@@ -433,9 +434,9 @@ Sorted the same way.
 | `src/components/dashboard/DateRangeButton.tsx` | 1 | 117 | AN-3 (Cam 2026-10-19: | `DateRange`, `default (DateRangeButton)`, `presets`, `rangeLabel` |
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |
 | `src/components/dashboard/GolferMessageModal.tsx` | 1 | 136 | MSG-1 (PLATFORM_ROADMAP_SPEC §5): | `default (GolferMessageModal)` |
-| `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 172 | SD-8 — the Cancellations half of the Money page. | `CancellationsPanel` |
-| `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 124 | SD-8 — the Payments half of the Money page. | `PaymentsPanel` |
-| `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 126 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
+| `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 80 | Money rework (Cam 2026-10-19: | `CancellationsPanel` |
+| `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 115 | Money rework (Cam 2026-10-19: | `PaymentsPanel`, `paymentStatus` |
+| `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 96 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/dashboard/MoveGroupModal.tsx` | 1 | 154 | ACT-1 (PLATFORM_ROADMAP_SPEC §2): | `default (MoveGroupModal)` |
 | `src/components/dashboard/ShopCatalog.tsx` | 1 | 135 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `ShopCatalog` |
 | `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 131 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
@@ -508,11 +509,11 @@ without opening anything.
 
 ### Blackout
 
-5 fields · 3 writer(s) · 6 reader(s)
+5 fields · 3 writer(s) · 5 reader(s)
 
 - fields: `id`, `courseId`, `course`, `date`, `reason`
 - writers: `src/app/api/operator/blackouts/route.ts`, `src/lib/lifecycle.ts`, `src/lib/weather-cancel.ts`
-- readers: `src/app/api/operator/blackouts/route.ts`, `src/lib/birdie/proposals.ts`, `src/lib/birdie/tools.ts`, `src/lib/schedule-preview.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/weather-cancel.ts`
+- readers: `src/app/api/operator/blackouts/route.ts`, `src/lib/birdie/proposals.ts`, `src/lib/birdie/tools.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/weather-cancel.ts`
 
 ### Booking
 
@@ -604,11 +605,11 @@ without opening anything.
 
 ### CourseProduct
 
-12 fields · 2 writer(s) · 8 reader(s)
+12 fields · 2 writer(s) · 7 reader(s)
 
 - fields: `id`, `courseId`, `course`, `label`, `holes`, `nineIds`, `active`, `sortOrder`, `createdAt`, `teeSetRatings`, `schedules`, `teeTimes`
 - writers: `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/course-products/route.ts`
-- readers: `src/app/api/admin/course-detail/route.ts`, `src/app/api/operator/course-products/route.ts`, `src/app/api/operator/nines/route.ts`, `src/app/api/operator/tee-sets/route.ts`, `src/lib/birdie/course-context.ts`, `src/lib/schedule-preview.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
+- readers: `src/app/api/admin/course-detail/route.ts`, `src/app/api/operator/course-products/route.ts`, `src/app/api/operator/nines/route.ts`, `src/app/api/operator/tee-sets/route.ts`, `src/lib/birdie/course-context.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
 
 ### CourseProductTeeSet
 
@@ -748,11 +749,11 @@ without opening anything.
 
 ### TeeTime
 
-20 fields · 7 writer(s) · 18 reader(s)
+20 fields · 7 writer(s) · 17 reader(s)
 
 - fields: `id`, `courseId`, `course`, `date`, `time`, `holes`, `playersAvailable`, `playersBooked`, `greenFeeCents`, `memberRateCents`, `residentRateCents`, `cartFeeCents`, `walkingAllowed`, `tierName`, `status`, `createdAt`, `bookings`, `teeTimeAlerts`, `productId`, `product`
 - writers: `src/app/api/operator/blackouts/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/frost-delay.ts`, `src/lib/lifecycle.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/weather-cancel.ts`
-- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/lib/analytics.ts`, `src/lib/birdie/proposals.ts`, `src/lib/birdie/tools.ts`, `src/lib/frost-delay.ts` +6 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/lib/analytics.ts`, `src/lib/birdie/proposals.ts`, `src/lib/birdie/tools.ts`, `src/lib/frost-delay.ts` +5 more (see `docs/codemap.json`)
 
 ### TeeTimeAlert
 
@@ -764,11 +765,11 @@ without opening anything.
 
 ### TeeTimeSchedule
 
-21 fields · 4 writer(s) · 6 reader(s)
+21 fields · 4 writer(s) · 5 reader(s)
 
 - fields: `id`, `courseId`, `course`, `tierName`, `daysOfWeek`, `startTime`, `endTime`, `intervalMinutes`, `holes`, `greenFeeWeekdayCents`, `greenFeeWeekendCents`, `memberRateWeekdayCents`, `memberRateWeekendCents`, `residentRateWeekdayCents`, `residentRateWeekendCents`, `cartFeeCents`, `walkingAllowed`, `active`, `createdAt`, `productId`, `product`
 - writers: `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/lib/lifecycle.ts`, `src/lib/schedule-service.ts`
-- readers: `src/app/api/operator/course-products/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/birdie/course-context.ts`, `src/lib/schedule-preview.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
+- readers: `src/app/api/operator/course-products/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/birdie/course-context.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`
 
 ## Orphans
 
