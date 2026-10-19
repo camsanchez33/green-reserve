@@ -1,13 +1,12 @@
 'use client';
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { StatusDot } from '@/components/ui/StatusDot';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function LoginContent() {
-  const router = useRouter();
   const params = useSearchParams();
   const justVerified = params.get('verified') === '1';
   const [form, setForm] = useState({ email: '', password: '' });
@@ -21,7 +20,10 @@ function LoginContent() {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) { setError(data.error || 'Invalid email or password'); return; }
-    router.push(data.redirect || '/dashboard');
+    // A new sign-in may be another course: drop the top bar's remembered identity (AN-3).
+    try { sessionStorage.removeItem('gr:op-identity'); } catch { /* storage unavailable */ }
+    // A full load, not router.push: the top bar's in-memory cache must not survive into another course.
+    window.location.assign(data.redirect || '/dashboard');
   };
 
   // Cam 2026-10-19 (HOMEPAGE_SPEC §0a): keep it minimal — the homepage's photo

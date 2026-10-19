@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 407,
+    "files": 409,
     "routes": 211,
-    "libs": 120,
+    "libs": 121,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4151,7 +4151,7 @@
     },
     {
       "path": "src/app/api/operator/analytics/route.ts",
-      "lines": 35,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6053,8 +6053,8 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 525,
-      "purpose": "AN-2 (Cam 2026-10-08:",
+      "lines": 610,
+      "purpose": "AN-3 (Cam 2026-10-19, after AN-2):",
       "brain": [],
       "exports": [
         {
@@ -6069,11 +6069,13 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/DateRangeButton",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/analytics",
+        "@/lib/birdie/ask",
         "@/lib/dashboard-fetch",
         "lucide-react",
         "next/link",
@@ -6152,7 +6154,7 @@
     },
     {
       "path": "src/app/dashboard/login/page.tsx",
-      "lines": 91,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7259,7 +7261,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 241,
+      "lines": 264,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7564,7 +7566,7 @@
     },
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
-      "lines": 189,
+      "lines": 207,
       "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
       "brain": [],
       "exports": [
@@ -7580,6 +7582,7 @@
       "guard": null,
       "imports": [
         "./ConfirmCard",
+        "@/lib/birdie/ask",
         "@/lib/birdie/proposal-types",
         "@/lib/unsaved-guard",
         "lucide-react",
@@ -7695,6 +7698,42 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/DateRangeButton.tsx",
+      "lines": 117,
+      "purpose": "AN-3 (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DateRange",
+          "kind": "type"
+        },
+        {
+          "name": "default (DateRangeButton)",
+          "kind": "component"
+        },
+        {
+          "name": "presets",
+          "kind": "fn"
+        },
+        {
+          "name": "rangeLabel",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/analytics/page.tsx"
       ]
     },
     {
@@ -8268,6 +8307,7 @@
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx"
       ]
     },
@@ -9285,7 +9325,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 333,
+      "lines": 335,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -9527,6 +9567,42 @@
         "src/app/api/operator/onboarding-complete/route.ts",
         "src/lib/member-session.ts",
         "src/lib/session.ts"
+      ]
+    },
+    {
+      "path": "src/lib/birdie/ask.ts",
+      "lines": 31,
+      "purpose": "AN-3 (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ASK_EVENT",
+          "kind": "const"
+        },
+        {
+          "name": "askBirdie",
+          "kind": "fn"
+        },
+        {
+          "name": "markBirdieReady",
+          "kind": "fn"
+        },
+        {
+          "name": "useBirdieReady",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
+        "src/components/birdie/BirdieWidget.tsx"
       ]
     },
     {
@@ -12962,7 +13038,7 @@
     },
     {
       "path": "src/lib/monthly-review.ts",
-      "lines": 256,
+      "lines": 255,
       "purpose": "BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07:",
       "brain": [],
       "exports": [
