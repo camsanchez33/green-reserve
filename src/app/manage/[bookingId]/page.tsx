@@ -14,6 +14,7 @@ type BookingInfo = {
   courseName: string;
   courseSlug: string;
   courseAddress: string;
+  coursePhone?: string;
   brandColor: string;
   heroImageUrl?: string; logoUrl?: string;
   date: string;
@@ -490,6 +491,7 @@ function ManagePageInner() {
             <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{fmtTime(info.time)} &middot; {info.productLabel ? `${info.productLabel} · ` : ''}{info.holes} holes</span></div>
             <div className="flex items-center gap-2.5 text-sm"><span className="text-ink font-medium">{info.players} player{info.players !== 1 ? 's' : ''}</span></div>
             <div className="flex items-start gap-2.5 text-sm"><span className="text-ink-soft">{info.courseAddress}</span></div>
+            {info.coursePhone && <div className="text-sm"><a href={`tel:${info.coursePhone.replace(/[^\d+]/g, '')}`} className="text-ink-soft hover:text-ink underline underline-offset-2">Call the course: {info.coursePhone}</a></div>}
             <div className="border-t border-line pt-3">
               <PriceBreakdown greenFeeTotal={info.greenFeeTotal} cartFeeTotal={info.cartFeeTotal} rangeBallsTotal={info.rangeBallsTotal} accessFeeTotal={info.accessFeeTotal} totalAmount={info.totalAmount} players={info.players} shopChargeCents={info.shopChargeCents ?? 0} />
             </div>

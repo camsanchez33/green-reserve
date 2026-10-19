@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
       course: {
         select: {
-          name: true, slug: true, address: true, city: true, state: true,
+          name: true, slug: true, address: true, city: true, state: true, phone: true,
           timezone: true, cancellationHours: true, brandColor: true, heroImageUrl: true, logoUrl: true,
         },
       },
@@ -58,6 +58,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     courseName: booking.course.name,
     courseSlug: booking.course.slug,
     courseAddress: `${booking.course.address}, ${booking.course.city}, ${booking.course.state}`,
+    // The course is who a golfer calls about their round (/contact sends them here).
+    coursePhone: booking.course.phone || '',
     brandColor: booking.course.brandColor,
     heroImageUrl: booking.course.heroImageUrl || '',
     logoUrl: booking.course.logoUrl || '',
