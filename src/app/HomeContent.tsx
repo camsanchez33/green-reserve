@@ -20,15 +20,16 @@ const DETAIL = '/teesheet';
 const Arrow = () => <span aria-hidden="true">→</span>;
 
 const DOES = [
-  'Your own booking page, with your course’s name, colors and photos',
-  'Online, phone and walk-in bookings on one tee sheet',
-  'Check-in and payment at the counter, or on the golfer’s own phone',
-  'Member rates, your cancellation policy and staff permissions, all set by you',
+  'A booking page with your course’s name, colors and photos, linked from your own website',
+  'Online, phone and walk-in bookings on one sheet, with your public, resident and member rates',
+  'Payments at the counter or on the golfer’s own phone, with a card on file for late-cancel and no-show fees',
+  'Staff logins, with permissions you set for each person',
+  'An AI assistant that answers questions about your day and drafts changes for you to confirm',
 ];
 
 const HIGHLIGHTS = [
   { h: 'Free for your course', p: 'No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.' },
-  { h: 'Birdie, your assistant', p: 'Ask how today looks, find a golfer’s booking or draft a change to the sheet. Birdie never changes anything until you confirm it.' },
+  { h: 'Your AI assistant', p: 'Ask how today looks, find a golfer’s booking or draft a change to the sheet. Nothing changes until you confirm it.' },
   { h: 'Analytics', p: 'Revenue collected and still owed, how full each day ran, no-shows, and the tee times that went unsold.' },
   { h: 'Your money, your account', p: 'Golfers pay with one card payment to your course’s own Stripe account, and it lands on Stripe’s normal schedule.' },
 ];
@@ -52,14 +53,14 @@ export default function HomeContent() {
 
       {/* WHAT IT IS — the headline, the paragraph, the list, then the way on. */}
       <section className={`${s.col} ${s.about}`} id="about">
-        <h2 className={s.display}>A free tee sheet built for how your course really runs.</h2>
+        <h2 className={s.display}>Everything your course needs, in one tee sheet.</h2>
         <div className={s.aboutGrid}>
           <div>
             <p className={s.lead}>
-              GreenReserve gives your course its own online booking page and the tee sheet your staff run the day from.
-              Golfers book from a button on your website, on a page with your course&apos;s name, colors and photos.
-              Every booking, whether it came in online, by phone or at the counter, lands on the same sheet, so nothing
-              is double-booked. Green fees are paid into your course&apos;s own Stripe account, and GreenReserve charges your course nothing.
+              GreenReserve brings your tee sheet and online booking into one system that your staff run.
+              During setup, we build your course&apos;s booking page from your schedule, rates, photos and colors,
+              and you can change any of it whenever you like. We bring your members over and train your staff,
+              so your counter is ready before you go live. GreenReserve charges your course nothing.
             </p>
             <ul className={s.does}>
               {DOES.map(d => <li key={d}>{d}</li>)}
