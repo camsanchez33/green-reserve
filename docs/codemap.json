@@ -4107,7 +4107,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "lines": 96,
+      "lines": 105,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6301,7 +6301,7 @@
     },
     {
       "path": "src/app/courses/[slug]/member/page.tsx",
-      "lines": 843,
+      "lines": 862,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6317,6 +6317,7 @@
       "guard": "NONE FOUND",
       "imports": [
         "@/components/ui/StatusDot",
+        "@/lib/residents",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -14828,6 +14829,7 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/operator/residents/route.ts",
+        "src/app/courses/[slug]/member/page.tsx",
         "src/lib/booking-residents.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/member-session.ts",

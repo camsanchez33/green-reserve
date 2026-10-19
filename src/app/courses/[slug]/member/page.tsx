@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { groupGreenFee } from '@/lib/residents';
 
 type MemberTier = {
   id: string;
@@ -42,7 +43,18 @@ type MemberTeeTime = {
   walking_allowed: boolean;
   status: 'available' | 'limited' | 'almost_full';
   has_member_rate: boolean;
+  /** RES-1: the signed-in golfer's own spot at the resident rate (one player), when it applies. */
+  resident_green_fee?: number | null;
 };
+
+// The group's green fee as booking charges it (api/bookings → groupGreenFee):
+// the signed-in golfer's own spot at the resident rate when it applies, everyone
+// else at the member price. Cents, so the total can't drift by a float.
+const toCents = (d: number) => Math.round(d * 100);
+function groupGreen(t: MemberTeeTime, players: number): number {
+  const resident = t.resident_green_fee != null ? toCents(t.resident_green_fee) : null;
+  return groupGreenFee(players, toCents(t.member_green_fee), resident != null ? 1 : 0, resident).greenFeeTotal;
+}
 
 type PaymentRecord = {
   type: string;
@@ -616,6 +628,11 @@ function MemberDashboard({
                                       Save ${savings}
                                     </div>
                                   )}
+                                  {t.resident_green_fee != null && (
+                                    <div className="text-[11px] text-ok font-semibold whitespace-nowrap">
+                                      Your spot ${t.resident_green_fee} as a resident
+                                    </div>
+                                  )}
                                 </div>
                                 <span
                                   className={`hidden sm:inline-flex px-4 py-2 rounded-md text-xs font-medium transition-colors ${
@@ -759,9 +776,11 @@ function MemberDashboard({
                 {players === 1 ? 'player' : 'players'}
               </div>
               <div className="text-xs text-ink-muted mt-0.5">
-                Member rate ${selectedTime.member_green_fee} × {players}
+                {selectedTime.resident_green_fee != null
+                  ? <>Your spot ${selectedTime.resident_green_fee} as a resident{players > 1 ? ` + $${selectedTime.member_green_fee} × ${players - 1}` : ''}</>
+                  : <>Member rate ${selectedTime.member_green_fee} × {players}</>}
                 {selectedTime.has_member_rate && selectedTime.member_green_fee < selectedTime.green_fee
-                  ? ` · Saving $${((selectedTime.green_fee - selectedTime.member_green_fee) * players).toFixed(2)} total`
+                  ? ` · Saving $${((toCents(selectedTime.green_fee) * players - groupGreen(selectedTime, players)) / 100).toFixed(2)} total`
                   : ''}
               </div>
             </div>
@@ -771,7 +790,7 @@ function MemberDashboard({
                   Total
                 </div>
                 <div className="font-serif font-semibold text-ink text-xl leading-tight">
-                  ${(selectedTime.member_green_fee * players + 1.5 * players).toFixed(2)}
+                  ${((groupGreen(selectedTime, players) + 150 * players) / 100).toFixed(2)}
                 </div>
               </div>
               <button
