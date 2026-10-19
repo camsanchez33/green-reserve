@@ -489,7 +489,7 @@ function SettingsPageInner() {
     const onApplied = (e: Event) => {
       const paths = (e as CustomEvent<{ paths?: string[] }>).detail?.paths ?? [];
       if (!paths.includes('/api/operator/settings')) return;
-      fetch('/api/operator/settings').then(r => r.ok ? r.json() : null)
+      fetch('/api/operator/settings').then(r => r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
         .then(d => {
           if (!d || typeof d.description !== 'string') return;
           // The confirmed card is the newest intent for the description: take it,
