@@ -100,6 +100,9 @@ suggestion save this information". Decisions go here as they are made.
 beside the form (homepage feel; form only on phones) and a "Need help signing
 in?" line pointing to support. ("Ask a question" was not swapped for Book a demo.)
 
+**About section — DRAFT sent to Cam 2026-10-19 (not approved yet).** See the
+session for the copy; record it here once approved.
+
 **Round 5 (Cam 2026-10-19):** hide Test Course 3 from the public site and the
 sitemap; the site phone number is Cam's cell (number to come from Cam);
 REMOVE durations and contract terms from /for-courses too; fix link previews
