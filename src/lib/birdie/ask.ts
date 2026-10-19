@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 
 export const ASK_EVENT = 'birdie:ask';
+/** Fired after a confirm card's calls all succeed; detail.paths = the routes it called. */
+export const APPLIED_EVENT = 'birdie:applied';
 const READY_EVENT = 'birdie:ready';
 let ready = false;
 

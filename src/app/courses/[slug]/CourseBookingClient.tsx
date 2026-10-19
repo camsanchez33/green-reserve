@@ -1,5 +1,7 @@
 'use client';
 import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
+import { teeColour } from '@/lib/tee-colour';
+import { walkingWords } from '@/lib/walking';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -127,6 +129,12 @@ type CourseWithBrand = Course & {
   brand_color?: string;
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
+  tee_sets?: { name: string; yardage: number; rating: number; slope: number }[];
+  walking_policy?: string;
+  walking_note?: string;
+  dress_code?: string[];
+  facilities?: string[];
+  nines?: { name: string; par: number }[];
   page_approval_status?: 'none' | 'approved' | 'changes_requested';
   is_live?: boolean;
   // BOOKING WINDOWS
@@ -549,7 +557,7 @@ export default function CourseDetailPage({
     const heroStyle = course.hero_image_url
       ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
       : { backgroundColor: course.brand_color || '#173B2A' };
-    const amenities = course.amenities ? course.amenities.filter(Boolean) : [];
+    const amenities = course.facilities ?? [];
     return (
       <>
         <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
@@ -580,12 +588,10 @@ export default function CourseDetailPage({
               )}
               {amenities.length > 0 && (
                 <div className="mb-8">
-                  <p className="text-[15px] font-semibold text-ink mb-3">Amenities</p>
-                  <div className="flex flex-wrap gap-2">
-                    {amenities.map((a: string) => (
-                      <span key={a} className="text-xs text-ink-soft border border-line rounded-md px-2.5 py-1">{a}</span>
-                    ))}
-                  </div>
+                  <p className="text-[15px] font-semibold text-ink mb-3">Facilities</p>
+                  <ul className="text-sm text-ink-soft list-disc pl-5 space-y-0.5">
+                    {amenities.map((a: string, i: number) => <li key={i}>{a}</li>)}
+                  </ul>
                 </div>
               )}
               <div className="flex flex-wrap gap-4 text-sm text-ink">
@@ -626,7 +632,7 @@ export default function CourseDetailPage({
 
   const accent = course.brand_color || '#173B2A';
   const typeLabel = TYPE_LABELS[course.type] ?? 'Public';
-  const amenities = course.amenities ? course.amenities.filter((s: string) => s.trim()) : [];
+  const amenities = course.facilities ?? [];
   const strip = buildDateStrip();
   const todayStr = formatDate(startOfToday());
   // BOOKING WINDOWS: the viewer's horizon — a member's tier window, else the
@@ -1570,8 +1576,8 @@ export default function CourseDetailPage({
                       { label: 'Course type', value: typeLabel },
                       { label: 'Holes', value: String(course.holes) },
                       { label: 'Par', value: String(course.par) },
-                      { label: 'Walking', value: course.walking_allowed ? 'Allowed' : 'Cart only' },
-                      { label: 'Cart', value: course.cart_required ? 'Required' : 'Optional' },
+                      // A carts-only course says so under Walking; "Cart: Optional" beside it read as a contradiction.
+                      { label: 'Cart', value: course.walking_policy === 'never' ? '' : course.cart_required ? 'Required' : 'Optional' },
                       { label: 'State', value: course.state },
                     ].filter(f => f.value && f.value !== 'undefined' && f.value !== 'null').map(f => (
                       <div key={f.label}>
@@ -1582,20 +1588,54 @@ export default function CourseDetailPage({
                   </div>
                 </div>
 
+                {/* Settings rework (Cam 2026-10-19): walking and dress code from Settings → Booking rules. */}
+                <div className="border-t border-line pt-5 grid sm:grid-cols-2 gap-5 text-sm">
+                  <div>
+                    <h2 className="font-serif text-ink text-[22px] leading-none mb-3">Walking</h2>
+                    <p className="text-ink">{walkingWords(course.walking_policy)}{course.walking_note?.trim() ? ` ${course.walking_note.trim()}` : ''}</p>
+                  </div>
+                  {(course.dress_code?.length ?? 0) > 0 && (
+                    <div>
+                      <h2 className="font-serif text-ink text-[22px] leading-none mb-3">Dress code</h2>
+                      <ul className="text-ink list-disc pl-5 space-y-0.5">{course.dress_code!.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Settings rework (Cam 2026-10-19): the tees and nines from Settings → Course layout. */}
+                {((course.tee_sets?.length ?? 0) > 0 || (course.nines?.length ?? 0) > 1) && (
+                  <div className="border-t border-line pt-5">
+                    <h2 className="font-serif text-ink text-[22px] leading-none mb-4">The tees</h2>
+                    {(course.nines?.length ?? 0) > 1 && (
+                      <p className="text-sm text-ink mb-3">{course.nines!.length} nines: {course.nines!.map(n => `${n.name} (par ${n.par})`).join(', ')}.</p>
+                    )}
+                    {(course.tee_sets?.length ?? 0) > 0 && (
+                      <ul className="divide-y divide-line text-sm">
+                        {course.tee_sets!.map(t => {
+                          const c = teeColour(t.name);
+                          return (
+                            <li key={t.name} className="flex items-center justify-between gap-3 py-2">
+                              <span className="flex items-center gap-2 font-medium text-ink">
+                                {c && <span className="w-3 h-3 rounded-full border border-line-strong shrink-0" style={{ backgroundColor: c }} aria-hidden="true" />}
+                                {t.name}
+                              </span>
+                              <span className="text-ink-soft tabular-nums">
+                                {[t.yardage > 0 ? `${t.yardage.toLocaleString('en-US')} yards` : '', t.rating > 0 && t.slope > 0 ? `${t.rating.toFixed(1)} / ${t.slope}` : ''].filter(Boolean).join(' · ')}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
                 {amenities.length > 0 && (
                   <div className="border-t border-line pt-5">
-                    <h2 className="font-serif text-ink text-[22px] leading-none mb-4">Amenities</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {amenities.map(a => (
-                        <span
-                          key={a}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium"
-                          style={{ backgroundColor: `${accent}10`, color: accent }}
-                        >
-                          {a}
-                        </span>
-                      ))}
-                    </div>
+                    <h2 className="font-serif text-ink text-[22px] leading-none mb-4">Facilities</h2>
+                    <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-ink list-disc pl-5">
+                      {amenities.map((a, i) => <li key={i}>{a}</li>)}
+                    </ul>
                   </div>
                 )}
               </div>

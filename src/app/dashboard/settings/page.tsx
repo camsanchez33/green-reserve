@@ -18,6 +18,10 @@ import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/pass
 import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { walkingWords } from '@/lib/walking';
+import { askBirdie, useBirdieReady, APPLIED_EVENT } from '@/lib/birdie/ask';
+import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityFields } from '@/lib/facilities';
+import { Card } from '@/components/ui/Card';
 import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
 
 type Course = Record<string, unknown>;
@@ -48,9 +52,9 @@ const SECTION_ALIASES: Record<string, Section> = {
   'Pricing & cancellation': 'Prices & fees',
   'Staff & account': 'Staff',
 };
-// Sections whose contents save themselves (shop, staff, password, 2FA) —
-// the header Save button is hidden on these.
-const NO_SAVE_BUTTON: Section[] = ['Pro shop', 'Staff', 'Your account'];
+// Sections whose contents save themselves (layout, shop, staff, password,
+// 2FA) — the header Save button is hidden on these.
+const NO_SAVE_BUTTON: Section[] = ['Course layout', 'Pro shop', 'Staff', 'Your account'];
 // SP-A: the cancellation policy is the owner's alone — a staff login with
 // "Edit course settings" never sends these (the API refuses them too).
 const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes'];
@@ -63,7 +67,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
   'Your course': [
     'brandColor', 'phone', 'website', 'type', 'establishedYear', 'description', 'giftCardUrl', 'confirmationNote',
   ],
-  'Course layout': ['holes', 'par', 'yardage', 'slope', 'courseRating'],
+  'Course layout': [],
   'Booking rules': [
     'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'minPlayers', 'maxPlayers', 'dresscode',
     'walkingAllowed', 'walkingNote', 'cartRequired',
@@ -95,6 +99,35 @@ const IDENTITY_ROWS: { key: string; label: string }[] = [
   { key: 'state', label: 'State' },
   { key: 'zipCode', label: 'ZIP' },
 ];
+// Facilities checklist, in the order golfers think about them. Food and drink
+// (one choice) and "Anything else" sit below the groups.
+const FACILITY_GROUPS: { title: string; items: { key: string; label: string }[] }[] = [
+  { title: 'Practice', items: [
+    { key: 'hasDrivingRange', label: 'Driving range' },
+    { key: 'hasPuttingGreen', label: 'Putting green' },
+    { key: 'hasShortGameArea', label: 'Chipping and short-game area' },
+  ] },
+  { title: 'Shop, rentals and help', items: [
+    { key: 'hasProShop', label: 'Pro shop' },
+    { key: 'hasLessons', label: 'Lessons' },
+    { key: 'hasClubRental', label: 'Club rental' },
+    { key: 'hasPushCartRental', label: 'Push carts' },
+    { key: 'hasCaddies', label: 'Caddies' },
+  ] },
+  { title: 'Clubhouse and carts', items: [
+    { key: 'hasGpsCarts', label: 'GPS in the carts' },
+    { key: 'hasBagStorage', label: 'Bag storage' },
+    { key: 'hasLockerRoom', label: 'Locker room' },
+    { key: 'hasTournaments', label: 'Tournaments' },
+  ] },
+];
+// The four walking rules the settings API accepts, in golfers' words.
+const WALKING_CHOICES = [
+  { key: 'always', label: 'Golfers can walk any time' },
+  { key: 'weekdays', label: 'Walking on weekdays only' },
+  { key: 'after12', label: 'Walking after 12pm only' },
+  { key: 'never', label: 'Carts only — no walking' },
+] as const;
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -195,6 +228,7 @@ function SettingsPageInner() {
   // Money rework (Cam 2026-10-19): other pages link straight to a section, e.g. ?section=Pricing+%26+cancellation.
   const sectionParam = searchParams.get('section') ?? '';
   const [active, setActive] = useState<Section>(() => (SECTIONS as readonly string[]).includes(sectionParam) ? sectionParam as Section : SECTION_ALIASES[sectionParam] ?? 'Your course');
+  const [teeSetCount, setTeeSetCount] = useState<number | null>(null);
   const [form, setForm] = useState<Record<string,unknown>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -210,7 +244,8 @@ function SettingsPageInner() {
   // SD-8 review: blank fields and a failed load used to look identical.
   const [formLoaded, setFormLoaded] = useState(false);
   const [formError, setFormError] = useState('');
-  const isStaffLogin = useDashboardAccess().isStaff;
+  const access = useDashboardAccess();
+  const isStaffLogin = access.isStaff;
   // SP-B: the policy as currently on screen, in golfers' words.
   const cents = (v: unknown) => Math.round(Number(v || 0) * 100);
   const formTerms = describePolicy(policyFrom({
@@ -264,6 +299,14 @@ function SettingsPageInner() {
     return () => window.removeEventListener('focus', refreshForm);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // "Finish setting up" asks whether any tee exists; re-read on every section
+  // change so adding one under Course layout clears the item. Null (unknown or
+  // failed) never shows the item.
+  useEffect(() => {
+    fetch('/api/operator/tee-sets').then(r => r.ok ? r.json() : null)
+      .then(d => { if (Array.isArray(d)) setTeeSetCount(d.length); }).catch(() => {});
+  }, [active]);
 
   async function uploadGalleryPhoto(file: File | null) {
     if (!file) return;
@@ -424,6 +467,51 @@ function SettingsPageInner() {
 
   const dresscodes = (form.dresscode as string[])||[];
 
+  // Settings rework (Cam 2026-10-19: "AI should help write" the description).
+  // Birdie gets the course's own facts in the question, drafts, and shows a
+  // confirm card; nothing is saved until the owner confirms it there.
+  const birdieOn = useBirdieReady();
+  function askForDescription() {
+    const facts = [
+      `${String(form.name ?? '')}${form.city ? `, ${form.city}, ${form.state}` : ''}`,
+      `${form.type === 'private' ? 'Private' : 'Public'} course${form.holes ? `, ${form.holes} holes` : ''}${form.par ? `, par ${form.par}` : ''}${form.establishedYear ? `, opened ${form.establishedYear}` : ''}`,
+      walkingWords(form.walkingAllowed as string),
+      facilityPreview.length ? `Facilities: ${facilityPreview.join('; ')}` : '',
+    ].filter(Boolean).join('\n');
+    // Birdie's box takes 1500 characters; the current text gets what the facts leave.
+    const intro = 'Draft the description for our booking page — 3 to 5 sentences, friendly and plain. Use only these facts, and ask me for anything else you want to say:\n';
+    const current = String(form.description ?? '').trim();
+    const room = 1500 - intro.length - facts.length - 25;
+    const currentLine = current && room > 80 ? `\nCurrent description: ${current.length > room ? current.slice(0, room - 1) + '…' : current}` : '';
+    askBirdie(`${intro}${facts}${currentLine}`.slice(0, 1500));
+  }
+  useEffect(() => {
+    const onApplied = (e: Event) => {
+      const paths = (e as CustomEvent<{ paths?: string[] }>).detail?.paths ?? [];
+      if (!paths.includes('/api/operator/settings')) return;
+      fetch('/api/operator/settings').then(r => r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
+        .then(d => {
+          if (!d || typeof d.description !== 'string') return;
+          // The confirmed card is the newest intent for the description: take it,
+          // and stop treating an older unsaved draft of it as a pending edit.
+          setForm(f => ({ ...f, description: d.description }));
+          setDirtyFields(s => { if (!s.has('description')) return s; const next = new Set(s); next.delete('description'); return next; });
+        })
+        .catch(() => toast('Birdie saved the description. Reload to see it here.'));
+    };
+    window.addEventListener(APPLIED_EVENT, onApplied);
+    return () => window.removeEventListener(APPLIED_EVENT, onApplied);
+  }, []);
+  const dresscodeLines = dresscodes.map(l => l.trim()).filter(Boolean);
+  // The preview reads the same lines the booking page does; the form holds dollars, the lib wants cents.
+  const cents$ = (v: unknown) => Math.round(Number(v || 0) * 100);
+  const facilityPreview = facilityLines({
+    ...(form as FacilityFields),
+    clubRentalRateCents: cents$(form.clubRentalRate), pushCartRateCents: cents$(form.pushCartRate),
+    caddieLooperRateCents: cents$(form.caddieLooperRate), caddieForeRateCents: cents$(form.caddieForeRate),
+  });
+  const walking = WALKING_CHOICES.some(o => o.key === form.walkingAllowed) ? form.walkingAllowed as string : 'always';
+
   const goTo = (sec: Section) => { setActive(sec); document.querySelector('main')?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); };
   const missing = (v: unknown) => !String(v ?? '').trim();
   const setupItems: SetupItem[] = [
@@ -432,6 +520,7 @@ function SettingsPageInner() {
     missing(form.description) && { key: 'description', title: 'Describe your course', why: 'A few sentences golfers read before they book.', action: 'Write it', onClick: () => goTo('Your course') },
     missing(form.phone) && { key: 'phone', title: 'Add your phone number', why: 'Golfers call it with questions about their booking.', action: 'Add phone', onClick: () => goTo('Your course') },
     photosLoaded && photos.length === 0 && { key: 'gallery', title: 'Add gallery photos', why: 'Up to 8 photos in the Photos section of your booking page.', action: 'Add photos', onClick: () => goTo('Your course') },
+    teeSetCount === 0 && { key: 'teesets', title: 'Add your tees', why: 'Golfers see each tee’s yardage, rating and slope on your booking page.', action: 'Add tees', onClick: () => goTo('Course layout') },
     (!form.holes || !form.par) && { key: 'holes', title: 'Say how many holes and the par', why: 'Shown at the top of your booking page.', action: 'Set it', onClick: () => goTo('Course layout') },
   ].filter((i): i is SetupItem => !!i);
 
@@ -589,6 +678,11 @@ function SettingsPageInner() {
                     placeholder="e.g. 1927" min={1850} max={new Date().getFullYear()} className={iCls}/>
                 </Field>
                 <Field label="Description">
+                  {birdieOn && access.can('settings.edit') && (
+                    <button type="button" onClick={askForDescription} className="mb-1.5 text-[12.5px] font-medium text-pine hover:underline underline-offset-4">
+                      {String(form.description ?? '').trim() ? 'Ask Birdie to improve it' : 'Ask Birdie to write it'}
+                    </button>
+                  )}
                   <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>
                 </Field>
                 <Field label="Gift Card URL" hint="Paste the URL to where golfers can buy gift cards (your website, Square, etc.). An optional button will appear on your course page.">
@@ -598,21 +692,14 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Course details ── */}
+          {/* ── Course layout ── guided steps; each saves itself (CourseLayoutTab). */}
           {active==='Course layout' && (
-            <div className="space-y-5">
-              <SectionCard title="Course details">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Field label="Holes"><FInput value={form.holes as number} onChange={v=>set('holes',Number(v))} type="number"/></Field>
-                  <Field label="Par"><FInput value={form.par as number} onChange={v=>set('par',Number(v))} type="number"/></Field>
-                  <Field label="Yardage"><FInput value={form.yardage as number} onChange={v=>set('yardage',Number(v))} type="number"/></Field>
-                  <Field label="Slope"><FInput value={form.slope as number} onChange={v=>set('slope',Number(v))} type="number"/></Field>
-                  <Field label="Course Rating"><FInput value={form.courseRating as number} onChange={v=>set('courseRating',Number(v))} type="number" step="0.1"/></Field>
-                </div>
-                <p className="text-xs text-ink-soft">The whole course, as golfers see it on your page. If you have more than 18 holes, name each nine and set what golfers can book below.</p>
-              </SectionCard>
-              <CourseLayoutTab />
-            </div>
+            <CourseLayoutTab
+              holes={typeof form.holes === 'number' ? form.holes : null}
+              par={typeof form.par === 'number' ? form.par : null}
+              readOnly={isStaffLogin}
+              onCourseSaved={patch => setForm(f => ({ ...f, ...patch }))}
+            />
           )}
 
           {/* ── Photos ── */}
@@ -682,61 +769,75 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Booking rules ── */}
+          {/* ── Booking rules ── Settings rework (Cam 2026-10-19: "reword and organise";
+              the dress-code and walking selection buttons were bad). Plain questions,
+              and the two things golfers read get a text box with a live preview. */}
           {active==='Booking rules' && (
             <div className="space-y-5">
-              <SectionCard title="How far ahead golfers can book">
+              <SectionCard title="When golfers can book">
                 {/* SD-3: the course's clock — every "today" on the sheet and in the crons reads it. */}
-                <div className="mb-3">
-                  <Field label="Course time zone" hint="Your tee sheet's today and the check-in and cancellation clocks all run on this.">
-                    <select value={String(form.timezone ?? 'America/New_York')} onChange={e=>set('timezone',e.target.value)} className={iCls}>
-                      {US_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label} — {z.id}</option>)}
-                    </select>
+                <Field label="Your time zone" hint="Your tee sheet's today, and the check-in and cancellation clocks, all run on this.">
+                  <select value={String(form.timezone ?? 'America/New_York')} onChange={e=>set('timezone',e.target.value)} className={iCls}>
+                    {US_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label} — {z.id}</option>)}
+                  </select>
+                </Field>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Field label="Days ahead anyone can book" hint={`Golfers see today plus the next ${Number(form.publicAdvanceDays) || 0} days.`}>
+                    <FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/>
                   </Field>
+                  {!!form.hasMemberPricing && (
+                    <Field label="Days ahead members can book" hint="Each membership can set its own on Members.">
+                      <FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/>
+                    </Field>
+                  )}
                 </div>
+              </SectionCard>
+              <SectionCard title="Group size">
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="How far ahead can golfers book?" hint="Days ahead the public can see and book tee times. 7 means today plus the next seven days. Enforced on the booking page, not just shown."><FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/></Field>
-                  {!!form.hasMemberPricing && <Field label="How far ahead can members book?" hint="The default for members. Each membership tier can set its own window in Members → tiers."><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
+                  <Field label="Fewest players in a booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
+                  <Field label="Most players in a booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
                 </div>
               </SectionCard>
-              <SectionCard title="Player limits">
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Min players per booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
-                  <Field label="Max players per booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+                <SectionCard title="What golfers should know">
+                  <Field label="Dress code" hint="One rule per line. Leave it empty if you don't have one.">
+                    <textarea value={dresscodes.join('\n')} onChange={e => set('dresscode', e.target.value.split('\n'))} rows={4}
+                      placeholder={'Collared shirts\nNo denim\nSoft spikes only'} className={iCls + ' resize-none'}/>
+                  </Field>
+                  <Field label="Walking">
+                    <div className="space-y-2">
+                      {WALKING_CHOICES.map(o => (
+                        <label key={o.key} className={'flex items-center gap-2.5 px-3 py-2 rounded-md border cursor-pointer bg-white text-sm text-ink ' + (walking === o.key ? 'border-pine/40' : 'border-line')}>
+                          <input type="radio" name="walking" checked={walking === o.key} onChange={() => set('walkingAllowed', o.key)} className="accent-pine"/>
+                          {o.label}
+                        </label>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Anything else about walking or carts" hint="Optional, one sentence.">
+                    <FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Push carts are free at the pro shop." maxLength={500}/>
+                  </Field>
+                </SectionCard>
+                <div className="xl:sticky xl:top-6">
+                  <div className="text-[13px] font-semibold text-ink mb-2">On your booking page</div>
+                  <Card className="p-4 space-y-3 text-sm">
+                    <div>
+                      <div className="text-[13px] font-semibold text-ink">Walking</div>
+                      <div className="text-ink">{walkingWords(walking)}{String(form.walkingNote ?? '').trim() ? ` ${String(form.walkingNote).trim()}` : ''}</div>
+                    </div>
+                    {dresscodeLines.length > 0 && (
+                      <div>
+                        <div className="text-[13px] font-semibold text-ink">Dress code</div>
+                        <ul className="text-ink list-disc pl-5">{dresscodeLines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                      </div>
+                    )}
+                  </Card>
+                  <p className="text-[12px] text-ink-soft mt-2">Updates as you type. Shown in the About section of your booking page.</p>
                 </div>
-              </SectionCard>
-              <SectionCard title="Dress code">
-                <div className="flex flex-wrap gap-2">
-                  {['Collared shirt required','No denim','Soft spikes only','Golf shoes required','No shorts','Proper golf attire'].map(rule => {
-                    const on = dresscodes.includes(rule);
-                    return (
-                      <button key={rule} onClick={() => set('dresscode', on ? dresscodes.filter(c=>c!==rule) : [...dresscodes,rule])}
-                        className={'px-3 py-1.5 rounded-md text-[13.5px] border transition-colors ' + (on ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
-                        {rule}
-                      </button>
-                    );
-                  })}
-                </div>
-              </SectionCard>
+              </div>
             </div>
           )}
 
-          {/* ── Walking & carts ── */}
-          {active==='Booking rules' && (
-            <div className="space-y-5">
-              <SectionCard title="Walking & carts">
-                <Field label="Walking policy">
-                  <select value={form.walkingAllowed as string} onChange={e=>set('walkingAllowed',e.target.value)} className={iCls}>
-                    <option value="always">Always allowed</option>
-                    <option value="weekdays">Weekdays only</option>
-                    <option value="after12">After 12pm only</option>
-                    <option value="never">Cart required</option>
-                  </select>
-                </Field>
-                <Field label="Walking note (optional)"><FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Walking allowed after 1pm weekends"/></Field>
-              </SectionCard>
-            </div>
-          )}
 
           {/* ── Cancellation ── */}
           {active==='Prices & fees' && (
@@ -835,85 +936,97 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Facilities ── */}
+          {/* ── Facilities ── Settings rework (Cam 2026-10-19: "the worst thing I have
+              ever seen"). One checklist of what the course has; ticking a line opens
+              its one or two details. Beside it, the list exactly as golfers read it. */}
           {active==='Facilities' && (
-            <div className="space-y-5">
-              <SectionCard title="Practice">
-                <Toggle label="Driving Range" checked={!!form.hasDrivingRange} onChange={()=>tog('hasDrivingRange')}/>
-                {!!form.hasDrivingRange && (
-                  <>
-                    <Field label="Range type">
-                      <select value={form.drivingRangeType as string} onChange={e=>set('drivingRangeType',e.target.value)} className={iCls}>
-                        <option value="">Select...</option>
-                        <option value="grass">Grass tees</option>
-                        <option value="mat">Mat only</option>
-                        <option value="both">Grass + Mat</option>
-                        <option value="toptracer">TopTracer</option>
-                      </select>
-                    </Field>
-                    <Toggle label="Range Balls Free / Included" checked={form.rangeBallsFree!==false} onChange={()=>tog('rangeBallsFree')}/>
-                  </>
-                )}
-                <Toggle label="Putting Green" checked={!!form.hasPuttingGreen} onChange={()=>tog('hasPuttingGreen')}/>
-                <Toggle label="Short Game / Chipping Area" checked={!!form.hasShortGameArea} onChange={()=>tog('hasShortGameArea')}/>
-              </SectionCard>
-              <SectionCard title="Amenities">
-                <Toggle label="Pro Shop" checked={!!form.hasProShop} onChange={()=>tog('hasProShop')}/>
-                {!!form.hasProShop && <Field label="Pro shop phone number"><FInput value={form.proShopPhone as string} onChange={v=>set('proShopPhone',v)} placeholder="(201) 555-0100"/></Field>}
-                <Toggle label="Lessons Available" checked={!!form.hasLessons} onChange={()=>tog('hasLessons')}/>
-                <Toggle label="Club Rental" checked={!!form.hasClubRental} onChange={()=>tog('hasClubRental')}/>
-                {!!form.hasClubRental && <Field label="Club rental rate ($)"><FInput value={form.clubRentalRate as number} onChange={v=>set('clubRentalRate',Number(v))} type="number"/></Field>}
-                <Toggle label="Push Cart Rental" checked={!!form.hasPushCartRental} onChange={()=>tog('hasPushCartRental')}/>
-                {!!form.hasPushCartRental && <Field label="Push cart rate ($)"><FInput value={form.pushCartRate as number} onChange={v=>set('pushCartRate',Number(v))} type="number"/></Field>}
-                <Toggle label="Bag Storage" checked={!!form.hasBagStorage} onChange={()=>tog('hasBagStorage')}/>
-                <Toggle label="Locker Room" checked={!!form.hasLockerRoom} onChange={()=>tog('hasLockerRoom')}/>
-                <Toggle label="GPS Carts" checked={!!form.hasGpsCarts} onChange={()=>tog('hasGpsCarts')}/>
-                <Toggle label="Tournaments Hosted" checked={!!form.hasTournaments} onChange={()=>tog('hasTournaments')}/>
-                {!!form.hasTournaments && (
-                  <Field label="How often?">
-                    <select value={form.tournamentFrequency as string} onChange={e=>set('tournamentFrequency',e.target.value)} className={iCls}>
-                      <option value="">Select...</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="seasonally">A few times a season</option>
-                      <option value="rarely">Rarely</option>
-                    </select>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+              <Card className="p-5">
+                <h2 className="text-[15px] font-semibold text-ink">What your course has</h2>
+                <p className="text-sm text-ink-soft mt-1 mb-3">Tick everything golfers can use. It shows on your booking page.</p>
+                {FACILITY_GROUPS.map(g => (
+                  <div key={g.title} className="border-t border-line-soft pt-3 mt-3 first-of-type:border-0">
+                    <h3 className="text-[13px] font-semibold text-ink mb-1">{g.title}</h3>
+                    <ul>
+                      {g.items.map(it => (
+                        <li key={it.key} className="py-1.5">
+                          <label className="flex items-center gap-2.5 text-sm text-ink cursor-pointer">
+                            <input type="checkbox" checked={!!form[it.key]} onChange={() => tog(it.key)} className="accent-pine w-4 h-4"/>
+                            {it.label}
+                          </label>
+                          {!!form[it.key] && it.key === 'hasDrivingRange' && (
+                            <div className="pl-[26px] mt-2 flex flex-wrap items-center gap-3">
+                              <select value={String(form.drivingRangeType ?? '')} onChange={e=>set('drivingRangeType',e.target.value)} className={iCls + ' !w-auto'} aria-label="Range type">
+                                <option value="">Type of range…</option>
+                                {Object.entries(RANGE_TYPES).map(([k, v]) => <option key={k} value={k}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
+                              </select>
+                              <label className="flex items-center gap-2 text-[13px] text-ink-soft"><input type="checkbox" checked={form.rangeBallsFree !== false} onChange={() => set('rangeBallsFree', form.rangeBallsFree === false)} className="accent-pine"/>Balls included with a round</label>
+                            </div>
+                          )}
+                          {!!form[it.key] && it.key === 'hasProShop' && (
+                            <div className="pl-[26px] mt-2 max-w-xs"><FInput value={form.proShopPhone as string} onChange={v=>set('proShopPhone',v)} placeholder="Pro shop phone (optional)" type="tel"/></div>
+                          )}
+                          {!!form[it.key] && it.key === 'hasClubRental' && (
+                            <label className="pl-[26px] mt-2 flex items-center gap-2 text-[13px] text-ink-soft">Price $<span className="w-28"><FInput value={(form.clubRentalRate as number) || ''} onChange={v=>set('clubRentalRate',Number(v))} placeholder="optional" type="number"/></span></label>
+                          )}
+                          {!!form[it.key] && it.key === 'hasPushCartRental' && (
+                            <label className="pl-[26px] mt-2 flex items-center gap-2 text-[13px] text-ink-soft">Price $<span className="w-28"><FInput value={(form.pushCartRate as number) || ''} onChange={v=>set('pushCartRate',Number(v))} placeholder="optional" type="number"/></span></label>
+                          )}
+                          {!!form[it.key] && it.key === 'hasCaddies' && (
+                            <div className="pl-[26px] mt-2 grid sm:grid-cols-3 gap-2">
+                              <select value={String(form.caddieType || 'looper')} onChange={e=>set('caddieType',e.target.value)} className={iCls} aria-label="Caddie type">
+                                <option value="looper">Caddies carry the bag</option>
+                                <option value="fore_caddie">Fore caddies</option>
+                                <option value="both">Both</option>
+                              </select>
+                              {form.caddieType !== 'fore_caddie' && <label className="flex items-center gap-2 text-[13px] text-ink-soft whitespace-nowrap">Per bag $<FInput value={(form.caddieLooperRate as number) || ''} onChange={v=>set('caddieLooperRate',Number(v))} placeholder="optional" type="number"/></label>}
+                              {(form.caddieType === 'fore_caddie' || form.caddieType === 'both') && <label className="flex items-center gap-2 text-[13px] text-ink-soft whitespace-nowrap">Fore caddie $<FInput value={(form.caddieForeRate as number) || ''} onChange={v=>set('caddieForeRate',Number(v))} placeholder="optional" type="number"/></label>}
+                              <div className="sm:col-span-3"><FInput value={form.caddieNote as string} onChange={v=>set('caddieNote',v)} placeholder="e.g. Book 48 hours ahead (optional)"/></div>
+                            </div>
+                          )}
+                          {!!form[it.key] && it.key === 'hasTournaments' && (
+                            <div className="pl-[26px] mt-2 max-w-xs">
+                              <select value={String(form.tournamentFrequency ?? '')} onChange={e=>set('tournamentFrequency',e.target.value)} className={iCls} aria-label="How often">
+                                <option value="">How often? (optional)</option>
+                                {Object.entries(TOURNAMENT_FREQ).map(([k, v]) => <option key={k} value={k}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
+                              </select>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                <div className="border-t border-line-soft pt-3 mt-3">
+                  <h3 className="text-[13px] font-semibold text-ink mb-1">Food and drink</h3>
+                  <div className="grid sm:grid-cols-2 gap-1.5">
+                    {Object.entries(FOOD_TYPES).map(([k, v]) => (
+                      <label key={k} className="flex items-center gap-2.5 text-sm text-ink cursor-pointer py-1">
+                        <input type="radio" name="food" checked={(form.restaurantType || 'none') === k} onChange={() => set('restaurantType', k)} className="accent-pine"/>{v}
+                      </label>
+                    ))}
+                  </div>
+                  {['snack_bar','bar','full'].includes(form.restaurantType as string) && (
+                    <label className="flex items-center gap-2.5 text-sm text-ink cursor-pointer py-1 mt-1">
+                      <input type="checkbox" checked={!!form.hasCartGirl} onChange={() => tog('hasCartGirl')} className="accent-pine w-4 h-4"/>A beverage cart on the course as well
+                    </label>
+                  )}
+                </div>
+                <div className="border-t border-line-soft pt-3 mt-3">
+                  <Field label="Anything else" hint="One per line — e.g. Dog-friendly, Simulator bay. Each shows as its own line.">
+                    <textarea value={((form.amenities as string[]) || []).join('\n')} onChange={e => set('amenities', e.target.value.split('\n'))} rows={3} className={iCls + ' resize-none'}/>
                   </Field>
-                )}
-              </SectionCard>
-              <SectionCard title="Food & Beverage">
-                <Field label="Restaurant / Bar">
-                  <select value={form.restaurantType as string} onChange={e=>set('restaurantType',e.target.value)} className={iCls}>
-                    <option value="none">None</option>
-                    <option value="snack_bar">Snack Bar</option>
-                    <option value="bar">Bar Only</option>
-                    <option value="full">Full Restaurant</option>
-                    <option value="beverage_cart">Beverage Cart</option>
-                  </select>
-                </Field>
-                {['snack_bar','bar','full'].includes(form.restaurantType as string) && (
-                  <Toggle label="Also Have a Beverage Cart / Cart Girl" checked={!!form.hasCartGirl} onChange={()=>tog('hasCartGirl')}/>
-                )}
-              </SectionCard>
-              <SectionCard title="Caddies">
-                <Toggle label="Caddies Available" checked={!!form.hasCaddies} onChange={()=>tog('hasCaddies')}/>
-                {!!form.hasCaddies && (
-                  <>
-                    <Field label="Caddie type">
-                      <select value={form.caddieType as string} onChange={e=>set('caddieType',e.target.value)} className={iCls}>
-                        <option value="looper">Looper only</option>
-                        <option value="fore_caddie">Fore caddie</option>
-                        <option value="both">Both</option>
-                      </select>
-                    </Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field label="Looper rate ($)"><FInput value={form.caddieLooperRate as number} onChange={v=>set('caddieLooperRate',Number(v))} type="number"/></Field>
-                      <Field label="Fore caddie rate ($)"><FInput value={form.caddieForeRate as number} onChange={v=>set('caddieForeRate',Number(v))} type="number"/></Field>
-                    </div>
-                    <Field label="Caddie note"><FInput value={form.caddieNote as string} onChange={v=>set('caddieNote',v)} placeholder="e.g. Must request 48hrs in advance"/></Field>
-                  </>
-                )}
-              </SectionCard>
+                </div>
+              </Card>
+              <div className="xl:sticky xl:top-6">
+                <div className="text-[13px] font-semibold text-ink mb-2">On your booking page</div>
+                <Card className="p-4 text-sm">
+                  {facilityPreview.length ? (
+                    <ul className="list-disc pl-5 space-y-0.5 text-ink">{facilityPreview.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                  ) : <p className="text-ink-soft">Nothing ticked yet, so golfers see no Facilities section.</p>}
+                </Card>
+                <p className="text-[12px] text-ink-soft mt-2">Updates as you tick. Prices here are shown to golfers, never charged.</p>
+              </div>
             </div>
           )}
 

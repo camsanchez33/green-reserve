@@ -1,7 +1,7 @@
 // BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which
 // builds cards in proposals.ts) and the widget (which shows them and makes the
 // call). Kept free of server imports so the widget can use it.
-export type ProposalCall = { method: 'PATCH' | 'POST' | 'DELETE'; path: '/api/operator/schedule' | '/api/operator/blackouts' | '/api/operator/bookings' | '/api/operator/tee-times'; body: Record<string, unknown> };
+export type ProposalCall = { method: 'PATCH' | 'POST' | 'DELETE'; path: '/api/operator/schedule' | '/api/operator/blackouts' | '/api/operator/bookings' | '/api/operator/tee-times' | '/api/operator/settings'; body: Record<string, unknown> };
 export type ProposalCard = {
   id: string;
   title: string;
@@ -22,6 +22,8 @@ export const PROPOSAL_ROUTES: Record<ProposalCall['path'], ProposalCall['method'
   // paid — those actions are NOT Birdie's (BODY_RULES below keeps them off).
   '/api/operator/bookings': ['PATCH', 'POST'],
   '/api/operator/tee-times': ['PATCH'],
+  // Settings rework: the course description only (BODY_RULES below).
+  '/api/operator/settings': ['PATCH'],
 };
 
 const sameKeys = (body: Record<string, unknown>, keys: string[]) => Object.keys(body).sort().join() === [...keys].sort().join();
@@ -34,6 +36,8 @@ const BODY_RULES: Partial<Record<ProposalCall['path'], (method: string, body: Re
     : (body.action === 'move' && sameKeys(body, ['id', 'action', 'newTeeTimeId'])) || (body.action === 'send_pay_link' && sameKeys(body, ['id', 'action', 'via'])),
   // Block or open a time; nothing else.
   '/api/operator/tee-times': (_m, body) => body.status === 'blocked' || body.status === 'available',
+  // The description and nothing else — never the policy, prices or anything a settings PATCH can carry.
+  '/api/operator/settings': (_m, body) => sameKeys(body, ['description']) && typeof body.description === 'string',
 };
 
 function isAllowedCall(call: unknown): call is ProposalCall {

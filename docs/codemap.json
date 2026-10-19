@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 416,
+    "files": 420,
     "routes": 214,
-    "libs": 123,
+    "libs": 127,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5574,7 +5574,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/route.ts",
-      "lines": 60,
+      "lines": 64,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5940,7 +5940,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1766,
+      "lines": 1806,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5962,7 +5962,9 @@
         "@/lib/change-requests",
         "@/lib/courses-data",
         "@/lib/demo-courses",
+        "@/lib/tee-colour",
         "@/lib/tee-time-utils",
+        "@/lib/walking",
         "lucide-react",
         "next/image",
         "next/link",
@@ -6522,7 +6524,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1052,
+      "lines": 1165,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6545,15 +6547,19 @@
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/components/dashboard/settings/FinishSetup",
+        "@/components/ui/Card",
         "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/birdie/ask",
         "@/lib/cancel-policy",
         "@/lib/course-time",
+        "@/lib/facilities",
         "@/lib/image-resize",
         "@/lib/password",
         "@/lib/unsaved-guard",
         "@/lib/use-dashboard-access",
+        "@/lib/walking",
         "lucide-react",
         "next/navigation",
         "react"
@@ -7681,7 +7687,7 @@
     },
     {
       "path": "src/components/birdie/ConfirmCard.tsx",
-      "lines": 96,
+      "lines": 99,
       "purpose": "BIRDIE_AI_SPEC B4b — a change Birdie drafted, waiting on the operator.",
       "brain": [],
       "exports": [
@@ -7697,6 +7703,7 @@
       "guard": null,
       "imports": [
         "@/components/ui/StatusDot",
+        "@/lib/birdie/ask",
         "@/lib/birdie/proposal-types",
         "react"
       ],
@@ -7736,8 +7743,8 @@
     },
     {
       "path": "src/components/dashboard/CourseLayoutTab.tsx",
-      "lines": 469,
-      "purpose": "",
+      "lines": 503,
+      "purpose": "Settings rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
         {
@@ -7751,8 +7758,10 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
-        "lucide-react",
+        "@/lib/course-rounds",
+        "@/lib/tee-colour",
         "next/link",
         "react"
       ],
@@ -8465,10 +8474,12 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/dashboard/settings/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -9737,10 +9748,14 @@
     },
     {
       "path": "src/lib/birdie/ask.ts",
-      "lines": 31,
+      "lines": 33,
       "purpose": "AN-3 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
+        {
+          "name": "APPLIED_EVENT",
+          "kind": "const"
+        },
         {
           "name": "ASK_EVENT",
           "kind": "const"
@@ -9768,7 +9783,9 @@
       ],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
-        "src/components/birdie/BirdieWidget.tsx"
+        "src/app/dashboard/settings/page.tsx",
+        "src/components/birdie/BirdieWidget.tsx",
+        "src/components/birdie/ConfirmCard.tsx"
       ]
     },
     {
@@ -9903,7 +9920,7 @@
     },
     {
       "path": "src/lib/birdie/proposal-types.ts",
-      "lines": 61,
+      "lines": 65,
       "purpose": "BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call).",
       "brain": [],
       "exports": [
@@ -9943,7 +9960,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 419,
+      "lines": 449,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [
@@ -11268,6 +11285,35 @@
       ]
     },
     {
+      "path": "src/lib/course-rounds.ts",
+      "lines": 20,
+      "purpose": "Settings rework (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CandidateRound",
+          "kind": "type"
+        },
+        {
+          "name": "candidateRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "sameNines",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/CourseLayoutTab.tsx"
+      ]
+    },
+    {
       "path": "src/lib/course-setup.ts",
       "lines": 52,
       "purpose": "COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes through before it is live.",
@@ -12214,6 +12260,44 @@
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/revenue/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/facilities.ts",
+      "lines": 55,
+      "purpose": "Settings rework (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FacilityFields",
+          "kind": "type"
+        },
+        {
+          "name": "facilityLines",
+          "kind": "fn"
+        },
+        {
+          "name": "FOOD_TYPES",
+          "kind": "const"
+        },
+        {
+          "name": "RANGE_TYPES",
+          "kind": "const"
+        },
+        {
+          "name": "TOURNAMENT_FREQ",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx",
+        "src/lib/normalize-course.ts"
       ]
     },
     {
@@ -13410,7 +13494,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 71,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13426,7 +13510,8 @@
       "guard": null,
       "imports": [
         "./cancel-policy",
-        "./money"
+        "./money",
+        "@/lib/facilities"
       ],
       "usedBy": [
         "src/app/api/courses/route.ts",
@@ -13856,7 +13941,7 @@
     },
     {
       "path": "src/lib/public-course.ts",
-      "lines": 29,
+      "lines": 31,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
@@ -14791,6 +14876,28 @@
       ]
     },
     {
+      "path": "src/lib/tee-colour.ts",
+      "lines": 22,
+      "purpose": "Settings rework (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "teeColour",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/components/dashboard/CourseLayoutTab.tsx"
+      ]
+    },
+    {
       "path": "src/lib/tee-sheet-engine.ts",
       "lines": 229,
       "purpose": "",
@@ -15191,6 +15298,28 @@
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/lib/walking.ts",
+      "lines": 11,
+      "purpose": "Settings rework (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "walkingWords",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/dashboard/settings/page.tsx"
+      ]
     },
     {
       "path": "src/lib/weather-cancel.ts",
@@ -16718,6 +16847,7 @@
         "src/lib/analytics.ts",
         "src/lib/announcement-audience.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/course-closure.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",

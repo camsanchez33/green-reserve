@@ -1,4 +1,5 @@
 import { policyFrom } from './cancel-policy';
+import { facilityLines } from '@/lib/facilities';
 import { centsToDollarsOr0 } from './money';
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
@@ -24,9 +25,16 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     holes: c.holes,
     par: c.par,
     description: c.description,
-    amenities: Array.isArray(c.amenities) ? c.amenities.join(', ') : (c.amenities ?? ''),
+    // The booking page reads this as a list; a joined string crashed it (.filter on a string).
+    amenities: Array.isArray(c.amenities) ? c.amenities.map((a: unknown) => String(a)) : [],
+    // Settings rework (Cam 2026-10-19): everything the course ticked under Facilities, in golfers' words.
+    facilities: facilityLines(c),
     walking_allowed: c.walkingAllowed === 'always' || c.walkingAllowed === 'allowed',
     cart_required: c.cartRequired ?? false,
+    // Settings rework (Cam 2026-10-19): what the course set under Booking rules, shown in About.
+    walking_policy: typeof c.walkingAllowed === 'string' ? c.walkingAllowed : 'always',
+    walking_note: c.walkingNote ?? '',
+    dress_code: Array.isArray(c.dresscode) ? c.dresscode.map((l: unknown) => String(l).trim()).filter(Boolean) : [],
     rating: c.rating ?? 4.5,
     review_count: c.reviewCount ?? 0,
     image_gradient: c.imageGradient ?? 'linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)',
@@ -65,6 +73,16 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     photos: Array.isArray(c.photos)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? c.photos.map((p: any) => ({ id: p.id, url: p.url, sortOrder: p.sortOrder }))
+      : [],
+    // Settings rework (Cam 2026-10-19): the tees and named nines the course set
+    // up under Course layout, shown in the About section.
+    tee_sets: Array.isArray(c.teeSets)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? c.teeSets.map((t: any) => ({ name: String(t.name), yardage: Number(t.yardage) || 0, rating: Number(t.rating) || 0, slope: Number(t.slope) || 0 }))
+      : [],
+    nines: Array.isArray(c.nines)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? c.nines.map((n: any) => ({ name: String(n.name), par: Number(n.par) || 0 }))
       : [],
   };
 }
