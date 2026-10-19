@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 415,
+    "files": 416,
     "routes": 214,
     "libs": 123,
     "models": 39,
@@ -6522,7 +6522,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1005,
+      "lines": 1052,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6544,6 +6544,7 @@
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
+        "@/components/dashboard/settings/FinishSetup",
         "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -8332,6 +8333,35 @@
       ]
     },
     {
+      "path": "src/components/dashboard/settings/FinishSetup.tsx",
+      "lines": 54,
+      "purpose": "Settings rework (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FinishSetup",
+          "kind": "component"
+        },
+        {
+          "name": "SetupItem",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/home/TeeSheetDemo.tsx",
       "lines": 316,
       "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
@@ -8441,7 +8471,8 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
-        "src/components/dashboard/money/PaymentsPanel.tsx"
+        "src/components/dashboard/money/PaymentsPanel.tsx",
+        "src/components/dashboard/settings/FinishSetup.tsx"
       ]
     },
     {
@@ -8714,7 +8745,8 @@
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
-        "src/components/dashboard/money/PayoutsTable.tsx"
+        "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/settings/FinishSetup.tsx"
       ]
     },
     {
