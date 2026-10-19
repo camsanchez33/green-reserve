@@ -66,8 +66,12 @@ Keep it minimal; a photo/brand panel beside the form (form only on phones); a
 **Decisions (Cam 2026-10-19):**
 - The price line ("18 holes · $70 + $10 cart") leaves the header and goes
   where staff use it — in the time slot's detail.
-- The side panel needs a complete rework — maybe not a side panel at all but a
-  pop-up with all the information needed for that time and its groups.
+- The side panel needs a complete rework. DECIDED (Claude's proposal, Cam
+  2026-10-19 "do your idea"): on a laptop, a wide card that opens over part of
+  the sheet with the surrounding times still visible (staff keep seeing who's
+  next and can still drag groups); on a phone, a full-screen sheet that slides
+  up. It shows everything for that time in one place: each group, players,
+  paid or not, the price, and check in / pay / move / cancel.
 - "Ring someone up" waits for the card reader (POS-1b, after launch). For
   launch: "Add a walk-in" with fit-in warnings (within ~5 minutes of another
   group, slot capacity).
