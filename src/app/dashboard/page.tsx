@@ -24,6 +24,7 @@ import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/ca
 import TeeSheetBoard, { type BoardGroup } from '@/components/dashboard/TeeSheetBoard';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
+import { timesTooClose } from '@/lib/tee-time-fit';
 import { formatTeeDay as fmtDate, formatTeeTime as fmtTime } from '@/lib/format';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -977,7 +978,7 @@ function DashboardPageInner() {
               <h3 className="font-serif font-semibold text-ink text-[17px]">Add a tee time — {fmtDate(selectedDate)}</h3>
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <AddTeeTimeForm date={selectedDate} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
+            <AddTeeTimeForm date={selectedDate} existingTimes={teeTimes.filter(t => t.status !== 'blocked').map(t => t.time)} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
           </div>
         </div>
       )}
@@ -1303,7 +1304,7 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
 }
 
 /* ─── Add Tee Time Form ─────────────────────────────────────────────────── */
-function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>void; onCancel: ()=>void }) {
+function AddTeeTimeForm({ date, existingTimes, onSave, onCancel }: { date: string; existingTimes: string[]; onSave: ()=>void; onCancel: ()=>void }) {
   const [time,     setTime]     = useState('08:00');
   const [holes,    setHoles]    = useState(18);
   const [players,  setPlayers]  = useState(4);
@@ -1315,7 +1316,13 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
 
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
 
+  // Cam 2026-10-19: a time squeezed within a few minutes of another group asks once before it's added.
+  const close = timesTooClose(time, existingTimes);
+  const [confirmedClose, setConfirmedClose] = useState('');
+  const needsConfirm = close.length > 0 && confirmedClose !== time;
+
   async function save() {
+    if (needsConfirm) { setConfirmedClose(time); return; }
     setSaving(true); setErr('');
     const r = await dfetch('/api/operator/tee-times', { method:'POST', body:JSON.stringify({date,time,holes,playersAvailable:players,greenFee,cartFee,walkingAllowed:walking}) });
     setSaving(false);
@@ -1342,10 +1349,18 @@ function AddTeeTimeForm({ date, onSave, onCancel }: { date: string; onSave: ()=>
           <span className={'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-sm shadow-card transition-transform ' + (walking ? 'translate-x-5' : '')}/>
         </button>
       </div>
+      {close.length > 0 && (
+        <p role="status" className="text-[13px] text-ink bg-white border border-line border-l-[3px] border-l-warn rounded-md px-3 py-2.5">
+          {close[0].gap === 0
+            ? `There's already a ${fmtTime(close[0].time)} time on this day.`
+            : `This is ${close[0].gap} min from the ${fmtTime(close[0].time)} tee time${close.length > 1 ? ` (and ${close.length - 1} more nearby)` : ''}.`}{' '}
+          Groups this close can stack up on the first tee.{confirmedClose === time ? ' Tap Add anyway to add it.' : ''}
+        </p>
+      )}
       <div className="flex gap-3 pt-1">
         <button onClick={onCancel} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">Cancel</button>
         <button onClick={save} disabled={saving} className="flex-1 bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[12.5px] font-medium disabled:opacity-50 transition-colors">
-          {saving ? 'Adding...' : 'Add time'}
+          {saving ? 'Adding...' : close.length > 0 && confirmedClose === time ? 'Add anyway' : 'Add time'}
         </button>
       </div>
     </div>
