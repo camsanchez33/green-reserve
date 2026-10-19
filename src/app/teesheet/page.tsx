@@ -111,7 +111,7 @@ export default function TeeSheetPage() {
     <div className="bg-paper text-ink">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd()) }} />
 
-      <section className="w-[min(1180px,calc(100%-48px))] mx-auto pt-32 pb-16 border-b border-line">
+      <section className="w-[min(1180px,calc(100%-48px))] mx-auto pt-32 pb-16">
         <h1 className="font-serif text-[40px] sm:text-[56px] leading-none text-pine">The GreenReserve tee sheet.</h1>
         <p className="mt-6 text-[19px] leading-relaxed max-w-[38em]">
           An online booking page for your golfers and one tee sheet for your staff, set up by us around how your
@@ -168,7 +168,7 @@ export default function TeeSheetPage() {
         </div>
       </section>
 
-      <section className="border-t border-line">
+      <section className="bg-white">
         <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-16 grid md:grid-cols-[minmax(0,38fr)_minmax(0,62fr)] gap-8 md:gap-12" id="faq">
           <h2 className={H2}>What courses ask us.</h2>
           <div className="grid sm:grid-cols-2 gap-x-10 gap-y-7">
@@ -177,7 +177,7 @@ export default function TeeSheetPage() {
         </div>
       </section>
 
-      <section className="border-t border-line">
+      <section>
         <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-16 grid md:grid-cols-2 gap-10 md:gap-16">
           <div id="about">
             <h2 className={H2}>About GreenReserve.</h2>

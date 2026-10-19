@@ -28,9 +28,9 @@ const DOES = [
 
 const HIGHLIGHTS = [
   { h: 'Free for your course', p: 'No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.' },
-  { h: 'Birdie, your assistant', p: 'Ask how today looks, find a golfer’s booking or draft a change to the sheet. Birdie never changes anything until you confirm it.' },
-  { h: 'Analytics', p: 'Revenue collected and still owed, how full each day ran, no-shows, and the tee times that went unsold.' },
-  { h: 'Your money, your account', p: 'Golfers pay with one card payment to your course’s own Stripe account, and it lands on Stripe’s normal schedule.' },
+  { h: 'Your AI assistant', p: 'Ask how today looks, find a golfer’s booking or draft a change to the sheet. Nothing changes until you confirm it.' },
+  { h: 'A monthly review of your course', p: 'Analytics for every day, and at the end of each month a written review of how the course did and what to look at next.' },
+  { h: 'Payments, anywhere', p: 'Golfers pay at the counter or on their own phone, including Apple Pay and Google Pay, and you can text them a pay link. A card on file covers late-cancel and no-show fees. The money goes to your course’s own Stripe account.' },
 ];
 
 export default function HomeContent() {
@@ -100,7 +100,7 @@ export default function HomeContent() {
           <div className={s.seeCta} id="demo">
             <a className={s.btn} href={DEMO}>Book a demo <Arrow /></a>
             <span>We&apos;ll show it with your own course&apos;s times and prices.</span>
-            <Link className={s.quiet} href={INQUIRY}>Or ask a question</Link>
+            <Link className={s.quiet} href="/for-courses#ask">Not ready for a call? Send us a note</Link>
           </div>
         </div>
       </section>

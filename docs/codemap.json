@@ -6570,7 +6570,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 595,
+      "lines": 594,
       "purpose": "",
       "brain": [],
       "exports": [

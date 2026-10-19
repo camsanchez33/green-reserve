@@ -419,7 +419,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         <div className="lg:grid lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-14 lg:items-start">
 
           {/* The form */}
-          <div ref={formRef} className="space-y-8 lg:order-last">
+          <div ref={formRef} id="ask" className="space-y-8 lg:order-last scroll-mt-24">
 
           {/* Honeypot — hidden from humans, read by bots. FB-1: it used to be
               labelled "Website" / name="_website", which browser autofill and
@@ -576,10 +576,9 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           <p className="text-[15px] font-semibold text-ink mb-5">Quick answers</p>
           <div className="space-y-5">
             {[
-              { q: 'What does it cost to list my course?', a: 'Nothing. $0 to set up, $0/month, no long-term contract. Golfers pay $1.50 per player at checkout, on top of your price.' },
+              { q: 'What does it cost to list my course?', a: 'Nothing to set up and nothing monthly. Golfers pay $1.50 per player at checkout, on top of your price.' },
               { q: 'Who pays the $1.50?', a: "The golfer, as a line on their checkout above your green fee. It's collected in the same card payment as your green fee and passed to GreenReserve, so your listed price isn't reduced. Stripe's normal processing fee applies to the payment as a whole, like any card you take today." },
-              { q: 'How long does it take to go live?', a: 'About a week from your first call. We handle setup and run a test before flipping you live.' },
-              { q: 'Can I leave anytime?', a: 'Yes, with 30 days’ notice — the same either way, and there is no cancellation fee. We deactivate your page and your data is yours to keep.' },
+              { q: 'How does setup work?', a: 'We set up your booking page with you from your schedule, rates, photos and colors, bring your members over and train your staff, then run a test before you go live.' },
             ].map(({ q, a }) => (
               <div key={q}>
                 <p className="text-sm font-medium text-ink mb-1">{q}</p>
