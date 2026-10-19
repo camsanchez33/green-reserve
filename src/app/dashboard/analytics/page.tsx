@@ -381,7 +381,7 @@ function MissesTab({ d }: { d: Data }) {
   return (
     <div className="space-y-10">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <Fig label="No-shows" value={String(d.noShows.count)} sub={`${pctS(d.noShows.ratePct)} of bookings that played`} />
+        <Fig label="No-shows" value={String(d.noShows.count)} sub={`${pctS(d.noShows.ratePct)} of bookings whose tee time has passed`} />
         <Fig label="Worth" value={usd(d.noShows.impactCents)} sub="the no-show groups’ rounds" />
         <Fig label="Cancellations" value={String(c.count)} sub={`${pctS(c.ratePct)} of bookings`} />
         <Fig label="Booked again" value={pctS(c.rebookedPct)} sub="of cancelled times, by someone else" />
@@ -421,13 +421,13 @@ function GolfersTab({ d }: { d: Data }) {
   return (
     <div className="space-y-10">
       <p className="text-[13px] text-ink-soft leading-snug max-w-[62em]">
-        Built only from bookings golfers made at your course: their name, email, phone and rounds. Golfers are told this
-        when they book, in GreenReserve’s <Link href="/privacy" target="_blank" className="text-pine underline underline-offset-4">Privacy Policy</Link>.
+        Built only from bookings golfers made at your course: their name, email, phone and rounds. GreenReserve’s
+        <Link href="/privacy" target="_blank" className="text-pine underline underline-offset-4">Privacy Policy</Link> tells golfers this.
         It’s your course’s data — use it to look after your regulars, not for marketing they didn’t ask for.
       </p>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <Fig label="Golfers" value={g.identified.toLocaleString()} sub={`${g.newCustomers} new, ${g.returning} came back`} />
-        <Fig label="Came back" value={pctS(g.returningPct)} sub="booked more than once in these dates" />
+        <Fig label="Came back" value={pctS(g.returningPct)} sub="booked with you more than once, counting past visits" />
         <Fig label="Kept from before" value={pctS(g.retentionPct)} sub={`${g.retained} of ${g.previousCustomers} from the period before played again`} />
         <Fig label="Members" value={String(g.members.active)} sub={`active, of ${g.members.onFile} on file`} />
       </div>

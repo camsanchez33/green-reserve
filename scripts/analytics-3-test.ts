@@ -24,7 +24,7 @@ check('the golf-standard four', ['label="Revenue"', 'label="Tee sheet filled"', 
 check('no dollar total for unsold spots on the page', !page.includes('d.unfilled.lostCents'));
 check('Ask Birdie offered, only when Birdie is on', page.includes('useBirdieReady()') && page.includes('askBirdie(q)'));
 check('five tabs', page.includes("['booking', 'How they book']") && page.includes("['revenue', 'Revenue']"));
-check('golfers tab says where the data comes from', page.includes('Golfers are told this'));
+check('golfers tab says where the data comes from', page.includes('tells golfers this'));
 const route = readFileSync('src/app/api/operator/analytics/route.ts', 'utf8');
 check('the route takes days=N', route.includes("sp.get('days')"));
 const bar = readFileSync('src/components/OperatorSidebar.tsx', 'utf8');
@@ -32,5 +32,8 @@ check('the top bar remembers the course colour between tabs', bar.includes('cach
 check('…and forgets it on a course switch and sign-out', (bar.match(/saveIdentity\(null\)/g) || []).length >= 2);
 const w = readFileSync('src/components/birdie/BirdieWidget.tsx', 'utf8');
 check('Birdie fills the question but does not send it', w.includes('setInput(q.slice(0, 500))') && !/onAsk[\s\S]{0,400}ask\(q/.test(w));
+check('no unsold-spot dollar figure reaches Birdie or the monthly review', !readFileSync('src/lib/monthly-review.ts', 'utf8').includes('unsoldTeeTimeLossDollars') && !readFileSync('src/lib/monthly-review.ts', 'utf8').includes('lostDollars: dollars(h.lostCents)') && !readFileSync('src/lib/birdie/tools.ts', 'utf8').includes('lostToEmptySpots'));
+check('a new sign-in forgets the last course’s top bar', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("sessionStorage.removeItem('gr:op-identity')"));
+check('tile wording matches the numbers', page.includes('of bookings whose tee time has passed') && page.includes('counting past visits'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

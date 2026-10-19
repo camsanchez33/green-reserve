@@ -6154,7 +6154,7 @@
     },
     {
       "path": "src/app/dashboard/login/page.tsx",
-      "lines": 91,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13038,7 +13038,7 @@
     },
     {
       "path": "src/lib/monthly-review.ts",
-      "lines": 256,
+      "lines": 255,
       "purpose": "BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07:",
       "brain": [],
       "exports": [

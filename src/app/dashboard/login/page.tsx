@@ -21,6 +21,8 @@ function LoginContent() {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) { setError(data.error || 'Invalid email or password'); return; }
+    // A new sign-in may be another course: drop the top bar's remembered identity (AN-3).
+    try { sessionStorage.removeItem('gr:op-identity'); } catch { /* storage unavailable */ }
     router.push(data.redirect || '/dashboard');
   };
 

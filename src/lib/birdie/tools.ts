@@ -86,8 +86,8 @@ async function getAnalytics(input: Record<string, unknown>, ctx: ToolContext): P
   const a = await computeAnalytics(ctx.courseId, range);
   // Dollars only: handing the model both cents and dollars invites it to quote the wrong one.
   const inDollars = (h: ReturnType<typeof headline>) => {
-    const { collectedCents, expectedCents, lostCents, perRoundCents, ...rest } = h;
-    return { collected: dollars(collectedCents), expected: dollars(expectedCents), lostToEmptySpots: dollars(lostCents), revenuePerRound: perRoundCents == null ? null : dollars(perRoundCents), ...rest };
+    const { collectedCents, expectedCents, lostCents: _unsold, perRoundCents, ...rest } = h; // AN-3: no unsold-spot dollar figure
+    return { collected: dollars(collectedCents), expected: dollars(expectedCents), revenuePerRound: perRoundCents == null ? null : dollars(perRoundCents), ...rest };
   };
   const compare = input.compare === true ? { range: previousRange(range), headline: inDollars(headline(await computeAnalytics(ctx.courseId, previousRange(range)))) } : null;
   // A compact summary: the same numbers as the Analytics tab, minus the per-row lists.
@@ -98,8 +98,8 @@ async function getAnalytics(input: Record<string, unknown>, ctx: ToolContext): P
     compare,
     fillByDayOfWeek: a.utilization.byDow,
     blockedTimes: a.utilization.blockedTimes,
-    worstHours: a.unfilled.worstHours.map(({ lostCents, ...r }) => ({ ...r, lost: dollars(lostCents) })),
-    worstDays: a.unfilled.worstDays.map(({ lostCents, ...r }) => ({ ...r, lost: dollars(lostCents) })),
+    worstHours: a.unfilled.worstHours.map(({ lostCents: _l, ...r }) => r),
+    worstDays: a.unfilled.worstDays.map(({ lostCents: _l, ...r }) => r),
     noShows: { count: a.noShows.count, ratePct: a.noShows.ratePct, impact: dollars(a.noShows.impactCents), repeatOffenders: a.noShows.repeat.slice(0, 5) },
     cancellations: { count: a.cancellations.count, ratePct: a.cancellations.ratePct, lost: dollars(a.cancellations.lostCents), lateFeesKept: dollars(a.cancellations.lateFeesKeptCents), rebookedPct: a.cancellations.rebookedPct },
     customers: {
