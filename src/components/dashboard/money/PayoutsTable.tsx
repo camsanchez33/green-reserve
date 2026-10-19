@@ -3,7 +3,6 @@
 // from Stripe by /api/operator/stripe/payouts — so nobody has to open Stripe
 // to see when money lands.
 import { useCallback, useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -33,7 +32,7 @@ export function PayoutsTable() {
   useEffect(() => { load(); }, [load]);
 
   if (error) return <LoadError message={error} onRetry={load} />;
-  if (!data) return <div className="py-8 text-center text-ink-muted"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>;
+  if (!data) return <p className="py-6 text-center text-[13px] text-ink-muted">Loading your payouts from Stripe…</p>;
   const b = data.balance;
   return (
     <div className="space-y-5">

@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 407,
-    "routes": 211,
+    "files": 410,
+    "routes": 213,
     "libs": 120,
     "models": 39,
     "orphans": 10,
@@ -4680,6 +4680,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/money/overview/route.ts",
+      "lines": 29,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/money/overview",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/analytics",
+        "@/lib/course-time",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/monthly-reviews/route.ts",
       "lines": 29,
       "purpose": "",
@@ -5233,6 +5260,32 @@
       "kind": "api",
       "methods": [
         "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/session",
+        "@/lib/stripe",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/stripe/payouts/route.ts",
+      "lines": 41,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/stripe/payouts",
+      "kind": "api",
+      "methods": [
+        "GET"
       ],
       "auth": "operator",
       "guard": "file",
@@ -6236,7 +6289,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 183,
+      "lines": 217,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -6256,7 +6309,9 @@
         "@/components/dashboard/money/CancellationsPanel",
         "@/components/dashboard/money/PaymentsPanel",
         "@/components/dashboard/money/PayoutsPanel",
+        "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/money/types",
+        "@/components/ui/Card",
         "@/lib/dashboard-fetch",
         "@/lib/use-dashboard-access",
         "lucide-react",
@@ -6436,7 +6491,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1003,
+      "lines": 1005,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7773,7 +7828,8 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
-        "src/app/dashboard/schedules/page.tsx"
+        "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/money/PayoutsTable.tsx"
       ]
     },
     {
@@ -8046,14 +8102,13 @@
         "src/components/AnnouncementBanner.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
-        "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/money/CancellationsPanel.tsx"
+        "src/components/dashboard/StaffPermissions.tsx"
       ]
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 172,
-      "purpose": "SD-8 — the Cancellations half of the Money page.",
+      "lines": 81,
+      "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
         {
@@ -8068,12 +8123,9 @@
       "guard": null,
       "imports": [
         "./types",
-        "@/components/dashboard/Toast",
         "@/components/ui/StatusDot",
-        "@/lib/cancel-confirm",
-        "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/use-dashboard-access",
+        "next/link",
         "react"
       ],
       "usedBy": [
@@ -8082,13 +8134,17 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 124,
-      "purpose": "SD-8 — the Payments half of the Money page.",
+      "lines": 116,
+      "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
         {
           "name": "PaymentsPanel",
           "kind": "component"
+        },
+        {
+          "name": "paymentStatus",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -8098,8 +8154,8 @@
       "guard": null,
       "imports": [
         "./types",
+        "@/components/ui/Card",
         "@/components/ui/StatusDot",
-        "@/lib/booking-status",
         "@/lib/format",
         "lucide-react",
         "react"
@@ -8110,7 +8166,7 @@
     },
     {
       "path": "src/components/dashboard/money/PayoutsPanel.tsx",
-      "lines": 126,
+      "lines": 96,
       "purpose": "SD-8 — the Stripe card, moved here out of Settings.",
       "brain": [],
       "exports": [
@@ -8125,6 +8181,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./PayoutsTable",
         "./types",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
@@ -8133,6 +8190,49 @@
       ],
       "usedBy": [
         "src/app/dashboard/money/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/money/PayoutsTable.tsx",
+      "lines": 73,
+      "purpose": "Money rework (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "fmtDay",
+          "kind": "fn"
+        },
+        {
+          "name": "Payout",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutsData",
+          "kind": "type"
+        },
+        {
+          "name": "PayoutsTable",
+          "kind": "component"
+        },
+        {
+          "name": "usd",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/StatusDot",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/money/page.tsx",
+        "src/components/dashboard/money/PayoutsPanel.tsx"
       ]
     },
     {
@@ -8263,12 +8363,14 @@
         "src/app/admin/system/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/messages/page.tsx",
+        "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
-        "src/components/dashboard/TeeSheetBoard.tsx"
+        "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/money/PaymentsPanel.tsx"
       ]
     },
     {
@@ -8542,7 +8644,8 @@
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
-        "src/components/dashboard/money/PayoutsPanel.tsx"
+        "src/components/dashboard/money/PayoutsPanel.tsx",
+        "src/components/dashboard/money/PayoutsTable.tsx"
       ]
     },
     {
@@ -9332,6 +9435,7 @@
       ],
       "usedBy": [
         "src/app/api/operator/analytics/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
         "src/lib/monthly-review.ts"
@@ -9951,8 +10055,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/page.tsx",
-        "src/components/dashboard/money/PaymentsPanel.tsx"
+        "src/app/dashboard/page.tsx"
       ]
     },
     {
@@ -10352,8 +10455,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/page.tsx",
-        "src/components/dashboard/money/CancellationsPanel.tsx"
+        "src/app/dashboard/page.tsx"
       ]
     },
     {
@@ -11118,6 +11220,7 @@
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
@@ -11495,7 +11598,7 @@
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/money/CancellationsPanel.tsx"
+        "src/components/dashboard/money/PayoutsTable.tsx"
       ]
     },
     {
@@ -13495,6 +13598,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -13511,6 +13615,7 @@
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
+        "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/tiers/route.ts",
@@ -14061,6 +14166,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -14078,6 +14184,7 @@
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
+        "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/tiers/route.ts",
@@ -14456,6 +14563,7 @@
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
+        "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
@@ -14803,8 +14911,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
-        "src/components/dashboard/StaffNotice.tsx",
-        "src/components/dashboard/money/CancellationsPanel.tsx"
+        "src/components/dashboard/StaffNotice.tsx"
       ]
     },
     {
@@ -16357,6 +16464,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
@@ -16365,6 +16473,7 @@
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
+        "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/upload/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",

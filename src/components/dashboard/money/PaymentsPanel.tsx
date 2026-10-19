@@ -4,6 +4,7 @@
 // each with what the course is owed and one plain status. Bookings still to
 // come live on the tee sheet, not here. A ?date= deep link from the tee sheet
 // still narrows it to that day.
+import { Card } from '@/components/ui/Card';
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -76,16 +77,16 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
       </div>
 
       {rows.length === 0 ? (
-        <div className="py-12 text-center bg-white rounded-lg shadow-card text-ink-soft text-[13.5px]">
+        <Card className="py-12 text-center text-ink-soft text-[13.5px]">
           {q || filter !== 'all' ? 'Nothing matches that.' : dateFilter ? `No bookings on ${fmtDate(dateFilter)}.` : 'No rounds played yet. Payments show here once golfers have played.'}
-        </div>
+        </Card>
       ) : (
         <div className="space-y-4">
           {visibleDays.map(day => {
             const dayRows = rows.filter(r => r.b.teeTime.date === day);
             const paid = dayRows.filter(r => r.s.group === 'paid').reduce((s, r) => s + r.b.greenFeeTotal + r.b.cartFeeTotal + r.b.rangeBallsTotal, 0);
             return (
-              <section key={day} className="bg-white rounded-lg shadow-card">
+              <Card key={day}>
                 <div className="flex items-baseline justify-between gap-3 px-4 pt-3 pb-2 border-b border-line-soft">
                   <h3 className="text-[14px] font-semibold text-ink">{day === today ? 'Today' : fmtDate(day)}</h3>
                   <span className="text-[12.5px] text-ink-muted tabular-nums">{paid > 0 ? `${usd(paid)} paid` : ''}</span>
@@ -100,7 +101,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
                     </li>
                   ))}
                 </ul>
-              </section>
+              </Card>
             );
           })}
           {visibleDays.length < days.length && (
