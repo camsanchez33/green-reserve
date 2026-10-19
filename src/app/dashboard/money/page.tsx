@@ -106,6 +106,9 @@ function MoneyPageInner() {
   // not-yet-paid (same numbers as Analytics), and when the next payout lands.
   const [overview, setOverview] = useState<Overview | null>(null);
   const [nextPayout, setNextPayout] = useState<PayoutsData['next'] | undefined>(undefined);
+  // A failed load is said out loud — never shown as "nothing on its way".
+  const [overviewError, setOverviewError] = useState('');
+  const [payoutError, setPayoutError] = useState('');
   const [openingStripe, setOpeningStripe] = useState(false);
   const [stripeError, setStripeError] = useState('');
   // Booleans, not the access object: it is a new object every render, and a
@@ -118,7 +121,9 @@ function MoneyPageInner() {
       seesPayouts ? dfetch<PayoutsData>('/api/operator/stripe/payouts') : Promise.resolve(null),
     ]);
     setOverview(o && o.ok ? o.data : null);
+    setOverviewError(o && !o.ok ? o.error : '');
     setNextPayout(p && p.ok ? (p.data.next ?? null) : undefined);
+    setPayoutError(p && !p.ok ? p.error : '');
   }, [seesPayments, seesPayouts]);
 
   useEffect(() => { loadBookings(); }, [loadBookings]);
@@ -161,14 +166,17 @@ function MoneyPageInner() {
           {stripeError && <div className="mb-4"><LoadError message={stripeError} onRetry={openStripe} /></div>}
           {courseError && <div className="mb-4"><LoadError message={`Couldn't load your course — ${courseError}`} onRetry={loadCourse} /></div>}
 
-          {(overview || nextPayout) && (
+          {overviewError && <div className="mb-4"><LoadError message={`Couldn't load this week's totals — ${overviewError}`} onRetry={loadOverview} /></div>}
+          {payoutError && <div className="mb-4"><LoadError message={`Couldn't load your payouts from Stripe — ${payoutError}`} onRetry={loadOverview} /></div>}
+          {(overview || nextPayout !== undefined || (seesPayouts && !payoutError && courseLoaded && !course.stripeAccountActive)) && (
             <Card className="grid grid-cols-1 sm:grid-cols-3 gap-px !bg-line overflow-hidden mb-6">
               {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Paid in the last 7 days</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.paidCents)}</div><div className="text-[12.5px] text-ink-muted">for rounds played</div></div>}
               {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Not paid yet</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.notPaidCents)}</div><div className="text-[12.5px] text-ink-muted">{overview.notPaidGroups === 0 ? 'every group in the last 7 days has paid' : `${overview.notPaidGroups} group${overview.notPaidGroups === 1 ? '' : 's'} in the last 7 days, no-shows included`}</div></div>}
-              <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Next payout</div>
+              {seesPayouts && !payoutError && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Next payout</div>
                 {nextPayout ? <><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">lands in your bank {fmtArrival(nextPayout.arrivalDate)}</div></>
-                  : <div className="text-[13.5px] text-ink-soft mt-1.5">{courseLoaded && !course.stripeAccountActive ? 'Connect Stripe to get paid (Payouts tab).' : 'Nothing on its way right now.'}</div>}
-              </div>
+                  : nextPayout === null ? <div className="text-[13.5px] text-ink-soft mt-1.5">Nothing on its way right now.</div>
+                  : <div className="text-[13.5px] text-ink-soft mt-1.5">{courseLoaded && !course.stripeAccountActive ? 'Connect Stripe to get paid (Payouts tab).' : 'Checking Stripe…'}</div>}
+              </div>}
             </Card>
           )}
 

@@ -6289,7 +6289,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 221,
+      "lines": 229,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -8107,7 +8107,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 81,
+      "lines": 80,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -8134,7 +8134,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 116,
+      "lines": 115,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [

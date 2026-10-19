@@ -15,16 +15,17 @@ type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 /** One plain status per booking, in the words staff use at the counter. */
-export function paymentStatus(b: MoneyBooking, today: string): { label: string; tone: Tone; group: 'paid' | 'unpaid' | 'cancelled' | 'upcoming' } {
+export function paymentStatus(b: MoneyBooking, today: string): { label: string; tone: Tone; group: 'paid' | 'unpaid' | 'cancelled' | 'refunded' | 'upcoming' } {
   if (b.status === 'cancelled') return b.paymentStatus === 'cancellation_fee_charged'
     ? { label: `Cancelled · ${usd(b.cancellationFeeTotal)} fee kept`, tone: 'warn', group: 'cancelled' }
     : { label: 'Cancelled, no fee', tone: 'neutral', group: 'cancelled' };
-  if (b.status === 'completed' && b.paymentStatus === 'paid') return { label: 'Paid by card', tone: 'ok', group: 'paid' };
-  if (b.status === 'completed' && b.paymentStatus === 'paid_offline') return { label: 'Paid at the counter', tone: 'ok', group: 'paid' };
+  // paymentStatus is what was charged: collectPayment() can charge a round that is still 'confirmed'.
+  if (b.paymentStatus === 'paid') return { label: 'Paid by card', tone: 'ok', group: 'paid' };
+  if (b.paymentStatus === 'paid_offline') return { label: 'Paid at the counter', tone: 'ok', group: 'paid' };
+  if (b.paymentStatus === 'refunded') return { label: 'Refunded', tone: 'neutral', group: 'refunded' };
   if (b.teeTime.date > today) return { label: 'Not played yet', tone: 'neutral', group: 'upcoming' };
+  if (b.noShowAt) return { label: b.paymentStatus === 'cancellation_fee_charged' ? `No-show · ${usd(b.cancellationFeeTotal)} hold kept` : 'No-show', tone: 'bad', group: 'unpaid' };
   if (b.paymentStatus === 'cancellation_fee_charged') return { label: `Not paid yet · ${usd(b.cancellationFeeTotal)} hold taken`, tone: 'warn', group: 'unpaid' };
-  if (b.paymentStatus === 'refunded') return { label: 'Refunded', tone: 'neutral', group: 'cancelled' };
-  if (b.noShowAt) return { label: 'No-show', tone: 'bad', group: 'unpaid' };
   return { label: 'Not paid yet', tone: 'warn', group: 'unpaid' };
 }
 
@@ -84,12 +85,10 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
         <div className="space-y-4">
           {visibleDays.map(day => {
             const dayRows = rows.filter(r => r.b.teeTime.date === day);
-            const paid = dayRows.filter(r => r.s.group === 'paid').reduce((s, r) => s + r.b.greenFeeTotal + r.b.cartFeeTotal + r.b.rangeBallsTotal, 0);
             return (
               <Card key={day}>
                 <div className="flex items-baseline justify-between gap-3 px-4 pt-3 pb-2 border-b border-line-soft">
                   <h3 className="text-[14px] font-semibold text-ink">{day === today ? 'Today' : fmtDate(day)}</h3>
-                  <span className="text-[12.5px] text-ink-muted tabular-nums">{paid > 0 ? `${usd(paid)} paid` : ''}</span>
                 </div>
                 <ul className="divide-y divide-line-soft">
                   {dayRows.map(({ b, s }) => (
@@ -107,7 +106,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
           {visibleDays.length < days.length && (
             <button onClick={() => setShowAll(true)} className="w-full py-2.5 text-[13px] font-medium text-pine hover:underline">Show older days ({days.length - visibleDays.length} more)</button>
           )}
-          <p className="text-[12.5px] text-ink-muted">Amounts are your course’s share: green fees, carts and range balls. GreenReserve’s booking fee is the golfer’s and isn’t included.</p>
+          <p className="text-[12.5px] text-ink-muted">Your latest 200 bookings. Amounts are your course’s share: green fees, carts and range balls; GreenReserve’s booking fee is the golfer’s and isn’t included. Totals for any dates are on Analytics.</p>
         </div>
       )}
     </>

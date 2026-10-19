@@ -83,11 +83,11 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
         </div>
       </div>
 
-      {/* Cam 2026-10-19: keep the GreenReserve note, cleaner. Fee copy per legal/LQ-2_FEE_COPY.md. */}
+      {/* Cam 2026-10-19: keep the GreenReserve note, cleaner. Sentences only from legal/LQ-2_FEE_COPY.md's allowed list. */}
       <div className="bg-white rounded-lg shadow-card px-5 py-4">
-        <h3 className="text-[15px] font-semibold text-ink">What GreenReserve takes from your payouts</h3>
+        <h3 className="text-[15px] font-semibold text-ink">GreenReserve&apos;s fee</h3>
         <p className="text-[13.5px] text-ink mt-1.5 leading-relaxed">
-          Nothing. Golfers pay GreenReserve&apos;s ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per-player booking fee on top of your price, in the same card payment. Stripe&apos;s normal card-processing fee applies, as it does for any card you take.
+          Golfers pay ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player on each online booking, added to your price. Your green fee and our fee are collected in one card payment to your own Stripe account; our ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player is then passed to GreenReserve. Stripe&apos;s standard card-processing fee applies to the payment, the same as any card you take today. GreenReserve charges you nothing on top of it.
         </p>
       </div>
     </div>

@@ -28,13 +28,12 @@ export function CancellationsPanel({ bookings, course }: { bookings: MoneyBookin
     .sort((a, b) => (b.cancelledAt ?? b.createdAt).localeCompare(a.cancelledAt ?? a.createdAt));
   const withFee = cancelled.filter(b => b.paymentStatus === 'cancellation_fee_charged');
   const rows = feesOnly ? withFee : cancelled;
-  const kept = withFee.reduce((s, b) => s + b.cancellationFeeTotal, 0);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-[13.5px] text-ink">
-          {cancelled.length === 0 ? 'No cancellations yet.' : <>{cancelled.length} cancelled{withFee.length > 0 ? <>, {withFee.length} late with {usd(kept)} in fees kept</> : ', all in time'}.</>}
+          {cancelled.length === 0 ? 'No cancellations yet.' : 'Your latest cancellations, newest first.'}
         </p>
         <p className="text-[12.5px] text-ink-muted">
           Free cancellation until {course.cancellationHours} hours before
