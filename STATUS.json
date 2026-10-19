@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-19T16:16:03.301Z",
+  "generatedAt": "2026-10-19T20:35:24.253Z",
   "repo": {
-    "head": "cb884f2",
-    "branch": "claude/status-board",
+    "head": "428da80",
+    "branch": "claude/status-1019b",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -10,6 +10,69 @@
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "428da80",
+        "date": "2026-10-19T16:35:14-04:00",
+        "subject": "Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0419675",
+        "date": "2026-10-19T16:20:24-04:00",
+        "subject": "Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b14b998",
+        "date": "2026-10-19T16:10:34-04:00",
+        "subject": "Course groups: one golfer page and one resident list for courses run together (#141)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "662f294",
+        "date": "2026-10-19T15:03:28-04:00",
+        "subject": "Members: import a list, and each member's last round (#140)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9aba8a1",
+        "date": "2026-10-19T14:22:40-04:00",
+        "subject": "Settings: Who pays what, one table of every kind of golfer and their price (#139)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a8c71b9",
+        "date": "2026-10-19T14:09:30-04:00",
+        "subject": "Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c17100d",
+        "date": "2026-10-19T13:49:05-04:00",
+        "subject": "Dashboard nav: every tab fits on every screen (#137)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "668b8ce",
+        "date": "2026-10-19T13:34:56-04:00",
+        "subject": "Residents: staff keep a resident list; residents book at the resident rate (#136)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "73245fc",
+        "date": "2026-10-19T12:38:16-04:00",
+        "subject": "Status board after Settings part 2 and the pro shop (#135)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "cb884f2",
         "date": "2026-10-19T12:15:35-04:00",
@@ -219,7 +282,7 @@
       "line": 2357,
       "hash": "b88c8bf",
       "shipDate": "2026-07-22",
-      "ageDays": 88
+      "ageDays": 89
     }
   ],
   "next": [
@@ -367,7 +430,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "HOMEPAGE_SPEC.md",
@@ -391,13 +454,13 @@
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-05",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -415,167 +478,212 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-09-29",
-      "ageDays": 19
+      "ageDays": 20
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "428da80",
+      "date": "2026-10-19",
+      "subject": "Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)"
+    },
+    {
+      "h": "0419675",
+      "date": "2026-10-19",
+      "subject": "Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)"
+    },
+    {
+      "h": "b14b998",
+      "date": "2026-10-19",
+      "subject": "Course groups: one golfer page and one resident list for courses run together (#141)"
+    },
+    {
+      "h": "662f294",
+      "date": "2026-10-19",
+      "subject": "Members: import a list, and each member's last round (#140)"
+    },
+    {
+      "h": "9aba8a1",
+      "date": "2026-10-19",
+      "subject": "Settings: Who pays what, one table of every kind of golfer and their price (#139)"
+    },
+    {
+      "h": "a8c71b9",
+      "date": "2026-10-19",
+      "subject": "Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)"
+    },
+    {
+      "h": "c17100d",
+      "date": "2026-10-19",
+      "subject": "Dashboard nav: every tab fits on every screen (#137)"
+    },
+    {
+      "h": "668b8ce",
+      "date": "2026-10-19",
+      "subject": "Residents: staff keep a resident list; residents book at the resident rate (#136)"
+    },
+    {
+      "h": "73245fc",
+      "date": "2026-10-19",
+      "subject": "Status board after Settings part 2 and the pro shop (#135)"
+    },
     {
       "h": "cb884f2",
       "date": "2026-10-19",
@@ -590,51 +698,6 @@
       "h": "1cf8419",
       "date": "2026-10-19",
       "subject": "Homepage hero: Learn more instead of Book a demo (#133)"
-    },
-    {
-      "h": "a37365e",
-      "date": "2026-10-19",
-      "subject": "Email: log Resend's message id and accept time for every send (#132)"
-    },
-    {
-      "h": "e226ed7",
-      "date": "2026-10-19",
-      "subject": "Members: a self-joined member put on a tier gets a pay link, and dues emails reach them (#130)"
-    },
-    {
-      "h": "27e358a",
-      "date": "2026-10-19",
-      "subject": "Members: list first, one plain dues line per member, remind count matches who actually gets emailed (#128)"
-    },
-    {
-      "h": "49d373a",
-      "date": "2026-10-19",
-      "subject": "Settings part 1: sections in setup order, a \"Finish setting up\" list, Staff and Your account split (#129)"
-    },
-    {
-      "h": "fc1c99e",
-      "date": "2026-10-19",
-      "subject": "Schedule rework: your week at a glance, named price periods, closed-days calendar, every save shows what it changes (#127)"
-    },
-    {
-      "h": "45ac49a",
-      "date": "2026-10-19",
-      "subject": "Add time: warn and ask once when a new time is within 5 minutes of another (#120)"
-    },
-    {
-      "h": "33ae355",
-      "date": "2026-10-19",
-      "subject": "Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126)"
-    },
-    {
-      "h": "92cdf08",
-      "date": "2026-10-19",
-      "subject": "Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124)"
-    },
-    {
-      "h": "7af1de5",
-      "date": "2026-10-19",
-      "subject": "Golfers tick a box to agree to the Terms and Privacy Policy before booking or changing a booking (#123)"
     }
   ]
 }

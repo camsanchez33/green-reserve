@@ -4,14 +4,23 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-19 16:16 UTC · branch `claude/status-board` · HEAD `cb884f2` · working tree clean
+Generated 2026-10-19 20:35 UTC · branch `claude/status-1019b` · HEAD `428da80` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 26 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 35 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `428da80` | 2026-10-19 | Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143) |
+| `0419675` | 2026-10-19 | Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142) |
+| `b14b998` | 2026-10-19 | Course groups: one golfer page and one resident list for courses run together (#141) |
+| `662f294` | 2026-10-19 | Members: import a list, and each member's last round (#140) |
+| `9aba8a1` | 2026-10-19 | Settings: Who pays what, one table of every kind of golfer and their price (#139) |
+| `a8c71b9` | 2026-10-19 | Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138) |
+| `c17100d` | 2026-10-19 | Dashboard nav: every tab fits on every screen (#137) |
+| `668b8ce` | 2026-10-19 | Residents: staff keep a resident list; residents book at the resident rate (#136) |
+| `73245fc` | 2026-10-19 | Status board after Settings part 2 and the pro shop (#135) |
 | `cb884f2` | 2026-10-19 | Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134) |
 | `cd9c3a1` | 2026-10-19 | Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131) |
 | `1cf8419` | 2026-10-19 | Homepage hero: Learn more instead of Book a demo (#133) |
@@ -53,7 +62,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 88d | `b88c8bf` | `RUN_QUEUE.md:2357` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 89d | `b88c8bf` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -122,56 +131,56 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-19 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 1d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 2d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-19 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 7d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 13d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 13d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 14d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 14d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 14d |
 | `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 18d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 19d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `ARCHITECTURE.md` | 0 | 2026-09-29 | 19d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 19d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 19d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 20d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `ARCHITECTURE.md` | 0 | 2026-09-29 | 20d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 20d |
 
 ## Recent commits
 
+- `428da80` 2026-10-19 — Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)
+- `0419675` 2026-10-19 — Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)
+- `b14b998` 2026-10-19 — Course groups: one golfer page and one resident list for courses run together (#141)
+- `662f294` 2026-10-19 — Members: import a list, and each member's last round (#140)
+- `9aba8a1` 2026-10-19 — Settings: Who pays what, one table of every kind of golfer and their price (#139)
+- `a8c71b9` 2026-10-19 — Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)
+- `c17100d` 2026-10-19 — Dashboard nav: every tab fits on every screen (#137)
+- `668b8ce` 2026-10-19 — Residents: staff keep a resident list; residents book at the resident rate (#136)
+- `73245fc` 2026-10-19 — Status board after Settings part 2 and the pro shop (#135)
 - `cb884f2` 2026-10-19 — Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134)
 - `cd9c3a1` 2026-10-19 — Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131)
 - `1cf8419` 2026-10-19 — Homepage hero: Learn more instead of Book a demo (#133)
-- `a37365e` 2026-10-19 — Email: log Resend's message id and accept time for every send (#132)
-- `e226ed7` 2026-10-19 — Members: a self-joined member put on a tier gets a pay link, and dues emails reach them (#130)
-- `27e358a` 2026-10-19 — Members: list first, one plain dues line per member, remind count matches who actually gets emailed (#128)
-- `49d373a` 2026-10-19 — Settings part 1: sections in setup order, a "Finish setting up" list, Staff and Your account split (#129)
-- `fc1c99e` 2026-10-19 — Schedule rework: your week at a glance, named price periods, closed-days calendar, every save shows what it changes (#127)
-- `45ac49a` 2026-10-19 — Add time: warn and ask once when a new time is within 5 minutes of another (#120)
-- `33ae355` 2026-10-19 — Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126)
-- `92cdf08` 2026-10-19 — Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124)
-- `7af1de5` 2026-10-19 — Golfers tick a box to agree to the Terms and Privacy Policy before booking or changing a booking (#123)
 
 ---
 
