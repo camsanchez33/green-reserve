@@ -6546,7 +6546,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1461,
+      "lines": 1464,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8637,7 +8637,7 @@
     },
     {
       "path": "src/components/home/TeeSheetDemo.tsx",
-      "lines": 316,
+      "lines": 320,
       "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
       "brain": [],
       "exports": [

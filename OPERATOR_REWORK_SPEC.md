@@ -72,6 +72,11 @@ Keep it minimal; a photo/brand panel beside the form (form only on phones); a
   next and can still drag groups); on a phone, a full-screen sheet that slides
   up. It shows everything for that time in one place: each group, players,
   paid or not, the price, and check in / pay / move / cancel.
+  Built (TT-CARD, branch claude/time-card): the card above, with the price
+  line in it, each group's amount (to logins that see payments), its status in
+  words, the main action first, the rest as plain links, cancel last. The
+  homepage demo mirrors it. The sheet bar now wraps on a phone (it pushed the
+  page 30px wider than the screen).
 - "Ring someone up" waits for the card reader (POS-1b, after launch). For
   launch: "Add a walk-in" with fit-in warnings (within ~5 minutes of another
   group, slot capacity).

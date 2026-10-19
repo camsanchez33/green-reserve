@@ -159,15 +159,19 @@ function TeeSheet() {
       {panel && (
         <div className={s.pnl} role="dialog" aria-label={`${fmt(panel.t)} tee time`}>
           <div className={s.pnlHd}>
-            <div><b>{fmt(panel.t)}</b><span>{d.short} · {booked(panel)} of {CAP} players{panel.t === nextUp ? ' · Next up' : ''}</span></div>
+            <div>
+              <b>{fmt(panel.t)}{panel.t === nextUp && <em>Next up</em>}</b>
+              <span>{d.short}</span>
+              <span className={s.pnlFacts}>{panel.blocked ? 'Blocked' : `${booked(panel)} of ${CAP} players · ${CAP - booked(panel) <= 0 ? 'Full' : `${CAP - booked(panel)} open`}`} · 18 holes · {money(d.rate)} a player</span>
+            </div>
             <button type="button" aria-label="Close" onClick={() => update(x => ({ ...x, open: null }))}>×</button>
           </div>
-          {!panel.groups.length && <p className={s.dim}>No bookings yet.</p>}
+          {!panel.groups.length && <p className={s.dim}>{panel.blocked ? 'This time is blocked — golfers can’t book it.' : 'Nobody is booked yet.'}</p>}
           {panel.groups.map((g, gi) => (
             <div key={`${g.name}-${gi}`} className={s.pnlG}>
-              <div><b>{g.name}</b> <span className={s.dim}>{g.n} player{g.n === 1 ? '' : 's'}</span>{g.src !== 'online' && <span className={s.dim}> {g.src === 'phone' ? 'Phone' : 'Walk-in'}</span>}</div>
+              <div className={s.pnlWho}><span><b>{g.name}</b><span className={s.dim}> · {g.n} player{g.n === 1 ? '' : 's'}{g.src !== 'online' ? ` · ${g.src === 'phone' ? 'Phone' : 'Walk-in'}` : ''}</span></span><b>{money(roundTotal(d, g.n))}</b></div>
+              <span className={s.pnlSt}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} />{statusOf(g)}</span>
               <div className={s.pnlAct}>
-                <span className={s.pnlSt}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} />{statusOf(g)}</span>
                 {!g.done && <button type="button" className={s.ci} onClick={() => {
                   setRow(panel.t, r => ({ ...r, groups: r.groups.map((x, i) => i === gi ? { ...x, done: true, isNew: false } : x) }));
                   toast(g.src === 'online' ? `Checked in — charged ${money(roundTotal(d, g.n))}.` : `${g.name} checked in — paid at the counter.`);
@@ -180,11 +184,11 @@ function TeeSheet() {
             </div>
           ))}
           <div className={s.pnlSlot}>
-            {!panel.blocked && booked(panel) < CAP && <button type="button" className={s.wk} onClick={() => {
+            {!panel.blocked && booked(panel) < CAP && <button type="button" className={s.ci} onClick={() => {
               setRow(panel.t, r => ({ ...r, groups: [...r.groups, { name: 'Dana Price', n: 1, src: 'walk_in' as Src }] }));
               toast('Dana Price added.');
-            }}>Walk-in or phone booking</button>}
-            {!panel.groups.length && <button type="button" className={s.wk} onClick={() => setRow(panel.t, r => ({ ...r, blocked: !r.blocked }))}>{panel.blocked ? 'Unblock' : 'Block'}</button>}
+            }}>Add a walk-in or phone booking</button>}
+            {!panel.groups.length && <button type="button" className={s.wk} onClick={() => setRow(panel.t, r => ({ ...r, blocked: !r.blocked }))}>{panel.blocked ? 'Unblock' : 'Block this time'}</button>}
           </div>
         </div>
       )}
