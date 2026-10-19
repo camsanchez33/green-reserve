@@ -10,6 +10,8 @@ import { PrismaClient } from '@prisma/client';
 import { signMemberSessionToken } from '../src/lib/member-session';
 import { applyTierRates } from '../src/lib/tier-rates';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
+import { signGolferToken } from '../src/lib/auth';
+import { groupGreenFee } from '../src/lib/residents';
 
 const prisma = new PrismaClient();
 const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
@@ -24,6 +26,8 @@ async function cleanup() {
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });
   const courseId = { in: courses.map(c => c.id) };
   await prisma.courseMembership.deleteMany({ where: { courseId } });
+  await prisma.courseResident.deleteMany({ where: { courseId } });
+  await prisma.golferAccount.deleteMany({ where: { email: { endsWith: `@${TAG}.test` } } });
   await prisma.membershipTier.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
@@ -37,7 +41,7 @@ async function main() {
   // The next Saturday inside the members' default window — weekend rules are the ones that differed.
   let date = addDaysStr(todayIn('UTC'), 1);
   while (new Date(date + 'T12:00:00').getDay() !== 6) date = addDaysStr(date, 1);
-  const tt = await prisma.teeTime.create({ data: { courseId: course.id, date, time: '09:00', holes: 18, greenFeeCents: 10000, cartFeeCents: 2000, memberRateCents: 7000, playersAvailable: 4, playersBooked: 0 } });
+  const tt = await prisma.teeTime.create({ data: { courseId: course.id, date, time: '09:00', holes: 18, greenFeeCents: 10000, cartFeeCents: 2000, memberRateCents: 7000, residentRateCents: 3000, playersAvailable: 4, playersBooked: 0 } });
 
   const tiers: Record<string, Record<string, unknown>> = {
     '20% off (the schedule also has a member rate)': { discountPct: 20 },
@@ -60,6 +64,40 @@ async function main() {
       if (row && status === 'expired') check(`…and a lapsed membership isn't flagged as a member rate`, row.has_member_rate === false, row);
     }
   }
+
+  // RES-1: booking charges the signed-in golfer's own spot the resident rate
+  // when no membership price applied and their card is good on the date
+  // (api/bookings: golferResident + groupGreenFee). The list must show it.
+  const golferCookie = async (email: string) => {
+    const g = await prisma.golferAccount.create({ data: { email, password: 'x', firstName: 'Res', lastName: 'Ident' } });
+    return `gr_golfer=${await signGolferToken({ golferId: g.id, email })}`;
+  };
+  const portal = async (cookie: string) => {
+    const r = await fetch(`${BASE_URL}/api/member/${course.slug}/tee-times?date=${date}`, { headers: { cookie } });
+    const body = await r.json();
+    return Array.isArray(body) ? body.find((x: { id: string }) => x.id === tt.id) : { status: r.status, body };
+  };
+  // A tierless member who is also a resident.
+  const resEmail = `res@${TAG}.test`;
+  await prisma.courseMembership.create({ data: { courseId: course.id, tierId: null, membershipType: 'Member', status: 'active', inviteEmail: resEmail, inviteName: 'Res', payToken: `${TAG}-res` } });
+  await prisma.courseResident.create({ data: { courseId: course.id, name: 'Res', email: resEmail, expiresOn: '' } });
+  const resRow = await portal(await golferCookie(resEmail));
+  const charged = groupGreenFee(3, tt.greenFeeCents, 1, tt.residentRateCents).greenFeeTotal;
+  check('a tierless member on the resident list sees their own spot at the resident rate',
+    resRow?.resident_green_fee === 30 && groupGreenFee(3, Math.round(resRow.member_green_fee * 100), 1, Math.round(resRow.resident_green_fee * 100)).greenFeeTotal === charged, { resRow, charged });
+  // A resident whose card expired before the date pays the member price for every spot.
+  const oldEmail = `expired@${TAG}.test`;
+  await prisma.courseMembership.create({ data: { courseId: course.id, tierId: null, membershipType: 'Member', status: 'active', inviteEmail: oldEmail, inviteName: 'Old', payToken: `${TAG}-old` } });
+  await prisma.courseResident.create({ data: { courseId: course.id, name: 'Old', email: oldEmail, expiresOn: addDaysStr(date, -1) } });
+  const oldRow = await portal(await golferCookie(oldEmail));
+  check('…but not with a card that expired before the date', !!oldRow && oldRow.resident_green_fee == null, oldRow);
+  // A resident whose membership has its own price: the member price wins, never both.
+  const tierEmail = `tier@${TAG}.test`;
+  const pctTier = await prisma.membershipTier.create({ data: { courseId: course.id, name: 'ResTier', discountPct: 20 } });
+  await prisma.courseMembership.create({ data: { courseId: course.id, tierId: pctTier.id, membershipType: 'ResTier', status: 'active', inviteEmail: tierEmail, inviteName: 'Tier', payToken: `${TAG}-tier` } });
+  await prisma.courseResident.create({ data: { courseId: course.id, name: 'Tier', email: tierEmail, expiresOn: '' } });
+  const tierRow = await portal(await golferCookie(tierEmail));
+  check('…and never on top of a membership price', !!tierRow && tierRow.resident_green_fee == null && Math.round(tierRow.member_green_fee * 100) === 8000, tierRow);
 
   await cleanup();
   console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

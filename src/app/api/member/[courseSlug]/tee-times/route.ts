@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { getMemberSession, getGolferMembership } from '@/lib/member-session';
+import { getMemberSession, getGolferMembership, golferResident } from '@/lib/member-session';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 import { applyTierRates } from '@/lib/tier-rates';
 
@@ -64,6 +64,12 @@ export async function GET(
   // own copy with a different order (member rate before a % off), a different
   // weekend fallback and no % off the cart, so it could show one price and
   // charge another.
+  // RES-1: booking charges ONE player — the signed-in golfer — the tee time's
+  // resident rate when no membership price applied and their resident card is
+  // good on the date (api/bookings: golferResident, groupGreenFee). Same lookup
+  // here, so the list can show it; the page adds it up the same way.
+  const resident = !pricingTier ? await golferResident(course.id, date) : null;
+
   const hasTierPrice = !!pricingTier && (pricingTier.greenFeeWeekdayCents != null || pricingTier.greenFeeWeekendCents != null || pricingTier.discountPct != null);
 
   return NextResponse.json(
@@ -89,6 +95,9 @@ export async function GET(
         walking_allowed: t.walkingAllowed,
         status: slotStatus,
         has_member_rate: hasMemberRate,
+        // What the signed-in golfer pays for their own spot as a resident (one
+        // player); null when the resident rate doesn't apply to this time.
+        resident_green_fee: resident && t.residentRateCents != null ? centsToDollarsOr0(t.residentRateCents) : null,
       };
     })
   );
