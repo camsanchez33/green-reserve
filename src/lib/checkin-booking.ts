@@ -4,6 +4,7 @@ import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booki
 import { sendCheckInReceiptEmail } from './email';
 import { refundSeparateAccessFee } from './access-fee';
 import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop';
+import { groupGreenFee, otherPerPlayerCents } from './residents';
 
 /**
  * Charging a round, and checking a golfer in, are two different things.
@@ -152,7 +153,12 @@ async function chargeBooking(
   const showed = opts?.checkedInPlayers;
   if (showed != null && Number.isInteger(showed) && showed >= 1 && showed < booking.players && !alreadyPaid) {
     const f = showed / booking.players;
-    const greenFeeTotal = Math.round(booking.greenFeeTotal * f);
+    // RES-1: with residents in the group, the residents are counted first among
+    // those who showed; the others pay what the booking's non-residents pay.
+    const others = booking.residentPlayers > 0 ? otherPerPlayerCents(booking) : null;
+    const greenFeeTotal = booking.residentPlayers > 0
+      ? groupGreenFee(showed, others ?? 0, booking.residentPlayers, booking.residentRateCents).greenFeeTotal
+      : Math.round(booking.greenFeeTotal * f);
     const cartFeeTotal = Math.round(booking.cartFeeTotal * f);
     const accessFeeTotal = Math.round(booking.accessFeeTotal * f);
     const totalAmount = greenFeeTotal + cartFeeTotal + accessFeeTotal + booking.rangeBallsTotal;

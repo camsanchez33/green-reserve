@@ -10,7 +10,7 @@ export const DASHBOARD_PAGES: DashboardPage[] = [
   { key: 'analytics', label: 'Analytics', href: '/dashboard/analytics', does: 'revenue collected vs expected, fill rate, unfilled slots, no-shows, cancellations, customers and booking lead time (owner login)' },
   { key: 'cancellations', label: 'Cancellations', href: '/dashboard/money?tab=cancellations', does: 'cancelled bookings, late-cancellation fees and the cancellation policy' },
   { key: 'schedule', label: 'Schedule', href: '/dashboard/schedules', does: 'the templates that generate tee times: days, hours, interval, green fees, member and resident rates, cart fee, blocked days, booking windows, and which round each schedule sells' },
-  { key: 'members', label: 'Members', href: '/dashboard/members', does: 'membership tiers, member accounts, dues' },
+  { key: 'members', label: 'Members', href: '/dashboard/members', does: 'membership tiers, member accounts, dues, and the residents list (golfers who showed a resident card get the resident rate)' },
   { key: 'payments', label: 'Money', href: '/dashboard/money', does: 'what was collected, cancellations, and the Stripe connection and payouts' },
   { key: 'messages', label: 'Messages', href: '/dashboard/messages', does: 'messages with GreenReserve' },
   { key: 'settings', label: 'Settings', href: '/dashboard/settings', does: 'course info, cancellation policy and fee, check-in window, walking policy, brand colour, photos, staff logins, course and layout (nines, products, tee sets)' },

@@ -33,6 +33,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
+import { groupGreenFee } from './residents';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
@@ -103,6 +104,9 @@ export async function moveBooking(opts: {
   allowCheckedIn?: boolean;
   /** Validate and price, change nothing. */
   dryRun?: boolean;
+  /** RES-1: residents to price at the new slot (default: the booking's own).
+   *  The golfer's swap re-checks the card for the new slot's date. */
+  residentPlayers?: number;
   now?: Date;
 }): Promise<MoveOk | MoveFail> {
   const now = opts.now ?? new Date();
@@ -113,7 +117,7 @@ export async function moveBooking(opts: {
         select: {
           id: true, courseId: true, teeTimeId: true, players: true, status: true, checkedInAt: true, noShowAt: true,
           paymentStatus: true, roundPaymentIntentId: true,
-          cartSelected: true, appliedRate: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
+          cartSelected: true, appliedRate: true, residentPlayers: true, residentRateCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
           course: { select: { timezone: true, cancellationHours: true } },
@@ -140,7 +144,7 @@ export async function moveBooking(opts: {
 
       const slot = await tx.teeTime.findUnique({
         where: { id: opts.newTeeTimeId },
-        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true },
+        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, residentRateCents: true },
       });
       if (!slot) throw new MoveError('SLOT_GONE');
       if (slot.courseId !== b.courseId) throw new MoveError('WRONG_COURSE');
@@ -153,7 +157,7 @@ export async function moveBooking(opts: {
 
       // ── price ──
       let rate = { greenFeeCents: slot.greenFeeCents, cartFeeCents: slot.cartFeeCents };
-      if (b.appliedRate !== 'standard') {
+      if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') {
         // Tier names aren't unique in the schema: take the oldest ACTIVE tier of
         // that name so the answer is deterministic (a tierId on Booking is the
         // proper fix; the tiers route now refuses duplicate names).
@@ -163,7 +167,9 @@ export async function moveBooking(opts: {
           // A member rate whose tier is gone: keep what they paid per player.
           : { greenFeeCents: Math.round(b.greenFeeTotal / b.players), cartFeeCents: b.cartSelected ? Math.round(b.cartFeeTotal / b.players) : slot.cartFeeCents };
       }
-      const newGreen = rate.greenFeeCents * b.players;
+      // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
+      const residents = groupGreenFee(b.players, rate.greenFeeCents, opts.residentPlayers ?? b.residentPlayers, slot.residentRateCents);
+      const newGreen = residents.greenFeeTotal;
       const newCart = b.cartSelected ? rate.cartFeeCents * b.players : 0;
       const range = Math.round(b.rangeBallsTotal);
       const access = Math.round(b.accessFeeTotal); // per-player amount unchanged: same players
@@ -191,6 +197,10 @@ export async function moveBooking(opts: {
 
       // ── claim, release, record ──
       const data: Prisma.BookingUpdateInput = { teeTime: { connect: { id: slot.id } }, ...totals };
+      if (!keep) {
+        data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
+        if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
+      }
       if (opts.terms) { data.termsAcceptedAt = now; data.termsVersion = opts.terms.version; }
       await tx.booking.update({ where: { id: b.id }, data });
 

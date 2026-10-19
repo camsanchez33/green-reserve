@@ -271,6 +271,9 @@
   "src/components/dashboard/Toast.tsx": {
     "lucide": 1
   },
+  "src/components/dashboard/members/ResidentsCard.tsx": {
+    "lucide": 1
+  },
   "src/components/dashboard/money/CancellationsPanel.tsx": {
     "card": 1
   },
