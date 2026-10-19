@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 430,
+    "files": 432,
     "routes": 220,
-    "libs": 130,
+    "libs": 131,
     "models": 42,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -6667,7 +6667,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1165,
+      "lines": 1166,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6690,6 +6690,7 @@
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/components/dashboard/settings/FinishSetup",
+        "@/components/dashboard/settings/WhoPaysWhat",
         "@/components/ui/Card",
         "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
@@ -8109,7 +8110,8 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
-        "src/components/dashboard/money/PayoutsTable.tsx"
+        "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
     {
@@ -8606,6 +8608,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/settings/WhoPaysWhat.tsx",
+      "lines": 97,
+      "purpose": "Settings → Prices & fees:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "WhoPaysWhat",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/lib/dashboard-fetch",
+        "@/lib/who-pays",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/home/TeeSheetDemo.tsx",
       "lines": 320,
       "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
@@ -8721,7 +8751,8 @@
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
-        "src/components/dashboard/settings/FinishSetup.tsx"
+        "src/components/dashboard/settings/FinishSetup.tsx",
+        "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
     {
@@ -12060,7 +12091,8 @@
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
-        "src/components/dashboard/money/PayoutsTable.tsx"
+        "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
     {
@@ -15524,7 +15556,8 @@
       "imports": [],
       "usedBy": [
         "src/app/api/bookings/route.ts",
-        "src/lib/move-booking.ts"
+        "src/lib/move-booking.ts",
+        "src/lib/who-pays.ts"
       ]
     },
     {
@@ -15801,6 +15834,49 @@
       ],
       "usedBy": [
         "src/app/api/operator/weather-cancel/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/who-pays.ts",
+      "lines": 104,
+      "purpose": "Settings → Prices & fees, \"Who pays what\" (Cam 2026-10-19, OPERATOR_REWORK_SPEC \"Settings — round 1\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "Cell",
+          "kind": "type"
+        },
+        {
+          "name": "Period",
+          "kind": "type"
+        },
+        {
+          "name": "Row",
+          "kind": "type"
+        },
+        {
+          "name": "whoPays",
+          "kind": "fn"
+        },
+        {
+          "name": "WireSchedule",
+          "kind": "type"
+        },
+        {
+          "name": "WireTier",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./tier-rates"
+      ],
+      "usedBy": [
+        "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
     {
