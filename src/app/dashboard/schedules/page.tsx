@@ -294,7 +294,7 @@ export default function SchedulesPage() {
                         return (
                           <button key={s.id} onClick={() => openEdit(s)} disabled={!canEdit}
                             title={`${s.tierName === 'standard' ? 'Tee times' : s.tierName}: ${fmtTime(s.startTime)} – ${fmtTime(s.endTime)}, every ${s.intervalMinutes} min, ${money(isWeekend(d) ? s.greenFeeWeekend : s.greenFeeWeekday)}`}
-                            className="absolute left-1 right-1 rounded-md bg-white border border-line border-l-[3px] border-l-pine px-2 py-1.5 text-left overflow-hidden hover:border-line-strong disabled:cursor-default"
+                            className="absolute left-1 right-1 flex flex-col items-start justify-start rounded-md bg-white border border-line border-l-[3px] border-l-pine px-2 py-1.5 text-left overflow-hidden hover:border-line-strong disabled:cursor-default"
                             style={{ top, height: h }}>
                             <span className="block text-[12.5px] font-semibold text-ink truncate">{s.tierName === 'standard' ? 'Tee times' : s.tierName}</span>
                             <span className="block text-[12px] text-ink tabular-nums">{money(isWeekend(d) ? s.greenFeeWeekend : s.greenFeeWeekday)}</span>
