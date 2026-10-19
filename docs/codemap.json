@@ -6714,7 +6714,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 565,
+      "lines": 571,
       "purpose": "",
       "brain": [],
       "exports": [

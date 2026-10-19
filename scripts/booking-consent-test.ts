@@ -14,5 +14,7 @@ check('Apple Pay / Google Pay only appear once ticked, and refuse without it', c
 check('the request carries the real answer, not a hard-coded true', c.includes('termsAccepted: latest.current.agreed === true') && !c.includes('termsAccepted: true'));
 check('the old "By confirming, you agree" line is gone', !c.includes('By confirming, you agree'));
 check('the server still refuses a booking without it and records the version', r.includes('if (termsAccepted !== true)') && r.includes('termsVersion:     CURRENT_TERMS_VERSION'));
+const m = readFileSync('src/app/manage/[bookingId]/page.tsx', 'utf8');
+check('changing a booking also needs the tick (it re-stamps consent)', !m.includes('By confirming, you agree') && !m.includes('termsAccepted: true') && (m.match(/termsAccepted: agreed/g) || []).length === 2 && m.includes('disabled={swapping || !agreed}') && m.includes('|| !agreed}'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
