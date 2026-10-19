@@ -117,10 +117,41 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-17 16:37 UTC</span><span>claude/hero-photo @ 806a8cd</span>
+    <span>2026-10-19 16:16 UTC</span><span>claude/status-board @ cb884f2</span>
     <span>tree clean</span>
   </div>
 </header>
+<div class="alarm">
+<div class="lede">26 runs have shipped that the queue doesn't know about</div>
+<p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
+<ul>
+<li><span class="h">cb884f2</span><span>Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134)</span></li>
+<li><span class="h">cd9c3a1</span><span>Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131)</span></li>
+<li><span class="h">1cf8419</span><span>Homepage hero: Learn more instead of Book a demo (#133)</span></li>
+<li><span class="h">a37365e</span><span>Email: log Resend's message id and accept time for every send (#132)</span></li>
+<li><span class="h">e226ed7</span><span>Members: a self-joined member put on a tier gets a pay link, and dues emails reach them (#130)</span></li>
+<li><span class="h">27e358a</span><span>Members: list first, one plain dues line per member, remind count matches who actually gets emailed (#128)</span></li>
+<li><span class="h">49d373a</span><span>Settings part 1: sections in setup order, a &quot;Finish setting up&quot; list, Staff and Your account split (#129)</span></li>
+<li><span class="h">fc1c99e</span><span>Schedule rework: your week at a glance, named price periods, closed-days calendar, every save shows what it changes (#127)</span></li>
+<li><span class="h">45ac49a</span><span>Add time: warn and ask once when a new time is within 5 minutes of another (#120)</span></li>
+<li><span class="h">33ae355</span><span>Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126)</span></li>
+<li><span class="h">92cdf08</span><span>Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124)</span></li>
+<li><span class="h">7af1de5</span><span>Golfers tick a box to agree to the Terms and Privacy Policy before booking or changing a booking (#123)</span></li>
+<li><span class="h">31b018f</span><span>2FA page: says where the code went, new code by email or text (#119)</span></li>
+<li><span class="h">25f5082</span><span>Hotfix: regenerating a day no longer wipes its open tee times (#125)</span></li>
+<li><span class="h">8ef438a</span><span>Analytics rework (AN-3): one date button, golf-standard four, plain explanations, Ask Birdie; no tab-switch colour flash (#122)</span></li>
+<li><span class="h">9450ca4</span><span>Legal: Terms, Privacy, Operator Agreement v2026-11 and Brand License match the product (#121)</span></li>
+<li><span class="h">636b0ca</span><span>Homepage batch 2: no section lines, four feature tiles, Send us a note, phone frame, /for-courses without terms (#118)</span></li>
+<li><span class="h">556cf10</span><span>Tee sheet batch 2: no logo box, Weather and Message renamed and explained, course alert can email today's golfers (#117)</span></li>
+<li><span class="h">bb8b1cc</span><span>Operator login: photo panel beside the form, &quot;Need help signing in?&quot; (#116)</span></li>
+<li><span class="h">014eadb</span><span>Tee sheet batch 1: awaiting check-in, tidy bar, alerts + key up top, tinted squares (#115)</span></li>
+<li><span class="h">458b063</span><span>Homepage about section + 'Your AI assistant' on marketing pages (#114)</span></li>
+<li><span class="h">1203da1</span><span>Walk 1 fixes: no fee on cash, dues lock, link previews, plain confirmation email (#113)</span></li>
+<li><span class="h">a77263a</span><span>Homepage hero: 'The tee sheet your course deserves.' + Walk 1 decisions (#112)</span></li>
+<li><span class="h">8c863b9</span><span>Launch security: late-fee dodge, party-size fees, phone takeover, booking flood (#111)</span></li>
+<li><span class="h">8bc5a27</span><span>Homepage hero: links green above the ocean at dusk (#110)</span></li>
+<li><span class="h">293f1d7</span><span>Homepage hero: sun through the pines photo (#109)</span></li>
+</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">1</span><span class="l">Awaiting review</span></div>
@@ -158,7 +189,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">86d</span><span class="where">b88c8bf</span></div>
+<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">88d</span><span class="where">b88c8bf</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:49</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:56</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:235</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:338</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2357</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2993</span></li></ul>
@@ -169,55 +200,56 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 0d</td></tr>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-11 &middot; 5d</td></tr>
-<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-17 &middot; 0d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 5d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 11d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 11d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-04 &middot; 12d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-01 &middot; 16d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 17d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-19 &middot; 0d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 1d</td></tr>
+<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 7d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 13d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 13d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-04 &middot; 14d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-01 &middot; 18d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 19d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">806a8cd</td><td class="num">2026-10-17</td><td>queue/spec update</td></tr>
-<tr><td class="num">21193df</td><td class="num">2026-10-17</td><td>queue/spec update</td></tr>
-<tr><td class="num">0f5d200</td><td class="num">2026-10-17</td><td>Homepage hero: real sunset photo in place of the AI image</td></tr>
-<tr><td class="num">9e4bf52</td><td class="num">2026-10-11</td><td>Fix: re-sign banner stays after signing the new Operator Agreement (#107)</td></tr>
-<tr><td class="num">c4800f7</td><td class="num">2026-10-11</td><td>POS-1a: pro-shop catalog, items charged with the round (#106)</td></tr>
-<tr><td class="num">5ed62ea</td><td class="num">2026-10-11</td><td>Admin → System: publish agreement versions (owner with 2FA) (#105)</td></tr>
-<tr><td class="num">47e7320</td><td class="num">2026-10-11</td><td>Operator Agreement v2026-10 live (1% membership fee, re-accept), counsel waived (#104)</td></tr>
-<tr><td class="num">fa1e1df</td><td class="num">2026-10-08</td><td>Operator Agreement v2026-10 draft (1% membership fee), held for counsel (#103)</td></tr>
-<tr><td class="num">4165bc8</td><td class="num">2026-10-08</td><td>Membership fee: 1% of dues, paid by the member (#102)</td></tr>
-<tr><td class="num">2eae475</td><td class="num">2026-10-08</td><td>Homepage demo shows the board (#101)</td></tr>
-<tr><td class="num">718522c</td><td class="num">2026-10-08</td><td>AN-2: Analytics reworked so it reads plainly (#100)</td></tr>
-<tr><td class="num">b7079ea</td><td class="num">2026-10-07</td><td>Tee sheet: one board that fits the page, cancel from the sheet (#99)</td></tr>
+<tr><td class="num">cb884f2</td><td class="num">2026-10-19</td><td>Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134)</td></tr>
+<tr><td class="num">cd9c3a1</td><td class="num">2026-10-19</td><td>Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131)</td></tr>
+<tr><td class="num">1cf8419</td><td class="num">2026-10-19</td><td>Homepage hero: Learn more instead of Book a demo (#133)</td></tr>
+<tr><td class="num">a37365e</td><td class="num">2026-10-19</td><td>Email: log Resend's message id and accept time for every send (#132)</td></tr>
+<tr><td class="num">e226ed7</td><td class="num">2026-10-19</td><td>Members: a self-joined member put on a tier gets a pay link, and dues emails reach them (#130)</td></tr>
+<tr><td class="num">27e358a</td><td class="num">2026-10-19</td><td>Members: list first, one plain dues line per member, remind count matches who actually gets emailed (#128)</td></tr>
+<tr><td class="num">49d373a</td><td class="num">2026-10-19</td><td>Settings part 1: sections in setup order, a &quot;Finish setting up&quot; list, Staff and Your account split (#129)</td></tr>
+<tr><td class="num">fc1c99e</td><td class="num">2026-10-19</td><td>Schedule rework: your week at a glance, named price periods, closed-days calendar, every save shows what it changes (#127)</td></tr>
+<tr><td class="num">45ac49a</td><td class="num">2026-10-19</td><td>Add time: warn and ask once when a new time is within 5 minutes of another (#120)</td></tr>
+<tr><td class="num">33ae355</td><td class="num">2026-10-19</td><td>Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126)</td></tr>
+<tr><td class="num">92cdf08</td><td class="num">2026-10-19</td><td>Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124)</td></tr>
+<tr><td class="num">7af1de5</td><td class="num">2026-10-19</td><td>Golfers tick a box to agree to the Terms and Privacy Policy before booking or changing a booking (#123)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
