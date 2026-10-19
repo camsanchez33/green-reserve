@@ -5143,7 +5143,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 108,
+      "lines": 128,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5174,6 +5174,7 @@
         "@/lib/email",
         "@/lib/golfer-otp",
         "@/lib/prisma",
+        "@/lib/rate-limit",
         "@/lib/session",
         "@/lib/shop-sales",
         "@/lib/twilio",
@@ -5726,7 +5727,7 @@
     },
     {
       "path": "src/app/api/shop-sale/[id]/route.ts",
-      "lines": 30,
+      "lines": 31,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7059,7 +7060,7 @@
     },
     {
       "path": "src/app/pay/shop/[id]/page.tsx",
-      "lines": 140,
+      "lines": 141,
       "purpose": "POS-2 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -14120,6 +14121,7 @@
         "src/app/api/operator/agreement/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/request-changes/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/request-changes/route.ts",
@@ -14623,10 +14625,14 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 208,
+      "lines": 262,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
+        {
+          "name": "cancelSaleIntent",
+          "kind": "fn"
+        },
         {
           "name": "chargeSale",
           "kind": "fn"
@@ -14642,6 +14648,10 @@
         {
           "name": "MAX_SALE_LINES",
           "kind": "const"
+        },
+        {
+          "name": "reconcileStuckSale",
+          "kind": "fn"
         },
         {
           "name": "saleForPayPage",
@@ -14673,7 +14683,8 @@
         "./prisma",
         "./shop",
         "./stripe",
-        "crypto"
+        "crypto",
+        "stripe"
       ],
       "usedBy": [
         "src/app/api/operator/shop-sales/route.ts",

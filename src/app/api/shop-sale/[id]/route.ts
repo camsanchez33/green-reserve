@@ -19,7 +19,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!(await rateLimit(`shop-sale-pay:${clientIp(req)}`, 10, 600))) {
+  // Per IP and per sale: one leaked link can't be used to test cards against the course's Stripe account.
+  if (!(await rateLimit(`shop-sale-pay:${clientIp(req)}`, 10, 600)) || !(await rateLimit(`shop-sale-pay:sale:${id}`, 5, 600))) {
     return NextResponse.json({ error: 'Too many tries — wait a few minutes, or pay at the pro shop.' }, { status: 429 });
   }
   const body = await req.json().catch(() => ({})) as { token?: unknown; paymentMethodId?: unknown; expectedTotalCents?: unknown };

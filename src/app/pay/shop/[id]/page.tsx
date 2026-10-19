@@ -32,6 +32,7 @@ function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; tok
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { onError(data.error || 'The payment didn’t go through. Try again or pay at the pro shop.'); return false; }
+      if (data.status === 'processing') { onError('Your bank is still processing this payment. Please don’t pay again — reopen this link in a few minutes.'); return true; }
       onPaid();
       return true;
     } catch {

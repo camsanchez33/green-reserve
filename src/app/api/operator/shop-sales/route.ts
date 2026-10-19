@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { createSale, settleOpenSale, saleView, type SaleView } from '@/lib/shop-sales';
+import { createSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, type SaleView } from '@/lib/shop-sales';
+import { rateLimit } from '@/lib/rate-limit';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { sendShopSalePayLinkEmail, isPlaceholderEmail } from '@/lib/email';
@@ -29,6 +30,12 @@ export async function GET() {
   const g = await gate(false);
   if ('res' in g) return g.res;
   const since = new Date(Date.now() - 36 * 60 * 60 * 1000);
+  // A card payment whose request never finished is settled from Stripe here.
+  const stuck = await prisma.shopSale.findMany({ where: { courseId: g.session.courseId, status: 'paying' }, select: { id: true }, take: 10 });
+  for (const s of stuck) {
+    try { await reconcileStuckSale(g.session.courseId, s.id); }
+    catch (err) { console.error(JSON.stringify({ ev: 'shop_sale.reconcile.fail', saleId: s.id, error: err instanceof Error ? err.message : String(err) })); }
+  }
   const sales = await prisma.shopSale.findMany({
     where: { courseId: g.session.courseId, OR: [{ createdAt: { gte: since } }, { status: { in: ['open', 'paying'] } }] },
     orderBy: { createdAt: 'desc' }, take: 200, include: { lines: LINES },
@@ -37,12 +44,17 @@ export async function GET() {
 }
 
 /** Text or email an open sale's pay link. Never throws; says what went wrong. */
-async function sendLink(sale: SaleView, payToken: string, via: 'sms' | 'email', courseName: string): Promise<string | null> {
+async function sendLink(courseId: string, sale: SaleView, payToken: string, via: 'sms' | 'email', courseName: string): Promise<string | null> {
+  // Security review: links cost us a text each; a staff login can't send unlimited.
+  if (!(await rateLimit(`shop-link:course:${courseId}`, 60, 3600))) return 'Too many pay links this hour — take cash, or try again later.';
+  if (!(await rateLimit(`shop-link:sale:${sale.id}`, 5, 3600))) return 'This sale’s link has been sent 5 times this hour — take cash instead.';
   const payUrl = `${process.env.NEXT_PUBLIC_URL}/pay/shop/${sale.id}?token=${payToken}`;
   try {
     if (via === 'sms') {
       if ((sale.customerPhone || '').replace(/\D/g, '').length < 10) return 'Add a mobile number to text the link.';
-      await sendSms(normalizePhone(sale.customerPhone), `${courseName}: pay $${(sale.totalCents / 100).toFixed(2)} for your pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`);
+      const to = normalizePhone(sale.customerPhone);
+      if (!to.startsWith('+1')) return 'Pay links can only be texted to US and Canadian numbers — email it instead.';
+      await sendSms(to, `${courseName}: pay $${(sale.totalCents / 100).toFixed(2)} for your pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`);
     } else {
       if (!sale.customerEmail || isPlaceholderEmail(sale.customerEmail) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(sale.customerEmail)) return 'Add an email address to send the link.';
       await sendShopSalePayLinkEmail({ email: sale.customerEmail, name: sale.customerName, courseName, totalCents: sale.totalCents, lines: sale.lines, payUrl });
@@ -79,7 +91,7 @@ export async function POST(req: NextRequest) {
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   const { payToken, ...sale } = r.value;
   if (pay === 'cash') return NextResponse.json({ sale });
-  const sendError = await sendLink(sale, payToken, via, course.name);
+  const sendError = await sendLink(g.session.courseId, sale, payToken, via, course.name);
   // The sale exists either way; staff can resend or take cash for it from the list.
   return NextResponse.json({ sale, sent: !sendError, ...(sendError ? { sendError } : {}) }, { status: sendError ? 207 : 200 });
 }
@@ -91,6 +103,14 @@ export async function PATCH(req: NextRequest) {
   const id = typeof body.id === 'string' ? body.id : '';
   if (!id) return NextResponse.json({ error: 'Missing sale.' }, { status: 400 });
   if (body.action === 'void' || body.action === 'paid_cash') {
+    // A sale with a card payment started: stop that payment first, so it can
+    // never go through after the sale is voided or taken in cash.
+    try {
+      const blocked = await cancelSaleIntent(g.session.courseId, id);
+      if (blocked) return NextResponse.json({ error: blocked }, { status: 409 });
+    } catch (err) {
+      return NextResponse.json({ error: `Couldn’t stop the card payment link (${err instanceof Error ? err.message : 'Stripe error'}). Nothing was changed — try again.` }, { status: 502 });
+    }
     const r = await settleOpenSale(g.session.courseId, id, body.action);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ sale: r.value });
@@ -99,7 +119,7 @@ export async function PATCH(req: NextRequest) {
     const s = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId }, include: { lines: LINES, course: { select: { name: true } } } });
     if (!s) return NextResponse.json({ error: 'Sale not found.' }, { status: 404 });
     if (s.status !== 'open' || !s.payToken) return NextResponse.json({ error: 'Only an unpaid link sale can be sent again.' }, { status: 409 });
-    const err = await sendLink(saleView(s), s.payToken, body.via === 'email' ? 'email' : 'sms', s.course.name);
+    const err = await sendLink(g.session.courseId, saleView(s), s.payToken, body.via === 'email' ? 'email' : 'sms', s.course.name);
     if (err) return NextResponse.json({ error: err }, { status: 502 });
     return NextResponse.json({ sent: true });
   }

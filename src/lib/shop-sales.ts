@@ -13,13 +13,14 @@
 // flight; a charge claims the sale first, so two taps cannot both charge.
 import { randomUUID } from 'crypto';
 import { prisma } from './prisma';
-import { stripe, chargeOnConnectedAccount } from './stripe';
+import Stripe from 'stripe';
+import { stripe } from './stripe';
 import { MAX_ITEM_PRICE_CENTS, MAX_LINE_QUANTITY, takeStock, shopFeeFor } from './shop';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
-/** A charge that started this long ago and never finished may be retried (Stripe's idempotency and the search below keep it single). */
-const STALE_CHARGE_MS = 2 * 60 * 1000;
+/** A claim this old belongs to a request that is gone (longer than any function run). The sale's single PaymentIntent keeps a retry to one charge either way. */
+const STALE_CHARGE_MS = 10 * 60 * 1000;
 
 export type SaleLineInput = { shopItemId: string; quantity: number };
 export type SaleView = {
@@ -121,11 +122,18 @@ export async function saleForPayPage(saleId: string, token: string) {
 }
 
 /**
- * The customer pays a link sale with a card or wallet. The card is a platform
- * PaymentMethod from the page (as on the round pay link); it is attached to a
- * throwaway platform Customer and cloned onto the course's account.
+ * The customer pays a link sale with a card or wallet.
+ *
+ * Security review (2026-10-19): ONE PaymentIntent per sale, on the course's
+ * account, created once (idempotency key per sale) and stored on the sale.
+ * Every attempt confirms that same intent with the new card. Stripe lets a
+ * PaymentIntent succeed only once, so a retry after a timeout, a second tab or
+ * a reclaimed stale claim can never become a second charge — no search index
+ * and no per-card key is relied on. The card is a platform PaymentMethod from
+ * the page (as on the round pay link), attached to a throwaway platform
+ * Customer and cloned onto the course's account.
  */
-export async function chargeSale(saleId: string, token: string, paymentMethodId: string, expectedTotalCents: number): Promise<Result<{ status: 'paid_card' }>> {
+export async function chargeSale(saleId: string, token: string, paymentMethodId: string, expectedTotalCents: number): Promise<Result<{ status: 'paid_card' | 'processing' }>> {
   const sale = await saleForPayPage(saleId, token);
   if (!sale) return fail(404, 'This pay link is not valid any more. Ask the pro shop for a new one.');
   if (sale.status === 'paid_card' || sale.status === 'paid_cash') return fail(409, 'This sale is already paid. Thank you!');
@@ -133,59 +141,105 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
   if (!sale.course.stripeAccountId || !sale.course.stripeAccountActive) return fail(409, 'This course can’t take card payments yet — please pay at the pro shop.');
   if (Number(expectedTotalCents) !== sale.totalCents) return fail(409, 'The total changed since this page loaded — refresh to see it.');
   if (typeof paymentMethodId !== 'string' || !paymentMethodId.startsWith('pm_')) return fail(400, 'Card details are missing — try again.');
+  const account = sale.course.stripeAccountId;
 
-  // Claim: open, or a charge that started long ago and never finished.
+  // Claim: open, or a claim old enough that its request must be gone.
   const now = new Date();
   const claimed = await prisma.shopSale.updateMany({
     where: { id: saleId, payToken: token, OR: [{ status: 'open' }, { status: 'paying', chargeStartedAt: { lt: new Date(now.getTime() - STALE_CHARGE_MS) } }] },
     data: { status: 'paying', chargeStartedAt: now },
   });
   if (claimed.count === 0) return fail(409, 'A payment for this sale is already going through — wait a moment and refresh.');
+  // Back to open ONLY when Stripe has definitely not taken the money.
   const release = () => prisma.shopSale.updateMany({ where: { id: saleId, status: 'paying', chargeStartedAt: now }, data: { status: 'open', chargeStartedAt: null } });
-  const account = sale.course.stripeAccountId;
+  const unsure = fail(502, 'We couldn’t confirm the payment. Please don’t pay again — wait a few minutes and reopen this link, or ask the pro shop.');
 
-  // A retry after a lost response must not charge twice: ask Stripe first.
+  // The sale's one PaymentIntent.
+  let pi;
   try {
-    const found = await stripe.paymentIntents.search({ query: `metadata['shopSaleId']:'${saleId}' AND status:'succeeded'`, limit: 1 }, { stripeAccount: account });
-    if (found.data[0]) {
-      await markCardPaid(saleId, now, found.data[0].id);
-      return { ok: true, value: { status: 'paid_card' } };
-    }
+    pi = await saleIntent(saleId, sale.paymentIntentId, sale.totalCents, sale.course.name, account);
   } catch (err) {
-    console.warn(JSON.stringify({ ev: 'shop_sale.charge.search_failed', saleId, error: err instanceof Error ? err.message : String(err) }));
+    console.error(JSON.stringify({ ev: 'shop_sale.intent.fail', saleId, error: err instanceof Error ? err.message : String(err) }));
+    await release(); // nothing can have been charged without an intent
+    return fail(502, 'Card payments are not working right now — please pay at the pro shop.');
   }
+  if (pi.status === 'succeeded') { await markCardPaid(saleId, now, pi.id); return { ok: true, value: { status: 'paid_card' } }; }
+  if (pi.status === 'processing') return { ok: true, value: { status: 'processing' } };
 
-  let customerId: string;
+  let clonedId: string;
   try {
     const customer = await stripe.customers.create({ email: sale.customerEmail || undefined, name: sale.customerName || undefined, metadata: { shopSaleId: saleId, source: 'shop_walk_up' } });
-    customerId = customer.id;
-    await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+    await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
+    const cloned = await stripe.paymentMethods.create({ customer: customer.id, payment_method: paymentMethodId }, { stripeAccount: account, idempotencyKey: `${pi.id}-${paymentMethodId}-pm` });
+    clonedId = cloned.id;
   } catch (err) {
-    await release();
-    return fail(402, `Card setup failed: ${err instanceof Error ? err.message : 'try another card.'}`);
+    await release(); // the intent has not been confirmed with this card
+    return fail(402, err instanceof Stripe.errors.StripeCardError ? (err.message || 'That card can’t be used — try another.') : 'That card can’t be used — try another, or pay at the pro shop.');
   }
 
   try {
-    console.log(JSON.stringify({ ev: 'shop_sale.charge.attempt', saleId, amountCents: sale.totalCents }));
-    const pi = await chargeOnConnectedAccount({
-      customerId, paymentMethodId, connectedAccountId: account,
-      amountCents: sale.totalCents, applicationFeeCents: shopFeeFor(sale.totalCents),
-      description: `Pro shop - ${sale.course.name} - sale ${saleId}`,
-      metadata: { shopSaleId: saleId },
-      // Sale + card: a retry with the same card replays the first result.
-      idempotencyKey: `shop-sale-${saleId}-${paymentMethodId}`,
-    });
-    if (pi.status !== 'succeeded') {
-      await release();
-      return fail(402, 'The card needs more steps than this page can do — try another card, or pay at the pro shop.');
-    }
-    await markCardPaid(saleId, now, pi.id);
-    return { ok: true, value: { status: 'paid_card' } };
-  } catch (err) {
+    console.log(JSON.stringify({ ev: 'shop_sale.charge.attempt', saleId, paymentIntentId: pi.id, amountCents: sale.totalCents }));
+    const done = await stripe.paymentIntents.confirm(pi.id, { payment_method: clonedId, off_session: true }, { stripeAccount: account, idempotencyKey: `${pi.id}-${paymentMethodId}-confirm` });
+    if (done.status === 'succeeded') { await markCardPaid(saleId, now, done.id); return { ok: true, value: { status: 'paid_card' } }; }
+    if (done.status === 'requires_payment_method' || done.status === 'canceled') { await release(); return fail(402, 'The card was declined — try another card, or pay at the pro shop.'); }
+    if (done.status === 'processing') return { ok: true, value: { status: 'processing' } };
+    // requires_action and the like: this page can't finish it; the intent stays the sale's.
     await release();
-    const msg = err instanceof Error ? err.message : '';
-    return fail(402, msg ? `The card was declined: ${msg}` : 'The card was declined — try another card, or pay at the pro shop.');
+    return fail(402, 'This card needs a step this page can’t do — try another card, or pay at the pro shop.');
+  } catch (err) {
+    // A card error is a definite decline (the intent goes back to needing a card).
+    // Anything else — a timeout, a 5xx — may have charged: keep the claim; the
+    // next attempt or the pro shop's list reads the intent and settles it.
+    if (err instanceof Stripe.errors.StripeCardError) {
+      await release();
+      return fail(402, err.message ? `The card was declined: ${err.message}` : 'The card was declined — try another card, or pay at the pro shop.');
+    }
+    console.error(JSON.stringify({ ev: 'shop_sale.charge.unsure', saleId, paymentIntentId: pi.id, error: err instanceof Error ? err.message : String(err) }));
+    return unsure;
   }
+}
+
+/** The sale's single PaymentIntent on the course's account: made once, then reused. */
+async function saleIntent(saleId: string, existingId: string, amountCents: number, courseName: string, account: string) {
+  if (existingId) return stripe.paymentIntents.retrieve(existingId, {}, { stripeAccount: account });
+  const fee = shopFeeFor(amountCents);
+  const pi = await stripe.paymentIntents.create({
+    amount: amountCents, currency: 'usd', payment_method_types: ['card'],
+    application_fee_amount: fee > 0 ? fee : undefined,
+    description: `Pro shop - ${courseName} - sale ${saleId}`,
+    metadata: { shopSaleId: saleId },
+  }, { stripeAccount: account, idempotencyKey: `shop-sale-intent-${saleId}` });
+  await prisma.shopSale.update({ where: { id: saleId }, data: { paymentIntentId: pi.id } });
+  return pi;
+}
+
+/**
+ * Settle a sale left 'paying' by a request that never finished (or a charge
+ * Stripe was still processing): read its intent and record what happened.
+ * Called from the pro shop's list. Returns the new status, or null if unchanged.
+ */
+export async function reconcileStuckSale(courseId: string, saleId: string): Promise<string | null> {
+  const sale = await prisma.shopSale.findFirst({ where: { id: saleId, courseId, status: 'paying' }, include: { course: { select: { stripeAccountId: true } } } });
+  if (!sale || !sale.paymentIntentId || !sale.course.stripeAccountId || !sale.chargeStartedAt) return null;
+  if (Date.now() - sale.chargeStartedAt.getTime() < STALE_CHARGE_MS) return null;
+  const pi = await stripe.paymentIntents.retrieve(sale.paymentIntentId, {}, { stripeAccount: sale.course.stripeAccountId });
+  if (pi.status === 'succeeded') { await markCardPaid(saleId, sale.chargeStartedAt, pi.id); return 'paid_card'; }
+  if (pi.status === 'requires_payment_method' || pi.status === 'canceled' || pi.status === 'requires_action') {
+    const back = await prisma.shopSale.updateMany({ where: { id: saleId, status: 'paying', chargeStartedAt: sale.chargeStartedAt }, data: { status: 'open', chargeStartedAt: null } });
+    return back.count ? 'open' : null;
+  }
+  return null; // still processing at Stripe
+}
+
+/** Void or take cash for a sale whose card intent exists: stop the intent first so it can't be paid later. */
+export async function cancelSaleIntent(courseId: string, saleId: string): Promise<string | null> {
+  const sale = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, include: { course: { select: { stripeAccountId: true } } } });
+  if (!sale?.paymentIntentId || !sale.course.stripeAccountId) return null;
+  const pi = await stripe.paymentIntents.retrieve(sale.paymentIntentId, {}, { stripeAccount: sale.course.stripeAccountId });
+  if (pi.status === 'succeeded') { await markCardPaid(saleId, sale.chargeStartedAt ?? new Date(0), pi.id); return 'This sale was just paid by card — it can’t be voided or taken in cash.'; }
+  if (pi.status === 'processing') return 'The customer’s card payment is still going through — wait a few minutes.';
+  if (pi.status !== 'canceled') await stripe.paymentIntents.cancel(pi.id, {}, { stripeAccount: sale.course.stripeAccountId });
+  return null;
 }
 
 async function markCardPaid(saleId: string, stamp: Date, paymentIntentId: string) {
