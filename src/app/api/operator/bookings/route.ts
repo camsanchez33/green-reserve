@@ -238,10 +238,12 @@ export async function PATCH(req: NextRequest) {
     // (Cam 2026-10-19, HOMEPAGE_SPEC §0a; PAY-2): it is counted on Admin →
     // Revenue instead. A booking fee already taken separately (a no-show
     // charge, then the group turned up and paid cash) goes back.
+    let refundNote: string | null = null;
     if (await liveSeparateFee(id)) {
-      await refundSeparateAccessFee(id, 'paid at the counter — no GreenReserve fee on cash', 'operator', actorName);
+      const r = await refundSeparateAccessFee(id, 'paid at the counter — no GreenReserve fee on cash', 'operator', actorName);
+      if (!r.ok) refundNote = `GreenReserve's booking fee could not be refunded to the golfer's card (${r.error}) — GreenReserve will follow up.`;
     }
-    return NextResponse.json({ success: true, fee: holdNote });
+    return NextResponse.json({ success: true, fee: [holdNote, refundNote].filter(Boolean).join(' ') || null });
   }
 
   const result = action === 'cancel'

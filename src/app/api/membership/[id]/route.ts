@@ -52,7 +52,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     serviceFee: feeCents / 100,
     total: totalCents / 100,
     paymentStatus: m.paymentStatus,
-    alreadyPaid: m.paymentStatus === 'paid' || m.paymentStatus === 'paid_offline',
+    // Paid, and not yet inside the 30-day renewal window the POST allows —
+    // else the renewal link the reminder cron sends could never be paid.
+    alreadyPaid: (m.paymentStatus === 'paid' || m.paymentStatus === 'paid_offline')
+      && !(m.expiresAt && (m.expiresAt.getTime() - Date.now()) / 86400000 <= 30),
     expiresAt: m.expiresAt,
     stripeReady: !!(m.course.stripeAccountActive && m.course.stripeAccountId),
   });

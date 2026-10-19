@@ -2,8 +2,9 @@
 // FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). GreenReserve's
 // $1.50/player normally rides inside the ONE check-in charge, as the
 // application fee on the course's connected account. When no such charge is
-// ever made — staff mark the round "paid offline" (paid at the counter) or a
-// no-show — the fee used to be lost. Here it is charged on its own:
+// ever made — a no-show or a late cancellation — the fee used to be lost. Here
+// it is charged on its own. (Paid at the counter in cash collects NO fee since
+// Cam 2026-10-19 — PAY-2; 'paid_offline' stays in the types for old events.)
 //
 //   - on the PLATFORM account (GreenReserve is merchant of record for its own
 //     fee and pays Stripe's cost on it — Cam: courses never pay a fee on money
@@ -17,8 +18,8 @@
 //
 // Refunded when the separate charge turns out to be a double or wrong: a
 // no-show marked in error ("still coming"), a card check-in after all (that
-// charge already carries the fee), a cancellation, or a smaller party paying
-// at the counter (re-charged at the prorated amount).
+// charge already carries the fee), a cancellation, or the group paying cash
+// at the counter after all.
 
 import Stripe from 'stripe';
 import { prisma } from './prisma';

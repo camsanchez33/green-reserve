@@ -13,7 +13,7 @@ const code = (p: string) => src(p).replace(/\/\/.*$/gm, '');
 const ops = code('src/app/api/operator/bookings/route.ts');
 const paidOffline = ops.slice(ops.indexOf("if (action === 'paid_offline')"), ops.indexOf('const result = action'));
 check('paid at the counter never charges the booking fee', paidOffline.length > 0 && !paidOffline.includes('chargeAccessFeeSeparately'));
-check('…and gives back a booking fee already taken separately', paidOffline.includes('refundSeparateAccessFee'));
+check('…and gives back a booking fee already taken separately, saying so if that fails', paidOffline.includes('refundSeparateAccessFee') && paidOffline.includes('refundNote'));
 check('the counter confirm no longer says the fee goes on their card', !src('src/app/dashboard/page.tsx').includes('booking fee is charged to their saved card'));
 
 const dues = code('src/app/api/membership/[id]/route.ts');
@@ -23,14 +23,15 @@ check('a deactivated membership is not revived by paying', dues.includes("now.st
 
 check('the root metadata sets no og:url for every page', !/openGraph:\s*\{[^}]*url:/.test(code('src/app/layout.tsx')));
 const course = code('src/app/courses/[slug]/page.tsx');
-check('a course page previews with its own name and photo', course.includes('openGraph: { title, description, url: `/courses/${slug}`') && course.includes('heroPhotoUrl'));
+check('a course page previews with its own name and photo, over the site card', course.includes('openGraph: { ...OG_BASE, title, description, url: `/courses/${slug}`') && course.includes('heroPhotoUrl'));
+check('the shared preview base keeps the site name and default card', /siteName: 'GreenReserve'/.test(src('src/lib/seo.ts')) && src('src/lib/seo.ts').includes("url: '/opengraph-image'"));
 for (const f of ['teesheet', 'for-courses', 'contact', 'privacy', 'terms', 'operator-agreement']) {
-  check(`/${f} has its own link-preview title`, /openGraph: \{ title: '[^']+ \| GreenReserve'/.test(src(`src/app/${f}/page.tsx`)));
+  check(`/${f} has its own link-preview title, with the site card`, /\.\.\.previewFor\('[^']+ \| GreenReserve'/.test(src(`src/app/${f}/page.tsx`)));
 }
 
 const email = src('src/lib/email.ts');
 const confirm = email.slice(email.indexOf('export async function sendBookingConfirmation'), email.indexOf('export async function sendOperatorBookingNotification'));
-check('the confirmation email has no pill badge, emoji or tinted boxes', !/#dcfce7|&#10003;|&#128205;|#eff6ff|#fefce8|#1e40af/.test(confirm));
+check('the confirmation email has no pill badge, emoji or tinted boxes', !/#dcfce7|&#10003;|&#128205;|#eff6ff|#fefce8|#1e40af|#1e3a8a/.test(confirm));
 check('golfer names are escaped in emails', !/\$\{data\.golferName\}|\$\{data\.golferEmail\}\)/.test(email));
 check("no 'keep 100%' claim on the payouts panel", !/keep 100%/i.test(src('src/components/dashboard/money/PayoutsPanel.tsx')));
 

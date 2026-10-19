@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { OG_BASE } from '@/lib/seo';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
@@ -29,7 +30,7 @@ export async function generateMetadata(
   const image = course.heroPhotoUrl || course.photos[0]?.url || course.logoUrl;
   return {
     title, description, robots,
-    openGraph: { title, description, url: `/courses/${slug}`, ...(image ? { images: [{ url: image, alt: course.name }] } : {}) },
+    openGraph: { ...OG_BASE, title, description, url: `/courses/${slug}`, ...(image ? { images: [{ url: image, alt: course.name }] } : {}) },
     twitter: { card: 'summary_large_image', title, description, ...(image ? { images: [image] } : {}) },
   };
 }

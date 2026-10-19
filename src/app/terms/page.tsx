@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+import { previewFor } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description: 'GreenReserve terms of service. The rules governing use of our online tee sheet platform for golf courses and golfers.',
   // Link previews carry this page's own title, not the homepage's.
-  openGraph: { title: 'Terms of Service | GreenReserve', description: 'GreenReserve terms of service. The rules governing use of our online tee sheet platform for golf courses and golfers.' },
+  ...previewFor('Terms of Service | GreenReserve', 'GreenReserve terms of service. The rules governing use of our online tee sheet platform for golf courses and golfers.'),
 };
 
 const navLink = 'border-l-2 pl-3 py-1.5 text-sm transition-colors';

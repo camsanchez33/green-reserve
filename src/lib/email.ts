@@ -130,7 +130,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
       <p style="margin:0 0 24px;color:#5f655e;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
     totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#5f655e;font-size:13px;">Estimated total at check-in</span><br><span style="color:#141814;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
     policyBox = `<div style="background:#f6f7f3;border:1px solid #e3e4de;border-radius:4px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0 0 4px;color:#1e3a8a;font-size:13px;font-weight:700;">Cancellation policy</p>
+      <p style="margin:0 0 4px;color:#141814;font-size:13px;font-weight:700;">Cancellation policy</p>
       ${data.policyLines?.length
         ? data.policyLines.map(l => `<p style="margin:0 0 4px;color:#141814;font-size:13px;">${escapeHtml(l)}</p>`).join('')
         : `<p style="margin:0;color:#141814;font-size:13px;">Cancel any time up to ${hoursLabel(cancellationHours)} before your tee time at no charge. After that, a $${(cancellationFee / 100).toFixed(2)} late-cancellation fee will be charged to your card — it&rsquo;s refunded in full when you check in and pay for your round.</p>`}
