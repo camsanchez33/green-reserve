@@ -153,9 +153,11 @@ check('widget: a description card passes', isProposalCard(st({ description: 'A f
 check('widget: a settings card carrying the policy is refused', !isProposalCard(st({ description: 'x', cancellationHours: 0 })));
 check('widget: a settings card without a description is refused', !isProposalCard(st({ lateCancellationFee: 0 })));
 const descDenied = await runProposeTool('propose_course_description', { description: 'A'.repeat(60) }, { ...noEdit, can: k => k !== 'settings.edit' });
-check('propose_course_description: a login without settings.edit gets an error, never a card', descDenied.isError && !descDenied.card, descDenied.content);
+check('propose_course_description: a login without settings.edit gets an error, never a card', descDenied.isError && !descDenied.card && /can't change the course description/.test(descDenied.content), descDenied.content);
 const descShort = await runProposeTool('propose_course_description', { description: 'Too short.' }, canEdit);
-check('propose_course_description: too short is refused', descShort.isError && !descShort.card);
+check('propose_course_description: too short is refused', descShort.isError && !descShort.card && /40 to 1500/.test(descShort.content), descShort.content);
+const descElsewhere = await runProposeTool('propose_course_description', { description: 'A'.repeat(60) }, canEdit);
+check('propose_course_description: reads only the session course', descElsewhere.isError && descElsewhere.content === 'Course not found.', descElsewhere.content);
 check('widget: a counter booking passes', isProposalCard(bk({ teeTimeId: 't', golferName: 'Ann', players: 2, source: 'walk_in' }, 'POST')));
 check('widget: a counter booking checked in on the spot is refused', !isProposalCard(bk({ teeTimeId: 't', golferName: 'Ann', players: 2, source: 'walk_in', checkInNow: true }, 'POST')));
 const tt = (status: unknown) => ({ ...goodCard, call: { method: 'PATCH', path: '/api/operator/tee-times', body: { id: 't', status } } });

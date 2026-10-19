@@ -76,7 +76,7 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
       <p className="mt-1.5 text-[12px] text-ink leading-snug">{card.note}</p>
 
       {state.kind === 'done' ? (
-        <div className="mt-2"><StatusDot status="ok" label="Done — saved. Reload the page to see it." /></div>
+        <div className="mt-2"><StatusDot status="ok" label="Done — saved." /></div>
       ) : (
         <>
           {state.kind === 'error' && (

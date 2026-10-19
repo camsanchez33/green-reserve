@@ -82,7 +82,7 @@ export default function BirdieWidget() {
       const q = (e as CustomEvent<{ question?: string }>).detail?.question;
       if (typeof q !== 'string' || !q.trim()) return;
       setOpen(true); try { localStorage.setItem(OPEN_KEY, '1'); } catch { /* ignore */ }
-      setInput(q.slice(0, 500));
+      setInput(q.slice(0, 1500)); // MAX_USER_CHARS in guardrails.ts
       setTimeout(() => inputRef.current?.focus(), 0);
     };
     window.addEventListener(ASK_EVENT, onAsk);

@@ -244,7 +244,8 @@ function SettingsPageInner() {
   // SD-8 review: blank fields and a failed load used to look identical.
   const [formLoaded, setFormLoaded] = useState(false);
   const [formError, setFormError] = useState('');
-  const isStaffLogin = useDashboardAccess().isStaff;
+  const access = useDashboardAccess();
+  const isStaffLogin = access.isStaff;
   // SP-B: the policy as currently on screen, in golfers' words.
   const cents = (v: unknown) => Math.round(Number(v || 0) * 100);
   const formTerms = describePolicy(policyFrom({
@@ -476,17 +477,27 @@ function SettingsPageInner() {
       `${form.type === 'private' ? 'Private' : 'Public'} course${form.holes ? `, ${form.holes} holes` : ''}${form.par ? `, par ${form.par}` : ''}${form.establishedYear ? `, opened ${form.establishedYear}` : ''}`,
       walkingWords(form.walkingAllowed as string),
       facilityPreview.length ? `Facilities: ${facilityPreview.join('; ')}` : '',
-      String(form.description ?? '').trim() ? `Current description: ${String(form.description).trim()}` : '',
     ].filter(Boolean).join('\n');
-    askBirdie(`Draft the description for our booking page — 3 to 5 sentences, friendly and plain. Use only these facts, and ask me for anything else you want to say:\n${facts}`);
+    // Birdie's box takes 1500 characters; the current text gets what the facts leave.
+    const intro = 'Draft the description for our booking page — 3 to 5 sentences, friendly and plain. Use only these facts, and ask me for anything else you want to say:\n';
+    const current = String(form.description ?? '').trim();
+    const room = 1500 - intro.length - facts.length - 25;
+    const currentLine = current && room > 80 ? `\nCurrent description: ${current.length > room ? current.slice(0, room - 1) + '…' : current}` : '';
+    askBirdie(`${intro}${facts}${currentLine}`.slice(0, 1500));
   }
   useEffect(() => {
     const onApplied = (e: Event) => {
       const paths = (e as CustomEvent<{ paths?: string[] }>).detail?.paths ?? [];
       if (!paths.includes('/api/operator/settings')) return;
       fetch('/api/operator/settings').then(r => r.ok ? r.json() : null)
-        .then(d => { if (d && typeof d.description === 'string' && !dirtyRef.current) setForm(f => ({ ...f, description: d.description })); })
-        .catch(() => {});
+        .then(d => {
+          if (!d || typeof d.description !== 'string') return;
+          // The confirmed card is the newest intent for the description: take it,
+          // and stop treating an older unsaved draft of it as a pending edit.
+          setForm(f => ({ ...f, description: d.description }));
+          setDirtyFields(s => { if (!s.has('description')) return s; const next = new Set(s); next.delete('description'); return next; });
+        })
+        .catch(() => toast('Birdie saved the description. Reload to see it here.'));
     };
     window.addEventListener(APPLIED_EVENT, onApplied);
     return () => window.removeEventListener(APPLIED_EVENT, onApplied);
@@ -667,7 +678,7 @@ function SettingsPageInner() {
                     placeholder="e.g. 1927" min={1850} max={new Date().getFullYear()} className={iCls}/>
                 </Field>
                 <Field label="Description">
-                  {birdieOn && (
+                  {birdieOn && access.can('settings.edit') && (
                     <button type="button" onClick={askForDescription} className="mb-1.5 text-[12.5px] font-medium text-pine hover:underline underline-offset-4">
                       {String(form.description ?? '').trim() ? 'Ask Birdie to improve it' : 'Ask Birdie to write it'}
                     </button>
