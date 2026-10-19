@@ -4294,7 +4294,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 340,
+      "lines": 341,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6902,7 +6902,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 252,
+      "lines": 245,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7031,7 +7031,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 199,
+      "lines": 220,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14564,7 +14564,7 @@
     },
     {
       "path": "src/lib/terms.ts",
-      "lines": 7,
+      "lines": 8,
       "purpose": "Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to.",
       "brain": [],
       "exports": [
