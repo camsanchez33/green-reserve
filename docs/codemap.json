@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 425,
-    "routes": 218,
-    "libs": 128,
-    "models": 41,
+    "files": 430,
+    "routes": 220,
+    "libs": 130,
+    "models": 42,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -2954,8 +2954,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/bookings/resident-rate/route.ts",
+      "lines": 22,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/bookings/resident-rate",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/member-session",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 374,
+      "lines": 384,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2988,6 +3013,7 @@
         "@/lib/money",
         "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/residents",
         "@/lib/stripe",
         "@/lib/tee-time-utils",
         "@/lib/terms",
@@ -3790,7 +3816,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/change-players/route.ts",
-      "lines": 121,
+      "lines": 129,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3813,6 +3839,7 @@
         "@/lib/manage-access",
         "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/residents",
         "@/lib/terms",
         "next/server"
       ],
@@ -4296,7 +4323,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 341,
+      "lines": 348,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4325,6 +4352,7 @@
       "imports": [
         "@/lib/access-fee",
         "@/lib/booking-events",
+        "@/lib/booking-residents",
         "@/lib/cancel-booking",
         "@/lib/checkin-booking",
         "@/lib/claim-tee-time",
@@ -4997,6 +5025,48 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/residents/route.ts",
+      "lines": 76,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DELETE",
+          "kind": "route"
+        },
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/residents",
+      "kind": "api",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/residents",
+        "@/lib/session",
+        "@prisma/client",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/schedule/preview/route.ts",
       "lines": 24,
       "purpose": "",
@@ -5413,7 +5483,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 140,
+      "lines": 142,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5809,7 +5879,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 690,
+      "lines": 701,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6331,7 +6401,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 668,
+      "lines": 671,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6350,6 +6420,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
+        "@/components/dashboard/members/ResidentsCard",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -6474,7 +6545,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1429,
+      "lines": 1461,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8036,6 +8107,7 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx"
       ]
     },
@@ -8310,7 +8382,39 @@
         "src/components/AnnouncementBanner.tsx",
         "src/components/OperatorSidebar.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
-        "src/components/dashboard/StaffPermissions.tsx"
+        "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/members/ResidentsCard.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/members/ResidentsCard.tsx",
+      "lines": 166,
+      "purpose": "RES-1 (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ResidentsCard",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/dashboard/Toast",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/members/page.tsx"
       ]
     },
     {
@@ -8614,6 +8718,7 @@
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/settings/FinishSetup.tsx"
       ]
@@ -8886,6 +8991,7 @@
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/Toast.tsx",
+        "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
@@ -8939,7 +9045,8 @@
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
-        "src/components/dashboard/StaffPermissions.tsx"
+        "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/members/ResidentsCard.tsx"
       ]
     },
     {
@@ -10225,6 +10332,7 @@
         "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/booking-residents.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
@@ -10313,6 +10421,35 @@
         "src/components/Footer.tsx",
         "src/components/MainOffset.tsx",
         "src/components/Nav.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/booking-residents.ts",
+      "lines": 60,
+      "purpose": "RES-1 (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "setBookingResidents",
+          "kind": "fn"
+        },
+        {
+          "name": "SetResidentsResult",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./prisma",
+        "./residents"
+      ],
+      "usedBy": [
+        "src/app/api/operator/bookings/route.ts"
       ]
     },
     {
@@ -10988,7 +11125,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 446,
+      "lines": 452,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11015,6 +11152,7 @@
         "./booking-events",
         "./email",
         "./prisma",
+        "./residents",
         "./shop",
         "./stripe"
       ],
@@ -11920,6 +12058,7 @@
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx"
       ]
     },
@@ -12552,6 +12691,7 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/lib/frost-delay.ts",
@@ -13286,7 +13426,7 @@
     },
     {
       "path": "src/lib/member-session.ts",
-      "lines": 89,
+      "lines": 103,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13296,6 +13436,10 @@
         },
         {
           "name": "getMemberSession",
+          "kind": "fn"
+        },
+        {
+          "name": "golferResident",
           "kind": "fn"
         },
         {
@@ -13319,10 +13463,12 @@
       "imports": [
         "./auth",
         "./prisma",
+        "./residents",
         "jose",
         "next/headers"
       ],
       "usedBy": [
+        "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
@@ -13531,7 +13677,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 218,
+      "lines": 222,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -13566,6 +13712,7 @@
         "./cancel-policy",
         "./course-time",
         "./prisma",
+        "./residents",
         "./tier-rates",
         "@prisma/client"
       ],
@@ -13914,6 +14061,7 @@
         "src/app/api/auth/verify/route.ts",
         "src/app/api/birdie/chat/route.ts",
         "src/app/api/bookings/cancel/route.ts",
+        "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/calcom/webhook/route.ts",
@@ -13975,6 +14123,7 @@
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
@@ -14012,6 +14161,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/booking-residents.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
@@ -14296,6 +14446,53 @@
         "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/no-show-fee.ts"
+      ]
+    },
+    {
+      "path": "src/lib/residents.ts",
+      "lines": 66,
+      "purpose": "RES-1 (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cardValidOn",
+          "kind": "fn"
+        },
+        {
+          "name": "groupGreenFee",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_CARD_NUMBER",
+          "kind": "const"
+        },
+        {
+          "name": "MAX_RESIDENT_NAME",
+          "kind": "const"
+        },
+        {
+          "name": "otherPerPlayerCents",
+          "kind": "fn"
+        },
+        {
+          "name": "residentInput",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/bookings/route.ts",
+        "src/app/api/manage/[bookingId]/change-players/route.ts",
+        "src/app/api/operator/residents/route.ts",
+        "src/lib/booking-residents.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/member-session.ts",
+        "src/lib/move-booking.ts"
       ]
     },
     {
@@ -14591,6 +14788,7 @@
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/request-changes/route.ts",
+        "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/schedule/preview/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
@@ -16210,6 +16408,14 @@
           "type": "Int?"
         },
         {
+          "name": "residentPlayers",
+          "type": "Int"
+        },
+        {
+          "name": "residentRateCents",
+          "type": "Int?"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -16942,6 +17148,10 @@
           "type": "CourseMembership[]"
         },
         {
+          "name": "residents",
+          "type": "CourseResident[]"
+        },
+        {
           "name": "membershipTiers",
           "type": "MembershipTier[]"
         },
@@ -17427,6 +17637,7 @@
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/transactions/route.ts",
+        "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
@@ -17774,6 +17985,62 @@
         "src/app/api/operator/tee-sets/route.ts"
       ],
       "readers": []
+    },
+    {
+      "name": "CourseResident",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "email",
+          "type": "String?"
+        },
+        {
+          "name": "cardNumber",
+          "type": "String"
+        },
+        {
+          "name": "expiresOn",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String"
+        },
+        {
+          "name": "addedBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/residents/route.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/residents/route.ts",
+        "src/lib/member-session.ts"
+      ]
     },
     {
       "name": "CourseStaff",
@@ -18881,6 +19148,7 @@
       ],
       "readers": [
         "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
@@ -19068,6 +19336,7 @@
       ],
       "readers": [
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/schedule-preview.ts",

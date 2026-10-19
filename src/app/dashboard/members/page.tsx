@@ -11,6 +11,7 @@ import { formatMoney as fmtMoney, formatDate as fmtDate } from '@/lib/format';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Card } from '@/components/ui/Card';
 import { INPUT_COMPACT } from '@/components/ui/field';
+import { ResidentsCard } from '@/components/dashboard/members/ResidentsCard';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Tier {
@@ -660,6 +661,8 @@ export default function MembersPage() {
               <p className="text-[12.5px] text-ink-muted mt-2">When members pay dues through GreenReserve, a 1% fee is added to what they pay.</p>
             </Card>
           )}
+
+          <ResidentsCard canEdit={canEdit} />
         </div>
       </main>
     </div>

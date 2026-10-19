@@ -151,6 +151,7 @@ model Course {
   schedules                  TeeTimeSchedule[]
   blackouts                  Blackout[]
   memberships                CourseMembership[]
+  residents                  CourseResident[]
   membershipTiers            MembershipTier[]
   staff                      CourseStaff[]
   teeSets                    TeeSet[]
@@ -356,6 +357,28 @@ model MembershipTier {
   memberships          CourseMembership[]
 }
 
+/// RES-1 (Cam 2026-10-19): a golfer who showed the pro shop their resident
+/// card. A golfer signed in with this email books one player at the tee time's
+/// resident rate; staff can set residents on any unpaid booking at the counter.
+model CourseResident {
+  id         String   @id @default(cuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name       String
+  /// Lower-cased; null = recognised only at the counter.
+  email      String?
+  cardNumber String   @default("")
+  /// YYYY-MM-DD, last day the card is good; '' = no expiry.
+  expiresOn  String   @default("")
+  notes      String   @default("")
+  addedBy    String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([courseId, email])
+  @@index([courseId])
+}
+
 model CourseMembership {
   id                  String          @id @default(cuid())
   golferId            String?
@@ -515,6 +538,11 @@ model Booking {
   /// What the round's PaymentIntent actually took (round + shop items + fee).
   /// Refunds and receipts cap against this, never a recomputed figure.
   roundChargedCents          Int?
+  /// RES-1 (Cam 2026-10-19): how many of `players` pay the resident rate, and
+  /// the per-player resident rate used for them. The rest pay the booked
+  /// standard (or member) rate; greenFeeTotal already includes both.
+  residentPlayers            Int               @default(0)
+  residentRateCents          Int?
   createdAt                  DateTime          @default(now())
   paymentEvents              PaymentEvent[]
   shopItems                  BookingShopItem[]
@@ -868,6 +896,8 @@ enum BookingEventType {
   fee_refunded
   /// ACT-1: a group moved to another tee time (metadata: from/to, by whom).
   booking_moved
+  /// RES-1: staff changed a group's price at the counter (residents in the group; metadata: before/after).
+  price_changed
 }
 
 enum EventActorType {

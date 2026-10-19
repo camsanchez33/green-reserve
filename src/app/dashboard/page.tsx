@@ -37,6 +37,8 @@ type TeeTime = {
   product?: { label: string } | null;
   playersAvailable: number; playersBooked: number;
   greenFee: number; cartFee: number; walkingAllowed: boolean;
+  /** RES-1: the tee time's resident price (cents); null = none. */
+  residentRateCents?: number | null;
   status: string; bookings?: Booking[];
 };
 type Booking = {
@@ -64,6 +66,9 @@ type Booking = {
   roundPaid?: boolean;
   /** A round charge has been attempted — items are frozen (lib/shop shopLockedReason). */
   shopLocked?: boolean;
+  /** RES-1: how many of the group pay the resident rate; appliedRate names a member tier otherwise. */
+  residentPlayers?: number;
+  appliedRate?: string;
 };
 /** POS-1a: what the card is charged beyond the round itself. */
 const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0);
@@ -219,6 +224,20 @@ function DashboardPageInner() {
       if (!r.ok) { toast(r.error, 'warn'); return; }
       const out = cancelResultText(c, waive, r.data ?? {});
       toast(out.text, out.tone);
+      await loadTimes(selectedDate);
+    } finally {
+      setRowBusy(null);
+    }
+  }
+
+  // RES-1: how many of this group showed a resident card. The route refuses a
+  // paid, checked-in or member-rate group and says why.
+  async function setResidents(b: Booking, n: number) {
+    setRowBusy(b.id);
+    try {
+      const r = await dfetch<{ residentPlayers: number; totalAmount: number }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'set_residents', residentPlayers: n }) });
+      if (!r.ok) { toast(r.error, 'warn'); return; }
+      toast(`${b.golferName}: ${n === 0 ? 'no residents' : `${n} at the resident rate`}${access.can('money.payments') ? ` — round now $${(r.data.totalAmount / 100).toFixed(2)}` : ''}.`, 'ok');
       await loadTimes(selectedDate);
     } finally {
       setRowBusy(null);
@@ -562,6 +581,7 @@ function DashboardPageInner() {
         <div className="basis-full min-w-0">
           <span className="font-medium text-ink">{b.golferName}</span>
           <span className="text-ink-muted ml-2">{b.players} player{b.players!==1?'s':''}</span>
+          {(b.residentPlayers ?? 0) > 0 && <span className="text-ink-muted"> · {b.residentPlayers} resident{b.residentPlayers === 1 ? '' : 's'}</span>}
           {(b.source === 'walk_in' || b.source === 'phone') && (
             <span className="ml-2 text-[12px] font-medium text-ink-muted">{b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>
           )}
@@ -628,6 +648,18 @@ function DashboardPageInner() {
         {b.status === 'confirmed' && access.can('sheet.cancel') && access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
           <button onClick={e => { e.stopPropagation(); cancelGroup(b, true); }} disabled={rowBusy === b.id}
             className="shrink-0 text-xs text-ink-soft hover:text-ink px-2 py-1 disabled:opacity-50">Cancel, no fee</button>
+        )}
+        {/* RES-1: residents in the group, while the round's price can still change. */}
+        {b.status === 'confirmed' && tt.residentRateCents != null && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid'
+          && (!b.appliedRate || b.appliedRate === 'standard' || b.appliedRate === 'resident') && access.can('sheet.counter_payment') && (
+          <label className="shrink-0 inline-flex items-center gap-1.5 text-xs text-ink-soft" onClick={e => e.stopPropagation()}>
+            Residents
+            <select value={b.residentPlayers ?? 0} disabled={rowBusy === b.id} onChange={e => setResidents(b, Number(e.target.value))}
+              title={`Players who showed a resident card pay $${(tt.residentRateCents / 100).toFixed(2)}`}
+              className="bg-paper border border-line rounded-md px-1.5 py-1 text-xs text-ink disabled:opacity-50">
+              {Array.from({ length: b.players + 1 }, (_, i) => <option key={i} value={i}>{i}</option>)}
+            </select>
+          </label>
         )}
         {/* POS-1a: pro-shop items charged with this round. Same lock as the server (lib/shop shopLockedReason). */}
         <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0}

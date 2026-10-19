@@ -175,6 +175,16 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     }).catch(() => { setLoadError('Something went wrong loading this tee time.'); setLoadingInfo(false); });
   }, [courseSlug, teeTimeId, date]);
 
+  // RES-1: a signed-in resident sees their own resident rate before booking.
+  const [residentFee, setResidentFee] = useState<number | null>(null);
+  const ttId = teeTime?.id;
+  useEffect(() => {
+    if (!golfer || !ttId) { setResidentFee(null); return; }
+    fetch(`/api/bookings/resident-rate?teeTimeId=${encodeURIComponent(String(ttId))}`)
+      .then(r => r.ok ? r.json() : null).then(d => setResidentFee(typeof d?.residentGreenFee === 'number' ? d.residentGreenFee : null))
+      .catch(() => setResidentFee(null));
+  }, [golfer, ttId]);
+
   const accent = course?.brand_color || '#173B2A';
 
   if (confirmedData) {
@@ -292,7 +302,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   }
 
   const players = Math.min(requestedPlayers, Math.max(teeTime.players_available, 1));
-  const greenTotal  = teeTime.green_fee * players;
+  const greenTotal  = residentFee != null ? residentFee + teeTime.green_fee * (players - 1) : teeTime.green_fee * players;
   const cartTotal    = cartSelected ? teeTime.cart_fee * players : 0;
   const rangeBallsPrice = rangeBallsSize === 'small' ? course.range_balls_small_price
     : rangeBallsSize === 'medium' ? course.range_balls_medium_price
@@ -380,6 +390,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
               <div className="border-t border-line pt-3 space-y-2">
                 <div className="flex justify-between text-ink-soft"><span>Green fee (×{players})</span><span>${greenTotal.toFixed(2)}</span></div>
+                {residentFee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
                 {cartTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
                 {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls ({rangeBallsSize})</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-ink-soft">

@@ -6,6 +6,7 @@ import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
 import { bookingWindowHours, rescalePartyFees } from '@/lib/cancel-policy';
 import { teeTimeInstant } from '@/lib/booking-events';
+import { groupGreenFee, otherPerPlayerCents } from '@/lib/residents';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -31,10 +32,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
         select: {
           id: true, checkInToken: true, golferAccountId: true, teeTimeId: true, players: true,
           status: true, cartSelected: true, rangeBallsTotal: true,
-          greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true,
+          greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
           paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true,
-          teeTime: { select: { date: true, time: true } },
+          teeTime: { select: { date: true, time: true, greenFeeCents: true } },
           course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true } },
         },
       });
@@ -75,7 +76,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       const perPlayerAccess = booking.players > 0 ? Math.round(booking.accessFeeTotal / booking.players) : 0;
       const { cancellationFeeTotal, noShowFeeTotal } = rescalePartyFees(booking, booking.course, booking.players, newPlayers);
 
-      const greenFeeTotal = Math.round(perPlayerGreen * newPlayers);
+      // RES-1: residents keep the resident rate (never more of them than players);
+      // everyone else pays what the booking's non-residents pay.
+      const others = otherPerPlayerCents(booking);
+      const res = booking.residentPlayers > 0
+        ? groupGreenFee(newPlayers, others ?? booking.teeTime.greenFeeCents, booking.residentPlayers, booking.residentRateCents)
+        : null;
+      const greenFeeTotal = res ? res.greenFeeTotal : Math.round(perPlayerGreen * newPlayers);
       const cartFeeTotal = Math.round(perPlayerCart * newPlayers);
       const accessFeeTotal = perPlayerAccess * newPlayers;
       const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
@@ -84,7 +91,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       await tx.booking.update({
         where: { id: bookingId },
         data: {
-          players: newPlayers, greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount, cancellationFeeTotal, noShowFeeTotal,
+          players: newPlayers, greenFeeTotal, cartFeeTotal,
+          ...(res ? { residentPlayers: res.residentPlayers, residentRateCents: res.residentRateCents } : {}), accessFeeTotal, totalAmount, cancellationFeeTotal, noShowFeeTotal,
           termsAcceptedAt: new Date(), termsVersion: CURRENT_TERMS_VERSION,
         },
       });
