@@ -108,14 +108,18 @@ function MoneyPageInner() {
   const [nextPayout, setNextPayout] = useState<PayoutsData['next'] | undefined>(undefined);
   const [openingStripe, setOpeningStripe] = useState(false);
   const [stripeError, setStripeError] = useState('');
+  // Booleans, not the access object: it is a new object every render, and a
+  // callback keyed on it would refetch forever.
+  const seesPayments = access.can('money.payments');
+  const seesPayouts = access.can('money.payouts');
   const loadOverview = useCallback(async () => {
     const [o, p] = await Promise.all([
-      access.can('money.payments') ? dfetch<Overview>('/api/operator/money/overview') : Promise.resolve(null),
-      access.can('money.payouts') ? dfetch<PayoutsData>('/api/operator/stripe/payouts') : Promise.resolve(null),
+      seesPayments ? dfetch<Overview>('/api/operator/money/overview') : Promise.resolve(null),
+      seesPayouts ? dfetch<PayoutsData>('/api/operator/stripe/payouts') : Promise.resolve(null),
     ]);
     setOverview(o && o.ok ? o.data : null);
     setNextPayout(p && p.ok ? (p.data.next ?? null) : undefined);
-  }, [access]);
+  }, [seesPayments, seesPayouts]);
 
   useEffect(() => { loadBookings(); }, [loadBookings]);
   useEffect(() => { loadCourse(); }, [loadCourse]);
@@ -159,8 +163,8 @@ function MoneyPageInner() {
 
           {(overview || nextPayout) && (
             <Card className="grid grid-cols-1 sm:grid-cols-3 gap-px !bg-line overflow-hidden mb-6">
-              {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Paid this week</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.paidCents)}</div><div className="text-[12.5px] text-ink-muted">since Monday, for rounds played</div></div>}
-              {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Not paid yet</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.notPaidCents)}</div><div className="text-[12.5px] text-ink-muted">{overview.notPaidGroups === 0 ? 'every group this week has paid' : `${overview.notPaidGroups} group${overview.notPaidGroups === 1 ? '' : 's'} this week, no-shows included`}</div></div>}
+              {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Paid in the last 7 days</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.paidCents)}</div><div className="text-[12.5px] text-ink-muted">for rounds played</div></div>}
+              {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Not paid yet</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.notPaidCents)}</div><div className="text-[12.5px] text-ink-muted">{overview.notPaidGroups === 0 ? 'every group in the last 7 days has paid' : `${overview.notPaidGroups} group${overview.notPaidGroups === 1 ? '' : 's'} in the last 7 days, no-shows included`}</div></div>}
               <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Next payout</div>
                 {nextPayout ? <><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">lands in your bank {fmtArrival(nextPayout.arrivalDate)}</div></>
                   : <div className="text-[13.5px] text-ink-soft mt-1.5">{courseLoaded && !course.stripeAccountActive ? 'Connect Stripe to get paid (Payouts tab).' : 'Nothing on its way right now.'}</div>}

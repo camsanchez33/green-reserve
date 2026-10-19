@@ -21,7 +21,7 @@ const cx = readFileSync('src/components/dashboard/money/CancellationsPanel.tsx',
 const pay = readFileSync('src/components/dashboard/money/PaymentsPanel.tsx', 'utf8');
 check('title says what it is, not "Money"', page.includes('>Payments and payouts</h1>') && !page.includes("'Stripe connected'"));
 check('Stripe dashboard is a button for owners, not a status line', page.includes('Open your Stripe dashboard') && page.includes('!treatAsStaff'));
-check('overview line: paid this week, not paid yet, next payout', ['Paid this week', 'Not paid yet', 'Next payout'].every(x => page.includes(x)));
+check('overview line: paid this week, not paid yet, next payout', ['Paid in the last 7 days', 'Not paid yet', 'Next payout'].every(x => page.includes(x)));
 check('Refresh is an icon', page.includes('aria-label="Refresh"') && page.includes('↻'));
 check('cancellation policy is not edited here', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Pricing+%26+cancellation'));
 check('no upcoming-bookings list on Money', !cx.includes('Upcoming bookings'));

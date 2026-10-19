@@ -4681,7 +4681,7 @@
     },
     {
       "path": "src/app/api/operator/money/overview/route.ts",
-      "lines": 29,
+      "lines": 28,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6289,7 +6289,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 217,
+      "lines": 221,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [

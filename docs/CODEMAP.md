@@ -195,7 +195,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 270 |
 | `/api/operator/members/remind-overdue` | operator | file | POST | `src/app/api/operator/members/remind-overdue/route.ts` | 76 |
 | `/api/operator/messages` | operator | file | GET PATCH POST | `src/app/api/operator/messages/route.ts` | 123 |
-| `/api/operator/money/overview` | operator | file | GET | `src/app/api/operator/money/overview/route.ts` | 29 |
+| `/api/operator/money/overview` | operator | file | GET | `src/app/api/operator/money/overview/route.ts` | 28 |
 | `/api/operator/monthly-reviews` | operator | file | GET | `src/app/api/operator/monthly-reviews/route.ts` | 29 |
 | `/api/operator/my-courses` | operator | file | GET | `src/app/api/operator/my-courses/route.ts` | 33 |
 | `/api/operator/nines` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/nines/route.ts` | 82 |
@@ -244,7 +244,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 91 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 713 |
 | `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 193 |
-| `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 217 |
+| `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 221 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 316 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 27 |
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
