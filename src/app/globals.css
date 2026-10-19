@@ -89,6 +89,13 @@ body {
 }
 .bob { animation: bob 2s ease-in-out infinite; }
 
+/* TT-CARD: on a phone the tee time's card slides up from the bottom; on a
+   laptop it fades in beside the sheet. Never for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes tt-card-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .tt-card { animation: tt-card-up 0.18s ease-out; }
+}
+
 /* Line clamp */
 .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
 .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
