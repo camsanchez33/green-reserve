@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession, getGolferMembership } from '@/lib/member-session';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
+import { applyTierRates } from '@/lib/tier-rates';
 
 export async function GET(
   req: NextRequest,
@@ -32,7 +33,11 @@ export async function GET(
     where: { id: membershipId },
     include: { tier: true },
   });
+  // Booking applies member rates only to an active membership (api/bookings),
+  // so the prices shown here do too — otherwise a lapsed member sees a member
+  // rate and is charged the public one. The window still uses the tier.
   const tier = membership && membership.courseId === course.id ? membership.tier : null;
+  const pricingTier = membership?.status === 'active' ? tier : null;
 
   // BOOKING WINDOWS: a member sees as far ahead as their tier allows (the
   // course's member default when the tier does not say).
@@ -54,33 +59,20 @@ export async function GET(
     ? teeTimes.filter(t => t.time > nowLocal)
     : teeTimes;
 
-  const d = new Date(date + 'T12:00:00');
-  const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+  // A member pays exactly what applyTierRates says — the one function booking
+  // (api/bookings), moves and check-in pricing use. This list used to carry its
+  // own copy with a different order (member rate before a % off), a different
+  // weekend fallback and no % off the cart, so it could show one price and
+  // charge another.
+  const hasTierPrice = !!pricingTier && (pricingTier.greenFeeWeekdayCents != null || pricingTier.greenFeeWeekendCents != null || pricingTier.discountPct != null);
 
   return NextResponse.json(
     visible.map(t => {
       const spotsLeft = t.playersAvailable - t.playersBooked;
       const slotStatus =
         spotsLeft <= 1 ? 'almost_full' : spotsLeft <= 2 ? 'limited' : 'available';
-
-      // Resolve member rate: tier flat rate > teeTime.memberRate > tier discount > standard
-      let memberGreenFee: number | null = null;
-      let memberCartFee: number | null = null;
-      if (tier) {
-        // MP-3 B2c: the B2a unit boundary is GONE — tier and TeeTime are both
-        // cents now, so nothing here converts and nothing can mix units. Work
-        // entirely in cents and convert once, at the response below.
-        const flatGreenCents = isWeekend ? tier.greenFeeWeekendCents : tier.greenFeeWeekdayCents;
-        const flatCartCents = isWeekend ? tier.cartFeeWeekendCents : tier.cartFeeWeekdayCents;
-        if (flatGreenCents != null) {
-          memberGreenFee = flatGreenCents;
-        } else if (t.memberRateCents != null) {
-          memberGreenFee = t.memberRateCents;
-        } else if (tier.discountPct != null) {
-          memberGreenFee = Math.round(t.greenFeeCents * (1 - tier.discountPct / 100));
-        }
-        if (flatCartCents != null) memberCartFee = flatCartCents;
-      }
+      const rates = pricingTier ? applyTierRates(t, pricingTier) : null;
+      const hasMemberRate = !!pricingTier && (hasTierPrice || t.memberRateCents != null);
 
       return {
         id: t.id,
@@ -92,11 +84,11 @@ export async function GET(
         players_available: spotsLeft,
         // cents at rest, dollars on the wire — the course page renders these.
         green_fee: centsToDollarsOr0(t.greenFeeCents),
-        member_green_fee: centsToDollarsOr0(memberGreenFee ?? t.greenFeeCents),
-        cart_fee: centsToDollarsOr0(memberCartFee ?? t.cartFeeCents),
+        member_green_fee: centsToDollarsOr0(rates?.greenFeeCents ?? t.greenFeeCents),
+        cart_fee: centsToDollarsOr0(rates?.cartFeeCents ?? t.cartFeeCents),
         walking_allowed: t.walkingAllowed,
         status: slotStatus,
-        has_member_rate: memberGreenFee !== null,
+        has_member_rate: hasMemberRate,
       };
     })
   );

@@ -177,7 +177,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/member/[courseSlug]/payments` | member | file | GET | `src/app/api/member/[courseSlug]/payments/route.ts` | 81 |
 | `/api/member/[courseSlug]/send-code` | member | entry | POST | `src/app/api/member/[courseSlug]/send-code/route.ts` | 66 |
 | `/api/member/[courseSlug]/session` | member | file | GET | `src/app/api/member/[courseSlug]/session/route.ts` | 80 |
-| `/api/member/[courseSlug]/tee-times` | member | file | GET | `src/app/api/member/[courseSlug]/tee-times/route.ts` | 104 |
+| `/api/member/[courseSlug]/tee-times` | member | file | GET | `src/app/api/member/[courseSlug]/tee-times/route.ts` | 96 |
 | `/api/member/[courseSlug]/verify` | member | token | GET | `src/app/api/member/[courseSlug]/verify/route.ts` | 57 |
 | `/api/membership/[id]` | public | token | GET POST | `src/app/api/membership/[id]/route.ts` | 158 |
 | `/api/operator/active-course` | operator | file | POST | `src/app/api/operator/active-course/route.ts` | 30 |
@@ -344,6 +344,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/lifecycle.ts` | 4 | 414 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
 | `src/lib/move-booking.ts` | 4 | 228 | ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07): | `moveBooking`, `MoveCode`, `MoveFail`, `MoveOk`, `MovePricing` |
 | `src/lib/terms.ts` | 4 | 8 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
+| `src/lib/tier-rates.ts` | 4 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
 | `src/lib/booking-mode.ts` | 3 | 20 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
 | `src/lib/checkin-booking.ts` | 3 | 452 |  | `cartAddOnCentsFor`, `collectPayment`, `performCheckIn` |
 | `src/lib/claim-tee-time.ts` | 3 | 93 |  | `claimTeeTime`, `TeeTimeClaimError` |
@@ -359,7 +360,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/public-tee-times.ts` | 3 | 81 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
 | `src/lib/schedule-wire.ts` | 3 | 92 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
 | `src/lib/thread-signal.ts` | 3 | 52 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
-| `src/lib/tier-rates.ts` | 3 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
 | `src/lib/unsaved-guard.ts` | 3 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/agreement-publish.ts` | 2 | 101 | AG-3 — publishing an agreement version: | `agreementVersionsOverview`, `publishAgreementVersion`, `publishDates`, `PublishResult`, `REACCEPT_WINDOW_DAYS`, `reacceptPublishError`, `VersionRow` |
 | `src/lib/agreement-sign.ts` | 2 | 206 | AGREEMENT_SPEC AG-2 — the signing service. | `deliverAgreementPdfs`, `recordSigning`, `retryMissingAgreementPdfs`, `SignInput`, `SignResult` |

@@ -4107,7 +4107,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "lines": 104,
+      "lines": 96,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4129,6 +4129,7 @@
         "@/lib/member-session",
         "@/lib/money",
         "@/lib/prisma",
+        "@/lib/tier-rates",
         "next/server"
       ],
       "usedBy": []
@@ -15857,6 +15858,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/bookings/route.ts",
+        "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/lib/move-booking.ts",
         "src/lib/who-pays.ts"
       ]
