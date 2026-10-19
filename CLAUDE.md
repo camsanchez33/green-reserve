@@ -217,13 +217,14 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 
 ## Homepage direction — READ `HOMEPAGE_SPEC.md` §0 FIRST (Cam 2026-10-07)
 
-HOME-2 is Cam's own layout: one full-screen coast photo with the cream logo
-centred and one line under it saying what we are (CLUB-1) → what it is
+HOME-2 is Cam's own layout: one full-screen photo with the cream logo
+centred, "The tee sheet your course deserves.", one sentence on what it is and
+why it's free for courses, and Book a demo (Cam 2026-10-19; HOMEPAGE_SPEC §0a) → what it is
 (paragraph, bullets, "See how it works" + "Learn more about the tee sheet"
 cards) → what your course gets (only features that exist today; pro-shop
 access waits until built) → the working demo (tee sheet on a laptop, golfer
-phone beside it) with Book a demo → the logo again with "The tee sheet your
-course deserves." The detail, FAQ (+ its JSON-LD), about and contact live on
+phone beside it) with Book a demo → the logo again with "Ready when your
+course is." The detail, FAQ (+ its JSON-LD), about and contact live on
 `/teesheet`. `src/app/HomeContent.tsx` + `home.module.css`, ONE client island
 `src/components/home/TeeSheetDemo.tsx`, whose every label must match the real
 dashboard tee sheet and booking flow. Every "Book a demo" goes to `/demo`

@@ -43,6 +43,68 @@ suggestion save this information". Decisions go here as they are made.
     on it (support), a golfer with a booking (contact your course; their
     booking email has the course's details). Open: phone number? branded inbox?
 
+12. **Operator login (/dashboard/login).** Cam: straightforward but can look
+    better and say different things; rethink it. Today: "Sign in / Your tee
+    sheet, your bookings and your settings.", email, password, Forgot password,
+    "Ask a question →".
+13. **The email link in the nav (thegreenreserve@outlook.com)** just opens an
+    email — same as /contact; Cam agrees with the /contact proposal (11).
+14. **How Cam wants to work these notes:** not through the punch-list sheet —
+    Claude asks questions in the session, and the answers decide what changes,
+    what gets added, what stays.
+
+**Decisions, round 1 (Cam 2026-10-19):**
+- Audience: course owners and GMs ("our only product is the tee sheet and the
+  things that come with it").
+- Tagline: simple and clear, makes the reader want to read on; highlight that
+  it's FREE and that it has a ton of helpful features — lean on what's big now (AI).
+- Top bar: Operator login + Book a demo only.
+- "Free" is LOUD — e.g. "Free tee sheet. Stop spending money to run your sheet."
+  Cam: "it is so important this is our whole business". (Fee sentences still
+  come from legal/LQ-2_FEE_COPY.md.)
+
+**Decisions, round 2 (Cam 2026-10-19):**
+- Hero: logo, tagline, and a Book a demo button right there.
+- Features to show off: Birdie (AI assistant), the AI monthly review +
+  analytics, payments (text-to-pay, Apple Pay / Google Pay, card-protected
+  late/no-show fees). Memberships were NOT picked for the homepage.
+- About section: combine "the problem, then the fix" with "what it is, plainly".
+- Pictures: real product screenshots in device frames; no stock photos.
+
+**Decisions, round 3 (Cam 2026-10-19):**
+- See how it works: fine as is; make the golfer side look a bit more like a
+  phone, or size it better.
+- "Or ask a question" becomes "Not ready for a call? Send us a note" — a short
+  form (name, course, role, message) that lands in admin inquiries.
+- /teesheet: ONE page, "very in depth and explained" — a section per feature.
+- /contact: split into 3 paths (interested course / existing course / golfer
+  with a booking, sent to their course); a phone number on the site; a branded
+  support@greenreserve.app address forwarding to the Outlook inbox. (No
+  separate contact form picked — the "send us a note" form covers it.)
+
+**Legal decisions (Cam 2026-10-19):**
+- Entity: GreenReserve LLC, a New York LLC; governing law and venue New York.
+  Courses re-sign the agreement once.
+- 1% membership fee applies to dues AND initiation fees (keep the code; fix the
+  agreement wording).
+- No lawyer before launch: Claude makes Terms / Privacy / Operator Agreement
+  accurate to the product and flags what is unreviewed (texting consent,
+  card-on-file wording).
+- Cash at the counter: NO GreenReserve fee on cash, card on file or not (the
+  code must stop charging a saved card on "paid at counter"). Abuse is watched
+  on Admin → Revenue ("Not collected, paid at the counter", per course), not
+  prevented. Rejected: a $1 cash fee (it could only be billed to the course,
+  breaking "free for courses") and a cashless rule.
+
+**Operator login (Cam 2026-10-19):** keep it minimal; add a photo/brand panel
+beside the form (homepage feel; form only on phones) and a "Need help signing
+in?" line pointing to support. ("Ask a question" was not swapped for Book a demo.)
+
+**Round 5 (Cam 2026-10-19):** hide Test Course 3 from the public site and the
+sitemap; the site phone number is Cam's cell (number to come from Cam);
+REMOVE durations and contract terms from /for-courses too; fix link previews
+before launch (course pages preview with the course's name and photo).
+
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
 Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3
@@ -53,9 +115,11 @@ below conflict with this section, THIS section wins; they stay as history.
    real photo, a links green above the ocean at dusk, flag on the horizon,
    Unsplash photo-1646204221936 (Cam picked it from 18), free under the Unsplash License (no credit required);
    a placeholder until a partner course's own photo, Cam 2026-10-17) with the cream logo
-   centred in the upper third and one line under it that says what we are
-   (CLUB-1 still holds): "The online tee sheet and booking page for golf
-   courses." A dark top-to-bottom scrim so the logo reads. The nav has no logo
+   centred in the upper third. Under it (Cam 2026-10-19, option A — "free"
+   as the headline sounded cheap): the line "The tee sheet your course
+   deserves.", one sentence "Online booking, payments and an AI assistant that
+   knows your course. GreenReserve charges your course nothing: golfers pay a
+   small booking fee instead." (LQ-2-safe wording), and a Book a demo button. A dark top-to-bottom scrim so the logo reads. The nav has no logo
    on `/` (the hero's logo replaces it): Operator login + Book a demo, top right.
 2. **What it is** (`#about`): headline, one long paragraph, four bullets, and
    two cards: "See how it works" (scrolls to the demo) and "Learn more about the
@@ -67,7 +131,8 @@ below conflict with this section, THIS section wins; they stay as history.
 4. **See how it works** (`#see`): the working demo, the operator tee sheet on a
    laptop and the golfer's booking page on a phone beside it, one store behind
    both. Then Book a demo + "Or ask a question".
-5. **End:** the logo again with "The tee sheet your course deserves."
+5. **End:** the logo again with "Ready when your course is." (the old closing
+   line moved up to the hero, Cam 2026-10-19)
 6. Footer: "© {year} GreenReserve. All rights reserved." + The tee sheet,
    Terms, Privacy, Operator agreement, Contact, Operator login, email.
 
