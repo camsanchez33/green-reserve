@@ -19,7 +19,11 @@ export async function GET(
 
   const dbCourse = await prisma.course.findUnique({
     where: { id: courseId },
-    include: { photos: { orderBy: { sortOrder: 'asc' } } },
+    include: {
+      photos: { orderBy: { sortOrder: 'asc' } },
+      teeSets: { orderBy: { sortOrder: 'asc' }, select: { name: true, yardage: true, rating: true, slope: true } },
+      nines: { orderBy: { sortOrder: 'asc' }, select: { name: true, par: true } },
+    },
   });
   if (!dbCourse) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

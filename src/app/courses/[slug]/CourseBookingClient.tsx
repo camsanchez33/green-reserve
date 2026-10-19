@@ -1,5 +1,6 @@
 'use client';
 import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
+import { teeColour } from '@/lib/tee-colour';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -127,6 +128,8 @@ type CourseWithBrand = Course & {
   brand_color?: string;
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
+  tee_sets?: { name: string; yardage: number; rating: number; slope: number }[];
+  nines?: { name: string; par: number }[];
   page_approval_status?: 'none' | 'approved' | 'changes_requested';
   is_live?: boolean;
   // BOOKING WINDOWS
@@ -1581,6 +1584,34 @@ export default function CourseDetailPage({
                     ))}
                   </div>
                 </div>
+
+                {/* Settings rework (Cam 2026-10-19): the tees and nines from Settings → Course layout. */}
+                {((course.tee_sets?.length ?? 0) > 0 || (course.nines?.length ?? 0) > 1) && (
+                  <div className="border-t border-line pt-5">
+                    <h2 className="font-serif text-ink text-[22px] leading-none mb-4">The tees</h2>
+                    {(course.nines?.length ?? 0) > 1 && (
+                      <p className="text-sm text-ink mb-3">{course.nines!.length} nines: {course.nines!.map(n => `${n.name} (par ${n.par})`).join(', ')}.</p>
+                    )}
+                    {(course.tee_sets?.length ?? 0) > 0 && (
+                      <ul className="divide-y divide-line text-sm">
+                        {course.tee_sets!.map(t => {
+                          const c = teeColour(t.name);
+                          return (
+                            <li key={t.name} className="flex items-center justify-between gap-3 py-2">
+                              <span className="flex items-center gap-2 font-medium text-ink">
+                                {c && <span className="w-3 h-3 rounded-full border border-line-strong shrink-0" style={{ backgroundColor: c }} aria-hidden="true" />}
+                                {t.name}
+                              </span>
+                              <span className="text-ink-soft tabular-nums">
+                                {[t.yardage > 0 ? `${t.yardage.toLocaleString('en-US')} yards` : '', t.rating > 0 && t.slope > 0 ? `${t.rating.toFixed(1)} / ${t.slope}` : ''].filter(Boolean).join(' · ')}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                )}
 
                 {amenities.length > 0 && (
                   <div className="border-t border-line pt-5">

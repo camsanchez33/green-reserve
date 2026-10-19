@@ -66,5 +66,15 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? c.photos.map((p: any) => ({ id: p.id, url: p.url, sortOrder: p.sortOrder }))
       : [],
+    // Settings rework (Cam 2026-10-19): the tees and named nines the course set
+    // up under Course layout, shown in the About section.
+    tee_sets: Array.isArray(c.teeSets)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? c.teeSets.map((t: any) => ({ name: String(t.name), yardage: Number(t.yardage) || 0, rating: Number(t.rating) || 0, slope: Number(t.slope) || 0 }))
+      : [],
+    nines: Array.isArray(c.nines)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? c.nines.map((n: any) => ({ name: String(n.name), par: Number(n.par) || 0 }))
+      : [],
   };
 }
