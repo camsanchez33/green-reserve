@@ -145,3 +145,7 @@ Shipped notes (2026-10-19):
 - Tee colour comes from the tee's name (Blue, Black, Gold…); it is not stored. Par stays one number for the course; there is no par per tee.
 - Resident rates are saved on schedules but never charged: no booking or counter path applies them. Whether to build that or hide resident pricing until after launch is Cam's call.
 
+## Pro shop — POS-2 (Cam 2026-10-19: "everything")
+
+Catalog in Settings → Pro shop: one-tap starter items, categories, optional stock count. Selling on a new Pro shop page (nav, for logins with "Sell from the pro shop"): tap items into a sale, then take cash or text/email a pay link; today's sales below with Send again / Took cash / Void for unpaid links. The customer pays on their phone (Apple Pay, Google Pay or card) as a direct charge on the course's Stripe account; GreenReserve takes nothing while the shop fee is off. Not yet: refunds of a paid walk-up sale from the dashboard (Stripe dashboard for now), a card reader (Stripe Terminal, after launch), sales reporting on Analytics.
+

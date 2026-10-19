@@ -66,6 +66,16 @@ export function validItemInput(body: { name?: unknown; category?: unknown; price
   return { name, category, priceCents };
 }
 
+/**
+ * POS-2: move an item's shelf count by `quantity` (negative puts it back).
+ * Items nobody counts (stockCount null) are left alone; a count may go below
+ * zero — it never blocks a sale, the shelf is the truth.
+ */
+export async function takeStock(tx: Prisma.TransactionClient, shopItemId: string, quantity: number) {
+  if (!quantity) return;
+  await tx.shopItem.updateMany({ where: { id: shopItemId, stockCount: { not: null } }, data: { stockCount: { decrement: quantity } } });
+}
+
 /** Re-total a booking's shop lines onto the booking. Call inside the write's transaction. */
 async function retotal(tx: Prisma.TransactionClient, bookingId: string) {
   const lines = await tx.bookingShopItem.findMany({ where: { bookingId }, select: { unitPriceCents: true, quantity: true } });
@@ -107,6 +117,7 @@ export async function addItemToBooking(courseId: string, bookingId: string, shop
     const item = await tx.shopItem.findUnique({ where: { id: shopItemId } });
     if (!item || item.courseId !== courseId || !item.active) return { ok: false, status: 404, error: 'That item is not in your shop.' } as const;
     await tx.bookingShopItem.create({ data: { bookingId, shopItemId: item.id, name: item.name, unitPriceCents: item.priceCents, quantity, addedBy } });
+    await takeStock(tx, item.id, quantity);
     return { ok: true, ...(await retotal(tx, bookingId)) } as const;
   }).catch(e => { if (e instanceof ShopCapError) return CAP_RESULT; throw e; });
 }
@@ -119,8 +130,10 @@ export async function removeLineFromBooking(courseId: string, bookingId: string,
     if (!b || b.courseId !== courseId) return { ok: false, status: 404, error: 'Booking not found.' } as const;
     const locked = shopLockedReason(b);
     if (locked) return { ok: false, status: 409, error: locked } as const;
-    const gone = await tx.bookingShopItem.deleteMany({ where: { id: lineId, bookingId } });
-    if (gone.count === 0) return { ok: false, status: 404, error: 'That item is not on this booking.' } as const;
+    const line = await tx.bookingShopItem.findFirst({ where: { id: lineId, bookingId }, select: { shopItemId: true, quantity: true } });
+    if (!line) return { ok: false, status: 404, error: 'That item is not on this booking.' } as const;
+    await tx.bookingShopItem.delete({ where: { id: lineId } });
+    if (line.shopItemId) await takeStock(tx, line.shopItemId, -line.quantity);
     return { ok: true, ...(await retotal(tx, bookingId)) } as const;
   });
 }

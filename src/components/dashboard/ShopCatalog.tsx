@@ -8,7 +8,20 @@ import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON } from '@/lib/booking-fees';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 
-type Item = { id: string; name: string; category: string; priceCents: number; active: boolean };
+type Item = { id: string; name: string; category: string; priceCents: number; active: boolean; stockCount: number | null };
+
+// POS-2 (Cam 2026-10-19): a new shop starts from the things nearly every pro
+// shop sells — one tap each, edit the price after.
+const STARTERS: { name: string; category: string; priceCents: number }[] = [
+  { name: 'Sleeve of balls', category: 'Balls', priceCents: 1200 },
+  { name: 'Dozen balls', category: 'Balls', priceCents: 4500 },
+  { name: 'Glove', category: 'Accessories', priceCents: 2000 },
+  { name: 'Tees (bag)', category: 'Accessories', priceCents: 500 },
+  { name: 'Small bucket of range balls', category: 'Range', priceCents: 800 },
+  { name: 'Large bucket of range balls', category: 'Range', priceCents: 1400 },
+  { name: 'Water', category: 'Drinks', priceCents: 300 },
+  { name: 'Sports drink', category: 'Drinks', priceCents: 400 },
+];
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
@@ -19,16 +32,17 @@ function toCents(v: string): number {
 }
 
 function ItemForm({ initial, busy, submitLabel, onSubmit, onCancel }: {
-  initial: { name: string; category: string; price: string };
+  initial: { name: string; category: string; price: string; stock: string };
   busy: boolean; submitLabel: string;
-  onSubmit: (v: { name: string; category: string; priceCents: number }) => void;
+  onSubmit: (v: { name: string; category: string; priceCents: number; stockCount: number | null | string }) => void;
   onCancel?: () => void;
 }) {
   const [name, setName] = useState(initial.name);
   const [category, setCategory] = useState(initial.category);
   const [price, setPrice] = useState(initial.price);
+  const [stock, setStock] = useState(initial.stock);
   return (
-    <form className="flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); onSubmit({ name, category, priceCents: toCents(price) }); }}>
+    <form className="flex flex-wrap items-end gap-2" onSubmit={e => { e.preventDefault(); onSubmit({ name, category, priceCents: toCents(price), stockCount: stock.trim() === '' ? null : stock.trim() }); }}>
       <label className="flex-1 min-w-[160px]">
         <span className="block text-[12.5px] text-ink-soft mb-1">Item</span>
         <input value={name} onChange={e => setName(e.target.value)} maxLength={80} placeholder="Sleeve of balls" className={INPUT + ' w-full'} />
@@ -40,6 +54,10 @@ function ItemForm({ initial, busy, submitLabel, onSubmit, onCancel }: {
       <label className="w-28">
         <span className="block text-[12.5px] text-ink-soft mb-1">Price</span>
         <input value={price} onChange={e => setPrice(e.target.value)} inputMode="decimal" placeholder="12.00" className={INPUT + ' w-full tabular-nums'} />
+      </label>
+      <label className="w-24">
+        <span className="block text-[12.5px] text-ink-soft mb-1">In stock</span>
+        <input value={stock} onChange={e => setStock(e.target.value)} inputMode="numeric" placeholder="—" aria-describedby="stock-help" className={INPUT + ' w-full tabular-nums'} />
       </label>
       <button type="submit" disabled={busy} className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm px-4 py-2 disabled:opacity-50">{busy ? 'Saving…' : submitLabel}</button>
       {onCancel && <button type="button" onClick={onCancel} className="text-sm text-ink-soft hover:text-ink px-2 py-2">Cancel</button>}
@@ -79,7 +97,7 @@ export function ShopCatalog() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-ink-soft -mt-1">
-        Staff add these to a group&apos;s round from the tee sheet. They&apos;re charged with the round at check-in or on the golfer&apos;s pay link{SHOP_FEE_ON ? <>, plus GreenReserve&apos;s {usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer</> : null}. A price change never touches items already on a booking.
+        Sell these on the Pro shop page (cash or a pay link), or add them to a group&apos;s round from the tee sheet, where they&apos;re charged with the round at check-in or on the golfer&apos;s pay link{SHOP_FEE_ON ? <>, plus GreenReserve&apos;s {usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer</> : null}. A price change never touches items already on a booking.
       </p>
       {loadError && (
         <div className="rounded-md bg-bad/5 border border-bad/20 px-4 py-2.5 flex items-center justify-between gap-3">
@@ -90,8 +108,28 @@ export function ShopCatalog() {
       {!loadError && !items && <p className="text-xs text-ink-muted">Loading your shop…</p>}
 
       {canEdit && items && (
-        <ItemForm key={formKey} initial={{ name: '', category: '', price: '' }} busy={busy === 'new'} submitLabel="Add item"
-          onSubmit={async v => { if (await write('new', 'POST', v, `${v.name} added.`)) setFormKey(k => k + 1); }} />
+        <>
+          <ItemForm key={formKey} initial={{ name: '', category: '', price: '', stock: '' }} busy={busy === 'new'} submitLabel="Add item"
+            onSubmit={async v => { if (await write('new', 'POST', v, `${v.name} added.`)) setFormKey(k => k + 1); }} />
+          <p id="stock-help" className="text-[12.5px] text-ink-muted -mt-2">In stock is optional. Fill it in to count what’s on the shelf: every sale takes from it, and the Pro shop page shows what’s left. Leave it blank for things you don’t count.</p>
+          {(() => {
+            const have = new Set(items.map(i => i.name.toLowerCase()));
+            const left = STARTERS.filter(st => !have.has(st.name.toLowerCase()));
+            return left.length > 0 && (
+              <div>
+                <p className="text-[12.5px] text-ink-soft mb-1.5">Quick add — tap one, then fix its price:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {left.map(st => (
+                    <button key={st.name} type="button" disabled={busy !== null} onClick={() => write(`q-${st.name}`, 'POST', st, `${st.name} added at ${usd(st.priceCents)} — edit it if your price differs.`)}
+                      className="text-[12.5px] text-ink border border-line rounded-md px-2.5 py-1 hover:border-pine/40 disabled:opacity-50">
+                      {st.name} · {usd(st.priceCents)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </>
       )}
       {!canEdit && items && <p className="text-xs text-ink-muted">Ask the course owner to turn on “Edit the shop catalog” for you to change these.</p>}
       {error && <p className="text-xs text-bad">{error}</p>}
@@ -103,7 +141,7 @@ export function ShopCatalog() {
           {items.map(i => (
             <li key={i.id} className="py-2.5">
               {editing === i.id ? (
-                <ItemForm initial={{ name: i.name, category: i.category, price: (i.priceCents / 100).toFixed(2) }} busy={busy === i.id} submitLabel="Save"
+                <ItemForm initial={{ name: i.name, category: i.category, price: (i.priceCents / 100).toFixed(2), stock: i.stockCount === null ? '' : String(i.stockCount) }} busy={busy === i.id} submitLabel="Save"
                   onSubmit={async v => { if (await write(i.id, 'PATCH', { id: i.id, ...v }, `${v.name} saved.`)) setEditing(null); }}
                   onCancel={() => setEditing(null)} />
               ) : (
@@ -112,6 +150,7 @@ export function ShopCatalog() {
                     <span className={'text-sm ' + (i.active ? 'text-ink' : 'text-ink-muted')}>{i.name}</span>
                     {i.category && <span className="text-[12.5px] text-ink-muted"> · {i.category}</span>}
                     {!i.active && <span className="text-[12.5px] text-ink-muted"> · hidden</span>}
+                    {i.stockCount !== null && <span className={'text-[12.5px] ' + (i.stockCount <= 0 ? 'text-bad' : 'text-ink-muted')}> · {i.stockCount <= 0 ? 'none left' : `${i.stockCount} in stock`}</span>}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-sm tabular-nums text-ink">{usd(i.priceCents)}</span>

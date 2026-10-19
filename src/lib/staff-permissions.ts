@@ -57,7 +57,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'schedule.view', group: 'Schedule', label: 'See the schedule', help: 'Schedules, intervals, rates and blocked days.' },
   { key: 'schedule.edit', group: 'Schedule', label: 'Edit the schedule', help: 'Change schedules and rates, block whole days, rebuild the sheet.', requires: ['schedule.view'] },
   // POS-1a (Cam 2026-10-08): pro-shop items charged with the round.
-  { key: 'shop.sell', group: 'Pro shop', label: 'Add shop items to a round', help: 'Add pro-shop items to a group’s booking before they pay; they’re charged with the round.' },
+  { key: 'shop.sell', group: 'Pro shop', label: 'Sell from the pro shop', help: 'Add shop items to a group’s round, and ring up walk-up sales paid in cash or by a pay link.' },
   { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop.', requires: ['settings.edit'] },
   { key: 'analytics.view', group: 'Course', label: 'See analytics', help: 'Revenue, utilization, no-shows and customers.' },
   { key: 'messages.use', group: 'Course', label: 'Message GreenReserve', help: 'Send and read messages with the GreenReserve team.' },
