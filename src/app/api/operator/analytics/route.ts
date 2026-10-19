@@ -21,7 +21,9 @@ export async function GET(req: NextRequest) {
   const today = todayIn(course?.timezone);
   const sp = req.nextUrl.searchParams;
   const from = sp.get('from') ?? '', to = sp.get('to') ?? '';
-  const range: Range = DATE.test(from) && DATE.test(to) ? { from, to } : { from: addDaysStr(today, -29), to: today };
+  // AN-3: the page opens on the last 7 days (`days=7`) before it knows the course's date.
+  const days = Math.min(MAX_DAYS, Math.max(1, Number(sp.get('days')) || 30));
+  const range: Range = DATE.test(from) && DATE.test(to) ? { from, to } : { from: addDaysStr(today, -(days - 1)), to: today };
   if (range.from > range.to) return NextResponse.json({ error: 'The start date is after the end date.' }, { status: 400 });
   const span = (Date.parse(range.to) - Date.parse(range.from)) / 86400000 + 1;
   if (!Number.isFinite(span) || span > MAX_DAYS) return NextResponse.json({ error: `Pick a range of ${MAX_DAYS} days or fewer.` }, { status: 400 });

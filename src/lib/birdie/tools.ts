@@ -86,8 +86,8 @@ async function getAnalytics(input: Record<string, unknown>, ctx: ToolContext): P
   const a = await computeAnalytics(ctx.courseId, range);
   // Dollars only: handing the model both cents and dollars invites it to quote the wrong one.
   const inDollars = (h: ReturnType<typeof headline>) => {
-    const { collectedCents, expectedCents, lostCents, ...rest } = h;
-    return { collected: dollars(collectedCents), expected: dollars(expectedCents), lostToEmptySpots: dollars(lostCents), ...rest };
+    const { collectedCents, expectedCents, lostCents, perRoundCents, ...rest } = h;
+    return { collected: dollars(collectedCents), expected: dollars(expectedCents), lostToEmptySpots: dollars(lostCents), revenuePerRound: perRoundCents == null ? null : dollars(perRoundCents), ...rest };
   };
   const compare = input.compare === true ? { range: previousRange(range), headline: inDollars(headline(await computeAnalytics(ctx.courseId, previousRange(range)))) } : null;
   // A compact summary: the same numbers as the Analytics tab, minus the per-row lists.

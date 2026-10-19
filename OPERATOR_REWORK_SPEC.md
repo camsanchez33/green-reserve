@@ -97,3 +97,19 @@ on screen; agreement announcement clears once signed and looks urgent; "Mark
 no-show" and "Still coming" on a late group's row in the panel.
 
 ## 5. Next from Cam: Analytics (notes to come)
+
+## Analytics — AN-3 (Cam 2026-10-19)
+
+Cam's notes: switching tabs flashed the top bar green ("looks cheap"); "How your course is doing" is childish — it should say Analytics; the dates under it explain nothing; the four presets plus Pick dates looked thrown together — wants a calendar defaulting to the past week; "Money collected" makes no sense (revenue); "Tee sheet filled" is solid; "Bookings" could be better; "Empty spots $86,900" makes no sense; "What to look at" is liked but must be clear and help them act, with Birdie offered for more; the monthly review smaller and say what it will provide; every tab (money, busy times, no-shows, golfers) needs better organisation and explanation, not new data; golfers must know their data is collected; any agreement must be impossible to skip.
+
+Decisions (Cam's picks):
+- Dates: ONE button naming the range, opening shortcuts (Last 7 days, This week, Last week, This month, Last month, Last 30 days, This season) beside a month calendar. Defaults to the last 7 days.
+- Top four: Revenue · Tee sheet filled · Rounds played · Average per round, each vs the period before, each with a one-line plain explanation. The unsold-spots dollar total is gone everywhere (it is open spots × full green fee — a number no course could ever earn); Busy times lists open spots as a count.
+- Under the title: one sentence built only from the numbers ("You took in $X, up N% on the 7 days before, and Saturdays and 8 AM tee times filled best.").
+- Golfer consent: a required, unticked Terms + Privacy checkbox at booking naming that the course and GreenReserve keep the booking history (clickwrap), recorded with version and time. Separate run.
+
+Built (my calls, Cam said "think about it"):
+- What to look at: each line restates the page's numbers, adds one idea to try where there is a clear one, and an "Ask Birdie" that opens Birdie with the question typed (not sent). Shown only when Birdie is on.
+- Monthly review: one compact card; before the first review it says what it will contain and when.
+- Tabs: Revenue · Busy times · No-shows & cancellations · Golfers · How they book. Every block has a one-sentence "what this tells you". Golfers says where the data comes from and links the Privacy Policy.
+- The green flash: OperatorSidebar started on the default pine until the course loaded on each page; it now keeps the course's identity between tabs and clears it on course switch and sign-out.
