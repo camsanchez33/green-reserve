@@ -138,12 +138,11 @@
     "input": 1
   },
   "src/app/dashboard/members/page.tsx": {
-    "card": 3,
+    "card": 2,
     "input": 1,
-    "lucide": 10
+    "lucide": 4
   },
   "src/app/dashboard/messages/page.tsx": {
-    "uppercase": 1,
     "input": 1,
     "lucide": 1
   },
@@ -165,8 +164,7 @@
     "lucide": 1
   },
   "src/app/dashboard/schedules/page.tsx": {
-    "input": 1,
-    "lucide": 5
+    "input": 1
   },
   "src/app/dashboard/settings/page.tsx": {
     "card": 1,

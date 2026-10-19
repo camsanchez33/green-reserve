@@ -266,7 +266,7 @@ async function unblockDay(input: Record<string, unknown>, ctx: ToolContext): Pro
     id: cardId(),
     title: `Reopen ${fmtDate(date)}`,
     changes: [{ label: fmtDate(date), from: blackout.reason ? `Blocked — ${blackout.reason}` : 'Blocked', to: 'Open for booking' }],
-    note: 'The day stops being blocked. Its tee times come back from your schedule on the next rebuild (tonight, or Apply to tee sheet on the Schedule page).',
+    note: 'The day stops being blocked. Its tee times come back from your schedule straight away; booked times stay as they are.',
     call: { method: 'DELETE', path: '/api/operator/blackouts', body: { id: blackout.id } },
   });
 }

@@ -16,6 +16,9 @@ type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; er
 type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string };
 
 const OPEN_KEY = 'birdie:open';
+// Cam 2026-10-19: Birdie can be tucked into a small tab on the screen's edge and
+// stays tucked (this browser) until opened again.
+const TUCK_KEY = 'birdie:tucked';
 const iCls = 'flex-1 min-w-0 bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10 focus:outline-none transition-colors';
 
 // SD-8d: these are client-side <Link>s, so they bypass beforeunload the same
@@ -48,6 +51,7 @@ function renderReply(text: string) {
 export default function BirdieWidget() {
   const [meta, setMeta] = useState<Meta | null>(null);
   const [open, setOpen] = useState(false);
+  const [tucked, setTucked] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -63,14 +67,15 @@ export default function BirdieWidget() {
       .catch(() => { /* no Birdie is a valid state; nothing to show */ });
     // The dashboard is multi-page: this component remounts on every navigation.
     // Carry the open panel across that so a link click doesn't shut Birdie.
-    try { if (localStorage.getItem(OPEN_KEY) === '1') setOpen(true); } catch { /* storage unavailable */ }
+    try { if (localStorage.getItem(OPEN_KEY) === '1') setOpen(true); if (localStorage.getItem(TUCK_KEY) === '1') setTucked(true); } catch { /* storage unavailable */ }
     return () => { cancelled = true; };
   }, []);
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight }); }, [turns, open]);
 
   const close = useCallback(() => { setOpen(false); try { localStorage.removeItem(OPEN_KEY); } catch { /* ignore */ } }, []);
-  const show = () => { setOpen(true); try { localStorage.setItem(OPEN_KEY, '1'); } catch { /* ignore */ } };
+  const show = () => { setOpen(true); setTucked(false); try { localStorage.setItem(OPEN_KEY, '1'); localStorage.removeItem(TUCK_KEY); } catch { /* ignore */ } };
+  const tuck = () => { setTucked(true); try { localStorage.setItem(TUCK_KEY, '1'); } catch { /* ignore */ } };
 
   // AN-3 (Cam 2026-10-19): "Ask Birdie" links on other pages open the panel with
   // the question typed in (askBirdie() in lib/birdie/ask.ts). Nothing is sent
@@ -81,7 +86,7 @@ export default function BirdieWidget() {
     const onAsk = (e: Event) => {
       const q = (e as CustomEvent<{ question?: string }>).detail?.question;
       if (typeof q !== 'string' || !q.trim()) return;
-      setOpen(true); try { localStorage.setItem(OPEN_KEY, '1'); } catch { /* ignore */ }
+      setOpen(true); setTucked(false); try { localStorage.setItem(OPEN_KEY, '1'); localStorage.removeItem(TUCK_KEY); } catch { /* ignore */ }
       setInput(q.slice(0, 1500)); // MAX_USER_CHARS in guardrails.ts
       setTimeout(() => inputRef.current?.focus(), 0);
     };
@@ -161,12 +166,22 @@ export default function BirdieWidget() {
 
   return (
     <>
-      {!open && (
-        <button type="button" onClick={show} aria-label="Ask Birdie"
-          className="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-white border border-line hover:border-pine/40 transition-colors flex items-center justify-center"
-          style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
-          <Image src="/brand/golfer.svg" unoptimized alt="" width={27} height={33} className="h-8 w-auto" />
+      {!open && tucked && (
+        <button type="button" onClick={show} aria-label="Open Birdie"
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-white border border-r-0 border-line rounded-l-md px-1.5 py-3 text-[12px] font-semibold text-pine hover:bg-paper [writing-mode:vertical-rl]">
+          Birdie
         </button>
+      )}
+      {!open && !tucked && (
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-5 right-4 md:right-5 z-40 flex items-end gap-1.5">
+          <button type="button" onClick={tuck} aria-label="Tuck Birdie away" title="Tuck Birdie away"
+            className="mb-1 w-9 h-9 rounded-full bg-white border border-line text-ink-muted hover:text-ink text-[13px] leading-none flex items-center justify-center">›</button>
+          <button type="button" onClick={show} aria-label="Ask Birdie"
+            className="w-14 h-14 rounded-full bg-white border border-line hover:border-pine/40 transition-colors flex items-center justify-center"
+            style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
+            <Image src="/brand/golfer.svg" unoptimized alt="" width={27} height={33} className="h-8 w-auto" />
+          </button>
+        </div>
       )}
       {open && (
         <div role="dialog" aria-label="Birdie" className="fixed bottom-5 right-5 z-40 w-[min(380px,calc(100vw-2rem))] max-h-[min(600px,calc(100vh-2.5rem))] bg-white rounded-lg shadow-card flex flex-col" style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
