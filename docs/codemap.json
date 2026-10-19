@@ -5658,7 +5658,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 679,
+      "lines": 690,
       "purpose": "",
       "brain": [],
       "exports": [
