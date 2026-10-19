@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
       appliedRate: true, greenFeeTotal: true, cartFeeTotal: true, cartSelected: true,
       rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true,
       cancellationFeeTotal: true, cancellationFeeChargedAt: true, cancelledAt: true,
-      checkedInAt: true, paymentStatus: true, status: true, createdAt: true,
+      checkedInAt: true, noShowAt: true, paymentStatus: true, status: true, createdAt: true,
       teeTime: { select: { date: true, time: true, holes: true } },
     },
     orderBy: { createdAt: 'desc' },

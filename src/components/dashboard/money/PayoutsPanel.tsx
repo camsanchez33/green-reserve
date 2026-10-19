@@ -3,7 +3,8 @@
 // not configuration, and an operator looking for "where is my money" was
 // being sent to a settings sub-tab.
 import { useState } from 'react';
-import { CreditCard, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { PayoutsTable } from './PayoutsTable';
 import { ACCESS_FEE_PER_PLAYER } from '@/lib/booking-fees';
 import type { MoneyCourse } from './types';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -15,7 +16,6 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
   onConnected: () => void;
 }) {
   const [connecting, setConnecting] = useState(false);
-  const [openingDashboard, setOpeningDashboard] = useState(false);
   const [stripeError, setStripeError] = useState('');
 
   async function connectStripe() {
@@ -30,21 +30,10 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
     setConnecting(false);
   }
 
-  async function openStripeDashboard() {
-    setOpeningDashboard(true); setStripeError('');
-    try {
-      const res = await fetch('/api/operator/stripe/dashboard-link', { method: 'POST' });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.url) window.open(data.url, '_blank', 'noopener');
-      else setStripeError(data.error || 'Could not open the Stripe dashboard.');
-    } catch { setStripeError('Could not reach Stripe. Try again.'); }
-    setOpeningDashboard(false);
-  }
-
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5">
       <div className="bg-white rounded-lg shadow-card p-5">
-        <div className="text-[15px] font-semibold text-ink mb-4">Payouts (Stripe)</div>
+        
         <div className="space-y-4">
           {/* SD-8 review: Stripe returns four states and only two were spoken
               for — someone who abandoned onboarding mid-flow ('refresh') or
@@ -81,43 +70,24 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
             </div>
           )}
 
-          {course.stripeAccountActive ? (
+          {course.stripeAccountActive ? <PayoutsTable /> : (
             <div className="space-y-3">
-              <div className="flex items-center gap-3 bg-ok/5 border border-ok/20 rounded-md p-4">
-                
-                <div>
-                  <div className="font-medium text-ok text-sm">Stripe connected</div>
-                  <div className="text-xs text-ink-soft mt-0.5">Charges and payouts are enabled. Green fees go straight to your bank account.</div>
-                </div>
-              </div>
-              <button onClick={openStripeDashboard} disabled={openingDashboard}
-                className="flex items-center justify-center gap-2 w-full bg-paper border border-line hover:border-line-strong text-ink-soft py-2.5 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-                {openingDashboard ? <><Loader2 className="w-4 h-4 animate-spin"/>Opening...</> : 'View payouts & balance →'}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-ink-soft">Connect your bank account through Stripe so you can get paid for bookings. This takes about 5 minutes — you&apos;ll need your business/bank details. GreenReserve can&apos;t take your course live until this is connected.</p>
+              <p className="text-[13.5px] text-ink">Connect your bank account through Stripe so card payments reach you. You&apos;ll need your business and bank details. GreenReserve can&apos;t take your course live until this is connected.</p>
               <button onClick={connectStripe} disabled={connecting}
-                className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[12.5px] disabled:opacity-50 transition-colors">
-                {connecting ? <><Loader2 className="w-4 h-4 animate-spin"/>Connecting...</> : <><CreditCard className="w-4 h-4"/>Connect with Stripe</>}
+                className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
+                {connecting ? <><Loader2 className="w-4 h-4 animate-spin"/>Connecting...</> : 'Connect with Stripe'}
               </button>
+              {course.liveStatus !== 'live' && <p className="text-[12.5px] text-ink-muted">Course status: <span className="capitalize">{course.liveStatus || 'draft'}</span></p>}
             </div>
           )}
-
-          <div className="text-xs text-ink-faint pt-2 border-t border-line-soft">
-            Status: <span className="font-medium text-ink-muted capitalize">{course.liveStatus || 'draft'}</span>
-            {course.liveStatus !== 'live' && course.stripeAccountActive ? ' — Stripe is connected. GreenReserve will review and take you live shortly.' : ''}
-          </div>
         </div>
       </div>
 
-      {/* SD-8: the one number every operator asks about, written down where the
-          money lives instead of only in the onboarding email. */}
-      <div className="bg-white rounded-lg shadow-card p-5">
-        <div className="text-[15px] font-semibold text-ink mb-3">What GreenReserve takes</div>
-        <p className="text-[13.5px] text-ink-soft">
-          <span className="font-medium text-ink">${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player</span>, charged to the <span className="font-medium text-ink">golfer</span> on top of your price, in the same card payment as your green fee. No commission on your green and cart fees. Stripe&apos;s normal card-processing fee applies to the payment, like any card you take; GreenReserve charges you nothing on top of it.
+      {/* Cam 2026-10-19: keep the GreenReserve note, cleaner. Fee copy per legal/LQ-2_FEE_COPY.md. */}
+      <div className="bg-white rounded-lg shadow-card px-5 py-4">
+        <h3 className="text-[15px] font-semibold text-ink">What GreenReserve takes from your payouts</h3>
+        <p className="text-[13.5px] text-ink mt-1.5 leading-relaxed">
+          Nothing. Golfers pay GreenReserve&apos;s ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per-player booking fee on top of your price, in the same card payment. Stripe&apos;s normal card-processing fee applies, as it does for any card you take.
         </p>
       </div>
     </div>

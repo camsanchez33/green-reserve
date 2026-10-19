@@ -1,13 +1,35 @@
 'use client';
-// SD-8 — the Payments half of the Money page. Lifted out of
-// /dashboard/payments unchanged in behaviour; the bookings now arrive as a
-// prop because Money loads them once for all three tabs.
+// Money rework (Cam 2026-10-19: "it shows every payment ever with random
+// information all over"). The rounds that have been played, newest day first,
+// each with what the course is owed and one plain status. Bookings still to
+// come live on the tee sheet, not here. A ?date= deep link from the tee sheet
+// still narrows it to that day.
 import { useState } from 'react';
-import { X, CheckCircle2 } from 'lucide-react';
-import { getBookingStatus, statusDot } from '@/lib/booking-status';
+import { X } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import type { MoneyBooking } from './types';
 import { formatTeeTime as fmtTime, formatTeeDate as fmtDate } from '@/lib/format';
+
+type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
+const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/** One plain status per booking, in the words staff use at the counter. */
+export function paymentStatus(b: MoneyBooking, today: string): { label: string; tone: Tone; group: 'paid' | 'unpaid' | 'cancelled' | 'upcoming' } {
+  if (b.status === 'cancelled') return b.paymentStatus === 'cancellation_fee_charged'
+    ? { label: `Cancelled · ${usd(b.cancellationFeeTotal)} fee kept`, tone: 'warn', group: 'cancelled' }
+    : { label: 'Cancelled, no fee', tone: 'neutral', group: 'cancelled' };
+  if (b.status === 'completed' && b.paymentStatus === 'paid') return { label: 'Paid by card', tone: 'ok', group: 'paid' };
+  if (b.status === 'completed' && b.paymentStatus === 'paid_offline') return { label: 'Paid at the counter', tone: 'ok', group: 'paid' };
+  if (b.teeTime.date > today) return { label: 'Not played yet', tone: 'neutral', group: 'upcoming' };
+  if (b.paymentStatus === 'cancellation_fee_charged') return { label: `Not paid yet · ${usd(b.cancellationFeeTotal)} hold taken`, tone: 'warn', group: 'unpaid' };
+  if (b.paymentStatus === 'refunded') return { label: 'Refunded', tone: 'neutral', group: 'cancelled' };
+  if (b.noShowAt) return { label: 'No-show', tone: 'bad', group: 'unpaid' };
+  return { label: 'Not paid yet', tone: 'warn', group: 'unpaid' };
+}
+
+const FILTERS = [['all', 'All'], ['paid', 'Paid'], ['unpaid', 'Not paid yet'], ['cancelled', 'Cancelled']] as const;
+type Filter = typeof FILTERS[number][0];
+const DAYS_SHOWN = 14;
 
 export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
   bookings: MoneyBooking[];
@@ -15,107 +37,76 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
   onClearDate: () => void;
 }) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-
+  const [filter, setFilter] = useState<Filter>('all');
+  const [showAll, setShowAll] = useState(false);
+  const today = new Date().toLocaleDateString('en-CA');
   const q = search.trim().toLowerCase();
-  const allRows = bookings.filter(b => {
-    if (q && !b.golferName.toLowerCase().includes(q) && !b.golferEmail.toLowerCase().includes(q)) return false;
-    if (statusFilter === 'paid')      return b.paymentStatus === 'paid' && b.status !== 'cancelled';
-    if (statusFilter === 'upcoming')  return b.status === 'confirmed';
-    if (statusFilter === 'fee')       return b.paymentStatus === 'cancellation_fee_charged';
-    if (statusFilter === 'cancelled') return b.status === 'cancelled';
-    return true;
-  });
+
+  const rows = bookings
+    .map(b => ({ b, s: paymentStatus(b, today) }))
+    .filter(({ b, s }) => {
+      if (!dateFilter && s.group === 'upcoming') return false; // future rounds belong to the tee sheet
+      if (q && !b.golferName.toLowerCase().includes(q) && !b.golferEmail.toLowerCase().includes(q)) return false;
+      return filter === 'all' || s.group === filter;
+    })
+    .sort((x, y) => (y.b.teeTime.date + y.b.teeTime.time).localeCompare(x.b.teeTime.date + x.b.teeTime.time));
+
+  const days = [...new Set(rows.map(r => r.b.teeTime.date))];
+  const visibleDays = showAll || dateFilter || q ? days : days.slice(0, DAYS_SHOWN);
 
   return (
     <>
       {dateFilter && (
-        <div className="flex items-center justify-between bg-pine/5 border border-pine/20 rounded-md px-4 py-2.5 mb-4 text-sm">
-          <span className="text-pine font-medium">Showing bookings for {fmtDate(dateFilter)}</span>
-          <button onClick={onClearDate} className="flex items-center gap-1 text-pine hover:underline text-xs font-medium">
-            <X className="w-3.5 h-3.5"/>Clear filter
+        <div className="flex items-center justify-between bg-white border border-line border-l-[3px] border-l-pine rounded-md px-4 py-2.5 mb-4 text-[13.5px]">
+          <span className="text-ink">Showing {fmtDate(dateFilter)} only</span>
+          <button onClick={onClearDate} className="flex items-center gap-1 text-pine hover:underline text-[12.5px] font-medium" aria-label="Show every day">
+            <X className="w-3.5 h-3.5" />Show every day
           </button>
         </div>
       )}
-
-      {/* AN-1 (Cam 2026-10-01): the Collected / Pending stat tiles moved to
-          Analytics (Revenue: collected, card vs counter, outstanding, still to
-          come, late fees kept, holds held, GreenReserve fees). This tab is the
-          working ledger: search, filter, the rows. */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search golfer name or email..."
-          className="w-64 bg-white border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none"/>
-        {/* U-O: filters are square chips, one per filter, not a segmented pill. */}
-        <div className="flex flex-wrap gap-1.5">
-          {([['all','All'],['paid','Paid'],['upcoming','Upcoming'],['fee','Fee charged'],['cancelled','Cancelled']] as [string,string][]).map(([key, label]) => (
-            <button key={key} onClick={() => setStatusFilter(key)}
-              aria-pressed={statusFilter === key}
-              className={'px-3 py-1.5 rounded-md text-[12.5px] font-medium border transition-colors ' + (statusFilter === key ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:border-line-strong hover:text-ink')}>
-              {label}
-            </button>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a golfer" aria-label="Find a golfer"
+          className="w-60 bg-white border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none" />
+        <div className="flex flex-wrap gap-x-5 gap-y-1 ml-1" role="tablist" aria-label="Show">
+          {FILTERS.map(([key, label]) => (
+            <button key={key} role="tab" aria-selected={filter === key} onClick={() => setFilter(key)}
+              className={'py-1.5 text-[13.5px] font-medium border-b-2 transition-colors ' + (filter === key ? 'text-ink border-fairway' : 'text-ink-soft border-transparent hover:text-ink')}>{label}</button>
           ))}
         </div>
-        {(q || statusFilter !== 'all') && <span className="text-[12.5px] text-ink-muted">{allRows.length} of {bookings.length} bookings</span>}
       </div>
 
-      {allRows.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border border-dashed border-line text-ink-muted text-sm">
-          {q || statusFilter !== 'all' ? 'No bookings match your search or filter.' : dateFilter ? `No bookings for ${fmtDate(dateFilter)}.` : 'No bookings yet.'}
+      {rows.length === 0 ? (
+        <div className="py-12 text-center bg-white rounded-lg shadow-card text-ink-soft text-[13.5px]">
+          {q || filter !== 'all' ? 'Nothing matches that.' : dateFilter ? `No bookings on ${fmtDate(dateFilter)}.` : 'No rounds played yet. Payments show here once golfers have played.'}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-line overflow-x-auto">
-          <table className="w-full text-[13.5px]">
-            <thead>
-              <tr className="text-left border-b border-line">
-                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium">Golfer</th>
-                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium">Booked</th>
-                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium">Tee time</th>
-                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium text-right">Green + cart</th>
-                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium text-right">Fee held</th>
-                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium text-right">Total</th>
-                <th className="px-4 py-3 text-[13px] font-semibold text-ink font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allRows.map(b => {
-                const bStatus = getBookingStatus(b.status, b.paymentStatus);
-                return (
-                  // U-O (§1b): cancelled rows fade back; a row carrying a late
-                  // fee keeps a 3px amber left edge so the money is findable.
-                  <tr key={b.id} className={'border-b border-line-soft last:border-0 ' + (b.paymentStatus === 'cancellation_fee_charged' ? 'border-l-[3px] border-l-warn ' : '') + (b.status==='cancelled'?'opacity-50':'')}>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-ink">{b.golferName}</div>
-                      <div className="text-[12.5px] text-ink-muted">{b.golferEmail} · {b.players} player{b.players!==1?'s':''}</div>
-                    </td>
-                    <td className="px-4 py-3 text-ink-muted text-[12.5px] tabular-nums">
-                      {new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      <div>{new Date(b.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>
-                    </td>
-                    <td className="px-4 py-3 text-ink-soft text-[13.5px] tabular-nums">
-                      <div>{fmtDate(b.teeTime.date)}</div>
-                      <div>{fmtTime(b.teeTime.time)}</div>
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-ink tabular-nums">
-                      ${((b.greenFeeTotal + b.cartFeeTotal) / 100).toFixed(2)}
-                      {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-ink-faint text-xs"> est.</span>}
-                    </td>
-                    <td className="px-4 py-3 text-right text-[13.5px] tabular-nums">
-                      {b.cancellationFeeTotal > 0
-                        ? <span className={'font-medium ' + (b.paymentStatus === 'cancellation_fee_charged' ? 'text-warn' : 'text-ink-muted')}>${(b.cancellationFeeTotal / 100).toFixed(2)}</span>
-                        : <span className="text-ink-faint">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-right text-ink-soft tabular-nums">
-                      ${(b.totalAmount / 100).toFixed(2)}
-                      {b.paymentStatus !== 'paid' && b.status !== 'cancelled' && <span className="text-ink-faint text-xs"> est.</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-ink"><StatusDot {...statusDot(bStatus.tone)} />{bStatus.label}</span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {visibleDays.map(day => {
+            const dayRows = rows.filter(r => r.b.teeTime.date === day);
+            const paid = dayRows.filter(r => r.s.group === 'paid').reduce((s, r) => s + r.b.greenFeeTotal + r.b.cartFeeTotal + r.b.rangeBallsTotal, 0);
+            return (
+              <section key={day} className="bg-white rounded-lg shadow-card">
+                <div className="flex items-baseline justify-between gap-3 px-4 pt-3 pb-2 border-b border-line-soft">
+                  <h3 className="text-[14px] font-semibold text-ink">{day === today ? 'Today' : fmtDate(day)}</h3>
+                  <span className="text-[12.5px] text-ink-muted tabular-nums">{paid > 0 ? `${usd(paid)} paid` : ''}</span>
+                </div>
+                <ul className="divide-y divide-line-soft">
+                  {dayRows.map(({ b, s }) => (
+                    <li key={b.id} className={'grid grid-cols-[64px_1fr_auto] sm:grid-cols-[72px_1fr_110px_220px] items-baseline gap-x-3 px-4 py-2.5 text-[13.5px] ' + (b.status === 'cancelled' ? 'text-ink-soft' : 'text-ink')}>
+                      <span className="tabular-nums text-ink-soft">{fmtTime(b.teeTime.time)}</span>
+                      <span className="min-w-0 truncate"><span className="font-medium">{b.golferName}</span><span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span></span>
+                      <span className="tabular-nums text-right font-medium">{usd(b.greenFeeTotal + b.cartFeeTotal + b.rangeBallsTotal)}</span>
+                      <span className="col-span-3 sm:col-span-1 inline-flex items-center gap-1.5"><StatusDot status={s.tone} />{s.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+          {visibleDays.length < days.length && (
+            <button onClick={() => setShowAll(true)} className="w-full py-2.5 text-[13px] font-medium text-pine hover:underline">Show older days ({days.length - visibleDays.length} more)</button>
+          )}
+          <p className="text-[12.5px] text-ink-muted">Amounts are your course’s share: green fees, carts and range balls. GreenReserve’s booking fee is the golfer’s and isn’t included.</p>
         </div>
       )}
     </>
