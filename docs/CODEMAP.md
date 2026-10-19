@@ -422,7 +422,7 @@ Sorted the same way.
 | `src/components/ui/field.ts` | 26 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 14 | 267 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
-| `src/components/OperatorSidebar.tsx` | 11 | 267 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
+| `src/components/OperatorSidebar.tsx` | 11 | 282 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/dashboard/LoadError.tsx` | 8 | 16 | SD-10. | `LoadError` |
 | `src/components/ui/ErrorState.tsx` | 8 | 96 |  | `ErrorBanner`, `LoadFailure` |
 | `src/components/ui/Modal.tsx` | 7 | 141 | MP-9 (ADMIN_V4 V4-6 §4) — the one dialog. | `Modal`, `ModalActions` |
