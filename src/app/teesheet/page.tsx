@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { previewFor } from '@/lib/seo';
 import Link from 'next/link';
 import { HOME_FAQ, faqJsonLd } from '@/lib/faq';
 
@@ -12,6 +13,8 @@ import { HOME_FAQ, faqJsonLd } from '@/lib/faq';
 export const metadata: Metadata = {
   title: 'The Tee Sheet',
   description: 'Everything a golf course gets with GreenReserve: its own booking page, one tee sheet for online, phone and walk-in bookings, payments to its own Stripe account, members, staff permissions, an assistant and analytics.',
+  // Link previews carry this page's own title, not the homepage's.
+  ...previewFor('The Tee Sheet | GreenReserve', 'Everything a golf course gets with GreenReserve: its own booking page, one tee sheet for online, phone and walk-in bookings, payments to its own Stripe account, members, staff permissions, an assistant and analytics.'),
 };
 
 const FEATURES: { h: string; p: string; items: string[] }[] = [

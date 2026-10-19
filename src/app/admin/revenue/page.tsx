@@ -554,7 +554,7 @@ export default function RevenuePage() {
                   {/* FB-3: fees charged on their own — no-shows and rounds paid at the counter. */}
                   {(pnl.separateFeeCharges ?? 0) > 0 && (
                     <div className="mt-1 text-xs text-ink-soft">
-                      Plus booking fees charged separately (no-shows, paid at the counter): <span className="font-medium text-ink tabular-nums">{fmtMoney(pnl.separateFees ?? 0)}</span>
+                      Plus booking fees charged separately (no-shows, late cancellations): <span className="font-medium text-ink tabular-nums">{fmtMoney(pnl.separateFees ?? 0)}</span>
                       <span className="text-ink-muted"> from {fmtCount(pnl.separateFeeCharges ?? 0)} charge{pnl.separateFeeCharges === 1 ? '' : 's'}, net of refunds — counted in net below.</span>
                     </div>
                   )}

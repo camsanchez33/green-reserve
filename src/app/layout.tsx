@@ -38,7 +38,10 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   applicationName: 'GreenReserve',
   openGraph: {
-    type: 'website', siteName: 'GreenReserve', locale: 'en_US', url: SITE_URL,
+    // No url here: a child page that sets no openGraph would inherit it and
+    // every shared link would preview as the homepage (Walk 1, 2026-10-18).
+    // Pages with their own preview spread OG_BASE (src/lib/seo.ts).
+    type: 'website', siteName: 'GreenReserve', locale: 'en_US',
     title: 'GreenReserve — Online Tee Sheet for Golf Courses', description: DESCRIPTION,
   },
   twitter: { card: 'summary_large_image', title: 'GreenReserve — Online Tee Sheet for Golf Courses', description: DESCRIPTION },

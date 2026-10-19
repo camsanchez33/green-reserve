@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 406,
+    "files": 407,
     "routes": 211,
-    "libs": 119,
+    "libs": 120,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4060,7 +4060,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 142,
+      "lines": 157,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4293,7 +4293,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 344,
+      "lines": 340,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5832,7 +5832,7 @@
     },
     {
       "path": "src/app/contact/page.tsx",
-      "lines": 41,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5851,6 +5851,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/seo",
         "next",
         "next/link"
       ],
@@ -5997,7 +5998,7 @@
     },
     {
       "path": "src/app/courses/[slug]/page.tsx",
-      "lines": 45,
+      "lines": 50,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6020,6 +6021,7 @@
         "@/lib/demo-courses",
         "@/lib/prisma",
         "@/lib/public-course",
+        "@/lib/seo",
         "next",
         "react"
       ],
@@ -6313,7 +6315,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1384,
+      "lines": 1381,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6646,7 +6648,7 @@
     },
     {
       "path": "src/app/for-courses/page.tsx",
-      "lines": 15,
+      "lines": 18,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6667,13 +6669,14 @@
       "imports": [
         "./ForCoursesContent",
         "@/lib/calcom",
+        "@/lib/seo",
         "next"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/layout.tsx",
-      "lines": 60,
+      "lines": 63,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6815,7 +6818,7 @@
     },
     {
       "path": "src/app/operator-agreement/page.tsx",
-      "lines": 82,
+      "lines": 85,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6835,6 +6838,7 @@
       "guard": "public",
       "imports": [
         "@/lib/agreements",
+        "@/lib/seo",
         "next"
       ],
       "usedBy": []
@@ -6896,7 +6900,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 249,
+      "lines": 252,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6915,6 +6919,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/seo",
         "next"
       ],
       "usedBy": []
@@ -6996,7 +7001,7 @@
     },
     {
       "path": "src/app/teesheet/page.tsx",
-      "lines": 203,
+      "lines": 206,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7016,6 +7021,7 @@
       "guard": "public",
       "imports": [
         "@/lib/faq",
+        "@/lib/seo",
         "next",
         "next/link"
       ],
@@ -7023,7 +7029,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 196,
+      "lines": 199,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7042,6 +7048,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/seo",
         "next"
       ],
       "usedBy": []
@@ -8584,7 +8591,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 181,
+      "lines": 182,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -11586,7 +11593,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1890,
+      "lines": 1889,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13954,6 +13961,39 @@
       "guard": null,
       "imports": [],
       "usedBy": []
+    },
+    {
+      "path": "src/lib/seo.ts",
+      "lines": 21,
+      "purpose": "Link previews (Walk 1, 2026-10-19).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "OG_BASE",
+          "kind": "const"
+        },
+        {
+          "name": "previewFor",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "next"
+      ],
+      "usedBy": [
+        "src/app/contact/page.tsx",
+        "src/app/courses/[slug]/page.tsx",
+        "src/app/for-courses/page.tsx",
+        "src/app/operator-agreement/page.tsx",
+        "src/app/privacy/page.tsx",
+        "src/app/teesheet/page.tsx",
+        "src/app/terms/page.tsx"
+      ]
     },
     {
       "path": "src/lib/session.ts",
@@ -16668,7 +16708,6 @@
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/memberships/route.ts",
-        "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/lib/lifecycle.ts"

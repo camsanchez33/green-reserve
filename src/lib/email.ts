@@ -97,14 +97,14 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
 
   // Breakdown rows shared by all variants
   const breakdownRows = `
-    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Course</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.courseName}</span></td></tr>
-    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Date &amp; Time</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.date} at ${data.time}</span></td></tr>
-    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Players</span><br><span style="color:#111827;font-size:15px;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</span></td></tr>
-    ${data.appliedRate !== 'standard' ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Rate</span><br><span style="color:#166534;font-size:15px;font-weight:600;text-transform:capitalize;">${data.appliedRate}</span></td></tr>` : ''}
-    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Green Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</span></td></tr>
-    ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Cart Fee</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
-    ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">Range Balls</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${((data.rangeBallsTotal ?? 0) / 100).toFixed(2)}</span></td></tr>` : ''}
-    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#6b7280;font-size:13px;">${serviceFeeLabel(data.players)}</span><br><span style="color:#111827;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
+    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#5f655e;font-size:13px;">Course</span><br><span style="color:#141814;font-size:15px;font-weight:600;">${data.courseName}</span></td></tr>
+    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#5f655e;font-size:13px;">Date &amp; Time</span><br><span style="color:#141814;font-size:15px;font-weight:600;">${data.date} at ${data.time}</span></td></tr>
+    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#5f655e;font-size:13px;">Players</span><br><span style="color:#141814;font-size:15px;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</span></td></tr>
+    ${data.appliedRate !== 'standard' ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#5f655e;font-size:13px;">Rate</span><br><span style="color:#1b4332;font-size:15px;font-weight:600;text-transform:capitalize;">${data.appliedRate}</span></td></tr>` : ''}
+    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#5f655e;font-size:13px;">Green Fee</span><br><span style="color:#141814;font-size:15px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</span></td></tr>
+    ${data.cartFeeTotal > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#5f655e;font-size:13px;">Cart Fee</span><br><span style="color:#141814;font-size:15px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</span></td></tr>` : ''}
+    ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#5f655e;font-size:13px;">Range Balls</span><br><span style="color:#141814;font-size:15px;font-weight:600;">$${((data.rangeBallsTotal ?? 0) / 100).toFixed(2)}</span></td></tr>` : ''}
+    <tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><span style="color:#5f655e;font-size:13px;">${serviceFeeLabel(data.players)}</span><br><span style="color:#141814;font-size:15px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</span></td></tr>
   `;
 
   let intro: string;
@@ -114,48 +114,47 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
 
   if (noCard) {
     // No-fee-policy course — no card collected, golfer pays at check-in
-    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Your spot at ${data.courseName} is confirmed. <strong>No card required</strong> — pay at the course when you check in, or use the link below to pay online.</p>`;
-    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Total due at the course</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
+    intro = `<h1 style="margin:16px 0 4px;color:#141814;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
+      <p style="margin:0 0 24px;color:#5f655e;font-size:15px;">Your spot at ${data.courseName} is confirmed. <strong>No card required</strong> — pay at the course when you check in, or use the link below to pay online.</p>`;
+    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#5f655e;font-size:13px;">Total due at the course</span><br><span style="color:#141814;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
     policyBox = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#166534;font-size:13px;font-weight:600;">&#10003; Free cancellation any time — no fees, no card on file.</p>
+      <p style="margin:0;color:#1b4332;font-size:13px;font-weight:600;">Free cancellation any time — no fees, no card on file.</p>
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay Online &rarr;</a>` : ''}
       <a href="${manageUrl}" style="display:block;color:#1b4332;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>
-      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
+      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#5f655e;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
   } else if (cancellationFee > 0) {
     // Card on file, course has a cancellation fee
-    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
-    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Estimated total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
-    policyBox = `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0 0 4px;color:#1e3a8a;font-size:13px;font-weight:700;">Cancellation policy</p>
+    intro = `<h1 style="margin:16px 0 4px;color:#141814;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
+      <p style="margin:0 0 24px;color:#5f655e;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
+    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#5f655e;font-size:13px;">Estimated total at check-in</span><br><span style="color:#141814;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
+    policyBox = `<div style="background:#f6f7f3;border:1px solid #e3e4de;border-radius:4px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0 0 4px;color:#141814;font-size:13px;font-weight:700;">Cancellation policy</p>
       ${data.policyLines?.length
-        ? data.policyLines.map(l => `<p style="margin:0 0 4px;color:#1e40af;font-size:13px;">${escapeHtml(l)}</p>`).join('')
-        : `<p style="margin:0;color:#1e40af;font-size:13px;">Cancel any time up to ${hoursLabel(cancellationHours)} before your tee time at no charge. After that, a $${(cancellationFee / 100).toFixed(2)} late-cancellation fee will be charged to your card — it&rsquo;s refunded in full when you check in and pay for your round.</p>`}
+        ? data.policyLines.map(l => `<p style="margin:0 0 4px;color:#141814;font-size:13px;">${escapeHtml(l)}</p>`).join('')
+        : `<p style="margin:0;color:#141814;font-size:13px;">Cancel any time up to ${hoursLabel(cancellationHours)} before your tee time at no charge. After that, a $${(cancellationFee / 100).toFixed(2)} late-cancellation fee will be charged to your card — it&rsquo;s refunded in full when you check in and pay for your round.</p>`}
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
       <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>
-      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
+      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#5f655e;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
   } else {
     // Card on file, no cancellation fee policy
-    intro = `<h1 style="margin:16px 0 4px;color:#111827;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
-    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#6b7280;font-size:13px;">Estimated total at check-in</span><br><span style="color:#111827;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
+    intro = `<h1 style="margin:16px 0 4px;color:#141814;font-size:26px;font-weight:700;">You're on the tee sheet.</h1>
+      <p style="margin:0 0 24px;color:#5f655e;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
+    totalRow = `<tr><td style="padding:12px 0 0;"><span style="color:#5f655e;font-size:13px;">Estimated total at check-in</span><br><span style="color:#141814;font-size:20px;font-weight:700;">$${(data.totalAmount / 100).toFixed(2)}</span></td></tr>`;
     policyBox = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#166534;font-size:13px;font-weight:600;">&#10003; Free cancellation any time — this course has no late-cancellation fee.</p>
-      ${(data.policyLines ?? []).filter(l => /no-show/i.test(l)).map(l => `<p style="margin:4px 0 0;color:#166534;font-size:13px;">${escapeHtml(l)}</p>`).join('')}
+      <p style="margin:0;color:#1b4332;font-size:13px;font-weight:600;">Free cancellation any time — this course has no late-cancellation fee.</p>
+      ${(data.policyLines ?? []).filter(l => /no-show/i.test(l)).map(l => `<p style="margin:4px 0 0;color:#1b4332;font-size:13px;">${escapeHtml(l)}</p>`).join('')}
     </div>`;
     ctaButtons = `
       ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:4px;font-weight:700;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
       <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#1b4332;' : 'background:#1b4332;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:4px;font-weight:700;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>
-      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#6b7280;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
+      ${data.checkInToken ? `<a href="${portalUrl}" style="display:block;color:#5f655e;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}`;
   }
 
   const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#dcfce7;color:#166534;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">&#10003; Booking Confirmed</span></div>
     ${intro}
     <div style="background:#f9fafb;border-radius:4px;padding:24px;margin-bottom:20px;">
       <table width="100%" cellpadding="0" cellspacing="0">
@@ -164,9 +163,9 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
       </table>
     </div>
     ${policyBox}
-    <div style="background:#fefce8;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#92400e;font-size:13px;font-weight:600;">&#128205; ${data.courseAddress}</p>
-      <p style="margin:8px 0 0;color:#92400e;font-size:12px;${data.confirmationNote ? 'white-space:pre-line;' : ''}">${data.confirmationNote ? escapeHtml(data.confirmationNote) : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
+    <div style="background:#f6f7f3;border:1px solid #e3e4de;border-radius:4px;padding:16px;margin-bottom:24px;">
+      <p style="margin:0;color:#141814;font-size:13px;font-weight:600;">${data.courseAddress}</p>
+      <p style="margin:8px 0 0;color:#141814;font-size:12px;${data.confirmationNote ? 'white-space:pre-line;' : ''}">${data.confirmationNote ? escapeHtml(data.confirmationNote) : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
     </div>
     ${ctaButtons}
     ${data.checkInToken ? `<p style="margin:0 0 8px;text-align:center;"><a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="color:#71717a;font-size:12px;text-decoration:underline;">View booking confirmation</a></p>` : ''}
@@ -185,7 +184,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
     <h2 style="margin:0 0 4px;color:#111827;font-size:22px;font-weight:700;">New Booking</h2>
     <p style="margin:0 0 24px;color:#6b7280;font-size:14px;">A tee time has been booked at ${data.courseName.trim()}. ${noCard ? 'No card was collected — golfer pays at the course or via check-in link.' : "Their card is on file — nothing's charged until they check in (or the cancellation window closes)."}</p>
     <div style="background:#f9fafb;border-radius:4px;padding:20px;">
-      <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${data.golferName} (${data.golferEmail})</p>
+      <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${escHtml(data.golferName)} (${escHtml(data.golferEmail)})</p>
       <p style="margin:0 0 8px;"><strong>Date:</strong> ${data.date} at ${data.time}</p>
       <p style="margin:0 0 12px;"><strong>Players:</strong> ${data.players} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</p>
       <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5e7eb;padding-top:10px;">
@@ -305,7 +304,7 @@ export async function sendCancellationWarningEmail(data: {
     <div style="margin-bottom:8px;"><span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:13px;font-weight:600;padding:4px 12px;border-radius:3px;">Action required</span></div>
     <h1 style="margin:16px 0 4px;color:#111827;font-size:24px;font-weight:700;">Your cancellation window closes soon.</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
-      Hi ${data.golferName} — your tee time at <strong style="color:#111827;">${data.courseName}</strong> on ${data.date} at ${data.time} is coming up.
+      Hi ${escHtml(data.golferName)} — your tee time at <strong style="color:#111827;">${data.courseName}</strong> on ${data.date} at ${data.time} is coming up.
       The free-cancellation window (${hoursLabel(data.cancellationHours)} before your tee time) closes within the next hour.
     </p>
     <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:4px;padding:16px;margin-bottom:24px;">
@@ -653,7 +652,7 @@ export async function sendGolferPasswordResetEmail(data: {
   const html = baseTemplate(`
     <h1 style="margin:0 0 4px;color:#111827;font-size:24px;font-weight:700;">Reset your password</h1>
     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">
-      Hi ${data.golferName} — we got a request to reset the password on your GreenReserve account (${data.golferEmail}).
+      Hi ${escHtml(data.golferName)} — we got a request to reset the password on your GreenReserve account (${escHtml(data.golferEmail)}).
       If this wasn't you, you can safely ignore this email.
     </p>
     <a href="${data.resetLink}" style="display:block;background:#1b4332;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:4px;font-weight:800;font-size:16px;margin-bottom:16px;">

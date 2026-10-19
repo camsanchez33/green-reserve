@@ -52,7 +52,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     serviceFee: feeCents / 100,
     total: totalCents / 100,
     paymentStatus: m.paymentStatus,
-    alreadyPaid: m.paymentStatus === 'paid' || m.paymentStatus === 'paid_offline',
+    // Paid, and not yet inside the 30-day renewal window the POST allows —
+    // else the renewal link the reminder cron sends could never be paid.
+    alreadyPaid: (m.paymentStatus === 'paid' || m.paymentStatus === 'paid_offline')
+      && !(m.expiresAt && (m.expiresAt.getTime() - Date.now()) / 86400000 <= 30),
     expiresAt: m.expiresAt,
     stripeReady: !!(m.course.stripeAccountActive && m.course.stripeAccountId),
   });
@@ -76,10 +79,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { duesCents, feeCents, totalCents } = amountsDue(m);
   if (duesCents <= 0) return NextResponse.json({ error: 'Nothing due on this membership.' }, { status: 409 });
 
-  // A paid membership can only be paid again once it's within its renewal
-  // window (30 days of expiry) — protects against double-pays from old emails.
-  if (m.paymentStatus === 'paid' && m.expiresAt) {
-    const daysLeft = (m.expiresAt.getTime() - Date.now()) / 86400000;
+  // Launch security review 2026-10-18: the whole pay runs holding this
+  // membership's row lock, so a double click or a retry waits for the first
+  // payment and then hits the guards below instead of charging again.
+  return prisma.$transaction(async (tx) => {
+  await tx.$queryRaw`SELECT id FROM "CourseMembership" WHERE id = ${m.id} FOR UPDATE`;
+  const now = await tx.courseMembership.findUnique({ where: { id: m.id }, select: { status: true, paymentStatus: true, expiresAt: true } });
+  if (!now) return NextResponse.json({ error: 'Invalid or expired payment link.' }, { status: 404 });
+  // A membership the course deactivated is not revived by an old pay link.
+  if (now.status !== 'active') {
+    return NextResponse.json({ error: 'This membership is no longer active — please contact the course.' }, { status: 409 });
+  }
+  // A paid membership (online, or cash/check at the shop) can only be paid
+  // again within its renewal window (30 days of expiry) — protects against
+  // double-pays from old emails.
+  if ((now.paymentStatus === 'paid' || now.paymentStatus === 'paid_offline') && now.expiresAt) {
+    const daysLeft = (now.expiresAt.getTime() - Date.now()) / 86400000;
     if (daysLeft > 30) {
       return NextResponse.json({ error: 'These dues are already paid — nothing due until renewal.' }, { status: 409 });
     }
@@ -110,15 +125,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // Term extends from expiry if renewing early, from today otherwise.
   const termMonths = m.tier?.termMonths ?? 12;
-  const base = m.expiresAt && m.expiresAt.getTime() > Date.now() ? new Date(m.expiresAt) : new Date();
+  const base = now.expiresAt && now.expiresAt.getTime() > Date.now() ? new Date(now.expiresAt) : new Date();
   const newExpiry = new Date(base);
   newExpiry.setMonth(newExpiry.getMonth() + termMonths);
 
-  const updated = await prisma.courseMembership.update({
+  const updated = await tx.courseMembership.update({
     where: { id: m.id },
     data: {
       paymentStatus: 'paid',
-      status: 'active',
       startedAt: m.startedAt ?? new Date(),
       lastPaidAt: new Date(),
       lastPaymentIntentId: paymentIntentId,
@@ -138,4 +152,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }).catch(console.error));
 
   return NextResponse.json({ success: true, amountPaid: totalCents / 100, expiresAt: updated.expiresAt });
+  }, { timeout: 30_000, maxWait: 30_000 });
 }

@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
+import { previewFor } from '@/lib/seo';
 import { loadDocument } from '@/lib/agreements';
 
 export const metadata: Metadata = {
   title: 'Operator Agreement',
   description: 'The agreement between GreenReserve and golf courses listing on the platform — fees, liability, data, and termination.',
+  // Link previews carry this page's own title, not the homepage's.
+  ...previewFor('Operator Agreement | GreenReserve', 'The agreement between GreenReserve and golf courses listing on the platform — fees, liability, data, and termination.'),
 };
 
 // AG-1: this page renders legal/documents/operator-agreement/<current>.md —

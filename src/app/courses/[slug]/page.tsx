@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { OG_BASE } from '@/lib/seo';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
@@ -11,7 +12,7 @@ export async function generateMetadata(
   const { slug } = await params;
   const course = await prisma.course.findUnique({
     where: { slug },
-    select: { name: true, city: true, state: true, type: true },
+    select: { name: true, city: true, state: true, type: true, heroPhotoUrl: true, logoUrl: true, photos: { orderBy: { sortOrder: 'asc' }, take: 1, select: { url: true } } },
   });
   const isDemo = DEMO_COURSE_SLUGS.includes(slug);
   const robots = isDemo ? { index: false, follow: false } : undefined;
@@ -23,10 +24,14 @@ export async function generateMetadata(
       robots,
     };
   }
+  const title = `${course.name} — Book Tee Times`;
+  const description = `Book tee times at ${course.name} in ${course.city}, ${course.state}. Online reservations powered by GreenReserve — direct booking, no middleman.`;
+  // A shared link previews as the course: its name and its own photo (or logo).
+  const image = course.heroPhotoUrl || course.photos[0]?.url || course.logoUrl;
   return {
-    title: `${course.name} — Book Tee Times`,
-    description: `Book tee times at ${course.name} in ${course.city}, ${course.state}. Online reservations powered by GreenReserve — direct booking, no middleman.`,
-    robots,
+    title, description, robots,
+    openGraph: { ...OG_BASE, title, description, url: `/courses/${slug}`, ...(image ? { images: [{ url: image, alt: course.name }] } : {}) },
+    twitter: { card: 'summary_large_image', title, description, ...(image ? { images: [image] } : {}) },
   };
 }
 
