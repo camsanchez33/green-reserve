@@ -11840,7 +11840,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1889,
+      "lines": 1901,
       "purpose": "",
       "brain": [],
       "exports": [
