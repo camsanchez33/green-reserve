@@ -122,7 +122,8 @@ function MoneyPageInner() {
     ]);
     setOverview(o && o.ok ? o.data : null);
     setOverviewError(o && !o.ok ? o.error : '');
-    setNextPayout(p && p.ok ? (p.data.next ?? null) : undefined);
+    // Not connected is its own state (undefined → "Connect Stripe"), never "nothing on its way".
+    setNextPayout(p && p.ok ? (p.data.connected ? (p.data.next ?? null) : undefined) : undefined);
     setPayoutError(p && !p.ok ? p.error : '');
   }, [seesPayments, seesPayouts]);
 
@@ -174,8 +175,9 @@ function MoneyPageInner() {
               {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Not paid yet</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.notPaidCents)}</div><div className="text-[12.5px] text-ink-muted">{overview.notPaidGroups === 0 ? 'every group in the last 7 days has paid' : `${overview.notPaidGroups} group${overview.notPaidGroups === 1 ? '' : 's'} in the last 7 days, no-shows included`}</div></div>}
               {seesPayouts && !payoutError && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Next payout</div>
                 {nextPayout ? <><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">lands in your bank {fmtArrival(nextPayout.arrivalDate)}</div></>
+                  : courseLoaded && !course.stripeAccountActive ? <div className="text-[13.5px] text-ink-soft mt-1.5">Connect Stripe to get paid (Payouts tab).</div>
                   : nextPayout === null ? <div className="text-[13.5px] text-ink-soft mt-1.5">Nothing on its way right now.</div>
-                  : <div className="text-[13.5px] text-ink-soft mt-1.5">{courseLoaded && !course.stripeAccountActive ? 'Connect Stripe to get paid (Payouts tab).' : 'Checking Stripe…'}</div>}
+                  : <div className="text-[13.5px] text-ink-soft mt-1.5">Checking Stripe…</div>}
               </div>}
             </Card>
           )}

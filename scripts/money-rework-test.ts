@@ -35,5 +35,6 @@ const payouts = readFileSync('src/components/dashboard/money/PayoutsPanel.tsx', 
 check('fee note uses only LQ-2 allowed sentences', payouts.includes('our ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player is then passed to GreenReserve') && !payouts.includes('Nothing. Golfers') && !/from your payouts/.test(payouts));
 check('a failed payouts load is an error, never "nothing on its way"', page.includes('setPayoutError(p && !p.ok ? p.error') && page.includes('nextPayout === null ?'));
 check('no money totals summed from the capped 200-row list', !pay.includes('$ paid') && !pay.includes("`${usd(paid)} paid`") && !cx.includes('in fees kept'));
+check('an unconnected course is told to connect Stripe, not that nothing is on its way', page.includes('p.data.connected ?') && page.indexOf("Connect Stripe to get paid") < page.indexOf('nextPayout === null ?'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
