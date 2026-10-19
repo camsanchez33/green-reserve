@@ -100,6 +100,11 @@ suggestion save this information". Decisions go here as they are made.
 beside the form (homepage feel; form only on phones) and a "Need help signing
 in?" line pointing to support. ("Ask a question" was not swapped for Book a demo.)
 
+**Round 5 (Cam 2026-10-19):** hide Test Course 3 from the public site and the
+sitemap; the site phone number is Cam's cell (number to come from Cam);
+REMOVE durations and contract terms from /for-courses too; fix link previews
+before launch (course pages preview with the course's name and photo).
+
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT
 
 Cam scrapped the "why switch" rewrite and wrote the page himself. Where §1–§3
