@@ -5,7 +5,8 @@ name: Tests
 # quietly gone stale. Every PR now runs:
 #   1. every pure script (any scripts/*-test.ts not listed in SERVER_TESTS)
 #   2. a production build, started against a throwaway Postgres
-#   3. the server-backed scripts against it: tenant isolation, booking concurrency
+#   3. the server-backed scripts against it: tenant isolation, booking concurrency,
+#      member portal prices
 # load-test.ts is NOT here on purpose: its p95 budget measures the runner, not
 # the code. Run it by hand (see its header).
 
@@ -41,7 +42,7 @@ jobs:
       JWT_SECRET: ci-only-not-a-real-secret-0123456789abcdef
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
       TEST_URL: http://localhost:3000
-      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts"
+      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts"
 
     steps:
       - uses: actions/checkout@v4
@@ -87,6 +88,9 @@ jobs:
 
       - name: Booking concurrency
         run: npx tsx scripts/concurrency-test.ts
+
+      - name: Member portal prices match booking
+        run: npx tsx scripts/member-portal-price-test.ts
 
       - name: Server log
         if: failure()
