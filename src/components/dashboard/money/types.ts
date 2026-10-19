@@ -4,7 +4,7 @@ export type MoneyBooking = {
   id: string; golferName: string; golferEmail: string; players: number;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number; totalAmount: number;
   cancellationFeeTotal: number; cancelledAt?: string | null; cancellationFeeChargedAt?: string | null;
-  paymentStatus: string; status: string; appliedRate?: string; createdAt: string;
+  paymentStatus: string; status: string; appliedRate?: string; createdAt: string; noShowAt?: string | null;
   teeTime: { date: string; time: string; holes: number };
 };
 
