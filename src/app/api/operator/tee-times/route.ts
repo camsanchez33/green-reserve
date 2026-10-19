@@ -31,6 +31,8 @@ export async function GET(req: NextRequest) {
       ...(withBookings ? { bookings: {
       where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
       select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true, cancellationFeeTotal: true, roundPaymentIntentId: true,
+        // RES-1: residents in the group, and whether it is on a member rate.
+        residentPlayers: true, appliedRate: true,
         // POS-1a: pro-shop items added to the round, for the panel.
         shopTotalCents: true, shopFeeCents: true, shopLockedAt: true, shopItems: { orderBy: { createdAt: 'asc' }, select: { id: true, name: true, unitPriceCents: true, quantity: true } } },
     } } : {}),

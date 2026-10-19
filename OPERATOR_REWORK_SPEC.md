@@ -143,7 +143,7 @@ My calls (no question needed): course identity edits go to GreenReserve for appr
 Shipped notes (2026-10-19):
 - Facilities has no separate note per item. Adding one would need a new column, and that migration waits until after launch. The existing detail fields (range type and balls, pro shop phone, rental prices, caddie type, rates and note, tournament frequency) do that job, and anything else goes in "Anything else" (one line each).
 - Tee colour comes from the tee's name (Blue, Black, Gold…); it is not stored. Par stays one number for the course; there is no par per tee.
-- Resident rates are saved on schedules but never charged: no booking or counter path applies them. Whether to build that or hide resident pricing until after launch is Cam's call.
+- Resident rates: built (RES-1, Cam 2026-10-19 "yes build the resident flow"). Members → Residents holds the list (name, email, card number, card good until, notes). A signed-in golfer on the list books themselves at the resident rate; the rest of the group pays the public rate (per player, as municipal courses charge — not the whole group). The tee-sheet panel's "Residents" picker sets how many of an unpaid group are residents. A member rate is never combined with it.
 
 ## Pro shop — POS-2 (Cam 2026-10-19: "everything")
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { applyTierRates } from '@/lib/tier-rates';
+import { groupGreenFee } from '@/lib/residents';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
 import { describePolicy, policyFrom, cardRequired, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
@@ -7,7 +8,7 @@ import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars } from '@/lib/money';
 import { getGolferSession } from '@/lib/auth';
-import { getMemberSession, getGolferMembership } from '@/lib/member-session';
+import { getMemberSession, getGolferMembership, golferResident } from '@/lib/member-session';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -136,7 +137,13 @@ export async function POST(req: NextRequest) {
   const cartFeePerPlayerCents  = resolvedCartFeeOverride  ?? teeTimeFull.cartFeeCents;
   const wantsCart = teeTimeFull.course.cartRequired ? true : !!cartSelected;
 
-  const greenFeeTotal  = greenFeePerPlayerCents * players;
+  // RES-1: a signed-in golfer on the course's resident list pays the resident
+  // rate for one player — themselves. A member rate is never combined with it.
+  const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null
+    ? await golferResident(teeTimeFull.courseId, teeTimeFull.date) : null;
+  const priced = groupGreenFee(players, greenFeePerPlayerCents, resident ? 1 : 0, teeTimeFull.residentRateCents);
+  const greenFeeTotal  = priced.greenFeeTotal;
+  if (priced.residentPlayers > 0) appliedRate = 'resident';
   const cartFeeTotal   = wantsCart ? cartFeePerPlayerCents * players : 0;
 
   let rangeBallsTotal = 0;
@@ -222,6 +229,8 @@ export async function POST(req: NextRequest) {
       players,
       appliedRate,
       greenFeeTotal,
+      residentPlayers:  priced.residentPlayers,
+      residentRateCents: priced.residentRateCents,
       cartFeeTotal,
       cartSelected:     wantsCart,
       rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',
@@ -341,6 +350,7 @@ export async function POST(req: NextRequest) {
     bookingId:      claimed.id,
     appliedRate,
     memberRate:     appliedTierName !== 'standard',
+    residentPlayers: priced.residentPlayers,
     greenFeeTotal:  greenFeeTotal  / 100,
     cartFeeTotal:   cartFeeTotal   / 100,
     rangeBallsTotal: rangeBallsTotal / 100,

@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 import { getGolferSession } from './auth';
+import { cardValidOn } from './residents';
 
 const rawSecret =
   process.env.JWT_SECRET ||
@@ -85,4 +86,22 @@ export async function getGolferMembership(courseId: string): Promise<{ membershi
   if (!membership) return null;
 
   return { membershipId: membership.id, tierName: membership.tier?.name ?? membership.membershipType };
+}
+
+/** The signed-in golfer's resident card at this course, if it is good on `dateYmd`. */
+export async function golferResident(courseId: string, dateYmd: string) {
+  const session = await getGolferSession();
+  if (!session) return null;
+  // The account's email from the database (as getGolferMembership does), not the token's copy.
+  const golfer = await prisma.golferAccount.findUnique({ where: { id: session.golferId }, select: { email: true } });
+  return golfer?.email ? residentOn(courseId, golfer.email, dateYmd) : null;
+}
+
+/** The resident card listed under this email at this course, if it is good on `dateYmd`. */
+export async function residentOn(courseId: string, emailRaw: string, dateYmd: string) {
+  const email = emailRaw.trim().toLowerCase();
+  if (!email) return null;
+  const r = await prisma.courseResident.findUnique({ where: { courseId_email: { courseId, email } } });
+  if (!r || !cardValidOn(r.expiresOn, dateYmd)) return null;
+  return r;
 }

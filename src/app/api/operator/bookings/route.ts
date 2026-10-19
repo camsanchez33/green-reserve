@@ -8,6 +8,7 @@ import { performCheckIn } from '@/lib/checkin-booking';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { sendBookingConfirmation, sendCheckInAvailableEmail, sendBookingModifiedEmail, isPlaceholderEmail } from '@/lib/email';
 import { moveBooking } from '@/lib/move-booking';
+import { setBookingResidents } from '@/lib/booking-residents';
 import { todayIn, isPastIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { refundSeparateAccessFee, liveSeparateFee } from '@/lib/access-fee';
@@ -72,17 +73,17 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'paid_offline', 'send_pay_link', 'move'];
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'paid_offline', 'send_pay_link', 'move', 'set_residents'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
   // SP-A: each counter action is its own permission.
-  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', move: 'sheet.move' };
+  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', move: 'sheet.move', set_residents: 'sheet.counter_payment' };
   const deniedAction = requirePermission(session, NEEDS[action]);
   if (deniedAction) return deniedAction;
   // SP-A: cancelling WITHOUT the late fee refunds a hold already taken — its own permission.
@@ -113,6 +114,12 @@ export async function PATCH(req: NextRequest) {
   // `dryRun` returns what the move would do (price both ways, whether the new
   // time's free-cancellation window has closed) so the sheet can show it
   // before Confirm. The price is kept unless staff ask for the new time's rate.
+  // RES-1: how many of the group are residents (they showed their card).
+  if (action === 'set_residents') {
+    const r = await setBookingResidents(session.courseId, id, residentPlayers, staff);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r);
+  }
   if (action === 'move') {
     if (typeof newTeeTimeId !== 'string' || !newTeeTimeId) return NextResponse.json({ error: 'Pick a tee time to move to.' }, { status: 400 });
     const r = await moveBooking({ bookingId: id, newTeeTimeId, courseId: session.courseId, pricing: reprice === true ? 'new_slot' : 'keep', actor: staff, allowCheckedIn: true, dryRun: dryRun === true });
