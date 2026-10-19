@@ -83,6 +83,7 @@ export async function GET() {
     createdAt:      m.createdAt,
     linked:         !!m.golferId,
     lastRound:      lastRound(m),
+    initiationWaived: m.initiationWaived,
   }));
 
   return NextResponse.json(normalized);

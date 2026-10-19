@@ -4659,7 +4659,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 292,
+      "lines": 293,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6430,7 +6430,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 683,
+      "lines": 685,
       "purpose": "",
       "brain": [],
       "exports": [

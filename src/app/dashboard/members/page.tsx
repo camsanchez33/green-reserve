@@ -33,6 +33,8 @@ interface Member {
   paymentStatus?: string; lastPaidAt?: string | null; annualFee?: number; initiationFee?: number;
   /** YYYY-MM-DD of their latest checked-in round here, or null. */
   lastRound?: string | null;
+  /** Imported members already belong: no joining fee in what they owe. */
+  initiationWaived?: boolean;
 }
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
@@ -58,7 +60,7 @@ function duesOf(m: Member, now: Date): Dues {
   if (m.status !== 'active') return { kind: 'inactive', label: 'Not active', tone: 'neutral' };
   // What they'd owe now — the same sum the dues pay link and the Remind button use.
   // A free membership owes nothing, whatever paymentStatus still says (it defaults to 'unpaid').
-  const owed = (m.annualFee ?? 0) + (m.lastPaidAt ? 0 : (m.initiationFee ?? 0));
+  const owed = (m.annualFee ?? 0) + ((m.lastPaidAt || m.initiationWaived) ? 0 : (m.initiationFee ?? 0));
   if (m.paymentStatus === 'comped' || owed <= 0) return { kind: 'comped', label: 'No dues', tone: 'ok' };
   if (m.paymentStatus === 'unpaid') return { kind: 'unpaid', label: `Dues unpaid · ${fmtMoney(owed)}`, tone: 'bad' };
   if (m.expiresAt && new Date(m.expiresAt) < now) return { kind: 'expired', label: `Expired ${fmtDate(m.expiresAt)}`, tone: 'bad' };

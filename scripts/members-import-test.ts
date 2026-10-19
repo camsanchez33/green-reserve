@@ -84,7 +84,9 @@ async function main() {
     readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
     && readFileSync('src/app/api/operator/members/remind-overdue/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
     && readFileSync('src/app/api/membership/[id]/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
-    && readFileSync('src/app/api/member/[courseSlug]/payments/route.ts', 'utf8').includes('!membership.initiationWaived'));
+    && readFileSync('src/app/api/member/[courseSlug]/payments/route.ts', 'utf8').includes('!membership.initiationWaived')
+    && readFileSync('src/app/dashboard/members/page.tsx', 'utf8').includes('(m.lastPaidAt || m.initiationWaived) ? 0')
+    && readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('initiationWaived: m.initiationWaived'));
   check('only "already a member" is swallowed; other failures fail the import', readFileSync('src/lib/member-import.ts', 'utf8').includes("code !== 'P2002') throw err"));
   check('the import never emails', !/send\w*Email|sendSms/.test(route + readFileSync('src/lib/member-import.ts', 'utf8')));
   check('the members list returns each member\'s last round', readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('lastRound:      lastRound(m)'));

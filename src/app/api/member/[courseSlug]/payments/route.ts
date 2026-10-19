@@ -72,7 +72,7 @@ export async function GET(
       startedAt: membership.startedAt,
       tierName: membership.tier?.name ?? membership.membershipType,
       annualFee: centsToDollarsOr0(membership.tier?.annualFeeCents),
-      initiationFee: centsToDollarsOr0(membership.tier?.initiationFeeCents),
+      initiationFee: membership.initiationWaived ? 0 : centsToDollarsOr0(membership.tier?.initiationFeeCents),
     },
     records,
     courseName: course.name,

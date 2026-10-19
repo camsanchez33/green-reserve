@@ -72,7 +72,7 @@ export async function GET(
           discountPct: membership.tier.discountPct,
           advanceBookingDays: membership.tier.advanceBookingDays,
           annualFee: centsToDollarsOr0(membership.tier.annualFeeCents),
-          initiationFee: centsToDollarsOr0(membership.tier.initiationFeeCents),
+          initiationFee: membership.initiationWaived ? 0 : centsToDollarsOr0(membership.tier.initiationFeeCents),
         }
       : null,
   });
