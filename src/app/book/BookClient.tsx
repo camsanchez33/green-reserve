@@ -467,8 +467,11 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
 
   // The wallet sheet's handler is registered once, so it reads the latest
   // form values from here.
-  const latest = useRef({ name, email, phone });
-  latest.current = { name, email, phone };
+  // Cam 2026-10-19: agreeing is a box the golfer ticks, never implied by the
+  // button (clickwrap). Nothing books — card form, Apple Pay or no card — until it is.
+  const [agreed, setAgreed] = useState(false);
+  const latest = useRef({ name, email, phone, agreed });
+  latest.current = { name, email, phone, agreed };
 
   /** Create the booking. setupIntentId when a card was saved for it. */
   async function book(who: { name: string; email: string; phone: string }, setupIntentId?: string): Promise<boolean> {
@@ -485,7 +488,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         ...(setupIntentId ? { setupIntentId } : {}),
         cartSelected,
         rangeBallsSize,
-        termsAccepted: true,
+        termsAccepted: latest.current.agreed === true,
       }),
     });
     const data = await res.json();
@@ -534,6 +537,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
     req.on('paymentmethod', async (ev) => {
       setError('');
       const f = latest.current;
+      if (!f.agreed) { ev.complete('fail'); setError('Tick the box to agree to the terms, then try again.'); return; }
       const who = {
         name: f.name.trim() || ev.payerName || '',
         email: f.email.trim() || ev.payerEmail || '',
@@ -573,6 +577,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   async function handleSubmit() {
     setError('');
     if (!name.trim() || !email.trim()) { setError('Please enter your name and email.'); return; }
+    if (!agreed) { setError('Tick the box to agree to the terms before you book.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email address.'); return; }
     setLoading(true);
     try {
@@ -624,10 +629,18 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         </div>
       </div>
 
+      <label className="flex items-start gap-2.5 text-[13px] text-ink leading-snug cursor-pointer select-none">
+        <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: accent }} />
+        <span>
+          I agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a> and
+          to {courseName || 'this course'}&apos;s cancellation policy shown on this page, including that {courseName || 'the course'} and GreenReserve keep my booking history.
+        </span>
+      </label>
+
       {needsCard && <>
       <div className="pt-1 border-t border-line-soft" />
       <StepHeading title="A card to hold your spot" note="Nothing is charged today." />
-      {walletRequest && (
+      {walletRequest && agreed && (
         <>
           <PaymentRequestButtonElement options={{ paymentRequest: walletRequest, style: { paymentRequestButton: { type: 'book', theme: 'dark', height: '48px' } } }} />
           <div className="flex items-center gap-3 text-xs text-ink-muted">
@@ -647,12 +660,10 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
       {error && <p className="text-bad text-sm">{error}</p>}
 
       {!needsCard && <TrustNote>No charge until check-in.</TrustNote>}
-      <p className="text-[11px] text-ink text-center leading-snug">
-        By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy. See how we handle your information in our <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Privacy Policy</a>.
-      </p>
+      {!agreed && <p className="text-[12px] text-ink-muted text-center">Tick the box above to agree to the terms and book{needsCard ? ' (Apple Pay and Google Pay appear once you do)' : ''}.</p>}
       <button
         onClick={handleSubmit}
-        disabled={loading || (needsCard && !stripe)}
+        disabled={loading || !agreed || (needsCard && !stripe)}
         className="w-full py-3.5 rounded-md font-medium text-white text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         style={{ backgroundColor: accent }}
       >
