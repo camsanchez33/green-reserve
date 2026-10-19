@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-416 source files · 213 routes · 124 libraries · 39 models
+417 source files · 213 routes · 125 libraries · 39 models
 
 ## Single sources of truth
 
@@ -250,7 +250,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 118 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 457 |
-| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1080 |
+| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1122 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 27 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
@@ -340,7 +340,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/go-live-preflight.ts` | 3 | 35 |  | `computeStripeGoLiveCheck`, `StripeGoLiveCheck` |
 | `src/lib/inquiry-needs.ts` | 3 | 38 | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column. | `NeedItem`, `stillNeed` |
 | `src/lib/money-problems.ts` | 3 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
-| `src/lib/normalize-course.ts` | 3 | 85 |  | `normalizeDbCourse` |
+| `src/lib/normalize-course.ts` | 3 | 89 |  | `normalizeDbCourse` |
 | `src/lib/public-course.ts` | 3 | 31 | PERF-1: | `loadPublicCourse` |
 | `src/lib/thread-signal.ts` | 3 | 52 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
 | `src/lib/unsaved-guard.ts` | 3 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
@@ -353,6 +353,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/calcom-url.ts` | 2 | 21 | The prefilled Cal.com booking link — no server-only imports, so the /for-courses thanks page can build it in the browser (FB-1 review) as well as the server routes (via lib/calcom.ts). | `calcomEmbedUrl` |
 | `src/lib/course-closure.ts` | 2 | 128 | MP-5b. | `cancelFutureBookingsForClosure`, `closureImpact`, `ClosureImpact`, `ClosureResult`, `notifyOperatorOfClosure` |
 | `src/lib/courses-data.ts` | 2 | 320 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
+| `src/lib/facilities.ts` | 2 | 53 | Settings rework (Cam 2026-10-19: | `FacilityFields`, `facilityLines`, `FOOD_TYPES`, `RANGE_TYPES`, `TOURNAMENT_FREQ` |
 | `src/lib/image-resize.ts` | 2 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/inquiry-action-queue.ts` | 2 | 105 | The Overview action queue's inquiry rows. | `ActionQueueRow`, `buildInquiryQueueRows`, `QueueInquiry` |
 | `src/lib/inquiry-signin.ts` | 2 | 124 | SD-11 — the "are you trying to sign in?" challenge that sits between the public sign-up form and a course that already exists. | `CODE_TTL_SECONDS`, `codeMatches`, `cookieOptions`, `generateCode`, `inertChallenge`, `macCode`, `MAX_CODE_ATTEMPTS`, `newChallengeId` +5 more |
@@ -432,7 +433,7 @@ Sorted the same way.
 | `src/components/birdie/BirdieWidget.tsx` | 1 | 207 | BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard. | `default (BirdieWidget)` |
 | `src/components/birdie/ConfirmCard.tsx` | 1 | 96 | BIRDIE_AI_SPEC B4b — a change Birdie drafted, waiting on the operator. | `ConfirmCard` |
 | `src/components/dashboard/AgreementNotice.tsx` | 1 | 68 | AGREEMENT_SPEC AG-3 §3 — the re-acceptance banner and, after the deadline, the modal. | `AGREEMENT_REQUIRED_EVENT`, `default (AgreementNotice)` |
-| `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 500 | Settings rework (Cam 2026-10-19: | `default (CourseLayoutTab)` |
+| `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 503 | Settings rework (Cam 2026-10-19: | `default (CourseLayoutTab)` |
 | `src/components/dashboard/CoursePreview.tsx` | 1 | 80 | B-6 (UI_REVISE_SPEC §4): | `CoursePreviewProps`, `default (CoursePreview)` |
 | `src/components/dashboard/DateRangeButton.tsx` | 1 | 117 | AN-3 (Cam 2026-10-19: | `DateRange`, `default (DateRangeButton)`, `presets`, `rangeLabel` |
 | `src/components/dashboard/GettingStartedChecklist.tsx` | 1 | 187 |  | `default (GettingStartedChecklist)` |

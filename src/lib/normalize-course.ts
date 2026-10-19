@@ -1,4 +1,5 @@
 import { policyFrom } from './cancel-policy';
+import { facilityLines } from '@/lib/facilities';
 import { centsToDollarsOr0 } from './money';
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
@@ -24,7 +25,10 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     holes: c.holes,
     par: c.par,
     description: c.description,
-    amenities: Array.isArray(c.amenities) ? c.amenities.join(', ') : (c.amenities ?? ''),
+    // The booking page reads this as a list; a joined string crashed it (.filter on a string).
+    amenities: Array.isArray(c.amenities) ? c.amenities.map((a: unknown) => String(a)) : [],
+    // Settings rework (Cam 2026-10-19): everything the course ticked under Facilities, in golfers' words.
+    facilities: facilityLines(c),
     walking_allowed: c.walkingAllowed === 'always' || c.walkingAllowed === 'allowed',
     cart_required: c.cartRequired ?? false,
     // Settings rework (Cam 2026-10-19): what the course set under Booking rules, shown in About.

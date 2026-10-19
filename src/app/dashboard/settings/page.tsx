@@ -19,6 +19,7 @@ import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { walkingWords } from '@/lib/walking';
+import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityFields } from '@/lib/facilities';
 import { Card } from '@/components/ui/Card';
 import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
 
@@ -96,6 +97,28 @@ const IDENTITY_ROWS: { key: string; label: string }[] = [
   { key: 'city', label: 'City' },
   { key: 'state', label: 'State' },
   { key: 'zipCode', label: 'ZIP' },
+];
+// Facilities checklist, in the order golfers think about them. Food and drink
+// (one choice) and "Anything else" sit below the groups.
+const FACILITY_GROUPS: { title: string; items: { key: string; label: string }[] }[] = [
+  { title: 'Practice', items: [
+    { key: 'hasDrivingRange', label: 'Driving range' },
+    { key: 'hasPuttingGreen', label: 'Putting green' },
+    { key: 'hasShortGameArea', label: 'Chipping and short-game area' },
+  ] },
+  { title: 'Shop, rentals and help', items: [
+    { key: 'hasProShop', label: 'Pro shop' },
+    { key: 'hasLessons', label: 'Lessons' },
+    { key: 'hasClubRental', label: 'Club rental' },
+    { key: 'hasPushCartRental', label: 'Push carts' },
+    { key: 'hasCaddies', label: 'Caddies' },
+  ] },
+  { title: 'Clubhouse and carts', items: [
+    { key: 'hasGpsCarts', label: 'GPS in the carts' },
+    { key: 'hasBagStorage', label: 'Bag storage' },
+    { key: 'hasLockerRoom', label: 'Locker room' },
+    { key: 'hasTournaments', label: 'Tournaments' },
+  ] },
 ];
 // The four walking rules the settings API accepts, in golfers' words.
 const WALKING_CHOICES = [
@@ -442,6 +465,13 @@ function SettingsPageInner() {
 
   const dresscodes = (form.dresscode as string[])||[];
   const dresscodeLines = dresscodes.map(l => l.trim()).filter(Boolean);
+  // The preview reads the same lines the booking page does; the form holds dollars, the lib wants cents.
+  const cents$ = (v: unknown) => Math.round(Number(v || 0) * 100);
+  const facilityPreview = facilityLines({
+    ...(form as FacilityFields),
+    clubRentalRateCents: cents$(form.clubRentalRate), pushCartRateCents: cents$(form.pushCartRate),
+    caddieLooperRateCents: cents$(form.caddieLooperRate), caddieForeRateCents: cents$(form.caddieForeRate),
+  });
   const walking = WALKING_CHOICES.some(o => o.key === form.walkingAllowed) ? form.walkingAllowed as string : 'always';
 
   const goTo = (sec: Section) => { setActive(sec); document.querySelector('main')?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); };
@@ -863,85 +893,97 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Facilities ── */}
+          {/* ── Facilities ── Settings rework (Cam 2026-10-19: "the worst thing I have
+              ever seen"). One checklist of what the course has; ticking a line opens
+              its one or two details. Beside it, the list exactly as golfers read it. */}
           {active==='Facilities' && (
-            <div className="space-y-5">
-              <SectionCard title="Practice">
-                <Toggle label="Driving Range" checked={!!form.hasDrivingRange} onChange={()=>tog('hasDrivingRange')}/>
-                {!!form.hasDrivingRange && (
-                  <>
-                    <Field label="Range type">
-                      <select value={form.drivingRangeType as string} onChange={e=>set('drivingRangeType',e.target.value)} className={iCls}>
-                        <option value="">Select...</option>
-                        <option value="grass">Grass tees</option>
-                        <option value="mat">Mat only</option>
-                        <option value="both">Grass + Mat</option>
-                        <option value="toptracer">TopTracer</option>
-                      </select>
-                    </Field>
-                    <Toggle label="Range Balls Free / Included" checked={form.rangeBallsFree!==false} onChange={()=>tog('rangeBallsFree')}/>
-                  </>
-                )}
-                <Toggle label="Putting Green" checked={!!form.hasPuttingGreen} onChange={()=>tog('hasPuttingGreen')}/>
-                <Toggle label="Short Game / Chipping Area" checked={!!form.hasShortGameArea} onChange={()=>tog('hasShortGameArea')}/>
-              </SectionCard>
-              <SectionCard title="Amenities">
-                <Toggle label="Pro Shop" checked={!!form.hasProShop} onChange={()=>tog('hasProShop')}/>
-                {!!form.hasProShop && <Field label="Pro shop phone number"><FInput value={form.proShopPhone as string} onChange={v=>set('proShopPhone',v)} placeholder="(201) 555-0100"/></Field>}
-                <Toggle label="Lessons Available" checked={!!form.hasLessons} onChange={()=>tog('hasLessons')}/>
-                <Toggle label="Club Rental" checked={!!form.hasClubRental} onChange={()=>tog('hasClubRental')}/>
-                {!!form.hasClubRental && <Field label="Club rental rate ($)"><FInput value={form.clubRentalRate as number} onChange={v=>set('clubRentalRate',Number(v))} type="number"/></Field>}
-                <Toggle label="Push Cart Rental" checked={!!form.hasPushCartRental} onChange={()=>tog('hasPushCartRental')}/>
-                {!!form.hasPushCartRental && <Field label="Push cart rate ($)"><FInput value={form.pushCartRate as number} onChange={v=>set('pushCartRate',Number(v))} type="number"/></Field>}
-                <Toggle label="Bag Storage" checked={!!form.hasBagStorage} onChange={()=>tog('hasBagStorage')}/>
-                <Toggle label="Locker Room" checked={!!form.hasLockerRoom} onChange={()=>tog('hasLockerRoom')}/>
-                <Toggle label="GPS Carts" checked={!!form.hasGpsCarts} onChange={()=>tog('hasGpsCarts')}/>
-                <Toggle label="Tournaments Hosted" checked={!!form.hasTournaments} onChange={()=>tog('hasTournaments')}/>
-                {!!form.hasTournaments && (
-                  <Field label="How often?">
-                    <select value={form.tournamentFrequency as string} onChange={e=>set('tournamentFrequency',e.target.value)} className={iCls}>
-                      <option value="">Select...</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="seasonally">A few times a season</option>
-                      <option value="rarely">Rarely</option>
-                    </select>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+              <Card className="p-5">
+                <h2 className="text-[15px] font-semibold text-ink">What your course has</h2>
+                <p className="text-sm text-ink-soft mt-1 mb-3">Tick everything golfers can use. It shows on your booking page.</p>
+                {FACILITY_GROUPS.map(g => (
+                  <div key={g.title} className="border-t border-line-soft pt-3 mt-3 first-of-type:border-0">
+                    <h3 className="text-[13px] font-semibold text-ink mb-1">{g.title}</h3>
+                    <ul>
+                      {g.items.map(it => (
+                        <li key={it.key} className="py-1.5">
+                          <label className="flex items-center gap-2.5 text-sm text-ink cursor-pointer">
+                            <input type="checkbox" checked={!!form[it.key]} onChange={() => tog(it.key)} className="accent-pine w-4 h-4"/>
+                            {it.label}
+                          </label>
+                          {!!form[it.key] && it.key === 'hasDrivingRange' && (
+                            <div className="pl-[26px] mt-2 flex flex-wrap items-center gap-3">
+                              <select value={String(form.drivingRangeType ?? '')} onChange={e=>set('drivingRangeType',e.target.value)} className={iCls + ' !w-auto'} aria-label="Range type">
+                                <option value="">Type of range…</option>
+                                {Object.entries(RANGE_TYPES).map(([k, v]) => <option key={k} value={k}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
+                              </select>
+                              <label className="flex items-center gap-2 text-[13px] text-ink-soft"><input type="checkbox" checked={form.rangeBallsFree !== false} onChange={() => set('rangeBallsFree', form.rangeBallsFree === false)} className="accent-pine"/>Balls included with a round</label>
+                            </div>
+                          )}
+                          {!!form[it.key] && it.key === 'hasProShop' && (
+                            <div className="pl-[26px] mt-2 max-w-xs"><FInput value={form.proShopPhone as string} onChange={v=>set('proShopPhone',v)} placeholder="Pro shop phone (optional)" type="tel"/></div>
+                          )}
+                          {!!form[it.key] && it.key === 'hasClubRental' && (
+                            <label className="pl-[26px] mt-2 flex items-center gap-2 text-[13px] text-ink-soft">Price $<span className="w-28"><FInput value={(form.clubRentalRate as number) || ''} onChange={v=>set('clubRentalRate',Number(v))} placeholder="optional" type="number"/></span></label>
+                          )}
+                          {!!form[it.key] && it.key === 'hasPushCartRental' && (
+                            <label className="pl-[26px] mt-2 flex items-center gap-2 text-[13px] text-ink-soft">Price $<span className="w-28"><FInput value={(form.pushCartRate as number) || ''} onChange={v=>set('pushCartRate',Number(v))} placeholder="optional" type="number"/></span></label>
+                          )}
+                          {!!form[it.key] && it.key === 'hasCaddies' && (
+                            <div className="pl-[26px] mt-2 grid sm:grid-cols-3 gap-2">
+                              <select value={String(form.caddieType || 'looper')} onChange={e=>set('caddieType',e.target.value)} className={iCls} aria-label="Caddie type">
+                                <option value="looper">Caddies carry the bag</option>
+                                <option value="fore_caddie">Fore caddies</option>
+                                <option value="both">Both</option>
+                              </select>
+                              {form.caddieType !== 'fore_caddie' && <label className="flex items-center gap-2 text-[13px] text-ink-soft whitespace-nowrap">Per bag $<FInput value={(form.caddieLooperRate as number) || ''} onChange={v=>set('caddieLooperRate',Number(v))} placeholder="optional" type="number"/></label>}
+                              {(form.caddieType === 'fore_caddie' || form.caddieType === 'both') && <label className="flex items-center gap-2 text-[13px] text-ink-soft whitespace-nowrap">Fore caddie $<FInput value={(form.caddieForeRate as number) || ''} onChange={v=>set('caddieForeRate',Number(v))} placeholder="optional" type="number"/></label>}
+                              <div className="sm:col-span-3"><FInput value={form.caddieNote as string} onChange={v=>set('caddieNote',v)} placeholder="e.g. Book 48 hours ahead (optional)"/></div>
+                            </div>
+                          )}
+                          {!!form[it.key] && it.key === 'hasTournaments' && (
+                            <div className="pl-[26px] mt-2 max-w-xs">
+                              <select value={String(form.tournamentFrequency ?? '')} onChange={e=>set('tournamentFrequency',e.target.value)} className={iCls} aria-label="How often">
+                                <option value="">How often? (optional)</option>
+                                {Object.entries(TOURNAMENT_FREQ).map(([k, v]) => <option key={k} value={k}>{v.charAt(0).toUpperCase() + v.slice(1)}</option>)}
+                              </select>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                <div className="border-t border-line-soft pt-3 mt-3">
+                  <h3 className="text-[13px] font-semibold text-ink mb-1">Food and drink</h3>
+                  <div className="grid sm:grid-cols-2 gap-1.5">
+                    {Object.entries(FOOD_TYPES).map(([k, v]) => (
+                      <label key={k} className="flex items-center gap-2.5 text-sm text-ink cursor-pointer py-1">
+                        <input type="radio" name="food" checked={(form.restaurantType || 'none') === k} onChange={() => set('restaurantType', k)} className="accent-pine"/>{v}
+                      </label>
+                    ))}
+                  </div>
+                  {['snack_bar','bar','full'].includes(form.restaurantType as string) && (
+                    <label className="flex items-center gap-2.5 text-sm text-ink cursor-pointer py-1 mt-1">
+                      <input type="checkbox" checked={!!form.hasCartGirl} onChange={() => tog('hasCartGirl')} className="accent-pine w-4 h-4"/>A beverage cart on the course as well
+                    </label>
+                  )}
+                </div>
+                <div className="border-t border-line-soft pt-3 mt-3">
+                  <Field label="Anything else" hint="One per line — e.g. Dog-friendly, Simulator bay. Each shows as its own line.">
+                    <textarea value={((form.amenities as string[]) || []).join('\n')} onChange={e => set('amenities', e.target.value.split('\n'))} rows={3} className={iCls + ' resize-none'}/>
                   </Field>
-                )}
-              </SectionCard>
-              <SectionCard title="Food & Beverage">
-                <Field label="Restaurant / Bar">
-                  <select value={form.restaurantType as string} onChange={e=>set('restaurantType',e.target.value)} className={iCls}>
-                    <option value="none">None</option>
-                    <option value="snack_bar">Snack Bar</option>
-                    <option value="bar">Bar Only</option>
-                    <option value="full">Full Restaurant</option>
-                    <option value="beverage_cart">Beverage Cart</option>
-                  </select>
-                </Field>
-                {['snack_bar','bar','full'].includes(form.restaurantType as string) && (
-                  <Toggle label="Also Have a Beverage Cart / Cart Girl" checked={!!form.hasCartGirl} onChange={()=>tog('hasCartGirl')}/>
-                )}
-              </SectionCard>
-              <SectionCard title="Caddies">
-                <Toggle label="Caddies Available" checked={!!form.hasCaddies} onChange={()=>tog('hasCaddies')}/>
-                {!!form.hasCaddies && (
-                  <>
-                    <Field label="Caddie type">
-                      <select value={form.caddieType as string} onChange={e=>set('caddieType',e.target.value)} className={iCls}>
-                        <option value="looper">Looper only</option>
-                        <option value="fore_caddie">Fore caddie</option>
-                        <option value="both">Both</option>
-                      </select>
-                    </Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field label="Looper rate ($)"><FInput value={form.caddieLooperRate as number} onChange={v=>set('caddieLooperRate',Number(v))} type="number"/></Field>
-                      <Field label="Fore caddie rate ($)"><FInput value={form.caddieForeRate as number} onChange={v=>set('caddieForeRate',Number(v))} type="number"/></Field>
-                    </div>
-                    <Field label="Caddie note"><FInput value={form.caddieNote as string} onChange={v=>set('caddieNote',v)} placeholder="e.g. Must request 48hrs in advance"/></Field>
-                  </>
-                )}
-              </SectionCard>
+                </div>
+              </Card>
+              <div className="xl:sticky xl:top-6">
+                <div className="text-[13px] font-semibold text-ink mb-2">On your booking page</div>
+                <Card className="p-4 text-sm">
+                  {facilityPreview.length ? (
+                    <ul className="list-disc pl-5 space-y-0.5 text-ink">{facilityPreview.map(l => <li key={l}>{l}</li>)}</ul>
+                  ) : <p className="text-ink-soft">Nothing ticked yet, so golfers see no Facilities section.</p>}
+                </Card>
+                <p className="text-[12px] text-ink-soft mt-2">Updates as you tick. Prices here are shown to golfers, never charged.</p>
+              </div>
             </div>
           )}
 

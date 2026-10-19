@@ -133,6 +133,7 @@ type CourseWithBrand = Course & {
   walking_policy?: string;
   walking_note?: string;
   dress_code?: string[];
+  facilities?: string[];
   nines?: { name: string; par: number }[];
   page_approval_status?: 'none' | 'approved' | 'changes_requested';
   is_live?: boolean;
@@ -556,7 +557,7 @@ export default function CourseDetailPage({
     const heroStyle = course.hero_image_url
       ? { backgroundImage: `url(${course.hero_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
       : { backgroundColor: course.brand_color || '#173B2A' };
-    const amenities = course.amenities ? course.amenities.filter(Boolean) : [];
+    const amenities = course.facilities ?? [];
     return (
       <>
         <div className="relative h-44 sm:h-56 flex items-end overflow-hidden" style={heroStyle}>
@@ -587,12 +588,10 @@ export default function CourseDetailPage({
               )}
               {amenities.length > 0 && (
                 <div className="mb-8">
-                  <p className="text-[15px] font-semibold text-ink mb-3">Amenities</p>
-                  <div className="flex flex-wrap gap-2">
-                    {amenities.map((a: string) => (
-                      <span key={a} className="text-xs text-ink-soft border border-line rounded-md px-2.5 py-1">{a}</span>
-                    ))}
-                  </div>
+                  <p className="text-[15px] font-semibold text-ink mb-3">Facilities</p>
+                  <ul className="text-sm text-ink-soft list-disc pl-5 space-y-0.5">
+                    {amenities.map((a: string) => <li key={a}>{a}</li>)}
+                  </ul>
                 </div>
               )}
               <div className="flex flex-wrap gap-4 text-sm text-ink">
@@ -633,7 +632,7 @@ export default function CourseDetailPage({
 
   const accent = course.brand_color || '#173B2A';
   const typeLabel = TYPE_LABELS[course.type] ?? 'Public';
-  const amenities = course.amenities ? course.amenities.filter((s: string) => s.trim()) : [];
+  const amenities = course.facilities ?? [];
   const strip = buildDateStrip();
   const todayStr = formatDate(startOfToday());
   // BOOKING WINDOWS: the viewer's horizon — a member's tier window, else the
@@ -1632,18 +1631,10 @@ export default function CourseDetailPage({
 
                 {amenities.length > 0 && (
                   <div className="border-t border-line pt-5">
-                    <h2 className="font-serif text-ink text-[22px] leading-none mb-4">Amenities</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {amenities.map(a => (
-                        <span
-                          key={a}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-medium"
-                          style={{ backgroundColor: `${accent}10`, color: accent }}
-                        >
-                          {a}
-                        </span>
-                      ))}
-                    </div>
+                    <h2 className="font-serif text-ink text-[22px] leading-none mb-4">Facilities</h2>
+                    <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-ink list-disc pl-5">
+                      {amenities.map(a => <li key={a}>{a}</li>)}
+                    </ul>
                   </div>
                 )}
               </div>

@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 416,
+    "files": 417,
     "routes": 213,
-    "libs": 124,
+    "libs": 125,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5913,7 +5913,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1814,
+      "lines": 1805,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6495,7 +6495,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1080,
+      "lines": 1122,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6524,6 +6524,7 @@
         "@/components/ui/field",
         "@/lib/cancel-policy",
         "@/lib/course-time",
+        "@/lib/facilities",
         "@/lib/image-resize",
         "@/lib/password",
         "@/lib/unsaved-guard",
@@ -7711,7 +7712,7 @@
     },
     {
       "path": "src/components/dashboard/CourseLayoutTab.tsx",
-      "lines": 500,
+      "lines": 503,
       "purpose": "Settings rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -12222,6 +12223,44 @@
       ]
     },
     {
+      "path": "src/lib/facilities.ts",
+      "lines": 53,
+      "purpose": "Settings rework (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FacilityFields",
+          "kind": "type"
+        },
+        {
+          "name": "facilityLines",
+          "kind": "fn"
+        },
+        {
+          "name": "FOOD_TYPES",
+          "kind": "const"
+        },
+        {
+          "name": "RANGE_TYPES",
+          "kind": "const"
+        },
+        {
+          "name": "TOURNAMENT_FREQ",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx",
+        "src/lib/normalize-course.ts"
+      ]
+    },
+    {
       "path": "src/lib/faq.ts",
       "lines": 26,
       "purpose": "SD-7:",
@@ -13415,7 +13454,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 85,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13431,7 +13470,8 @@
       "guard": null,
       "imports": [
         "./cancel-policy",
-        "./money"
+        "./money",
+        "@/lib/facilities"
       ],
       "usedBy": [
         "src/app/api/courses/route.ts",
