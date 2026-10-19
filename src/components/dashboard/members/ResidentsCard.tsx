@@ -13,7 +13,7 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { toast } from '@/components/dashboard/Toast';
 import { formatDate as fmtDate } from '@/lib/format';
 
-type Resident = { id: string; name: string; email: string | null; cardNumber: string; expiresOn: string; notes: string };
+type Resident = { id: string; name: string; email: string | null; cardNumber: string; expiresOn: string; notes: string; courseName?: string };
 type Form = { name: string; email: string; cardNumber: string; expiresOn: string; notes: string };
 const EMPTY: Form = { name: '', email: '', cardNumber: '', expiresOn: '', notes: '' };
 const lbl = 'block text-[13px] font-semibold text-ink mb-1.5';
@@ -26,6 +26,8 @@ function todayYmd() {
 export function ResidentsCard({ canEdit }: { canEdit: boolean }) {
   const [rows, setRows] = useState<Resident[] | null>(null);
   const [hasRate, setHasRate] = useState(true);
+  // GRP-1: one list for every course in the group.
+  const [shared, setShared] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [editing, setEditing] = useState<string | 'new' | null>(null);
   const [form, setForm] = useState<Form>(EMPTY);
@@ -35,9 +37,9 @@ export function ResidentsCard({ canEdit }: { canEdit: boolean }) {
 
   const load = useCallback(async () => {
     setLoadError('');
-    const r = await dfetch<{ residents: Resident[]; hasResidentRate: boolean }>('/api/operator/residents');
+    const r = await dfetch<{ residents: Resident[]; hasResidentRate: boolean; shared?: boolean }>('/api/operator/residents');
     if (!r.ok) { setLoadError(r.error); return; }
-    setRows(r.data.residents); setHasRate(r.data.hasResidentRate);
+    setRows(r.data.residents); setHasRate(r.data.hasResidentRate); setShared(!!r.data.shared);
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -114,6 +116,7 @@ export function ResidentsCard({ canEdit }: { canEdit: boolean }) {
           <h2 className="text-[17px] font-semibold text-ink">Residents</h2>
           <p className="text-[13px] text-ink-soft mt-1">
             Add a golfer here once they show their resident card. Signed in with this email, they book themselves at the resident rate; the rest of their group pays the public rate. At the counter, set how many of a group are residents from the tee sheet.
+            {shared && ' This list is shared with every course in your group: a resident here gets the resident rate at all of them.'}
           </p>
         </div>
         {canEdit && editing !== 'new' && <button onClick={() => open()} className="shrink-0 bg-pine hover:bg-pine-hover text-white rounded-md text-[13px] font-medium px-4 py-2">Add a resident</button>}
@@ -143,7 +146,7 @@ export function ResidentsCard({ canEdit }: { canEdit: boolean }) {
               <li key={r.id} className="px-4 py-3 grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-x-4 gap-y-1 items-center">
                 <span className="min-w-0">
                   <span className="block text-[14px] font-medium text-ink truncate">{r.name}</span>
-                  <span className="block text-[12.5px] text-ink-muted truncate">{r.email || 'No email — counter only'}{r.cardNumber ? ` · card ${r.cardNumber}` : ''}{r.notes ? ` · ${r.notes}` : ''}</span>
+                  <span className="block text-[12.5px] text-ink-muted truncate">{r.email || 'No email — counter only'}{r.cardNumber ? ` · card ${r.cardNumber}` : ''}{shared && r.courseName ? ` · added at ${r.courseName}` : ''}{r.notes ? ` · ${r.notes}` : ''}</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-[13.5px] text-ink">
                   <StatusDot status={expired ? 'bad' : 'ok'} />

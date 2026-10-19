@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 import { getGolferSession } from './auth';
 import { cardValidOn } from './residents';
+import { groupCourseIds } from './course-group';
 
 const rawSecret =
   process.env.JWT_SECRET ||
@@ -97,11 +98,11 @@ export async function golferResident(courseId: string, dateYmd: string) {
   return golfer?.email ? residentOn(courseId, golfer.email, dateYmd) : null;
 }
 
-/** The resident card listed under this email at this course, if it is good on `dateYmd`. */
+/** The resident card listed under this email at this course — or, for a course
+ *  in a group (GRP-1), at any course in the group — if it is good on `dateYmd`. */
 export async function residentOn(courseId: string, emailRaw: string, dateYmd: string) {
   const email = emailRaw.trim().toLowerCase();
   if (!email) return null;
-  const r = await prisma.courseResident.findUnique({ where: { courseId_email: { courseId, email } } });
-  if (!r || !cardValidOn(r.expiresOn, dateYmd)) return null;
-  return r;
+  const cards = await prisma.courseResident.findMany({ where: { courseId: { in: await groupCourseIds(courseId) }, email } });
+  return cards.find(r => cardValidOn(r.expiresOn, dateYmd)) ?? null;
 }
