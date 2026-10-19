@@ -3919,7 +3919,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 89,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6156,7 +6156,7 @@
     },
     {
       "path": "src/app/contact/page.tsx",
-      "lines": 44,
+      "lines": 79,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6175,6 +6175,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/components/ui/Card",
         "@/lib/seo",
         "next",
         "next/link"
@@ -7112,7 +7113,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 571,
+      "lines": 573,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8899,6 +8900,7 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
+        "src/app/contact/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
