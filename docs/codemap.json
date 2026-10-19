@@ -8609,7 +8609,7 @@
     },
     {
       "path": "src/components/dashboard/settings/WhoPaysWhat.tsx",
-      "lines": 89,
+      "lines": 96,
       "purpose": "Settings → Prices & fees:",
       "brain": [],
       "exports": [
@@ -15838,7 +15838,7 @@
     },
     {
       "path": "src/lib/who-pays.ts",
-      "lines": 105,
+      "lines": 104,
       "purpose": "Settings → Prices & fees, \"Who pays what\" (Cam 2026-10-19, OPERATOR_REWORK_SPEC \"Settings — round 1\"):",
       "brain": [],
       "exports": [

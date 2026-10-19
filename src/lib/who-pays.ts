@@ -25,8 +25,9 @@ export type WireTier = {
 };
 
 export type Period = { id: string; label: string };
-/** One price per period; null = this kind of golfer pays the public rate there. */
-export type Cell = { periodId: string; dollars: number | null };
+/** One price per period; null = this kind of golfer pays the public rate there;
+ *  na = the period has no tee times on those days (a weekend-only schedule's weekday). */
+export type Cell = { periodId: string; dollars: number | null; na?: boolean };
 export type Row = { key: string; label: string; who: string; color?: string; weekday: Cell[]; weekend: Cell[] };
 
 const c = (d: number | null | undefined) => (d == null ? null : Math.round(d * 100));
@@ -44,35 +45,38 @@ export function whoPays(schedules: WireSchedule[], tiers: WireTier[]): { periods
   // Columns in the order of the day (Morning before Twilight), not the order they were made.
   const live = schedules.filter(s => s.active).sort((a, b) => a.startTime.localeCompare(b.startTime) || a.tierName.localeCompare(b.tierName));
   const periods = live.map(s => ({ id: s.id, label: periodLabel(s, live.length > 1) }));
+  // A schedule limited to some days generates no tee times on the others (tee-sheet-engine).
+  const runs = (s: WireSchedule, weekend: boolean) => !s.daysOfWeek?.length || s.daysOfWeek.some(d => (d === 0 || d === 6) === weekend);
+  const cells = (pick: (s: WireSchedule) => number | null, weekend: boolean): Cell[] =>
+    live.map(s => runs(s, weekend) ? { periodId: s.id, dollars: pick(s) } : { periodId: s.id, dollars: null, na: true });
   const rows: Row[] = [];
 
   rows.push({
     key: 'public', label: 'Public', who: 'Anyone who books — online, by phone or as a walk-in.',
-    weekday: live.map(s => ({ periodId: s.id, dollars: s.greenFeeWeekday })),
-    weekend: live.map(s => ({ periodId: s.id, dollars: s.greenFeeWeekend })),
+    weekday: cells(s => s.greenFeeWeekday, false),
+    weekend: cells(s => s.greenFeeWeekend, true),
   });
 
   if (live.some(s => s.residentRateWeekday != null || s.residentRateWeekend != null)) {
     rows.push({
       key: 'resident', label: 'Residents',
       who: 'Golfers on your Residents list (Members → Residents). Signed in, a resident books themselves at this rate; at the counter, staff set how many of a group showed a card.',
-      weekday: live.map(s => ({ periodId: s.id, dollars: s.residentRateWeekday })),
-      weekend: live.map(s => ({ periodId: s.id, dollars: s.residentRateWeekend })),
+      weekday: cells(s => s.residentRateWeekday, false),
+      weekend: cells(s => s.residentRateWeekend, true),
     });
   }
 
-  const memberPrice = (s: WireSchedule, t: WireTier | null, date: string) => {
+  const memberPrice = (s: WireSchedule, t: WireTier, date: string) => {
     const weekend = date === WEEKEND;
     const teeTime = {
       date, greenFeeCents: c(weekend ? s.greenFeeWeekend : s.greenFeeWeekday) ?? 0, cartFeeCents: c(s.cartFee) ?? 0,
       memberRateCents: c(weekend ? s.memberRateWeekend : s.memberRateWeekday),
     };
-    const tier = t && {
+    const tier = {
       greenFeeWeekdayCents: c(t.greenFeeWeekday), greenFeeWeekendCents: c(t.greenFeeWeekend),
       cartFeeWeekdayCents: c(t.cartFeeWeekday), cartFeeWeekendCents: c(t.cartFeeWeekend), discountPct: t.discountPct,
     };
-    // No tier = the schedule's own member rate (members without a membership tier).
-    const cents = tier ? applyTierRates(teeTime, tier).greenFeeCents : (teeTime.memberRateCents ?? teeTime.greenFeeCents);
+    const cents = applyTierRates(teeTime, tier).greenFeeCents;
     return cents === teeTime.greenFeeCents ? null : d(cents);
   };
 
@@ -80,8 +84,8 @@ export function whoPays(schedules: WireSchedule[], tiers: WireTier[]): { periods
     const how = t.greenFeeWeekday != null || t.greenFeeWeekend != null ? 'their own flat price'
       : t.discountPct != null ? `${t.discountPct}% off the public rate`
       : 'the member rate on your schedule';
-    const weekday = live.map(s => ({ periodId: s.id, dollars: memberPrice(s, t, WEEKDAY) }));
-    const weekend = live.map(s => ({ periodId: s.id, dollars: memberPrice(s, t, WEEKEND) }));
+    const weekday = cells(s => memberPrice(s, t, WEEKDAY), false);
+    const weekend = cells(s => memberPrice(s, t, WEEKEND), true);
     const noPrice = [...weekday, ...weekend].every(x => x.dollars == null);
     rows.push({
       key: `tier:${t.id}`, label: t.name, color: t.color,
@@ -92,13 +96,8 @@ export function whoPays(schedules: WireSchedule[], tiers: WireTier[]): { periods
     });
   }
 
-  if (!tiers.some(t => t.active) && live.some(s => s.memberRateWeekday != null || s.memberRateWeekend != null)) {
-    rows.push({
-      key: 'members', label: 'Members', who: 'Members signed in with the email on their membership. Set up memberships in Members to give each its own price.',
-      weekday: live.map(s => ({ periodId: s.id, dollars: memberPrice(s, null, WEEKDAY) })),
-      weekend: live.map(s => ({ periodId: s.id, dollars: memberPrice(s, null, WEEKEND) })),
-    });
-  }
-
+  // No "Members" row without a membership: a schedule's member rate only ever
+  // reaches a golfer through a membership with no price of its own (booking
+  // route: the rate applies inside `if (membership?.tier)`).
   return { periods, rows };
 }

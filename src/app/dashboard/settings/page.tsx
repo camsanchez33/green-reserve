@@ -753,7 +753,7 @@ function SettingsPageInner() {
             <div className="space-y-5">
               {/* Cam 2026-10-19: member vs resident pricing confused people. One
                   table of who pays what, read from Schedule and Members. */}
-              <WhoPaysWhat canSeeSchedule={access.can('schedule.view')} canSeeMembers={access.can('members.view')} />
+              <WhoPaysWhat accessLoaded={access.loaded} accessFailed={!!access.failed} canSeeSchedule={access.can('schedule.view')} canSeeMembers={access.can('members.view')} />
               <SectionCard title="Members and residents">
                 <Toggle label="We offer member prices" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
                 <Toggle label="We offer resident prices" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>

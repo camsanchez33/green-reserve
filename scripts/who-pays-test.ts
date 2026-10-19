@@ -27,13 +27,15 @@ check('the sentence says how', /20% off the public rate/.test(pct?.who ?? ''));
 const flat = whoPays([sched()], [tier({ greenFeeWeekday: 25, greenFeeWeekend: null })]).rows.find(x => x.key === 'tier:t1');
 check('a flat membership with only a weekday price uses it on weekends too (as booking does)', flat?.weekday[0].dollars === 25 && flat?.weekend[0].dollars === 25, flat);
 check('an inactive membership has no row', !whoPays([sched()], [tier({ active: false, discountPct: 10 })]).rows.some(x => x.key.startsWith('tier:')));
-const legacy = whoPays([sched({ memberRateWeekday: 40 })], []).rows.find(x => x.key === 'members');
-check('no memberships but a schedule member rate: a Members row from it', legacy?.weekday[0].dollars === 40 && legacy?.weekend[0].dollars === null, legacy);
 const viaSched = whoPays([sched({ memberRateWeekday: 40, memberRateWeekend: 50 })], [tier()]).rows.find(x => x.key === 'tier:t1');
 check('a membership with no price of its own pays the schedule member rate', viaSched?.weekday[0].dollars === 40 && viaSched?.weekend[0].dollars === 50, viaSched);
 
 const two = whoPays([sched({ id: 'a', tierName: 'Morning' }), sched({ id: 'b', tierName: 'Twilight', greenFeeWeekday: 35 }), sched({ id: 'c', active: false })], []);
 check('named periods become the columns inside each cell; paused schedules are left out', two.periods.map(p => p.label).join() === 'Morning,Twilight' && two.rows[0].weekday.map(c => c.dollars).join() === '55,35');
+check('no memberships but a schedule member rate: no Members row (nobody is charged it without a membership)', !whoPays([sched({ memberRateWeekday: 40 })], []).rows.some(x => x.key === 'members' || x.key.startsWith('tier:')));
+const wkend = whoPays([sched({ daysOfWeek: [0, 6] })], [tier({ discountPct: 10 })]);
+check('a weekend-only schedule has no weekday price, on every row', wkend.rows.every(r => r.weekday[0].na === true && !r.weekend[0].na));
+check('a weekday-only schedule has no weekend price', whoPays([sched({ daysOfWeek: [1, 2, 3, 4, 5] })], []).rows[0].weekend[0].na === true);
 check('no schedules: no periods', whoPays([], [tier()]).periods.length === 0);
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

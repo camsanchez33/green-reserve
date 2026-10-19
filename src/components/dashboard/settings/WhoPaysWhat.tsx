@@ -14,7 +14,8 @@ const money = (v: number) => `$${v.toFixed(2)}`;
 
 /** One kind of golfer's prices: a line per price period, weekdays and weekends. */
 function Prices({ weekday, weekend, periods }: { weekday: Cell[]; weekend: Cell[]; periods: Period[] }) {
-  const show = (v: number | null) => v == null ? <span className="text-ink-muted">Public rate</span> : <span className="tabular-nums">{money(v)}</span>;
+  const show = (c: Cell | undefined) => !c || c.na ? <span className="text-ink-faint" title="No tee times on these days">—</span>
+    : c.dollars == null ? <span className="text-ink-muted">Public rate</span> : <span className="tabular-nums">{money(c.dollars)}</span>;
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-x-4 gap-y-1 text-[13.5px]">
       <span className="text-[12px] text-ink-muted">{periods.length > 1 ? 'Times' : ''}</span>
@@ -23,20 +24,23 @@ function Prices({ weekday, weekend, periods }: { weekday: Cell[]; weekend: Cell[
       {periods.map((p, i) => (
         <div key={p.id} className="contents">
           <span className="text-ink-soft truncate">{periods.length > 1 ? p.label : ''}</span>
-          <span className="text-right">{show(weekday[i]?.dollars ?? null)}</span>
-          <span className="text-right">{show(weekend[i]?.dollars ?? null)}</span>
+          <span className="text-right">{show(weekday[i])}</span>
+          <span className="text-right">{show(weekend[i])}</span>
         </div>
       ))}
     </div>
   );
 }
 
-export function WhoPaysWhat({ canSeeSchedule, canSeeMembers }: { canSeeSchedule: boolean; canSeeMembers: boolean }) {
+export function WhoPaysWhat({ accessLoaded, accessFailed, canSeeSchedule, canSeeMembers }: { accessLoaded: boolean; accessFailed: boolean; canSeeSchedule: boolean; canSeeMembers: boolean }) {
   const [data, setData] = useState<ReturnType<typeof whoPays> | null>(null);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setError('');
+    // What this login may see isn't known until the access check answers.
+    if (!accessLoaded) return;
+    if (accessFailed) { setError('We couldn’t check what your login can see. Reload the page to try again.'); return; }
     if (!canSeeSchedule) { setError('Your login can’t see the schedule, where prices are set. Ask the course owner.'); return; }
     const [s, t] = await Promise.all([
       dfetch<WireSchedule[]>('/api/operator/schedule'),
@@ -45,7 +49,7 @@ export function WhoPaysWhat({ canSeeSchedule, canSeeMembers }: { canSeeSchedule:
     if (!s.ok) { setError(s.error); return; }
     if (t && !t.ok) { setError(t.error); return; }
     setData(whoPays(s.data, t?.ok ? t.data : []));
-  }, [canSeeSchedule, canSeeMembers]);
+  }, [accessLoaded, accessFailed, canSeeSchedule, canSeeMembers]);
   useEffect(() => { load(); }, [load]);
 
   return (
@@ -54,7 +58,7 @@ export function WhoPaysWhat({ canSeeSchedule, canSeeMembers }: { canSeeSchedule:
         <h2 className="text-[15px] font-semibold text-ink">Who pays what</h2>
         <span className="text-[12.5px] text-ink-muted">Green fee per player</span>
       </div>
-      {error && <div className="mt-3"><LoadError message={error} onRetry={canSeeSchedule ? load : undefined} /></div>}
+      {error && <div className="mt-3"><LoadError message={error} onRetry={canSeeSchedule && !accessFailed ? load : undefined} /></div>}
       {!data && !error && <p className="mt-3 text-[13.5px] text-ink-muted">Loading prices…</p>}
       {data && data.periods.length === 0 && (
         <p className="mt-3 text-[13.5px] text-ink-soft">No tee times are set up yet, so there are no prices to show. Set them in <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Schedule</Link>.</p>
@@ -74,6 +78,9 @@ export function WhoPaysWhat({ canSeeSchedule, canSeeMembers }: { canSeeSchedule:
             </li>
           ))}
         </ul>
+      )}
+      {data && data.periods.length > 0 && !canSeeMembers && (
+        <p className="mt-3 text-[12.5px] text-ink-muted">Membership prices aren&apos;t shown — your login can&apos;t see Members.</p>
       )}
       {data && data.periods.length > 0 && !data.rows.some(r => r.key === 'resident') && (
         <p className="mt-3 text-[12.5px] text-ink-muted">No resident prices. To charge residents less, add a resident price to a schedule.</p>
