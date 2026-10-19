@@ -213,12 +213,15 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         bottom bar above are unchanged. Tournaments and Outings are "Soon"
         placeholders and stay off the bar until they exist. */}
     <header className="hidden md:block shrink-0" style={{ backgroundColor: brandColor }}>
-      <div className="flex items-end gap-8 px-6 lg:px-8 h-16 text-white">
-        <div className="self-center flex items-center gap-3 min-w-0 shrink-0">
+      {/* Cam 2026-10-19: with Pro shop added the bar ran past 1280px and cut
+          Settings off. Tighter below 2xl; below xl (an iPad at the counter)
+          the tabs take their own row under the name — never a sideways scroll. */}
+      <div className="flex flex-wrap xl:flex-nowrap items-end gap-x-5 2xl:gap-x-8 px-6 lg:px-8 xl:h-16 text-white">
+        <div className="self-center flex items-center gap-3 min-w-0 shrink-0 pt-3 pb-1 xl:p-0">
           {/* The course logo box that sat here did nothing (Cam 2026-10-19) — the name carries it. */}
-          <span className="font-serif text-[24px] leading-none truncate max-w-[260px]" title={meta}>{name || 'Your course'}</span>
+          <span className="font-serif text-[22px] 2xl:text-[24px] leading-none truncate max-w-[70vw] xl:max-w-[240px] 2xl:max-w-[260px]" title={meta}>{name || 'Your course'}</span>
         </div>
-        <nav aria-label="Dashboard" className="flex items-end gap-1 min-w-0 overflow-x-auto">
+        <nav aria-label="Dashboard" className="order-last xl:order-none basis-full xl:basis-auto -mx-2 xl:mx-0 flex flex-wrap xl:flex-nowrap items-end gap-1 min-w-0">
           {navItems.filter(n => !n.soon && visible(n.key)).map(item => {
             const isActive = active === item.key;
             return (
@@ -226,7 +229,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
                 key={item.key}
                 onClick={() => { if (confirmLeave()) router.push(item.href); }}
                 aria-current={isActive ? 'page' : undefined}
-                className={'shrink-0 px-3 pb-[13px] pt-2 text-[14px] font-semibold border-b-[3px] transition-opacity whitespace-nowrap ' + (isActive ? 'border-fairway opacity-100' : 'border-transparent opacity-80 hover:opacity-100')}
+                className={'shrink-0 px-2 2xl:px-3 pb-[13px] pt-2 text-[14px] font-semibold border-b-[3px] transition-opacity whitespace-nowrap ' + (isActive ? 'border-fairway opacity-100' : 'border-transparent opacity-80 hover:opacity-100')}
               >
                 {item.label}
                 {item.key === 'messages' && unreadMessages > 0 && (
@@ -236,7 +239,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
             );
           })}
         </nav>
-        <div className="ml-auto self-center flex items-center gap-4 text-[13px] shrink-0">
+        <div className="ml-auto self-center flex items-center gap-3 2xl:gap-4 text-[13px] shrink-0 pt-3 pb-1 xl:p-0">
           {myCourses.length > 1 && (
             <select
               value={identity.id || ''}
