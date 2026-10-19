@@ -19,6 +19,11 @@ export function askBirdie(question: string) {
   window.dispatchEvent(new CustomEvent(ASK_EVENT, { detail: { question } }));
 }
 
+/** Open Birdie with nothing typed — the top bar's "Ask Birdie". */
+export function openBirdie() {
+  window.dispatchEvent(new CustomEvent(ASK_EVENT, { detail: { question: '' } }));
+}
+
 /** True once Birdie is on — "Ask Birdie" links render only then, so they never do nothing. */
 export function useBirdieReady(): boolean {
   const [on, setOn] = useState(ready);

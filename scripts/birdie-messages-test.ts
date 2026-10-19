@@ -8,11 +8,18 @@ const w = readFileSync('src/components/birdie/BirdieWidget.tsx', 'utf8');
 check('Birdie can be tucked into an edge tab', w.includes('aria-label="Tuck Birdie away"') && w.includes('aria-label="Open Birdie"'));
 check('…and stays tucked until opened', w.includes("localStorage.setItem(TUCK_KEY, '1')") && w.includes("localStorage.getItem(TUCK_KEY) === '1'"));
 check('an Ask Birdie link untucks it', /onAsk[\s\S]{0,300}setTucked\(false\)/.test(w));
-check('on phones it sits above the bottom tab bar', w.includes('bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-5'));
+check('on phones it sits above the bottom tab bar', w.includes('fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4'));
+// Cam 2026-10-19: "it must be obvious that this is where you ask questions" and
+// never in the way — on md+ it lives in the top bar, not over the page.
+check('on a laptop there is no floating launcher or edge tab', w.includes('md:hidden fixed bottom-[calc(5rem') && w.includes('md:hidden fixed right-0'));
+check('the phone launcher says Ask, not just the logo', />Ask<\/span>/.test(w));
+check('an empty question only opens the panel, keeping a draft', /if \(q\.trim\(\)\) setInput/.test(w));
+const bar = readFileSync('src/components/OperatorSidebar.tsx', 'utf8');
+check('the top bar has Ask Birdie, only once Birdie is on', /birdieOn && \([\s\S]{0,200}onClick=\{openBirdie\}[\s\S]{0,200}Ask Birdie/.test(bar));
 const m = readFileSync('src/app/dashboard/messages/page.tsx', 'utf8');
 check('Messages says when to expect a reply', m.includes('We reply within one business day.'));
 check('…and offers email', m.includes('mailto:thegreenreserve@outlook.com'));
-check('the compose bar clears Birdie\'s buttons', m.includes('pr-[8.5rem]'));
+check('the compose bar clears Birdie\'s phone buttons', m.includes('pr-[8.5rem] md:pr-6'));
 check('no eyebrow label', !m.includes('<Eyebrow'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

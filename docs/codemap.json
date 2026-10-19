@@ -7688,7 +7688,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 282,
+      "lines": 289,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7711,6 +7711,7 @@
         "@/components/birdie/BirdieWidget",
         "@/components/dashboard/AgreementNotice",
         "@/components/dashboard/Toast",
+        "@/lib/birdie/ask",
         "@/lib/dashboard-visits",
         "@/lib/unsaved-guard",
         "@/lib/use-dashboard-access",
@@ -7995,8 +7996,8 @@
     },
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
-      "lines": 222,
-      "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
+      "lines": 229,
+      "purpose": "BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its phone launcher (on md+ the top bar's \"Ask Birdie\" opens it).",
       "brain": [],
       "exports": [
         {
@@ -10201,7 +10202,7 @@
     },
     {
       "path": "src/lib/birdie/ask.ts",
-      "lines": 33,
+      "lines": 38,
       "purpose": "AN-3 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10222,6 +10223,10 @@
           "kind": "fn"
         },
         {
+          "name": "openBirdie",
+          "kind": "fn"
+        },
+        {
           "name": "useBirdieReady",
           "kind": "fn"
         }
@@ -10237,6 +10242,7 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/settings/page.tsx",
+        "src/components/OperatorSidebar.tsx",
         "src/components/birdie/BirdieWidget.tsx",
         "src/components/birdie/ConfirmCard.tsx"
       ]

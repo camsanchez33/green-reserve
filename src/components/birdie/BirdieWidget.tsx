@@ -1,6 +1,6 @@
 'use client';
-// BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the
-// operator dashboard. Renders nothing until GET /api/birdie/chat says the
+// BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its
+// phone launcher (on md+ the top bar's "Ask Birdie" opens it). Renders nothing until GET /api/birdie/chat says the
 // assistant is on. Replies stream in; links the model writes as
 // [Open Schedule](/dashboard/schedules) become deep-link buttons.
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -85,9 +85,10 @@ export default function BirdieWidget() {
     markBirdieReady();
     const onAsk = (e: Event) => {
       const q = (e as CustomEvent<{ question?: string }>).detail?.question;
-      if (typeof q !== 'string' || !q.trim()) return;
+      if (typeof q !== 'string') return;
       setOpen(true); setTucked(false); try { localStorage.setItem(OPEN_KEY, '1'); localStorage.removeItem(TUCK_KEY); } catch { /* ignore */ }
-      setInput(q.slice(0, 1500)); // MAX_USER_CHARS in guardrails.ts
+      // An empty question (openBirdie) just opens the panel, keeping any draft.
+      if (q.trim()) setInput(q.slice(0, 1500)); // MAX_USER_CHARS in guardrails.ts
       setTimeout(() => inputRef.current?.focus(), 0);
     };
     window.addEventListener(ASK_EVENT, onAsk);
@@ -168,18 +169,23 @@ export default function BirdieWidget() {
     <>
       {!open && tucked && (
         <button type="button" onClick={show} aria-label="Open Birdie"
-          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-white border border-r-0 border-line rounded-l-md px-1.5 py-3 text-[12px] font-semibold text-pine hover:bg-paper [writing-mode:vertical-rl]">
+          className="md:hidden fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-white border border-r-0 border-line rounded-l-md px-1.5 py-3 text-[12px] font-semibold text-pine hover:bg-paper [writing-mode:vertical-rl]">
           Birdie
         </button>
       )}
       {!open && !tucked && (
-        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-5 right-4 md:right-5 z-40 flex items-end gap-1.5">
+        <div className="md:hidden fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-40 flex items-end gap-1.5">
           <button type="button" onClick={tuck} aria-label="Tuck Birdie away" title="Tuck Birdie away"
             className="mb-1 w-9 h-9 rounded-full bg-white border border-line text-ink-muted hover:text-ink text-[13px] leading-none flex items-center justify-center">›</button>
+          {/* Cam 2026-10-19: "it must be obvious that this is where you ask
+              questions". On md+ "Ask Birdie" sits in the top bar (OperatorSidebar);
+              here, the circle says "Ask" so it doesn't read as a logo. Same 56px
+              footprint, so pages' insets that clear it still hold. */}
           <button type="button" onClick={show} aria-label="Ask Birdie"
-            className="w-14 h-14 rounded-full bg-white border border-line hover:border-pine/40 transition-colors flex items-center justify-center"
+            className="w-14 h-14 rounded-full bg-white border border-pine/30 hover:border-pine/60 transition-colors flex flex-col items-center justify-center gap-0.5"
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
-            <Image src="/brand/golfer.svg" unoptimized alt="" width={27} height={33} className="h-8 w-auto" />
+            <Image src="/brand/golfer.svg" unoptimized alt="" width={18} height={22} className="h-[22px] w-auto" />
+            <span className="text-[11px] font-semibold text-pine leading-none">Ask</span>
           </button>
         </div>
       )}
@@ -188,13 +194,14 @@ export default function BirdieWidget() {
           <div className="flex items-center gap-2.5 px-4 py-3 border-b border-line">
             <Image src="/brand/golfer.svg" unoptimized alt="" width={22} height={27} className="h-7 w-auto" />
             <div className="min-w-0">
-              <div className="text-sm font-medium text-ink leading-tight">Birdie</div>
-              <div className="text-[11px] text-ink-muted truncate">Can help with {meta.helpsWith}</div>
+              <div className="text-[15px] font-semibold text-ink leading-tight">Ask Birdie</div>
+              <div className="text-[12px] text-ink-soft truncate">Your course&apos;s assistant. Ask in plain words.</div>
             </div>
             <button type="button" onClick={close} aria-label="Close" className="ml-auto text-ink-muted hover:text-ink transition-colors"><X className="w-4 h-4" /></button>
           </div>
           <div ref={listRef} aria-live="polite" aria-atomic="false" className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[200px]">
-            <div className="text-sm text-ink-soft">{meta.greeting}</div>
+            <div className="text-sm text-ink">{meta.greeting}</div>
+            {turns.length === 0 && <div className="text-[12.5px] text-ink-soft">It reads your course&apos;s live numbers and can draft a change for you to confirm. It never changes anything by itself. Try one:</div>}
             {turns.length === 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {meta.chips.map(c => (
@@ -211,7 +218,7 @@ export default function BirdieWidget() {
             ))}
           </div>
           <form className="flex items-center gap-2 px-3 py-3 border-t border-line" onSubmit={e => { e.preventDefault(); ask(input); }}>
-            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} placeholder="Ask about your course…" className={iCls} maxLength={1500} disabled={busy} aria-label="Message Birdie" />
+            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} placeholder="Ask a question…" className={iCls} maxLength={1500} disabled={busy} aria-label="Message Birdie" />
             <button type="submit" disabled={busy || !input.trim()} aria-label="Send" className="w-9 h-9 flex items-center justify-center rounded-md bg-pine hover:bg-pine-hover disabled:opacity-50 text-white transition-colors"><Send className="w-4 h-4" /></button>
           </form>
         </div>
