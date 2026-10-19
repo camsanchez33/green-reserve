@@ -128,6 +128,7 @@ function DashboardPageInner() {
   const [conditions, setConditions]       = useState('');
   const [conditionsInput, setConditionsInput] = useState('');
   const [savingConditions, setSavingConditions] = useState(false);
+  const [alertEmail, setAlertEmail] = useState(false);
   const [checkingInId, setCheckingInId] = useState<string | null>(null);
   // B-8: late groups the counter has said are "still coming" — hidden from the
   // attention row for this page load only; nothing is written anywhere.
@@ -151,7 +152,7 @@ function DashboardPageInner() {
   type WxPlan = { from: string; to: string; wholeDay: boolean; startedBefore: string | null; groups: WxGroup[]; teeTimeIds: string[] };
   // SP-A: what this login may do on the sheet (owners: everything).
   const access = useDashboardAccess();
-  const wxTabs = ([['cancel', 'Cancel times'], ['delay', 'Delay start']] as const).filter(([k]) => access.can(k === 'cancel' ? 'sheet.weather_cancel' : 'sheet.delay_start'));
+  const wxTabs = ([['cancel', 'Cancel for weather'], ['delay', 'Delay the start']] as const).filter(([k]) => access.can(k === 'cancel' ? 'sheet.weather_cancel' : 'sheet.delay_start'));
   const [wxMode, setWxMode] = useState<'cancel' | 'delay'>('cancel');
   const [wxWhole, setWxWhole] = useState(true);
   const [wxFrom, setWxFrom] = useState('13:00');
@@ -501,6 +502,15 @@ function DashboardPageInner() {
     setSavingConditions(false);
     if (!r.ok) { toast(r.error); return; } // the modal stays open with the text intact
     setConditions(conditionsInput); setShowConditions(false);
+    // Cam 2026-10-19: the alert can also go to everyone booked today, through
+    // the same Message golfers route (its own permission check and send log).
+    if (alertEmail && conditionsInput.trim()) {
+      setAlertEmail(false);
+      const m = await dfetch<{ sentEmail: number; unreachable: number }>('/api/operator/golfer-messages', { method: 'POST', body: JSON.stringify({ date: today(), body: `Course notice: ${conditionsInput.trim()}`, sms: false }) });
+      if (!m.ok) { toast(`Course alert saved, but the email to today’s golfers did not send — ${m.error}`); return; }
+      toast(`Course alert saved and emailed to ${m.data.sentEmail} golfer${m.data.sentEmail === 1 ? '' : 's'} booked today.`, 'ok');
+      return;
+    }
     toast(conditionsInput.trim() ? 'Course alert saved — golfers see it on your page.' : 'Course alert cleared.', 'ok');
   }
 
@@ -793,12 +803,12 @@ function DashboardPageInner() {
                 <div className="flex flex-wrap gap-2 items-center">
                   {selectedDate >= today() && wxTabs.length > 0 && (
                     <button onClick={() => { setFrostOpen(true); setWxMode(wxTabs[0][0]); setFrostPlan(null); setFrostErr(''); setFrostResult(null); setWxPlan(null); setWxErr(''); setWxResult(null); }} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-                      Weather
+                      Weather delay / cancel
                     </button>
                   )}
                   {access.can('sheet.message_golfers') && (
                     <button onClick={() => setMessageOpen(true)} className="text-[13px] font-medium text-ink bg-white px-3.5 py-1.5 rounded-md border border-line hover:border-line-strong transition-colors">
-                      Message golfers
+                      {selectedDate === today() ? 'Message today’s golfers' : 'Message this day’s golfers'}
                     </button>
                   )}
                   {access.can('sheet.edit_times') && (
@@ -971,14 +981,21 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full sm:max-w-md rounded-t-lg sm:rounded-lg shadow-card p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-serif font-semibold text-ink text-[17px]">Weather — {fmtDate(selectedDate)}</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">Weather delay or cancel — {fmtDate(selectedDate)}</h3>
               <button onClick={() => setFrostOpen(false)} disabled={frostBusy || wxBusy} className="text-ink-muted hover:text-ink disabled:opacity-40" aria-label="Close"><X className="w-5 h-5"/></button>
             </div>
             {!frostResult && !wxResult && (
-              <div role="tablist" className={'grid gap-1 p-1 bg-paper rounded-md mb-4 ' + (wxTabs.length > 1 ? 'grid-cols-2' : 'grid-cols-1')}>
+              // Cam 2026-10-19 ("doesn't explain what it does"): two plain choices,
+              // each saying what happens to the golfers, before anything else.
+              <div role="radiogroup" aria-label="What do you need to do?" className={'grid gap-2 mb-4 ' + (wxTabs.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1')}>
                 {wxTabs.map(([k, l]) => (
-                  <button key={k} role="tab" aria-selected={wxMode === k} disabled={frostBusy || wxBusy} onClick={() => setWxMode(k)}
-                    className={'py-1.5 rounded-md text-[13px] font-semibold transition-colors disabled:opacity-60 ' + (wxMode === k ? 'bg-white text-ink shadow-card' : 'text-ink-muted hover:text-ink')}>{l}</button>
+                  <button key={k} role="radio" aria-checked={wxMode === k} disabled={frostBusy || wxBusy} onClick={() => setWxMode(k)}
+                    className={'text-left rounded-md border px-3 py-2.5 transition-colors disabled:opacity-60 ' + (wxMode === k ? 'border-pine/50 bg-pine/[0.05]' : 'border-line hover:border-line-strong')}>
+                    <span className="block text-[13.5px] font-semibold text-ink">{l}</span>
+                    <span className="block text-[12.5px] text-ink-soft mt-0.5">{k === 'cancel'
+                      ? 'Rain or lightning: cancel a range of times with no fee, block them, and email those golfers.'
+                      : 'Frost or a wet morning: push the first tee time later and move the early groups back, then email them.'}</span>
+                  </button>
                 ))}
               </div>
             )}
@@ -1167,10 +1184,16 @@ function DashboardPageInner() {
               <h3 className="font-serif font-semibold text-ink text-[17px]">Course alert</h3>
               <button onClick={() => setShowConditions(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <p className="text-sm text-ink-soft mb-3">Shown as a banner to golfers before they book. Leave blank to clear.</p>
+            <p className="text-sm text-ink-soft mb-3">A short notice at the top of your booking page, like “Cart path only today” or “Back nine closed”. It stays up until you clear it. Leave blank to clear.</p>
             <textarea value={conditionsInput} onChange={e=>setConditionsInput(e.target.value)} rows={3}
               placeholder="e.g. Cart paths only through Sunday"
-              className={iCls + ' w-full mb-4 resize-none'}/>
+              className={iCls + ' w-full mb-3 resize-none'}/>
+            {access.can('sheet.message_golfers') && (
+              <label className="flex items-start gap-2 mb-4 text-[13px] text-ink cursor-pointer">
+                <input type="checkbox" checked={alertEmail} onChange={e => setAlertEmail(e.target.checked)} disabled={!conditionsInput.trim()} className="mt-0.5 accent-pine"/>
+                <span>Also email everyone booked today<span className="block text-[12px] text-ink-muted">Sends this notice to today’s golfers who have an email on file.</span></span>
+              </label>
+            )}
             <div className="flex gap-3">
               <button onClick={() => setShowConditions(false)} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">Cancel</button>
               <button onClick={saveConditions} disabled={savingConditions}
