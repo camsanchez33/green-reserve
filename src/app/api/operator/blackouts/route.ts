@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -42,5 +43,11 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
   await prisma.blackout.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  // Schedule rework (Cam 2026-10-19: changes reach the tee sheet without an
+  // Apply button). Reopening a day undoes what closing it did: the times it
+  // blocked in place (they hold bookings) go back on sale, then the day is
+  // rebuilt from the schedule. Booked times are never removed by the rebuild.
+  const held = await prisma.teeTime.updateMany({ where: { courseId: session.courseId, date: blackout.date, status: 'blocked' }, data: { status: 'available' } });
+  const created = await generateTeeTimes(session.courseId, blackout.date);
+  return NextResponse.json({ success: true, reopened: held.count, created });
 }

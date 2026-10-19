@@ -165,8 +165,7 @@
     "lucide": 1
   },
   "src/app/dashboard/schedules/page.tsx": {
-    "input": 1,
-    "lucide": 5
+    "input": 1
   },
   "src/app/dashboard/settings/page.tsx": {
     "card": 1,
