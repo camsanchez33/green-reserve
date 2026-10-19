@@ -6178,7 +6178,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 666,
+      "lines": 668,
       "purpose": "",
       "brain": [],
       "exports": [

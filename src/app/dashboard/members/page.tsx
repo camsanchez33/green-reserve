@@ -52,8 +52,11 @@ const emptyMember = () => ({ email: '', name: '', phone: '', tierId: '', notes: 
 type Dues = { kind: 'comped' | 'unpaid' | 'expired' | 'renewing' | 'paid' | 'inactive'; label: string; tone: 'ok' | 'warn' | 'bad' | 'neutral' };
 function duesOf(m: Member, now: Date): Dues {
   if (m.status !== 'active') return { kind: 'inactive', label: 'Not active', tone: 'neutral' };
-  if (m.paymentStatus === 'comped') return { kind: 'comped', label: 'No dues (comped)', tone: 'ok' };
-  if (m.paymentStatus === 'unpaid') return { kind: 'unpaid', label: m.annualFee ? `Dues unpaid · ${fmtMoney((m.annualFee ?? 0) + (m.lastPaidAt ? 0 : (m.initiationFee ?? 0)))}` : 'Dues unpaid', tone: 'bad' };
+  // What they'd owe now — the same sum the dues pay link and the Remind button use.
+  // A free membership owes nothing, whatever paymentStatus still says (it defaults to 'unpaid').
+  const owed = (m.annualFee ?? 0) + (m.lastPaidAt ? 0 : (m.initiationFee ?? 0));
+  if (m.paymentStatus === 'comped' || owed <= 0) return { kind: 'comped', label: 'No dues', tone: 'ok' };
+  if (m.paymentStatus === 'unpaid') return { kind: 'unpaid', label: `Dues unpaid · ${fmtMoney(owed)}`, tone: 'bad' };
   if (m.expiresAt && new Date(m.expiresAt) < now) return { kind: 'expired', label: `Expired ${fmtDate(m.expiresAt)}`, tone: 'bad' };
   if (m.expiresAt && new Date(m.expiresAt).getTime() - now.getTime() < 30 * 86400000) return { kind: 'renewing', label: `Renews ${fmtDate(m.expiresAt)}`, tone: 'warn' };
   return { kind: 'paid', label: m.expiresAt ? `Paid to ${fmtDate(m.expiresAt)}` : 'Paid', tone: 'ok' };
@@ -71,7 +74,6 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [view, setView] = useState<View>('list');
-  const [panel, setPanel] = useState<'tiers' | 'members'>('tiers');
 
   const [wizStep, setWizStep] = useState(1);
   const [tierForm, setTierForm] = useState<Partial<Tier>>(emptyTier());
@@ -161,7 +163,7 @@ export default function MembersPage() {
   const startAddMember = (tierId?: string) => {
     const t = tiers.find(x => x.id === tierId);
     setMemberForm({ ...emptyMember(), tierId: tierId ?? '', expiresAt: t ? addMonthsISO(t.termMonths || 12) : '' });
-    setMemberError(''); setPanel('members'); setAddOpen(true); setView('list');
+    setMemberError(''); setAddOpen(true); setView('list');
   };
 
   const addMember = async () => {
@@ -459,7 +461,7 @@ export default function MembersPage() {
               className="bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[12.5px] transition-colors flex items-center justify-center gap-2">
               Add your first member
             </button>
-            <button onClick={() => { setView('list'); setPanel('tiers'); }}
+            <button onClick={() => { setView('list'); }}
               className="border border-line text-ink-soft hover:border-line-strong py-3 rounded-md font-medium text-[12.5px] transition-colors">
               Back to Tiers
             </button>

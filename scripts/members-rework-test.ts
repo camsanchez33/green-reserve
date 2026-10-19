@@ -11,5 +11,6 @@ check('dues status uses the same overdue rule as Remind (unpaid, or expired and 
 check('edit actions only for members.edit', p.includes("const canEdit = pageAccess.can('members.edit');") && p.includes('{canEdit && ('));
 check('the 1% dues fee is stated plainly', p.includes('a 1% fee is added to what they pay'));
 check('no decorative icons in rows', !p.includes('UserCheck') && !p.includes('Trash2'));
+check('a free membership never reads as dues unpaid (owed is checked first)', p.indexOf('owed <= 0') > -1 && p.indexOf('owed <= 0') < p.indexOf("m.paymentStatus === 'unpaid'"));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
