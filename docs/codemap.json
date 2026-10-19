@@ -5143,7 +5143,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 128,
+      "lines": 146,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5727,7 +5727,7 @@
     },
     {
       "path": "src/app/api/shop-sale/[id]/route.ts",
-      "lines": 31,
+      "lines": 33,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6633,7 +6633,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 222,
+      "lines": 226,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -14625,7 +14625,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 262,
+      "lines": 275,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -14671,6 +14671,14 @@
         },
         {
           "name": "settleOpenSale",
+          "kind": "fn"
+        },
+        {
+          "name": "STALE_CHARGE_MS",
+          "kind": "const"
+        },
+        {
+          "name": "whyNotOpen",
           "kind": "fn"
         }
       ],

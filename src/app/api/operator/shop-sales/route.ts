@@ -2,24 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { createSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, type SaleView } from '@/lib/shop-sales';
+import { createSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, type SaleView } from '@/lib/shop-sales';
 import { rateLimit } from '@/lib/rate-limit';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { sendShopSalePayLinkEmail, isPlaceholderEmail } from '@/lib/email';
 
-// POS-2 (Cam 2026-10-19): walk-up pro-shop sales. Selling needs shop.sell and a
-// current agreement; the course is always the session's.
+// POS-2 (Cam 2026-10-19): walk-up pro-shop sales. Selling needs shop.sell;
+// recording cash also needs sheet.counter_payment (the same power as marking a
+// round paid at the counter). Only card pay links need a current agreement —
+// cash is never blocked. The course is always the session's.
 
-async function gate(write: boolean) {
+async function gate() {
   const session = await resolveDashboardSession();
   if (!session) return { res: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
   const denied = requirePermission(session, 'shop.sell');
   if (denied) return { res: denied };
-  if (write) {
-    const agreementBlock = await requireAgreementCurrent(session.courseId); // AG-3 §3
-    if (agreementBlock) return { res: agreementBlock };
-  }
   return { session };
 }
 
@@ -27,7 +25,7 @@ const LINES = { select: { name: true, unitPriceCents: true, quantity: true }, or
 
 /** Today's sales and any still waiting on a pay link, newest first. */
 export async function GET() {
-  const g = await gate(false);
+  const g = await gate();
   if ('res' in g) return g.res;
   const since = new Date(Date.now() - 36 * 60 * 60 * 1000);
   // A card payment whose request never finished is settled from Stripe here.
@@ -66,11 +64,18 @@ async function sendLink(courseId: string, sale: SaleView, payToken: string, via:
 }
 
 export async function POST(req: NextRequest) {
-  const g = await gate(true);
+  const g = await gate();
   if ('res' in g) return g.res;
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   const pay = body.pay === 'cash' ? 'cash' : body.pay === 'link' ? 'link' : null;
   if (!pay) return NextResponse.json({ error: 'Choose cash or a pay link.' }, { status: 400 });
+  if (pay === 'cash') {
+    const denied = requirePermission(g.session, 'sheet.counter_payment');
+    if (denied) return denied;
+  } else {
+    const agreementBlock = await requireAgreementCurrent(g.session.courseId); // AG-3 §3
+    if (agreementBlock) return agreementBlock;
+  }
   const via = body.via === 'email' ? 'email' : 'sms';
   const course = await prisma.course.findUnique({ where: { id: g.session.courseId }, select: { name: true, stripeAccountId: true, stripeAccountActive: true } });
   if (!course) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
@@ -97,12 +102,23 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const g = await gate(true);
+  const g = await gate();
   if ('res' in g) return g.res;
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
   const id = typeof body.id === 'string' ? body.id : '';
   if (!id) return NextResponse.json({ error: 'Missing sale.' }, { status: 400 });
   if (body.action === 'void' || body.action === 'paid_cash') {
+    if (body.action === 'paid_cash') {
+      const denied = requirePermission(g.session, 'sheet.counter_payment');
+      if (denied) return denied;
+    }
+    // Only an open sale: never stop the card payment of a customer paying right
+    // now. A stale 'paying' claim is settled from Stripe first.
+    try { await reconcileStuckSale(g.session.courseId, id); }
+    catch (err) { console.error(JSON.stringify({ ev: 'shop_sale.reconcile.fail', saleId: id, error: err instanceof Error ? err.message : String(err) })); }
+    const current = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId }, select: { status: true } });
+    if (!current) return NextResponse.json({ error: 'Sale not found.' }, { status: 404 });
+    if (current.status !== 'open') return NextResponse.json({ error: whyNotOpen(current.status) }, { status: 409 });
     // A sale with a card payment started: stop that payment first, so it can
     // never go through after the sale is voided or taken in cash.
     try {
@@ -116,6 +132,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ sale: r.value });
   }
   if (body.action === 'resend') {
+    const agreementBlock = await requireAgreementCurrent(g.session.courseId); // AG-3 §3
+    if (agreementBlock) return agreementBlock;
     const s = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId }, include: { lines: LINES, course: { select: { name: true } } } });
     if (!s) return NextResponse.json({ error: 'Sale not found.' }, { status: 404 });
     if (s.status !== 'open' || !s.payToken) return NextResponse.json({ error: 'Only an unpaid link sale can be sent again.' }, { status: 409 });

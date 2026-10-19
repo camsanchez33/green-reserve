@@ -149,7 +149,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   } as Record<string, boolean>)[k] !== false;
 
   // SD-2: what fits in a thumb row.
-  const mobileKeys: OperatorNavKey[] = (['teesheet', 'money', 'schedule', 'messages', 'settings'] as OperatorNavKey[]).filter(visible);
+  const mobileKeys: OperatorNavKey[] = (['teesheet', 'shop', 'money', 'schedule', 'messages', 'settings'] as OperatorNavKey[]).filter(visible);
   const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
 
   return (

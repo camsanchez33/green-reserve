@@ -90,6 +90,10 @@ export default function ShopPage() {
   }
 
   const canSell = access.can('shop.sell');
+  // Recording cash is the counter-payment power, as on the tee sheet.
+  const canCash = access.can('sheet.counter_payment');
+  const payChoices = ([['cash', 'Cash'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const).filter(([k]) => k !== 'cash' || canCash);
+  useEffect(() => { if (access.loaded && !canCash) setPay(p => (p === 'cash' ? 'sms' : p)); }, [access.loaded, canCash]);
   const needContact = pay === 'sms' ? customer.phone.replace(/\D/g, '').length < 10 : pay === 'email' ? !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(customer.email.trim()) : false;
   const todayTotal = (sales ?? []).filter(s => (s.status === 'paid_cash' || s.status === 'paid_card') && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString()).reduce((t, s) => t + s.totalCents, 0);
 
@@ -157,7 +161,7 @@ export default function ShopPage() {
                 {lines.length > 0 && (
                   <div className="mt-3 space-y-3">
                     <div className="space-y-1.5" role="radiogroup" aria-label="How they pay">
-                      {([['cash', 'Cash'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const).map(([k, label]) => (
+                      {payChoices.map(([k, label]) => (
                         <label key={k} className={'flex items-center gap-2.5 px-3 py-2 rounded-md border cursor-pointer text-sm text-ink ' + (pay === k ? 'border-pine/40' : 'border-line')}>
                           <input type="radio" name="pay" checked={pay === k} onChange={() => setPay(k)} className="accent-pine" />{label}
                         </label>
@@ -201,7 +205,7 @@ export default function ShopPage() {
                           {s.status === 'open' && (
                             <>
                               <button onClick={() => act(s, 'resend', s.customerPhone ? 'sms' : 'email')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Send again</button>
-                              <button onClick={() => act(s, 'paid_cash')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Took cash</button>
+                              {canCash && <button onClick={() => act(s, 'paid_cash')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Took cash</button>}
                               <button onClick={() => act(s, 'void')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>
                             </>
                           )}

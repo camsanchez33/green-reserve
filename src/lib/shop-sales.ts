@@ -9,8 +9,10 @@
 //   open ──(card claimed)──▶ paying ──(charged)──▶ paid_card
 //                              └──(declined)──▶ open
 //   open ──(void)──────────────▶ void
-// A void can only take an 'open' sale, so it can never race a charge in
-// flight; a charge claims the sale first, so two taps cannot both charge.
+// Void / took-cash only take an 'open' sale and cancel its PaymentIntent
+// first; a charge that then finds the intent canceled stops ("ask for a new
+// link"). A charge claims the sale first, so two taps cannot both charge, and
+// the sale has ONE PaymentIntent, so a retry can never charge twice.
 import { randomUUID } from 'crypto';
 import { prisma } from './prisma';
 import Stripe from 'stripe';
@@ -20,7 +22,7 @@ import { MAX_ITEM_PRICE_CENTS, MAX_LINE_QUANTITY, takeStock, shopFeeFor } from '
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
 /** A claim this old belongs to a request that is gone (longer than any function run). The sale's single PaymentIntent keeps a retry to one charge either way. */
-const STALE_CHARGE_MS = 10 * 60 * 1000;
+export const STALE_CHARGE_MS = 10 * 60 * 1000;
 
 export type SaleLineInput = { shopItemId: string; quantity: number };
 export type SaleView = {
@@ -88,6 +90,13 @@ export async function createSale(opts: {
   return { ok: true, value: { ...saleView(sale), payToken } };
 }
 
+/** Why staff can't void or take cash for a sale in this status. */
+export const whyNotOpen = (status: string) =>
+  status === 'paying' ? 'The customer is paying right now — wait a moment and refresh.'
+    : status === 'paid_card' ? 'This sale is already paid by card.'
+    : status === 'paid_cash' ? 'This sale is already paid in cash.'
+    : 'This sale was voided.';
+
 /** Void an unpaid link sale, or take cash for it at the counter instead. */
 export async function settleOpenSale(courseId: string, saleId: string, to: 'void' | 'paid_cash'): Promise<Result<SaleView>> {
   return prisma.$transaction(async tx => {
@@ -98,13 +107,7 @@ export async function settleOpenSale(courseId: string, saleId: string, to: 'void
     });
     const sale = await tx.shopSale.findFirst({ where: { id: saleId, courseId }, include: { lines: { select: { name: true, unitPriceCents: true, quantity: true, shopItemId: true }, orderBy: { id: 'asc' } } } });
     if (!sale) return fail(404, 'Sale not found.');
-    if (done.count === 0) {
-      const why = sale.status === 'paying' ? 'The customer is paying right now — wait a moment and refresh.'
-        : sale.status === 'paid_card' ? 'This sale is already paid by card.'
-        : sale.status === 'paid_cash' ? 'This sale is already paid in cash.'
-        : 'This sale was voided.';
-      return fail(409, why);
-    }
+    if (done.count === 0) return fail(409, whyNotOpen(sale.status));
     if (to === 'paid_cash') for (const l of sale.lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
     return { ok: true as const, value: saleView(sale) };
   });
@@ -165,6 +168,8 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
   }
   if (pi.status === 'succeeded') { await markCardPaid(saleId, now, pi.id); return { ok: true, value: { status: 'paid_card' } }; }
   if (pi.status === 'processing') return { ok: true, value: { status: 'processing' } };
+  // The pro shop stopped this link (took cash or voided while it was open).
+  if (pi.status === 'canceled') { await release(); return fail(409, 'The pro shop closed this pay link — ask them for a new one, or pay there.'); }
 
   let clonedId: string;
   try {
@@ -220,8 +225,14 @@ async function saleIntent(saleId: string, existingId: string, amountCents: numbe
  */
 export async function reconcileStuckSale(courseId: string, saleId: string): Promise<string | null> {
   const sale = await prisma.shopSale.findFirst({ where: { id: saleId, courseId, status: 'paying' }, include: { course: { select: { stripeAccountId: true } } } });
-  if (!sale || !sale.paymentIntentId || !sale.course.stripeAccountId || !sale.chargeStartedAt) return null;
+  if (!sale || !sale.chargeStartedAt) return null;
   if (Date.now() - sale.chargeStartedAt.getTime() < STALE_CHARGE_MS) return null;
+  // A request that died before its intent was stored cannot have charged anything.
+  if (!sale.paymentIntentId) {
+    const back = await prisma.shopSale.updateMany({ where: { id: saleId, status: 'paying', chargeStartedAt: sale.chargeStartedAt, paymentIntentId: '' }, data: { status: 'open', chargeStartedAt: null } });
+    return back.count ? 'open' : null;
+  }
+  if (!sale.course.stripeAccountId) return null;
   const pi = await stripe.paymentIntents.retrieve(sale.paymentIntentId, {}, { stripeAccount: sale.course.stripeAccountId });
   if (pi.status === 'succeeded') { await markCardPaid(saleId, sale.chargeStartedAt, pi.id); return 'paid_card'; }
   if (pi.status === 'requires_payment_method' || pi.status === 'canceled' || pi.status === 'requires_action') {
@@ -234,7 +245,9 @@ export async function reconcileStuckSale(courseId: string, saleId: string): Prom
 /** Void or take cash for a sale whose card intent exists: stop the intent first so it can't be paid later. */
 export async function cancelSaleIntent(courseId: string, saleId: string): Promise<string | null> {
   const sale = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, include: { course: { select: { stripeAccountId: true } } } });
-  if (!sale?.paymentIntentId || !sale.course.stripeAccountId) return null;
+  if (!sale) return 'Sale not found.';
+  if (sale.status !== 'open') return whyNotOpen(sale.status); // never stop a payment in flight
+  if (!sale.paymentIntentId || !sale.course.stripeAccountId) return null;
   const pi = await stripe.paymentIntents.retrieve(sale.paymentIntentId, {}, { stripeAccount: sale.course.stripeAccountId });
   if (pi.status === 'succeeded') { await markCardPaid(saleId, sale.chargeStartedAt ?? new Date(0), pi.id); return 'This sale was just paid by card — it can’t be voided or taken in cash.'; }
   if (pi.status === 'processing') return 'The customer’s card payment is still going through — wait a few minutes.';

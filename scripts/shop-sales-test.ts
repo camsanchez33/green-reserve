@@ -26,7 +26,9 @@ check('the customer must confirm the total they saw', lib.includes('Number(expec
 check('GreenReserve fee follows the shop-fee switch', lib.includes('const fee = shopFeeFor(amountCents);'));
 check('the pay page needs the sale token', lib.includes('sale.payToken !== token') && pub.includes('saleForPayPage(id, token)'));
 check('the pay route is rate limited', pub.includes('rateLimit(`shop-sale-pay:'));
-check('staff routes need shop.sell and a current agreement', staff.includes("requirePermission(session, 'shop.sell')") && staff.includes('requireAgreementCurrent(session.courseId)'));
+check('staff routes need shop.sell; cash also needs counter payment; only links need the agreement',
+  staff.includes("requirePermission(session, 'shop.sell')") && (staff.match(/requirePermission\(g\.session, 'sheet\.counter_payment'\)/g) || []).length === 2
+  && (staff.match(/requireAgreementCurrent\(g\.session\.courseId\)/g) || []).length === 2);
 check('staff writes are scoped to the session course', staff.includes('courseId: g.session.courseId') && lib.includes('where: { id: saleId, courseId, status'));
 check('stock is optional and bounded', items.includes('n > 100000') && items.includes("body.stockCount === ''"));
 check('round items take and return stock too', shop.includes('await takeStock(tx, item.id, quantity)') && shop.includes('await takeStock(tx, line.shopItemId, -line.quantity)'));

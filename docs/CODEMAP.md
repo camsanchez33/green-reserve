@@ -210,7 +210,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/schedule/preview` | operator | file | POST | `src/app/api/operator/schedule/preview/route.ts` | 24 |
 | `/api/operator/settings` | operator | file | GET PATCH | `src/app/api/operator/settings/route.ts` | 123 |
 | `/api/operator/shop-items` | operator | NONE FOUND for POST/PATCH/DELETE | DELETE GET PATCH POST | `src/app/api/operator/shop-items/route.ts` | 97 |
-| `/api/operator/shop-sales` | operator | file | GET PATCH POST | `src/app/api/operator/shop-sales/route.ts` | 128 |
+| `/api/operator/shop-sales` | operator | file | GET PATCH POST | `src/app/api/operator/shop-sales/route.ts` | 146 |
 | `/api/operator/sign` | operator | file | GET POST | `src/app/api/operator/sign/route.ts` | 105 |
 | `/api/operator/staff` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/staff/route.ts` | 124 |
 | `/api/operator/stripe/callback` | operator | file | GET | `src/app/api/operator/stripe/callback/route.ts` | 42 |
@@ -228,7 +228,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/preview/[courseId]/tee-times` | public | token | GET | `src/app/api/preview/[courseId]/tee-times/route.ts` | 67 |
 | `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 148 |
 | `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 73 |
-| `/api/shop-sale/[id]` | public | token | GET POST | `src/app/api/shop-sale/[id]/route.ts` | 31 |
+| `/api/shop-sale/[id]` | public | token | GET POST | `src/app/api/shop-sale/[id]/route.ts` | 33 |
 | `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 134 |
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |
 | `/book` | public | public | page | `src/app/book/page.tsx` | 33 |
@@ -254,7 +254,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 118 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 520 |
 | `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1052 |
-| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 222 |
+| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 226 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 27 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
@@ -369,7 +369,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/schedule-conflict.ts` | 2 | 78 | COURSE_LAYOUT_SPEC L2 — conflict detection for product-scoped schedules. | `ConflictNine`, `ConflictProduct`, `ConflictSchedule`, `findScheduleConflict` |
 | `src/lib/settings-validation.ts` | 2 | 141 | SD-1. | `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
 | `src/lib/sheet-token.ts` | 2 | 52 |  | `CLOSED_TO_SHEET`, `DETAILS_TOKEN_TTL_DAYS`, `gateSheetAccess`, `SheetGate` |
-| `src/lib/shop-sales.ts` | 2 | 262 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `MAX_SALE_CENTS`, `MAX_SALE_LINES`, `reconcileStuckSale`, `saleForPayPage`, `SaleLineInput` +3 more |
+| `src/lib/shop-sales.ts` | 2 | 275 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `MAX_SALE_CENTS`, `MAX_SALE_LINES`, `reconcileStuckSale`, `saleForPayPage`, `SaleLineInput` +5 more |
 | `src/lib/staff-fonts.ts` | 2 | 10 | U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here: | `STAFF_LOOK_CLASS` |
 | `src/lib/stripe-errors.ts` | 2 | 26 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
 | `src/lib/submit-change-request.ts` | 2 | 88 |  | `cleanChangeItems`, `submitChangeRequest` |
