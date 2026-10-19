@@ -73,6 +73,7 @@ here listed `src/app/account/`, which has never existed.
 - `GolferAccount` — golfer login, email-based auth
 - `MembershipTier` / `CourseMembership` — member pricing tiers
 - `TeeSet` — tee set options per course
+- `CourseGroup` — GRP-1 (Cam 2026-10-19, after golfbergencounty.com): courses run together (a county). Made ONLY in Admin → Courses → Course groups (`/api/admin/course-groups`, manager+), never by a course. A group gets one golfer page `/g/[slug]` (every live public course's open times for a day; a time opens that course's own booking page with `?tt=` picked) and ONE resident list: `residentOn()` and `/api/operator/residents` read every course in the group through `groupCourseIds()` (`src/lib/course-group.ts`), so any course's staff in the group see and edit it. Prices, memberships, staff and payouts stay per course
 
 ---
 

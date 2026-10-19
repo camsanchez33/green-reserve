@@ -423,6 +423,7 @@ function CoursesContent() {
               </p>
             </div>
             <div className="flex gap-2 items-center">
+              <Link href="/admin/groups" className="text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors">Course groups</Link>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
                 <input
