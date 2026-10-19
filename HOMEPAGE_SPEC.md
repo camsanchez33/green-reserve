@@ -100,8 +100,20 @@ suggestion save this information". Decisions go here as they are made.
 beside the form (homepage feel; form only on phones) and a "Need help signing
 in?" line pointing to support. ("Ask a question" was not swapped for Book a demo.)
 
-**About section — DRAFT sent to Cam 2026-10-19 (not approved yet).** See the
-session for the copy; record it here once approved.
+**About section — answers (Cam 2026-10-19), copy draft pending approval:**
+- About the PRODUCT only (a company/founder "about" lives elsewhere, later).
+  It must not attack what other systems do.
+- The reader should come away believing: easy to switch, modern and smart,
+  they need it, and it is NOT a cheap free thing — it checks every box.
+- Shape: short paragraph + bullets (today's). Tone: clubhouse, warm, confident.
+- Switching, what is true: courses send their schedule, rates, photos and colors
+  and the page is set up from them (they can change it all themselves after);
+  members are brought over; staff are trained.
+- Bullets: booking page linked from the course's own website; one sheet with
+  public, resident and member rates; payments + card protection for late/no-show
+  fees; staff permissions; an AI assistant (as a bullet).
+- Do NOT say "Birdie" in marketing copy — "an AI assistant" (Cam: the name
+  sounds unprofessional on the site).
 
 **Round 5 (Cam 2026-10-19):** hide Test Course 3 from the public site and the
 sitemap; the site phone number is Cam's cell (number to come from Cam);
