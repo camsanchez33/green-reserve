@@ -114,6 +114,15 @@ in?" line pointing to support. ("Ask a question" was not swapped for Book a demo
   fees; staff permissions; an AI assistant (as a bullet).
 - Do NOT say "Birdie" in marketing copy — "an AI assistant" (Cam: the name
   sounds unprofessional on the site).
+- Copy (Cam 2026-10-19, after "not 'send us' — informal; and it must not sound
+  like WE run it — it runs on our software, their staff manage it"): headline
+  "Everything your course needs, in one tee sheet."; paragraph "GreenReserve
+  brings your tee sheet and online booking into one system that your staff run.
+  During setup, we build your course's booking page from your schedule, rates,
+  photos and colors, and you can change any of it whenever you like. We bring
+  your members over and train your staff, so your counter is ready before you go
+  live. GreenReserve charges your course nothing." + the five bullets in
+  HomeContent.tsx `DOES`.
 
 **Round 5 (Cam 2026-10-19):** hide Test Course 3 from the public site and the
 sitemap; the site phone number is Cam's cell (number to come from Cam);
