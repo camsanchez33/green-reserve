@@ -7997,7 +7997,7 @@
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
       "lines": 229,
-      "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
+      "purpose": "BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its phone launcher (on md+ the top bar's \"Ask Birdie\" opens it).",
       "brain": [],
       "exports": [
         {

@@ -450,7 +450,7 @@ Sorted the same way.
 | `src/components/admin/InquiryCallCards.tsx` | 1 | 914 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
 | `src/components/admin/OwnerTwoFactorCard.tsx` | 1 | 159 | OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only). | `default (OwnerTwoFactorCard)` |
 | `src/components/AnnouncementBanner.tsx` | 1 | 51 |  | `default (AnnouncementBanner)` |
-| `src/components/birdie/BirdieWidget.tsx` | 1 | 229 | BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard. | `default (BirdieWidget)` |
+| `src/components/birdie/BirdieWidget.tsx` | 1 | 229 | BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its phone launcher (on md+ the top bar's "Ask Birdie" opens it). | `default (BirdieWidget)` |
 | `src/components/birdie/ConfirmCard.tsx` | 1 | 99 | BIRDIE_AI_SPEC B4b — a change Birdie drafted, waiting on the operator. | `ConfirmCard` |
 | `src/components/dashboard/AgreementNotice.tsx` | 1 | 68 | AGREEMENT_SPEC AG-3 §3 — the re-acceptance banner and, after the deadline, the modal. | `AGREEMENT_REQUIRED_EVENT`, `default (AgreementNotice)` |
 | `src/components/dashboard/CourseLayoutTab.tsx` | 1 | 503 | Settings rework (Cam 2026-10-19: | `default (CourseLayoutTab)` |

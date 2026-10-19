@@ -1,6 +1,6 @@
 'use client';
-// BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the
-// operator dashboard. Renders nothing until GET /api/birdie/chat says the
+// BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its
+// phone launcher (on md+ the top bar's "Ask Birdie" opens it). Renders nothing until GET /api/birdie/chat says the
 // assistant is on. Replies stream in; links the model writes as
 // [Open Schedule](/dashboard/schedules) become deep-link buttons.
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -195,7 +195,7 @@ export default function BirdieWidget() {
             <Image src="/brand/golfer.svg" unoptimized alt="" width={22} height={27} className="h-7 w-auto" />
             <div className="min-w-0">
               <div className="text-[15px] font-semibold text-ink leading-tight">Ask Birdie</div>
-              <div className="text-[12px] text-ink-muted truncate">Your course&apos;s assistant. Ask in plain words.</div>
+              <div className="text-[12px] text-ink-soft truncate">Your course&apos;s assistant. Ask in plain words.</div>
             </div>
             <button type="button" onClick={close} aria-label="Close" className="ml-auto text-ink-muted hover:text-ink transition-colors"><X className="w-4 h-4" /></button>
           </div>
