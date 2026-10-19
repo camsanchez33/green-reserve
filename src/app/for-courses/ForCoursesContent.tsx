@@ -576,7 +576,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           <p className="text-[15px] font-semibold text-ink mb-5">Quick answers</p>
           <div className="space-y-5">
             {[
-              { q: 'What does it cost to list my course?', a: 'Nothing to set up and nothing monthly. Golfers pay $1.50 per player at checkout, on top of your price.' },
+              { q: 'What does it cost to list my course?', a: 'No setup fee and no monthly fee. Golfers pay $1.50 per player at checkout, on top of your price.' },
               { q: 'Who pays the $1.50?', a: "The golfer, as a line on their checkout above your green fee. It's collected in the same card payment as your green fee and passed to GreenReserve, so your listed price isn't reduced. Stripe's normal processing fee applies to the payment as a whole, like any card you take today." },
               { q: 'How does setup work?', a: 'We set up your booking page with you from your schedule, rates, photos and colors, bring your members over and train your staff, then run a test before you go live.' },
             ].map(({ q, a }) => (

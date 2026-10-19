@@ -14,7 +14,6 @@ import s from './home.module.css';
 // A server component; the only client JS is the demo island (TeeSheetDemo).
 
 const DEMO = '/demo';
-const INQUIRY = '/for-courses';
 const DETAIL = '/teesheet';
 
 const Arrow = () => <span aria-hidden="true">→</span>;
@@ -30,7 +29,7 @@ const HIGHLIGHTS = [
   { h: 'Free for your course', p: 'No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.' },
   { h: 'Your AI assistant', p: 'Ask how today looks, find a golfer’s booking or draft a change to the sheet. Nothing changes until you confirm it.' },
   { h: 'A monthly review of your course', p: 'Analytics for every day, and at the end of each month a written review of how the course did and what to look at next.' },
-  { h: 'Payments, anywhere', p: 'Golfers pay at the counter or on their own phone, including Apple Pay and Google Pay, and you can text them a pay link. A card on file covers late-cancel and no-show fees. The money goes to your course’s own Stripe account.' },
+  { h: 'Payments, anywhere', p: 'Golfers pay at the counter or on their own phone, including Apple Pay and Google Pay, and you can send them a pay link. If you charge late-cancel or no-show fees, a card on file covers them. The money goes to your course’s own Stripe account.' },
 ];
 
 export default function HomeContent() {

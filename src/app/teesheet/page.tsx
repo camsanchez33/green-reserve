@@ -142,7 +142,7 @@ export default function TeeSheetPage() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-white">
+      <section className="bg-white">
         <div className="w-[min(1180px,calc(100%-48px))] mx-auto py-16 grid md:grid-cols-[minmax(0,38fr)_minmax(0,62fr)] gap-8 md:gap-12">
           <div>
             <h2 className={H2}>How setting up works.</h2>
