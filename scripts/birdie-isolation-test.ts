@@ -101,7 +101,7 @@ const propSrc = readFileSync(new URL('../src/lib/birdie/proposals.ts', import.me
 check('proposals: no tool accepts a course', PROPOSE_TOOLS.every(t => !/course/i.test(Object.keys((t.input_schema as { properties?: object }).properties ?? {}).join(','))));
 check('proposals: drafting never writes', !/prisma\.\w+\.(create|update|upsert|delete)/.test(propSrc));
 const propReads = [...propSrc.matchAll(/prisma\.(\w+)\.(findMany|findFirst|findUnique|count)\(\{[\s\S]*?where: \{([^}]*)\}/g)];
-check('proposals: every read filters on ctx.courseId', propReads.length > 0 && propReads.every(m => m[3].includes('courseId: ctx.courseId')), `${propReads.length} reads`);
+check('proposals: every read filters on ctx.courseId', propReads.length > 0 && propReads.every(m => m[3].includes('courseId: ctx.courseId') || (m[1] === 'course' && /^\s*id: ctx\.courseId\s*$/.test(m[3]))), `${propReads.length} reads`);
 const paths = [...propSrc.matchAll(/path: '([^']+)'/g)].map(m => m[1]);
 check('proposals: every card calls an allow-listed route', paths.length >= 3 && paths.every(p => p in PROPOSAL_ROUTES), paths.join(','));
 const noEdit: ToolContext = { courseId: 'not-a-real-course', timezone: 'America/New_York', can: k => k !== 'schedule.edit' };
@@ -147,6 +147,15 @@ check('widget: a move card carrying extra fields is refused', !isProposalCard(bk
 check('widget: a cancel on the bookings route is refused', !isProposalCard(bk({ id: 'b', action: 'cancel' })));
 check('widget: a check-in on the bookings route is refused', !isProposalCard(bk({ id: 'b', action: 'checkin' })));
 check('widget: paid-at-counter is refused', !isProposalCard(bk({ id: 'b', action: 'paid_offline' })));
+// Settings rework: the description card, and nothing else through the settings route.
+const st = (body: Record<string, unknown>) => ({ ...goodCard, call: { method: 'PATCH', path: '/api/operator/settings', body } });
+check('widget: a description card passes', isProposalCard(st({ description: 'A friendly public 18.' })));
+check('widget: a settings card carrying the policy is refused', !isProposalCard(st({ description: 'x', cancellationHours: 0 })));
+check('widget: a settings card without a description is refused', !isProposalCard(st({ lateCancellationFee: 0 })));
+const descDenied = await runProposeTool('propose_course_description', { description: 'A'.repeat(60) }, { ...noEdit, can: k => k !== 'settings.edit' });
+check('propose_course_description: a login without settings.edit gets an error, never a card', descDenied.isError && !descDenied.card, descDenied.content);
+const descShort = await runProposeTool('propose_course_description', { description: 'Too short.' }, canEdit);
+check('propose_course_description: too short is refused', descShort.isError && !descShort.card);
 check('widget: a counter booking passes', isProposalCard(bk({ teeTimeId: 't', golferName: 'Ann', players: 2, source: 'walk_in' }, 'POST')));
 check('widget: a counter booking checked in on the spot is refused', !isProposalCard(bk({ teeTimeId: 't', golferName: 'Ann', players: 2, source: 'walk_in', checkInNow: true }, 'POST')));
 const tt = (status: unknown) => ({ ...goodCard, call: { method: 'PATCH', path: '/api/operator/tee-times', body: { id: 't', status } } });

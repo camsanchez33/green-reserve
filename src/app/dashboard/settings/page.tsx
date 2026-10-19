@@ -19,6 +19,7 @@ import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { walkingWords } from '@/lib/walking';
+import { askBirdie, useBirdieReady, APPLIED_EVENT } from '@/lib/birdie/ask';
 import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityFields } from '@/lib/facilities';
 import { Card } from '@/components/ui/Card';
 import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
@@ -464,6 +465,32 @@ function SettingsPageInner() {
   }
 
   const dresscodes = (form.dresscode as string[])||[];
+
+  // Settings rework (Cam 2026-10-19: "AI should help write" the description).
+  // Birdie gets the course's own facts in the question, drafts, and shows a
+  // confirm card; nothing is saved until the owner confirms it there.
+  const birdieOn = useBirdieReady();
+  function askForDescription() {
+    const facts = [
+      `${String(form.name ?? '')}${form.city ? `, ${form.city}, ${form.state}` : ''}`,
+      `${form.type === 'private' ? 'Private' : 'Public'} course${form.holes ? `, ${form.holes} holes` : ''}${form.par ? `, par ${form.par}` : ''}${form.establishedYear ? `, opened ${form.establishedYear}` : ''}`,
+      walkingWords(form.walkingAllowed as string),
+      facilityPreview.length ? `Facilities: ${facilityPreview.join('; ')}` : '',
+      String(form.description ?? '').trim() ? `Current description: ${String(form.description).trim()}` : '',
+    ].filter(Boolean).join('\n');
+    askBirdie(`Draft the description for our booking page — 3 to 5 sentences, friendly and plain. Use only these facts, and ask me for anything else you want to say:\n${facts}`);
+  }
+  useEffect(() => {
+    const onApplied = (e: Event) => {
+      const paths = (e as CustomEvent<{ paths?: string[] }>).detail?.paths ?? [];
+      if (!paths.includes('/api/operator/settings')) return;
+      fetch('/api/operator/settings').then(r => r.ok ? r.json() : null)
+        .then(d => { if (d && typeof d.description === 'string' && !dirtyRef.current) setForm(f => ({ ...f, description: d.description })); })
+        .catch(() => {});
+    };
+    window.addEventListener(APPLIED_EVENT, onApplied);
+    return () => window.removeEventListener(APPLIED_EVENT, onApplied);
+  }, []);
   const dresscodeLines = dresscodes.map(l => l.trim()).filter(Boolean);
   // The preview reads the same lines the booking page does; the form holds dollars, the lib wants cents.
   const cents$ = (v: unknown) => Math.round(Number(v || 0) * 100);
@@ -640,6 +667,11 @@ function SettingsPageInner() {
                     placeholder="e.g. 1927" min={1850} max={new Date().getFullYear()} className={iCls}/>
                 </Field>
                 <Field label="Description">
+                  {birdieOn && (
+                    <button type="button" onClick={askForDescription} className="mb-1.5 text-[12.5px] font-medium text-pine hover:underline underline-offset-4">
+                      {String(form.description ?? '').trim() ? 'Ask Birdie to improve it' : 'Ask Birdie to write it'}
+                    </button>
+                  )}
                   <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>
                 </Field>
                 <Field label="Gift Card URL" hint="Paste the URL to where golfers can buy gift cards (your website, Square, etc.). An optional button will appear on your course page.">
@@ -979,7 +1011,7 @@ function SettingsPageInner() {
                 <div className="text-[13px] font-semibold text-ink mb-2">On your booking page</div>
                 <Card className="p-4 text-sm">
                   {facilityPreview.length ? (
-                    <ul className="list-disc pl-5 space-y-0.5 text-ink">{facilityPreview.map(l => <li key={l}>{l}</li>)}</ul>
+                    <ul className="list-disc pl-5 space-y-0.5 text-ink">{facilityPreview.map((l, i) => <li key={i}>{l}</li>)}</ul>
                   ) : <p className="text-ink-soft">Nothing ticked yet, so golfers see no Facilities section.</p>}
                 </Card>
                 <p className="text-[12px] text-ink-soft mt-2">Updates as you tick. Prices here are shown to golfers, never charged.</p>

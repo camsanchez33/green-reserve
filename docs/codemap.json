@@ -5913,7 +5913,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1805,
+      "lines": 1806,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6495,7 +6495,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1122,
+      "lines": 1154,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6522,6 +6522,7 @@
         "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/birdie/ask",
         "@/lib/cancel-policy",
         "@/lib/course-time",
         "@/lib/facilities",
@@ -7657,7 +7658,7 @@
     },
     {
       "path": "src/components/birdie/ConfirmCard.tsx",
-      "lines": 96,
+      "lines": 99,
       "purpose": "BIRDIE_AI_SPEC B4b — a change Birdie drafted, waiting on the operator.",
       "brain": [],
       "exports": [
@@ -7673,6 +7674,7 @@
       "guard": null,
       "imports": [
         "@/components/ui/StatusDot",
+        "@/lib/birdie/ask",
         "@/lib/birdie/proposal-types",
         "react"
       ],
@@ -9716,10 +9718,14 @@
     },
     {
       "path": "src/lib/birdie/ask.ts",
-      "lines": 31,
+      "lines": 33,
       "purpose": "AN-3 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
+        {
+          "name": "APPLIED_EVENT",
+          "kind": "const"
+        },
         {
           "name": "ASK_EVENT",
           "kind": "const"
@@ -9747,7 +9753,9 @@
       ],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
-        "src/components/birdie/BirdieWidget.tsx"
+        "src/app/dashboard/settings/page.tsx",
+        "src/components/birdie/BirdieWidget.tsx",
+        "src/components/birdie/ConfirmCard.tsx"
       ]
     },
     {
@@ -9882,7 +9890,7 @@
     },
     {
       "path": "src/lib/birdie/proposal-types.ts",
-      "lines": 61,
+      "lines": 65,
       "purpose": "BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call).",
       "brain": [],
       "exports": [
@@ -9922,7 +9930,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 419,
+      "lines": 449,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [
@@ -12224,7 +12232,7 @@
     },
     {
       "path": "src/lib/facilities.ts",
-      "lines": 53,
+      "lines": 55,
       "purpose": "Settings rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -16717,6 +16725,7 @@
         "src/lib/analytics.ts",
         "src/lib/announcement-audience.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/birdie/proposals.ts",
         "src/lib/course-closure.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",

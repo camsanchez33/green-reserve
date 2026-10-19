@@ -145,6 +145,18 @@ export const PROPOSE_TOOLS: Anthropic.Beta.BetaTool[] = [
       additionalProperties: false,
     },
   },
+  {
+    // Settings rework (Cam 2026-10-19: "let them ask the AI to help write" the description).
+    name: 'propose_course_description',
+    description:
+      "Draft the course's description for its booking page (the About section), for the operator to confirm. Write 3 to 5 plain sentences to golfers using ONLY facts the operator gave you or that the tools returned — never invent history, awards, views, designers or prices. This does NOT change anything — it shows a confirm card.",
+    input_schema: {
+      type: 'object',
+      properties: { description: { type: 'string', description: 'The full new description, 40 to 1500 characters.' } },
+      required: ['description'],
+      additionalProperties: false,
+    },
+  },
 ];
 
 export type ProposalOutcome = ToolOutcome & { card?: ProposalCard };
@@ -400,6 +412,23 @@ async function sendPayLink(input: Record<string, unknown>, ctx: ToolContext): Pr
   });
 }
 
+// ── Settings: the course description ─────────────────────────────────────
+async function courseDescription(input: Record<string, unknown>, ctx: ToolContext): Promise<ProposalOutcome> {
+  if (!ctx.can('settings.edit')) return err("This login can't change the course description — the course owner decides that under Settings → Staff & permissions.");
+  const text = typeof input.description === 'string' ? input.description.trim() : '';
+  if (text.length < 40 || text.length > 1500) return err('The description must be 40 to 1500 characters.');
+  const course = await prisma.course.findUnique({ where: { id: ctx.courseId }, select: { description: true } });
+  if (!course) return err('Course not found.');
+  const short = (s: string) => (s.length > 160 ? `${s.slice(0, 157)}…` : s);
+  return shown({
+    id: cardId(),
+    title: 'Update your course description',
+    changes: [{ label: 'About the course', from: course.description?.trim() ? short(course.description.trim()) : 'Empty', to: short(text) }],
+    note: 'Shown in the About section of your booking page. You can edit it any time under Settings → Your course.',
+    call: { method: 'PATCH', path: '/api/operator/settings', body: { description: text } },
+  });
+}
+
 /** Runs one propose_* call. Bad input comes back as an error, never a card. */
 export async function runProposeTool(name: string, input: unknown, ctx: ToolContext): Promise<ProposalOutcome> {
   const args = input && typeof input === 'object' && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
@@ -411,6 +440,7 @@ export async function runProposeTool(name: string, input: unknown, ctx: ToolCont
     case 'propose_block_times': return blockTimes(args, ctx);
     case 'propose_add_booking': return addBooking(args, ctx);
     case 'propose_send_pay_link': return sendPayLink(args, ctx);
+    case 'propose_course_description': return courseDescription(args, ctx);
     default: return err(`There is no tool called ${name}.`);
   }
 }
