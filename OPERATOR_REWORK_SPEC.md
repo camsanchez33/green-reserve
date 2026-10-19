@@ -76,4 +76,24 @@ Keep it minimal; a photo/brand panel beside the form (form only on phones); a
   launch: "Add a walk-in" with fit-in warnings (within ~5 minutes of another
   group, slot capacity).
 
+**Decisions, round 2 (Cam 2026-10-19):**
+- The corner icon is the TOP-LEFT one: the course's uploaded logo in a small
+  white box beside the course name (OperatorSidebar.tsx). It does nothing —
+  remove it (or give it a job).
+- Weather: keep, rename and explain ("Weather delay / cancel": delay the
+  morning's start, or cancel a range of times and email those golfers). Cam
+  also doesn't like how it works today — "fix that and ways it can be better".
+- Message golfers: keep, rename and explain ("Message today's golfers": who
+  gets it — everyone booked on that date — and how: email, and text once
+  texting is approved).
+- Course alert: a notice on the course's booking page (e.g. "Cart path only
+  today", "Back nine closed") until it ends, AND optionally emails everyone
+  booked that day.
+
+**Built (PR, branch claude/teesheet-1, 2026-10-19):** header "awaiting
+check-in" and no rate; Find golfer + refresh icon in the sheet bar; late
+groups and the color key in the bar under the date; tinted squares; calendar
+on screen; agreement announcement clears once signed and looks urgent; "Mark
+no-show" and "Still coming" on a late group's row in the panel.
+
 ## 5. Next from Cam: Analytics (notes to come)
