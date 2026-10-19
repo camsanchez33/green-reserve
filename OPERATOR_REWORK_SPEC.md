@@ -63,4 +63,13 @@ Keep it minimal; a photo/brand panel beside the form (form only on phones); a
 - **Birdie:** needs a better look, and it must be obvious that this is where
   you ask questions — that it's there at all.
 
+**Decisions (Cam 2026-10-19):**
+- The price line ("18 holes · $70 + $10 cart") leaves the header and goes
+  where staff use it — in the time slot's detail.
+- The side panel needs a complete rework — maybe not a side panel at all but a
+  pop-up with all the information needed for that time and its groups.
+- "Ring someone up" waits for the card reader (POS-1b, after launch). For
+  launch: "Add a walk-in" with fit-in warnings (within ~5 minutes of another
+  group, slot capacity).
+
 ## 5. Next from Cam: Analytics (notes to come)
