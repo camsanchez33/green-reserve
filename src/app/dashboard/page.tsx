@@ -962,7 +962,7 @@ function DashboardPageInner() {
               <h3 className="font-serif font-semibold text-ink text-[17px]">Add a tee time — {fmtDate(selectedDate)}</h3>
               <button onClick={() => setShowAddModal(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <AddTeeTimeForm date={selectedDate} existingTimes={teeTimes.map(t => t.time)} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
+            <AddTeeTimeForm date={selectedDate} existingTimes={teeTimes.filter(t => t.status !== 'blocked').map(t => t.time)} onSave={()=>{setShowAddModal(false);loadTimes(selectedDate);}} onCancel={()=>setShowAddModal(false)}/>
           </div>
         </div>
       )}
@@ -1324,7 +1324,7 @@ function AddTeeTimeForm({ date, existingTimes, onSave, onCancel }: { date: strin
         <p role="status" className="text-[13px] text-ink bg-white border border-line border-l-[3px] border-l-warn rounded-md px-3 py-2.5">
           {close[0].gap === 0
             ? `There's already a ${fmtTime(close[0].time)} time on this day.`
-            : `This is ${close[0].gap} min from the ${fmtTime(close[0].time)} group${close.length > 1 ? ` (and ${close.length - 1} more nearby)` : ''}.`}{' '}
+            : `This is ${close[0].gap} min from the ${fmtTime(close[0].time)} tee time${close.length > 1 ? ` (and ${close.length - 1} more nearby)` : ''}.`}{' '}
           Groups this close can stack up on the first tee.{confirmedClose === time ? ' Tap Add anyway to add it.' : ''}
         </p>
       )}
