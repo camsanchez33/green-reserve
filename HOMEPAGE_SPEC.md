@@ -115,9 +115,11 @@ below conflict with this section, THIS section wins; they stay as history.
    real photo, a links green above the ocean at dusk, flag on the horizon,
    Unsplash photo-1646204221936 (Cam picked it from 18), free under the Unsplash License (no credit required);
    a placeholder until a partner course's own photo, Cam 2026-10-17) with the cream logo
-   centred in the upper third and one line under it that says what we are
-   (CLUB-1 still holds): "The online tee sheet and booking page for golf
-   courses." A dark top-to-bottom scrim so the logo reads. The nav has no logo
+   centred in the upper third. Under it (Cam 2026-10-19, option A — "free"
+   as the headline sounded cheap): the line "The tee sheet your course
+   deserves.", one sentence "Online booking, payments and an AI assistant that
+   knows your course. GreenReserve charges your course nothing: golfers pay a
+   small booking fee instead." (LQ-2-safe wording), and a Book a demo button. A dark top-to-bottom scrim so the logo reads. The nav has no logo
    on `/` (the hero's logo replaces it): Operator login + Book a demo, top right.
 2. **What it is** (`#about`): headline, one long paragraph, four bullets, and
    two cards: "See how it works" (scrolls to the demo) and "Learn more about the
@@ -129,7 +131,8 @@ below conflict with this section, THIS section wins; they stay as history.
 4. **See how it works** (`#see`): the working demo, the operator tee sheet on a
    laptop and the golfer's booking page on a phone beside it, one store behind
    both. Then Book a demo + "Or ask a question".
-5. **End:** the logo again with "The tee sheet your course deserves."
+5. **End:** the logo again with "Ready when your course is." (the old closing
+   line moved up to the hero, Cam 2026-10-19)
 6. Footer: "© {year} GreenReserve. All rights reserved." + The tee sheet,
    Terms, Privacy, Operator agreement, Contact, Operator login, email.
 
