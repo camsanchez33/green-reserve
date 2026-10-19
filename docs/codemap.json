@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 415,
+    "files": 416,
     "routes": 213,
-    "libs": 123,
+    "libs": 124,
     "models": 39,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5913,7 +5913,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1797,
+      "lines": 1814,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5937,6 +5937,7 @@
         "@/lib/demo-courses",
         "@/lib/tee-colour",
         "@/lib/tee-time-utils",
+        "@/lib/walking",
         "lucide-react",
         "next/image",
         "next/link",
@@ -6494,7 +6495,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1055,
+      "lines": 1080,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6517,6 +6518,7 @@
         "@/components/dashboard/StaffPermissions",
         "@/components/dashboard/Toast",
         "@/components/dashboard/settings/FinishSetup",
+        "@/components/ui/Card",
         "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -6526,6 +6528,7 @@
         "@/lib/password",
         "@/lib/unsaved-guard",
         "@/lib/use-dashboard-access",
+        "@/lib/walking",
         "lucide-react",
         "next/navigation",
         "react"
@@ -8437,6 +8440,7 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
+        "src/app/dashboard/settings/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -13411,7 +13415,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 81,
+      "lines": 85,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15126,6 +15130,28 @@
         "react"
       ],
       "usedBy": []
+    },
+    {
+      "path": "src/lib/walking.ts",
+      "lines": 11,
+      "purpose": "Settings rework (Cam 2026-10-19):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "walkingWords",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/dashboard/settings/page.tsx"
+      ]
     },
     {
       "path": "src/lib/weather-cancel.ts",

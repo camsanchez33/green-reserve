@@ -27,6 +27,10 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     amenities: Array.isArray(c.amenities) ? c.amenities.join(', ') : (c.amenities ?? ''),
     walking_allowed: c.walkingAllowed === 'always' || c.walkingAllowed === 'allowed',
     cart_required: c.cartRequired ?? false,
+    // Settings rework (Cam 2026-10-19): what the course set under Booking rules, shown in About.
+    walking_policy: typeof c.walkingAllowed === 'string' ? c.walkingAllowed : 'always',
+    walking_note: c.walkingNote ?? '',
+    dress_code: Array.isArray(c.dresscode) ? c.dresscode.map((l: unknown) => String(l).trim()).filter(Boolean) : [],
     rating: c.rating ?? 4.5,
     review_count: c.reviewCount ?? 0,
     image_gradient: c.imageGradient ?? 'linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)',

@@ -1,6 +1,7 @@
 'use client';
 import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
 import { teeColour } from '@/lib/tee-colour';
+import { walkingWords } from '@/lib/walking';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { useEffect, useMemo, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -129,6 +130,9 @@ type CourseWithBrand = Course & {
   gift_card_url?: string;
   photos?: { id: string; url: string; sortOrder: number }[];
   tee_sets?: { name: string; yardage: number; rating: number; slope: number }[];
+  walking_policy?: string;
+  walking_note?: string;
+  dress_code?: string[];
   nines?: { name: string; par: number }[];
   page_approval_status?: 'none' | 'approved' | 'changes_requested';
   is_live?: boolean;
@@ -1573,7 +1577,6 @@ export default function CourseDetailPage({
                       { label: 'Course type', value: typeLabel },
                       { label: 'Holes', value: String(course.holes) },
                       { label: 'Par', value: String(course.par) },
-                      { label: 'Walking', value: course.walking_allowed ? 'Allowed' : 'Cart only' },
                       { label: 'Cart', value: course.cart_required ? 'Required' : 'Optional' },
                       { label: 'State', value: course.state },
                     ].filter(f => f.value && f.value !== 'undefined' && f.value !== 'null').map(f => (
@@ -1583,6 +1586,20 @@ export default function CourseDetailPage({
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Settings rework (Cam 2026-10-19): walking and dress code from Settings → Booking rules. */}
+                <div className="border-t border-line pt-5 grid sm:grid-cols-2 gap-5 text-sm">
+                  <div>
+                    <h2 className="font-serif text-ink text-[22px] leading-none mb-3">Walking</h2>
+                    <p className="text-ink">{walkingWords(course.walking_policy)}{course.walking_note?.trim() ? ` ${course.walking_note.trim()}` : ''}</p>
+                  </div>
+                  {(course.dress_code?.length ?? 0) > 0 && (
+                    <div>
+                      <h2 className="font-serif text-ink text-[22px] leading-none mb-3">Dress code</h2>
+                      <ul className="text-ink list-disc pl-5 space-y-0.5">{course.dress_code!.map(l => <li key={l}>{l}</li>)}</ul>
+                    </div>
+                  )}
                 </div>
 
                 {/* Settings rework (Cam 2026-10-19): the tees and nines from Settings → Course layout. */}

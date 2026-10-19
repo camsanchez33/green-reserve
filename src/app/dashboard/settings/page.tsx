@@ -18,6 +18,8 @@ import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/pass
 import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { walkingWords } from '@/lib/walking';
+import { Card } from '@/components/ui/Card';
 import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
 
 type Course = Record<string, unknown>;
@@ -95,6 +97,13 @@ const IDENTITY_ROWS: { key: string; label: string }[] = [
   { key: 'state', label: 'State' },
   { key: 'zipCode', label: 'ZIP' },
 ];
+// The four walking rules the settings API accepts, in golfers' words.
+const WALKING_CHOICES = [
+  { key: 'always', label: 'Golfers can walk any time' },
+  { key: 'weekdays', label: 'Walking on weekdays only' },
+  { key: 'after12', label: 'Walking after 12pm only' },
+  { key: 'never', label: 'Carts only — no walking' },
+] as const;
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -432,6 +441,8 @@ function SettingsPageInner() {
   }
 
   const dresscodes = (form.dresscode as string[])||[];
+  const dresscodeLines = dresscodes.map(l => l.trim()).filter(Boolean);
+  const walking = WALKING_CHOICES.some(o => o.key === form.walkingAllowed) ? form.walkingAllowed as string : 'always';
 
   const goTo = (sec: Section) => { setActive(sec); document.querySelector('main')?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); };
   const missing = (v: unknown) => !String(v ?? '').trim();
@@ -685,61 +696,75 @@ function SettingsPageInner() {
             </div>
           )}
 
-          {/* ── Booking rules ── */}
+          {/* ── Booking rules ── Settings rework (Cam 2026-10-19: "reword and organise";
+              the dress-code and walking selection buttons were bad). Plain questions,
+              and the two things golfers read get a text box with a live preview. */}
           {active==='Booking rules' && (
             <div className="space-y-5">
-              <SectionCard title="How far ahead golfers can book">
+              <SectionCard title="When golfers can book">
                 {/* SD-3: the course's clock — every "today" on the sheet and in the crons reads it. */}
-                <div className="mb-3">
-                  <Field label="Course time zone" hint="Your tee sheet's today and the check-in and cancellation clocks all run on this.">
-                    <select value={String(form.timezone ?? 'America/New_York')} onChange={e=>set('timezone',e.target.value)} className={iCls}>
-                      {US_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label} — {z.id}</option>)}
-                    </select>
+                <Field label="Your time zone" hint="Your tee sheet's today, and the check-in and cancellation clocks, all run on this.">
+                  <select value={String(form.timezone ?? 'America/New_York')} onChange={e=>set('timezone',e.target.value)} className={iCls}>
+                    {US_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label} — {z.id}</option>)}
+                  </select>
+                </Field>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Field label="Days ahead anyone can book" hint={`Golfers see today plus the next ${Number(form.publicAdvanceDays) || 0} days.`}>
+                    <FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/>
                   </Field>
+                  {!!form.hasMemberPricing && (
+                    <Field label="Days ahead members can book" hint="Each membership can set its own on Members.">
+                      <FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/>
+                    </Field>
+                  )}
                 </div>
+              </SectionCard>
+              <SectionCard title="Group size">
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="How far ahead can golfers book?" hint="Days ahead the public can see and book tee times. 7 means today plus the next seven days. Enforced on the booking page, not just shown."><FInput value={form.publicAdvanceDays as number} onChange={v=>set('publicAdvanceDays',Number(v))} type="number"/></Field>
-                  {!!form.hasMemberPricing && <Field label="How far ahead can members book?" hint="The default for members. Each membership tier can set its own window in Members → tiers."><FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/></Field>}
+                  <Field label="Fewest players in a booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
+                  <Field label="Most players in a booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
                 </div>
               </SectionCard>
-              <SectionCard title="Player limits">
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Min players per booking"><FInput value={form.minPlayers as number} onChange={v=>set('minPlayers',Number(v))} type="number"/></Field>
-                  <Field label="Max players per booking"><FInput value={form.maxPlayers as number} onChange={v=>set('maxPlayers',Number(v))} type="number"/></Field>
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+                <SectionCard title="What golfers should know">
+                  <Field label="Dress code" hint="One rule per line. Leave it empty if you don't have one.">
+                    <textarea value={dresscodes.join('\n')} onChange={e => set('dresscode', e.target.value.split('\n'))} rows={4}
+                      placeholder={'Collared shirts\nNo denim\nSoft spikes only'} className={iCls + ' resize-none'}/>
+                  </Field>
+                  <Field label="Walking">
+                    <div className="space-y-2">
+                      {WALKING_CHOICES.map(o => (
+                        <label key={o.key} className={'flex items-center gap-2.5 px-3 py-2 rounded-md border cursor-pointer bg-white text-sm text-ink ' + (walking === o.key ? 'border-pine/40' : 'border-line')}>
+                          <input type="radio" name="walking" checked={walking === o.key} onChange={() => set('walkingAllowed', o.key)} className="accent-pine"/>
+                          {o.label}
+                        </label>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Anything else about walking or carts" hint="Optional, one sentence.">
+                    <FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Push carts are free at the pro shop." maxLength={500}/>
+                  </Field>
+                </SectionCard>
+                <div className="xl:sticky xl:top-6">
+                  <div className="text-[13px] font-semibold text-ink mb-2">On your booking page</div>
+                  <Card className="p-4 space-y-3 text-sm">
+                    <div>
+                      <div className="text-[13px] font-semibold text-ink">Walking</div>
+                      <div className="text-ink">{walkingWords(walking)}{String(form.walkingNote ?? '').trim() ? ` ${String(form.walkingNote).trim()}` : ''}</div>
+                    </div>
+                    {dresscodeLines.length > 0 && (
+                      <div>
+                        <div className="text-[13px] font-semibold text-ink">Dress code</div>
+                        <ul className="text-ink list-disc pl-5">{dresscodeLines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                      </div>
+                    )}
+                  </Card>
+                  <p className="text-[12px] text-ink-soft mt-2">Updates as you type. Shown in the About section of your booking page.</p>
                 </div>
-              </SectionCard>
-              <SectionCard title="Dress code">
-                <div className="flex flex-wrap gap-2">
-                  {['Collared shirt required','No denim','Soft spikes only','Golf shoes required','No shorts','Proper golf attire'].map(rule => {
-                    const on = dresscodes.includes(rule);
-                    return (
-                      <button key={rule} onClick={() => set('dresscode', on ? dresscodes.filter(c=>c!==rule) : [...dresscodes,rule])}
-                        className={'px-3 py-1.5 rounded-md text-[13.5px] border transition-colors ' + (on ? 'bg-pine text-white border-pine' : 'bg-paper text-ink-soft border-line hover:border-pine/40')}>
-                        {rule}
-                      </button>
-                    );
-                  })}
-                </div>
-              </SectionCard>
+              </div>
             </div>
           )}
 
-          {/* ── Walking & carts ── */}
-          {active==='Booking rules' && (
-            <div className="space-y-5">
-              <SectionCard title="Walking & carts">
-                <Field label="Walking policy">
-                  <select value={form.walkingAllowed as string} onChange={e=>set('walkingAllowed',e.target.value)} className={iCls}>
-                    <option value="always">Always allowed</option>
-                    <option value="weekdays">Weekdays only</option>
-                    <option value="after12">After 12pm only</option>
-                    <option value="never">Cart required</option>
-                  </select>
-                </Field>
-                <Field label="Walking note (optional)"><FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Walking allowed after 1pm weekends"/></Field>
-              </SectionCard>
-            </div>
-          )}
 
           {/* ── Cancellation ── */}
           {active==='Prices & fees' && (
