@@ -14575,7 +14575,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 202,
+      "lines": 208,
       "purpose": "",
       "brain": [],
       "exports": [
