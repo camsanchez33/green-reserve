@@ -26,7 +26,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 116,
+      "lines": 117,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4204,7 +4204,7 @@
     },
     {
       "path": "src/app/api/operator/announcements/route.ts",
-      "lines": 42,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4221,6 +4221,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/agreement-gate",
         "@/lib/announcement-audience",
         "@/lib/prisma",
         "@/lib/session",
@@ -6315,7 +6316,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1381,
+      "lines": 1385,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6341,6 +6342,7 @@
         "@/components/ui/Card",
         "@/components/ui/MonthPicker",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/booking-status",
         "@/lib/cancel-confirm",
         "@/lib/change-requests",
@@ -7055,7 +7057,7 @@
     },
     {
       "path": "src/components/AnnouncementBanner.tsx",
-      "lines": 49,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8579,6 +8581,7 @@
         "src/app/admin/profile/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
+        "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -8990,6 +8993,7 @@
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
+        "src/app/api/operator/announcements/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/lib/agreement-sign.ts"
       ]

@@ -33,10 +33,12 @@ export default function AnnouncementBanner() {
   // MP-7b: was an amber bar in font-black (both banned); now the one look —
   // white, a hairline, pine accent. The full text lives on Messages.
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line px-4 py-2.5 flex items-center gap-3 text-ink">
+    // Cam 2026-10-19 ("doesn't look urgent, looks weird"): the attention style —
+    // a 3px left border in warn on white, the one place borders carry color.
+    <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-line border-l-[3px] border-l-warn shadow-card px-4 py-3 flex items-center gap-3 text-ink">
       
       <div className="flex-1 min-w-0 flex items-baseline gap-2 overflow-hidden">
-        <span className="font-semibold text-[13.5px] whitespace-nowrap">{announcement.title}</span>
+        <span className="font-semibold text-[14px] whitespace-nowrap">{announcement.title}</span>
         {firstLine && <span className="text-[13px] text-ink-soft truncate">{firstLine}</span>}
       </div>
       <a href="/dashboard/messages#announcements" className="shrink-0 text-[12.5px] font-semibold text-pine hover:underline underline-offset-4">Read</a>
