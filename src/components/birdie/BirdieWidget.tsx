@@ -173,9 +173,9 @@ export default function BirdieWidget() {
         </button>
       )}
       {!open && !tucked && (
-        <div className="fixed bottom-20 md:bottom-5 right-4 md:right-5 z-40 flex items-end gap-1.5">
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-5 right-4 md:right-5 z-40 flex items-end gap-1.5">
           <button type="button" onClick={tuck} aria-label="Tuck Birdie away" title="Tuck Birdie away"
-            className="mb-1 w-6 h-6 rounded-full bg-white border border-line text-ink-muted hover:text-ink text-[13px] leading-none flex items-center justify-center">›</button>
+            className="mb-1 w-9 h-9 rounded-full bg-white border border-line text-ink-muted hover:text-ink text-[13px] leading-none flex items-center justify-center">›</button>
           <button type="button" onClick={show} aria-label="Ask Birdie"
             className="w-14 h-14 rounded-full bg-white border border-line hover:border-pine/40 transition-colors flex items-center justify-center"
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
