@@ -11,17 +11,20 @@ import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaym
 async function maybeSendPayLink(membershipId: string, isRenewal = false) {
   const m = await prisma.courseMembership.findUnique({
     where: { id: membershipId },
-    include: { tier: true, course: { select: { name: true, stripeAccountActive: true } } },
+    include: { tier: true, course: { select: { name: true, stripeAccountActive: true } }, golfer: { select: { email: true, firstName: true, lastName: true } } },
   });
   if (!m || !m.tier) return;
+  // The account's email wins over the invite address (a self-joined member has no invite address).
+  const to = m.golfer?.email || m.inviteEmail;
+  if (!to) return;
   // MP-3 B2a: compare in cents, convert to dollars only for the email, which
   // renders $${annualFee.toFixed(2)}.
   const initiationCents = m.lastPaidAt ? 0 : m.tier.initiationFeeCents;
   if (m.tier.annualFeeCents + initiationCents <= 0) return;
   if (!m.course.stripeAccountActive) return;
   await sendMembershipPaymentLinkEmail({
-    name: m.inviteName,
-    email: m.inviteEmail,
+    name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '),
+    email: to,
     courseName: m.course.name,
     tierName: m.tier.name,
     annualFee: centsToDollarsOr0(m.tier.annualFeeCents),
