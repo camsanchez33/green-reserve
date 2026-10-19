@@ -38,9 +38,10 @@ export function WhoPaysWhat({ accessLoaded, accessFailed, canSeeSchedule, canSee
 
   const load = useCallback(async () => {
     setError('');
-    // What this login may see isn't known until the access check answers.
-    if (!accessLoaded) return;
+    // A failed access check never becomes "loaded", so it is checked first;
+    // otherwise what this login may see isn't known until the check answers.
     if (accessFailed) { setError('We couldn’t check what your login can see. Reload the page to try again.'); return; }
+    if (!accessLoaded) return;
     if (!canSeeSchedule) { setError('Your login can’t see the schedule, where prices are set. Ask the course owner.'); return; }
     const [s, t] = await Promise.all([
       dfetch<WireSchedule[]>('/api/operator/schedule'),
