@@ -142,6 +142,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   // at it (RESTRICT): deleting it would abort the whole date. Keep it.
   const toDelete = existing.filter(t => t.playersBooked === 0 && t.status !== 'blocked' && t._count.bookings === 0).map(t => t.id);
   // Operator-blocked slots are also left alone — that's a manual override, not generated data.
+  const deleted = new Set(toDelete);
   if (toDelete.length > 0) {
     await prisma.teeTime.deleteMany({ where: { id: { in: toDelete } } });
   }
@@ -161,7 +162,12 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
         continue;
       }
     }
-    if (existingSlot) continue; // an empty row that survived deletion (has cancelled bookings) — keep, don't double
+    // Hotfix 2026-10-19: `existing` was read BEFORE the delete above, so every
+    // open row we just deleted still matched here and was skipped — a second
+    // run on the same day wiped all its open tee times and recreated none
+    // (they came back the next night, then vanished again). Only a row that
+    // survived the delete (cancelled bookings only) is kept as is.
+    if (existingSlot && !deleted.has(existingSlot.id)) continue;
     await prisma.teeTime.create({
       data: {
         courseId,
