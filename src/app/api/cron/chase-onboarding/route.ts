@@ -91,7 +91,12 @@ export const GET = cronRoute('chase-onboarding', async (req: NextRequest) => {
     const events = await getCourseTimeline(course.id);
     // AG-2: the table is the record — legacy lines were migrated into it.
     const agreements = await agreementStatus(course.id);
-    if (agreements.missing.length === 0) continue; // everything signed — nothing to chase
+    // Only an unsigned Operator Agreement makes a live course look unfinished.
+    // A Brand License (new in v2026-11) or a re-sign still inside its window is
+    // asked for by the dashboard banner, never by a "still waiting to go live"
+    // email to a course that is already live (review 2026-10-19).
+    const oa = agreements.documents.find(d => d.document === 'operator_agreement');
+    if (!oa || oa.signed) continue;
     const status = isDue(events, course.createdAt, now);
     if (!status.due) { results.push({ courseId: course.id, sent: false, reason: status.reason }); continue; }
 

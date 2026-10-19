@@ -648,7 +648,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
 
       {!needsCard && <TrustNote>No charge until check-in.</TrustNote>}
       <p className="text-[11px] text-ink text-center leading-snug">
-        By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy.
+        By confirming, you agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Terms of Service</a> and this course&apos;s cancellation policy. See how we handle your information in our <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">Privacy Policy</a>.
       </p>
       <button
         onClick={handleSubmit}
