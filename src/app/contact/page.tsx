@@ -5,6 +5,8 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Contact',
   description: 'Get in touch with the GreenReserve team. Questions about listing your course or using our platform — we\'re happy to help.',
+  // Link previews carry this page's own title, not the homepage's.
+  openGraph: { title: 'Contact | GreenReserve', description: 'Get in touch with the GreenReserve team. Questions about listing your course or using our platform — we\'re happy to help.' },
 };
 
 export default function ContactPage() {

@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description: 'GreenReserve privacy policy. How we collect, use, and protect your personal information.',
+  // Link previews carry this page's own title, not the homepage's.
+  openGraph: { title: 'Privacy Policy | GreenReserve', description: 'GreenReserve privacy policy. How we collect, use, and protect your personal information.' },
 };
 
 const navLink = 'border-l-2 pl-3 py-1.5 text-sm transition-colors';

@@ -117,7 +117,7 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
       <div className="bg-white rounded-lg shadow-card p-5">
         <div className="text-[15px] font-semibold text-ink mb-3">What GreenReserve takes</div>
         <p className="text-[13.5px] text-ink-soft">
-          <span className="font-medium text-ink">${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player</span>, charged to the <span className="font-medium text-ink">golfer</span> on top of your price, in the same card payment as your green fee. You keep 100% of your green and cart fees. Stripe&apos;s normal card-processing fee applies to the payment, like any card you take; GreenReserve charges you nothing on top of it.
+          <span className="font-medium text-ink">${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player</span>, charged to the <span className="font-medium text-ink">golfer</span> on top of your price, in the same card payment as your green fee. No commission on your green and cart fees. Stripe&apos;s normal card-processing fee applies to the payment, like any card you take; GreenReserve charges you nothing on top of it.
         </p>
       </div>
     </div>

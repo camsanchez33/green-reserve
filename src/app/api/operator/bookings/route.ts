@@ -10,7 +10,7 @@ import { sendBookingConfirmation, sendCheckInAvailableEmail, sendBookingModified
 import { moveBooking } from '@/lib/move-booking';
 import { todayIn, isPastIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
-import { chargeAccessFeeSeparately, refundSeparateAccessFee, liveSeparateFee, type FeeChargeResult } from '@/lib/access-fee';
+import { refundSeparateAccessFee, liveSeparateFee } from '@/lib/access-fee';
 import { refundOnConnectedAccount } from '@/lib/stripe';
 import { markNoShow, refundNoShowFee } from '@/lib/no-show-fee';
 import { sendSms } from '@/lib/twilio';
@@ -234,14 +234,14 @@ export async function PATCH(req: NextRequest) {
         holdNote = `The late-cancellation hold fee could not be refunded automatically (${err instanceof Error ? err.message : 'Stripe error'}) — GreenReserve will follow up.`;
       }
     }
-    // A no-show fee taken for the whole party, then fewer players arrive and
-    // pay at the counter: give it back and take the prorated fee instead.
-    const live = await liveSeparateFee(id);
-    if (live && cip !== undefined && cip < booking.players) {
-      await refundSeparateAccessFee(id, `only ${cip} of ${booking.players} players came and paid at the counter`, 'operator', actorName);
+    // Cash at the counter collects no GreenReserve fee, card on file or not
+    // (Cam 2026-10-19, HOMEPAGE_SPEC §0a; PAY-2): it is counted on Admin →
+    // Revenue instead. A booking fee already taken separately (a no-show
+    // charge, then the group turned up and paid cash) goes back.
+    if (await liveSeparateFee(id)) {
+      await refundSeparateAccessFee(id, 'paid at the counter — no GreenReserve fee on cash', 'operator', actorName);
     }
-    const fee = await chargeAccessFeeSeparately(id, { why: 'paid_offline', players: cip, actor: 'operator', actorName });
-    return NextResponse.json({ success: true, fee: [feeNote(fee), holdNote].filter(Boolean).join(' ') || null });
+    return NextResponse.json({ success: true, fee: holdNote });
   }
 
   const result = action === 'cancel'
@@ -333,11 +333,5 @@ export async function POST(req: NextRequest) {
     } catch (e) { console.error('walk-in confirmation email failed:', e); emailSent = false; }
   }
   return NextResponse.json({ success: true, bookingId: claimed.id, emailSent });
-}
-
-/** What the tee sheet shows after a separate fee charge (null = nothing to say). */
-function feeNote(r: FeeChargeResult): string | null {
-  if (!r.ok) return `GreenReserve's booking fee could not be charged to the golfer's card (${r.error}). Nothing for you to do — we'll follow up.`;
-  return null;
 }
 

@@ -228,16 +228,13 @@ function DashboardPageInner() {
       const n = askHeadcount(b);
       if (n === null) return;
       checkedInPlayers = n < b.players ? n : undefined;
-      // FB-3: GreenReserve's booking fee is charged to the golfer's saved card
-      // on its own, so the counter collects only the course's share — taking
-      // the full total here would charge the golfer the fee twice.
+      // Cash at the counter collects no GreenReserve fee (Cam 2026-10-19, PAY-2),
+      // so the counter takes only the course's share and no card is charged.
       const who = checkedInPlayers ?? b.players;
-      const fee = Math.round((b.accessFeeTotal ?? 0) * who / b.players);
       // POS-1a: shop items on the booking are collected at the counter too (no
       // GreenReserve shop fee on a counter payment, like the booking fee in cash).
       const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players) + (b.shopTotalCents ?? 0);
-      const feeLine = fee > 0 ? ` GreenReserve's $${(fee / 100).toFixed(2)} booking fee is charged to their saved card — don't collect it at the counter.` : ' No card will be charged.';
-      if (!confirm(`Mark ${b.golferName} checked in — ${who} of ${b.players} players, paid $${(owed / 100).toFixed(2)} at the counter?${feeLine}`)) return;
+      if (!confirm(`Mark ${b.golferName} checked in — ${who} of ${b.players} players, paid $${(owed / 100).toFixed(2)} at the counter? No card will be charged.`)) return;
     }
     setRowBusy(b.id);
     try {

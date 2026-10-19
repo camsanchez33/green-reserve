@@ -4060,7 +4060,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 142,
+      "lines": 154,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4293,7 +4293,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 344,
+      "lines": 338,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5832,7 +5832,7 @@
     },
     {
       "path": "src/app/contact/page.tsx",
-      "lines": 41,
+      "lines": 43,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5997,7 +5997,7 @@
     },
     {
       "path": "src/app/courses/[slug]/page.tsx",
-      "lines": 45,
+      "lines": 49,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6313,7 +6313,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1384,
+      "lines": 1381,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6646,7 +6646,7 @@
     },
     {
       "path": "src/app/for-courses/page.tsx",
-      "lines": 15,
+      "lines": 17,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6673,7 +6673,7 @@
     },
     {
       "path": "src/app/layout.tsx",
-      "lines": 60,
+      "lines": 62,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6815,7 +6815,7 @@
     },
     {
       "path": "src/app/operator-agreement/page.tsx",
-      "lines": 82,
+      "lines": 84,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6896,7 +6896,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 249,
+      "lines": 251,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6996,7 +6996,7 @@
     },
     {
       "path": "src/app/teesheet/page.tsx",
-      "lines": 203,
+      "lines": 205,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7023,7 +7023,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 196,
+      "lines": 198,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11586,7 +11586,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1890,
+      "lines": 1889,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16668,7 +16668,6 @@
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/memberships/route.ts",
-        "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/lib/lifecycle.ts"
