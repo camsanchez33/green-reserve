@@ -6208,7 +6208,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 193,
+      "lines": 194,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6227,7 +6227,6 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "lucide-react",
@@ -7566,7 +7565,7 @@
     },
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
-      "lines": 207,
+      "lines": 222,
       "purpose": "BIRDIE_AI_SPEC B1 — the floating Birdie button and chat panel for the operator dashboard.",
       "brain": [],
       "exports": [
@@ -8394,7 +8393,6 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
-        "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",

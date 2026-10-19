@@ -8,7 +8,6 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { formatStamp as fmtFull } from '@/lib/format';
 import { Card } from '@/components/ui/Card';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
@@ -95,9 +94,11 @@ function MessagesContent() {
           <div className="flex items-center gap-2">
             <h1 className="text-[30px] font-serif font-semibold tracking-tight text-ink leading-none">Messages</h1>
           </div>
-          <div className="text-[13.5px] text-ink-soft mt-2">
-            Your conversation with the GreenReserve team
-          </div>
+          {/* Cam 2026-10-19: say when to expect a reply, and offer email. */}
+          <p className="text-[14px] text-ink-soft mt-2.5 max-w-[46em] leading-snug">
+            Questions, changes or anything not working — write to the GreenReserve team here. We reply within one business day.
+            Prefer email? <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>
+          </p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
@@ -106,7 +107,7 @@ function MessagesContent() {
             <Card id="announcements">
               <div className="flex items-center gap-2 px-4 pt-3 pb-2">
                 
-                <Eyebrow as="span">From GreenReserve</Eyebrow>
+                <h2 className="text-[15px] font-semibold text-ink">From GreenReserve</h2>
                 {announcements.some(a => !a.read) && <span className="text-[11px] text-pine font-semibold">{announcements.filter(a => !a.read).length} new</span>}
               </div>
               <ul className="divide-y divide-line">
@@ -167,7 +168,7 @@ function MessagesContent() {
           <div className="flex gap-3 items-end">
             <textarea value={compose} onChange={e => setCompose(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendMessage(); }}
-              placeholder="Message GreenReserve..."
+              placeholder="Write to the GreenReserve team…"
               rows={2}
               className="flex-1 bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 resize-none"
             />
