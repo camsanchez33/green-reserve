@@ -2955,7 +2955,7 @@
     },
     {
       "path": "src/app/api/bookings/resident-rate/route.ts",
-      "lines": 22,
+      "lines": 28,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2969,8 +2969,8 @@
       "methods": [
         "GET"
       ],
-      "auth": "public",
-      "guard": "public",
+      "auth": "member",
+      "guard": "file",
       "imports": [
         "@/lib/member-session",
         "@/lib/prisma",
@@ -3904,7 +3904,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/swap-time/route.ts",
-      "lines": 57,
+      "lines": 67,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3923,6 +3923,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/manage-access",
+        "@/lib/member-session",
         "@/lib/move-booking",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -13426,7 +13427,7 @@
     },
     {
       "path": "src/lib/member-session.ts",
-      "lines": 103,
+      "lines": 108,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13440,6 +13441,10 @@
         },
         {
           "name": "golferResident",
+          "kind": "fn"
+        },
+        {
+          "name": "residentOn",
           "kind": "fn"
         },
         {
@@ -13471,6 +13476,7 @@
         "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/session/route.ts",
@@ -13677,7 +13683,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 222,
+      "lines": 228,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -19151,6 +19157,7 @@
         "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/tee-times/route.ts",

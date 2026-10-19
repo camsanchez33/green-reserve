@@ -104,6 +104,9 @@ export async function moveBooking(opts: {
   allowCheckedIn?: boolean;
   /** Validate and price, change nothing. */
   dryRun?: boolean;
+  /** RES-1: residents to price at the new slot (default: the booking's own).
+   *  The golfer's swap re-checks the card for the new slot's date. */
+  residentPlayers?: number;
   now?: Date;
 }): Promise<MoveOk | MoveFail> {
   const now = opts.now ?? new Date();
@@ -165,7 +168,7 @@ export async function moveBooking(opts: {
           : { greenFeeCents: Math.round(b.greenFeeTotal / b.players), cartFeeCents: b.cartSelected ? Math.round(b.cartFeeTotal / b.players) : slot.cartFeeCents };
       }
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
-      const residents = groupGreenFee(b.players, rate.greenFeeCents, b.residentPlayers, slot.residentRateCents);
+      const residents = groupGreenFee(b.players, rate.greenFeeCents, opts.residentPlayers ?? b.residentPlayers, slot.residentRateCents);
       const newGreen = residents.greenFeeTotal;
       const newCart = b.cartSelected ? rate.cartFeeCents * b.players : 0;
       const range = Math.round(b.rangeBallsTotal);
@@ -194,7 +197,10 @@ export async function moveBooking(opts: {
 
       // ── claim, release, record ──
       const data: Prisma.BookingUpdateInput = { teeTime: { connect: { id: slot.id } }, ...totals };
-      if (!keep) { data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents; }
+      if (!keep) {
+        data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
+        if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
+      }
       if (opts.terms) { data.termsAcceptedAt = now; data.termsVersion = opts.terms.version; }
       await tx.booking.update({ where: { id: b.id }, data });
 

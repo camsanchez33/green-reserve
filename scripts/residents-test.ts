@@ -100,7 +100,16 @@ async function main() {
   const bk5 = await bk(kept.id);
   check('moved to a slot with no resident price: everyone pays public, residents cleared', bk5.greenFeeTotal === 16500 && bk5.residentPlayers === 0 && bk5.residentRateCents === null, bk5);
 
-  // The list: one email per course, any number of counter-only residents.
+  // The golfer's swap passes the residents it re-checked: none → everyone public.
+  const t5 = await slot('12:00', 3000, 5000);
+  const swapper = await book(t5.id, { players: 2 });
+  await setBookingResidents(course.id, swapper.id, 1, STAFF);
+  const t6 = await slot('12:10', 3000, 5000);
+  const sw = await moveBooking({ bookingId: swapper.id, newTeeTimeId: t6.id, courseId: course.id, pricing: 'new_slot', actor: STAFF, residentPlayers: 0 });
+  const bk6 = await bk(swapper.id);
+  check('a move told "no residents" prices everyone public and clears the rate label', sw.ok && bk6.greenFeeTotal === 10000 && bk6.residentPlayers === 0 && bk6.appliedRate === 'standard', bk6);
+
+    // The list: one email per course, any number of counter-only residents.
   await prisma.courseResident.create({ data: { courseId: course.id, name: 'A', email: 'a@x.com' } });
   let dup = false;
   try { await prisma.courseResident.create({ data: { courseId: course.id, name: 'A2', email: 'a@x.com' } }); } catch { dup = true; }

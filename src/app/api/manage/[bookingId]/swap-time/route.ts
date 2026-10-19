@@ -5,6 +5,7 @@ import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
 import { moveBooking } from '@/lib/move-booking';
+import { residentOn } from '@/lib/member-session';
 
 // The golfer's own "change my time". ACT-1: the move itself — claim, release,
 // price, event — is lib/move-booking.ts, shared with staff moves. The golfer
@@ -36,12 +37,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     return NextResponse.json({ error: 'You must agree to the Terms of Service to change this booking.' }, { status: 400 });
   }
 
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { checkInToken: true, golferAccountId: true, courseId: true } });
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { checkInToken: true, golferAccountId: true, courseId: true, residentPlayers: true, golferAccount: { select: { email: true } } } });
   if (!booking || !canManageBooking(booking, golferSession?.golferId, token)) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
+
+  // RES-1: the resident rate follows the golfer's own swap only while the
+  // booking's account is still on the resident list with a card good on the
+  // new date. Residents staff set at the counter are set again at the counter.
+  let residentPlayers = 0;
+  if (booking.residentPlayers > 0 && booking.golferAccount?.email) {
+    const slot = await prisma.teeTime.findUnique({ where: { id: String(newTeeTimeId) }, select: { date: true } });
+    if (slot && await residentOn(booking.courseId, booking.golferAccount.email, slot.date)) residentPlayers = 1;
+  }
 
   try {
     const r = await moveBooking({
-      bookingId, newTeeTimeId, courseId: booking.courseId, pricing: 'new_slot',
+      bookingId, newTeeTimeId, courseId: booking.courseId, pricing: 'new_slot', residentPlayers,
       actor: { type: 'golfer', id: golferSession?.golferId ?? null }, terms: { version: CURRENT_TERMS_VERSION },
     });
     if (!r.ok) return NextResponse.json({ error: COPY[r.code] ?? r.message }, { status: STATUS[r.code] ?? 409 });

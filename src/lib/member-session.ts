@@ -94,7 +94,12 @@ export async function golferResident(courseId: string, dateYmd: string) {
   if (!session) return null;
   // The account's email from the database (as getGolferMembership does), not the token's copy.
   const golfer = await prisma.golferAccount.findUnique({ where: { id: session.golferId }, select: { email: true } });
-  const email = golfer?.email.trim().toLowerCase();
+  return golfer?.email ? residentOn(courseId, golfer.email, dateYmd) : null;
+}
+
+/** The resident card listed under this email at this course, if it is good on `dateYmd`. */
+export async function residentOn(courseId: string, emailRaw: string, dateYmd: string) {
+  const email = emailRaw.trim().toLowerCase();
   if (!email) return null;
   const r = await prisma.courseResident.findUnique({ where: { courseId_email: { courseId, email } } });
   if (!r || !cardValidOn(r.expiresOn, dateYmd)) return null;
