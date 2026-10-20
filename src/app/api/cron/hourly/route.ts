@@ -16,6 +16,7 @@ import {
 import { retryMissingAgreementPdfs } from '@/lib/agreement-sign';
 import { sendAgreementBumpNotices } from '@/lib/agreement-required';
 import { sendCallReminders } from '@/lib/call-invite';
+import { recordPendingShopTax } from '@/lib/sales-tax';
 
 /**
  * Runs every hour (Vercel Pro). Handles all time-sensitive booking actions:
@@ -231,5 +232,9 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   let callReminders = { due: 0, sent: 0, failed: 0, skipped: 0 };
   try { callReminders = await sendCallReminders(now); } catch (err) { console.error('Call reminders failed:', err); }
 
-  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders });
+  // ─── 7: W2-7 part B — record sales tax for paid pro-shop sales still missing it ──
+  let shopTaxRecorded = 0;
+  try { shopTaxRecorded = await recordPendingShopTax(); } catch (err) { console.error('Shop sales tax recording failed:', err); }
+
+  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded });
 });

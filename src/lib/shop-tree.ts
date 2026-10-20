@@ -2,7 +2,7 @@
 // each item with its options (sizes/colors) under it. Pure, browser-safe.
 export type FlatItem = {
   id: string; name: string; category: string; priceCents: number; active: boolean; stockCount: number | null;
-  sku: string; parentId: string | null; optionLabel: string; sortOrder?: number;
+  sku: string; parentId: string | null; optionLabel: string; sortOrder?: number; taxCategory?: string;
 };
 export type TreeItem = FlatItem & { options: FlatItem[] };
 

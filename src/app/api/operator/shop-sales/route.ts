@@ -55,7 +55,7 @@ async function sendLink(courseId: string, sale: SaleView, payToken: string, via:
       await sendSms(to, `${courseName}: pay $${(sale.totalCents / 100).toFixed(2)} for your pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`);
     } else {
       if (!sale.customerEmail || isPlaceholderEmail(sale.customerEmail) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(sale.customerEmail)) return 'Add an email address to send the link.';
-      await sendShopSalePayLinkEmail({ email: sale.customerEmail, name: sale.customerName, courseName, totalCents: sale.totalCents, lines: sale.lines, payUrl });
+      await sendShopSalePayLinkEmail({ email: sale.customerEmail, name: sale.customerName, courseName, totalCents: sale.totalCents, taxCents: sale.taxCents, lines: sale.lines, payUrl });
     }
     return null;
   } catch (err) {
@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
   const r = await createSale({
     courseId: g.session.courseId, lines: body.lines, pay, soldBy: g.session.email,
     customerName: body.customerName as string, customerPhone: body.customerPhone as string, customerEmail: body.customerEmail as string,
+    taxCalculationId: typeof body.taxCalculationId === 'string' ? body.taxCalculationId : undefined,
   });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   const { payToken, ...sale } = r.value;

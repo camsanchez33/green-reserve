@@ -1,18 +1,30 @@
 {
-  "generatedAt": "2026-10-20T03:00:55.648Z",
+  "generatedAt": "2026-10-20T03:08:51.712Z",
   "repo": {
-    "head": "a8cb431",
-    "branch": "HEAD",
-    "dirtyCount": 8,
+    "head": "ad6524b",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 25,
     "dirty": [
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "M  scripts/op-login-test.ts",
-      "M  src/app/dashboard/2fa/page.tsx",
-      "M  src/app/dashboard/forgot-password/page.tsx",
-      "M  src/app/dashboard/login/page.tsx",
-      "M  src/app/dashboard/reset-password/page.tsx",
-      "A  src/components/AuthPhotoShell.tsx"
+      "M OPERATOR_REWORK_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M scripts/shop-sales-test.ts",
+      " M src/app/api/cron/hourly/route.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/api/shop-sale/[id]/route.ts",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/app/pay/shop/[id]/page.tsx",
+      " M src/components/dashboard/ShopCatalog.tsx",
+      " M src/lib/email.ts",
+      " M src/lib/shop-ai-import.ts",
+      " M src/lib/shop-catalog.ts",
+      " M src/lib/shop-import.ts",
+      " M src/lib/shop-sales.ts",
+      " M src/lib/shop-tree.ts",
+      "?? prisma/migrations/20261020021959_w2_7_shop_sales_tax/",
+      "?? scripts/shop-sales-tax-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -20,23 +32,23 @@
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
       {
+        "h": "ad6524b",
+        "date": "2026-10-19T23:08:11-04:00",
+        "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bd86947",
+        "date": "2026-10-19T22:39:15-04:00",
+        "subject": "Sign-in page: full-screen photo with the sign-in card under the logo (#153)",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "fff11a1",
         "date": "2026-10-19T22:27:05-04:00",
         "subject": "Emails: one clean look for every email (EMAIL-2) (#152)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "6956862",
-        "date": "2026-10-20T02:11:43+00:00",
-        "subject": "W2-7 part A: review fixes — hiding an item leaves its options alone",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "43dd9d7",
-        "date": "2026-10-20T02:05:48+00:00",
-        "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling",
         "ids": [],
         "matches": []
       },
@@ -516,7 +528,7 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-20",
+      "lastTouched": "2026-10-19",
       "ageDays": 0
     },
     {
@@ -715,24 +727,19 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ad6524b",
+      "date": "2026-10-19",
+      "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)"
+    },
+    {
+      "h": "bd86947",
+      "date": "2026-10-19",
+      "subject": "Sign-in page: full-screen photo with the sign-in card under the logo (#153)"
+    },
+    {
       "h": "fff11a1",
       "date": "2026-10-19",
       "subject": "Emails: one clean look for every email (EMAIL-2) (#152)"
-    },
-    {
-      "h": "1028831",
-      "date": "2026-10-20",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "6956862",
-      "date": "2026-10-20",
-      "subject": "W2-7 part A: review fixes — hiding an item leaves its options alone"
-    },
-    {
-      "h": "43dd9d7",
-      "date": "2026-10-20",
-      "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling"
     },
     {
       "h": "8287f54",
@@ -773,6 +780,11 @@
       "h": "428da80",
       "date": "2026-10-19",
       "subject": "Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)"
+    },
+    {
+      "h": "0419675",
+      "date": "2026-10-19",
+      "subject": "Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)"
     }
   ]
 }

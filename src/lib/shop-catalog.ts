@@ -7,13 +7,14 @@
 import { prisma } from './prisma';
 import { validItemInput, MAX_ITEM_PRICE_CENTS } from './shop';
 import { MAX_IMPORT_ITEMS, MAX_OPTIONS, type ImportItem } from './shop-import';
+import { isTaxCategory } from './tax-categories';
 
-export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true } as const;
+export const ITEM_SELECT = { id: true, name: true, category: true, priceCents: true, active: true, sortOrder: true, stockCount: true, sku: true, parentId: true, optionLabel: true, taxCategory: true } as const;
 
 export const optionName = (item: string, option: string) => `${item} — ${option}`;
 
 type OptionIn = { id?: string; label: string; priceCents: number | null; stockCount: number | null; sku: string };
-export type ItemIn = { name: string; category: string; priceCents: number; stockCount: number | null; sku: string; options: OptionIn[] };
+export type ItemIn = { name: string; category: string; priceCents: number; stockCount: number | null; sku: string; taxCategory: string; options: OptionIn[] };
 
 const fail = (error: string) => ({ ok: false as const, error });
 
@@ -47,7 +48,9 @@ export function readItem(body: Record<string, unknown>): { ok: true; item: ItemI
     options.push({ id: typeof o.id === 'string' ? o.id : undefined, label, priceCents: p, stockCount: s, sku: typeof o.sku === 'string' ? o.sku.trim().slice(0, 64) : '' });
   }
   if (options.length === 1) return fail(`${v.name}: one option is just the item — add a second option, or remove it.`);
-  return { ok: true, item: { ...v, stockCount: options.length ? null : stock, sku: options.length ? '' : sku, options } };
+  // W2-7 part B: how it's taxed; options are taxed like their item.
+  const taxCategory = isTaxCategory(body.taxCategory) ? body.taxCategory : 'general';
+  return { ok: true, item: { ...v, stockCount: options.length ? null : stock, sku: options.length ? '' : sku, taxCategory, options } };
 }
 
 /** Create one or many items (a bulk add), all or nothing. */
@@ -63,11 +66,11 @@ export async function createItems(courseId: string, bodies: unknown[]) {
   const ids = await prisma.$transaction(async tx => {
     const out: string[] = [];
     for (const it of items) {
-      const parent = await tx.shopItem.create({ data: { courseId, name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku } });
+      const parent = await tx.shopItem.create({ data: { courseId, name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku, taxCategory: it.taxCategory } });
       out.push(parent.id);
       if (it.options.length) await tx.shopItem.createMany({ data: it.options.map((o, i) => ({
         courseId, parentId: parent.id, optionLabel: o.label, name: optionName(it.name, o.label), category: it.category,
-        priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i,
+        priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i, taxCategory: it.taxCategory,
       })) });
     }
     return out;
@@ -85,17 +88,17 @@ export async function updateItem(courseId: string, id: string, body: Record<stri
   const existing = await prisma.shopItem.findFirst({ where: { id, courseId }, include: { options: { include: { _count: { select: { sales: true, saleLines: true } } } } } });
   if (!existing) return null;
   if (existing.parentId) return fail('Change an option from its item.');
-  const r = readItem({ ...body, options: Array.isArray(body.options) ? body.options : existing.options.filter(o => o.active).map(o => ({ id: o.id, label: o.optionLabel, priceCents: o.priceCents === existing.priceCents ? null : o.priceCents, stockCount: o.stockCount, sku: o.sku })) });
+  const r = readItem({ ...body, taxCategory: body.taxCategory ?? existing.taxCategory, options: Array.isArray(body.options) ? body.options : existing.options.filter(o => o.active).map(o => ({ id: o.id, label: o.optionLabel, priceCents: o.priceCents === existing.priceCents ? null : o.priceCents, stockCount: o.stockCount, sku: o.sku })) });
   if (!r.ok) return r;
   const it = r.item;
   const active = typeof body.active === 'boolean' ? body.active : existing.active;
   const mine = new Map(existing.options.map(o => [o.id, o]));
   if (it.options.some(o => o.id && !mine.has(o.id))) return null;
   await prisma.$transaction(async tx => {
-    await tx.shopItem.update({ where: { id }, data: { name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku, active } });
+    await tx.shopItem.update({ where: { id }, data: { name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku, taxCategory: it.taxCategory, active } });
     const keep = new Set<string>();
     for (const [i, o] of it.options.entries()) {
-      const data = { optionLabel: o.label, name: optionName(it.name, o.label), category: it.category, priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i, active: true };
+      const data = { optionLabel: o.label, name: optionName(it.name, o.label), category: it.category, priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i, taxCategory: it.taxCategory, active: true };
       if (o.id) { keep.add(o.id); await tx.shopItem.update({ where: { id: o.id }, data }); }
       else await tx.shopItem.create({ data: { courseId, parentId: id, ...data } });
     }

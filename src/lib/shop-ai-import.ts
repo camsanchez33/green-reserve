@@ -5,6 +5,7 @@
 // rows there, and nothing is saved until they press Add. Server only.
 import Anthropic from '@anthropic-ai/sdk';
 import { MAX_IMPORT_ITEMS, MAX_OPTIONS, type ImportItem } from './shop-import';
+import { isTaxCategory } from './tax-categories';
 
 export const SHOP_READ_MODEL = 'claude-opus-5-5';
 export const MAX_READ_CHARS = 20000;
@@ -18,6 +19,7 @@ Rules:
 - stock: the quantity on hand or received, if the text gives one; else null.
 - category: a short shop category such as Balls, Gloves, Apparel, Headwear, Accessories, Drinks, Snacks, Range, Rentals. Keep the course's own category names when the text has them.
 - sku: the item code, SKU, UPC or barcode number if present; else "".
+- taxCategory: how the item is usually taxed — general (balls, gloves, tees, equipment, accessories), clothing (shirts, hats, outerwear, shoes), snack, candy, soda (soft and sports drinks), water (plain bottled water), food (prepared to eat now), or none (gift cards).
 - Never invent products, prices or quantities that are not in the text.`;
 
 const SCHEMA = {
@@ -35,8 +37,9 @@ const SCHEMA = {
           stock: { type: ['integer', 'null'] },
           sku: { type: 'string' },
           sizes: { type: 'array', items: { type: 'string' } },
+          taxCategory: { type: 'string', enum: ['general', 'clothing', 'snack', 'candy', 'soda', 'water', 'food', 'none'] },
         },
-        required: ['name', 'category', 'price', 'priceIsCost', 'stock', 'sku', 'sizes'],
+        required: ['name', 'category', 'price', 'priceIsCost', 'stock', 'sku', 'sizes', 'taxCategory'],
         additionalProperties: false,
       },
     },
@@ -68,6 +71,7 @@ export function cleanRows(raw: unknown): ReadRow[] {
       priceCents: Math.round(dollars * 100), stockCount: unique.length > 1 ? null : stock,
       sku: unique.length > 1 ? '' : (typeof o.sku === 'string' ? o.sku.trim().slice(0, 64) : ''),
       options: unique.length > 1 ? unique.map(label => ({ label, priceCents: null, stockCount: null, sku: '' })) : [],
+      taxCategory: isTaxCategory(o.taxCategory) ? o.taxCategory : 'general',
       note: notes.join(' '),
     });
   }

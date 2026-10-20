@@ -44,6 +44,10 @@ export default function ShopPage() {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [picking, setPicking] = useState<string | null>(null);
+  // W2-7 part B: the total with sales tax, worked out as the sale is built.
+  const [quote, setQuote] = useState<{ key: string; subtotalCents: number; taxCents: number; totalCents: number; taxCalculationId: string } | null>(null);
+  const [quoteError, setQuoteError] = useState('');
+  const [quoteTry, setQuoteTry] = useState(0);
 
   const load = useCallback(async () => {
     setLoadError('');
@@ -71,6 +75,21 @@ export default function ShopPage() {
   const inCart = (it: TreeItem) => (it.options.length ? it.options.reduce((s, o) => s + (cart[o.id] ?? 0), 0) : cart[it.id] ?? 0);
   const lines = (items ?? []).filter(i => cart[i.id]).map(i => ({ item: i, quantity: cart[i.id] }));
   const total = lines.reduce((s, l) => s + l.item.priceCents * l.quantity, 0);
+  const cartKey = lines.map(l => `${l.item.id}:${l.quantity}`).join(',');
+  useEffect(() => {
+    if (!cartKey) { setQuote(null); setQuoteError(''); return; }
+    let live = true;
+    const t = setTimeout(async () => {
+      const r = await dfetch<{ subtotalCents: number; taxCents: number; totalCents: number; taxCalculationId: string }>('/api/operator/shop-sales/quote', {
+        method: 'POST', body: JSON.stringify({ lines: cartKey.split(',').map(x => { const [shopItemId, q] = x.split(':'); return { shopItemId, quantity: Number(q) }; }) }),
+      });
+      if (!live) return;
+      if (r.ok) { setQuote({ key: cartKey, ...r.data }); setQuoteError(''); } else { setQuote(null); setQuoteError(r.error); }
+    }, 700); // one Stripe Tax calculation per pause, not per tap
+    return () => { live = false; clearTimeout(t); };
+  }, [cartKey, quoteTry]);
+  const priced = quote && quote.key === cartKey ? quote : null;
+  const due = priced ? priced.totalCents : total;
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
 
   async function ringUp() {
@@ -79,7 +98,7 @@ export default function ShopPage() {
       method: 'POST',
       body: JSON.stringify({
         lines: lines.map(l => ({ shopItemId: l.item.id, quantity: l.quantity })),
-        pay: pay === 'cash' ? 'cash' : 'link', via: pay === 'email' ? 'email' : 'sms',
+        pay: pay === 'cash' ? 'cash' : 'link', via: pay === 'email' ? 'email' : 'sms', taxCalculationId: priced?.taxCalculationId || undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
       }),
     });
@@ -195,7 +214,8 @@ export default function ShopPage() {
                         </span>
                       </li>
                     ))}
-                    <li className="flex justify-between py-2.5 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums">{usd(total)}</span></li>
+                    {priced && priced.taxCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Sales tax</span><span className="tabular-nums">{usd(priced.taxCents)}</span></li>}
+                    <li className="flex justify-between py-2.5 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums">{priced ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
                   </ul>
                 )}
 
@@ -217,9 +237,10 @@ export default function ShopPage() {
                         <p className="text-[12.5px] text-ink-muted">They pay on their phone with Apple Pay, Google Pay or a card. The money goes to your Stripe account.</p>
                       </div>
                     )}
-                    <button onClick={ringUp} disabled={busy === 'sale' || needContact}
+                    {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
+                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !priced}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
-                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(total)} cash` : `Send ${usd(total)} pay link`}
+                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : `Send ${usd(due)} pay link`}
                     </button>
                   </div>
                 )}

@@ -13,6 +13,8 @@ export type ImportOption = { label: string; priceCents: number | null; stockCoun
 export type ImportItem = {
   name: string; category: string; priceCents: number; stockCount: number | null; sku: string;
   options: ImportOption[];
+  /** W2-7 part B: a TAX_CATEGORIES key; the AI suggests one, a paste leaves it to the default. */
+  taxCategory?: string;
 };
 export type ImportRow = { line: number; item: ImportItem | null; error: string };
 

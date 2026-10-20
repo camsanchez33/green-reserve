@@ -116,6 +116,11 @@ model Course {
   hasTournaments             Boolean               @default(false)
   stripeAccountId            String                @default("")
   stripeAccountActive        Boolean               @default(false)
+  /// W2-7 part B (Cam 2026-10-20): pro-shop sales tax through Stripe Tax on the
+  /// course's own Stripe account. On only once its Stripe tax settings are
+  /// active (head office + at least one state registration) — set in
+  /// Settings → Pro shop → Sales tax by the owner.
+  shopTaxOn                  Boolean               @default(false)
   rating                     Float                 @default(4.5)
   reviewCount                Int                   @default(0)
   imageGradient              String                @default("linear-gradient(160deg,#071810 0%,#1b4332 60%,#2d6a4f 100%)")
@@ -1128,6 +1133,8 @@ model ShopItem {
   parent      ShopItem?         @relation("ShopItemOptions", fields: [parentId], references: [id], onDelete: Cascade)
   options     ShopItem[]        @relation("ShopItemOptions")
   optionLabel String            @default("")
+  /// W2-7 part B: how the item is taxed — a key of TAX_CATEGORIES in lib/sales-tax.ts (Stripe product tax code).
+  taxCategory String            @default("general")
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   sales       BookingShopItem[]
@@ -1141,26 +1148,32 @@ model ShopItem {
 /// paid in cash at the counter, or by a pay link the customer opens on their
 /// phone (a direct charge on the course's Stripe account, like a round).
 model ShopSale {
-  id              String         @id @default(cuid())
-  courseId        String
-  course          Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  courseId         String
+  course           Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
   /// open (pay link sent, not paid) | paid_cash | paid_card | void
-  status          String         @default("open")
-  totalCents      Int
-  customerName    String         @default("")
-  customerPhone   String         @default("")
-  customerEmail   String         @default("")
+  status           String         @default("open")
+  /// What the customer pays: the lines plus taxCents.
+  totalCents       Int
+  /// W2-7 part B: sales tax on this sale (Stripe Tax), its calculation, and the
+  /// tax transaction recorded on the course's account once paid ("" = not yet).
+  taxCents         Int            @default(0)
+  taxCalculationId String         @default("")
+  taxTransactionId String         @default("")
+  customerName     String         @default("")
+  customerPhone    String         @default("")
+  customerEmail    String         @default("")
   /// The pay link's secret (open sales only); '' for cash.
-  payToken        String         @default("")
-  paymentIntentId String         @default("")
+  payToken         String         @default("")
+  paymentIntentId  String         @default("")
   /// Set while a card charge is in flight (status 'paying'); a void waits for it.
-  chargeStartedAt DateTime?
-  paidAt          DateTime?
-  voidedAt        DateTime?
+  chargeStartedAt  DateTime?
+  paidAt           DateTime?
+  voidedAt         DateTime?
   /// Who rang it up (staff/owner email).
-  soldBy          String         @default("")
-  createdAt       DateTime       @default(now())
-  lines           ShopSaleLine[]
+  soldBy           String         @default("")
+  createdAt        DateTime       @default(now())
+  lines            ShopSaleLine[]
 
   @@index([courseId, createdAt])
 }
