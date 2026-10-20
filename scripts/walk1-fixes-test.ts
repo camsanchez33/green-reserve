@@ -4,6 +4,7 @@
 // and the confirmation email uses the one plain template. Source-level guards,
 // like manage-access-test. Pure — no database. Run: npx tsx scripts/walk1-fixes-test.ts
 import { readFileSync } from 'fs';
+import { firstName } from '../src/lib/email';
 
 let failed = 0;
 const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`); if (!ok) failed++; };
@@ -35,5 +36,7 @@ check('the confirmation email has no pill badge, emoji or tinted boxes', !/#dcfc
 check('golfer names are escaped in emails', !/\$\{data\.golferName\}|\$\{data\.golferEmail\}\)/.test(email));
 check("no 'keep 100%' claim on the payouts panel", !/keep 100%/i.test(src('src/components/dashboard/money/PayoutsPanel.tsx')));
 
+// EMAIL-2 (Cam 2026-10-20): emails greet people by first name.
+check('emails greet by first name', firstName('Jane Smith') === 'Jane' && firstName('  ') === 'there' && firstName(null) === 'there');
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

@@ -12422,6 +12422,10 @@
           "kind": "fn"
         },
         {
+          "name": "firstName",
+          "kind": "fn"
+        },
+        {
           "name": "isPlaceholderEmail",
           "kind": "fn"
         },

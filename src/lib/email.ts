@@ -80,7 +80,7 @@ function baseTemplate(content: string) {
 }
 
 /** "Jane Smith" → "Jane". Greetings use the first name only (EMAIL-2). */
-function firstName(full: string | null | undefined): string {
+export function firstName(full: string | null | undefined): string {
   return (full ?? '').trim().split(/\s+/)[0] || 'there';
 }
 
@@ -232,7 +232,7 @@ export async function sendCancellationEmail(data: {
 }) {
   if (isPlaceholderEmail(data.golferEmail)) return; // SD-5: walk-in without an email
   const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F6E6E1;color:#991b1b;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Booking Cancelled</span></div>
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F6E6E1;color:#A3452F;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Booking Cancelled</span></div>
     <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your booking has been cancelled.</h1>
     <p style="margin:0 0 ${data.reason ? '16px' : '24px'};color:#3F453E;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time} &middot; ${data.players} player${data.players > 1 ? 's' : ''}</p>
     ${data.reason
@@ -380,7 +380,7 @@ export async function sendBookingModifiedEmail(data: {
   const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
   const checkInUrl = data.checkInToken && !data.checkedIn ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
   const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F6F4EC;color:#1e3a8a;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Booking Updated</span></div>
+    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F6F4EC;color:#173B2A;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Booking Updated</span></div>
     <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your booking has been updated.</h1>
     <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Here are your updated booking details for ${data.courseName}.</p>
     <div style="border-top:1px solid #E3E4DE;margin-bottom:24px;">
