@@ -73,7 +73,7 @@ export async function submitChangeRequest(courseId: string, cleanItems: ChangeIt
     // already durably recorded above; don't block the response on Resend.
     after(sendMessageNotificationEmail({
       recipientEmail: ADMIN_EMAIL,
-      recipientName: 'GreenReserve Team',
+      recipientName: 'there', // to the GreenReserve inbox: "Hi there," (greetings use first names)
       senderName,
       courseName: course.name,
       messageBody: message.trim(),
