@@ -5171,7 +5171,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/preview/route.ts",
-      "lines": 26,
+      "lines": 27,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14957,7 +14957,7 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 304,
+      "lines": 309,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [

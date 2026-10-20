@@ -194,4 +194,7 @@ Decisions (Cam 2026-10-20, asked in session):
 - W2-6: launch courses have plain 18, back-nine starts and 27 holes / 3 nines; shotgun / leagues not definite but plan for them.
 - W2-7: courses ring up the shop on GreenReserve from day one — bulk add and variants are pre-launch work.
 
-Shipped (2026-10-20): W2-1, W2-2, W2-3.
+- W2-4 built WITHOUT a schema change (overseer 2026-10-20): each price period stays one TeeTimeSchedule row; `lib/schedule-plans.ts` groups back-to-back rows (same round, days, interval, holes, on/off) into one schedule, so existing morning + twilight setups read as one with nothing to backfill. `PUT /api/operator/schedule` saves a whole schedule in one transaction. Periods start on a tee time (snapped to the grid). The "additive migration" in the W2-4 bullet above was not needed.
+- Open question for Cam (raised 2026-10-20): a membership's flat price ignores price periods, so a member can pay more at twilight than the public. Fix options: a membership price per period, or "the lower of the member and public price". Not changed — W2-5 kept pricing rules as they are.
+
+Shipped (2026-10-20): W2-1, W2-2, W2-3 (#148). W2-4, W2-5 on the branch.

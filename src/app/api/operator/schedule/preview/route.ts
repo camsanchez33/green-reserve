@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
   if (op === 'create' && body?.body && typeof body.body === 'object') change = { op, body: body.body as Record<string, unknown> };
   else if (op === 'update' && typeof body?.id === 'string' && body.data && typeof body.data === 'object') change = { op, id: body.id, data: body.data as Record<string, unknown> };
   else if (op === 'delete' && typeof body?.id === 'string') change = { op, id: body.id };
-  else if (op === 'plan' && body?.plan && typeof body.plan === 'object') change = { op, plan: body.plan as SchedulePlan };
+  else if (op === 'plan' && body?.plan && typeof body.plan === 'object' && Array.isArray((body.plan as SchedulePlan).replaces)
+    && Array.isArray((body.plan as SchedulePlan).periods) && (body.plan as SchedulePlan).periods.every(p => p && typeof p === 'object')) change = { op, plan: body.plan as SchedulePlan };
   else return NextResponse.json({ error: 'Tell us what you are changing.' }, { status: 400 });
 
   const preview = await previewScheduleChange(session.courseId, change);

@@ -1,26 +1,32 @@
 {
-  "generatedAt": "2026-10-20T00:34:52.967Z",
+  "generatedAt": "2026-10-20T01:32:01.699Z",
   "repo": {
-    "head": "640bc5a",
+    "head": "f9338d3",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 5,
+    "dirty": [
+      "M OPERATOR_REWORK_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M src/app/api/operator/schedule/preview/route.ts",
+      " M src/lib/schedule-service.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
       {
-        "h": "640bc5a",
-        "date": "2026-10-20T00:33:24+00:00",
-        "subject": "W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text",
+        "h": "f9338d3",
+        "date": "2026-10-20T01:27:01+00:00",
+        "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a13900e",
-        "date": "2026-10-20T00:29:23+00:00",
-        "subject": "W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time",
+        "h": "223121d",
+        "date": "2026-10-19T21:23:57-04:00",
+        "subject": "Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)",
         "ids": [],
         "matches": []
       },
@@ -455,7 +461,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-20",
+      "lastTouched": "2026-10-19",
       "ageDays": 0
     },
     {
@@ -467,13 +473,13 @@
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-20",
+      "lastTouched": "2026-10-19",
       "ageDays": 0
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-20",
+      "lastTouched": "2026-10-19",
       "ageDays": 0
     },
     {
@@ -672,14 +678,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "640bc5a",
+      "h": "f9338d3",
       "date": "2026-10-20",
-      "subject": "W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text"
+      "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised"
     },
     {
-      "h": "a13900e",
-      "date": "2026-10-20",
-      "subject": "W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time"
+      "h": "223121d",
+      "date": "2026-10-19",
+      "subject": "Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)"
     },
     {
       "h": "abb4518",

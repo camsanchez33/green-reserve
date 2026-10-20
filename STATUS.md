@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-20 00:34 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `640bc5a` · working tree clean
+Generated 2026-10-20 01:32 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f9338d3` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,8 +12,8 @@ Generated 2026-10-20 00:34 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 | commit | date | subject |
 |---|---|---|
-| `640bc5a` | 2026-10-20 | W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text |
-| `a13900e` | 2026-10-20 | W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time |
+| `f9338d3` | 2026-10-20 | W2-4/5: price periods inside one schedule; Prices & fees reorganised |
+| `223121d` | 2026-10-19 | Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148) |
 | `95da45f` | 2026-10-19 | Member portal: show a resident their own spot at the resident rate, as booking charges (#146) |
 | `9910cf6` | 2026-10-19 | Member portal: show members exactly what booking charges (#145) |
 | `dbd4737` | 2026-10-19 | Status board: regenerate (#144) |
@@ -54,6 +54,17 @@ Generated 2026-10-20 00:34 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (5 file(s))
+
+- `M OPERATOR_REWORK_SPEC.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M src/app/api/operator/schedule/preview/route.ts`
+- `M src/lib/schedule-service.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -134,10 +145,10 @@ Nothing awaiting review.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-20 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-19 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 2d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-20 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 0d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-19 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 7d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 11d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 11d |
@@ -173,8 +184,8 @@ Nothing awaiting review.
 
 ## Recent commits
 
-- `640bc5a` 2026-10-20 — W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text
-- `a13900e` 2026-10-20 — W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time
+- `f9338d3` 2026-10-20 — W2-4/5: price periods inside one schedule; Prices & fees reorganised
+- `223121d` 2026-10-19 — Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)
 - `abb4518` 2026-10-19 — queue/spec update (#147)
 - `95da45f` 2026-10-19 — Member portal: show a resident their own spot at the resident rate, as booking charges (#146)
 - `9910cf6` 2026-10-19 — Member portal: show members exactly what booking charges (#145)

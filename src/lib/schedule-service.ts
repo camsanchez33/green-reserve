@@ -199,12 +199,17 @@ export class SchedulePlanError extends Error {
 
 /** Returns null when a row in `replaces` is not this course's. */
 export async function saveSchedulePlan(courseId: string, plan: SchedulePlan, opts: ScheduleScope = {}) {
-  const replaces = [...new Set((plan.replaces ?? []).map(String))];
+  if (!Array.isArray(plan.replaces) || !Array.isArray(plan.periods) || plan.periods.some(p => !p || typeof p !== 'object')) {
+    throw new SchedulePlanError('Tell us what you are changing.');
+  }
+  const replaces = [...new Set(plan.replaces.map(String))];
   const existing = replaces.length ? await prisma.teeTimeSchedule.findMany({ where: { id: { in: replaces }, courseId } }) : [];
   if (existing.length !== replaces.length) return null;
   type Period = Record<string, unknown> & { id?: string; tierName?: string; startTime: unknown; endTime: unknown };
   const periods: Period[] = (plan.periods ?? []).map(p => ({ ...p, id: p.id ? String(p.id) : undefined, tierName: p.tierName == null ? undefined : String(p.tierName), startTime: p.startTime, endTime: p.endTime }));
   if (periods.some(p => p.id && !replaces.includes(p.id))) return null;
+  const periodIds = periods.map(p => p.id).filter(Boolean);
+  if (new Set(periodIds).size !== periodIds.length) throw new SchedulePlanError('Two price periods can’t be the same one. Refresh and try again.');
 
   if (periods.length === 0) {
     if (!replaces.length) throw new SchedulePlanError('Add at least one price period.');
