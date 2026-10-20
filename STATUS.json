@@ -1,36 +1,36 @@
 {
-  "generatedAt": "2026-10-20T03:08:51.712Z",
+  "generatedAt": "2026-10-20T18:01:16.721Z",
   "repo": {
-    "head": "ad6524b",
+    "head": "42ff2e4",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 25,
-    "dirty": [
-      "M OPERATOR_REWORK_SPEC.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/shop-sales-test.ts",
-      " M src/app/api/cron/hourly/route.ts",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/app/api/shop-sale/[id]/route.ts",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/app/pay/shop/[id]/page.tsx",
-      " M src/components/dashboard/ShopCatalog.tsx",
-      " M src/lib/email.ts",
-      " M src/lib/shop-ai-import.ts",
-      " M src/lib/shop-catalog.ts",
-      " M src/lib/shop-import.ts",
-      " M src/lib/shop-sales.ts",
-      " M src/lib/shop-tree.ts",
-      "?? prisma/migrations/20261020021959_w2_7_shop_sales_tax/",
-      "?? scripts/shop-sales-tax-db-test.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "42ff2e4",
+        "date": "2026-10-20T17:59:51+00:00",
+        "subject": "W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "dea0574",
+        "date": "2026-10-20T17:52:55+00:00",
+        "subject": "W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "39e62f4",
+        "date": "2026-10-20T13:36:31-04:00",
+        "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ad6524b",
         "date": "2026-10-19T23:08:11-04:00",
@@ -511,7 +511,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "ADMIN_V5_SPEC.md",
@@ -528,7 +528,7 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-19",
+      "lastTouched": "2026-10-20",
       "ageDays": 0
     },
     {
@@ -727,6 +727,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "42ff2e4",
+      "date": "2026-10-20",
+      "subject": "W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day"
+    },
+    {
+      "h": "dea0574",
+      "date": "2026-10-20",
+      "subject": "W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had"
+    },
+    {
+      "h": "39e62f4",
+      "date": "2026-10-20",
+      "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)"
+    },
+    {
       "h": "ad6524b",
       "date": "2026-10-19",
       "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)"
@@ -770,21 +785,6 @@
       "h": "9910cf6",
       "date": "2026-10-19",
       "subject": "Member portal: show members exactly what booking charges (#145)"
-    },
-    {
-      "h": "dbd4737",
-      "date": "2026-10-19",
-      "subject": "Status board: regenerate (#144)"
-    },
-    {
-      "h": "428da80",
-      "date": "2026-10-19",
-      "subject": "Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)"
-    },
-    {
-      "h": "0419675",
-      "date": "2026-10-19",
-      "subject": "Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)"
     }
   ]
 }
