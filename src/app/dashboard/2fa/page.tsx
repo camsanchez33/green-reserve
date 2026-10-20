@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { AuthPhotoShell } from '@/components/AuthPhotoShell';
 
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-4 py-3 text-center text-2xl font-mono tracking-[0.4em] text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -64,14 +64,12 @@ export default function TwoFactorVerifyPage() {
     : `We emailed a 6-digit code to ${emailHint || 'the email on your account'}.`;
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6">
-          <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">{method === 'sms' ? 'Check your phone' : 'Check your email'}</h1>
-          <p className="text-[14px] text-ink-soft mt-3 leading-relaxed">{where} It works for 10 minutes.</p>
-        </div>
-
-        <form onSubmit={submit} className="bg-white rounded-lg shadow-card p-6">
+    <AuthPhotoShell>
+        <form onSubmit={submit} className="bg-white rounded-lg shadow-card p-6 sm:p-7">
+          <div className="mb-5">
+            <h1 className="text-[28px] font-serif font-semibold leading-none tracking-tight text-ink">{method === 'sms' ? 'Check your phone' : 'Check your email'}</h1>
+            <p className="text-[14px] text-ink-soft mt-3 leading-relaxed">{where} It works for 10 minutes.</p>
+          </div>
           {error && <div className="bg-white border border-line border-l-[3px] border-l-bad text-bad rounded-md px-3 py-2.5 text-[13.5px] mb-4" role="alert">{error}</div>}
           {notice && !error && <div className="bg-white border border-line border-l-[3px] border-l-ok text-ink rounded-md px-3 py-2.5 text-[13.5px] mb-4" role="status">{notice}</div>}
 
@@ -106,11 +104,6 @@ export default function TwoFactorVerifyPage() {
             <a href="/dashboard/login" className="text-pine font-medium hover:underline">Back to sign in</a>
           </p>
         </form>
-
-        <div className="mt-6 flex justify-center">
-          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[130px] max-w-full h-auto opacity-60" />
-        </div>
-      </div>
-    </div>
+    </AuthPhotoShell>
   );
 }
