@@ -62,13 +62,13 @@ export async function PATCH(req: NextRequest) {
   const stock = stockFrom(body);
   if (typeof stock === 'string') return NextResponse.json({ error: stock }, { status: 400 });
   if (body.name === undefined) {
-    // Hide/show (a parent takes its options) and/or a shelf count on one row.
-    // Tenant isolation: both helpers match on this course's rows only.
-    if (typeof body.active === 'boolean' && !(await setItemActive(g.session.courseId, id, body.active))) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    if ('stockCount' in stock) {
-      const n = await prisma.shopItem.updateMany({ where: { id, courseId: g.session.courseId, options: { none: {} } }, data: { stockCount: stock.stockCount } });
-      if (!n.count) return NextResponse.json({ error: 'Count stock on each option, not on the item.' }, { status: 400 });
-    }
+    // Hide/show and/or a shelf count on one row. Tenant isolation: this course's rows only.
+    const row = await prisma.shopItem.findFirst({ where: { id, courseId: g.session.courseId }, select: { _count: { select: { options: true } } } });
+    if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (typeof body.active !== 'boolean' && !('stockCount' in stock)) return NextResponse.json({ error: 'Nothing to change.' }, { status: 400 });
+    if ('stockCount' in stock && row._count.options > 0) return NextResponse.json({ error: 'Count stock on each option, not on the item.' }, { status: 400 });
+    if (typeof body.active === 'boolean') await setItemActive(g.session.courseId, id, body.active);
+    if ('stockCount' in stock) await prisma.shopItem.updateMany({ where: { id, courseId: g.session.courseId }, data: { stockCount: stock.stockCount } });
     return NextResponse.json({ ok: true });
   }
   // A full edit — a price change never reaches a sale already made; those lines carry their own copied price.

@@ -118,7 +118,11 @@ function ItemEditor({ initial, categories, busy, submitLabel, onSubmit, onCancel
   );
 }
 
-type PreviewRow = ImportItem & { note?: string };
+// Each preview row gets a stable key and its own price text, so removing a row
+// never leaves another row's input showing the wrong price.
+type PreviewRow = ImportItem & { note?: string; key: string; priceText: string };
+let rowSeq = 0;
+const toPreview = (items: (ImportItem & { note?: string })[]): PreviewRow[] => items.map(r => ({ ...r, key: `r${++rowSeq}`, priceText: r.priceCents ? dollars(r.priceCents) : '' }));
 
 /** Many at once: paste, CSV or AI → one preview → Add. */
 function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) => Promise<boolean> }) {
@@ -132,15 +136,15 @@ function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) =
   function preview(t: string) {
     setError('');
     const r = parseImport(t);
-    setRows(r.items);
+    setRows(toPreview(r.items));
     setProblems(r.rows.filter(x => x.error).map(x => `Row ${x.line}: ${x.error}`));
   }
   async function readWithAi() {
     setReading(true); setError(''); setProblems([]);
-    const r = await dfetch<{ rows: PreviewRow[] }>('/api/operator/shop-items/read', { method: 'POST', body: JSON.stringify({ text }) });
+    const r = await dfetch<{ rows: (ImportItem & { note?: string })[] }>('/api/operator/shop-items/read', { method: 'POST', body: JSON.stringify({ text }) });
     setReading(false);
     if (!r.ok) { setError(r.error); return; }
-    setRows(r.data.rows);
+    setRows(toPreview(r.data.rows));
     if (!r.data.rows.length) setError('No products found in that text.');
   }
   async function onFile(f: File | undefined) {
@@ -191,10 +195,10 @@ function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) =
               <thead><tr className="text-left text-[12px] text-ink-soft border-b border-line"><th className="py-1.5 pr-2 font-medium">Item</th><th className="py-1.5 pr-2 font-medium">Category</th><th className="py-1.5 pr-2 font-medium">Price</th><th className="py-1.5 pr-2 font-medium">Sizes or colors</th><th className="py-1.5 pr-2 font-medium">Stock</th><th className="py-1.5 pr-2 font-medium">SKU</th><th /></tr></thead>
               <tbody className="divide-y divide-line-soft">
                 {rows.map((r, i) => (
-                  <tr key={i} className="align-top">
+                  <tr key={r.key} className="align-top">
                     <td className="py-1.5 pr-2 min-w-[160px]"><input value={r.name} onChange={e => edit(i, { name: e.target.value })} aria-label="Item" className={INPUT + ' w-full'} />{r.note && <span className="block text-[12px] text-warn mt-0.5">{r.note}</span>}</td>
                     <td className="py-1.5 pr-2 w-32"><input value={r.category} onChange={e => edit(i, { category: e.target.value })} aria-label="Category" className={INPUT + ' w-full'} /></td>
-                    <td className="py-1.5 pr-2 w-24"><input defaultValue={r.priceCents ? dollars(r.priceCents) : ''} onBlur={e => edit(i, { priceCents: parsePriceCents(e.target.value) ?? 0, note: '' })} inputMode="decimal" aria-label="Price" className={INPUT + ' w-full tabular-nums' + (r.priceCents > 0 ? '' : ' border-bad/40')} /></td>
+                    <td className="py-1.5 pr-2 w-24"><input value={r.priceText} onChange={e => { const c = parsePriceCents(e.target.value); edit(i, { priceText: e.target.value, priceCents: c && !Number.isNaN(c) ? c : 0, note: '' }); }} inputMode="decimal" aria-label="Price" className={INPUT + ' w-full tabular-nums' + (r.priceCents > 0 ? '' : ' border-bad/40')} /></td>
                     <td className="py-1.5 pr-2 text-ink-soft">{r.options.length ? r.options.map(o => o.label).join(' · ') : '—'}</td>
                     <td className="py-1.5 pr-2 tabular-nums text-ink-soft">{r.options.length ? (r.options.some(o => o.stockCount !== null) ? r.options.reduce((s, o) => s + (o.stockCount ?? 0), 0) : '—') : (r.stockCount ?? '—')}</td>
                     <td className="py-1.5 pr-2 text-ink-soft">{r.sku || '—'}</td>
@@ -275,7 +279,7 @@ export function ShopCatalog() {
               onSubmit={async b => { if (await write('new', 'POST', b, `${b.name} added.`)) setFormKey(k => k + 1); }} onCancel={() => setAdding('')} />
           )}
           {adding === 'many' && (
-            <BulkAdd busy={busy === 'bulk'} onAdd={rows => write('bulk', 'POST', { items: rows.map(r => ({ ...r, note: undefined })) }, `${rows.length} item${rows.length === 1 ? '' : 's'} added.`)} />
+            <BulkAdd busy={busy === 'bulk'} onAdd={rows => write('bulk', 'POST', { items: rows.map(({ note: _n, key: _k, priceText: _p, ...r }) => r) }, `${rows.length} item${rows.length === 1 ? '' : 's'} added.`)} />
           )}
           {(() => {
             const have = new Set(tree.map(i => i.name.toLowerCase()));

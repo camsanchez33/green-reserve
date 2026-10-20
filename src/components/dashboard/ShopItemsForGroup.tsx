@@ -40,7 +40,8 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, edit
     if (!r.ok) { setLoadError(r.error); return; }
     // W2-7: sellable rows only — an item with sizes/colors is picked by its option ("Logo polo — M").
     const parents = new Set(r.data.items.map(i => i.parentId).filter(Boolean));
-    const active = r.data.items.filter(i => i.active && !parents.has(i.id)).sort((a, b) => (a.category || '~').localeCompare(b.category || '~') || a.name.localeCompare(b.name));
+    const hidden = new Set(r.data.items.filter(i => !i.active).map(i => i.id));
+    const active = r.data.items.filter(i => i.active && !parents.has(i.id) && !(i.parentId && hidden.has(i.parentId))).sort((a, b) => (a.category || '~').localeCompare(b.category || '~') || a.name.localeCompare(b.name));
     setCatalog(active);
     if (active[0]) setItemId(active[0].id);
   }

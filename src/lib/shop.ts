@@ -114,8 +114,8 @@ export async function addItemToBooking(courseId: string, bookingId: string, shop
     if (!b || b.courseId !== courseId) return { ok: false, status: 404, error: 'Booking not found.' } as const;
     const locked = shopLockedReason(b);
     if (locked) return { ok: false, status: 409, error: locked } as const;
-    const item = await tx.shopItem.findUnique({ where: { id: shopItemId }, include: { _count: { select: { options: true } } } });
-    if (!item || item.courseId !== courseId || !item.active) return { ok: false, status: 404, error: 'That item is not in your shop.' } as const;
+    const item = await tx.shopItem.findUnique({ where: { id: shopItemId }, include: { _count: { select: { options: true } }, parent: { select: { active: true } } } });
+    if (!item || item.courseId !== courseId || !item.active || (item.parent && !item.parent.active)) return { ok: false, status: 404, error: 'That item is not in your shop.' } as const;
     // W2-7: an item with sizes/colors is sold by its option, never itself.
     if (item._count.options > 0) return { ok: false, status: 400, error: 'Pick a size or color for that item.' } as const;
     await tx.bookingShopItem.create({ data: { bookingId, shopItemId: item.id, name: item.name, unitPriceCents: item.priceCents, quantity, addedBy } });

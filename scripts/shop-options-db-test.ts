@@ -55,7 +55,17 @@ async function cleanup() {
   ok('another course cannot edit it', (await updateItem(other.id, polo.id, { name: 'x', priceCents: 1 })) === null);
 
   await setItemActive(c.id, polo.id, false);
-  ok('hiding the item hides its options', (await prisma.shopItem.count({ where: { parentId: polo.id, active: true } })) === 0);
+  const m = after.find(x => x.optionLabel === 'M')!;
+  ok('an option of a hidden item cannot be sold', !(await createSale({ courseId: c.id, lines: [{ shopItemId: m.id, quantity: 1 }], pay: 'cash', soldBy: 't' })).ok);
+  ok('hiding the item leaves its options as they were', (await prisma.shopItem.count({ where: { parentId: polo.id, active: true } })) === 2);
+  // Edit the hidden item (a rename): its options survive with their stock and SKUs.
+  await updateItem(c.id, polo.id, { name: 'Club polo', category: 'Apparel', priceCents: 5000 });
+  const kept = await prisma.shopItem.findMany({ where: { parentId: polo.id, active: true } });
+  ok('editing a hidden item keeps its options', kept.length === 2 && kept.some(x => x.optionLabel === 'M' && x.stockCount === 4));
+  await setItemActive(c.id, polo.id, true);
+  ok('showing it again does not bring back a dropped option', (await prisma.shopItem.findUnique({ where: { id: s.id } }))?.active === false);
+  ok('…and its options sell again', (await createSale({ courseId: c.id, lines: [{ shopItemId: m.id, quantity: 1 }], pay: 'cash', soldBy: 't' })).ok);
+  await setItemActive(c.id, polo.id, false);
   const del = await deleteItem(c.id, polo.id);
   ok('an item with a sold option is hidden, not deleted', !!del && del.hidden && !!(await prisma.shopItem.findUnique({ where: { id: polo.id } })));
   const glove = rows.find(x => x.name === 'Glove')!;

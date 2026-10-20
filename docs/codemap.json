@@ -5280,7 +5280,7 @@
     },
     {
       "path": "src/app/api/operator/shop-items/read/route.ts",
-      "lines": 32,
+      "lines": 33,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8322,7 +8322,7 @@
     },
     {
       "path": "src/components/dashboard/ShopCatalog.tsx",
-      "lines": 362,
+      "lines": 366,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -8351,7 +8351,7 @@
     },
     {
       "path": "src/components/dashboard/ShopItemsForGroup.tsx",
-      "lines": 137,
+      "lines": 138,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -15489,7 +15489,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 276,
+      "lines": 277,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [

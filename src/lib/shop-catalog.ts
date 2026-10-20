@@ -65,12 +65,10 @@ export async function createItems(courseId: string, bodies: unknown[]) {
     for (const it of items) {
       const parent = await tx.shopItem.create({ data: { courseId, name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku } });
       out.push(parent.id);
-      for (const [i, o] of it.options.entries()) {
-        await tx.shopItem.create({ data: {
-          courseId, parentId: parent.id, optionLabel: o.label, name: optionName(it.name, o.label), category: it.category,
-          priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i,
-        } });
-      }
+      if (it.options.length) await tx.shopItem.createMany({ data: it.options.map((o, i) => ({
+        courseId, parentId: parent.id, optionLabel: o.label, name: optionName(it.name, o.label), category: it.category,
+        priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i,
+      })) });
     }
     return out;
   }, { timeout: 30000 });
@@ -97,7 +95,7 @@ export async function updateItem(courseId: string, id: string, body: Record<stri
     await tx.shopItem.update({ where: { id }, data: { name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku, active } });
     const keep = new Set<string>();
     for (const [i, o] of it.options.entries()) {
-      const data = { optionLabel: o.label, name: optionName(it.name, o.label), category: it.category, priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i, active };
+      const data = { optionLabel: o.label, name: optionName(it.name, o.label), category: it.category, priceCents: o.priceCents ?? it.priceCents, stockCount: o.stockCount, sku: o.sku, sortOrder: i, active: true };
       if (o.id) { keep.add(o.id); await tx.shopItem.update({ where: { id: o.id }, data }); }
       else await tx.shopItem.create({ data: { courseId, parentId: id, ...data } });
     }
@@ -110,13 +108,14 @@ export async function updateItem(courseId: string, id: string, body: Record<stri
   return { ok: true as const };
 }
 
-/** Show or hide an item; a parent takes its options with it. */
+/**
+ * Show or hide one row. Hiding an item never touches its options: an option's
+ * own `active: false` means only "dropped from the item but kept because it
+ * was sold", and the sale paths refuse any option whose item is hidden.
+ */
 export async function setItemActive(courseId: string, id: string, active: boolean) {
-  const existing = await prisma.shopItem.findFirst({ where: { id, courseId }, select: { id: true, parentId: true } });
-  if (!existing) return null;
-  const where = existing.parentId ? { courseId, id } : { courseId, OR: [{ id }, { parentId: id }] };
-  await prisma.shopItem.updateMany({ where, data: { active } });
-  return { ok: true as const };
+  const n = await prisma.shopItem.updateMany({ where: { courseId, id }, data: { active } });
+  return n.count ? { ok: true as const } : null;
 }
 
 /** Delete an item (and its options) — or hide it when any of it was ever sold. */
@@ -125,7 +124,8 @@ export async function deleteItem(courseId: string, id: string) {
   if (!existing) return null;
   const sold = existing._count.sales + existing._count.saleLines + existing.options.reduce((s, o) => s + o._count.sales + o._count.saleLines, 0);
   if (sold > 0) {
-    await prisma.shopItem.updateMany({ where: { courseId, OR: [{ id }, { parentId: id }] }, data: { active: false } });
+    // Hiding the item is enough — its options can't be sold while it's hidden.
+    await prisma.shopItem.update({ where: { id }, data: { active: false } });
     return { ok: true as const, hidden: true };
   }
   await prisma.shopItem.delete({ where: { id } }); // options go with it (onDelete: Cascade)
