@@ -7365,7 +7365,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 250,
+      "lines": 253,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7697,7 +7697,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 282,
+      "lines": 288,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7724,6 +7724,7 @@
         "@/lib/unsaved-guard",
         "@/lib/use-dashboard-access",
         "lucide-react",
+        "next/image",
         "next/navigation",
         "react"
       ],
@@ -12408,7 +12409,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1920,
+      "lines": 1919,
       "purpose": "",
       "brain": [],
       "exports": [

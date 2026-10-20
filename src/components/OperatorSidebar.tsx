@@ -1,5 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
@@ -177,6 +178,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       <div className="flex-1 min-w-0">
         <div className="font-serif text-[14px] text-ink leading-snug truncate">{name || 'GreenReserve'}</div>
         {name && <div className="text-[11.5px] text-ink-muted truncate">{meta}</div>}
+        <div className="flex items-center gap-1.5 text-[11.5px] text-ink-muted mt-1 whitespace-nowrap">Powered by <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={80} height={15} className="h-[14px] w-auto" /></div>
       </div>
       {myCourses.length > 1 && (
         <select
@@ -231,7 +233,11 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       <div className={bar.row}>
         <div className={bar.side}>
           {/* The course logo box that sat here did nothing (Cam 2026-10-19) — the name carries it. */}
-          <span className="font-serif text-[22px] 2xl:text-[24px] leading-none truncate max-w-[70vw] 2xl:max-w-[260px]" title={meta}>{name || 'Your course'}</span>
+          {/* LOGO-2 (Cam 2026-10-20): the course's name, then "Powered by" and the GreenReserve lockup under it. */}
+          <div className="flex flex-col gap-1 min-w-0">
+            <span className="font-serif text-[22px] 2xl:text-[24px] leading-none truncate max-w-[70vw] 2xl:max-w-[260px]" title={meta}>{name || 'Your course'}</span>
+            <span className="flex items-center gap-2 text-[12px] opacity-80 whitespace-nowrap">Powered by <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={96} height={18} className="h-[17px] w-auto" /></span>
+          </div>
         </div>
         <nav aria-label="Dashboard" className={bar.nav}>
           {navItems.filter(n => !n.soon && visible(n.key)).map(item => {
