@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-19T20:35:24.253Z",
+  "generatedAt": "2026-10-20T00:34:52.967Z",
   "repo": {
-    "head": "428da80",
-    "branch": "claude/status-1019b",
+    "head": "640bc5a",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -10,6 +10,41 @@
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "640bc5a",
+        "date": "2026-10-20T00:33:24+00:00",
+        "subject": "W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a13900e",
+        "date": "2026-10-20T00:29:23+00:00",
+        "subject": "W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "95da45f",
+        "date": "2026-10-19T19:55:12-04:00",
+        "subject": "Member portal: show a resident their own spot at the resident rate, as booking charges (#146)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9910cf6",
+        "date": "2026-10-19T17:31:18-04:00",
+        "subject": "Member portal: show members exactly what booking charges (#145)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "dbd4737",
+        "date": "2026-10-19T16:39:42-04:00",
+        "subject": "Status board: regenerate (#144)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "428da80",
         "date": "2026-10-19T16:35:14-04:00",
@@ -259,9 +294,9 @@
   },
   "counts": {
     "runDone": 298,
-    "runAwaiting": 1,
+    "runAwaiting": 0,
     "runInFlight": 1,
-    "runNotStarted": 5,
+    "runNotStarted": 6,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 17,
@@ -276,15 +311,7 @@
       ]
     }
   ],
-  "awaiting": [
-    {
-      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
-      "line": 2357,
-      "hash": "b88c8bf",
-      "shipDate": "2026-07-22",
-      "ageDays": 89
-    }
-  ],
+  "awaiting": [],
   "next": [
     {
       "title": "WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).",
@@ -304,6 +331,11 @@
     {
       "title": "CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (\"Golf",
       "line": 338,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
+      "line": 2357,
       "section": "Queue (run in this order)"
     },
     {
@@ -423,7 +455,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-19",
+      "lastTouched": "2026-10-20",
       "ageDays": 0
     },
     {
@@ -435,13 +467,13 @@
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-19",
+      "lastTouched": "2026-10-20",
       "ageDays": 0
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-19",
+      "lastTouched": "2026-10-20",
       "ageDays": 0
     },
     {
@@ -451,194 +483,224 @@
       "ageDays": 7
     },
     {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 14
-    },
-    {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 14
-    },
-    {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-04",
-      "ageDays": 14
-    },
-    {
-      "file": "UI_REVISE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-01",
-      "ageDays": 18
-    },
-    {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
+    },
+    {
+      "file": "REVIEW_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 20
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
+    },
+    {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
+    },
+    {
+      "file": "UI_REVISE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 11
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "640bc5a",
+      "date": "2026-10-20",
+      "subject": "W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text"
+    },
+    {
+      "h": "a13900e",
+      "date": "2026-10-20",
+      "subject": "W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time"
+    },
+    {
+      "h": "abb4518",
+      "date": "2026-10-19",
+      "subject": "queue/spec update (#147)"
+    },
+    {
+      "h": "95da45f",
+      "date": "2026-10-19",
+      "subject": "Member portal: show a resident their own spot at the resident rate, as booking charges (#146)"
+    },
+    {
+      "h": "9910cf6",
+      "date": "2026-10-19",
+      "subject": "Member portal: show members exactly what booking charges (#145)"
+    },
+    {
+      "h": "dbd4737",
+      "date": "2026-10-19",
+      "subject": "Status board: regenerate (#144)"
+    },
     {
       "h": "428da80",
       "date": "2026-10-19",
@@ -668,36 +730,6 @@
       "h": "a8c71b9",
       "date": "2026-10-19",
       "subject": "Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)"
-    },
-    {
-      "h": "c17100d",
-      "date": "2026-10-19",
-      "subject": "Dashboard nav: every tab fits on every screen (#137)"
-    },
-    {
-      "h": "668b8ce",
-      "date": "2026-10-19",
-      "subject": "Residents: staff keep a resident list; residents book at the resident rate (#136)"
-    },
-    {
-      "h": "73245fc",
-      "date": "2026-10-19",
-      "subject": "Status board after Settings part 2 and the pro shop (#135)"
-    },
-    {
-      "h": "cb884f2",
-      "date": "2026-10-19",
-      "subject": "Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134)"
-    },
-    {
-      "h": "cd9c3a1",
-      "date": "2026-10-19",
-      "subject": "Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131)"
-    },
-    {
-      "h": "1cf8419",
-      "date": "2026-10-19",
-      "subject": "Homepage hero: Learn more instead of Book a demo (#133)"
     }
   ]
 }
