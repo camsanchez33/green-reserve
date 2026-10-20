@@ -452,10 +452,10 @@ export default function SchedulesPage() {
                 </div></div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div><label className={lCls} htmlFor="f-start">First tee time</label><input id="f-start" type="time" value={form.startTime} onChange={e => set('startTime', e.target.value)} className={iCls} /></div>
-                <div><label className={lCls} htmlFor="f-end">Stop at</label><input id="f-end" type="time" value={form.endTime} onChange={e => set('endTime', e.target.value)} className={iCls} /></div>
+                <div><label className={lCls} htmlFor="f-end">Last tee time</label><input id="f-end" type="time" value={form.endTime} onChange={e => set('endTime', e.target.value)} className={iCls} /></div>
                 <div><label className={lCls} htmlFor="f-int">Minutes apart</label><input id="f-int" type="number" min={1} value={form.intervalMinutes} onChange={e => set('intervalMinutes', Number(e.target.value))} className={iCls} /></div>
               </div>
-              <p className="text-[12.5px] text-ink-muted -mt-2">The last tee time is the one before “Stop at”.</p>
+              <p className="text-[12.5px] text-ink-muted -mt-2">The last group goes off at this time, if it falls on the interval.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div><label className={lCls} htmlFor="f-wd">Weekday price</label><input id="f-wd" type="number" min={0} value={form.greenFeeWeekday} onChange={e => set('greenFeeWeekday', Number(e.target.value))} className={iCls} /></div>
                 <div><label className={lCls} htmlFor="f-we">Weekend price</label><input id="f-we" type="number" min={0} value={form.greenFeeWeekend} onChange={e => set('greenFeeWeekend', Number(e.target.value))} className={iCls} /></div>

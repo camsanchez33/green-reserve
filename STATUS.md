@@ -4,14 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-19 20:35 UTC · branch `claude/status-1019b` · HEAD `428da80` · working tree clean
+Generated 2026-10-20 00:34 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `640bc5a` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 35 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 40 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `640bc5a` | 2026-10-20 | W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text |
+| `a13900e` | 2026-10-20 | W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time |
+| `95da45f` | 2026-10-19 | Member portal: show a resident their own spot at the resident rate, as booking charges (#146) |
+| `9910cf6` | 2026-10-19 | Member portal: show members exactly what booking charges (#145) |
+| `dbd4737` | 2026-10-19 | Status board: regenerate (#144) |
 | `428da80` | 2026-10-19 | Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143) |
 | `0419675` | 2026-10-19 | Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142) |
 | `b14b998` | 2026-10-19 | Course groups: one golfer page and one resident list for courses run together (#141) |
@@ -60,9 +65,7 @@ Generated 2026-10-19 20:35 UTC · branch `claude/status-1019b` · HEAD `428da80`
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-| item | shipped | age | commit | source |
-|---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 89d | `b88c8bf` | `RUN_QUEUE.md:2357` |
+Nothing awaiting review.
 
 ## Not started — the actual queue
 
@@ -70,7 +73,8 @@ This is the distinction a raw checkbox count gets wrong.
 2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
 3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
 4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+5. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2357`
+6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
@@ -130,58 +134,58 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-19 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-20 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 2d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-19 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-20 | 0d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 7d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 14d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 14d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 14d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 18d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 20d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `ARCHITECTURE.md` | 0 | 2026-09-29 | 20d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 20d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 20d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 11d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 11d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 11d |
 
 ## Recent commits
 
+- `640bc5a` 2026-10-20 — W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text
+- `a13900e` 2026-10-20 — W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time
+- `abb4518` 2026-10-19 — queue/spec update (#147)
+- `95da45f` 2026-10-19 — Member portal: show a resident their own spot at the resident rate, as booking charges (#146)
+- `9910cf6` 2026-10-19 — Member portal: show members exactly what booking charges (#145)
+- `dbd4737` 2026-10-19 — Status board: regenerate (#144)
 - `428da80` 2026-10-19 — Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)
 - `0419675` 2026-10-19 — Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)
 - `b14b998` 2026-10-19 — Course groups: one golfer page and one resident list for courses run together (#141)
 - `662f294` 2026-10-19 — Members: import a list, and each member's last round (#140)
 - `9aba8a1` 2026-10-19 — Settings: Who pays what, one table of every kind of golfer and their price (#139)
 - `a8c71b9` 2026-10-19 — Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)
-- `c17100d` 2026-10-19 — Dashboard nav: every tab fits on every screen (#137)
-- `668b8ce` 2026-10-19 — Residents: staff keep a resident list; residents book at the resident rate (#136)
-- `73245fc` 2026-10-19 — Status board after Settings part 2 and the pro shop (#135)
-- `cb884f2` 2026-10-19 — Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134)
-- `cd9c3a1` 2026-10-19 — Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131)
-- `1cf8419` 2026-10-19 — Homepage hero: Learn more instead of Book a demo (#133)
 
 ---
 
-**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 8 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 0 awaiting review · 1 in flight · 6 not started · 8 revise pages open · 17 ideas · 7 parked.

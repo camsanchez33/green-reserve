@@ -90,7 +90,7 @@ export async function previewScheduleChange(courseId: string, change: ScheduleCh
   const today = todayIn(course?.timezone);
   const dates = Array.from({ length: PREVIEW_DAYS }, (_, i) => addDaysStr(today, i));
   const [products, blackouts, teeTimes] = await Promise.all([
-    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true } }),
+    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true, nineIds: true } }),
     prisma.blackout.findMany({ where: { courseId, date: { in: dates } }, select: { date: true } }),
     prisma.teeTime.findMany({
       where: { courseId, date: { in: dates } },

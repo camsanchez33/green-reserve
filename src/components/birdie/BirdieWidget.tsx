@@ -1,6 +1,6 @@
 'use client';
 // BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its
-// phone launcher (on md+ the top bar's "Ask Birdie" opens it). Renders nothing until GET /api/birdie/chat says the
+// launcher in the bottom corner on every screen (W2-1, Cam 2026-10-19). Renders nothing until GET /api/birdie/chat says the
 // assistant is on. Replies stream in; links the model writes as
 // [Open Schedule](/dashboard/schedules) become deep-link buttons.
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -87,7 +87,7 @@ export default function BirdieWidget() {
       const q = (e as CustomEvent<{ question?: string }>).detail?.question;
       if (typeof q !== 'string') return;
       setOpen(true); setTucked(false); try { localStorage.setItem(OPEN_KEY, '1'); localStorage.removeItem(TUCK_KEY); } catch { /* ignore */ }
-      // An empty question (openBirdie) just opens the panel, keeping any draft.
+      // An empty question just opens the panel, keeping any draft.
       if (q.trim()) setInput(q.slice(0, 1500)); // MAX_USER_CHARS in guardrails.ts
       setTimeout(() => inputRef.current?.focus(), 0);
     };
@@ -169,18 +169,18 @@ export default function BirdieWidget() {
     <>
       {!open && tucked && (
         <button type="button" onClick={show} aria-label="Open Birdie"
-          className="md:hidden fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-white border border-r-0 border-line rounded-l-md px-1.5 py-3 text-[12px] font-semibold text-pine hover:bg-paper [writing-mode:vertical-rl]">
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-white border border-r-0 border-line rounded-l-md px-1.5 py-3 text-[12px] font-semibold text-pine hover:bg-paper [writing-mode:vertical-rl]">
           Birdie
         </button>
       )}
       {!open && !tucked && (
-        <div className="md:hidden fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-40 flex items-end gap-1.5">
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 md:bottom-5 md:right-5 z-40 flex items-end gap-1.5">
           <button type="button" onClick={tuck} aria-label="Tuck Birdie away" title="Tuck Birdie away"
             className="mb-1 w-9 h-9 rounded-full bg-white border border-line text-ink-muted hover:text-ink text-[13px] leading-none flex items-center justify-center">›</button>
           {/* Cam 2026-10-19: "it must be obvious that this is where you ask
-              questions". On md+ "Ask Birdie" sits in the top bar (OperatorSidebar);
-              here, the circle says "Ask" so it doesn't read as a logo. Same 56px
-              footprint, so pages' insets that clear it still hold. */}
+              questions" — the circle says "Ask" so it doesn't read as a logo.
+              W2-1: back in the corner on every screen (it reverses #143's top-bar
+              button); the › beside it tucks it to an edge tab when it is in the way. */}
           <button type="button" onClick={show} aria-label="Ask Birdie"
             className="w-14 h-14 rounded-full bg-white border border-pine/30 hover:border-pine/60 transition-colors flex flex-col items-center justify-center gap-0.5"
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>

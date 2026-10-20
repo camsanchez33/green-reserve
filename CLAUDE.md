@@ -220,13 +220,14 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 ## Homepage direction — READ `HOMEPAGE_SPEC.md` §0 FIRST (Cam 2026-10-07)
 
 HOME-2 is Cam's own layout: one full-screen photo with the cream logo
-centred, "The tee sheet your course deserves.", one sentence on what it is and
-why it's free for courses, and Learn more (Cam 2026-10-19: Book a demo came off the hero; it stays top right and after the demo) → what it is
-(paragraph, bullets, "See how it works" + "Learn more about the tee sheet"
-cards) → what your course gets (only features that exist today; pro-shop
-access waits until built) → the working demo (tee sheet on a laptop, golfer
-phone beside it) with Book a demo → the logo again with "Ready when your
-course is." The detail, FAQ (+ its JSON-LD), about and contact live on
+centred, "The tee sheet your course deserves.", one sentence on what it is
+ending "Free for your course." (W2-H1, Cam 2026-10-19: no fee model in the hero), and Learn more (Cam 2026-10-19: Book a demo came off the hero; it stays top right and after the demo) → what it is and
+what your course gets, in ONE list (paragraph, bullets of features that exist
+today, then the one fee line in LQ-2 wording, "See how it works" + "Learn more
+about the tee sheet" cards; W2-H2 merged the separate "what your course gets"
+block, which repeated it) → the working demo (tee sheet on a laptop, golfer
+phone beside it) with Book a demo → the footer, "GreenReserve LLC" (W2-H3: the
+closing logo + "Ready when your course is." is gone). The detail, FAQ (+ its JSON-LD), about and contact live on
 `/teesheet`. `src/app/HomeContent.tsx` + `home.module.css`, ONE client island
 `src/components/home/TeeSheetDemo.tsx`, whose every label must match the real
 dashboard tee sheet and booking flow. Every "Book a demo" goes to `/demo`
@@ -287,7 +288,7 @@ set there. Self-contained public pages that skip the Nav (/for-courses, setup sh
 - Email template: ONE light template for all emails (operator + golfer) — white body, ink text, pine accents (`#1b4332`), sharp corners (`border-radius:4px`), zinc border. LOGO-1 (Cam 2026-09-30): the lockup sits TOP-LEFT of every email (`public/brand/email-logo-3x.png`, shown at 180px — rendered from the vector at 3x because email clients don't show SVG); the footer is text only, "GreenReserve · greenreserve.app".
 - Logo (LOGO-1): the vector lockup `public/brand/logo.svg` (cream: `logo-cream.svg`) everywhere on the web, with `unoptimized` on next/image — never the old raster `logo-lockup*.png`. Homepage header (HOME-2): no nav logo — the hero's centred logo replaces it; Operator login + Book a demo top-right. Every other page keeps the logo top-left. Browser-tab icons (`src/app/icon.svg`, `icon.png`, `favicon.ico`) are JUST the golfer (Cam 2026-09-30: "it should just be this guy") — pine, and cream in dark mode via the SVG's media query; the home-screen icon (`apple-icon.png`, `public/apple-touch-icon.png`) is the pine golfer on paper, since iOS paints transparency black. The golfer mark alone is `public/brand/golfer.svg`.
 - PERS-1 (Cam 2026-10-05): every course-owned golfer page (book, confirmation, check-in, manage) wears the course's OWN uploads through `<CourseHeaderBar photoUrl logoUrl>` — the hero photo becomes a short band, the logo sits beside the name. No per-page images, no page builder. The one extra knob is `Course.confirmationNote` (Settings → Your course), shown on the confirmation screen and in the confirmation email
-- Birdie (BIRDIE_AI_SPEC B4a/B4b, Cam 2026-10-05): the dashboard assistant reads live data through `src/lib/birdie/tools.ts` and DRAFTS changes through `src/lib/birdie/proposals.ts` — a confirm card whose button calls the page's own route. Birdie never writes. A new Birdie action needs: a propose tool, its route in `PROPOSAL_ROUTES` (plus a `BODY_RULES` entry when the route does more than one thing), and a check in `scripts/birdie-isolation-test.ts`. ACT-2 (2026-10-07): Birdie also drafts tee-sheet changes — move a group, block/reopen a run of times, add a phone booking or walk-in, send a pay link; a card may carry several calls (`calls`), run in order. Money, refunds, cancelling (waits on Cam), the cancellation policy, Stripe and staff stay off it. Where it lives (Cam 2026-10-19, "must be obvious … that it's there at all"): on md+ an "Ask Birdie" button in the operator top bar (`openBirdie()` in `lib/birdie/ask.ts`) — no floating launcher, so it never covers a page's buttons; below md the 56px circle reads "Ask" and can be tucked to an edge tab
+- Birdie (BIRDIE_AI_SPEC B4a/B4b, Cam 2026-10-05): the dashboard assistant reads live data through `src/lib/birdie/tools.ts` and DRAFTS changes through `src/lib/birdie/proposals.ts` — a confirm card whose button calls the page's own route. Birdie never writes. A new Birdie action needs: a propose tool, its route in `PROPOSAL_ROUTES` (plus a `BODY_RULES` entry when the route does more than one thing), and a check in `scripts/birdie-isolation-test.ts`. ACT-2 (2026-10-07): Birdie also drafts tee-sheet changes — move a group, block/reopen a run of times, add a phone booking or walk-in, send a pay link; a card may carry several calls (`calls`), run in order. Money, refunds, cancelling (waits on Cam), the cancellation policy, Stripe and staff stay off it. Where it lives (W2-1, Cam 2026-10-19, reversing the md+ top-bar button): the 56px "Ask" circle in the bottom corner on EVERY screen size, with a › beside it that tucks it to an edge tab (remembered per browser) when it covers a page's buttons; no top-bar button
 - NO Birdie dog artwork anywhere (Cam 2026-09-30: "unprofessional — it should just be the little golfer logo"). 404, empty states, coming-soon pages and the assistant's avatar use the golfer mark, and copy never speaks as the character ("We couldn't find…", not "Birdie couldn't…"). The assistant keeps the NAME Birdie (a golf term).
 
 ### BANNED

@@ -26,7 +26,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 116,
+      "lines": 97,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6772,7 +6772,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1166,
+      "lines": 1177,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7690,7 +7690,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 289,
+      "lines": 282,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7713,7 +7713,6 @@
         "@/components/birdie/BirdieWidget",
         "@/components/dashboard/AgreementNotice",
         "@/components/dashboard/Toast",
-        "@/lib/birdie/ask",
         "@/lib/dashboard-visits",
         "@/lib/unsaved-guard",
         "@/lib/use-dashboard-access",
@@ -7999,7 +7998,7 @@
     {
       "path": "src/components/birdie/BirdieWidget.tsx",
       "lines": 229,
-      "purpose": "BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its phone launcher (on md+ the top bar's \"Ask Birdie\" opens it).",
+      "purpose": "BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its launcher in the bottom corner on every screen (W2-1, Cam 2026-10-19).",
       "brain": [],
       "exports": [
         {
@@ -10204,7 +10203,7 @@
     },
     {
       "path": "src/lib/birdie/ask.ts",
-      "lines": 38,
+      "lines": 33,
       "purpose": "AN-3 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10225,10 +10224,6 @@
           "kind": "fn"
         },
         {
-          "name": "openBirdie",
-          "kind": "fn"
-        },
-        {
           "name": "useBirdieReady",
           "kind": "fn"
         }
@@ -10244,7 +10239,6 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/settings/page.tsx",
-        "src/components/OperatorSidebar.tsx",
         "src/components/birdie/BirdieWidget.tsx",
         "src/components/birdie/ConfirmCard.tsx"
       ]
@@ -15668,7 +15662,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 229,
+      "lines": 246,
       "purpose": "",
       "brain": [],
       "exports": [

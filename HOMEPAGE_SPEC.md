@@ -345,3 +345,10 @@ Items (nothing built yet):
 - **W2-H3 Closing section.** Remove the logo + "Ready when your course is." block. Footer line at the bottom: "GreenReserve LLC" (entity: GreenReserve LLC, New York).
 - **W2-H4 Ask a question (/for-courses#ask).** Completely rethink it — needs questions to Cam first.
 - **W2-H5 Book a demo flow.** Think through what happens end to end after a course books a call on Cal.com (confirmation, reminders, what the call covers, what follows) and make it smooth.
+
+Decisions (Cam 2026-10-20, asked in session):
+- W2-H1: the hero says "Free for your course."; the golfer fee is disclosed once, lower down (under the "what it is" list), in LQ-2 wording.
+- W2-H4: FAQ + a short form, with AI answering first ("Did that answer your question?" → if not, reach out to us).
+- W2-H5: prep questions at booking (wording still to decide with Cam), our own confirmation email, a reminder the day before. Nothing automatic after the call — "no guarantee things go well", so any follow-up is sent by Cam.
+
+Shipped (2026-10-20): W2-H1, W2-H2 (the "What your course gets" block merged into the "what it is" list; the monthly review moved into the list), W2-H3 (closing logo block removed; the footer reads "© <year> GreenReserve LLC").
