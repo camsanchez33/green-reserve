@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendMessageNotificationEmail({
         recipientEmail: ADMIN_EMAIL,
-        recipientName: 'GreenReserve Team',
+        recipientName: 'there', // to the GreenReserve inbox: "Hi there," (greetings use first names)
         senderName,
         courseName: course.name,
         messageBody: body.trim(),

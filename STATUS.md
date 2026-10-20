@@ -4,16 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-20 02:19 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1028831` · working tree **11 dirty file(s)**
+Generated 2026-10-20 02:31 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a58eab3` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 42 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 43 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
 | `6956862` | 2026-10-20 | W2-7 part A: review fixes — hiding an item leaves its options alone |
 | `43dd9d7` | 2026-10-20 | W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling |
+| `8287f54` | 2026-10-19 | Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150) |
 | `cb98de8` | 2026-10-19 | W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149) |
 | `223121d` | 2026-10-19 | Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148) |
 | `95da45f` | 2026-10-19 | Member portal: show a resident their own spot at the resident rate, as booking charges (#146) |
@@ -57,19 +58,16 @@ Generated 2026-10-20 02:19 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (8 file(s))
 
 - `M  CLAUDE.md`
 - `M  docs/CODEMAP.md`
 - `M  docs/codemap.json`
-- `A  public/brand/email-mark-2x.png`
-- `A  public/brand/mark-1024.png`
-- `A  public/brand/mark-cream-1024.png`
-- `A  public/brand/mark-cream.svg`
-- `A  public/brand/mark.svg`
-- `M  src/app/receipt/[bookingId]/page.tsx`
-- `M  src/components/OperatorSidebar.tsx`
+- `A  public/brand/email-golfer-3x.png`
+- `M  scripts/walk1-fixes-test.ts`
+- `M  src/app/api/operator/messages/route.ts`
 - `M  src/lib/email.ts`
+- `M  src/lib/submit-change-request.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -196,6 +194,7 @@ Nothing awaiting review.
 - `1028831` 2026-10-20 — queue/spec update
 - `6956862` 2026-10-20 — W2-7 part A: review fixes — hiding an item leaves its options alone
 - `43dd9d7` 2026-10-20 — W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling
+- `8287f54` 2026-10-19 — Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150)
 - `cb98de8` 2026-10-19 — W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)
 - `223121d` 2026-10-19 — Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)
 - `abb4518` 2026-10-19 — queue/spec update (#147)
@@ -204,7 +203,6 @@ Nothing awaiting review.
 - `dbd4737` 2026-10-19 — Status board: regenerate (#144)
 - `428da80` 2026-10-19 — Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)
 - `0419675` 2026-10-19 — Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)
-- `b14b998` 2026-10-19 — Course groups: one golfer page and one resident list for courses run together (#141)
 
 ---
 
