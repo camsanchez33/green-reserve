@@ -168,7 +168,6 @@
   },
   "src/app/dashboard/settings/page.tsx": {
     "card": 1,
-    "uppercase": 1,
     "input": 2,
     "lucide": 3
   },

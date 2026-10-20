@@ -117,16 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-20 00:34 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 640bc5a</span>
-    <span>tree clean</span>
+    <span>2026-10-20 01:32 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ f9338d3</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
 <div class="lede">40 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">640bc5a</span><span>W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text</span></li>
-<li><span class="h">a13900e</span><span>W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time</span></li>
+<li><span class="h">f9338d3</span><span>W2-4/5: price periods inside one schedule; Prices &amp; fees reorganised</span></li>
+<li><span class="h">223121d</span><span>Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)</span></li>
 <li><span class="h">95da45f</span><span>Member portal: show a resident their own spot at the resident rate, as booking charges (#146)</span></li>
 <li><span class="h">9910cf6</span><span>Member portal: show members exactly what booking charges (#145)</span></li>
 <li><span class="h">dbd4737</span><span>Status board: regenerate (#144)</span></li>
@@ -174,6 +174,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
+<section><h2>Working tree right now</h2>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M OPERATOR_REWORK_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/operator/schedule/preview/route.ts</code></li><li><code>M src/lib/schedule-service.ts</code></li></ul>
+</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
@@ -214,10 +219,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-19 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 2d</td></tr>
-<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 0d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 0d</td></tr>
+<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 7d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 11d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 11d</td></tr>
@@ -252,8 +257,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 11d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">640bc5a</td><td class="num">2026-10-20</td><td>W2 quick wins: review fixes — shared-nine end slot, Card, stale Birdie text</td></tr>
-<tr><td class="num">a13900e</td><td class="num">2026-10-20</td><td>W2 quick wins: homepage free hero + LLC footer, Birdie back in the corner, owner label, last tee time at the end time</td></tr>
+<tr><td class="num">f9338d3</td><td class="num">2026-10-20</td><td>W2-4/5: price periods inside one schedule; Prices &amp; fees reorganised</td></tr>
+<tr><td class="num">223121d</td><td class="num">2026-10-19</td><td>Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)</td></tr>
 <tr><td class="num">abb4518</td><td class="num">2026-10-19</td><td>queue/spec update (#147)</td></tr>
 <tr><td class="num">95da45f</td><td class="num">2026-10-19</td><td>Member portal: show a resident their own spot at the resident rate, as booking charges (#146)</td></tr>
 <tr><td class="num">9910cf6</td><td class="num">2026-10-19</td><td>Member portal: show members exactly what booking charges (#145)</td></tr>

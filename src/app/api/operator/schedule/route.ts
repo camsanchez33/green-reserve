@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { listSchedules, createSchedule, updateSchedule, deleteSchedule, ScheduleConflictError, ScheduleProductError } from '@/lib/schedule-service';
+import { listSchedules, createSchedule, updateSchedule, deleteSchedule, saveSchedulePlan, ScheduleConflictError, ScheduleProductError, SchedulePlanError, type SchedulePlan } from '@/lib/schedule-service';
 
 // L2: the service refuses a save that would double-book a nine (409) or names a
 // product this course does not own (400); everything else is unchanged.
 function scheduleError(err: unknown) {
   if (err instanceof ScheduleConflictError) return NextResponse.json({ error: err.message, conflict: true }, { status: 409 });
   if (err instanceof ScheduleProductError) return NextResponse.json({ error: err.message }, { status: 400 });
+  if (err instanceof SchedulePlanError) return NextResponse.json({ error: err.message }, { status: 400 });
   return null;
 }
 
@@ -67,4 +68,21 @@ export async function DELETE(req: NextRequest) {
   const removed = await deleteSchedule(id, { scopeCourseId: session.courseId });
   if (!removed) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json({ success: true });
+}
+
+// W2-4: save a whole schedule — its shared hours and every price period — at
+// once (lib/schedule-service saveSchedulePlan). Returns the course's schedules.
+export async function PUT(req: NextRequest) {
+  const session = await resolveDashboardSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  { const denied = requirePermission(session, 'schedule.edit'); if (denied) return denied; } // SP-A
+  const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
+
+  const body = await req.json().catch(() => null) as SchedulePlan | null;
+  if (!body || !Array.isArray(body.periods) || !Array.isArray(body.replaces)) return NextResponse.json({ error: 'Tell us what you are changing.' }, { status: 400 });
+  try {
+    const rows = await saveSchedulePlan(session.courseId, body);
+    if (!rows) return NextResponse.json({ error: 'That schedule isn’t on this course. Refresh and try again.' }, { status: 404 });
+    return NextResponse.json(rows);
+  } catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
