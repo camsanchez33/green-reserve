@@ -21,6 +21,7 @@ import { centsToDollarsOr0, dollarsToCentsOr0 } from './money';
 import { regenerateUpcoming } from './tee-sheet-engine';
 import { logSettingsChanged } from './course-timeline';
 import { findScheduleConflict } from './schedule-conflict';
+import { checkPeriods } from './schedule-plans';
 
 export type ScheduleScope = { scopeCourseId?: string; actor?: string };
 
@@ -172,6 +173,93 @@ export async function updateSchedule(id: string, data: Record<string, unknown>, 
   await regenerateUpcoming(existing.courseId);
 
   return scheduleToWire(updated);
+}
+
+/**
+ * W2-4: one schedule = shared hours for one round on some days, split into
+ * price periods (lib/schedule-plans.ts). The whole schedule is saved at once:
+ * the rows in `replaces` (the schedule as it was) become exactly `periods` —
+ * kept rows updated in place, new ones created, dropped ones deleted — in one
+ * transaction, then the window is rebuilt once. `periods: []` deletes the
+ * schedule; `active: false` pauses every period together.
+ */
+export type SchedulePlan = {
+  replaces: string[];
+  productId?: string | null;
+  daysOfWeek: number[];
+  intervalMinutes: number;
+  holes?: number;
+  active?: boolean;
+  periods: Record<string, unknown>[];   // { id?, tierName, startTime, endTime, money (dollars), walkingAllowed }
+};
+
+export class SchedulePlanError extends Error {
+  constructor(message: string) { super(message); this.name = 'SchedulePlanError'; }
+}
+
+/** Returns null when a row in `replaces` is not this course's. */
+export async function saveSchedulePlan(courseId: string, plan: SchedulePlan, opts: ScheduleScope = {}) {
+  const replaces = [...new Set((plan.replaces ?? []).map(String))];
+  const existing = replaces.length ? await prisma.teeTimeSchedule.findMany({ where: { id: { in: replaces }, courseId } }) : [];
+  if (existing.length !== replaces.length) return null;
+  type Period = Record<string, unknown> & { id?: string; tierName?: string; startTime: unknown; endTime: unknown };
+  const periods: Period[] = (plan.periods ?? []).map(p => ({ ...p, id: p.id ? String(p.id) : undefined, tierName: p.tierName == null ? undefined : String(p.tierName), startTime: p.startTime, endTime: p.endTime }));
+  if (periods.some(p => p.id && !replaces.includes(p.id))) return null;
+
+  if (periods.length === 0) {
+    if (!replaces.length) throw new SchedulePlanError('Add at least one price period.');
+    await prisma.teeTimeSchedule.deleteMany({ where: { id: { in: replaces }, courseId } });
+    if (opts.actor) await logSettingsChanged(courseId, [{ field: 'schedule', from: 'removed', to: null }], opts.actor);
+    await regenerateUpcoming(courseId);
+    return listSchedules(courseId);
+  }
+
+  const daysOfWeek = Array.isArray(plan.daysOfWeek) ? plan.daysOfWeek.map(Number).filter(d => d >= 0 && d <= 6) : [];
+  if (!daysOfWeek.length) throw new SchedulePlanError('Pick at least one day.');
+  const intervalMinutes = Number(plan.intervalMinutes);
+  const why = checkPeriods(periods, intervalMinutes);
+  if (why) throw new SchedulePlanError(why);
+  const product = await resolveProduct(courseId, plan.productId);
+  const productId = product?.id ?? null;
+  const holes = product ? product.holes : (Number(plan.holes) || 18);
+  const active = plan.active !== false;
+
+  // The periods run back to back, so they never overlap each other; each is
+  // checked against the course's OTHER schedules (the old rows are going away).
+  if (active) {
+    const [rows, products, nines] = await Promise.all([
+      prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, active: true } }),
+      prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true } }),
+      prisma.nine.findMany({ where: { courseId }, select: { id: true, name: true } }),
+    ]);
+    const others = rows.filter(r => !replaces.includes(r.id));
+    for (const p of periods) {
+      const clash = findScheduleConflict({ productId, daysOfWeek, startTime: String(p.startTime), endTime: String(p.endTime), active: true }, others, products, nines);
+      if (clash) throw new ScheduleConflictError(clash);
+    }
+  }
+
+  const rowData = (p: Record<string, unknown>) => ({
+    productId, daysOfWeek, intervalMinutes, holes, active,
+    tierName: String(p.tierName ?? '').trim() || 'standard',
+    startTime: String(p.startTime), endTime: String(p.endTime),
+    // The editor sends dollars; the columns are cents. Every price is sent for every period.
+    ...scheduleMoneyForCreate(p),
+    walkingAllowed: p.walkingAllowed !== false,
+  });
+  const keep = new Set(periods.map(p => p.id).filter(Boolean) as string[]);
+  await prisma.$transaction([
+    ...replaces.filter(id => !keep.has(id)).map(id => prisma.teeTimeSchedule.delete({ where: { id } })),
+    ...periods.map(p => p.id
+      ? prisma.teeTimeSchedule.update({ where: { id: p.id }, data: rowData(p) })
+      : prisma.teeTimeSchedule.create({ data: { courseId, ...rowData(p) } })),
+  ]);
+
+  if (opts.actor) {
+    await logSettingsChanged(courseId, [{ field: 'schedule', from: replaces.length ? 'changed' : null, to: `${periods.length} price period${periods.length === 1 ? '' : 's'}${active ? '' : ' (paused)'}` }], opts.actor);
+  }
+  await regenerateUpcoming(courseId);
+  return listSchedules(courseId);
 }
 
 /** Returns false when nothing matched (so the caller can 404). */

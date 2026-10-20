@@ -5,7 +5,6 @@ import { US_TIMEZONES } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Save, Loader2, X } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
 import { ShopCatalog } from '@/components/dashboard/ShopCatalog';
@@ -21,6 +20,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { walkingWords } from '@/lib/walking';
 import { askBirdie, useBirdieReady, APPLIED_EVENT } from '@/lib/birdie/ask';
 import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityFields } from '@/lib/facilities';
+import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
 import { WhoPaysWhat } from '@/components/dashboard/settings/WhoPaysWhat';
@@ -751,21 +751,35 @@ function SettingsPageInner() {
           {/* ── Member & resident pricing ── */}
           {active==='Prices & fees' && (
             <div className="space-y-5">
-              {/* Cam 2026-10-19: member vs resident pricing confused people. One
-                  table of who pays what, read from Schedule and Members. */}
+              {/* W2-5 (Cam 2026-10-19: "the whole pricing and fees … makes no sense").
+                  Read top to bottom: 1. who pays what (the answer, read from where
+                  prices are set), 2. which kinds of golfer get their own price and
+                  where each is set, 3. the fees golfers can be charged. The pricing
+                  rules underneath are unchanged. */}
               <WhoPaysWhat accessLoaded={access.loaded} accessFailed={!!access.failed} canSeeSchedule={access.can('schedule.view')} canSeeMembers={access.can('members.view')} />
-              <SectionCard title="Members and residents">
-                <Toggle label="We offer member prices" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
-                <Toggle label="We offer resident prices" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
-                {!!form.hasResidentPricing && (
-                  <>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field label="Who counts as a resident: county"><FInput value={form.residentCounty as string} onChange={v=>set('residentCounty',v)} placeholder="e.g. Bergen"/></Field>
-                      <Field label="State"><FInput value={form.residentState as string} onChange={v=>set('residentState',v)} maxLength={2} placeholder="NJ"/></Field>
+              <SectionCard title="Who gets their own price">
+                <p className="text-sm text-ink-soft -mt-2">Everyone pays your public price unless they are one of these. Public prices, and any period like twilight, are set in <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Schedule</Link>.</p>
+                <div className="border-t border-line-soft pt-4">
+                  <Toggle label="Members" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
+                  <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasMemberPricing
+                    ? <>Each membership&apos;s price is set on the membership in <Link href="/dashboard/members" className="text-pine hover:underline">Members</Link>. A membership without its own price pays the member price in Schedule, or the public price.</>
+                    : 'Turn on if members pay less than the public.'}</p>
+                </div>
+                <div className="border-t border-line-soft pt-4">
+                  <Toggle label="Residents" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
+                  <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasResidentPricing
+                    ? <>The resident price is set in <Link href="/dashboard/schedules" className="text-pine hover:underline">Schedule</Link>, and your list of residents is in <Link href="/dashboard/members" className="text-pine hover:underline">Members</Link>. A resident books one player at the resident price: themselves.</>
+                    : 'Turn on if people who live locally pay less.'}</p>
+                  {!!form.hasResidentPricing && (
+                    <div className="mt-3 space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label="Who counts as a resident: county"><FInput value={form.residentCounty as string} onChange={v=>set('residentCounty',v)} placeholder="e.g. Bergen"/></Field>
+                        <Field label="State"><FInput value={form.residentState as string} onChange={v=>set('residentState',v)} maxLength={2} placeholder="NJ"/></Field>
+                      </div>
+                      <Toggle label="Residents show proof of residency at check-in" checked={!!form.residentProofRequired} onChange={()=>tog('residentProofRequired')}/>
                     </div>
-                    <Toggle label="Residents show proof of residency at check-in" checked={!!form.residentProofRequired} onChange={()=>tog('residentProofRequired')}/>
-                  </>
-                )}
+                  )}
+                </div>
               </SectionCard>
             </div>
           )}
@@ -846,11 +860,12 @@ function SettingsPageInner() {
               {/* SP-B: the course's cancellation & card policy. The preview is
                   describePolicy() — word for word what golfers are shown. */}
               {isStaffLogin ? (
-                <SectionCard title="Cancellation & card">
+                <SectionCard title="Fees golfers can be charged">
                   <ul className="space-y-1 text-sm text-ink-soft">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
                   <p className="text-xs text-ink-soft">Only the course owner&apos;s login can change the cancellation policy.</p>
                 </SectionCard>
-              ) : (<SectionCard title="Cancellation & card">
+              ) : (<SectionCard title="Fees golfers can be charged">
+                <p className="text-sm text-ink-soft -mt-2">Your late-cancellation and no-show fees, and when golfers get their check-in link. Golfers pay $1.50 per player on each online booking, added to your price.</p>
                 {/* CARD-1 (Cam 2026-10-05: "a way for the course to not require a card"): the
                     choice made explicit. Nothing new is stored — "no card" IS both fees at $0
                     (cardRequired() in lib/cancel-policy), so picking it clears the fees and the
@@ -929,7 +944,7 @@ function SettingsPageInner() {
                 </Field>
                 <Field label="Rain check policy"><FInput value={form.rainCheckPolicy as string} onChange={v=>set('rainCheckPolicy',v)} placeholder="e.g. Rain checks issued for 9+ holes of rain"/></Field>
                 <div className="bg-paper/70 rounded-md p-4">
-                  <Eyebrow className="mb-2">What golfers will see</Eyebrow>
+                  <div className="text-[13px] font-semibold text-ink mb-2">What golfers will see</div>
                   <ul className="space-y-1 text-sm text-ink">{formTerms.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
                   <p className="text-xs text-ink-soft mt-2">{formTerms.cardNeeded ? 'A card is saved at booking because a fee above can be charged.' : 'No card is asked for at booking — there is nothing to charge it for.'} Weather and course-closed cancellations are always free.</p>
                 </div>

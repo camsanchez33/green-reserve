@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 440,
+    "files": 441,
     "routes": 224,
-    "libs": 134,
+    "libs": 135,
     "models": 43,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5171,7 +5171,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/preview/route.ts",
-      "lines": 24,
+      "lines": 26,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5189,6 +5189,7 @@
       "guard": "file",
       "imports": [
         "@/lib/schedule-preview",
+        "@/lib/schedule-service",
         "@/lib/session",
         "next/server"
       ],
@@ -5196,7 +5197,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/route.ts",
-      "lines": 71,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5215,6 +5216,10 @@
         {
           "name": "POST",
           "kind": "route"
+        },
+        {
+          "name": "PUT",
+          "kind": "route"
         }
       ],
       "route": "/api/operator/schedule",
@@ -5223,7 +5228,8 @@
         "DELETE",
         "GET",
         "PATCH",
-        "POST"
+        "POST",
+        "PUT"
       ],
       "auth": "operator",
       "guard": "file",
@@ -6742,7 +6748,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 520,
+      "lines": 583,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -6764,6 +6770,7 @@
         "@/components/ui/Card",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/schedule-plans",
         "@/lib/use-dashboard-access",
         "next/link",
         "react"
@@ -6772,7 +6779,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1177,
+      "lines": 1192,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6797,7 +6804,6 @@
         "@/components/dashboard/settings/FinishSetup",
         "@/components/dashboard/settings/WhoPaysWhat",
         "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/birdie/ask",
@@ -6810,6 +6816,7 @@
         "@/lib/use-dashboard-access",
         "@/lib/walking",
         "lucide-react",
+        "next/link",
         "next/navigation",
         "react"
       ],
@@ -9011,7 +9018,6 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
-        "src/app/dashboard/settings/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/StaffPermissions.tsx"
@@ -14865,8 +14871,50 @@
       ]
     },
     {
+      "path": "src/lib/schedule-plans.ts",
+      "lines": 98,
+      "purpose": "W2-4 (Cam 2026-10-19:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "checkPeriods",
+          "kind": "fn"
+        },
+        {
+          "name": "groupSchedules",
+          "kind": "fn"
+        },
+        {
+          "name": "normDays",
+          "kind": "fn"
+        },
+        {
+          "name": "PlanGroup",
+          "kind": "type"
+        },
+        {
+          "name": "PlanRow",
+          "kind": "type"
+        },
+        {
+          "name": "snapToGrid",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/schedules/page.tsx",
+        "src/lib/schedule-service.ts"
+      ]
+    },
+    {
       "path": "src/lib/schedule-preview.ts",
-      "lines": 110,
+      "lines": 125,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -14899,6 +14947,7 @@
       "imports": [
         "./course-time",
         "./prisma",
+        "./schedule-service",
         "./schedule-wire",
         "./tee-sheet-engine"
       ],
@@ -14908,7 +14957,7 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 216,
+      "lines": 304,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [
@@ -14925,7 +14974,19 @@
           "kind": "fn"
         },
         {
+          "name": "saveSchedulePlan",
+          "kind": "fn"
+        },
+        {
           "name": "ScheduleConflictError",
+          "kind": "class"
+        },
+        {
+          "name": "SchedulePlan",
+          "kind": "type"
+        },
+        {
+          "name": "SchedulePlanError",
           "kind": "class"
         },
         {
@@ -14955,16 +15016,19 @@
         "./money",
         "./prisma",
         "./schedule-conflict",
+        "./schedule-plans",
         "./schedule-wire",
         "./tee-sheet-engine"
       ],
       "usedBy": [
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/operator/schedule/preview/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/proposals.ts",
-        "src/lib/birdie/tools.ts"
+        "src/lib/birdie/tools.ts",
+        "src/lib/schedule-preview.ts"
       ]
     },
     {

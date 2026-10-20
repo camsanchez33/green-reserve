@@ -38,7 +38,8 @@ check('an unchanged open time is not counted', diffDay([row('07:00', 5500)], des
 
 const page = readFileSync('src/app/dashboard/schedules/page.tsx', 'utf8');
 check('no Apply-to-tee-sheet button', !page.includes('Apply to tee sheet') && !page.includes('regenerate-tee-times'));
-check('every save, pause and delete shows the preview first', (page.match(/confirmWithPreview\(/g) || []).length >= 4 && page.includes('/api/operator/schedule/preview'));
+// W2-4: save, pause and delete all go through submit(), which previews first.
+check('every save, pause and delete shows the preview first', /function submit[\s\S]{0,200}confirmWithPreview\(/.test(page) && (page.match(/\bsubmit\(/g) || []).length >= 4 && page.includes('/api/operator/schedule/preview'));
 check('the week view, prices and closed days', page.includes('>Your week</h2>') && page.includes('>Prices</h2>') && page.includes('>Closed days</h2>'));
 check('runs are named by the course', page.includes('Morning, Twilight'));
 const engine = readFileSync('src/lib/tee-sheet-engine.ts', 'utf8');

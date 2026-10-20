@@ -7,7 +7,10 @@
 //   2. Prices — every price period in one table. Periods are the course's own
 //      (Cam: "up to the course if they want twilight times and morning times").
 //   3. Closed days — a month calendar; click a day to close or reopen it.
-// A price period is a TeeTimeSchedule row (tierName = its name). Saving applies
+// A price period is a TeeTimeSchedule row (tierName = its name). W2-4 (Cam
+// 2026-10-19): a SCHEDULE is the hours for one round on some days, split into
+// any number of price periods, edited and saved as one (lib/schedule-plans.ts
+// groups the rows; PUT /api/operator/schedule saves them together). Saving applies
 // to the tee sheet straight away (lib/schedule-service regenerates), and every
 // save, pause and delete first shows what it will change (lib/schedule-preview).
 import React, { useState, useEffect, useCallback } from 'react';
@@ -20,6 +23,7 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { Card } from '@/components/ui/Card';
 import { formatTeeTime as fmtTime } from '@/lib/format';
+import { groupSchedules, snapToGrid, checkPeriods, normDays, type PlanGroup } from '@/lib/schedule-plans';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const WEEK = [1, 2, 3, 4, 5, 6, 0]; // Monday first, the way a course reads its week
@@ -42,7 +46,16 @@ type ProductOpt = { id: string; label: string; holes: number; active: boolean };
 type Preview = { days: number; added: number; removed: number; repriced: number; bookedKept: number };
 type Pending = { title: string; doing: string; preview: Preview | null; error: string; run: () => Promise<void> };
 
-const emptyForm = () => ({ productId: '' as string, tierName: '', daysOfWeek: [0, 1, 2, 3, 4, 5, 6] as number[], startTime: '06:30', endTime: '17:30', intervalMinutes: 8, holes: 18, greenFeeWeekday: 65, greenFeeWeekend: 85, memberRateWeekday: '', memberRateWeekend: '', residentRateWeekday: '', residentRateWeekend: '', cartFee: 18, walkingAllowed: true });
+type PeriodForm = {
+  id?: string; tierName: string; from: string;
+  greenFeeWeekday: number; greenFeeWeekend: number; memberRateWeekday: string; memberRateWeekend: string;
+  residentRateWeekday: string; residentRateWeekend: string; cartFee: number; walkingAllowed: boolean;
+};
+const emptyPeriod = (from: string): PeriodForm => ({ tierName: '', from, greenFeeWeekday: 65, greenFeeWeekend: 85, memberRateWeekday: '', memberRateWeekend: '', residentRateWeekday: '', residentRateWeekend: '', cartFee: 18, walkingAllowed: true });
+const emptyForm = () => ({ productId: '' as string, daysOfWeek: [0, 1, 2, 3, 4, 5, 6] as number[], startTime: '06:30', endTime: '17:30', intervalMinutes: 8, holes: 18, periods: [emptyPeriod('06:30')] });
+const str = (n: number | null) => n == null ? '' : n.toString();
+const periodFromRow = (s: Schedule): PeriodForm => ({ id: s.id, tierName: s.tierName === 'standard' ? '' : s.tierName, from: s.startTime, greenFeeWeekday: s.greenFeeWeekday, greenFeeWeekend: s.greenFeeWeekend, memberRateWeekday: str(s.memberRateWeekday), memberRateWeekend: str(s.memberRateWeekend), residentRateWeekday: str(s.residentRateWeekday), residentRateWeekend: str(s.residentRateWeekend), cartFee: s.cartFee, walkingAllowed: s.walkingAllowed });
+const groupName = (g: PlanGroup<Schedule>) => g.periods.length > 1 ? g.periods.map(p => p.tierName === 'standard' ? 'Tee times' : p.tierName).join(' · ') : (g.periods[0].tierName === 'standard' ? 'these tee times' : `"${g.periods[0].tierName}"`);
 
 /** "Adds 24 tee times, changes the price on 40 …" — what a save does to the next days. */
 function previewLines(p: Preview): string[] {
@@ -69,7 +82,7 @@ export default function SchedulesPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [editGroup, setEditGroup] = useState<PlanGroup<Schedule> | null>(null);
   const [form, setForm] = useState(emptyForm());
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
@@ -122,14 +135,31 @@ export default function SchedulesPage() {
   const showMember = hasMember || schedules.some(s => s.memberRateWeekday != null);
   const showResident = hasResident || schedules.some(s => s.residentRateWeekday != null);
 
-  function openAdd() { setForm({ ...emptyForm(), productId: view === 'other' ? '' : view }); setEditId(null); setShowForm(true); }
+  const groups = groupSchedules(schedules);
+  const groupOf = (id: string) => groups.find(g => g.ids.includes(id)) ?? null;
+  function openAdd() { setForm({ ...emptyForm(), productId: view === 'other' ? '' : view }); setEditGroup(null); setShowForm(true); }
   function openEdit(s: Schedule) {
     if (!canEdit) return;
-    setForm({ productId: s.productId ?? '', tierName: s.tierName === 'standard' ? '' : s.tierName, daysOfWeek: s.daysOfWeek, startTime: s.startTime, endTime: s.endTime, intervalMinutes: s.intervalMinutes, holes: s.holes, greenFeeWeekday: s.greenFeeWeekday, greenFeeWeekend: s.greenFeeWeekend, memberRateWeekday: s.memberRateWeekday?.toString() ?? '', memberRateWeekend: s.memberRateWeekend?.toString() ?? '', residentRateWeekday: s.residentRateWeekday?.toString() ?? '', residentRateWeekend: s.residentRateWeekend?.toString() ?? '', cartFee: s.cartFee, walkingAllowed: s.walkingAllowed });
-    setEditId(s.id); setShowForm(true);
+    const g = groupOf(s.id);
+    if (!g) return;
+    setForm({ productId: g.productId ?? '', daysOfWeek: g.daysOfWeek, startTime: g.startTime, endTime: g.endTime, intervalMinutes: g.intervalMinutes, holes: g.holes, periods: g.periods.map(periodFromRow) });
+    setEditGroup(g); setShowForm(true);
   }
   const toggleDay = (d: number) => setForm(f => ({ ...f, daysOfWeek: f.daysOfWeek.includes(d) ? f.daysOfWeek.filter(x => x !== d) : [...f.daysOfWeek, d].sort() }));
-  const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v, ...(k === 'startTime' ? { periods: f.periods.map((p, i) => i === 0 ? { ...p, from: String(v) } : p) } : {}) }));
+  const setPeriod = (i: number, k: keyof PeriodForm, v: unknown) => setForm(f => ({ ...f, periods: f.periods.map((p, j) => j === i ? { ...p, [k]: v } : p) }));
+  /** Split the last period: the new one starts at 3pm when that falls inside it (a twilight), else halfway, on a tee time. */
+  function addPeriod() {
+    setForm(f => {
+      const last = f.periods[f.periods.length - 1];
+      const a = toMin(last.from), b = toMin(f.endTime);
+      const pick = a < 15 * 60 && 15 * 60 < b ? 15 * 60 : Math.round((a + b) / 2);
+      const from = snapToGrid(f.startTime, Number(f.intervalMinutes), `${String(Math.floor(pick / 60)).padStart(2, '0')}:${String(pick % 60).padStart(2, '0')}`);
+      if (from <= last.from || from >= f.endTime) { toast('There is no room for another price period — move the last tee time later first.', 'warn'); return f; }
+      return { ...f, periods: [...f.periods, { ...last, id: undefined, tierName: '', from }] };
+    });
+  }
+  const removePeriod = (i: number) => setForm(f => ({ ...f, periods: f.periods.filter((_, j) => j !== i) }));
 
   /** Ask the server what a change would do, then show it before anything is saved. */
   async function confirmWithPreview(title: string, doing: string, change: Record<string, unknown>, run: () => Promise<void>) {
@@ -138,8 +168,33 @@ export default function SchedulesPage() {
     setPending(p => p && p.title === title ? { ...p, preview: r.ok ? r.data : null, error: r.ok ? '' : r.error } : p);
   }
 
-  function payload() {
-    return { ...form, tierName: form.tierName.trim() || 'standard', productId: form.productId || null, memberRateWeekday: form.memberRateWeekday || null, memberRateWeekend: form.memberRateWeekend || null, residentRateWeekday: form.residentRateWeekday || null, residentRateWeekend: form.residentRateWeekend || null };
+  /** The schedule as the server stores it: each period runs to where the next starts, the last to the last tee time. */
+  function plan(over: { active?: boolean; periods?: [] } = {}) {
+    const first = form.startTime, iv = Number(form.intervalMinutes);
+    const froms = form.periods.map((p, i) => i === 0 ? first : snapToGrid(first, iv, p.from));
+    return {
+      replaces: editGroup?.ids ?? [],
+      productId: form.productId || null,
+      daysOfWeek: form.daysOfWeek, intervalMinutes: iv, holes: form.holes,
+      active: over.active ?? (editGroup ? editGroup.active : true),
+      periods: over.periods ?? form.periods.map((p, i) => ({
+        id: p.id, tierName: p.tierName.trim() || 'standard', startTime: froms[i], endTime: froms[i + 1] ?? form.endTime,
+        greenFeeWeekday: p.greenFeeWeekday, greenFeeWeekend: p.greenFeeWeekend, cartFee: p.cartFee, walkingAllowed: p.walkingAllowed,
+        memberRateWeekday: p.memberRateWeekday || null, memberRateWeekend: p.memberRateWeekend || null,
+        residentRateWeekday: p.residentRateWeekday || null, residentRateWeekend: p.residentRateWeekend || null,
+      })),
+    };
+  }
+
+  /** Preview, then PUT the whole schedule. */
+  function submit(title: string, doing: string, body: ReturnType<typeof plan>, done: string) {
+    confirmWithPreview(title, doing, { op: 'plan', plan: body }, async () => {
+      const r = await dfetch<Schedule[]>('/api/operator/schedule', { method: 'PUT', body: JSON.stringify(body) });
+      if (!r.ok || !Array.isArray(r.data)) { toast(r.ok ? 'It came back empty — refresh and check.' : r.error); return; }
+      setSchedules(r.data);
+      setShowForm(false); setEditGroup(null);
+      toast(done, 'ok');
+    });
   }
 
   function save() {
@@ -147,49 +202,31 @@ export default function SchedulesPage() {
     if (multi && !form.productId) return toast('Pick which round these times are for.', 'warn');
     if (form.startTime >= form.endTime) return toast('The last tee time has to be after the first.', 'warn');
     if (!(Number(form.intervalMinutes) >= 1)) return toast('Set how many minutes apart tee times are.', 'warn');
+    const body = plan();
+    const why = checkPeriods(body.periods, body.intervalMinutes);
+    if (why) return toast(why, 'warn');
+    const mine = new Set(editGroup?.ids ?? []);
     const clash = schedules.find(s => {
-      if (editId && s.id === editId) return false;
+      if (mine.has(s.id)) return false;
       if (!s.active || (s.productId ?? '') !== (form.productId ?? '')) return false;
-      if (!s.daysOfWeek.some(d => form.daysOfWeek.includes(d))) return false;
+      if (!normDays(s.daysOfWeek).some(d => form.daysOfWeek.includes(d))) return false;
       return form.startTime < s.endTime && s.startTime < form.endTime;
     });
     if (clash) {
-      const days = clash.daysOfWeek.filter(d => form.daysOfWeek.includes(d)).map(d => DAYS[d]).join(', ');
+      const days = normDays(clash.daysOfWeek).filter(d => form.daysOfWeek.includes(d)).map(d => DAYS[d]).join(', ');
       return toast(`That overlaps "${clash.tierName === 'standard' ? 'your tee times' : clash.tierName}" on ${days} (${fmtTime(clash.startTime)} – ${fmtTime(clash.endTime)}). Change the hours so they don't overlap, or edit that one instead.`, 'warn');
     }
-    const body = payload();
-    const name = body.tierName === 'standard' ? 'these tee times' : `"${body.tierName}"`;
-    confirmWithPreview(editId ? `Save ${name}?` : `Add ${name}?`, 'Saving', editId ? { op: 'update', id: editId, data: body } : { op: 'create', body }, async () => {
-      const r = editId
-        ? await dfetch<Schedule>('/api/operator/schedule', { method: 'PATCH', body: JSON.stringify({ id: editId, ...body }) })
-        : await dfetch<Schedule>('/api/operator/schedule', { method: 'POST', body: JSON.stringify(body) });
-      if (!r.ok || !r.data) { toast(r.ok ? 'It came back empty — refresh and check.' : r.error); return; }
-      const row = r.data;
-      setSchedules(s => editId ? s.map(x => x.id === editId ? row : x) : [...s, row]);
-      setShowForm(false); setEditId(null);
-      toast('Saved. Your tee sheet is updated.', 'ok');
-    });
+    submit(editGroup ? 'Save this schedule?' : 'Add this schedule?', 'Saving', body, 'Saved. Your tee sheet is updated.');
   }
 
-  function toggleActive(s: Schedule) {
-    confirmWithPreview(s.active ? `Pause "${s.tierName === 'standard' ? 'these tee times' : s.tierName}"?` : `Turn "${s.tierName === 'standard' ? 'these tee times' : s.tierName}" back on?`, s.active ? 'Pausing' : 'Turning it on', { op: 'update', id: s.id, data: { active: !s.active } }, async () => {
-      const r = await dfetch<Schedule>('/api/operator/schedule', { method: 'PATCH', body: JSON.stringify({ id: s.id, active: !s.active }) });
-      if (!r.ok || !r.data) { toast(r.ok ? 'No response — refresh and check.' : r.error); return; }
-      const row = r.data;
-      setSchedules(prev => prev.map(x => x.id === s.id ? row : x));
-      setShowForm(false); setEditId(null);
-      toast(row.active ? 'Back on. Your tee sheet is updated.' : 'Paused. Its open times are off the sheet.', 'ok');
-    });
+  function toggleActive(g: PlanGroup<Schedule>) {
+    const body = plan({ active: !g.active });
+    submit(g.active ? `Pause ${groupName(g)}?` : `Turn ${groupName(g)} back on?`, g.active ? 'Pausing' : 'Turning it on', body,
+      g.active ? 'Paused. Its open times are off the sheet.' : 'Back on. Your tee sheet is updated.');
   }
 
-  function del(s: Schedule) {
-    confirmWithPreview(`Delete "${s.tierName === 'standard' ? 'these tee times' : s.tierName}"?`, 'Deleting', { op: 'delete', id: s.id }, async () => {
-      const r = await dfetch('/api/operator/schedule', { method: 'DELETE', body: JSON.stringify({ id: s.id }) });
-      if (!r.ok) { toast(r.error); return; }
-      setSchedules(prev => prev.filter(x => x.id !== s.id));
-      setShowForm(false); setEditId(null);
-      toast('Deleted. Its open times are off the sheet.', 'ok');
-    });
+  function del(g: PlanGroup<Schedule>) {
+    submit(`Delete ${groupName(g)}?`, 'Deleting', plan({ periods: [] }), 'Deleted. Its open times are off the sheet.');
   }
 
   async function runPending() {
@@ -224,6 +261,9 @@ export default function SchedulesPage() {
     </div>
   );
 
+  // Prices table: each schedule's periods together, in the order of the day.
+  const tableRows = groups.flatMap(g => g.periods.filter(s => inView.includes(s)).map((s, i) => ({ s, first: i === 0 })));
+
   // ── Your week ──────────────────────────────────────────────────────────────
   const live = inView.filter(s => s.active);
   const range = dayRange(live);
@@ -251,7 +291,7 @@ export default function SchedulesPage() {
               <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Schedule</h1>
               <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">When your tee times run and what they cost. Saving updates your tee sheet straight away, and times that already have bookings never change.</p>
             </div>
-            {canEdit && <button onClick={openAdd} className="shrink-0 bg-pine hover:bg-pine-hover text-white text-[13px] font-medium px-4 py-2 rounded-md">Add tee times</button>}
+            {canEdit && <button onClick={openAdd} className="shrink-0 bg-pine hover:bg-pine-hover text-white text-[13px] font-medium px-4 py-2 rounded-md">Add a schedule</button>}
           </div>
 
           {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
@@ -272,13 +312,13 @@ export default function SchedulesPage() {
               <h2 className="text-[17px] font-semibold text-ink">Your week</h2>
               <span className="text-[12.5px] text-ink-muted">{canEdit ? 'Click a block to change it' : ''}</span>
             </div>
-            <p className="text-[13px] text-ink-soft mb-4">Each block is a run of tee times: when the first and last go off, how far apart they are, and the public price that day.</p>
+            <p className="text-[13px] text-ink-soft mb-4">Each block is a price period: when its tee times run, how far apart they are, and the public price that day. Click one to change its schedule.</p>
             {loading ? <p className="py-8 text-center text-[13px] text-ink-muted">Loading your schedule…</p>
               : live.length === 0 ? (
                 <div className="py-10 text-center">
                   <p className="text-[14px] text-ink">No tee times set up{multi ? ' for this round' : ''} yet.</p>
                   <p className="text-[13px] text-ink-soft mt-1">Add your hours, the gap between tee times and your prices, and the tee sheet fills itself in.</p>
-                  {canEdit && <button onClick={openAdd} className="mt-4 bg-pine hover:bg-pine-hover text-white text-[13px] font-medium px-4 py-2 rounded-md">Add tee times</button>}
+                  {canEdit && <button onClick={openAdd} className="mt-4 bg-pine hover:bg-pine-hover text-white text-[13px] font-medium px-4 py-2 rounded-md">Add a schedule</button>}
                 </div>
               ) : (<>
                 {/* Laptop: the week side by side on a time axis */}
@@ -335,15 +375,15 @@ export default function SchedulesPage() {
           {inView.length > 0 && (
             <Card className="p-5">
               <h2 className="text-[17px] font-semibold text-ink">Prices</h2>
-              <p className="text-[13px] text-ink-soft mt-1 mb-4">Every run of tee times and what it costs per player. Name them however your course does: Morning, Twilight, Nine-hole evenings.</p>
+              <p className="text-[13px] text-ink-soft mt-1 mb-4">Each schedule and its price periods, per player. Name periods however your course does: Morning, Twilight, Nine-hole evenings.</p>
               <div className="overflow-x-auto">
                 <table className="w-full text-[13.5px]">
                   <thead><tr className="text-left border-b border-line">
                     {['Name', 'Days', 'Hours', 'Every', 'Weekday', 'Weekend', ...(showMember ? ['Member'] : []), ...(showResident ? ['Resident'] : []), 'Cart', ''].map((h, i) => <th key={i} className={'py-2 pr-4 text-[12.5px] font-semibold text-ink ' + (i >= 4 && h !== '' ? 'text-right' : '')}>{h}</th>)}
                   </tr></thead>
                   <tbody className="divide-y divide-line-soft">
-                    {inView.map(s => (
-                      <tr key={s.id} className={s.active ? '' : 'text-ink-muted'}>
+                    {tableRows.map(({ s, first }) => (
+                      <tr key={s.id} className={(s.active ? '' : 'text-ink-muted') + (first ? ' border-t-2 border-t-line' : '')}>
                         <td className="py-2.5 pr-4 font-medium text-ink">{s.tierName === 'standard' ? 'Tee times' : s.tierName}{!s.active && <span className="ml-2 text-[12px] font-normal text-ink-muted">Paused</span>}</td>
                         <td className="py-2.5 pr-4">{s.daysOfWeek.length === 7 || s.daysOfWeek.length === 0 ? 'Every day' : WEEK.filter(d => s.daysOfWeek.includes(d)).map(d => DAYS[d]).join(', ')}</td>
                         <td className="py-2.5 pr-4 tabular-nums whitespace-nowrap">{fmtTime(s.startTime)} – {fmtTime(s.endTime)}</td>
@@ -429,12 +469,12 @@ export default function SchedulesPage() {
         </div>
       </main>
 
-      {/* The editor */}
+      {/* The editor — one schedule: its hours, then its price periods (W2-4). */}
       {showForm && (
-        <div className="fixed inset-0 z-50 bg-black/30 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true" aria-label={editId ? 'Change tee times' : 'Add tee times'}>
+        <div className="fixed inset-0 z-50 bg-black/30 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true" aria-label={editGroup ? 'Change this schedule' : 'Add a schedule'}>
           <Card className="w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto p-6 rounded-b-none sm:rounded-b-lg">
-            <h3 className="font-serif font-semibold text-ink text-[22px]">{editId ? 'Change tee times' : 'Add tee times'}</h3>
-            <p className="text-[13px] text-ink-soft mt-1 mb-5">A run of tee times with one set of prices. Add another run for different hours, like a twilight rate.</p>
+            <h3 className="font-serif font-semibold text-ink text-[22px]">{editGroup ? 'Change this schedule' : 'Add a schedule'}</h3>
+            <p className="text-[13px] text-ink-soft mt-1 mb-5">Your hours and how far apart tee times are, then your prices. For a twilight or early-bird rate, add a price period.</p>
             <div className="space-y-4">
               {multi && (
                 <div><label className={lCls} htmlFor="f-round">Which round</label>
@@ -443,8 +483,6 @@ export default function SchedulesPage() {
                     {activeProducts.map(p => <option key={p.id} value={p.id}>{p.label} · {p.holes} holes</option>)}
                   </select></div>
               )}
-              <div><label className={lCls} htmlFor="f-name">Name <span className="font-normal text-ink-muted">(optional)</span></label>
-                <input id="f-name" value={form.tierName} onChange={e => set('tierName', e.target.value)} placeholder="Morning, Twilight, Weekend…" className={iCls} /></div>
               <div><span className={lCls}>Days</span>
                 <div className="flex flex-wrap gap-1.5">
                   {WEEK.map(d => <button key={d} type="button" onClick={() => toggleDay(d)} aria-pressed={form.daysOfWeek.includes(d)}
@@ -456,40 +494,65 @@ export default function SchedulesPage() {
                 <div><label className={lCls} htmlFor="f-int">Minutes apart</label><input id="f-int" type="number" min={1} value={form.intervalMinutes} onChange={e => set('intervalMinutes', Number(e.target.value))} className={iCls} /></div>
               </div>
               <p className="text-[12.5px] text-ink-muted -mt-2">The last group goes off at this time, if it falls on the interval.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div><label className={lCls} htmlFor="f-wd">Weekday price</label><input id="f-wd" type="number" min={0} value={form.greenFeeWeekday} onChange={e => set('greenFeeWeekday', Number(e.target.value))} className={iCls} /></div>
-                <div><label className={lCls} htmlFor="f-we">Weekend price</label><input id="f-we" type="number" min={0} value={form.greenFeeWeekend} onChange={e => set('greenFeeWeekend', Number(e.target.value))} className={iCls} /></div>
-                <div><label className={lCls} htmlFor="f-cart">Cart, per player</label><input id="f-cart" type="number" min={0} value={form.cartFee} onChange={e => set('cartFee', Number(e.target.value))} className={iCls} /></div>
+              {!form.productId && <div className="max-w-[12rem]"><label className={lCls} htmlFor="f-holes">Holes</label><select id="f-holes" value={form.holes} onChange={e => set('holes', Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>}
+
+              <div className="pt-2">
+                <h4 className="text-[15px] font-semibold text-ink">Prices</h4>
+                <p className="text-[12.5px] text-ink-soft mt-0.5">Per player. {form.periods.length > 1 ? 'Each price period runs until the next one starts.' : 'One price all day, or add a period for a different rate later in the day.'}</p>
               </div>
-              {(hasMember || form.memberRateWeekday !== '') && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div><label className={lCls} htmlFor="f-mwd">Member, weekday</label><input id="f-mwd" type="number" min={0} value={form.memberRateWeekday} onChange={e => set('memberRateWeekday', e.target.value)} placeholder="Same as public" className={iCls} /></div>
-                  <div><label className={lCls} htmlFor="f-mwe">Member, weekend</label><input id="f-mwe" type="number" min={0} value={form.memberRateWeekend} onChange={e => set('memberRateWeekend', e.target.value)} placeholder="Same as public" className={iCls} /></div>
-                </div>
-              )}
-              {(hasResident || form.residentRateWeekday !== '') && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div><label className={lCls} htmlFor="f-rwd">Resident, weekday</label><input id="f-rwd" type="number" min={0} value={form.residentRateWeekday} onChange={e => set('residentRateWeekday', e.target.value)} placeholder="Same as public" className={iCls} /></div>
-                  <div><label className={lCls} htmlFor="f-rwe">Resident, weekend</label><input id="f-rwe" type="number" min={0} value={form.residentRateWeekend} onChange={e => set('residentRateWeekend', e.target.value)} placeholder="Same as public" className={iCls} /></div>
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {!form.productId && <div><label className={lCls} htmlFor="f-holes">Holes</label><select id="f-holes" value={form.holes} onChange={e => set('holes', Number(e.target.value))} className={iCls}><option value={9}>9 holes</option><option value={18}>18 holes</option></select></div>}
-                <label className="flex items-center gap-2.5 text-[13.5px] text-ink self-end pb-2">
-                  <input type="checkbox" checked={form.walkingAllowed} onChange={e => set('walkingAllowed', e.target.checked)} className="w-4 h-4 accent-pine" />Golfers can walk
-                </label>
-              </div>
+              {form.periods.map((p, i) => {
+                const starts = i === 0 ? form.startTime : snapToGrid(form.startTime, Number(form.intervalMinutes), p.from);
+                const ends = i + 1 < form.periods.length ? snapToGrid(form.startTime, Number(form.intervalMinutes), form.periods[i + 1].from) : form.endTime;
+                return (
+                  <div key={i} className="bg-paper/70 rounded-md p-4 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_10rem] gap-3">
+                      <div><label className={lCls} htmlFor={`p-name-${i}`}>Name {form.periods.length === 1 && <span className="font-normal text-ink-muted">(optional)</span>}</label>
+                        <input id={`p-name-${i}`} value={p.tierName} onChange={e => setPeriod(i, 'tierName', e.target.value)} placeholder={i === 0 ? 'Morning, All day…' : 'Twilight, Nine-hole evening…'} className={iCls} /></div>
+                      {i === 0
+                        ? <div><span className={lCls}>Starts</span><p className="py-2 text-sm text-ink tabular-nums">{fmtTime(form.startTime)}</p></div>
+                        : <div><label className={lCls} htmlFor={`p-from-${i}`}>Starts at</label><input id={`p-from-${i}`} type="time" value={p.from} onChange={e => setPeriod(i, 'from', e.target.value)} className={iCls} /></div>}
+                    </div>
+                    {i > 0 && starts !== p.from && <p className="text-[12.5px] text-ink-muted -mt-1">Starts with the {fmtTime(starts)} tee time.</p>}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div><label className={lCls} htmlFor={`p-wd-${i}`}>Weekday price</label><input id={`p-wd-${i}`} type="number" min={0} value={p.greenFeeWeekday} onChange={e => setPeriod(i, 'greenFeeWeekday', Number(e.target.value))} className={iCls} /></div>
+                      <div><label className={lCls} htmlFor={`p-we-${i}`}>Weekend price</label><input id={`p-we-${i}`} type="number" min={0} value={p.greenFeeWeekend} onChange={e => setPeriod(i, 'greenFeeWeekend', Number(e.target.value))} className={iCls} /></div>
+                      <div><label className={lCls} htmlFor={`p-cart-${i}`}>Cart, per player</label><input id={`p-cart-${i}`} type="number" min={0} value={p.cartFee} onChange={e => setPeriod(i, 'cartFee', Number(e.target.value))} className={iCls} /></div>
+                    </div>
+                    {(hasMember || p.memberRateWeekday !== '') && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><label className={lCls} htmlFor={`p-mwd-${i}`}>Member, weekday</label><input id={`p-mwd-${i}`} type="number" min={0} value={p.memberRateWeekday} onChange={e => setPeriod(i, 'memberRateWeekday', e.target.value)} placeholder="Same as public" className={iCls} /></div>
+                        <div><label className={lCls} htmlFor={`p-mwe-${i}`}>Member, weekend</label><input id={`p-mwe-${i}`} type="number" min={0} value={p.memberRateWeekend} onChange={e => setPeriod(i, 'memberRateWeekend', e.target.value)} placeholder="Same as public" className={iCls} /></div>
+                        <p className="sm:col-span-2 text-[12.5px] text-ink-muted -mt-1">For memberships that don&apos;t set their own price in Members.</p>
+                      </div>
+                    )}
+                    {(hasResident || p.residentRateWeekday !== '') && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><label className={lCls} htmlFor={`p-rwd-${i}`}>Resident, weekday</label><input id={`p-rwd-${i}`} type="number" min={0} value={p.residentRateWeekday} onChange={e => setPeriod(i, 'residentRateWeekday', e.target.value)} placeholder="Same as public" className={iCls} /></div>
+                        <div><label className={lCls} htmlFor={`p-rwe-${i}`}>Resident, weekend</label><input id={`p-rwe-${i}`} type="number" min={0} value={p.residentRateWeekend} onChange={e => setPeriod(i, 'residentRateWeekend', e.target.value)} placeholder="Same as public" className={iCls} /></div>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <label className="flex items-center gap-2.5 text-[13.5px] text-ink">
+                        <input type="checkbox" checked={p.walkingAllowed} onChange={e => setPeriod(i, 'walkingAllowed', e.target.checked)} className="w-4 h-4 accent-pine" />Golfers can walk
+                      </label>
+                      <span className="text-[12.5px] text-ink-muted tabular-nums">{fmtTime(starts)} – {fmtTime(ends)}</span>
+                      {i > 0 && <button type="button" onClick={() => removePeriod(i)} className="text-[13px] font-medium text-ink-soft hover:text-ink">Remove this period</button>}
+                    </div>
+                  </div>
+                );
+              })}
+              <button type="button" onClick={addPeriod} className="text-[13px] font-medium text-pine hover:underline">Add a price period</button>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 mt-6 pt-4 border-t border-line-soft">
               <div className="flex gap-4">
-                {editId && (() => { const s = schedules.find(x => x.id === editId); return s ? <>
-                  <button onClick={() => toggleActive(s)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{s.active ? 'Pause' : 'Turn back on'}</button>
-                  <button onClick={() => del(s)} className="text-[13px] font-medium text-bad hover:underline">Delete</button>
-                </> : null; })()}
+                {editGroup && <>
+                  <button onClick={() => toggleActive(editGroup)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{editGroup.active ? 'Pause' : 'Turn back on'}</button>
+                  <button onClick={() => del(editGroup)} className="text-[13px] font-medium text-bad hover:underline">Delete</button>
+                </>}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => { setShowForm(false); setEditId(null); }} className="px-4 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Cancel</button>
-                <button onClick={save} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">{editId ? 'Save changes' : 'Add'}</button>
+                <button onClick={() => { setShowForm(false); setEditGroup(null); }} className="px-4 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Cancel</button>
+                <button onClick={save} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">{editGroup ? 'Save changes' : 'Add'}</button>
               </div>
             </div>
           </Card>

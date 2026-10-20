@@ -8,6 +8,7 @@ import { prisma } from './prisma';
 import { todayIn, addDaysStr } from './course-time';
 import { desiredSlots, slotKey, type ScheduleForSlots } from './tee-sheet-engine';
 import { scheduleMoneyForCreate, scheduleMoneyFromWire } from './schedule-wire';
+import type { SchedulePlan } from './schedule-service';
 
 /** How many days regenerateUpcoming() rebuilds — the preview covers the same days. */
 export const PREVIEW_DAYS = 8;
@@ -15,7 +16,9 @@ export const PREVIEW_DAYS = 8;
 export type ScheduleChange =
   | { op: 'create'; body: Record<string, unknown> }
   | { op: 'update'; id: string; data: Record<string, unknown> }
-  | { op: 'delete'; id: string };
+  | { op: 'delete'; id: string }
+  // W2-4: a whole schedule (its price periods) saved at once — lib/schedule-service saveSchedulePlan.
+  | { op: 'plan'; plan: SchedulePlan };
 
 export type SchedulePreview = {
   days: number;
@@ -63,6 +66,18 @@ async function proposedSchedules(courseId: string, change: ScheduleChange): Prom
       holes: Number(b.holes) || 18, tierName: (b.tierName as string) || 'standard', walkingAllowed: b.walkingAllowed !== false, active: true,
       ...scheduleMoneyForCreate(b),
     })];
+  }
+  if (change.op === 'plan') {
+    const { plan } = change;
+    const replaces = (plan.replaces ?? []).map(String);
+    if (replaces.some(id => !rows.some(r => r.id === id))) return null;
+    return [...rows.filter(r => !replaces.includes(r.id)).map(asSchedule), ...(plan.periods ?? []).map(p => asSchedule({
+      daysOfWeek: plan.daysOfWeek ?? [], productId: plan.productId || null,
+      startTime: String(p.startTime ?? ''), endTime: String(p.endTime ?? ''), intervalMinutes: Number(plan.intervalMinutes) || 8,
+      holes: Number(plan.holes) || 18, tierName: (p.tierName as string) || 'standard', walkingAllowed: p.walkingAllowed !== false,
+      active: plan.active !== false,
+      ...scheduleMoneyForCreate(p),
+    }))];
   }
   const target = rows.find(r => r.id === change.id);
   if (!target) return null;
