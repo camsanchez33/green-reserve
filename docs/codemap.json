@@ -6488,7 +6488,7 @@
     },
     {
       "path": "src/app/dashboard/login/page.tsx",
-      "lines": 93,
+      "lines": 86,
       "purpose": "",
       "brain": [],
       "exports": [

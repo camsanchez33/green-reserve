@@ -26,37 +26,30 @@ function LoginContent() {
     window.location.assign(data.redirect || '/dashboard');
   };
 
-  // Cam 2026-10-19 (HOMEPAGE_SPEC §0a): keep it minimal — the homepage's photo
-  // and logo beside the form on a laptop (the form alone on a phone), and a
-  // line for staff who can't get in.
+  // Cam 2026-10-20: the homepage photo fills the screen, the cream logo sits on
+  // it, and the sign-in card sits under the logo — one picture, phone and laptop
+  // alike. The card is solid white so the fields read on any part of the photo.
   return (
-    <div className="min-h-screen bg-paper md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <div className="relative hidden md:flex flex-col items-center justify-center overflow-hidden bg-[#2B3A2E]">
-        <Image src="/home/hero-coast.jpg" alt="" fill priority sizes="50vw" quality={50} className="object-cover" />
-        <div aria-hidden="true" className="absolute inset-0 bg-[#0A0E0B]/35" />
-        <div className="relative z-10 px-10 text-center">
-          <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={1530} height={286} priority className="w-[min(380px,70%)] h-auto mx-auto" />
-          <p className="font-serif text-[22px] text-[#F6F4EC] mt-5 [text-shadow:0_1px_2px_rgba(0,0,0,.4)]">The tee sheet your course deserves.</p>
-        </div>
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-[#2B3A2E]">
+      <Image src="/home/hero-coast.jpg" alt="" fill priority sizes="100vw" quality={55} className="object-cover" />
+      {/* A scrim, darker toward the bottom where the card sits, so the logo and the help links read. */}
+      <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,14,11,.25)_0%,rgba(10,14,11,.35)_45%,rgba(10,14,11,.6)_100%)]" />
 
-      <div className="min-h-screen md:min-h-0 flex items-center justify-center p-4 md:p-10">
-        <div className="w-full max-w-sm">
-          <div className="md:hidden flex justify-center mb-8">
-            <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[150px] h-auto" />
-          </div>
-          <div className="mb-6">
-            <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Sign in</h1>
-            <p className="text-[13.5px] text-ink-soft mt-2">Your tee sheet, your bookings and your settings.</p>
-          </div>
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-10">
+        <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={1530} height={286} priority className="w-[min(300px,72vw)] h-auto [filter:drop-shadow(0_1px_2px_rgba(0,0,0,.35))]" />
 
+        <div className="w-full max-w-sm mt-9">
           {justVerified && (
-            <div className="flex items-center gap-2 bg-white border border-line border-l-[3px] border-l-ok rounded-md px-4 py-3 mb-4 text-ok text-[13.5px]">
+            <div className="flex items-center gap-2 bg-white border border-line border-l-[3px] border-l-ok rounded-md px-4 py-3 mb-3 text-ok text-[13.5px]">
               <StatusDot status="ok" />Email verified! Sign in to continue setup.
             </div>
           )}
 
-          <form onSubmit={e => { e.preventDefault(); submit(); }} className="bg-white rounded-lg shadow-card p-6 space-y-4">
+          <form onSubmit={e => { e.preventDefault(); submit(); }} className="bg-white rounded-lg shadow-card p-6 sm:p-7 space-y-4">
+            <div>
+              <h1 className="text-[28px] font-serif font-semibold leading-none tracking-tight text-ink">Sign in</h1>
+              <p className="text-[13.5px] text-ink-soft mt-2">Your tee sheet, your bookings and your settings.</p>
+            </div>
             {error && <div className="bg-white border border-line border-l-[3px] border-l-bad text-bad rounded-md px-3 py-2.5 text-[13.5px]" role="alert">{error}</div>}
             <div className="space-y-3">
               <div>
@@ -77,9 +70,9 @@ function LoginContent() {
             </button>
           </form>
 
-          <div className="mt-5 space-y-1.5 text-center text-[12.5px] text-ink-soft">
-            <p>Need help signing in? <a href="mailto:thegreenreserve@outlook.com?subject=Help%20signing%20in" className="text-pine font-medium hover:underline">Email GreenReserve support</a></p>
-            <p>Don&apos;t have an account? <a href="/for-courses" className="text-pine font-medium hover:underline">Ask a question →</a></p>
+          <div className="mt-5 space-y-1.5 text-center text-[12.5px] text-[#F6F4EC]/90 [text-shadow:0_1px_2px_rgba(0,0,0,.45)]">
+            <p>Need help signing in? <a href="mailto:thegreenreserve@outlook.com?subject=Help%20signing%20in" className="text-[#F6F4EC] font-semibold underline underline-offset-2">Email GreenReserve support</a></p>
+            <p>Don&apos;t have an account? <a href="/for-courses" className="text-[#F6F4EC] font-semibold underline underline-offset-2">Ask a question →</a></p>
           </div>
         </div>
       </div>

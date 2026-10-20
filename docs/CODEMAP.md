@@ -249,7 +249,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 610 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 70 |
-| `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 93 |
+| `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 86 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 685 |
 | `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 195 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 231 |
