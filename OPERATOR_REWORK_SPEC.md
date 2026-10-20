@@ -155,3 +155,34 @@ Shipped notes (2026-10-19):
 
 Catalog in Settings → Pro shop: one-tap starter items, categories, optional stock count. Selling on a new Pro shop page (nav, for logins with "Sell from the pro shop"): tap items into a sale, then take cash or text/email a pay link; today's sales below with Send again / Took cash / Void for unpaid links. The customer pays on their phone (Apple Pay, Google Pay or card) as a direct charge on the course's Stripe account; GreenReserve takes nothing while the shop fee is off. Not yet: refunds of a paid walk-up sale from the dashboard (Stripe dashboard for now), a card reader (Stripe Terminal, after launch), sales reporting on Analytics.
 
+
+## Walkthrough 2 (Cam 2026-10-19)
+
+Cam's notes, verbatim (dashboard part; homepage part is in HOMEPAGE_SPEC "Walkthrough 2"):
+
+> Dashboard
+>
+> Birdie should still be in bottom corner just think that it should have an optioon to be pushed off screen
+>
+> Analytics I want you to do deep search what analytics would actullay help golf course and help them improve and help like what do they really need what should we actullay have there do deep research we really want to help them
+>
+> Schedule is still a bit confusing in the regard of to make twighlight time they ahve to make seperate schedule there should be a way to seperate it out in one schedule set up and the last tee time being the one before stop at doesnt make sense it should be the last one goes at at the stop at time
+>
+> Pro shop needs to be thought out think of it they need to add a ton of stuff like really think this shit out
+>
+> they this is for settings course layouthave need to think out how to make that easier in regards to what products are bookable if thye can just book back nine in the morning all of those things need to be seamless and smooth like for instance all these things pop up in the schedule when i click them but they really need to be organized and make complete sense should be trying to help the courses with course management making sure they have the tee time lined up in a format and timely manner that will work dont prohibit anything  but try to point them in right directions this is a huge part and needs to be thought out deeply with good questions
+>
+> in settings your account make it established that this is the owner account so that they know that they are in the admin for there own course
+>
+> The whole pricing and fees setting in sections makes no sense like genuinely rethink the whole think the whole thing and make sure that everything actually makes sense like the resident pricing and everything
+
+Items (nothing built yet; decisions recorded here as Cam makes them):
+
+- **W2-1 Birdie placement.** Reverses #143's md+ top-bar button: the launcher goes back to the bottom corner on every screen size, with a way to push it off screen (the phone tuck tab, `TUCK_KEY` in `BirdieWidget.tsx`, extended to desktop). If the corner launcher returns on desktop, restore the Messages composer inset (`pr-[8.5rem]`, made md-only in #143). Update `scripts/birdie-messages-test.ts` and the CLAUDE.md Birdie note.
+- **W2-2 Owner account label.** Settings → Your account says plainly that this is the course OWNER login — the admin for their own course (vs staff logins).
+- **W2-3 Schedule: last tee time AT "stop at".** Today the last generated time is the one before the stop time (`tee-sheet-engine.ts`, exclusive end). Cam: the last one goes off AT the stop time (inclusive). Touches generation (`generate-tee-times` cron) — overseer only.
+- **W2-4 Schedule: price periods inside one schedule.** Today a twilight price means a second schedule (a second `TeeTimeSchedule` row). Cam: split one schedule's hours into price periods (already decided 2026-10-19: any number of named periods, the course's own names, each with weekday/weekend/member/resident prices). Additive migration, verified locally from scratch. Built together with W2-5 — same model.
+- **W2-5 Prices & fees: rethink the whole section.** "Makes no sense … genuinely rethink the whole thing … the resident pricing and everything." One model for who pays what (public, resident, member tiers, season pass) × when (price periods, weekday/weekend) and fees (booking fee, late/no-show, card at booking). Builds on "Who pays what" (claude/who-pays) and RES-1.
+- **W2-6 Course layout / bookable products.** Make nines, tee sets and bookable products (e.g. back nine only in the morning) seamless; the options that pop up in Schedule must be organised and make sense. Help courses lay out a workable tee sheet — never prohibit, point them in the right direction (warnings and suggestions, not blocks). Needs questions to Cam first.
+- **W2-7 Pro shop, thought through.** Courses need to add a lot of items fast (bulk add / import, categories, variants such as sizes, stock). Builds on POS-2.
+- **W2-8 Analytics: deep research first.** Research what analytics actually help a golf course improve, then a proposal to Cam before building. Metrics stay in `src/lib/analytics.ts`; AN-1/AN-2 rules hold.

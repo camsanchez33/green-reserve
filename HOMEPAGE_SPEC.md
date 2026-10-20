@@ -324,3 +324,24 @@ Postgres 16 at `/var/tmp/grpg/data` port 5499 (start as the postgres user:
 plain `chromium.launch()` for localhost (the proxy breaks plain-HTTP localhost;
 next/font self-hosts fonts so no proxy is needed). A new sandbox may not have
 `/var/tmp/grpg` — recreate it.
+
+## Walkthrough 2 (Cam 2026-10-19)
+
+Cam's notes, verbatim (homepage and public part; dashboard part is in OPERATOR_REWORK_SPEC "Walkthrough 2"):
+
+> Homepage I think that maybe get rid of greenreserve charges nothing and the golfer thing and just say "for free" that will lure them in they dont need the whole pricing model off rip
+>
+> I like the demos I think the waht ur course gets is a little repetitive from the first section
+> and then the greenreserve logo witht he ready when yur course is what is the purpose of that tag line get rid of it and then bottom of the screen greenreserveLLC
+>
+> This ask a question page : https://greenreserve.app/for-courses#ask needs to be completely rethought and worked ask questions
+>
+> Then with the book a demo they schedule a car but what is that process going to look like need to makes sure that is smooth and thought out
+
+Items (nothing built yet):
+
+- **W2-H1 Hero copy.** Drop "GreenReserve charges your course nothing: golfers pay a small booking fee instead." and say it is free. Fee copy stays inside `legal/LQ-2_FEE_COPY.md`: "Free for your course" and "No setup fee, no monthly fee, no commission on your green fees" are allowed. Dropping the $1.50 sentence from the homepage is fine; it must stay disclosed on /teesheet's FAQ and /for-courses.
+- **W2-H2 "What your course gets" repeats the first section.** Trim or merge so nothing is said twice. The demos stay (Cam likes them).
+- **W2-H3 Closing section.** Remove the logo + "Ready when your course is." block. Footer line at the bottom: "GreenReserve LLC" (entity: GreenReserve LLC, New York).
+- **W2-H4 Ask a question (/for-courses#ask).** Completely rethink it — needs questions to Cam first.
+- **W2-H5 Book a demo flow.** Think through what happens end to end after a course books a call on Cal.com (confirmation, reminders, what the call covers, what follows) and make it smooth.
