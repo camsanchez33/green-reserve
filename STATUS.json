@@ -1,25 +1,35 @@
 {
-  "generatedAt": "2026-10-20T01:32:01.699Z",
+  "generatedAt": "2026-10-20T02:15:16.716Z",
   "repo": {
-    "head": "f9338d3",
+    "head": "6956862",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 5,
+    "dirtyCount": 1,
     "dirty": [
-      "M OPERATOR_REWORK_SPEC.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/operator/schedule/preview/route.ts",
-      " M src/lib/schedule-service.ts"
+      "M OPERATOR_REWORK_SPEC.md"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
       {
-        "h": "f9338d3",
-        "date": "2026-10-20T01:27:01+00:00",
-        "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised",
+        "h": "6956862",
+        "date": "2026-10-20T02:11:43+00:00",
+        "subject": "W2-7 part A: review fixes — hiding an item leaves its options alone",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "43dd9d7",
+        "date": "2026-10-20T02:05:48+00:00",
+        "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "cb98de8",
+        "date": "2026-10-19T21:36:27-04:00",
+        "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)",
         "ids": [],
         "matches": []
       },
@@ -471,6 +481,12 @@
       "ageDays": 2
     },
     {
+      "file": "ADMIN_V5_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 0
+    },
+    {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
@@ -479,208 +495,218 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-19",
+      "lastTouched": "2026-10-20",
       "ageDays": 0
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-11",
-      "ageDays": 7
+      "ageDays": 8
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 11
+      "ageDays": 12
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "f9338d3",
+      "h": "6956862",
       "date": "2026-10-20",
-      "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised"
+      "subject": "W2-7 part A: review fixes — hiding an item leaves its options alone"
+    },
+    {
+      "h": "43dd9d7",
+      "date": "2026-10-20",
+      "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling"
+    },
+    {
+      "h": "cb98de8",
+      "date": "2026-10-19",
+      "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)"
     },
     {
       "h": "223121d",
@@ -726,16 +752,6 @@
       "h": "662f294",
       "date": "2026-10-19",
       "subject": "Members: import a list, and each member's last round (#140)"
-    },
-    {
-      "h": "9aba8a1",
-      "date": "2026-10-19",
-      "subject": "Settings: Who pays what, one table of every kind of golfer and their price (#139)"
-    },
-    {
-      "h": "a8c71b9",
-      "date": "2026-10-19",
-      "subject": "Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)"
     }
   ]
 }
