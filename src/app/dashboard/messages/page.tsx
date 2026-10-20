@@ -165,7 +165,7 @@ function MessagesContent() {
         </div>
 
         {/* Right inset clears Birdie's phone launcher (tuck + circle) over this corner; on md+ Birdie is in the top bar. */}
-        <div className="pl-6 pr-[8.5rem] md:pr-6 py-4 border-t border-line shrink-0 bg-white">
+        <div className="pl-6 pr-[8.5rem] py-4 border-t border-line shrink-0 bg-white">
           <div className="flex gap-3 items-end">
             <textarea value={compose} onChange={e => setCompose(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendMessage(); }}

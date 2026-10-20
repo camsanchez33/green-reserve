@@ -4,8 +4,10 @@ import { LaptopDemo } from '@/components/home/TeeSheetDemo';
 import s from './home.module.css';
 
 // HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07): Cam's own layout. One idea per
-// scroll — the logo over the coast photo, what GreenReserve is, what a course
-// gets, the working demo with Book a demo, the logo again. The detail lives on
+// scroll — the logo over the coast photo, what GreenReserve is and what a course
+// gets, then the working demo with Book a demo. W2-H2/H3 (Cam 2026-10-19): the
+// separate "What your course gets" block repeated the list and is merged into
+// it; the closing logo + "Ready when your course is." is gone. The detail lives on
 // /teesheet ("Learn more about the tee sheet"). Copy rules still hold: NO
 // durations, NO contract terms, fee sentences only from legal/LQ-2_FEE_COPY.md
 // (never "keep 100%" or that the course nets its green fee to the cent), and
@@ -24,13 +26,7 @@ const DOES = [
   'Payments at the counter or on the golfer’s own phone, with a card on file for late-cancel and no-show fees',
   'Staff logins, with permissions you set for each person',
   'An AI assistant that answers questions about your day and drafts changes for you to confirm',
-];
-
-const HIGHLIGHTS = [
-  { h: 'Free for your course', p: 'No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.' },
-  { h: 'Your AI assistant', p: 'Ask how today looks, find a golfer’s booking or draft a change to the sheet. Nothing changes until you confirm it.' },
-  { h: 'A monthly review of your course', p: 'Analytics for every day, and at the end of each month a written review of how the course did and what to look at next.' },
-  { h: 'Payments, anywhere', p: 'Golfers pay at the counter or on their own phone, including Apple Pay and Google Pay, and you can send them a pay link. If you charge late-cancel or no-show fees, a card on file covers them. The money goes to your course’s own Stripe account.' },
+  'Analytics for every day, and at the end of each month a written review of how the course did',
 ];
 
 export default function HomeContent() {
@@ -45,7 +41,7 @@ export default function HomeContent() {
             <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={1530} height={286} priority className={s.heroLogoImg} />
           </h1>
           <p className={`${s.display} ${s.heroLine}`}>The tee sheet your course deserves.</p>
-          <p className={s.heroSub}>Online booking, payments and an AI assistant that knows your course. GreenReserve charges your course nothing: golfers pay a small booking fee instead.</p>
+          <p className={s.heroSub}>Online booking, payments and an AI assistant that knows your course. Free for your course.</p>
           <a className={`${s.btn} ${s.heroBtn}`} href="#about">Learn more <span aria-hidden="true">↓</span></a>
         </div>
       </section>
@@ -59,11 +55,13 @@ export default function HomeContent() {
               GreenReserve brings your tee sheet and online booking into one system that your staff run.
               During setup, we build your course&apos;s booking page from your schedule, rates, photos and colors,
               and you can change any of it whenever you like. We bring your members over and train your staff,
-              so your counter is ready before you go live. GreenReserve charges your course nothing.
+              so your counter is ready before you go live.
             </p>
             <ul className={s.does}>
               {DOES.map(d => <li key={d}>{d}</li>)}
             </ul>
+            {/* W2-H1 (Cam 2026-10-19): the hero only says free; the golfer fee is disclosed here, once (LQ-2 wording). */}
+            <p className={s.fee}><b>Free for your course.</b> No setup fee, no monthly fee, no commission on your green fees. Golfers pay $1.50 per player on each online booking, added to your price.</p>
           </div>
           <div className={s.cards}>
             <a href="#see" className={s.card}>
@@ -80,17 +78,6 @@ export default function HomeContent() {
         </div>
       </section>
 
-      {/* WHAT YOU GET — only what exists today. */}
-      <section className={s.why} id="why">
-        <div className={s.col}>
-          <h2 className={s.display}>What your course gets.</h2>
-          <div className={s.whyGrid}>
-            {HIGHLIGHTS.map(h => <div key={h.h}><h3 className={s.display}>{h.h}</h3><p>{h.p}</p></div>)}
-          </div>
-          <Link href={DETAIL} className={s.quiet}>Learn more about the tee sheet</Link>
-        </div>
-      </section>
-
       {/* SEE HOW IT WORKS — the working demo on a laptop, then Book a demo. */}
       <section className={s.see} id="see">
         <div className={s.col}>
@@ -103,12 +90,6 @@ export default function HomeContent() {
             <Link className={s.quiet} href="/for-courses#ask">Not ready for a call? Send us a note</Link>
           </div>
         </div>
-      </section>
-
-      {/* END — the logo again, with the line. */}
-      <section className={s.end}>
-        <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={1530} height={286} loading="lazy" className={s.endLogo} />
-        <p className={s.display}>Ready when your course is.</p>
       </section>
     </div>
   );

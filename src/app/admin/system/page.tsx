@@ -344,7 +344,7 @@ export default function AdminSystemPage() {
                     <StatusDot status={data.birdie.enabled ? 'ok' : 'neutral'}/>
                     <span className="text-sm text-ink-soft">
                       {data.birdie.enabled
-                        ? <>On for operators — Ask Birdie in the dashboard top bar, and a launcher on phones.</>
+                        ? <>On for operators — the Ask launcher in the dashboard's bottom corner.</>
                         : !data.birdie.keySet
                           ? <>Off — <code className="font-mono text-xs">ANTHROPIC_API_KEY</code> is not set in Vercel (PASSWORD_CHECKLIST Phase 7c).</>
                           : !data.birdie.flag

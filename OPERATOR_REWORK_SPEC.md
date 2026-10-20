@@ -186,3 +186,12 @@ Items (nothing built yet; decisions recorded here as Cam makes them):
 - **W2-6 Course layout / bookable products.** Make nines, tee sets and bookable products (e.g. back nine only in the morning) seamless; the options that pop up in Schedule must be organised and make sense. Help courses lay out a workable tee sheet — never prohibit, point them in the right direction (warnings and suggestions, not blocks). Needs questions to Cam first.
 - **W2-7 Pro shop, thought through.** Courses need to add a lot of items fast (bulk add / import, categories, variants such as sizes, stock). Builds on POS-2.
 - **W2-8 Analytics: deep research first.** Research what analytics actually help a golf course improve, then a proposal to Cam before building. Metrics stay in `src/lib/analytics.ts`; AN-1/AN-2 rules hold.
+
+Decisions (Cam 2026-10-20, asked in session):
+- W2-1: no preference given; built as recommended — the corner launcher on every screen, the tuck remembered per browser, the top-bar button removed.
+- W2-3: no clear answer given; built as recommended — the field reads "Last tee time"; the last slot is the last one on the interval at or before it (7:00 every 8 min to 6:00pm ends 5:58). The generator reconciles future days, so already-generated open days gain the end slot on its next run. Back-to-back schedules: the one that starts at the shared time owns it.
+- W2-5: reorganise + price periods for launch (one Prices page: who pays × when, fees in their own section); pricing rules underneath unchanged.
+- W2-6: launch courses have plain 18, back-nine starts and 27 holes / 3 nines; shotgun / leagues not definite but plan for them.
+- W2-7: courses ring up the shop on GreenReserve from day one — bulk add and variants are pre-launch work.
+
+Shipped (2026-10-20): W2-1, W2-2, W2-3.

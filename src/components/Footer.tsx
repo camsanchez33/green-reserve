@@ -70,7 +70,7 @@ export default function Footer() {
           <Link href="/dashboard/login" className="hover:text-ink transition-colors">Operator login</Link>
           <a href="mailto:thegreenreserve@outlook.com" className="hover:text-ink transition-colors">thegreenreserve@outlook.com</a>
         </nav>
-        <span>© {new Date().getFullYear()} GreenReserve. All rights reserved.</span>
+        <span>© {new Date().getFullYear()} GreenReserve LLC</span>
       </div>
     </footer>
   );

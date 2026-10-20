@@ -83,6 +83,11 @@ export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], pro
   // converted in the SAME migration, this copy stays a straight pass-through —
   // no x100 anywhere in the generation path.
   const desired = new Map<string, DesiredSlot>();
+  // W2-3 (Cam 2026-10-19): the last tee time goes off AT the schedule's end
+  // ("Last tee time"), when it lands on the interval. Two back-to-back
+  // schedules (morning ends 12:00, twilight starts 12:00) then both produce
+  // 12:00: the one that STARTS there owns it, whatever order they come in.
+  const endOnly = new Set<string>();
   for (const schedule of applicable) {
     const greenFeeCents     = isWeekend ? schedule.greenFeeWeekendCents     : schedule.greenFeeWeekdayCents;
     const memberRateCents   = isWeekend ? schedule.memberRateWeekendCents   : schedule.memberRateWeekdayCents;
@@ -94,9 +99,13 @@ export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], pro
     if (!(schedule.intervalMinutes >= 1)) continue;
     let current = timeToMinutes(schedule.startTime);
     const end = timeToMinutes(schedule.endTime);
-    while (current < end) {
+    while (current <= end) {
       const time = minutesToTime(current);
-      desired.set(slotKey(productId, time), {
+      const key = slotKey(productId, time);
+      const isEnd = current === end;
+      if (isEnd && desired.has(key) && !endOnly.has(key)) { current += schedule.intervalMinutes; continue; }
+      if (isEnd) endOnly.add(key); else endOnly.delete(key);
+      desired.set(key, {
         productId, time,
         holes,
         greenFeeCents,

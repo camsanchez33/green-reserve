@@ -191,6 +191,8 @@
 .does { margin: 28px 0 0; padding: 0; list-style: none; }
 .does li { position: relative; padding: 12px 0 12px 22px; border-top: 1px solid var(--line); }
 .does li:last-child { border-bottom: 1px solid var(--line); }
+.fee { margin: 24px 0 0; font-size: 16px; max-width: 36em; }
+.fee b { font-weight: 600; }
 .does li::before { content: ""; position: absolute; left: 2px; top: 22px; width: 8px; height: 2px; background: var(--fairway); }
 .cards { display: flex; flex-direction: column; gap: 16px; }
 .card { display: flex; flex-direction: column; gap: 6px; padding: 24px 26px; background: var(--paper); border-radius: 8px; box-shadow: 0 0 0 1px rgba(20,24,20,.06), 0 1px 2px rgba(20,24,20,.05); text-decoration: none; transition: box-shadow .15s; }
@@ -198,14 +200,6 @@
 .card b { font-size: 26px; line-height: 1.1; color: var(--forest); }
 .card span { font-size: 16px; }
 .card em { margin-top: 8px; font-style: normal; font-weight: 600; font-size: 15px; color: var(--forest); }
-
-/* WHAT YOU GET */
-.why { padding-block: 96px 104px; }
-.why h2 { font-size: clamp(30px, 3.2vw, 46px); line-height: 1.05; color: var(--forest); }
-.whyGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px; margin: 44px 0 40px; }
-.whyGrid > div { border-top: 2px solid var(--fairway); padding-top: 20px; }
-.whyGrid h3 { font-size: 26px; line-height: 1.1; margin-bottom: 10px; }
-.whyGrid p { margin: 0; font-size: 16px; }
 
 /* SEE HOW IT WORKS */
 .see { padding-block: 104px 120px; background: #fff; text-align: center; }
@@ -218,16 +212,10 @@
 .seeCta { margin-top: 72px; display: flex; flex-direction: column; align-items: center; gap: 14px; scroll-margin-top: 24px; }
 .seeCta span { font-size: 15px; }
 
-/* END — the logo again */
-.end { padding-block: 104px 96px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; }
-.endLogo { width: clamp(220px, 30vw, 400px); height: auto; }
-.end p { margin: 0; font-size: clamp(22px, 2.2vw, 30px); color: var(--forest); }
-
 @media (max-width: 1000px) {
   .aboutGrid { grid-template-columns: 1fr; gap: 36px; }
   .about { padding-block: 72px; }
-  .whyGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .why, .see { padding-block: 72px; }
+  .see { padding-block: 72px; }
   .stage { flex-direction: column; align-items: center; }
   .laptop { width: 100%; }
   .phoneSide { margin: 28px 0 0; }
@@ -235,7 +223,6 @@
   .lbls { display: none; }
 }
 @media (max-width: 560px) {
-  .whyGrid { grid-template-columns: 1fr; }
   .laptopScreen { padding: 8px 8px 10px; border-radius: 10px 10px 4px 4px; }
   .bdGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bdRow { flex-direction: column; gap: 4px; }

@@ -29,16 +29,16 @@ async function main() {
     const count = () => prisma.teeTime.count({ where: { courseId: course.id, date: DATE } });
 
     await generateTeeTimes(course.id, DATE);
-    check('first run makes the six times', (await count()) === 6, String(await count()));
+    check('first run makes the seven times (W2-3: the last at 08:00)', (await count()) === 7, String(await count()));
     await generateTeeTimes(course.id, DATE);
-    check('a second run keeps them (it used to delete all six)', (await count()) === 6, String(await count()));
+    check('a second run keeps them (it used to delete them all)', (await count()) === 7, String(await count()));
     await generateTeeTimes(course.id, DATE);
-    check('a third run still six', (await count()) === 6, String(await count()));
+    check('a third run still seven', (await count()) === 7, String(await count()));
 
     await prisma.teeTimeSchedule.update({ where: { id: sched.id }, data: { greenFeeWeekdayCents: 6000 } });
     await generateTeeTimes(course.id, DATE);
     const rows = await prisma.teeTime.findMany({ where: { courseId: course.id, date: DATE } });
-    check('a price change keeps every time, at the new price', rows.length === 6 && rows.every(r => r.greenFeeCents === 6000), JSON.stringify(rows.map(r => r.greenFeeCents)));
+    check('a price change keeps every time, at the new price', rows.length === 7 && rows.every(r => r.greenFeeCents === 6000), JSON.stringify(rows.map(r => r.greenFeeCents)));
 
     // A booked time is never touched.
     const t0700 = rows.find(r => r.time === '07:00')!;
@@ -46,7 +46,7 @@ async function main() {
     await prisma.teeTimeSchedule.update({ where: { id: sched.id }, data: { greenFeeWeekdayCents: 6500 } });
     await generateTeeTimes(course.id, DATE);
     const after = await prisma.teeTime.findMany({ where: { courseId: course.id, date: DATE } });
-    check('the booked time keeps its old price; the rest move', after.length === 6 && after.find(r => r.time === '07:00')!.greenFeeCents === 6000 && after.filter(r => r.time !== '07:00').every(r => r.greenFeeCents === 6500), JSON.stringify(after.map(r => [r.time, r.greenFeeCents])));
+    check('the booked time keeps its old price; the rest move', after.length === 7 && after.find(r => r.time === '07:00')!.greenFeeCents === 6000 && after.filter(r => r.time !== '07:00').every(r => r.greenFeeCents === 6500), JSON.stringify(after.map(r => [r.time, r.greenFeeCents])));
   } finally {
     await cleanup();
     await prisma.$disconnect();
