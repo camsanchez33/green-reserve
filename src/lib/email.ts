@@ -1904,14 +1904,16 @@ export async function sendCourseNoticeEmail(data: {
 
 /** POS-2: a walk-up pro-shop sale's pay link (Apple Pay, Google Pay or card on the customer's phone). */
 export async function sendShopSalePayLinkEmail(data: {
-  email: string; name: string; courseName: string; totalCents: number;
+  email: string; name: string; courseName: string; totalCents: number; taxCents?: number;
   lines: { name: string; unitPriceCents: number; quantity: number }[]; payUrl: string;
 }) {
+  // W2-7 part B: sales tax, when the course collects it, as its own line.
+  const taxRow = data.taxCents ? `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">Sales tax</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;text-align:right;">$${(data.taxCents / 100).toFixed(2)}</td></tr>` : '';
   const rows = data.lines.map(l => `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;">${escapeHtml(l.name)}${l.quantity > 1 ? ` &times; ${l.quantity}` : ''}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;text-align:right;">$${((l.unitPriceCents * l.quantity) / 100).toFixed(2)}</td></tr>`).join('');
   const html = baseTemplate(`
     <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your pro shop total</h1>
     <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">${data.name ? `Hi ${escapeHtml(firstName(data.name))}, here` : 'Here'}&rsquo;s what you picked up at ${escapeHtml(data.courseName)}.</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">${rows}
+    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">${rows}${taxRow}
       <tr><td style="padding:10px 0 0;color:#141814;font-size:15px;font-weight:700;">Total</td><td style="padding:10px 0 0;color:#141814;font-size:15px;font-weight:700;text-align:right;">$${(data.totalCents / 100).toFixed(2)}</td></tr>
     </table>
     <a href="${data.payUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin:16px 0;">Pay $${(data.totalCents / 100).toFixed(2)} &rarr;</a>

@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 447,
-    "routes": 225,
-    "libs": 139,
+    "files": 452,
+    "routes": 227,
+    "libs": 141,
     "models": 43,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3400,7 +3400,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 236,
+      "lines": 241,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3428,6 +3428,7 @@
         "@/lib/email",
         "@/lib/no-show-fee",
         "@/lib/prisma",
+        "@/lib/sales-tax",
         "@/lib/stripe",
         "@/lib/tee-time-utils",
         "next/server"
@@ -5170,6 +5171,43 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/sales-tax/route.ts",
+      "lines": 55,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/sales-tax",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/sales-tax",
+        "@/lib/session",
+        "next/server",
+        "stripe"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/schedule/preview/route.ts",
       "lines": 27,
       "purpose": "",
@@ -5352,8 +5390,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/shop-sales/quote/route.ts",
+      "lines": 19,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/shop-sales/quote",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/rate-limit",
+        "@/lib/session",
+        "@/lib/shop-sales",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 146,
+      "lines": 147,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6810,7 +6874,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1192,
+      "lines": 1199,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6828,6 +6892,7 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/CourseLayoutTab",
         "@/components/dashboard/CoursePreview",
+        "@/components/dashboard/SalesTaxCard",
         "@/components/dashboard/ShopCatalog",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/StaffPermissions",
@@ -6855,7 +6920,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 267,
+      "lines": 288,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -7315,7 +7380,7 @@
     },
     {
       "path": "src/app/pay/shop/[id]/page.tsx",
-      "lines": 141,
+      "lines": 142,
       "purpose": "POS-2 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -8356,8 +8421,35 @@
       ]
     },
     {
+      "path": "src/components/dashboard/SalesTaxCard.tsx",
+      "lines": 82,
+      "purpose": "W2-7 part B (Cam 2026-10-20):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "SalesTaxCard",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/tax-categories",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/ShopCatalog.tsx",
-      "lines": 366,
+      "lines": 374,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -8377,6 +8469,7 @@
         "@/lib/dashboard-fetch",
         "@/lib/shop-import",
         "@/lib/shop-tree",
+        "@/lib/tax-categories",
         "@/lib/use-dashboard-access",
         "react"
       ],
@@ -9268,6 +9361,7 @@
         "src/components/dashboard/AgreementNotice.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
+        "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
@@ -9326,6 +9420,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
@@ -9898,6 +9993,7 @@
         "src/app/api/operator/photos/[id]/route.ts",
         "src/app/api/operator/photos/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/sales-tax/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
@@ -12369,6 +12465,7 @@
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
@@ -12477,7 +12574,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1923,
+      "lines": 1925,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14594,6 +14691,7 @@
         "src/lib/rate-limit.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/session.ts",
@@ -14771,6 +14869,7 @@
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/shop-items/read/route.ts",
+        "src/app/api/operator/shop-sales/quote/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
@@ -14909,6 +15008,86 @@
         "src/lib/checkin-booking.ts",
         "src/lib/member-session.ts",
         "src/lib/move-booking.ts"
+      ]
+    },
+    {
+      "path": "src/lib/sales-tax.ts",
+      "lines": 176,
+      "purpose": "W2-7 part B (Cam 2026-10-20:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "isTaxCategory",
+          "kind": "reexport"
+        },
+        {
+          "name": "quoteShopTax",
+          "kind": "fn"
+        },
+        {
+          "name": "recordPendingShopTax",
+          "kind": "fn"
+        },
+        {
+          "name": "recordShopSaleTax",
+          "kind": "fn"
+        },
+        {
+          "name": "reuseShopTaxQuote",
+          "kind": "fn"
+        },
+        {
+          "name": "setTaxOn",
+          "kind": "fn"
+        },
+        {
+          "name": "setUpTax",
+          "kind": "fn"
+        },
+        {
+          "name": "TAX_CATEGORIES",
+          "kind": "reexport"
+        },
+        {
+          "name": "TaxCategory",
+          "kind": "reexport"
+        },
+        {
+          "name": "TaxLine",
+          "kind": "type"
+        },
+        {
+          "name": "TaxQuote",
+          "kind": "type"
+        },
+        {
+          "name": "taxStatus",
+          "kind": "fn"
+        },
+        {
+          "name": "TaxStatus",
+          "kind": "type"
+        },
+        {
+          "name": "US_STATES",
+          "kind": "reexport"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./stripe",
+        "./tax-categories",
+        "stripe"
+      ],
+      "usedBy": [
+        "src/app/api/cron/hourly/route.ts",
+        "src/app/api/operator/sales-tax/route.ts",
+        "src/lib/shop-sales.ts"
       ]
     },
     {
@@ -15264,11 +15443,13 @@
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/residents/route.ts",
+        "src/app/api/operator/sales-tax/route.ts",
         "src/app/api/operator/schedule/preview/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-items/route.ts",
+        "src/app/api/operator/shop-sales/quote/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
@@ -15384,7 +15565,7 @@
     },
     {
       "path": "src/lib/shop-ai-import.ts",
-      "lines": 92,
+      "lines": 96,
       "purpose": "W2-7 (Cam 2026-10-20:",
       "brain": [],
       "exports": [
@@ -15416,6 +15597,7 @@
       "guard": null,
       "imports": [
         "./shop-import",
+        "./tax-categories",
         "@anthropic-ai/sdk"
       ],
       "usedBy": [
@@ -15424,7 +15606,7 @@
     },
     {
       "path": "src/lib/shop-catalog.ts",
-      "lines": 136,
+      "lines": 139,
       "purpose": "W2-7 (Cam 2026-10-20):",
       "brain": [],
       "exports": [
@@ -15473,7 +15655,8 @@
       "imports": [
         "./prisma",
         "./shop",
-        "./shop-import"
+        "./shop-import",
+        "./tax-categories"
       ],
       "usedBy": [
         "src/app/api/operator/shop-items/route.ts"
@@ -15481,7 +15664,7 @@
     },
     {
       "path": "src/lib/shop-import.ts",
-      "lines": 131,
+      "lines": 133,
       "purpose": "W2-7 (Cam 2026-10-20:",
       "brain": [],
       "exports": [
@@ -15528,7 +15711,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 277,
+      "lines": 317,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -15551,6 +15734,10 @@
         {
           "name": "MAX_SALE_LINES",
           "kind": "const"
+        },
+        {
+          "name": "quoteSale",
+          "kind": "fn"
         },
         {
           "name": "reconcileStuckSale",
@@ -15592,12 +15779,14 @@
       "guard": null,
       "imports": [
         "./prisma",
+        "./sales-tax",
         "./shop",
         "./stripe",
         "crypto",
         "stripe"
       ],
       "usedBy": [
+        "src/app/api/operator/shop-sales/quote/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/shop-sale/[id]/route.ts"
       ]
@@ -15926,6 +16115,7 @@
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ]
     },
@@ -15958,6 +16148,43 @@
       "usedBy": [
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/preview/[courseId]/request-changes/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/tax-categories.ts",
+      "lines": 21,
+      "purpose": "W2-7 part B:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "isTaxCategory",
+          "kind": "fn"
+        },
+        {
+          "name": "TAX_CATEGORIES",
+          "kind": "const"
+        },
+        {
+          "name": "TaxCategory",
+          "kind": "type"
+        },
+        {
+          "name": "US_STATES",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/SalesTaxCard.tsx",
+        "src/components/dashboard/ShopCatalog.tsx",
+        "src/lib/sales-tax.ts",
+        "src/lib/shop-ai-import.ts",
+        "src/lib/shop-catalog.ts"
       ]
     },
     {
@@ -17732,6 +17959,10 @@
           "type": "Boolean"
         },
         {
+          "name": "shopTaxOn",
+          "type": "Boolean"
+        },
+        {
           "name": "rating",
           "type": "Float"
         },
@@ -17942,7 +18173,8 @@
         "src/app/api/operator/upload/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/agreement-sign.ts",
-        "src/lib/lifecycle.ts"
+        "src/lib/lifecycle.ts",
+        "src/lib/sales-tax.ts"
       ],
       "readers": [
         "src/app/api/admin/activity/route.ts",
@@ -18016,6 +18248,7 @@
         "src/lib/monthly-review.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
+        "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
@@ -19566,6 +19799,10 @@
           "type": "String"
         },
         {
+          "name": "taxCategory",
+          "type": "String"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -19616,6 +19853,18 @@
           "type": "Int"
         },
         {
+          "name": "taxCents",
+          "type": "Int"
+        },
+        {
+          "name": "taxCalculationId",
+          "type": "String"
+        },
+        {
+          "name": "taxTransactionId",
+          "type": "String"
+        },
+        {
           "name": "customerName",
           "type": "String"
         },
@@ -19661,10 +19910,12 @@
         }
       ],
       "writers": [
+        "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ],
       "readers": [
         "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ]
     },

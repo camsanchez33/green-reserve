@@ -18,6 +18,7 @@ import { prisma } from './prisma';
 import Stripe from 'stripe';
 import { stripe } from './stripe';
 import { MAX_ITEM_PRICE_CENTS, MAX_LINE_QUANTITY, takeStock, shopFeeFor } from './shop';
+import { quoteShopTax, reuseShopTaxQuote, recordShopSaleTax, type TaxLine } from './sales-tax';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
@@ -26,17 +27,17 @@ export const STALE_CHARGE_MS = 10 * 60 * 1000;
 
 export type SaleLineInput = { shopItemId: string; quantity: number };
 export type SaleView = {
-  id: string; status: string; totalCents: number; createdAt: string; paidAt: string | null;
+  id: string; status: string; totalCents: number; taxCents: number; createdAt: string; paidAt: string | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
 };
 
 export const saleView = (s: {
-  id: string; status: string; totalCents: number; createdAt: Date; paidAt: Date | null;
+  id: string; status: string; totalCents: number; taxCents: number; createdAt: Date; paidAt: Date | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
 }): SaleView => ({
-  id: s.id, status: s.status, totalCents: s.totalCents, createdAt: s.createdAt.toISOString(), paidAt: s.paidAt?.toISOString() ?? null,
+  id: s.id, status: s.status, totalCents: s.totalCents, taxCents: s.taxCents, createdAt: s.createdAt.toISOString(), paidAt: s.paidAt?.toISOString() ?? null,
   customerName: s.customerName, customerPhone: s.customerPhone, customerEmail: s.customerEmail, soldBy: s.soldBy,
   lines: s.lines.map(l => ({ name: l.name, unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
 });
@@ -46,15 +47,14 @@ const LINES = { select: { name: true, unitPriceCents: true, quantity: true }, or
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
 
-/** Ring up a sale. Cash is paid on the spot; a link sale waits for the customer. */
-export async function createSale(opts: {
-  courseId: string; lines: unknown; pay: 'cash' | 'link'; soldBy: string;
-  customerName?: string; customerPhone?: string; customerEmail?: string;
-}): Promise<Result<SaleView & { payToken: string }>> {
-  if (!Array.isArray(opts.lines) || opts.lines.length === 0) return fail(400, 'Add at least one item.');
-  if (opts.lines.length > MAX_SALE_LINES) return fail(400, `A sale can have up to ${MAX_SALE_LINES} lines.`);
+type PricedLine = { shopItemId: string; name: string; unitPriceCents: number; quantity: number; taxCategory: string };
+
+/** This course's active, sellable items for the requested lines, priced from the catalog — never from the client. */
+async function priceLines(courseId: string, raw: unknown): Promise<Result<{ lines: PricedLine[]; subtotalCents: number }>> {
+  if (!Array.isArray(raw) || raw.length === 0) return fail(400, 'Add at least one item.');
+  if (raw.length > MAX_SALE_LINES) return fail(400, `A sale can have up to ${MAX_SALE_LINES} lines.`);
   const wanted = new Map<string, number>();
-  for (const l of opts.lines as Record<string, unknown>[]) {
+  for (const l of raw as Record<string, unknown>[]) {
     const id = typeof l?.shopItemId === 'string' ? l.shopItemId : '';
     const q = Number(l?.quantity);
     if (!id || !Number.isInteger(q) || q < 1 || q > MAX_LINE_QUANTITY) return fail(400, `Each line needs an item and a quantity of 1 to ${MAX_LINE_QUANTITY}.`);
@@ -64,12 +64,48 @@ export async function createSale(opts: {
   // Tenant isolation: only this course's active items, priced from the catalog — never from the client.
   // W2-7: an item with options is sold by its option — a parent never matches
   // here, nor does an option of a hidden item.
-  const items = await prisma.shopItem.findMany({ where: { id: { in: [...wanted.keys()] }, courseId: opts.courseId, active: true, options: { none: {} }, OR: [{ parentId: null }, { parent: { active: true } }] } });
+  const items = await prisma.shopItem.findMany({ where: { id: { in: [...wanted.keys()] }, courseId, active: true, options: { none: {} }, OR: [{ parentId: null }, { parent: { active: true } }] } });
   if (items.length !== wanted.size) return fail(404, 'One of those items is not in your shop any more — refresh and try again.');
-  const lines = items.map(i => ({ shopItemId: i.id, name: i.name, unitPriceCents: i.priceCents, quantity: wanted.get(i.id)! }));
+  const lines = items.map(i => ({ shopItemId: i.id, name: i.name, unitPriceCents: i.priceCents, quantity: wanted.get(i.id)!, taxCategory: i.taxCategory }));
   if (lines.some(l => l.unitPriceCents <= 0 || l.unitPriceCents > MAX_ITEM_PRICE_CENTS)) return fail(400, 'An item has a price that needs fixing in Settings → Pro shop.');
-  const totalCents = lines.reduce((s, l) => s + l.unitPriceCents * l.quantity, 0);
-  if (totalCents > MAX_SALE_CENTS) return fail(400, 'That sale is over $10,000 — check the quantities.');
+  const subtotalCents = lines.reduce((s, l) => s + l.unitPriceCents * l.quantity, 0);
+  if (subtotalCents > MAX_SALE_CENTS) return fail(400, 'That sale is over $10,000 — check the quantities.');
+  return { ok: true, value: { lines, subtotalCents } };
+}
+
+const taxLines = (lines: PricedLine[]): TaxLine[] => lines.map(l => ({ reference: l.shopItemId, amountCents: l.unitPriceCents * l.quantity, quantity: l.quantity, category: l.taxCategory }));
+const TAX_DOWN = 'We couldn’t work out the sales tax just now — try again in a moment.';
+
+/** W2-7 part B: what a sale will come to, tax included, before it is rung up. */
+export async function quoteSale(courseId: string, raw: unknown): Promise<Result<{ subtotalCents: number; taxCents: number; totalCents: number; taxCalculationId: string }>> {
+  const p = await priceLines(courseId, raw);
+  if (!p.ok) return p;
+  let q;
+  try { q = await quoteShopTax(courseId, taxLines(p.value.lines)); }
+  catch (err) { console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId, error: err instanceof Error ? err.message : String(err) })); return fail(502, TAX_DOWN); }
+  return { ok: true, value: { subtotalCents: p.value.subtotalCents, taxCents: q.taxCents, totalCents: p.value.subtotalCents + q.taxCents, taxCalculationId: q.calculationId } };
+}
+
+/** Ring up a sale. Cash is paid on the spot; a link sale waits for the customer. */
+export async function createSale(opts: {
+  courseId: string; lines: unknown; pay: 'cash' | 'link'; soldBy: string;
+  customerName?: string; customerPhone?: string; customerEmail?: string;
+  /** The quote the counter showed (quoteSale); reused when it still matches, else tax is worked out again. */
+  taxCalculationId?: string;
+}): Promise<Result<SaleView & { payToken: string }>> {
+  const p = await priceLines(opts.courseId, opts.lines);
+  if (!p.ok) return p;
+  const lines = p.value.lines.map(({ taxCategory: _t, ...l }) => l);
+  // W2-7 part B: sales tax from Stripe Tax when the course has it on.
+  let tax = { taxCents: 0, calculationId: '' };
+  try {
+    tax = (opts.taxCalculationId ? await reuseShopTaxQuote(opts.courseId, opts.taxCalculationId, taxLines(p.value.lines)) : null)
+      ?? await quoteShopTax(opts.courseId, taxLines(p.value.lines));
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId: opts.courseId, error: err instanceof Error ? err.message : String(err) }));
+    return fail(502, TAX_DOWN);
+  }
+  const totalCents = p.value.subtotalCents + tax.taxCents;
   if (opts.pay === 'link' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up pay links are not set up for the shop fee yet.');
 
   const name = String(opts.customerName ?? '').trim().slice(0, 80);
@@ -79,7 +115,7 @@ export async function createSale(opts: {
   const sale = await prisma.$transaction(async tx => {
     const s = await tx.shopSale.create({
       data: {
-        courseId: opts.courseId, totalCents, soldBy: opts.soldBy, customerName: name, customerPhone: phone, customerEmail: email, payToken,
+        courseId: opts.courseId, totalCents, taxCents: tax.taxCents, taxCalculationId: tax.calculationId, soldBy: opts.soldBy, customerName: name, customerPhone: phone, customerEmail: email, payToken,
         status: opts.pay === 'cash' ? 'paid_cash' : 'open', paidAt: opts.pay === 'cash' ? new Date() : null,
         lines: { create: lines },
       },
@@ -89,6 +125,7 @@ export async function createSale(opts: {
     if (opts.pay === 'cash') for (const l of lines) await takeStock(tx, l.shopItemId, l.quantity);
     return s;
   });
+  if (opts.pay === 'cash') await recordShopSaleTax(sale.id); // never throws; the hourly cron retries
   return { ok: true, value: { ...saleView(sale), payToken } };
 }
 
@@ -101,7 +138,7 @@ export const whyNotOpen = (status: string) =>
 
 /** Void an unpaid link sale, or take cash for it at the counter instead. */
 export async function settleOpenSale(courseId: string, saleId: string, to: 'void' | 'paid_cash'): Promise<Result<SaleView>> {
-  return prisma.$transaction(async tx => {
+  const r = await prisma.$transaction(async tx => {
     const done = await tx.shopSale.updateMany({
       where: { id: saleId, courseId, status: 'open' },
       // The token stays: the customer's page then says the sale was paid or cancelled.
@@ -113,6 +150,8 @@ export async function settleOpenSale(courseId: string, saleId: string, to: 'void
     if (to === 'paid_cash') for (const l of sale.lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
     return { ok: true as const, value: saleView(sale) };
   });
+  if (r.ok && to === 'paid_cash') await recordShopSaleTax(saleId);
+  return r;
 }
 
 /** What the customer's pay page shows. Null unless the token matches an open (or just-paid) sale. */
@@ -273,4 +312,5 @@ async function markCardPaid(saleId: string, stamp: Date, paymentIntentId: string
     const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true } });
     for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
   });
+  await recordShopSaleTax(saleId); // never throws; the hourly cron retries
 }

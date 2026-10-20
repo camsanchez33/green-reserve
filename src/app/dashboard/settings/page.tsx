@@ -8,6 +8,7 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
 import { ShopCatalog } from '@/components/dashboard/ShopCatalog';
+import { SalesTaxCard } from '@/components/dashboard/SalesTaxCard';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { describePolicy, policyFrom, LATE_FEE_TIMINGS } from '@/lib/cancel-policy';
 import { toast } from '@/components/dashboard/Toast';
@@ -1052,6 +1053,12 @@ function SettingsPageInner() {
               <SectionCard title="Pro shop">
                 <ShopCatalog />
               </SectionCard>
+              {/* W2-7 part B: owner only — staff can't change anything Stripe. */}
+              {access.loaded && !isStaffLogin && (
+                <SectionCard title="Sales tax">
+                  <SalesTaxCard homeState={String(form.state ?? '')} />
+                </SectionCard>
+              )}
             </div>
           )}
 

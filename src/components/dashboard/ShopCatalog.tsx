@@ -13,6 +13,9 @@ import { SHOP_SALE_FEE_CENTS, SHOP_FEE_ON } from '@/lib/booking-fees';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { parseImport, parsePriceCents, type ImportItem } from '@/lib/shop-import';
 import { shopTree, matches, stockOf, type FlatItem, type TreeItem } from '@/lib/shop-tree';
+import { TAX_CATEGORIES } from '@/lib/tax-categories';
+
+const TAX_OPTIONS = Object.entries(TAX_CATEGORIES) as [string, { label: string; hint: string }][];
 
 // POS-2 (Cam 2026-10-19): a new shop starts from the things nearly every pro
 // shop sells — one tap each, edit the price after.
@@ -32,10 +35,10 @@ const dollars = (c: number | null) => (c === null ? '' : (c / 100).toFixed(2));
 const LBL = 'block text-[12.5px] text-ink-soft mb-1';
 
 type OptRow = { id?: string; label: string; price: string; stock: string; sku: string };
-type Draft = { name: string; category: string; price: string; stock: string; sku: string; sized: boolean; options: OptRow[] };
-const emptyDraft = (): Draft => ({ name: '', category: '', price: '', stock: '', sku: '', sized: false, options: [] });
+type Draft = { name: string; category: string; price: string; stock: string; sku: string; taxCategory: string; sized: boolean; options: OptRow[] };
+const emptyDraft = (): Draft => ({ name: '', category: '', price: '', stock: '', sku: '', taxCategory: 'general', sized: false, options: [] });
 const draftOf = (i: TreeItem): Draft => ({
-  name: i.name, category: i.category, price: dollars(i.priceCents), stock: i.stockCount === null ? '' : String(i.stockCount), sku: i.sku,
+  name: i.name, category: i.category, price: dollars(i.priceCents), stock: i.stockCount === null ? '' : String(i.stockCount), sku: i.sku, taxCategory: i.taxCategory ?? 'general',
   sized: i.options.some(o => o.active),
   options: i.options.filter(o => o.active).map(o => ({ id: o.id, label: o.optionLabel, price: o.priceCents === i.priceCents ? '' : dollars(o.priceCents), stock: o.stockCount === null ? '' : String(o.stockCount), sku: o.sku })),
 });
@@ -44,7 +47,7 @@ const draftOf = (i: TreeItem): Draft => ({
 function bodyOf(d: Draft) {
   const toStock = (s: string) => (s.trim() === '' ? null : s.trim());
   return {
-    name: d.name, category: d.category, priceCents: parsePriceCents(d.price) ?? NaN, sku: d.sku,
+    name: d.name, category: d.category, priceCents: parsePriceCents(d.price) ?? NaN, sku: d.sku, taxCategory: d.taxCategory,
     stockCount: d.sized ? null : toStock(d.stock),
     options: d.sized ? d.options.map(o => ({ id: o.id, label: o.label, priceCents: o.price.trim() ? parsePriceCents(o.price) : null, stockCount: toStock(o.stock), sku: o.sku })) : [],
   };
@@ -79,6 +82,10 @@ function ItemEditor({ initial, categories, busy, submitLabel, onSubmit, onCancel
             <input value={d.sku} onChange={e => set('sku', e.target.value)} maxLength={64} placeholder="Optional" className={INPUT + ' w-full'} /></label>
         </>}
       </div>
+      <label className="block max-w-xs"><span className={LBL}>Sales tax type</span>
+        <select value={d.taxCategory} onChange={e => set('taxCategory', e.target.value)} className={INPUT + ' w-full'}>
+          {TAX_OPTIONS.map(([k, c]) => <option key={k} value={k}>{c.label} ({c.hint})</option>)}
+        </select></label>
       <datalist id="shop-categories">{categories.map(c => <option key={c} value={c} />)}</datalist>
       <label className="flex items-center gap-2 text-[13.5px] text-ink">
         <input type="checkbox" checked={d.sized} onChange={e => set('sized', e.target.checked)} className="w-4 h-4 accent-pine" />
@@ -192,7 +199,7 @@ function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) =
         <div className="space-y-2">
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
-              <thead><tr className="text-left text-[12px] text-ink-soft border-b border-line"><th className="py-1.5 pr-2 font-medium">Item</th><th className="py-1.5 pr-2 font-medium">Category</th><th className="py-1.5 pr-2 font-medium">Price</th><th className="py-1.5 pr-2 font-medium">Sizes or colors</th><th className="py-1.5 pr-2 font-medium">Stock</th><th className="py-1.5 pr-2 font-medium">SKU</th><th /></tr></thead>
+              <thead><tr className="text-left text-[12px] text-ink-soft border-b border-line"><th className="py-1.5 pr-2 font-medium">Item</th><th className="py-1.5 pr-2 font-medium">Category</th><th className="py-1.5 pr-2 font-medium">Price</th><th className="py-1.5 pr-2 font-medium">Sizes or colors</th><th className="py-1.5 pr-2 font-medium">Stock</th><th className="py-1.5 pr-2 font-medium">SKU</th><th className="py-1.5 pr-2 font-medium">Tax type</th><th /></tr></thead>
               <tbody className="divide-y divide-line-soft">
                 {rows.map((r, i) => (
                   <tr key={r.key} className="align-top">
@@ -202,6 +209,7 @@ function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) =
                     <td className="py-1.5 pr-2 text-ink-soft">{r.options.length ? r.options.map(o => o.label).join(' · ') : '—'}</td>
                     <td className="py-1.5 pr-2 tabular-nums text-ink-soft">{r.options.length ? (r.options.some(o => o.stockCount !== null) ? r.options.reduce((s, o) => s + (o.stockCount ?? 0), 0) : '—') : (r.stockCount ?? '—')}</td>
                     <td className="py-1.5 pr-2 text-ink-soft">{r.sku || '—'}</td>
+                    <td className="py-1.5 pr-2 w-36"><select value={r.taxCategory ?? 'general'} onChange={e => edit(i, { taxCategory: e.target.value })} aria-label="Tax type" className={INPUT + ' w-full'}>{TAX_OPTIONS.map(([k, c]) => <option key={k} value={k}>{c.label}</option>)}</select></td>
                     <td className="py-1.5 text-right"><button type="button" onClick={() => setRows(rs => rs && rs.filter((_, j) => j !== i))} className="text-[12.5px] text-ink-soft hover:text-ink">Remove</button></td>
                   </tr>
                 ))}

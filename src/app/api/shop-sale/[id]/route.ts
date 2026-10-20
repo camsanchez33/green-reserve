@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const sale = await saleForPayPage(id, token);
   if (!sale) return NextResponse.json({ error: 'This pay link is not valid any more. Ask the pro shop for a new one.' }, { status: 404 });
   return NextResponse.json({
-    status: sale.status === 'paying' ? 'open' : sale.status, totalCents: sale.totalCents,
+    status: sale.status === 'paying' ? 'open' : sale.status, totalCents: sale.totalCents, taxCents: sale.taxCents,
     courseName: sale.course.name, brandColor: sale.course.brandColor, logoUrl: sale.course.logoUrl,
     lines: sale.lines,
   });
