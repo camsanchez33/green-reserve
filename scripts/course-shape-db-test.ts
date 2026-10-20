@@ -65,6 +65,41 @@ const sched = (courseId: string, productId: string | null, extra: Record<string,
   const slots0700 = await prisma.teeTime.findMany({ where: { courseId: d.id, date: day, time: '07:00' } });
   ok('a booked time is adopted by its round, not doubled', slots0700.length === 1 && slots0700[0].id === legacy.id, JSON.stringify(slots0700.map(x => [x.productId, x.playersBooked])));
 
+  // Review finding 1: an 18 with a 9-hole twilight schedule, default ticks (only "18 holes").
+  const e = await prisma.course.create({ data: { name: 'Twilight', slug: `${TAG}-c`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '1', holes: 18, par: 72, timezone: 'UTC' } });
+  const tw = await sched(e.id, null, { holes: 9, startTime: '16:00', endTime: '17:00', greenFeeWeekdayCents: 2500 });
+  await sched(e.id, null);
+  const defaults = { shape: 'eighteen' as const, names: [], par: 72, rounds: shapeRounds(shapeDef('eighteen')!, []).map(x => ({ key: x.key, on: x.on })) };
+  const refused = await planCourseSetup(e.id, defaults);
+  ok('a 9-hole schedule with no 9-hole round ticked is refused, not turned into 18s', !refused.ok && /9-hole schedule \(16:00–17:00\)/.test(refused.ok ? '' : refused.error), JSON.stringify(refused));
+  ok('…and nothing changed', (await prisma.teeTimeSchedule.findUnique({ where: { id: tw.id } }))?.holes === 9 && (await prisma.courseProduct.count({ where: { courseId: e.id } })) === 0);
+
+  // Review finding 2: an 18 with a separate 9 keeps its round names, and a rename shows in the preview.
+  const f = await prisma.course.create({ data: { name: 'Exec', slug: `${TAG}-d`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '1', holes: 27, par: 72, timezone: 'UTC' } });
+  const fn = await Promise.all(['Front 9', 'Back 9', 'Executive 9'].map((name, i) => prisma.nine.create({ data: { courseId: f.id, name, sortOrder: i } })));
+  await prisma.courseProduct.create({ data: { courseId: f.id, label: '18 holes', holes: 18, nineIds: [fn[0].id, fn[1].id], sortOrder: 0 } });
+  const ex = await prisma.courseProduct.create({ data: { courseId: f.id, label: 'Executive 9', holes: 9, nineIds: [fn[2].id], sortOrder: 1 } });
+  const names = ['Front 9', 'Back 9', 'Executive 9'];
+  const plus = await planCourseSetup(f.id, { shape: 'eighteen_plus_nine', names, par: 72, rounds: shapeRounds(shapeDef('eighteen_plus_nine')!, names).map(x => ({ key: x.key, on: x.on })) });
+  ok('an 18 + separate 9 saved as itself changes nothing', plus.ok && !plus.preview.roundsRenamed.length && !plus.preview.roundsStarted.length && !plus.preview.roundsStopped.length, JSON.stringify(plus));
+  const asThree = await planCourseSetup(f.id, { shape: 'three_nines', names, par: 72, rounds: [{ key: 'pair:0-1', on: true }, { key: 'pair:1-2', on: false }, { key: 'pair:0-2', on: false }, { key: 'single:2', on: true }] });
+  ok('a round whose name would change says so in the preview', asThree.ok && asThree.preview.roundsRenamed.some(r => r.from === '18 holes' && r.to === 'Front 9 + Back 9') && asThree.preview.roundsKept.includes('Executive 9'), JSON.stringify(asThree));
+  ok('…and the preview wrote nothing', (await prisma.courseProduct.findUnique({ where: { id: ex.id } }))?.label === 'Executive 9');
+
+  // Review finding 4: a stopped round's open times come off on far days too; booked ones stay.
+  const far = addDaysStr(todayIn('UTC'), 40);
+  await prisma.teeTime.create({ data: { courseId: c.id, productId: sw.id, date: far, time: '10:00', holes: 18, playersBooked: 0, greenFeeCents: 5000, cartFeeCents: 0 } });
+  // (sw was stopped above; make a fresh stop to exercise the delete)
+  await prisma.courseProduct.update({ where: { id: sw.id }, data: { active: true } });
+  await prisma.teeTime.create({ data: { courseId: c.id, productId: sw.id, date: far, time: '10:10', holes: 18, playersBooked: 3, greenFeeCents: 5000, cartFeeCents: 0 } });
+  await applyCourseSetup(c.id, input);
+  ok('open times 40 days out on a stopped round are removed', (await prisma.teeTime.count({ where: { courseId: c.id, productId: sw.id, date: far, playersBooked: 0 } })) === 0);
+  ok('a booked time 40 days out stays', (await prisma.teeTime.count({ where: { courseId: c.id, productId: sw.id, date: far, playersBooked: 3 } })) === 1);
+
+  // Review finding 3: junk in rounds is a 400-style refusal, not a crash.
+  const junk = await planCourseSetup(c.id, { ...input, rounds: [null, { key: 'pair:0-1', on: true, label: 5 }] as never });
+  ok('malformed rounds do not throw', junk.ok || typeof junk.error === 'string');
+
   // Bad input.
   ok('the same name twice is refused', !(await planCourseSetup(c.id, { shape: 'three_nines', names: ['A', 'A', 'B'], par: 72, rounds: [] })).ok);
   ok('no round ticked is refused', !(await planCourseSetup(c.id, { ...input, rounds: input.rounds.map(x => ({ ...x, on: false })) })).ok);

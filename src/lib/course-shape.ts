@@ -38,6 +38,8 @@ export type PlanNine = { name: string };
 export type PlanRound = { key: string; label: string; holes: number; nines: number[]; on: boolean; hint: string };
 
 const clean = (s: string, fallback: string) => (s ?? '').trim().slice(0, 40) || fallback;
+/** "West" → "West 9"; "Executive 9" stays as it is. */
+const nineLabel = (n: string) => /\b9$/.test(n) ? n : `${n} 9`;
 
 /** The nines a shape makes from its names, in order. */
 export function shapeNines(shape: ShapeDef, names: string[]): PlanNine[] {
@@ -71,24 +73,43 @@ export function shapeRounds(shape: ShapeDef, names: string[]): PlanRound[] {
       ];
     case 'three_nines': {
       const pairs: PlanRound[] = [[0, 1], [1, 2], [0, 2]].map(([a, b]) => ({ key: `pair:${a}-${b}`, label: `${nm(a)} + ${nm(b)}`, holes: 18, nines: [a, b], on: true, hint: '18 holes.' }));
-      return [...pairs, ...[0, 1, 2].map(i => ({ key: `single:${i}`, label: `${nm(i)} 9`, holes: 9, nines: [i], on: false, hint: '9 holes.' }))];
+      return [...pairs, ...[0, 1, 2].map(i => ({ key: `single:${i}`, label: nineLabel(nm(i)), holes: 9, nines: [i], on: false, hint: '9 holes.' }))];
     }
     case 'two_eighteens': {
       const c = shape.nameFields.map((f, i) => clean(names[i], f.default));
       return [
         { key: 'pair:0-1', label: c[0], holes: 18, nines: [0, 1], on: true, hint: '18 holes.' },
         { key: 'pair:2-3', label: c[1], holes: 18, nines: [2, 3], on: true, hint: '18 holes.' },
-        { key: 'single:0', label: `${c[0]} 9`, holes: 9, nines: [0], on: false, hint: 'Front nine only.' },
-        { key: 'single:2', label: `${c[1]} 9`, holes: 9, nines: [2], on: false, hint: 'Front nine only.' },
+        { key: 'single:0', label: nineLabel(c[0]), holes: 9, nines: [0], on: false, hint: 'Front nine only.' },
+        { key: 'single:2', label: nineLabel(c[1]), holes: 9, nines: [2], on: false, hint: 'Front nine only.' },
       ];
     }
   }
 }
 
-/** Best guess at a course's shape from what it already has (to prefill the setup). */
-export function guessShape(holes: number | null, nineCount: number): ShapeKey {
+/**
+ * Best guess at a course's shape from what it already has (to prefill the
+ * setup). 27 holes is three nines unless the third nine is sold on its own and
+ * never paired — an 18 with a separate 9.
+ */
+export function guessShape(holes: number | null, nineCount: number, thirdNineAlone = false): ShapeKey {
   if (holes === 9 || nineCount === 1) return 'nine';
   if (holes === 36 || nineCount === 4) return 'two_eighteens';
-  if (holes === 27 || nineCount === 3) return 'three_nines';
+  if (holes === 27 || nineCount === 3) return thirdNineAlone ? 'eighteen_plus_nine' : 'three_nines';
   return 'eighteen';
+}
+
+/**
+ * True when a round's name is one the setup made rather than one the owner
+ * chose — a stock name ("18 holes", "Back 9 start"), a nine's name, "<nine> 9",
+ * "<nine> + <nine>", or a two-18s course name. Those follow the shape; any
+ * other name is kept.
+ */
+export function isStockLabel(label: string, nineNames: string[]): boolean {
+  const l = label.trim().toLowerCase();
+  const base = nineNames.map(n => n.trim().toLowerCase());
+  const courses = base.map(n => n.replace(/ (front|back)$/, ''));
+  const stock = new Set(['18 holes', '9 holes', 'back 9 start', ...base, ...courses, ...base.map(n => `${n} 9`), ...courses.map(n => `${n} 9`)]);
+  for (const a of base) for (const b of base) if (a !== b) stock.add(`${a} + ${b}`);
+  return stock.has(l);
 }

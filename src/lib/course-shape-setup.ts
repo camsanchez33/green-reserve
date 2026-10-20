@@ -20,6 +20,7 @@ export type SetupPreview = {
   holes: number; par: number;
   ninesAdded: string[]; ninesRenamed: { from: string; to: string }[]; ninesRemoved: string[];
   roundsStarted: string[]; roundsStopped: string[]; roundsKept: string[];
+  roundsRenamed: { from: string; to: string }[];   // kept rounds whose golfer-facing name changes
   schedulesPaused: number; schedulesMoved: number;
   schedulesMovedTo: string[]; // the rounds they move onto, once each
   bookedTimesKept: number;    // future booked times on rounds that stop — they stay
@@ -32,6 +33,7 @@ type Ops = {
   rounds: { id?: string; label: string; holes: number; nineIdx: number[]; sortOrder: number }[];  // on rounds
   stopProductIds: string[];
   moveUnscoped: { scheduleId: string; toRound: number }[];     // index into rounds
+  today: string;
 };
 
 const fail = (error: string) => ({ ok: false as const, error });
@@ -46,10 +48,11 @@ function validate(input: SetupInput) {
   const names = Array.isArray(input.names) ? input.names.map(n => String(n ?? '')) : [];
   const nines = shapeNines(shape, names);
   if (new Set(nines.map(n => n.name.toLowerCase())).size !== nines.length) return fail('Give each nine a different name.');
-  const wanted = new Map((Array.isArray(input.rounds) ? input.rounds : []).map(r => [String(r.key), r]));
+  const wanted = new Map((Array.isArray(input.rounds) ? input.rounds : [])
+    .filter(r => r && typeof r === 'object').map(r => [String(r.key), r]));
   const rounds = shapeRounds(shape, names).map(r => {
     const w = wanted.get(r.key);
-    return { ...r, on: w ? !!w.on : r.on, label: (w?.label ?? '').trim().slice(0, 40) || r.label };
+    return { ...r, on: w ? !!w.on : r.on, label: (typeof w?.label === 'string' ? w.label : '').trim().slice(0, 40) || r.label };
   });
   if (!rounds.some(r => r.on)) return fail('Tick at least one round golfers can book.');
   return { ok: true as const, shape, par, nines, rounds };
@@ -61,7 +64,7 @@ async function plan(courseId: string, input: SetupInput) {
   const [existingNines, products, schedules, course] = await Promise.all([
     prisma.nine.findMany({ where: { courseId }, orderBy: { sortOrder: 'asc' } }),
     prisma.courseProduct.findMany({ where: { courseId }, orderBy: { sortOrder: 'asc' } }),
-    prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, holes: true, active: true } }),
+    prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, holes: true, active: true, startTime: true, endTime: true } }),
     prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } }),
   ]);
 
@@ -83,14 +86,22 @@ async function plan(courseId: string, input: SetupInput) {
       ? products.find(p => !usedProducts.has(p.id) && p.holes === r.holes && p.nineIds.length === ids.length && ids.every(id => p.nineIds.includes(id!)))
       : undefined;
     if (match) usedProducts.add(match.id);
-    return { id: match?.id, label: r.label, holes: r.holes, nineIdx: r.nines, sortOrder: i, wasActive: match?.active ?? false };
+    return { id: match?.id, label: r.label, holes: r.holes, nineIdx: r.nines, sortOrder: i, wasActive: match?.active ?? false, was: match?.label ?? '' };
   });
   const stop = products.filter(p => !usedProducts.has(p.id) && p.active);
 
   // Schedules with no round move onto the round that fits: a 9-hole one onto the
   // first 9-hole round, anything else onto the first 18 (else the first round).
-  const firstOf = (holes: number) => { const i = roundOps.findIndex(r => r.holes === holes); return i >= 0 ? i : 0; };
-  const moveUnscoped = schedules.filter(s => !s.productId).map(s => ({ scheduleId: s.id, toRound: firstOf(s.holes === 9 ? 9 : 18) }));
+  // A schedule keeps its hole count — a 9-hole twilight schedule never becomes
+  // 18-hole times at the 9-hole price — so it needs a ticked round of that size.
+  const unscoped = schedules.filter(s => !s.productId);
+  const moveUnscoped: { scheduleId: string; toRound: number }[] = [];
+  for (const s of unscoped) {
+    const holes = s.holes === 9 ? 9 : 18;
+    const i = roundOps.findIndex(r => r.holes === holes);
+    if (i < 0) return fail(`You have a ${holes}-hole schedule (${s.startTime}–${s.endTime}). Tick a ${holes}-hole round for it, or remove that schedule on Schedule first.`);
+    moveUnscoped.push({ scheduleId: s.id, toRound: i });
+  }
   const pausedSchedules = schedules.filter(s => s.active && s.productId && stop.some(p => p.id === s.productId)).length;
   const today = todayIn(course?.timezone);
   const bookedTimesKept = stop.length ? await prisma.teeTime.count({ where: { courseId, productId: { in: stop.map(p => p.id) }, date: { gte: today }, OR: [{ playersBooked: { gt: 0 } }, { bookings: { some: { status: { not: 'cancelled' } } } }] } }) : 0;
@@ -103,6 +114,7 @@ async function plan(courseId: string, input: SetupInput) {
     roundsStarted: roundOps.filter(r => !r.wasActive).map(r => r.label),
     roundsStopped: stop.map(p => p.label),
     roundsKept: roundOps.filter(r => r.wasActive).map(r => r.label),
+    roundsRenamed: roundOps.filter(r => r.id && r.was && r.was !== r.label).map(r => ({ from: r.was, to: r.label })),
     schedulesPaused: pausedSchedules,
     schedulesMoved: moveUnscoped.length,
     schedulesMovedTo: [...new Set(moveUnscoped.map(m => roundOps[m.toRound]?.label).filter(Boolean))] as string[],
@@ -112,9 +124,10 @@ async function plan(courseId: string, input: SetupInput) {
     holes: v.shape.holes, par: v.par,
     nines: reused.map((r, i) => ({ id: r.existing?.id, name: r.name, sortOrder: i })),
     deleteNineIds: deleteNines.map(n => n.id),
-    rounds: roundOps.map(({ wasActive: _w, ...r }) => r),
+    rounds: roundOps.map(({ wasActive: _w, was: _x, ...r }) => r),
     stopProductIds: stop.map(p => p.id),
     moveUnscoped,
+    today,
   };
   return { ok: true as const, preview, ops };
 }
@@ -147,6 +160,9 @@ export async function applyCourseSetup(courseId: string, input: SetupInput) {
     if (ops.stopProductIds.length) {
       await tx.courseProduct.updateMany({ where: { id: { in: ops.stopProductIds }, courseId }, data: { active: false } });
       await tx.teeTimeSchedule.updateMany({ where: { productId: { in: ops.stopProductIds }, courseId }, data: { active: false } });
+      // Their open times come off on EVERY future day (the rebuild below covers
+      // only the next 8; the cron generates much further). Booked or blocked stay.
+      await tx.teeTime.deleteMany({ where: { courseId, productId: { in: ops.stopProductIds }, date: { gte: ops.today }, status: 'available', playersBooked: 0, bookings: { none: {} } } });
     }
     for (const m of ops.moveUnscoped) {
       const toId = roundIds[m.toRound];

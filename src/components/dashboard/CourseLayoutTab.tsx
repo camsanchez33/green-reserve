@@ -13,7 +13,7 @@ import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { teeColour } from '@/lib/tee-colour';
 import { sameNines } from '@/lib/course-rounds';
-import { SHAPES, shapeDef, shapeNines, shapeRounds, guessShape, type ShapeDef, type ShapeKey } from '@/lib/course-shape';
+import { SHAPES, shapeDef, shapeNines, shapeRounds, guessShape, isStockLabel, type ShapeDef, type ShapeKey } from '@/lib/course-shape';
 import type { SetupPreview } from '@/lib/course-shape-setup';
 
 const iBase = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -132,9 +132,8 @@ function startingRounds(shape: ShapeDef, names: string[], nines: Nine[], product
   return shapeRounds(shape, names).map(r => {
     const want = r.nines.map(i => ids[i]);
     const p = want.every(Boolean) ? products.find(x => x.active && x.holes === r.holes && x.nineIds.length === want.length && sameNines(x.nineIds, want as string[])) : undefined;
-    // Keep a name the owner gave the round; a name that was only its nines ("North + South") follows the new shape.
-    const auto = p ? p.nineIds.map(id => nines.find(x => x.id === id)?.name).join(' + ') : '';
-    return { key: r.key, on: products.length ? !!p : r.on, label: p && p.label !== auto ? p.label : '' };
+    // Keep a name the owner gave the round; a name the setup made follows the new shape.
+    return { key: r.key, on: products.length ? !!p : r.on, label: p && !isStockLabel(p.label, nines.map(x => x.name)) ? p.label : '' };
   });
 }
 
@@ -143,6 +142,7 @@ function previewLines(pv: SetupPreview): string[] {
   const list = (xs: string[]) => xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
   if (pv.ninesAdded.length) out.push(`Adds ${list(pv.ninesAdded)}.`);
   for (const r of pv.ninesRenamed) out.push(`Renames ${r.from} to ${r.to}.`);
+  for (const r of pv.roundsRenamed ?? []) out.push(`Golfers will see ${r.from} as ${r.to}.`);
   if (pv.ninesRemoved.length) out.push(`Removes ${list(pv.ninesRemoved)}, and the tee yardages set for ${pv.ninesRemoved.length === 1 ? 'it' : 'them'}.`);
   if (pv.roundsStarted.length) out.push(`Golfers can book ${list(pv.roundsStarted)}.`);
   if (pv.roundsStopped.length) out.push(`Stops selling ${list(pv.roundsStopped)}.${pv.schedulesPaused ? ` ${pv.schedulesPaused === 1 ? 'Its schedule is' : `${pv.schedulesPaused} schedules are`} paused, so no new times are made.` : ''}`);
@@ -156,7 +156,12 @@ function ShapeStep({ n, holes, par, nines, products, readOnly, onSaved }: {
   onSaved: (p: { holes: number; par: number }) => Promise<void>;
 }) {
   const sorted = [...nines].sort((a, b) => a.sortOrder - b.sortOrder);
-  const [shapeKey, setShapeKey] = useState<ShapeKey>(() => guessShape(holes, nines.length));
+  const [shapeKey, setShapeKey] = useState<ShapeKey>(() => {
+    const third = sorted[2]?.id;
+    const alone = !!third && products.some(x => x.active && x.holes === 9 && x.nineIds.length === 1 && x.nineIds[0] === third)
+      && !products.some(x => x.active && x.holes === 18 && x.nineIds.includes(third));
+    return guessShape(holes, nines.length, alone);
+  });
   const shape = shapeDef(shapeKey)!;
   const [names, setNames] = useState<string[]>(() => startingNames(shape, sorted));
   const [p, setP] = useState<string>(par ? String(par) : '');
