@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import Image from 'next/image';
+import { AuthPhotoShell } from '@/components/AuthPhotoShell';
 
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -26,12 +26,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
-          <p className="text-sm text-ink-soft mt-1">Course operator portal</p>
-        </div>
+    <AuthPhotoShell>
 
         <div className="bg-white rounded-lg shadow-card p-6">
           {sent ? (
@@ -45,7 +40,6 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               <div className="flex items-center gap-2 mb-2">
-                
                 <h2 className="text-[24px] font-serif font-semibold leading-none text-ink">Forgot your password?</h2>
               </div>
               <p className="text-sm text-ink-soft mb-5">Enter the email on your account and we&apos;ll send you a reset link.</p>
@@ -63,7 +57,6 @@ export default function ForgotPasswordPage() {
             </>
           )}
         </div>
-      </div>
-    </div>
+    </AuthPhotoShell>
   );
 }

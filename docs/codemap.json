@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 441,
+    "files": 442,
     "routes": 224,
     "libs": 135,
     "models": 43,
@@ -6364,7 +6364,7 @@
     },
     {
       "path": "src/app/dashboard/2fa/page.tsx",
-      "lines": 117,
+      "lines": 110,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6379,7 +6379,7 @@
       "auth": "operator",
       "guard": "entry",
       "imports": [
-        "next/image",
+        "@/components/AuthPhotoShell",
         "next/navigation",
         "react"
       ],
@@ -6440,7 +6440,7 @@
     },
     {
       "path": "src/app/dashboard/forgot-password/page.tsx",
-      "lines": 70,
+      "lines": 63,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6455,7 +6455,7 @@
       "auth": "operator",
       "guard": "entry",
       "imports": [
-        "next/image",
+        "@/components/AuthPhotoShell",
         "react"
       ],
       "usedBy": []
@@ -6488,7 +6488,7 @@
     },
     {
       "path": "src/app/dashboard/login/page.tsx",
-      "lines": 93,
+      "lines": 76,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6503,8 +6503,8 @@
       "auth": "operator",
       "guard": "entry",
       "imports": [
+        "@/components/AuthPhotoShell",
         "@/components/ui/StatusDot",
-        "next/image",
         "next/navigation",
         "react"
       ],
@@ -6723,7 +6723,7 @@
     },
     {
       "path": "src/app/dashboard/reset-password/page.tsx",
-      "lines": 118,
+      "lines": 112,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6738,9 +6738,9 @@
       "auth": "operator",
       "guard": "entry",
       "imports": [
+        "@/components/AuthPhotoShell",
         "@/lib/password",
         "lucide-react",
-        "next/image",
         "next/navigation",
         "react"
       ],
@@ -7516,6 +7516,40 @@
       ],
       "usedBy": [
         "src/components/OperatorSidebar.tsx"
+      ]
+    },
+    {
+      "path": "src/components/AuthPhotoShell.tsx",
+      "lines": 23,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "AUTH_PHOTO_LINK",
+          "kind": "const"
+        },
+        {
+          "name": "AUTH_PHOTO_LINKS",
+          "kind": "const"
+        },
+        {
+          "name": "AuthPhotoShell",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "next/image"
+      ],
+      "usedBy": [
+        "src/app/dashboard/2fa/page.tsx",
+        "src/app/dashboard/forgot-password/page.tsx",
+        "src/app/dashboard/login/page.tsx",
+        "src/app/dashboard/reset-password/page.tsx"
       ]
     },
     {
