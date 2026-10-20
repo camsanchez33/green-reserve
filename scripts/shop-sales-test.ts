@@ -11,7 +11,7 @@ const shop = readFileSync('src/lib/shop.ts', 'utf8');
 let failed = 0;
 const check = (name: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); if (!ok) failed++; };
 
-check('prices come from the catalog, never the client', /findMany\(\{ where: \{ id: \{ in: \[\.\.\.wanted\.keys\(\)\] \}, courseId: opts\.courseId, active: true \} \}\)/.test(lib) && /unitPriceCents: i\.priceCents/.test(lib));
+check('prices come from the catalog, never the client', /findMany\(\{ where: \{ id: \{ in: \[\.\.\.wanted\.keys\(\)\] \}, courseId: opts\.courseId, active: true, options: \{ none: \{\} \}, OR: \[\{ parentId: null \}, \{ parent: \{ active: true \} \}\] \} \}\)/.test(lib) && /unitPriceCents: i\.priceCents/.test(lib));
 check('a charge claims the sale before touching Stripe', lib.indexOf("data: { status: 'paying', chargeStartedAt: now }") > 0 && lib.indexOf("data: { status: 'paying', chargeStartedAt: now }") < lib.indexOf('stripe.paymentIntents.confirm('));
 check('void and took-cash only take an open sale', /where: \{ id: saleId, courseId, status: 'open' \}/.test(lib));
 check('a decline puts the sale back to open', /status: 'paying', chargeStartedAt: now \}, data: \{ status: 'open'/.test(lib));
@@ -32,7 +32,9 @@ check('staff routes need shop.sell; cash also needs counter payment; only links 
 check('staff writes are scoped to the session course', staff.includes('courseId: g.session.courseId') && lib.includes('where: { id: saleId, courseId, status'));
 check('stock is optional and bounded', items.includes('n > 100000') && items.includes("body.stockCount === ''"));
 check('round items take and return stock too', shop.includes('await takeStock(tx, item.id, quantity)') && shop.includes('await takeStock(tx, line.shopItemId, -line.quantity)'));
-check('an item sold walk-up is hidden, not deleted', items.includes('existing._count.saleLines > 0'));
+// W2-7: the delete rule moved to lib/shop-catalog deleteItem (it also counts an item's options).
+const catalogLib = readFileSync('src/lib/shop-catalog.ts', 'utf8');
+check('an item sold walk-up is hidden, not deleted', /existing\._count\.sales \+ existing\._count\.saleLines/.test(catalogLib) && items.includes('deleteItem(g.session.courseId, id)'));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');

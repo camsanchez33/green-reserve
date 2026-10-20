@@ -9,7 +9,7 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { SHOP_FEE_LABEL, SHOP_SALE_FEE_CENTS, SHOP_FEE_ON } from '@/lib/booking-fees';
 
 export type ShopLine = { id: string; name: string; unitPriceCents: number; quantity: number };
-type CatalogItem = { id: string; name: string; category: string; priceCents: number; active: boolean };
+type CatalogItem = { id: string; name: string; category: string; priceCents: number; active: boolean; parentId?: string | null };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
@@ -38,7 +38,10 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, edit
     if (catalog) return;
     const r = await dfetch<{ items: CatalogItem[] }>('/api/operator/shop-items');
     if (!r.ok) { setLoadError(r.error); return; }
-    const active = r.data.items.filter(i => i.active);
+    // W2-7: sellable rows only — an item with sizes/colors is picked by its option ("Logo polo — M").
+    const parents = new Set(r.data.items.map(i => i.parentId).filter(Boolean));
+    const hidden = new Set(r.data.items.filter(i => !i.active).map(i => i.id));
+    const active = r.data.items.filter(i => i.active && !parents.has(i.id) && !(i.parentId && hidden.has(i.parentId))).sort((a, b) => (a.category || '~').localeCompare(b.category || '~') || a.name.localeCompare(b.name));
     setCatalog(active);
     if (active[0]) setItemId(active[0].id);
   }
@@ -108,7 +111,11 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, edit
               <label className="sr-only" htmlFor={`shop-item-${bookingId}`}>Item</label>
               <select id={`shop-item-${bookingId}`} value={itemId} onChange={e => setItemId(e.target.value)}
                 className="min-w-0 flex-1 bg-paper border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none">
-                {catalog.map(i => <option key={i.id} value={i.id}>{i.name}{showMoney ? ` — ${usd(i.priceCents)}` : ''}</option>)}
+                {[...new Set(catalog.map(i => i.category || 'Other'))].map(c => (
+                  <optgroup key={c} label={c}>
+                    {catalog.filter(i => (i.category || 'Other') === c).map(i => <option key={i.id} value={i.id}>{i.name}{showMoney ? ` · ${usd(i.priceCents)}` : ''}</option>)}
+                  </optgroup>
+                ))}
               </select>
               <label className="sr-only" htmlFor={`shop-qty-${bookingId}`}>Quantity</label>
               <input id={`shop-qty-${bookingId}`} type="number" min={1} max={99} value={qty}

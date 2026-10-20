@@ -4,15 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-20 01:32 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f9338d3` · working tree **5 dirty file(s)**
+Generated 2026-10-20 03:00 UTC · branch `HEAD` · HEAD `a8cb431` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 40 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 44 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `f9338d3` | 2026-10-20 | W2-4/5: price periods inside one schedule; Prices & fees reorganised |
+| `fff11a1` | 2026-10-19 | Emails: one clean look for every email (EMAIL-2) (#152) |
+| `6956862` | 2026-10-20 | W2-7 part A: review fixes — hiding an item leaves its options alone |
+| `43dd9d7` | 2026-10-20 | W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling |
+| `8287f54` | 2026-10-19 | Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150) |
+| `cb98de8` | 2026-10-19 | W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149) |
 | `223121d` | 2026-10-19 | Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148) |
 | `95da45f` | 2026-10-19 | Member portal: show a resident their own spot at the resident rate, as booking charges (#146) |
 | `9910cf6` | 2026-10-19 | Member portal: show members exactly what booking charges (#145) |
@@ -55,13 +59,16 @@ Generated 2026-10-20 01:32 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (8 file(s))
 
-- `M OPERATOR_REWORK_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/api/operator/schedule/preview/route.ts`
-- `M src/lib/schedule-service.ts`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `M  scripts/op-login-test.ts`
+- `M  src/app/dashboard/2fa/page.tsx`
+- `M  src/app/dashboard/forgot-password/page.tsx`
+- `M  src/app/dashboard/login/page.tsx`
+- `M  src/app/dashboard/reset-password/page.tsx`
+- `A  src/components/AuthPhotoShell.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -147,55 +154,56 @@ Nothing awaiting review.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-19 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 2d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-19 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-19 | 0d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 7d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 11d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 11d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 11d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 11d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 8d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 12d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 12d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 12d |
 
 ## Recent commits
 
-- `f9338d3` 2026-10-20 — W2-4/5: price periods inside one schedule; Prices & fees reorganised
+- `fff11a1` 2026-10-19 — Emails: one clean look for every email (EMAIL-2) (#152)
+- `1028831` 2026-10-20 — queue/spec update
+- `6956862` 2026-10-20 — W2-7 part A: review fixes — hiding an item leaves its options alone
+- `43dd9d7` 2026-10-20 — W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling
+- `8287f54` 2026-10-19 — Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150)
+- `cb98de8` 2026-10-19 — W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)
 - `223121d` 2026-10-19 — Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)
 - `abb4518` 2026-10-19 — queue/spec update (#147)
 - `95da45f` 2026-10-19 — Member portal: show a resident their own spot at the resident rate, as booking charges (#146)
 - `9910cf6` 2026-10-19 — Member portal: show members exactly what booking charges (#145)
 - `dbd4737` 2026-10-19 — Status board: regenerate (#144)
 - `428da80` 2026-10-19 — Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)
-- `0419675` 2026-10-19 — Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)
-- `b14b998` 2026-10-19 — Course groups: one golfer page and one resident list for courses run together (#141)
-- `662f294` 2026-10-19 — Members: import a list, and each member's last round (#140)
-- `9aba8a1` 2026-10-19 — Settings: Who pays what, one table of every kind of golfer and their price (#139)
-- `a8c71b9` 2026-10-19 — Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)
 
 ---
 

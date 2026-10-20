@@ -4,6 +4,8 @@
 // (text or email; they pay on their own phone). Items for a group that is
 // playing go on their round from the tee sheet instead, as before.
 // Below: today's sales and any still waiting on a pay link.
+// W2-7 (Cam 2026-10-20): find an item by name, size or SKU; filter by
+// category; an item with sizes/colors opens its options to pick one.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
@@ -13,8 +15,9 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
+import { shopTree, matches, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 
-type Item = { id: string; name: string; category: string; priceCents: number; active: boolean; stockCount: number | null };
+type Item = FlatItem;
 type Sale = { id: string; status: string; totalCents: number; createdAt: string; paidAt: string | null; customerName: string; customerPhone: string; customerEmail: string; soldBy: string; lines: { name: string; unitPriceCents: number; quantity: number }[] };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
@@ -38,6 +41,9 @@ export default function ShopPage() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
+  const [q, setQ] = useState('');
+  const [cat, setCat] = useState('');
+  const [picking, setPicking] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoadError('');
@@ -52,11 +58,17 @@ export default function ShopPage() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  const tree = useMemo(() => shopTree(items ?? []).filter(i => !i.parentId), [items]);
+  const categories = useMemo(() => [...new Set(tree.map(i => i.category || 'Other'))].sort(), [tree]);
   const groups = useMemo(() => {
-    const m = new Map<string, Item[]>();
-    for (const it of items ?? []) { const k = it.category || 'Other'; m.set(k, [...(m.get(k) ?? []), it]); }
+    const m = new Map<string, TreeItem[]>();
+    for (const it of tree) {
+      if (!matches(it, q) || (cat && (it.category || 'Other') !== cat)) continue;
+      const k = it.category || 'Other'; m.set(k, [...(m.get(k) ?? []), it]);
+    }
     return [...m.entries()];
-  }, [items]);
+  }, [tree, q, cat]);
+  const inCart = (it: TreeItem) => (it.options.length ? it.options.reduce((s, o) => s + (cart[o.id] ?? 0), 0) : cart[it.id] ?? 0);
   const lines = (items ?? []).filter(i => cart[i.id]).map(i => ({ item: i, quantity: cart[i.id] }));
   const total = lines.reduce((s, l) => s + l.item.priceCents * l.quantity, 0);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
@@ -119,21 +131,50 @@ export default function ShopPage() {
                 {items && items.length === 0 && (
                   <p className="text-sm text-ink-soft">Your shop has no items yet. <Link href="/dashboard/settings?section=Pro+shop" className="text-pine font-medium underline">Add them in Settings → Pro shop</Link>.</p>
                 )}
-                {groups.map(([cat, list]) => (
-                  <section key={cat} className="mb-4 last:mb-0">
-                    <h2 className="text-[13px] font-semibold text-ink mb-2">{cat}</h2>
+                {tree.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <input value={q} onChange={e => setQ(e.target.value)} placeholder="Find an item, size or SKU" aria-label="Find an item" className={INPUT + ' w-56'} />
+                    {categories.length > 1 && ['', ...categories].map(c => (
+                      <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
+                        className={'text-[12.5px] rounded-md px-2.5 py-1 border ' + (cat === c ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{c || 'All'}</button>
+                    ))}
+                  </div>
+                )}
+                {tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.</p>}
+                {groups.map(([group, list]) => (
+                  <section key={group} className="mb-4 last:mb-0">
+                    <h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {list.map(it => (
-                        <button key={it.id} onClick={() => add(it.id, 1)}
-                          className={'text-left rounded-md border px-3 py-2.5 transition-colors ' + (cart[it.id] ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
-                          <span className="block text-sm font-medium text-ink leading-snug">{it.name}</span>
-                          <span className="block text-[12.5px] text-ink-muted tabular-nums">
-                            {usd(it.priceCents)}
-                            {it.stockCount !== null && <span className={it.stockCount <= 0 ? 'text-bad' : ''}> · {it.stockCount <= 0 ? 'none left' : `${it.stockCount} left`}</span>}
-                            {cart[it.id] ? <span className="text-pine font-semibold"> · {cart[it.id]} in sale</span> : null}
-                          </span>
-                        </button>
-                      ))}
+                      {list.map(it => {
+                        const n = inCart(it);
+                        const opts = it.options.filter(o => o.active);
+                        return (
+                          <div key={it.id} className={picking === it.id ? 'col-span-2 sm:col-span-3' : ''}>
+                            <button onClick={() => (opts.length ? setPicking(p => (p === it.id ? null : it.id)) : add(it.id, 1))} aria-expanded={opts.length ? picking === it.id : undefined}
+                              className={'w-full text-left rounded-md border px-3 py-2.5 transition-colors ' + (n ? 'border-pine/50 bg-pine/[0.05]' : 'border-line bg-white hover:border-line-strong')}>
+                              <span className="block text-sm font-medium text-ink leading-snug">{it.name}</span>
+                              <span className="block text-[12.5px] text-ink-muted tabular-nums">
+                                {usd(it.priceCents)}
+                                {opts.length ? <> · {opts.length} options</> : it.stockCount !== null && <span className={it.stockCount <= 0 ? 'text-bad' : ''}> · {it.stockCount <= 0 ? 'none left' : `${it.stockCount} left`}</span>}
+                                {n ? <span className="text-pine font-semibold"> · {n} in sale</span> : null}
+                              </span>
+                            </button>
+                            {picking === it.id && (
+                              <div className="mt-1.5 flex flex-wrap gap-1.5 bg-paper/70 rounded-md p-2" role="group" aria-label={`${it.name} options`}>
+                                {opts.map(o => (
+                                  <button key={o.id} onClick={() => add(o.id, 1)}
+                                    className={'rounded-md border px-3 py-1.5 text-[13px] ' + (cart[o.id] ? 'border-pine/50 bg-white text-ink font-medium' : 'border-line bg-white text-ink hover:border-line-strong')}>
+                                    {o.optionLabel}
+                                    {o.priceCents !== it.priceCents && <span className="text-ink-muted tabular-nums"> {usd(o.priceCents)}</span>}
+                                    {o.stockCount !== null && <span className={'tabular-nums ' + (o.stockCount <= 0 ? 'text-bad' : 'text-ink-muted')}> ({o.stockCount})</span>}
+                                    {cart[o.id] ? <span className="text-pine font-semibold"> ×{cart[o.id]}</span> : null}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </section>
                 ))}
