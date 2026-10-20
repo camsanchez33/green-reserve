@@ -47,7 +47,9 @@ const REPLY_TO = 'thegreenreserve@outlook.com';
 // LOGO-1 (Cam 2026-09-30: the logo should be "defined" in the emails, top
 // left). The lockup sits top-left of every email, rendered from the vector
 // logo at 3x its 180px display width (email clients do not show SVG), so it is
-// sharp on retina phones. The footer is text only — one logo per email.
+// sharp on retina phones. LOGO-2 (Cam 2026-10-20): the footer carries the short
+// mark — the golfer alone, cream on pine (public/brand/mark.svg) — beside the
+// name, as a 28px PNG with its rounded corners baked in (Outlook ignores CSS radius).
 function baseTemplate(content: string) {
   return `<!DOCTYPE html>
 <html>
@@ -62,8 +64,11 @@ function baseTemplate(content: string) {
         <tr><td style="background:#ffffff;padding:24px 36px 36px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">${content}</td></tr>
         <tr>
           <td style="background:#ffffff;padding:0 36px 20px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;border-radius:0 0 4px 4px;">
-            <div style="border-top:1px solid #f4f4f5;padding-top:20px;text-align:center;color:#a1a1aa;font-size:11px;">
-              GreenReserve &middot; <a href="https://greenreserve.app" style="color:#71717a;text-decoration:none;">greenreserve.app</a>
+            <div style="border-top:1px solid #f4f4f5;padding-top:20px;">
+              <table cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;"><tr>
+                <td style="padding-right:10px;vertical-align:middle;"><img src="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/brand/email-mark-2x.png" width="28" height="28" alt="" style="display:block;border:0;outline:none;width:28px;height:28px;" /></td>
+                <td style="vertical-align:middle;color:#a1a1aa;font-size:11px;">GreenReserve &middot; <a href="https://greenreserve.app" style="color:#71717a;text-decoration:none;">greenreserve.app</a></td>
+              </tr></table>
             </div>
           </td>
         </tr>
@@ -617,9 +622,6 @@ export async function sendAdminPasswordChangedNotification(data: {
     <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:16px 20px;margin-bottom:20px;">
       <p style="margin:0;color:#92400e;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:thegreenreserve@outlook.com" style="color:#92400e;text-decoration:underline;">thegreenreserve@outlook.com</a> right away.</p>
     </div>
-    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Green Reserve &middot; <a href="https://greenreserve.app" style="color:#6b7280;">greenreserve.app</a>
-    </p>
   `);
   await getResend().emails.send({
     from: FROM,
@@ -922,9 +924,6 @@ export async function sendPasswordChangedNotification(data: {
     <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:16px 20px;margin-bottom:20px;">
       <p style="margin:0;color:#92400e;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:thegreenreserve@outlook.com" style="color:#92400e;text-decoration:underline;">thegreenreserve@outlook.com</a> right away.</p>
     </div>
-    <p style="margin:0;color:#9ca3af;font-size:12px;text-align:center;">
-      Green Reserve &middot; <a href="https://greenreserve.app" style="color:#6b7280;">greenreserve.app</a>
-    </p>
   `);
   await getResend().emails.send({
     from: FROM,

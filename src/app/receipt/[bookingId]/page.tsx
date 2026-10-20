@@ -224,8 +224,11 @@ function ReceiptPageInner() {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-line px-6 py-4 text-center text-xs text-ink-muted">
-              thegreenreserve@outlook.com · greenreserve.app
+            {/* LOGO-2 (Cam 2026-10-20): the short mark — the golfer, cream on pine — signs the receipt. */}
+            <div className="border-t border-line px-6 py-4 flex items-center justify-center gap-2.5 text-xs text-ink-muted">
+              {/* eslint-disable-next-line @next/next/no-img-element -- prints with the receipt; next/image adds nothing for a 28px static mark */}
+              <img src="/brand/mark.svg" alt="" width={28} height={28} loading="lazy" className="w-7 h-7 rounded-md shrink-0" />
+              <span>Booked through GreenReserve · greenreserve.app · thegreenreserve@outlook.com</span>
             </div>
           </div>
 

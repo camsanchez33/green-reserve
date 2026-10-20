@@ -1,13 +1,23 @@
 {
-  "generatedAt": "2026-10-20T02:15:16.716Z",
+  "generatedAt": "2026-10-20T02:19:01.296Z",
   "repo": {
-    "head": "6956862",
+    "head": "1028831",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 1,
+    "dirtyCount": 11,
     "dirty": [
-      "M OPERATOR_REWORK_SPEC.md"
+      "M  CLAUDE.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "A  public/brand/email-mark-2x.png",
+      "A  public/brand/mark-1024.png",
+      "A  public/brand/mark-cream-1024.png",
+      "A  public/brand/mark-cream.svg",
+      "A  public/brand/mark.svg",
+      "M  src/app/receipt/[bookingId]/page.tsx",
+      "M  src/components/OperatorSidebar.tsx",
+      "M  src/lib/email.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
@@ -694,6 +704,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "1028831",
+      "date": "2026-10-20",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "6956862",
       "date": "2026-10-20",
       "subject": "W2-7 part A: review fixes — hiding an item leaves its options alone"
@@ -747,11 +762,6 @@
       "h": "b14b998",
       "date": "2026-10-19",
       "subject": "Course groups: one golfer page and one resident list for courses run together (#141)"
-    },
-    {
-      "h": "662f294",
-      "date": "2026-10-19",
-      "subject": "Members: import a list, and each member's last round (#140)"
     }
   ]
 }

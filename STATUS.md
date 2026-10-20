@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-20 02:15 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6956862` · working tree **1 dirty file(s)**
+Generated 2026-10-20 02:19 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1028831` · working tree **11 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -57,12 +57,22 @@ Generated 2026-10-20 02:15 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (11 file(s))
 
-- `M OPERATOR_REWORK_SPEC.md`
+- `M  CLAUDE.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `A  public/brand/email-mark-2x.png`
+- `A  public/brand/mark-1024.png`
+- `A  public/brand/mark-cream-1024.png`
+- `A  public/brand/mark-cream.svg`
+- `A  public/brand/mark.svg`
+- `M  src/app/receipt/[bookingId]/page.tsx`
+- `M  src/components/OperatorSidebar.tsx`
+- `M  src/lib/email.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -183,6 +193,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `1028831` 2026-10-20 — queue/spec update
 - `6956862` 2026-10-20 — W2-7 part A: review fixes — hiding an item leaves its options alone
 - `43dd9d7` 2026-10-20 — W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling
 - `cb98de8` 2026-10-19 — W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)
@@ -194,7 +205,6 @@ Nothing awaiting review.
 - `428da80` 2026-10-19 — Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)
 - `0419675` 2026-10-19 — Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)
 - `b14b998` 2026-10-19 — Course groups: one golfer page and one resident list for courses run together (#141)
-- `662f294` 2026-10-19 — Members: import a list, and each member's last round (#140)
 
 ---
 
