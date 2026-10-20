@@ -62,7 +62,8 @@ export async function createSale(opts: {
   }
   for (const q of wanted.values()) if (q > MAX_LINE_QUANTITY) return fail(400, `Quantity must be 1 to ${MAX_LINE_QUANTITY}.`);
   // Tenant isolation: only this course's active items, priced from the catalog — never from the client.
-  const items = await prisma.shopItem.findMany({ where: { id: { in: [...wanted.keys()] }, courseId: opts.courseId, active: true } });
+  // W2-7: an item with options is sold by its option — a parent never matches here.
+  const items = await prisma.shopItem.findMany({ where: { id: { in: [...wanted.keys()] }, courseId: opts.courseId, active: true, options: { none: {} } } });
   if (items.length !== wanted.size) return fail(404, 'One of those items is not in your shop any more — refresh and try again.');
   const lines = items.map(i => ({ shopItemId: i.id, name: i.name, unitPriceCents: i.priceCents, quantity: wanted.get(i.id)! }));
   if (lines.some(l => l.unitPriceCents <= 0 || l.unitPriceCents > MAX_ITEM_PRICE_CENTS)) return fail(400, 'An item has a price that needs fixing in Settings → Pro shop.');

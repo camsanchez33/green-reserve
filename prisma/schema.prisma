@@ -1106,24 +1106,35 @@ model CourseMessage {
 /// POS-1a (PLATFORM_ROADMAP_SPEC §4): a course's pro-shop catalog — apparel,
 /// balls, range buckets, rentals. POS-2 (Cam 2026-10-19): optional stock count.
 model ShopItem {
-  id         String            @id @default(cuid())
-  courseId   String
-  course     Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  name       String
-  category   String            @default("")
-  priceCents Int
+  id          String            @id @default(cuid())
+  courseId    String
+  course      Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name        String
+  category    String            @default("")
+  priceCents  Int
   /// Hidden from "Add to round" but kept, so past sales still name it.
-  active     Boolean           @default(true)
-  sortOrder  Int               @default(0)
+  active      Boolean           @default(true)
+  sortOrder   Int               @default(0)
   /// POS-2: how many are on the shelf; null = not counted. Paid walk-up sales
   /// and items added to a round take from it. Never blocks a sale.
-  stockCount Int?
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  sales      BookingShopItem[]
-  saleLines  ShopSaleLine[]
+  stockCount  Int?
+  /// W2-7: the item's own code — SKU or barcode number (searchable; scanning later).
+  sku         String            @default("")
+  /// W2-7 (Cam 2026-10-20): sizes/colors are OPTIONS of one item. An option is
+  /// its own sellable row (own price, stock, SKU) under its parent; its name is
+  /// "<parent> — <optionLabel>" so every sale line reads right. A parent with
+  /// options is not sold itself — staff pick an option.
+  parentId    String?
+  parent      ShopItem?         @relation("ShopItemOptions", fields: [parentId], references: [id], onDelete: Cascade)
+  options     ShopItem[]        @relation("ShopItemOptions")
+  optionLabel String            @default("")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  sales       BookingShopItem[]
+  saleLines   ShopSaleLine[]
 
   @@index([courseId])
+  @@index([parentId])
 }
 
 /// POS-2 (Cam 2026-10-19): a walk-up pro-shop sale with no round attached —

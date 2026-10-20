@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 441,
-    "routes": 224,
-    "libs": 135,
+    "files": 446,
+    "routes": 225,
+    "libs": 139,
     "models": 43,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5279,8 +5279,39 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/shop-items/read/route.ts",
+      "lines": 32,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "maxDuration",
+          "kind": "const"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/shop-items/read",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/rate-limit",
+        "@/lib/session",
+        "@/lib/shop-ai-import",
+        "@anthropic-ai/sdk",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/shop-items/route.ts",
-      "lines": 97,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5315,7 +5346,7 @@
         "@/lib/agreement-required",
         "@/lib/prisma",
         "@/lib/session",
-        "@/lib/shop",
+        "@/lib/shop-catalog",
         "next/server"
       ],
       "usedBy": []
@@ -6824,7 +6855,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 226,
+      "lines": 267,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -6845,6 +6876,7 @@
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
+        "@/lib/shop-tree",
         "@/lib/use-dashboard-access",
         "next/link",
         "react"
@@ -8290,7 +8322,7 @@
     },
     {
       "path": "src/components/dashboard/ShopCatalog.tsx",
-      "lines": 174,
+      "lines": 362,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -8308,6 +8340,8 @@
         "@/components/ui/field",
         "@/lib/booking-fees",
         "@/lib/dashboard-fetch",
+        "@/lib/shop-import",
+        "@/lib/shop-tree",
         "@/lib/use-dashboard-access",
         "react"
       ],
@@ -8317,7 +8351,7 @@
     },
     {
       "path": "src/components/dashboard/ShopItemsForGroup.tsx",
-      "lines": 131,
+      "lines": 137,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -14525,6 +14559,7 @@
         "src/lib/schedule-service.ts",
         "src/lib/session.ts",
         "src/lib/sheet-token.ts",
+        "src/lib/shop-catalog.ts",
         "src/lib/shop-sales.ts",
         "src/lib/shop.ts",
         "src/lib/submit-change-request.ts",
@@ -14696,6 +14731,7 @@
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/request-changes/route.ts",
+        "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
@@ -15192,6 +15228,7 @@
         "src/app/api/operator/schedule/preview/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
@@ -15307,8 +15344,152 @@
       ]
     },
     {
+      "path": "src/lib/shop-ai-import.ts",
+      "lines": 92,
+      "purpose": "W2-7 (Cam 2026-10-20:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cleanRows",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_READ_CHARS",
+          "kind": "const"
+        },
+        {
+          "name": "ReadRow",
+          "kind": "type"
+        },
+        {
+          "name": "readShopList",
+          "kind": "fn"
+        },
+        {
+          "name": "SHOP_READ_MODEL",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./shop-import",
+        "@anthropic-ai/sdk"
+      ],
+      "usedBy": [
+        "src/app/api/operator/shop-items/read/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/shop-catalog.ts",
+      "lines": 136,
+      "purpose": "W2-7 (Cam 2026-10-20):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "createItems",
+          "kind": "fn"
+        },
+        {
+          "name": "deleteItem",
+          "kind": "fn"
+        },
+        {
+          "name": "ImportItem",
+          "kind": "reexport"
+        },
+        {
+          "name": "ITEM_SELECT",
+          "kind": "const"
+        },
+        {
+          "name": "ItemIn",
+          "kind": "type"
+        },
+        {
+          "name": "optionName",
+          "kind": "fn"
+        },
+        {
+          "name": "readItem",
+          "kind": "fn"
+        },
+        {
+          "name": "setItemActive",
+          "kind": "fn"
+        },
+        {
+          "name": "updateItem",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./shop",
+        "./shop-import"
+      ],
+      "usedBy": [
+        "src/app/api/operator/shop-items/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/shop-import.ts",
+      "lines": 131,
+      "purpose": "W2-7 (Cam 2026-10-20:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ImportItem",
+          "kind": "type"
+        },
+        {
+          "name": "ImportOption",
+          "kind": "type"
+        },
+        {
+          "name": "ImportRow",
+          "kind": "type"
+        },
+        {
+          "name": "MAX_IMPORT_ITEMS",
+          "kind": "const"
+        },
+        {
+          "name": "MAX_OPTIONS",
+          "kind": "const"
+        },
+        {
+          "name": "parseImport",
+          "kind": "fn"
+        },
+        {
+          "name": "parsePriceCents",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/ShopCatalog.tsx",
+        "src/lib/shop-ai-import.ts",
+        "src/lib/shop-catalog.ts"
+      ]
+    },
+    {
       "path": "src/lib/shop-sales.ts",
-      "lines": 275,
+      "lines": 276,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -15383,8 +15564,46 @@
       ]
     },
     {
+      "path": "src/lib/shop-tree.ts",
+      "lines": 29,
+      "purpose": "W2-7:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FlatItem",
+          "kind": "type"
+        },
+        {
+          "name": "matches",
+          "kind": "fn"
+        },
+        {
+          "name": "shopTree",
+          "kind": "fn"
+        },
+        {
+          "name": "stockOf",
+          "kind": "fn"
+        },
+        {
+          "name": "TreeItem",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/ShopCatalog.tsx"
+      ]
+    },
+    {
       "path": "src/lib/shop.ts",
-      "lines": 150,
+      "lines": 152,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [
         "pro-shop"
@@ -15476,11 +15695,11 @@
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/shop/route.ts",
-        "src/app/api/operator/shop-items/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/shop-catalog.ts",
         "src/lib/shop-sales.ts"
       ]
     },
@@ -19288,6 +19507,26 @@
           "type": "Int?"
         },
         {
+          "name": "sku",
+          "type": "String"
+        },
+        {
+          "name": "parentId",
+          "type": "String?"
+        },
+        {
+          "name": "parent",
+          "type": "ShopItem?"
+        },
+        {
+          "name": "options",
+          "type": "ShopItem[]"
+        },
+        {
+          "name": "optionLabel",
+          "type": "String"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -19305,10 +19544,12 @@
         }
       ],
       "writers": [
-        "src/app/api/operator/shop-items/route.ts"
+        "src/app/api/operator/shop-items/route.ts",
+        "src/lib/shop-catalog.ts"
       ],
       "readers": [
         "src/app/api/operator/shop-items/route.ts",
+        "src/lib/shop-catalog.ts",
         "src/lib/shop-sales.ts"
       ]
     },

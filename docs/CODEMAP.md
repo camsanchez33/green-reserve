@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-441 source files · 224 routes · 135 libraries · 43 models
+446 source files · 225 routes · 139 libraries · 43 models
 
 ## Single sources of truth
 
@@ -214,7 +214,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/schedule` | operator | file | DELETE GET PATCH POST PUT | `src/app/api/operator/schedule/route.ts` | 89 |
 | `/api/operator/schedule/preview` | operator | file | POST | `src/app/api/operator/schedule/preview/route.ts` | 27 |
 | `/api/operator/settings` | operator | file | GET PATCH | `src/app/api/operator/settings/route.ts` | 123 |
-| `/api/operator/shop-items` | operator | NONE FOUND for POST/PATCH/DELETE | DELETE GET PATCH POST | `src/app/api/operator/shop-items/route.ts` | 97 |
+| `/api/operator/shop-items` | operator | NONE FOUND for POST/PATCH/DELETE | DELETE GET PATCH POST | `src/app/api/operator/shop-items/route.ts` | 91 |
+| `/api/operator/shop-items/read` | operator | file | POST | `src/app/api/operator/shop-items/read/route.ts` | 32 |
 | `/api/operator/shop-sales` | operator | file | GET PATCH POST | `src/app/api/operator/shop-sales/route.ts` | 146 |
 | `/api/operator/sign` | operator | file | GET POST | `src/app/api/operator/sign/route.ts` | 105 |
 | `/api/operator/staff` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/staff/route.ts` | 124 |
@@ -259,7 +260,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 118 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 583 |
 | `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1192 |
-| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 226 |
+| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 267 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 27 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
@@ -283,11 +284,11 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 186 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 187 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 54 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
 | `src/lib/email.ts` | 50 | 1920 |  | `BookingEmailData`, `escapeHtml`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail`, `sendAdminTwoFactorCode` +54 more |
-| `src/lib/session.ts` | 46 | 99 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
-| `src/lib/rate-limit.ts` | 38 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
+| `src/lib/session.ts` | 47 | 99 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
+| `src/lib/rate-limit.ts` | 39 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 34 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/money.ts` | 28 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
@@ -302,7 +303,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-call.ts` | 13 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
 | `src/lib/booking-events.ts` | 12 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
 | `src/lib/inquiry-status.ts` | 12 | 465 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +21 more |
-| `src/lib/shop.ts` | 12 | 150 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
+| `src/lib/shop.ts` | 12 | 152 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
 | `src/lib/booking-fees.ts` | 11 | 24 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `hoursLabel`, `serviceFeeLabel`, `SHOP_FEE_LABEL`, `SHOP_FEE_ON`, `SHOP_SALE_FEE_CENTS` |
 | `src/lib/staff-permissions.ts` | 10 | 135 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
 | `src/lib/admin-session-context.tsx` | 9 | 77 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
@@ -359,6 +360,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/public-course.ts` | 3 | 31 | PERF-1: | `loadPublicCourse` |
 | `src/lib/public-tee-times.ts` | 3 | 81 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
 | `src/lib/schedule-wire.ts` | 3 | 92 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
+| `src/lib/shop-import.ts` | 3 | 131 | W2-7 (Cam 2026-10-20: | `ImportItem`, `ImportOption`, `ImportRow`, `MAX_IMPORT_ITEMS`, `MAX_OPTIONS`, `parseImport`, `parsePriceCents` |
 | `src/lib/thread-signal.ts` | 3 | 52 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
 | `src/lib/unsaved-guard.ts` | 3 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/agreement-publish.ts` | 2 | 101 | AG-3 — publishing an agreement version: | `agreementVersionsOverview`, `publishAgreementVersion`, `publishDates`, `PublishResult`, `REACCEPT_WINDOW_DAYS`, `reacceptPublishError`, `VersionRow` |
@@ -381,7 +383,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/schedule-plans.ts` | 2 | 98 | W2-4 (Cam 2026-10-19: | `checkPeriods`, `groupSchedules`, `normDays`, `PlanGroup`, `PlanRow`, `snapToGrid` |
 | `src/lib/settings-validation.ts` | 2 | 141 | SD-1. | `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
 | `src/lib/sheet-token.ts` | 2 | 52 |  | `CLOSED_TO_SHEET`, `DETAILS_TOKEN_TTL_DAYS`, `gateSheetAccess`, `SheetGate` |
-| `src/lib/shop-sales.ts` | 2 | 275 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `MAX_SALE_CENTS`, `MAX_SALE_LINES`, `reconcileStuckSale`, `saleForPayPage`, `SaleLineInput` +5 more |
+| `src/lib/shop-sales.ts` | 2 | 276 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `MAX_SALE_CENTS`, `MAX_SALE_LINES`, `reconcileStuckSale`, `saleForPayPage`, `SaleLineInput` +5 more |
+| `src/lib/shop-tree.ts` | 2 | 29 | W2-7: | `FlatItem`, `matches`, `shopTree`, `stockOf`, `TreeItem` |
 | `src/lib/staff-fonts.ts` | 2 | 10 | U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here: | `STAFF_LOOK_CLASS` |
 | `src/lib/stripe-errors.ts` | 2 | 26 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
 | `src/lib/submit-change-request.ts` | 2 | 88 |  | `cleanChangeItems`, `submitChangeRequest` |
@@ -408,6 +411,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/receipt-charges.ts` | 1 | 94 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
 | `src/lib/schedule-preview.ts` | 1 | 125 | Schedule rework (Cam 2026-10-19: | `diffDay`, `PREVIEW_DAYS`, `previewScheduleChange`, `ScheduleChange`, `SchedulePreview` |
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |
+| `src/lib/shop-ai-import.ts` | 1 | 92 | W2-7 (Cam 2026-10-20: | `cleanRows`, `MAX_READ_CHARS`, `ReadRow`, `readShopList`, `SHOP_READ_MODEL` |
+| `src/lib/shop-catalog.ts` | 1 | 136 | W2-7 (Cam 2026-10-20): | `createItems`, `deleteItem`, `ImportItem`, `ITEM_SELECT`, `ItemIn`, `optionName`, `readItem`, `setItemActive` +1 more |
 | `src/lib/tee-time-fit.ts` | 1 | 19 | Cam 2026-10-19: | `FIT_WINDOW_MIN`, `timesTooClose` |
 | `src/lib/tier-wire.ts` | 1 | 43 |  | `tierToWire` |
 | `src/lib/use-resource.ts` | 1 | 40 | MP-11b (ADMIN_V4 V4-7 item 4). | `ResourceError`, `useResource` |
@@ -467,8 +472,8 @@ Sorted the same way.
 | `src/components/dashboard/MoveGroupModal.tsx` | 1 | 154 | ACT-1 (PLATFORM_ROADMAP_SPEC §2): | `default (MoveGroupModal)` |
 | `src/components/dashboard/settings/FinishSetup.tsx` | 1 | 54 | Settings rework (Cam 2026-10-19: | `FinishSetup`, `SetupItem` |
 | `src/components/dashboard/settings/WhoPaysWhat.tsx` | 1 | 97 | Settings → Prices & fees: | `WhoPaysWhat` |
-| `src/components/dashboard/ShopCatalog.tsx` | 1 | 174 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `ShopCatalog` |
-| `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 131 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
+| `src/components/dashboard/ShopCatalog.tsx` | 1 | 362 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `ShopCatalog` |
+| `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 137 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
 | `src/components/dashboard/TeeSheetBoard.tsx` | 1 | 164 | SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07: | `BoardGroup`, `BoardSlot`, `default (TeeSheetBoard)`, `groupTone` |
 | `src/components/Footer.tsx` | 1 | 78 |  | `default (Footer)` |
@@ -762,11 +767,11 @@ without opening anything.
 
 ### ShopItem
 
-13 fields · 1 writer(s) · 2 reader(s)
+18 fields · 2 writer(s) · 3 reader(s)
 
-- fields: `id`, `courseId`, `course`, `name`, `category`, `priceCents`, `active`, `sortOrder`, `stockCount`, `createdAt`, `updatedAt`, `sales`, `saleLines`
-- writers: `src/app/api/operator/shop-items/route.ts`
-- readers: `src/app/api/operator/shop-items/route.ts`, `src/lib/shop-sales.ts`
+- fields: `id`, `courseId`, `course`, `name`, `category`, `priceCents`, `active`, `sortOrder`, `stockCount`, `sku`, `parentId`, `parent`, `options`, `optionLabel`, `createdAt`, `updatedAt`, `sales`, `saleLines`
+- writers: `src/app/api/operator/shop-items/route.ts`, `src/lib/shop-catalog.ts`
+- readers: `src/app/api/operator/shop-items/route.ts`, `src/lib/shop-catalog.ts`, `src/lib/shop-sales.ts`
 
 ### ShopSale
 
