@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-20 02:31 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a58eab3` · working tree **8 dirty file(s)**
+Generated 2026-10-20 03:00 UTC · branch `HEAD` · HEAD `a8cb431` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 43 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 44 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `fff11a1` | 2026-10-19 | Emails: one clean look for every email (EMAIL-2) (#152) |
 | `6956862` | 2026-10-20 | W2-7 part A: review fixes — hiding an item leaves its options alone |
 | `43dd9d7` | 2026-10-20 | W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling |
 | `8287f54` | 2026-10-19 | Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150) |
@@ -60,14 +61,14 @@ Generated 2026-10-20 02:31 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 ### Uncommitted working tree (8 file(s))
 
-- `M  CLAUDE.md`
-- `M  docs/CODEMAP.md`
-- `M  docs/codemap.json`
-- `A  public/brand/email-golfer-3x.png`
-- `M  scripts/walk1-fixes-test.ts`
-- `M  src/app/api/operator/messages/route.ts`
-- `M  src/lib/email.ts`
-- `M  src/lib/submit-change-request.ts`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `M  scripts/op-login-test.ts`
+- `M  src/app/dashboard/2fa/page.tsx`
+- `M  src/app/dashboard/forgot-password/page.tsx`
+- `M  src/app/dashboard/login/page.tsx`
+- `M  src/app/dashboard/reset-password/page.tsx`
+- `A  src/components/AuthPhotoShell.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -191,6 +192,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `fff11a1` 2026-10-19 — Emails: one clean look for every email (EMAIL-2) (#152)
 - `1028831` 2026-10-20 — queue/spec update
 - `6956862` 2026-10-20 — W2-7 part A: review fixes — hiding an item leaves its options alone
 - `43dd9d7` 2026-10-20 — W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling
@@ -202,7 +204,6 @@ Nothing awaiting review.
 - `9910cf6` 2026-10-19 — Member portal: show members exactly what booking charges (#145)
 - `dbd4737` 2026-10-19 — Status board: regenerate (#144)
 - `428da80` 2026-10-19 — Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)
-- `0419675` 2026-10-19 — Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)
 
 ---
 

@@ -5,7 +5,11 @@ import { readFileSync } from 'fs';
 let failed = 0;
 const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`); if (!ok) failed++; };
 const s = readFileSync('src/app/dashboard/login/page.tsx', 'utf8');
-check('a photo panel beside the form, hidden on phones', s.includes('hidden md:flex') && s.includes('/home/hero-coast.jpg'));
+// Cam 2026-10-20: the photo fills the screen and the card sits under the logo, on
+// every sign-in page (sign in, two-step code, forgot and reset password).
+const shell = readFileSync('src/components/AuthPhotoShell.tsx', 'utf8');
+check('the homepage photo fills the screen with the cream logo on it', shell.includes('/home/hero-coast.jpg') && shell.includes('logo-cream.svg') && s.includes('<AuthPhotoShell'));
+check('the code, forgot and reset pages share the same photo look', ['src/app/dashboard/2fa/page.tsx', 'src/app/dashboard/forgot-password/page.tsx', 'src/app/dashboard/reset-password/page.tsx'].every(f => readFileSync(f, 'utf8').includes('<AuthPhotoShell')));
 check('a "Need help signing in?" line', s.includes('Need help signing in?'));
 check('the form submits on Enter as a real form', s.includes('<form onSubmit='));
 check('help goes to the admin inbox, never the send-only address', s.includes('mailto:thegreenreserve@outlook.com') && !s.includes('hello@greenreserve.app'));

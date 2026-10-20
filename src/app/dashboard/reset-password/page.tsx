@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
+import { AuthPhotoShell } from '@/components/AuthPhotoShell';
 import { Loader2 } from 'lucide-react';
 import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/password';
 
@@ -49,12 +49,7 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={190} height={36} priority className="w-[190px] max-w-full h-auto mx-auto" />
-          <p className="text-xs text-ink-soft mt-1">Course operator portal</p>
-        </div>
+    <AuthPhotoShell width="md">
 
         <div className="bg-white rounded-lg shadow-card p-8">
           {checking && (
@@ -107,8 +102,7 @@ function ResetPasswordContent() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </AuthPhotoShell>
   );
 }
 

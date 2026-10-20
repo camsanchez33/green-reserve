@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-20 02:31 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ a58eab3</span>
+    <span>2026-10-20 03:00 UTC</span><span>HEAD @ a8cb431</span>
     <span>8 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">43 runs have shipped that the queue doesn't know about</div>
+<div class="lede">44 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">fff11a1</span><span>Emails: one clean look for every email (EMAIL-2) (#152)</span></li>
 <li><span class="h">6956862</span><span>W2-7 part A: review fixes — hiding an item leaves its options alone</span></li>
 <li><span class="h">43dd9d7</span><span>W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling</span></li>
 <li><span class="h">8287f54</span><span>Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150)</span></li>
@@ -180,7 +181,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  CLAUDE.md</code></li><li><code>M  docs/CODEMAP.md</code></li><li><code>M  docs/codemap.json</code></li><li><code>A  public/brand/email-golfer-3x.png</code></li><li><code>M  scripts/walk1-fixes-test.ts</code></li><li><code>M  src/app/api/operator/messages/route.ts</code></li><li><code>M  src/lib/email.ts</code></li><li><code>M  src/lib/submit-change-request.ts</code></li></ul>
+<ul class="plain"><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>M  scripts/op-login-test.ts</code></li><li><code>M  src/app/dashboard/2fa/page.tsx</code></li><li><code>M  src/app/dashboard/forgot-password/page.tsx</code></li><li><code>M  src/app/dashboard/login/page.tsx</code></li><li><code>M  src/app/dashboard/reset-password/page.tsx</code></li><li><code>A  src/components/AuthPhotoShell.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -261,6 +262,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">fff11a1</td><td class="num">2026-10-19</td><td>Emails: one clean look for every email (EMAIL-2) (#152)</td></tr>
 <tr><td class="num">1028831</td><td class="num">2026-10-20</td><td>queue/spec update</td></tr>
 <tr><td class="num">6956862</td><td class="num">2026-10-20</td><td>W2-7 part A: review fixes — hiding an item leaves its options alone</td></tr>
 <tr><td class="num">43dd9d7</td><td class="num">2026-10-20</td><td>W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling</td></tr>
@@ -272,7 +274,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">9910cf6</td><td class="num">2026-10-19</td><td>Member portal: show members exactly what booking charges (#145)</td></tr>
 <tr><td class="num">dbd4737</td><td class="num">2026-10-19</td><td>Status board: regenerate (#144)</td></tr>
 <tr><td class="num">428da80</td><td class="num">2026-10-19</td><td>Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)</td></tr>
-<tr><td class="num">0419675</td><td class="num">2026-10-19</td><td>Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -1,24 +1,31 @@
 {
-  "generatedAt": "2026-10-20T02:31:32.277Z",
+  "generatedAt": "2026-10-20T03:00:55.648Z",
   "repo": {
-    "head": "a58eab3",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "head": "a8cb431",
+    "branch": "HEAD",
     "dirtyCount": 8,
     "dirty": [
-      "M  CLAUDE.md",
-      "M  docs/CODEMAP.md",
-      "M  docs/codemap.json",
-      "A  public/brand/email-golfer-3x.png",
-      "M  scripts/walk1-fixes-test.ts",
-      "M  src/app/api/operator/messages/route.ts",
-      "M  src/lib/email.ts",
-      "M  src/lib/submit-change-request.ts"
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "M  scripts/op-login-test.ts",
+      "M  src/app/dashboard/2fa/page.tsx",
+      "M  src/app/dashboard/forgot-password/page.tsx",
+      "M  src/app/dashboard/login/page.tsx",
+      "M  src/app/dashboard/reset-password/page.tsx",
+      "A  src/components/AuthPhotoShell.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "fff11a1",
+        "date": "2026-10-19T22:27:05-04:00",
+        "subject": "Emails: one clean look for every email (EMAIL-2) (#152)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "6956862",
         "date": "2026-10-20T02:11:43+00:00",
@@ -708,6 +715,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "fff11a1",
+      "date": "2026-10-19",
+      "subject": "Emails: one clean look for every email (EMAIL-2) (#152)"
+    },
+    {
       "h": "1028831",
       "date": "2026-10-20",
       "subject": "queue/spec update"
@@ -761,11 +773,6 @@
       "h": "428da80",
       "date": "2026-10-19",
       "subject": "Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)"
-    },
-    {
-      "h": "0419675",
-      "date": "2026-10-19",
-      "subject": "Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)"
     }
   ]
 }
