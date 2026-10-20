@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-20 18:01 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `42ff2e4` · working tree clean
+Generated 2026-10-20 18:01 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `77187a1` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 47 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 48 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `77187a1` | 2026-10-20 | Status board |
 | `42ff2e4` | 2026-10-20 | W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day |
 | `dea0574` | 2026-10-20 | W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had |
 | `39e62f4` | 2026-10-20 | W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154) |
@@ -61,6 +62,17 @@ Generated 2026-10-20 18:01 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (5 file(s))
+
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -181,6 +193,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `77187a1` 2026-10-20 — Status board
 - `42ff2e4` 2026-10-20 — W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day
 - `dea0574` 2026-10-20 — W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had
 - `39e62f4` 2026-10-20 — W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)
@@ -192,7 +205,6 @@ Nothing awaiting review.
 - `223121d` 2026-10-19 — Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)
 - `abb4518` 2026-10-19 — queue/spec update (#147)
 - `95da45f` 2026-10-19 — Member portal: show a resident their own spot at the resident rate, as booking charges (#146)
-- `9910cf6` 2026-10-19 — Member portal: show members exactly what booking charges (#145)
 
 ---
 
