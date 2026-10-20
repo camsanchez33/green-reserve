@@ -10203,7 +10203,7 @@
     },
     {
       "path": "src/lib/birdie/ask.ts",
-      "lines": 38,
+      "lines": 33,
       "purpose": "AN-3 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10221,10 +10221,6 @@
         },
         {
           "name": "markBirdieReady",
-          "kind": "fn"
-        },
-        {
-          "name": "openBirdie",
           "kind": "fn"
         },
         {
@@ -15666,7 +15662,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 238,
+      "lines": 246,
       "purpose": "",
       "brain": [],
       "exports": [

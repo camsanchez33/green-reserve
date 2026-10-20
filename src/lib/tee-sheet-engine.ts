@@ -62,7 +62,7 @@ export const slotKey = (productId: string | null, time: string) => `${productId 
  * by generateTeeTimes and the Schedule page's save preview (lib/schedule-preview.ts),
  * so what the preview promises is exactly what a save does.
  */
-export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], products: { id: string; holes: number; active: boolean }[]): Map<string, DesiredSlot> {
+export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], products: { id: string; holes: number; active: boolean; nineIds?: string[] }[]): Map<string, DesiredSlot> {
   const d = new Date(dateStr + 'T12:00:00');
   const dayOfWeek = d.getDay();
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
@@ -84,10 +84,21 @@ export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], pro
   // no x100 anywhere in the generation path.
   const desired = new Map<string, DesiredSlot>();
   // W2-3 (Cam 2026-10-19): the last tee time goes off AT the schedule's end
-  // ("Last tee time"), when it lands on the interval. Two back-to-back
-  // schedules (morning ends 12:00, twilight starts 12:00) then both produce
-  // 12:00: the one that STARTS there owns it, whatever order they come in.
-  const endOnly = new Set<string>();
+  // ("Last tee time"), when it lands on the interval. The save-time conflict
+  // check (lib/schedule-conflict.ts) is half-open, so back-to-back schedules
+  // that share ground (morning ends 12:00, twilight starts 12:00; or two rounds
+  // on a shared nine) are allowed — the one that STARTS at the shared time owns
+  // it, and the other's end slot is dropped. Same ground = the rule that check
+  // uses: same scope, either side whole-course, or a nine in common.
+  const ninesOf = (id: string | null) => (id ? productById.get(id)?.nineIds ?? [] : []);
+  const sharesGround = (a: ScheduleForSlots, b: ScheduleForSlots) => {
+    const pa = a.productId ?? null, pb = b.productId ?? null;
+    if (pa === pb || !pa || !pb) return true;
+    const nb = ninesOf(pb);
+    return ninesOf(pa).some(n => nb.includes(n));
+  };
+  const handsOff = (s: ScheduleForSlots, end: number) =>
+    applicable.some(o => o !== s && timeToMinutes(o.startTime) === end && o.intervalMinutes >= 1 && sharesGround(s, o));
   for (const schedule of applicable) {
     const greenFeeCents     = isWeekend ? schedule.greenFeeWeekendCents     : schedule.greenFeeWeekdayCents;
     const memberRateCents   = isWeekend ? schedule.memberRateWeekendCents   : schedule.memberRateWeekdayCents;
@@ -101,11 +112,8 @@ export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], pro
     const end = timeToMinutes(schedule.endTime);
     while (current <= end) {
       const time = minutesToTime(current);
-      const key = slotKey(productId, time);
-      const isEnd = current === end;
-      if (isEnd && desired.has(key) && !endOnly.has(key)) { current += schedule.intervalMinutes; continue; }
-      if (isEnd) endOnly.add(key); else endOnly.delete(key);
-      desired.set(key, {
+      if (current === end && handsOff(schedule, end)) break;
+      desired.set(slotKey(productId, time), {
         productId, time,
         holes,
         greenFeeCents,
@@ -127,7 +135,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   if (blackout) return 0;
 
   const schedules = await prisma.teeTimeSchedule.findMany({ where: { courseId, active: true } });
-  const products = await prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true } });
+  const products = await prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true, nineIds: true } });
   const desired = desiredSlots(dateStr, schedules, products);
 
   const existing = await prisma.teeTime.findMany({

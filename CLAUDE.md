@@ -220,13 +220,14 @@ All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inve
 ## Homepage direction — READ `HOMEPAGE_SPEC.md` §0 FIRST (Cam 2026-10-07)
 
 HOME-2 is Cam's own layout: one full-screen photo with the cream logo
-centred, "The tee sheet your course deserves.", one sentence on what it is and
-why it's free for courses, and Learn more (Cam 2026-10-19: Book a demo came off the hero; it stays top right and after the demo) → what it is
-(paragraph, bullets, "See how it works" + "Learn more about the tee sheet"
-cards) → what your course gets (only features that exist today; pro-shop
-access waits until built) → the working demo (tee sheet on a laptop, golfer
-phone beside it) with Book a demo → the logo again with "Ready when your
-course is." The detail, FAQ (+ its JSON-LD), about and contact live on
+centred, "The tee sheet your course deserves.", one sentence on what it is
+ending "Free for your course." (W2-H1, Cam 2026-10-19: no fee model in the hero), and Learn more (Cam 2026-10-19: Book a demo came off the hero; it stays top right and after the demo) → what it is and
+what your course gets, in ONE list (paragraph, bullets of features that exist
+today, then the one fee line in LQ-2 wording, "See how it works" + "Learn more
+about the tee sheet" cards; W2-H2 merged the separate "what your course gets"
+block, which repeated it) → the working demo (tee sheet on a laptop, golfer
+phone beside it) with Book a demo → the footer, "GreenReserve LLC" (W2-H3: the
+closing logo + "Ready when your course is." is gone). The detail, FAQ (+ its JSON-LD), about and contact live on
 `/teesheet`. `src/app/HomeContent.tsx` + `home.module.css`, ONE client island
 `src/components/home/TeeSheetDemo.tsx`, whose every label must match the real
 dashboard tee sheet and booking flow. Every "Book a demo" goes to `/demo`

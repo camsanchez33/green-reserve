@@ -1057,14 +1057,14 @@ function SettingsPageInner() {
             <div className="space-y-5">
               {/* W2-2 (Cam 2026-10-19): say plainly whose login this is — the owner is the admin of their own course. */}
               {access.loaded && (
-                <div className="bg-white rounded-lg shadow-card p-5">
+                <Card className="p-5">
                   <div className="text-[15px] font-semibold text-ink">{isStaffLogin ? 'Staff login' : 'Owner account'}</div>
                   <p className="mt-1 text-sm text-ink-soft">
                     {isStaffLogin
                       ? <>You are signed in as staff at {String(form.name || 'this course')}. The course owner decides what you can see and change.</>
                       : <>This is the owner login for {String(form.name || 'your course')}: the admin for your own course. You can change everything here, and you decide what each staff login can do in <button type="button" onClick={() => goTo('Staff')} className="text-pine underline">Staff</button>.</>}
                   </p>
-                </div>
+                </Card>
               )}
               <SectionCard title="Signing in">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">

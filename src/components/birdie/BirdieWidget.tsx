@@ -87,7 +87,7 @@ export default function BirdieWidget() {
       const q = (e as CustomEvent<{ question?: string }>).detail?.question;
       if (typeof q !== 'string') return;
       setOpen(true); setTucked(false); try { localStorage.setItem(OPEN_KEY, '1'); localStorage.removeItem(TUCK_KEY); } catch { /* ignore */ }
-      // An empty question (openBirdie) just opens the panel, keeping any draft.
+      // An empty question just opens the panel, keeping any draft.
       if (q.trim()) setInput(q.slice(0, 1500)); // MAX_USER_CHARS in guardrails.ts
       setTimeout(() => inputRef.current?.focus(), 0);
     };

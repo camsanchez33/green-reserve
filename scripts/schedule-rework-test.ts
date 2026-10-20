@@ -20,6 +20,12 @@ const twilight = { ...base, tierName: 'Twilight', startTime: '15:00', endTime: '
 check('two named runs on one day', desiredSlots(mon, [base, twilight], []).size === 14 && desiredSlots(mon, [base, twilight], []).get(slotKey(null, '15:00'))!.tierName === 'Twilight');
 const late = { ...base, tierName: 'Late', startTime: '08:00', endTime: '09:00', greenFeeWeekdayCents: 3000 };
 check('back to back: the run that STARTS at the shared time owns it, in either order', [[base, late], [late, base]].every(o => { const m = desiredSlots(mon, o, []); return m.size === 13 && m.get(slotKey(null, '08:00'))!.tierName === 'Late'; }));
+// Two rounds on a shared nine, back to back: only the starter sells 08:00.
+const prods = [{ id: 'NS', holes: 18, active: true, nineIds: ['N', 'S'] }, { id: 'SE', holes: 18, active: true, nineIds: ['S', 'E'] }, { id: 'EW', holes: 18, active: true, nineIds: ['E', 'W'] }];
+const ns = { ...base, productId: 'NS' }, se = { ...late, productId: 'SE' }, ew = { ...late, productId: 'EW' };
+check('back to back on a shared nine: the earlier round gives up its end time', [[ns, se], [se, ns]].every(o => { const m = desiredSlots(mon, o, prods); return !m.has(slotKey('NS', '08:00')) && m.has(slotKey('SE', '08:00')); }));
+check('…a whole-course run starting there takes it from a round too', !desiredSlots(mon, [ns, late], prods).has(slotKey('NS', '08:00')));
+check('…but rounds on different nines keep their own end time', desiredSlots(mon, [ns, ew], prods).has(slotKey('NS', '08:00')) && desiredSlots(mon, [ns, ew], prods).has(slotKey('EW', '08:00')));
 
 const row = (time: string, fee: number, extra: Partial<{ playersBooked: number; status: string; bookings: number }> = {}) => ({ productId: null, time, playersBooked: 0, status: 'available', greenFeeCents: fee, memberRateCents: null, residentRateCents: null, cartFeeCents: 1800, bookings: 0, ...extra });
 const existing = [row('07:00', 5500), row('07:10', 5000), row('07:20', 5000, { playersBooked: 2, bookings: 1 }), row('06:50', 5500), row('06:40', 5500, { status: 'blocked' })];
