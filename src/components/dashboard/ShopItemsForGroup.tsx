@@ -13,10 +13,12 @@ type CatalogItem = { id: string; name: string; category: string; priceCents: num
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
-export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, editable, canSell, showMoney, onChanged }: {
+export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, shopTaxCents = 0, editable, canSell, showMoney, onChanged }: {
   bookingId: string;
   lines: ShopLine[];
   shopFeeCents: number;
+  /** W2-7 B2: sales tax on the items (the course's Stripe Tax), charged with them. */
+  shopTaxCents?: number;
   /** The round is not yet paid, checked in or cancelled. */
   editable: boolean;
   /** shop.sell */
@@ -32,6 +34,8 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, edit
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // W2-7 B2: the item saved but its sales tax couldn't be worked out yet.
+  const [taxNote, setTaxNote] = useState('');
 
   async function openPicker() {
     setPicking(true); setError(''); setLoadError('');
@@ -49,18 +53,20 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, edit
   async function add() {
     if (!itemId) return;
     setBusy('add'); setError('');
-    const r = await dfetch('/api/operator/bookings/shop', { method: 'POST', body: JSON.stringify({ bookingId, shopItemId: itemId, quantity: qty }) });
+    const r = await dfetch<{ taxError?: string }>('/api/operator/bookings/shop', { method: 'POST', body: JSON.stringify({ bookingId, shopItemId: itemId, quantity: qty }) });
     setBusy(null);
     if (!r.ok) { setError(r.error); return; }
+    setTaxNote(r.data?.taxError || '');
     setPicking(false); setQty(1);
     await onChanged();
   }
 
   async function remove(lineId: string) {
     setBusy(lineId); setError('');
-    const r = await dfetch('/api/operator/bookings/shop', { method: 'DELETE', body: JSON.stringify({ bookingId, lineId }) });
+    const r = await dfetch<{ taxError?: string }>('/api/operator/bookings/shop', { method: 'DELETE', body: JSON.stringify({ bookingId, lineId }) });
     setBusy(null);
     if (!r.ok) { setError(r.error); return; }
+    setTaxNote(r.data?.taxError || '');
     await onChanged();
   }
 
@@ -86,6 +92,11 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, edit
           {showMoney && shopFeeCents > 0 && (
             <li className="flex items-center justify-between gap-2 text-ink-muted">
               <span>{SHOP_FEE_LABEL}</span><span className="tabular-nums">{usd(shopFeeCents)}</span>
+            </li>
+          )}
+          {showMoney && shopTaxCents > 0 && (
+            <li className="flex items-center justify-between gap-2 text-ink-muted">
+              <span>Sales tax</span><span className="tabular-nums">{usd(shopTaxCents)}</span>
             </li>
           )}
         </ul>
@@ -132,6 +143,7 @@ export default function ShopItemsForGroup({ bookingId, lines, shopFeeCents, edit
         </div>
       )}
       {error && <p className="mt-1 text-xs text-bad">{error}</p>}
+      {taxNote && <p className="mt-1 text-xs text-warn">Saved, but {taxNote.charAt(0).toLowerCase() + taxNote.slice(1)} It&apos;s worked out again before the round is paid.</p>}
     </div>
   );
 }

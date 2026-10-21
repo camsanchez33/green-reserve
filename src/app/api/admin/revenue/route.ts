@@ -126,18 +126,18 @@ export async function GET(req: NextRequest) {
     prisma.booking.groupBy({ by: ['courseId'], where: FAILED_CHARGE_WHERE, _count: { id: true } }),
     prisma.booking.findMany({
       where: FAILED_CHARGE_WHERE,
-      select: { id: true, golferName: true, golferEmail: true, checkInFailReason: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true, createdAt: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, golferName: true, golferEmail: true, checkInFailReason: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true, createdAt: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { createdAt: 'desc' }, take: 100,
     }),
     prisma.booking.findMany({
       where: missedCheckInWhere(todayStr),
-      select: { id: true, golferName: true, golferEmail: true, players: true, accessFeeTotal: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true, paymentStatus: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, golferName: true, golferEmail: true, players: true, accessFeeTotal: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true, paymentStatus: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { teeTime: { date: 'desc' } }, take: 100,
     }),
     prisma.booking.aggregate({ where: missedCheckInWhere(todayStr), _sum: { accessFeeTotal: true }, _count: { id: true } }),
     prisma.booking.findMany({
       where: { status: 'confirmed', checkedInAt: null, teeTime: { date: { in: [todayStr, tomorrowStr] } } },
-      select: { id: true, golferName: true, players: true, accessFeeTotal: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, golferName: true, players: true, accessFeeTotal: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { teeTime: { time: 'asc' } }, take: 200,
     }),
     // Charged fees only. The old list also showed "pending" for any cancelled

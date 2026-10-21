@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ensureShopTax, recordRoundShopTax } from '@/lib/round-shop-tax';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from '@/lib/booking-events';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, can, requirePermission } from '@/lib/session';
@@ -139,7 +140,7 @@ export async function PATCH(req: NextRequest) {
         date: moved.teeTime.date, time: moved.teeTime.time, holes: moved.teeTime.holes, productLabel: moved.teeTime.product?.label ?? null,
         players: moved.players, greenFeeTotal: moved.greenFeeTotal, cartFeeTotal: moved.cartFeeTotal, rangeBallsTotal: moved.rangeBallsTotal,
         accessFeeTotal: moved.accessFeeTotal, totalAmount: moved.totalAmount, bookingId: moved.id, checkInToken: moved.checkInToken,
-        shopTotalCents: moved.shopTotalCents, shopFeeCents: moved.shopFeeCents,
+        shopTotalCents: moved.shopTotalCents, shopFeeCents: moved.shopFeeCents, shopTaxCents: moved.shopTaxCents,
         checkedIn: r.checkedIn,
       }).then(() => true, (err) => { console.error(JSON.stringify({ ev: 'move.email.fail', bookingId: id, error: err instanceof Error ? err.message : String(err) })); return false; });
     }
@@ -219,6 +220,10 @@ export async function PATCH(req: NextRequest) {
     // take the booking fee a second time.
     if (booking.paymentStatus === 'paid') return NextResponse.json({ error: 'This round was already paid by card — check them in instead.' }, { status: 409 });
     const hadHoldFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
+    // W2-7 B2: bring the shop items' sales tax up to date before the counter
+    // closes the round. Cash is never blocked (PAY-2): if Stripe can't be
+    // reached, the round still closes and the tax stays as last quoted.
+    await ensureShopTax(id);
     // This branch completes the booking WITHOUT performCheckIn (CLAUDE.md) —
     // so it writes its own checked_in event, or counter check-ins vanish from the log.
     await prisma.$transaction(async (tx) => {
@@ -230,6 +235,8 @@ export async function PATCH(req: NextRequest) {
       });
       await recordBookingEvent(tx, { ...evBase, type: 'checked_in', amountCents: booking.totalAmount, playerCount: cip ?? booking.players, metadata: { paidOffline: true } });
     });
+    // The tax on shop items paid at the counter goes on the course's tax record too (the hourly cron retries).
+    await recordRoundShopTax(id);
     // They paid the round at the counter, so the hold fee the cron took after
     // the cutoff goes back — exactly as a card check-in refunds it (review: this
     // branch skips performCheckIn and kept it).

@@ -15,7 +15,7 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
   const b = await prisma.booking.findUnique({
     where: { id: bookingId },
     select: {
-      totalAmount: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true, paymentStatus: true, roundPaymentIntentId: true, paidOffline: true,
+      totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true, paymentStatus: true, roundPaymentIntentId: true, paidOffline: true,
       cancellationFeeTotal: true, cancellationFeeChargeId: true, lateFeeTimingAtBooking: true,
       status: true, noShowAt: true,
     },

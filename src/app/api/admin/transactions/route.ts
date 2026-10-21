@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
       where: bookingWhere,
       select: {
         id: true, golferName: true, golferEmail: true, players: true,
-        totalAmount: true, accessFeeTotal: true, cancellationFeeTotal: true, shopTotalCents: true, shopFeeCents: true, roundChargedCents: true,
+        totalAmount: true, accessFeeTotal: true, cancellationFeeTotal: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true,
         paymentStatus: true, status: true, createdAt: true,
         teeTime: { select: { date: true, time: true } },
       },

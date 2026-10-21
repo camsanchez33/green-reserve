@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
         // RES-1: residents in the group, and whether it is on a member rate.
         residentPlayers: true, appliedRate: true,
         // POS-1a: pro-shop items added to the round, for the panel.
-        shopTotalCents: true, shopFeeCents: true, shopLockedAt: true, shopItems: { orderBy: { createdAt: 'asc' }, select: { id: true, name: true, unitPriceCents: true, quantity: true } } },
+        shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, shopLockedAt: true, shopItems: { orderBy: { createdAt: 'asc' }, select: { id: true, name: true, unitPriceCents: true, quantity: true } } },
     } } : {}),
     },
   });

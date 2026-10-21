@@ -61,8 +61,9 @@ async function main() {
   check('when on: no items, no fee', shopFeeFor(0, true) === 0);
   check('off (until the agreement names it): never a fee', shopFeeFor(1200, false) === 0);
   check('the switch is off until the Operator Agreement lists the fee', SHOP_FEE_ON === false);
-  check('the charge is round + items + fee', roundChargeCents({ totalAmount: 5300, shopTotalCents: 2400, shopFeeCents: 50 }) === 7750);
-  check('a booking without items charges the round only', roundChargeCents({ totalAmount: 5300 }) === 5300);
+  check('the charge is round + items + fee', roundChargeCents({ totalAmount: 5300, shopTotalCents: 2400, shopFeeCents: 50, shopTaxCents: 0 }) === 7750);
+  check('W2-7 B2: the sales tax on the items rides the same charge', roundChargeCents({ totalAmount: 5300, shopTotalCents: 2400, shopFeeCents: 50, shopTaxCents: 159 }) === 7909);
+  check('a booking without items charges the round only', roundChargeCents({ totalAmount: 5300, shopTaxCents: 0 }) === 5300);
   check('GreenReserve takes the booking fee plus the shop fee', roundApplicationFeeCents({ accessFeeTotal: 300, shopFeeCents: 50 }) === 350);
   const open = { status: 'confirmed', paymentStatus: 'card_on_file', roundPaymentIntentId: '', paidOffline: false };
   check('unpaid booking: items can change', shopLockedReason(open) === null);

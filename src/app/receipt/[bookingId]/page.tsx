@@ -14,6 +14,8 @@ type ReceiptData = {
   accessFeeTotal: number; totalAmount: number; status: string;
   /** POS-1a: pro-shop items charged with the round; totalAmount includes them. */
   shopLines?: { name: string; unitPriceCents: number; quantity: number }[]; shopFeeCents?: number;
+  /** W2-7 B2: sales tax on the shop items. */
+  shopTaxCents?: number;
   cancellationFeeTotal: number; cancellationFeeCharged: boolean; createdAt: string;
   /** R-GOLF-010: what actually reached the card — from lib/receipt-charges. */
   paidOffline?: boolean;
@@ -179,6 +181,12 @@ function ReceiptPageInner() {
                   <div className="flex justify-between px-4 py-3">
                     <span className="text-ink-soft">{SHOP_FEE_LABEL}</span>
                     <span className="font-medium text-ink">{dollars(data.shopFeeCents ?? 0)}</span>
+                  </div>
+                )}
+                {(data.shopTaxCents ?? 0) > 0 && (
+                  <div className="flex justify-between px-4 py-3">
+                    <span className="text-ink-soft">Sales tax on shop items</span>
+                    <span className="font-medium text-ink">{dollars(data.shopTaxCents ?? 0)}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-baseline px-4 py-3.5 bg-paper">
