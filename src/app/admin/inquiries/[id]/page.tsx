@@ -7,8 +7,9 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import {
   STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES, stageEnteredAt, daysSince,
   INQUIRY_SOURCES, CLOSED_REASONS, RESUBMIT_ACTOR,
-  unreviewedResubmit, diffResubmit, decodeResubmit,
+  unreviewedResubmit, diffResubmit, decodeResubmit, queueSignal,
 } from '@/lib/inquiry-status';
+import { nextStep } from '@/lib/inquiry-board';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure } from '@/components/ui/ErrorState';
 import {
@@ -75,43 +76,23 @@ function whyArchived(inq: Inquiry): { reason: string; date: string } {
 }
 
 type CheckpointState = 'done' | 'current' | 'pending' | 'skipped';
-interface Checkpoint { key: string; label: string; state: CheckpointState; date?: string; }
+interface Checkpoint { key: string; label: string; state: CheckpointState; date?: string; sub?: string; }
 
+// AW-6b (Cam 2026-10-21): the board's stages — Talking → Setting up → Live —
+// with where it is inside a stage said under the current one.
 function getCheckpoints(inq: Inquiry, hasSheet: boolean): Checkpoint[] {
-  const reviewEvent = inq.events.find(e => e.toStatus === 'in_review');
-  const submittedEvent = [...inq.events].reverse().find(e => e.toStatus === 'details_submitted');
-  const sheetSentEvent = [...inq.events].reverse().find(e => e.toStatus === 'details_requested');
-  const buildingEvent = [...inq.events].reverse().find(e => e.toStatus === 'building');
+  const setupEvent = inq.events.find(e => ['details_requested', 'details_submitted', 'building'].includes(e.toStatus));
   const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
-
-  const reviewDone = inq.status !== 'pending';
-  const skipBuilt = !hasSheet && !!inq.builtCourseId;
-  const sheetDone = hasSheet && ['details_submitted', 'building', 'live'].includes(inq.status);
-  const buildDone = !!inq.builtCourseId;
-  const liveDone = inq.status === 'live';
-
+  const talking = inq.status === 'pending' || inq.status === 'in_review';
+  const setup = ['details_requested', 'details_submitted', 'building'].includes(inq.status);
+  const live = inq.status === 'live';
+  const setupSub = inq.status === 'details_requested' ? 'Sheet out'
+    : inq.status === 'details_submitted' ? 'Sheet in'
+    : inq.status === 'building' ? (hasSheet ? 'Building' : 'Building, no sheet') : undefined;
   return [
-    { key: 'inquiry', label: 'Inquiry', state: 'done', date: inq.createdAt },
-    {
-      key: 'review', label: 'Review',
-      state: reviewDone ? 'done' : 'current',
-      date: reviewEvent?.createdAt,
-    },
-    {
-      key: 'sheet', label: 'Sheet',
-      state: skipBuilt ? 'skipped' : sheetDone ? 'done' : (inq.status === 'in_review' || inq.status === 'details_requested') ? 'current' : 'pending',
-      date: submittedEvent?.createdAt || sheetSentEvent?.createdAt,
-    },
-    {
-      key: 'build', label: 'Build',
-      state: buildDone ? 'done' : inq.status === 'details_submitted' ? 'current' : 'pending',
-      date: buildingEvent?.createdAt,
-    },
-    {
-      key: 'live', label: 'Live',
-      state: liveDone ? 'done' : inq.status === 'building' ? 'current' : 'pending',
-      date: liveEvent?.createdAt,
-    },
+    { key: 'talking', label: 'Talking', state: talking ? 'current' : 'done', date: talking ? undefined : inq.createdAt, sub: talking ? (inq.status === 'pending' ? 'New' : 'In review') : undefined },
+    { key: 'setup', label: 'Setting up', state: setup ? 'current' : live ? 'done' : 'pending', date: live ? setupEvent?.createdAt : undefined, sub: setupSub },
+    { key: 'live', label: 'Live', state: live ? 'done' : 'pending', date: liveEvent?.createdAt },
   ];
 }
 
@@ -139,6 +120,7 @@ function CheckpointStepper({ checkpoints }: { checkpoints: Checkpoint[] }) {
               }>
                 {c.label}
               </div>
+              {c.state === 'current' && c.sub && <div className="text-[11px] text-ink-muted">{c.sub}</div>}
               {c.state === 'done' && c.date && <div className="text-[10px] text-ink-faint">{fmtDate(c.date)}</div>}
               {c.state === 'skipped' && <div className="text-[10px] text-ink-faint">skipped</div>}
             </div>
@@ -378,6 +360,11 @@ function InquiryDetailInner() {
   // card, and `callFocus` opens the right part of it.
   const [callGateNotice, setCallGateNotice] = useState(false);
   const [callFocus, setCallFocus] = useState<CallFocus>(null);
+  // AW-6b: the call setup/log card lives in a dialog, not across the top of
+  // the page. Anything that asks for it (the next step, the build gate, ?call=1)
+  // sets callFocus, which opens the dialog on the right part.
+  const [callOpen, setCallOpen] = useState(false);
+  useEffect(() => { if (callFocus) setCallOpen(true); }, [callFocus]);
   // null means "everything in the diff" — the founder has not narrowed it yet.
   const [resubPicked, setResubPicked] = useState<Set<string> | null>(null);
   // The stage-aware default lands ONCE, on first load. Re-applying it after
@@ -803,6 +790,31 @@ function InquiryDetailInner() {
     setCallGateNotice(true);
   };
 
+  // AW-6b: the one next step, and what its button does on this page.
+  const step = nextStep(inq, queueSignal(inq));
+  const runStep = () => {
+    if (!step) return;
+    switch (step.key) {
+      case 'prep_call': setCallOpen(true); return;
+      case 'book_call': case 'call_today': case 'log_call':
+        setCallFocus({ what: step.key === 'book_call' ? 'setup' : 'log', n: Date.now() }); return;
+      case 'send_sheet': setPendingAction('send_sheet'); return;
+      case 'resend_sheet': setPendingAction('resend_sheet'); return;
+      case 'build': guardBuild('create_draft'); return;
+      case 'send_preview': case 'send_updated_preview': case 'resend_preview': setPendingAction('send_preview'); return;
+      case 'make_changes': setChangesExpanded(true); document.getElementById('next-step-detail')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+      case 'go_live': setPendingAction('go_live'); return;
+      case 'review_resubmit': document.getElementById('resubmit')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+    }
+  };
+
+  const leadRow = (label: string, value: React.ReactNode) => (
+    <div key={label} className="grid grid-cols-[150px_1fr] gap-3 px-4 py-2.5 items-baseline">
+      <div className="text-[13px] text-ink-muted">{label}</div>
+      <div className="text-[14px] text-ink whitespace-pre-wrap break-words">{value}</div>
+    </div>
+  );
+
   const btnP = 'bg-pine hover:bg-pine-hover disabled:opacity-50 text-white px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
   const btnO = 'bg-paper hover:bg-line border border-line text-ink px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
   const btnD = 'bg-bad/5 hover:bg-bad/10 text-bad border border-bad/20 px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors';
@@ -856,34 +868,12 @@ function InquiryDetailInner() {
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
 
-              {inq.status === 'pending' && (
-                <button onClick={() => action('mark_in_review')} disabled={processing} className={btnP}>
-                  In Review
-                </button>
-              )}
-              {inq.status === 'in_review' && (
-                <button onClick={() => setPendingAction('send_sheet')} disabled={processing} className={btnP}>
-                  Send Sheet
-                </button>
-              )}
-              {inq.status === 'details_requested' && (
-                <button onClick={() => setPendingAction('resend_sheet')} disabled={processing} className={btnO}>
-                  Resend Sheet
-                </button>
-              )}
-              {inq.status === 'details_submitted' && (
-                <button onClick={() => guardBuild('create_draft')} disabled={processing} className={btnP}>
-                  <StatusDot status="ok" />Create Draft Course
-                </button>
-              )}
-              {inq.status === 'building' && allChangesAddressed && (
-                <button onClick={() => setPendingAction('send_preview')} disabled={sendingPreview} className={btnP}>
-                  {sendingPreview ? 'Sending…' : 'Send updated preview'}
-                </button>
-              )}
-              {inq.status === 'building' && !pageChangesRequested && !allChangesAddressed && (
-                <button onClick={() => setPendingAction('go_live')} disabled={processing} className={btnP}>
-                  Go Live
+              {/* AW-6b (Cam 2026-10-21: "next step first"): ONE button — the
+                  same next step the board card shows (lib/inquiry-board).
+                  Everything else is in the ⋯ menu. */}
+              {step && step.key !== 'snoozed' && step.key !== 'open' && (
+                <button onClick={runStep} disabled={processing || sendingPreview} className={btnP + ' !text-[13px] !px-3.5 !py-2'}>
+                  {sendingPreview ? 'Sending…' : step.label}
                 </button>
               )}
               {inq.status === 'live' && inq.builtCourseId && (
@@ -918,6 +908,43 @@ function InquiryDetailInner() {
                       {ACTIVE_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
                     </select>
                   </div>
+                )}
+                {/* AW-6b: the stage moves the single next-step button doesn't cover. */}
+                {inq.status === 'pending' && (
+                  <button onClick={() => { setMoreOpen(false); action('mark_in_review'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Mark in review
+                  </button>
+                )}
+                {(inq.status === 'pending' || inq.status === 'in_review') && step?.key !== 'send_sheet' && (
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('send_sheet'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Send the setup sheet now
+                  </button>
+                )}
+                {!isArchived && inq.status !== 'live' && (
+                  <button onClick={() => { setMoreOpen(false); setCallFocus({ what: (upcomingCall || missedCall) ? 'log' : 'setup', n: Date.now() }); }}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    {(upcomingCall || missedCall) ? 'The call…' : 'Set up a call…'}
+                  </button>
+                )}
+                {inq.status === 'details_requested' && step?.key !== 'resend_sheet' && (
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('resend_sheet'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Resend the setup sheet
+                  </button>
+                )}
+                {inq.status === 'details_submitted' && step?.key !== 'build' && (
+                  <button onClick={() => guardBuild('create_draft')} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Build the course
+                  </button>
+                )}
+                {inq.status === 'building' && !pageChangesRequested && step?.key !== 'go_live' && (
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('go_live'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Go live now
+                  </button>
                 )}
                 {!isArchived && inq.status !== 'live' && !isSnoozed && (
                   <button onClick={() => { setMoreOpen(false); setSnoozeDate(''); setPendingAction('snooze'); }} disabled={processing}
@@ -1088,7 +1115,7 @@ function InquiryDetailInner() {
               pipeline, which is right — but what they sent is not nothing.
               Shown as a diff, applied only where ticked, never silently. */}
           {resubmit && (
-            <div className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-lg px-4 py-3">
+            <div id="resubmit" className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-lg px-4 py-3">
               <div className="flex items-center gap-2 mb-1.5">
                 
                 <span className="text-xs font-medium text-warn">
@@ -1167,11 +1194,27 @@ function InquiryDetailInner() {
 
           {/* Next-step guidance — merged from the old Next Steps card */}
           {!isArchived && inq.status !== 'rejected' && (
-            <div className="mt-3 text-sm text-ink max-w-3xl">
+            <div id="next-step-detail" className="mt-3 text-sm text-ink max-w-3xl">
+              {/* AW-6b: says the same thing as the next-step button. */}
               {(inq.status === 'pending' || inq.status === 'in_review') && (
-                hasAnswers
-                  ? <>Review the <button onClick={() => pickTab('lead')} className="font-medium text-pine hover:underline">Lead tab</button>, then send the course their setup sheet.</>
-                  : <>No extra answers were submitted with this inquiry — send the course their setup sheet when ready.</>
+                step?.key === 'book_call'
+                  ? <>Book a discovery call — it’s needed before the course is built. The setup sheet can go out before or after (⋯ menu).</>
+                  : step?.key === 'prep_call' || step?.key === 'call_today'
+                  ? <>Call booked for {upcomingCall ? fmtCallTime(upcomingCall.scheduledAt) : 'soon'} ET — the agenda is in the call card.</>
+                  : step?.key === 'log_call'
+                  ? <>The call time has passed — log how it went.</>
+                  : step?.key === 'snoozed'
+                  ? <>Snoozed — see the note above. The ⋯ menu still has every step.</>
+                  : step?.key === 'review_resubmit'
+                  ? <>They filled in the interest form again — review what they sent above.</>
+                  : <>{talkedCall
+                      ? 'Call done'
+                      : inq.callSkippedReason?.trim()
+                      ? `Call skipped — ${inq.callSkippedReason.trim()}`
+                      : 'No call yet'}
+                    {hasAnswers
+                      ? <> — check the <button onClick={() => pickTab('lead')} className="font-medium text-pine hover:underline">Lead tab</button>, then send the course their setup sheet.</>
+                      : <> — send the course their setup sheet.</>}</>
               )}
               {inq.status === 'details_requested' && (
                 <>Waiting on {inq.courseName}
@@ -1233,15 +1276,20 @@ function InquiryDetailInner() {
           )}
 
           {/* IC-2: the discovery call — set it up, or log it. */}
-          {!isArchived && inq.status !== 'rejected' && (
-            <InquiryCallCards
-              inquiry={inq}
-              processing={processing}
-              focus={callFocus}
-              onRefresh={loadInquiry}
-              onRequestSheet={() => action('request_details')}
-              onNotAFit={() => { setRejectReason('Not a fit'); setRejectNotify(true); setPendingAction('reject'); }}
-            />
+          {/* AW-6b: in a dialog, opened by the next step, the ⋯ menu, the
+              build gate or ?call=1 — the page leads with the next step, not a form. */}
+          {!isArchived && inq.status !== 'rejected' && callOpen && (
+            <ModalShell title={(upcomingCall || missedCall) ? 'The call' : 'Set up the call'} titleNode={<span className="sr-only">{(upcomingCall || missedCall) ? 'The call' : 'Set up the call'}</span>} size="lg" onClose={() => { setCallOpen(false); setCallFocus(null); }}>
+              <InquiryCallCards
+                inDialog
+                inquiry={inq}
+                processing={processing}
+                focus={callFocus}
+                onRefresh={loadInquiry}
+                onRequestSheet={async () => { setCallOpen(false); setCallFocus(null); await action('request_details'); }}
+                onNotAFit={() => { setCallOpen(false); setCallFocus(null); setRejectReason('Not a fit'); setRejectNotify(true); setPendingAction('reject'); }}
+              />
+            </ModalShell>
           )}
           {callGateNotice && (
             <div className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-md px-4 py-3">
@@ -1347,7 +1395,7 @@ function InquiryDetailInner() {
           {activeTab === 'lead' && (
             <div className="max-w-3xl">
               <div className="flex items-center justify-between mb-4">
-                <Eyebrow>Contact info</Eyebrow>
+                <h2 className="text-[15px] font-semibold text-ink">Contact</h2>
                 {!editContact ? (
                   <button onClick={() => {
                     setContactEdits({
@@ -1382,131 +1430,57 @@ function InquiryDetailInner() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <Card className="p-5">
-                    <div className="text-base font-medium text-ink">{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}</div>
-                    <a href={'mailto:' + inq.email} className="text-sm text-pine hover:underline block mt-1">{inq.email}</a>
-                    {inq.phone && <div className="text-sm text-ink-muted mt-0.5">{inq.phone}</div>}
-                  </Card>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Card className="px-4 py-3">
-                      <div className="text-[13px] font-semibold text-ink mb-1">City / State</div>
-                      <div className="text-ink font-medium">{inq.city}, {inq.state}</div>
-                    </Card>
-                    <Card className="px-4 py-3">
-                      <div className="text-[13px] font-semibold text-ink mb-1">Course type</div>
-                      <div className="text-ink font-medium capitalize">{inq.courseType}</div>
-                    </Card>
-                    {/* MP-4c: which channel this lead came from — the
-                        pre-launch growth question nothing could answer.
-                        "Not recorded" stays a real, visible state; it must
-                        never be silently folded into a category. */}
-                    <Card className="col-span-2 px-4 py-3">
-                      <div className="text-[13px] font-semibold text-ink mb-1">Source</div>
-                      <select
-                        value={inq.source || ''}
-                        disabled={processing}
-                        onChange={e => action('set_source', { source: e.target.value })}
-                        className="bg-paper border border-line rounded-md px-2 py-1.5 text-sm text-ink outline-none focus:border-pine/40 cursor-pointer disabled:opacity-50"
-                      >
-                        <option value="">Not recorded</option>
-                        {INQUIRY_SOURCES.map(src => <option key={src} value={src}>{src}</option>)}
-                      </select>
-                    </Card>
-                    {inq.website && (
-                      <Card className="col-span-2 px-4 py-3">
-                        <div className="text-[13px] font-semibold text-ink mb-1">Website</div>
-                        <a href={inq.website} target="_blank" rel="noreferrer" className="text-pine hover:underline text-sm">{inq.website}</a>
-                      </Card>
-                    )}
-                    {inq.address && (
-                      <Card className="col-span-2 px-4 py-3">
-                        <div className="text-[13px] font-semibold text-ink mb-1">Address</div>
-                        <div className="text-ink text-sm">{inq.address}{inq.zipCode ? ', ' + inq.zipCode : ''}</div>
-                      </Card>
-                    )}
-                    <Card className="col-span-2 px-4 py-3">
-                      <div className="text-[13px] font-semibold text-ink mb-1">Submitted</div>
-                      <div className="text-ink text-sm">{fmtDate(inq.createdAt)}</div>
-                    </Card>
-                  </div>
-                </div>
+                // AW-6b (Cam: "detail page too long", "too cluttered"): one card of
+                // label/value rows instead of a box per field.
+                <Card className="divide-y divide-line-soft">
+                  {leadRow('Contact', <>{inq.contactName}{inq.contactTitle ? ' · ' + inq.contactTitle : ''}</>)}
+                  {leadRow('Email', <a href={'mailto:' + inq.email} className="text-pine hover:underline">{inq.email}</a>)}
+                  {inq.phone && leadRow('Phone', <a href={'tel:' + inq.phone.replace(/[^\d+]/g, '')} className="text-pine hover:underline">{inq.phone}</a>)}
+                  {leadRow('Course', <span className="capitalize">{[inq.courseType, [inq.city, inq.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</span>)}
+                  {inq.address && leadRow('Address', <>{inq.address}{inq.zipCode ? ', ' + inq.zipCode : ''}</>)}
+                  {inq.website && leadRow('Website', <a href={inq.website} target="_blank" rel="noreferrer" className="text-pine hover:underline">{inq.website}</a>)}
+                  {/* MP-4c: which channel this lead came from. "Not recorded"
+                      stays a real, visible state, never folded into a category. */}
+                  {leadRow('Source', (
+                    <select
+                      value={inq.source || ''}
+                      disabled={processing}
+                      onChange={e => action('set_source', { source: e.target.value })}
+                      aria-label="Source"
+                      className="bg-paper border border-line rounded-md px-2 py-1 text-sm text-ink outline-none focus:border-pine/40 cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="">Not recorded</option>
+                      {INQUIRY_SOURCES.map(src => <option key={src} value={src}>{src}</option>)}
+                    </select>
+                  ))}
+                  {leadRow('Submitted', fmtDate(inq.createdAt))}
+                </Card>
               )}
             </div>
           )}
 
-          {activeTab === 'lead' && (
-            <div className="max-w-3xl space-y-5 mt-8">
-              <Eyebrow>What they told us</Eyebrow>
-              {(() => {
-                const rows: [string, string][] = [];
-                if (inq.currentBookingMethod) rows.push(['Current booking', inq.currentBookingMethod]);
-                if (inq.teeTimesPerDay) rows.push(['Tee times/day', String(inq.teeTimesPerDay)]);
-                if (inq.greenFeeRange) rows.push(['Green fees', inq.greenFeeRange]);
-                return rows.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {rows.map(([label, val]) => (
-                      <Card key={label} className="px-4 py-3">
-                        <div className="text-[13px] font-semibold text-ink mb-0.5">{label}</div>
-                        <div className="text-ink font-medium">{val}</div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : null;
-              })()}
-              {(inq.hasMemberPricing || inq.hasResidentPricing || inq.hasCaddies) && (
-                <div className="flex gap-2 flex-wrap">
-                  {inq.hasMemberPricing && <span className="text-[11px] px-2.5 py-1 rounded-md bg-white text-ink-muted border border-line">Members</span>}
-                  {inq.hasResidentPricing && <span className="text-[11px] px-2.5 py-1 rounded-md bg-white text-ink-muted border border-line">Residents</span>}
-                  {inq.hasCaddies && <span className="text-[11px] px-2.5 py-1 rounded-md bg-white text-ink-muted border border-line">Caddies</span>}
-                </div>
-              )}
-              {inq.lookingFor && inq.lookingFor.length > 0 && (
-                <Card className="px-4 py-3">
-                  <div className="text-[13px] font-semibold text-ink mb-1">Looking for</div>
-                  <div className="text-ink font-medium">{inq.lookingFor.join(', ')}</div>
-                </Card>
-              )}
-              {inq.additionalNotes && (
-                <Card className="px-4 py-3">
-                  <div className="text-[13px] font-semibold text-ink mb-1">Additional notes</div>
-                  <div className="text-ink text-sm">{inq.additionalNotes}</div>
-                </Card>
-              )}
-              {inq.pricingNotes && (
-                <Card className="px-4 py-3">
-                  <div className="text-[13px] font-semibold text-ink mb-1">Pricing notes</div>
-                  <div className="text-ink text-sm">{inq.pricingNotes}</div>
-                </Card>
-              )}
-              {inq.needsJson && (() => {
-                let n: Record<string, unknown> = {};
-                try { n = JSON.parse(inq.needsJson || ''); } catch { /* ignore */ }
-                const entries = Object.entries(n).filter(([, v]) => v !== '' && v !== null && v !== undefined);
-                if (entries.length === 0) return null;
-                return (
-                  <div>
-                    <div className="text-[13px] font-semibold text-warn mb-2">Form answers</div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {entries.map(([k, v]) => (
-                        <div key={k} className="bg-warn/5 border border-warn/20 rounded-lg px-4 py-3">
-                          <div className="text-[10px] text-warn/80 mb-0.5">{NEEDS_LABELS[k] || k}</div>
-                          <div className="text-warn font-medium">{fmtNeedValue(v, NEEDS_VALUES)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-              {!inq.currentBookingMethod && !inq.teeTimesPerDay && !inq.greenFeeRange &&
-               !inq.hasMemberPricing && !inq.hasResidentPricing && !inq.hasCaddies &&
-               (!inq.lookingFor || inq.lookingFor.length === 0) &&
-               !inq.additionalNotes && !inq.pricingNotes &&
-               (!inq.needsJson || inq.needsJson === '{}' || inq.needsJson === '') && (
-                <p className="text-sm text-ink-soft text-center py-10">No inquiry answers on record.</p>
-              )}
-            </div>
-          )}
+          {activeTab === 'lead' && (() => {
+            let needs: [string, unknown][] = [];
+            try { needs = Object.entries(JSON.parse(inq.needsJson || '{}') as Record<string, unknown>).filter(([, v]) => v !== '' && v !== null && v !== undefined); } catch { /* not JSON — nothing to show */ }
+            const pricing = [inq.hasMemberPricing && 'members', inq.hasResidentPricing && 'residents', inq.hasCaddies && 'caddies'].filter(Boolean).join(', ');
+            const rows: [string, React.ReactNode][] = [];
+            if (inq.currentBookingMethod) rows.push(['Books today by', inq.currentBookingMethod]);
+            if (inq.teeTimesPerDay) rows.push(['Tee times a day', String(inq.teeTimesPerDay)]);
+            if (inq.greenFeeRange) rows.push(['Green fees', inq.greenFeeRange]);
+            if (pricing) rows.push(['Has', pricing.charAt(0).toUpperCase() + pricing.slice(1)]);
+            if (inq.lookingFor?.length) rows.push(['Looking for', inq.lookingFor.join(', ')]);
+            if (inq.pricingNotes) rows.push(['Pricing notes', inq.pricingNotes]);
+            if (inq.additionalNotes) rows.push(['Notes', inq.additionalNotes]);
+            for (const [k, v] of needs) rows.push([NEEDS_LABELS[k] || k, fmtNeedValue(v, NEEDS_VALUES)]);
+            return (
+              <div className="max-w-3xl mt-7">
+                <h2 className="text-[15px] font-semibold text-ink mb-3">What they told us</h2>
+                {rows.length === 0
+                  ? <p className="text-sm text-ink-soft py-4">No inquiry answers on record.</p>
+                  : <Card className="divide-y divide-line-soft">{rows.map(([label, val]) => leadRow(label, val))}</Card>}
+              </div>
+            );
+          })()}
 
           {/* IC-2 §3: what the latest talked call gave us. */}
           {activeTab === 'lead' && talkedCall && callAnswerRows.length > 0 && (

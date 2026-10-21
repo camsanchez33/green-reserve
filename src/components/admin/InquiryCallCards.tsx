@@ -55,6 +55,8 @@ type Props = {
   /** open the Reject drawer with "Not a fit" preselected */
   onNotAFit: () => void;
   focus: CallFocus;
+  /** AW-6b: rendered inside a dialog — no card of its own (no box in a box). */
+  inDialog?: boolean;
 };
 
 const H = { 'Content-Type': 'application/json' };
@@ -138,7 +140,7 @@ function SkipInline({ inquiryId, contactFirst, busy, setBusy, onDone, onError, o
   );
 }
 
-export default function InquiryCallCards({ inquiry, processing, onRefresh, onRequestSheet, onNotAFit, focus }: Props) {
+export default function InquiryCallCards({ inquiry, processing, onRefresh, onRequestSheet, onNotAFit, focus, inDialog }: Props) {
   const calls = useMemo(() => inquiry.calls ?? [], [inquiry.calls]);
   const sheet = useMemo(() => parseJson<Record<string, unknown> | null>(inquiry.detailsJson, null), [inquiry.detailsJson]);
   const needs = useMemo(() => parseJson<Record<string, unknown> | null>(inquiry.needsJson, null), [inquiry.needsJson]);
@@ -203,7 +205,7 @@ export default function InquiryCallCards({ inquiry, processing, onRefresh, onReq
   }
 
   return (
-    <Card ref={wrap} className="mt-4 max-w-3xl px-5 py-4">
+    <Card ref={wrap} className={inDialog ? '!bg-transparent !shadow-none' : 'mt-4 max-w-3xl px-5 py-4'}>
       {body}
       {notice && <Notice tone={notice.tone} onClose={() => setNotice(null)}>{notice.text}</Notice>}
       {error && <Notice tone="bad" onClose={() => setError('')}>{error}</Notice>}
