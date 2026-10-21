@@ -1,4 +1,5 @@
 'use client';
+import { stepUpFetch } from '@/lib/step-up-client';
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { Copy } from 'lucide-react';
@@ -109,7 +110,7 @@ export default function EmployeesPage() {
     e.preventDefault();
     setCreateError(''); setCreateTempPwd(''); setCreating(true);
     try {
-      const res = await fetch('/api/admin/employees', {
+      const res = await stepUpFetch('/api/admin/employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName, email: newEmail, role: newRole }),
@@ -130,7 +131,7 @@ export default function EmployeesPage() {
   async function runEmployeeAction(key: string, body: Record<string, unknown>): Promise<Record<string, unknown> | null> {
     setActionLoading(key); setActionError('');
     try {
-      const res = await fetch('/api/admin/employees', {
+      const res = await stepUpFetch('/api/admin/employees', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

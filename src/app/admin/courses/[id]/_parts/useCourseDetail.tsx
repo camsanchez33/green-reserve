@@ -4,6 +4,7 @@
 // grown to 2,700 lines and 52 useState in one component. Moved verbatim; state
 // and handlers come from useCourseDetail() via useCourse(). Every piece of state and every handler the page had.
 
+import { stepUpFetch } from '@/lib/step-up-client';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useResource } from '@/lib/use-resource';
@@ -719,7 +720,7 @@ export function useCourseDetail() {
     if (!refundReason.trim()) { setRefundError('A reason is required — the golfer sees it in their email.'); return; }
     setRefundBusy(true); setRefundError('');
     try {
-      const r = await fetch('/api/admin/refund', {
+      const r = await stepUpFetch('/api/admin/refund', {
         method: 'POST', headers: H(),
         body: JSON.stringify({ bookingId: refundTarget.id, amountCents: dollars === null ? undefined : Math.round(dollars * 100), reason: refundReason.trim() }),
       });

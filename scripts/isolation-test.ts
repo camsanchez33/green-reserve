@@ -540,6 +540,13 @@ async function main() {
     const r = await api('/api/admin/passkeys', { cookie: viewerCookie });
     checkStatus('Employee → owner passkeys → 403', r.status, 403);
   }
+  {
+    // AW-1c: an employee can't see or remove the owner's devices, or confirm as the owner.
+    const r = await api('/api/admin/owner-devices', { cookie: viewerCookie });
+    checkStatus('Employee → owner devices → 403', r.status, 403);
+    const s = await api('/api/cam/step-up', { cookie: viewerCookie });
+    checkStatus('Employee → owner step-up → 401', s.status, 401);
+  }
 
   console.log('\n── Member cross-course session isolation ─────────────────────────');
   {

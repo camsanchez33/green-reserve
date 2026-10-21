@@ -23,6 +23,8 @@
  * itself instead of answering "Invalid credentials" to correct credentials.
  */
 
+import { stepUpFetch } from './step-up-client';
+
 export const LOGIN_SESSION_ENDED = '/admin/login?reason=session_ended';
 
 export type AdminFetchFailure =
@@ -118,7 +120,8 @@ export async function adminFetch<T = unknown>(
   const subject = init?.subject;
   const action = init?.action ?? 'load';
   try {
-    const res = await fetch(input, {
+    // AW-1c: a risky owner action may ask "Confirm it's you" first, then retries.
+    const res = await stepUpFetch(input, {
       ...init,
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     });

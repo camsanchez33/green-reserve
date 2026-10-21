@@ -6,7 +6,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
 import { hasPasskey, authenticationOptions, verifyPasskeySignIn } from '@/lib/owner-passkey';
-import { requestContext, deviceTokenFromCookie, trustedDevice, startDeviceApproval, setDeviceCookie, createOwnerSession, deviceLabel } from '@/lib/owner-session';
+import { requestContext, deviceTokenFromCookie, trustedDevice, startDeviceApproval, setDeviceCookie, createOwnerSession, deviceLabel, alertTime as when } from '@/lib/owner-session';
 
 // AW-1 (Cam 2026-10-20): the owner's ONLY sign-in, at /cam. Password → an
 // approved device (a new one is approved from an emailed link) → a second
@@ -28,7 +28,6 @@ async function setTotpPending(admin: { id: string; twoFactorCode: string | null;
 
 const DUMMY_HASH = '$2a$12$x9I/Ln7XwBr4.techzuhLufMEVbOz1lhUde8CTW8YVHD9pGubcv7u';
 
-const when = () => new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET';
 
 /** Signed in: the session, the cookie, and the alert email (a failed email never blocks the sign-in). */
 async function signIn(admin: { id: string; email: string; name: string }, deviceId: string, method: string) {

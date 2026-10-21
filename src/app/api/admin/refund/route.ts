@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, stepUpRequired } from '@/lib/admin-session';
 import { refundBooking } from '@/lib/refund-booking';
 
 // MP-6b: POST /api/admin/refund { bookingId, amountCents?, reason }
@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Refunds need manager access.' }, { status: 403 });
+  const su = stepUpRequired(session); if (su) return su;
 
   const body = await req.json().catch(() => ({}));
   const bookingId = String(body.bookingId || '');

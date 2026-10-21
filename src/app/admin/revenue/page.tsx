@@ -1,4 +1,5 @@
 'use client';
+import { stepUpFetch } from '@/lib/step-up-client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Plus, Pencil, Trash2, Search, ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
@@ -248,7 +249,7 @@ export default function RevenuePage() {
     // "Retrying…" forever with no message — on a money action, where the operator
     // most needs to know whether the card was charged.
     try {
-      const res = await fetch(`/api/admin/retry-charge/${p.bookingId}`, {
+      const res = await stepUpFetch(`/api/admin/retry-charge/${p.bookingId}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ checkIn: false }),
       });

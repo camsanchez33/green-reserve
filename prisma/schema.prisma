@@ -863,6 +863,9 @@ model OwnerSession {
   expiresAt  DateTime
   lastSeenAt DateTime     @default(now())
   revokedAt  DateTime?
+  /// AW-1c: when this session last proved a second factor (sign-in, or a
+  /// "confirm it's you"). Risky actions need it within the last 5 minutes.
+  stepUpAt   DateTime?
 
   @@index([adminId])
 }

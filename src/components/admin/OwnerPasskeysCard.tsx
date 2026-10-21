@@ -2,6 +2,7 @@
 // AW-1b (Cam 2026-10-21): the owner's passkeys — Face ID, Touch ID or a
 // security key — as the second factor at /cam. The authenticator app must be
 // set up first; it stays the backup. Each passkey can be removed here.
+import { stepUpFetch } from '@/lib/step-up-client';
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -11,7 +12,7 @@ type Passkey = { id: string; name: string; createdAt: string; lastUsedAt: string
 const day = (s: string) => new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 async function call(method: string, body?: unknown) {
-  const r = await fetch('/api/admin/passkeys', { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const r = await stepUpFetch('/api/admin/passkeys', { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const data = await r.json().catch(() => ({}));
   return { ok: r.ok, data };
 }

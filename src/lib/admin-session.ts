@@ -1,7 +1,8 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
-import { ownerSessionFromCookie } from './owner-session';
+import { ownerSessionFromCookie, STEP_UP_MINUTES } from './owner-session';
+import { NextResponse } from 'next/server';
 
 const rawSecret =
   process.env.JWT_SECRET ||
@@ -23,6 +24,10 @@ export interface AdminSession {
    * 2FA-backed" from an inference into an enforced invariant.
    */
   mfa?: boolean;
+  /** AW-1c: the owner's OwnerSession row, and when it last proved a second factor. */
+  ownerSessionId?: string;
+  ownerDeviceId?: string | null;
+  stepUpAt?: Date | null;
 }
 
 /**
@@ -67,6 +72,20 @@ export function ownerGateError(session: AdminSession): string {
     : 'Forbidden — owner only';
 }
 
+/**
+ * AW-1c (Cam 2026-10-21: risky actions re-confirmed with the passkey): the
+ * owner must have proved a second factor in the last STEP_UP_MINUTES before a
+ * risky action. Returns null to go ahead, or the 403 the admin pages turn into
+ * a "Confirm it's you" prompt (code: 'step_up'). Employees have no second
+ * factor and are unaffected (their own role gates still apply).
+ */
+export function stepUpRequired(session: AdminSession): NextResponse | null {
+  if (session.role !== 'owner') return null;
+  const at = session.stepUpAt ? new Date(session.stepUpAt).getTime() : 0;
+  if (at && Date.now() - at < STEP_UP_MINUTES * 60_000) return null;
+  return NextResponse.json({ error: 'Confirm it’s you to do this.', code: 'step_up' }, { status: 403 });
+}
+
 export async function signAdminToken(payload: AdminSession) {
   return new SignJWT({ ...payload, type: 'admin_session' })
     .setProtectedHeader({ alg: 'HS256' })
@@ -98,7 +117,7 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
     console.error(JSON.stringify({ ev: 'owner_session.db_unavailable', error: err instanceof Error ? err.message : String(err) }));
     throw new AdminSessionUnavailable();
   }
-  if (owner) return { adminId: owner.admin.id, email: owner.admin.email, name: owner.admin.name, role: 'owner', mfa: true };
+  if (owner) return { adminId: owner.admin.id, email: owner.admin.email, name: owner.admin.name, role: 'owner', mfa: true, ownerSessionId: owner.id, ownerDeviceId: owner.deviceId, stepUpAt: owner.stepUpAt };
 
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_session')?.value;
