@@ -1,18 +1,43 @@
 {
-  "generatedAt": "2026-10-21T03:45:30.135Z",
+  "generatedAt": "2026-10-21T04:07:07.170Z",
   "repo": {
-    "head": "00a9007",
+    "head": "5982380",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
-    "dirty": [
-      "M ADMIN_V5_SPEC.md",
-      " M src/app/api/cam/login/route.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "5982380",
+        "date": "2026-10-21T04:06:16+00:00",
+        "subject": "AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2807e2b",
+        "date": "2026-10-21T03:59:12+00:00",
+        "subject": "AW-1c: re-confirm risky owner actions; owner device list; passkey change emails",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5fc7ad8",
+        "date": "2026-10-21T03:45:32+00:00",
+        "subject": "Regenerate code map",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a6a13af",
+        "date": "2026-10-21T03:45:31+00:00",
+        "subject": "AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "00a9007",
         "date": "2026-10-21T03:41:34+00:00",
@@ -877,6 +902,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "5982380",
+      "date": "2026-10-21",
+      "subject": "AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step"
+    },
+    {
+      "h": "2807e2b",
+      "date": "2026-10-21",
+      "subject": "AW-1c: re-confirm risky owner actions; owner device list; passkey change emails"
+    },
+    {
+      "h": "5fc7ad8",
+      "date": "2026-10-21",
+      "subject": "Regenerate code map"
+    },
+    {
+      "h": "a6a13af",
+      "date": "2026-10-21",
+      "subject": "AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board"
+    },
+    {
       "h": "00a9007",
       "date": "2026-10-21",
       "subject": "AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists"
@@ -915,26 +960,6 @@
       "h": "efd1438",
       "date": "2026-10-20",
       "subject": "queue/spec update (#160)"
-    },
-    {
-      "h": "315e3e3",
-      "date": "2026-10-20",
-      "subject": "W2-7 B2: sales tax on pro-shop items added to a round (#159)"
-    },
-    {
-      "h": "2798d62",
-      "date": "2026-10-21",
-      "subject": "W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board"
-    },
-    {
-      "h": "557be09",
-      "date": "2026-10-21",
-      "subject": "W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched"
-    },
-    {
-      "h": "063dc87",
-      "date": "2026-10-21",
-      "subject": "W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid"
     }
   ]
 }
