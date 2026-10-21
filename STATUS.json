@@ -1,34 +1,39 @@
 {
-  "generatedAt": "2026-10-21T12:58:47.914Z",
+  "generatedAt": "2026-10-21T19:48:06.791Z",
   "repo": {
-    "head": "27af530",
+    "head": "fe16f64",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 18,
+    "dirtyCount": 2,
     "dirty": [
-      "M  ADMIN_V5_SPEC.md",
-      "M  docs/CODEMAP.md",
-      "M  docs/codemap.json",
-      "A  prisma/migrations/20261021060912_aw4b_today_goals/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/admin-nav-test.ts",
-      "A  scripts/admin-today-courses-test.ts",
-      "M  scripts/isolation-test.ts",
-      "A  src/app/admin/goals/page.tsx",
-      "M  src/app/admin/page.tsx",
-      "A  src/app/api/admin/goals/route.ts",
-      "M  src/app/api/admin/search/route.ts",
-      "M  src/app/api/admin/today/route.ts",
-      "M  src/components/admin/AdminSidebar.tsx",
-      "M  src/lib/admin-action-queue.ts",
-      "A  src/lib/admin-goals.ts",
-      "M  src/lib/admin-today.ts",
-      "M  src/lib/session.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "fe16f64",
+        "date": "2026-10-21T19:46:07+00:00",
+        "subject": "AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d58220f",
+        "date": "2026-10-21T09:02:53-04:00",
+        "subject": "AW-6b: inquiry page — the one next step first (#169)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a85a078",
+        "date": "2026-10-21T02:37:29-04:00",
+        "subject": "AW-4b: Today shows each course with its own to-dos; Goals tab (#170)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "27af530",
         "date": "2026-10-21T06:18:09+00:00",
@@ -824,7 +829,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "file": "ADMIN_V5_SPEC.md",
@@ -1040,6 +1045,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "fe16f64",
+      "date": "2026-10-21",
+      "subject": "AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)"
+    },
+    {
+      "h": "d58220f",
+      "date": "2026-10-21",
+      "subject": "AW-6b: inquiry page — the one next step first (#169)"
+    },
+    {
+      "h": "a85a078",
+      "date": "2026-10-21",
+      "subject": "AW-4b: Today shows each course with its own to-dos; Goals tab (#170)"
+    },
+    {
       "h": "27af530",
       "date": "2026-10-21",
       "subject": "Status board"
@@ -1083,21 +1103,6 @@
       "h": "3bccfa0",
       "date": "2026-10-21",
       "subject": "AW-5: hourly admin checks — urgent alerts once each, and a morning digest"
-    },
-    {
-      "h": "2228db8",
-      "date": "2026-10-21",
-      "subject": "AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+"
-    },
-    {
-      "h": "c78b7aa",
-      "date": "2026-10-21",
-      "subject": "AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding"
-    },
-    {
-      "h": "224db02",
-      "date": "2026-10-21",
-      "subject": "Status board and code map"
     }
   ]
 }

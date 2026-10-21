@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 12:58 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `27af530` · working tree **18 dirty file(s)**
+Generated 2026-10-21 19:48 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fe16f64` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 89 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 92 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `fe16f64` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review) |
+| `d58220f` | 2026-10-21 | AW-6b: inquiry page — the one next step first (#169) |
+| `a85a078` | 2026-10-21 | AW-4b: Today shows each course with its own to-dos; Goals tab (#170) |
 | `27af530` | 2026-10-21 | Status board |
 | `cbcfb8c` | 2026-10-21 | AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen |
 | `ec245d5` | 2026-10-21 | AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card |
@@ -104,29 +107,13 @@ Generated 2026-10-21 12:58 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (18 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M  ADMIN_V5_SPEC.md`
-- `M  docs/CODEMAP.md`
-- `M  docs/codemap.json`
-- `A  prisma/migrations/20261021060912_aw4b_today_goals/migration.sql`
-- `M  prisma/schema.prisma`
-- `M  scripts/admin-nav-test.ts`
-- `A  scripts/admin-today-courses-test.ts`
-- `M  scripts/isolation-test.ts`
-- `A  src/app/admin/goals/page.tsx`
-- `M  src/app/admin/page.tsx`
-- `A  src/app/api/admin/goals/route.ts`
-- `M  src/app/api/admin/search/route.ts`
-- `M  src/app/api/admin/today/route.ts`
-- `M  src/components/admin/AdminSidebar.tsx`
-- `M  src/lib/admin-action-queue.ts`
-- `A  src/lib/admin-goals.ts`
-- `M  src/lib/admin-today.ts`
-- `M  src/lib/session.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -208,7 +195,7 @@ Nothing awaiting review.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-21 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 3d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 4d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 1d |
@@ -247,6 +234,9 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `fe16f64` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)
+- `d58220f` 2026-10-21 — AW-6b: inquiry page — the one next step first (#169)
+- `a85a078` 2026-10-21 — AW-4b: Today shows each course with its own to-dos; Goals tab (#170)
 - `27af530` 2026-10-21 — Status board
 - `cbcfb8c` 2026-10-21 — AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen
 - `ec245d5` 2026-10-21 — AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card
@@ -256,9 +246,6 @@ Nothing awaiting review.
 - `e941200` 2026-10-21 — Code map and status board
 - `39d69df` 2026-10-21 — AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts
 - `3bccfa0` 2026-10-21 — AW-5: hourly admin checks — urgent alerts once each, and a morning digest
-- `2228db8` 2026-10-21 — AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+
-- `c78b7aa` 2026-10-21 — AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding
-- `224db02` 2026-10-21 — Status board and code map
 
 ---
 

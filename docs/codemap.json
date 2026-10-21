@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 483,
+    "files": 484,
     "routes": 237,
     "libs": 155,
     "models": 48,
@@ -756,7 +756,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2236,
+      "lines": 2253,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -773,6 +773,7 @@
       "imports": [
         "@/components/admin/AdminSidebar",
         "@/components/admin/InquiryCallCards",
+        "@/components/admin/LeadDialogs",
         "@/components/ui/Card",
         "@/components/ui/ErrorState",
         "@/components/ui/Eyebrow",
@@ -794,7 +795,7 @@
     },
     {
       "path": "src/app/admin/inquiries/page.tsx",
-      "lines": 947,
+      "lines": 949,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1963,7 +1964,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1201,
+      "lines": 1272,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8419,7 +8420,7 @@
     },
     {
       "path": "src/components/admin/InquiryBoard.tsx",
-      "lines": 121,
+      "lines": 137,
       "purpose": "AW-6a (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -8438,6 +8439,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/admin/LeadDialogs",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/inquiry-board",
@@ -8490,6 +8492,38 @@
       ],
       "usedBy": [
         "src/app/admin/inquiries/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/admin/LeadDialogs.tsx",
+      "lines": 129,
+      "purpose": "AW-6c (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "AddLeadDialog",
+          "kind": "component"
+        },
+        {
+          "name": "MoveToTalkingDialog",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Modal",
+        "@/components/ui/field",
+        "@/lib/inquiry-status",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/inquiries/[id]/page.tsx",
+        "src/components/admin/InquiryBoard.tsx"
       ]
     },
     {
@@ -9746,6 +9780,7 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
+        "src/components/admin/LeadDialogs.tsx",
         "src/components/admin/StepUpDialog.tsx"
       ]
     },
@@ -9953,6 +9988,7 @@
         "src/app/dashboard/shop/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
+        "src/components/admin/LeadDialogs.tsx",
         "src/components/admin/OwnerPasskeysCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/admin/StepUpDialog.tsx",
@@ -14394,7 +14430,7 @@
     },
     {
       "path": "src/lib/inquiry-board.ts",
-      "lines": 78,
+      "lines": 83,
       "purpose": "AW-6a (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -14571,7 +14607,7 @@
     },
     {
       "path": "src/lib/inquiry-needs.ts",
-      "lines": 38,
+      "lines": 39,
       "purpose": "INQUIRY_CALL_SPEC IC-1 §3 — \"Still need from them\", the sheet's column.",
       "brain": [
         "still-need-from-them"
@@ -14678,7 +14714,7 @@
     },
     {
       "path": "src/lib/inquiry-status.ts",
-      "lines": 465,
+      "lines": 480,
       "purpose": "Single source of truth for what every inquiry status means and which pipeline segment it belongs to.",
       "brain": [
         "inquiry-statuses",
@@ -14739,6 +14775,14 @@
         },
         {
           "name": "KNOWN_STATUSES",
+          "kind": "const"
+        },
+        {
+          "name": "LEAD_ACTIONS",
+          "kind": "const"
+        },
+        {
+          "name": "LEAD_STATUS",
           "kind": "const"
         },
         {
@@ -14820,6 +14864,7 @@
         "src/app/api/inquiries/route.ts",
         "src/app/api/inquiries/signin-code/route.ts",
         "src/components/admin/InquiryBoard.tsx",
+        "src/components/admin/LeadDialogs.tsx",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-today.ts",
         "src/lib/call-invite.ts",
