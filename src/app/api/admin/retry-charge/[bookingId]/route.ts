@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, stepUpRequired } from '@/lib/admin-session';
 import { performCheckIn, collectPayment } from '@/lib/checkin-booking';
 import { friendlyStripeError } from '@/lib/stripe-errors';
 
@@ -18,6 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   if (!session || !requireRole(session, MANAGER_PLUS)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+  const su = stepUpRequired(session); if (su) return su;
   const { bookingId } = await params;
 
   // Body is optional — a bare POST is charge-only, which is what the button

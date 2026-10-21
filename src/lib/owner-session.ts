@@ -25,6 +25,9 @@ const rawSecret = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'productio
 if (!rawSecret) throw new Error('JWT_SECRET is not set — refusing to start');
 const secret = new TextEncoder().encode(rawSecret);
 
+/** The time printed in owner alert emails (Cam is on the East Coast). */
+export const alertTime = () => new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET';
+
 export const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 const newToken = () => randomBytes(32).toString('base64url');
 
@@ -118,7 +121,8 @@ export async function signOwnerToken(sid: string, adminId: string, expiresAt: Da
 /** Sign the owner in: a session row and the gr_owner cookie on `res`. */
 export async function createOwnerSession(res: NextResponse, a: { adminId: string; deviceId: string; method: string; ip: string; userAgent: string }) {
   const expiresAt = new Date(Date.now() + OWNER_SESSION_HOURS * 3600_000);
-  const s = await prisma.ownerSession.create({ data: { adminId: a.adminId, deviceId: a.deviceId, method: a.method, ip: a.ip, userAgent: a.userAgent, expiresAt } });
+  // Signing in proved a second factor just now — that counts as the first "confirm it's you" (AW-1c).
+  const s = await prisma.ownerSession.create({ data: { adminId: a.adminId, deviceId: a.deviceId, method: a.method, ip: a.ip, userAgent: a.userAgent, expiresAt, stepUpAt: new Date() } });
   await prisma.ownerDevice.update({ where: { id: a.deviceId }, data: { lastUsedAt: new Date() } });
   const token = await signOwnerToken(s.id, a.adminId, expiresAt);
   // lax, not strict: an emailed link to /admin must arrive signed in. Admin writes are JSON
@@ -142,6 +146,13 @@ export async function ownerSessionFromCookie() {
   // A revoked device ends its sessions too; a demoted or deactivated owner is out at once.
   if (s.device?.revokedAt || !s.admin.active || s.admin.role !== 'owner') return null;
   return s;
+}
+
+/** AW-1c: how recently a second factor must have been proved for a risky action. */
+export const STEP_UP_MINUTES = 5;
+
+export async function markStepUp(sessionId: string) {
+  await prisma.ownerSession.update({ where: { id: sessionId }, data: { stepUpAt: new Date() } });
 }
 
 export async function revokeOwnerSession(id: string) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY, MANAGER_PLUS, ownerGateError } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, MANAGER_PLUS, ownerGateError, stepUpRequired } from '@/lib/admin-session';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // MP-2 fix-now #8 — see broadcasts: raw role check skipped the mfa assertion.
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
+  const su = stepUpRequired(session); if (su) return su;
 
   const { email: rawEmail, name, role } = await req.json();
   if (!rawEmail || !name) return NextResponse.json({ error: 'email and name required' }, { status: 400 });
@@ -67,6 +68,7 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // MP-2 fix-now #8 — see broadcasts: raw role check skipped the mfa assertion.
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
+  const su = stepUpRequired(session); if (su) return su;
 
   const { id, action, role, active } = await req.json();
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });

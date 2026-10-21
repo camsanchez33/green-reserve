@@ -1962,3 +1962,19 @@ export async function sendOwnerSignInAlert(data: { email: string; name: string; 
   `);
   await getResend().emails.send({ from: FROM, to: data.email, subject: 'GreenReserve owner sign-in', html });
 }
+
+// AW-1c: a passkey was added to or removed from the owner account — the one
+// change that alters how the account signs in, so it is always announced.
+export async function sendOwnerPasskeyChanged(data: { email: string; name: string; change: 'added' | 'removed'; passkey: string; device: string; when: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">A passkey was ${data.change}</h1>
+    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — a passkey was ${data.change} ${data.change === 'added' ? 'to' : 'from'} the GreenReserve owner account.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Passkey</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.passkey)}</td></tr>
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">From</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.device)}</td></tr>
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">When</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.when)}</td></tr>
+    </table>
+    <p style="margin:0;color:#6B706A;font-size:13px;">Not you? Sign in, go to My profile and choose “Sign out everywhere”, remove the passkey, then change your password.</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.email, subject: `GreenReserve passkey ${data.change}`, html });
+}

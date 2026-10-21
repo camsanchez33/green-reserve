@@ -55,7 +55,7 @@ export async function registrationOptions(admin: { id: string; email: string; na
   return options;
 }
 
-export async function addPasskey(adminId: string, response: RegistrationResponseJSON, name: string): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function addPasskey(adminId: string, response: RegistrationResponseJSON, name: string): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
   const expectedChallenge = await consumeChallenge(adminId);
   if (!expectedChallenge) return { ok: false, error: 'That took too long — try adding the passkey again.' };
   const { rpID, origin } = relyingParty();
@@ -69,11 +69,11 @@ export async function addPasskey(adminId: string, response: RegistrationResponse
   if (!verified.verified || !verified.registrationInfo) return { ok: false, error: 'That passkey couldn’t be checked — try again.' };
   const c = verified.registrationInfo.credential;
   if (await prisma.ownerPasskey.findUnique({ where: { credentialId: c.id } })) return { ok: false, error: 'That passkey is already added.' };
-  await prisma.ownerPasskey.create({ data: {
+  const saved = await prisma.ownerPasskey.create({ data: {
     adminId, credentialId: c.id, publicKey: Buffer.from(c.publicKey), counter: BigInt(c.counter),
     transports: c.transports ?? [], name: name.trim().slice(0, 60) || 'Passkey',
   } });
-  return { ok: true };
+  return { ok: true, name: saved.name };
 }
 
 // ── Signing in at /cam ───────────────────────────────────────────────────────

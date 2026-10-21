@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError, stepUpRequired } from '@/lib/admin-session';
 import { agreementVersionsOverview, publishAgreementVersion } from '@/lib/agreement-publish';
 
 // AG-3 — Admin → System → Agreement versions (Cam 2026-10-12: "build the admin
@@ -25,6 +25,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const g = await gate();
   if ('res' in g) return g.res;
+  const su = stepUpRequired(g.session); if (su) return su;
   // Irreversible and mass-emailing: accept only a JSON request (a cross-site form
   // POST cannot send this content type without a CORS preflight).
   if (!(req.headers.get('content-type') ?? '').toLowerCase().startsWith('application/json')) {

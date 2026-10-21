@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 03:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `00a9007` · working tree **2 dirty file(s)**
+Generated 2026-10-21 04:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5982380` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 68 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 72 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `5982380` | 2026-10-21 | AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step |
+| `2807e2b` | 2026-10-21 | AW-1c: re-confirm risky owner actions; owner device list; passkey change emails |
+| `5fc7ad8` | 2026-10-21 | Regenerate code map |
+| `a6a13af` | 2026-10-21 | AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board |
 | `00a9007` | 2026-10-21 | AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists |
 | `ccbfb06` | 2026-10-20 | AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161) |
 | `0671dab` | 2026-10-21 | Regenerate code map after main merge |
@@ -82,14 +86,6 @@ Generated 2026-10-21 03:45 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (2 file(s))
-
-- `M ADMIN_V5_SPEC.md`
-- `M src/app/api/cam/login/route.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -210,6 +206,10 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `5982380` 2026-10-21 — AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step
+- `2807e2b` 2026-10-21 — AW-1c: re-confirm risky owner actions; owner device list; passkey change emails
+- `5fc7ad8` 2026-10-21 — Regenerate code map
+- `a6a13af` 2026-10-21 — AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board
 - `00a9007` 2026-10-21 — AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists
 - `ccbfb06` 2026-10-20 — AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)
 - `0671dab` 2026-10-21 — Regenerate code map after main merge
@@ -218,10 +218,6 @@ Nothing awaiting review.
 - `fc3a0fc` 2026-10-21 — AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails
 - `eeea53c` 2026-10-21 — AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner
 - `efd1438` 2026-10-20 — queue/spec update (#160)
-- `315e3e3` 2026-10-20 — W2-7 B2: sales tax on pro-shop items added to a round (#159)
-- `2798d62` 2026-10-21 — W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board
-- `557be09` 2026-10-21 — W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched
-- `063dc87` 2026-10-21 — W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid
 
 ---
 
