@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 472,
-    "routes": 234,
-    "libs": 148,
+    "files": 475,
+    "routes": 235,
+    "libs": 150,
     "models": 46,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -1123,6 +1123,38 @@
         "@/lib/admin-session",
         "@/lib/course-closure",
         "@/lib/lifecycle",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/ask/route.ts",
+      "lines": 121,
+      "purpose": "AW-3b (Cam 2026-10-21):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "dynamic",
+          "kind": "const"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/ask",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-ask",
+        "@/lib/admin-day",
+        "@/lib/admin-session",
+        "@/lib/rate-limit",
+        "@anthropic-ai/sdk",
         "next/server"
       ],
       "usedBy": []
@@ -8255,7 +8287,7 @@
     },
     {
       "path": "src/components/admin/CommandPalette.tsx",
-      "lines": 237,
+      "lines": 341,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8270,6 +8302,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/admin-ask-links",
         "lucide-react",
         "next/navigation",
         "react"
@@ -9885,6 +9918,70 @@
       ]
     },
     {
+      "path": "src/lib/admin-ask-links.ts",
+      "lines": 15,
+      "purpose": "AW-3b:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ADMIN_LINK",
+          "kind": "const"
+        },
+        {
+          "name": "safeAdminPath",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/admin/CommandPalette.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/admin-ask.ts",
+      "lines": 156,
+      "purpose": "AW-3b (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ASK_TOOL_NAMES",
+          "kind": "const"
+        },
+        {
+          "name": "ASK_TOOLS",
+          "kind": "const"
+        },
+        {
+          "name": "AskOutcome",
+          "kind": "type"
+        },
+        {
+          "name": "runAskTool",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day",
+        "./admin-roles",
+        "./money-problems",
+        "./prisma",
+        "@anthropic-ai/sdk"
+      ],
+      "usedBy": [
+        "src/app/api/admin/ask/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/admin-day.ts",
       "lines": 111,
       "purpose": "Platform day boundaries.",
@@ -9930,7 +10027,9 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/stats/route.ts"
+        "src/app/api/admin/ask/route.ts",
+        "src/app/api/admin/stats/route.ts",
+        "src/lib/admin-ask.ts"
       ]
     },
     {
@@ -10022,6 +10121,7 @@
         "src/app/admin/groups/page.tsx",
         "src/app/admin/page.tsx",
         "src/components/admin/AdminSidebar.tsx",
+        "src/lib/admin-ask.ts",
         "src/lib/admin-session.ts"
       ]
     },
@@ -10151,6 +10251,7 @@
         "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/agreement-versions/route.ts",
         "src/app/api/admin/archive-course/route.ts",
+        "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/change-password/route.ts",
@@ -14601,7 +14702,8 @@
       "usedBy": [
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
-        "src/app/api/admin/revenue/route.ts"
+        "src/app/api/admin/revenue/route.ts",
+        "src/lib/admin-ask.ts"
       ]
     },
     {
@@ -15406,6 +15508,7 @@
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
         "src/lib/access-fee.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/admin-session.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-publish.ts",
@@ -15596,6 +15699,7 @@
         "./prisma"
       ],
       "usedBy": [
+        "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/login/route.ts",
@@ -18307,6 +18411,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/cancel-booking.ts",
@@ -19149,6 +19254,7 @@
         "src/app/courses/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
@@ -19427,6 +19533,7 @@
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/send/route.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/approval-state.ts",
         "src/lib/course-timeline.ts",
         "src/lib/lifecycle.ts",

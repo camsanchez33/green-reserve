@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-21 04:16 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ e66b258</span>
-    <span>2 uncommitted</span>
+    <span>2026-10-21 04:27 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 0c7421f</span>
+    <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">74 runs have shipped that the queue doesn't know about</div>
+<div class="lede">77 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">4c61670</span><span>AW-3b: Ask in the admin search — read-only AI answers with links to admin pages</span></li>
+<li><span class="h">905572d</span><span>Regenerate code map</span></li>
+<li><span class="h">474f3f0</span><span>Status board</span></li>
 <li><span class="h">e66b258</span><span>AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations</span></li>
 <li><span class="h">fc9a048</span><span>Status board</span></li>
 <li><span class="h">5982380</span><span>AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step</span></li>
@@ -208,11 +211,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>?? src/app/api/admin/ask/</code></li><li><code>?? src/lib/admin-ask.ts</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
@@ -292,6 +290,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">4c61670</td><td class="num">2026-10-21</td><td>AW-3b: Ask in the admin search — read-only AI answers with links to admin pages</td></tr>
+<tr><td class="num">905572d</td><td class="num">2026-10-21</td><td>Regenerate code map</td></tr>
+<tr><td class="num">474f3f0</td><td class="num">2026-10-21</td><td>Status board</td></tr>
 <tr><td class="num">e66b258</td><td class="num">2026-10-21</td><td>AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations</td></tr>
 <tr><td class="num">fc9a048</td><td class="num">2026-10-21</td><td>Status board</td></tr>
 <tr><td class="num">5982380</td><td class="num">2026-10-21</td><td>AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step</td></tr>
@@ -301,9 +302,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">00a9007</td><td class="num">2026-10-21</td><td>AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists</td></tr>
 <tr><td class="num">ccbfb06</td><td class="num">2026-10-20</td><td>AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)</td></tr>
 <tr><td class="num">0671dab</td><td class="num">2026-10-21</td><td>Regenerate code map after main merge</td></tr>
-<tr><td class="num">4fda831</td><td class="num">2026-10-21</td><td>AW-1a: dummy hash at the real cost; status board</td></tr>
-<tr><td class="num">c6ab10b</td><td class="num">2026-10-21</td><td>queue/spec update</td></tr>
-<tr><td class="num">fc3a0fc</td><td class="num">2026-10-21</td><td>AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

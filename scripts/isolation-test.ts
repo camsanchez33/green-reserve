@@ -559,6 +559,13 @@ async function main() {
     checkStatus('Employee → owner step-up → 401', s.status, 401);
   }
   {
+    // AW-3b: Ask reads platform data — the same support+ door as search, and nobody signed out.
+    const v = await api('/api/admin/ask', { method: 'POST', cookie: viewerCookie, body: { question: 'which courses are live?' } });
+    checkStatus('Viewer → Ask → 403', v.status, 403);
+    const n = await api('/api/admin/ask', { method: 'POST', body: { question: 'which courses are live?' } });
+    checkStatus('Signed out → Ask → 401', n.status, 401);
+  }
+  {
     // AW-1b/c: the passkey step signs in only right after the password step —
     // never on a trusted device alone (the pending marker is the gate).
     const { sha256 } = await import('../src/lib/owner-session');
