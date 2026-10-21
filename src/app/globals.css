@@ -100,9 +100,8 @@ body {
 .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
 .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
-/* Admin sidebar collapse */
+/* Admin rail width (w-56) */
 :root { --admin-sidebar-w: 14rem; }
-html.sidebar-collapsed { --admin-sidebar-w: 3.5rem; }
 .admin-content { margin-left: var(--admin-sidebar-w); transition: margin-left 0.2s ease; }
 
 /* FB-2: "See how it works" on the homepage glides to the steps instead of

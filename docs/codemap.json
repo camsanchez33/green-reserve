@@ -1,11 +1,11 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 472,
+    "files": 473,
     "routes": 234,
-    "libs": 148,
+    "libs": 149,
     "models": 46,
-    "orphans": 10,
+    "orphans": 11,
     "ungatedRoutes": 3
   },
   "brain": {
@@ -545,7 +545,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 523,
+      "lines": 522,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2364,7 +2364,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 169,
+      "lines": 219,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8178,7 +8178,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 267,
+      "lines": 201,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8203,7 +8203,6 @@
         "lucide-react",
         "next/image",
         "next/link",
-        "next/navigation",
         "react"
       ],
       "usedBy": [
@@ -8256,7 +8255,7 @@
     },
     {
       "path": "src/components/admin/CommandPalette.tsx",
-      "lines": 236,
+      "lines": 237,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9886,6 +9885,47 @@
       ]
     },
     {
+      "path": "src/lib/admin-ask.ts",
+      "lines": 158,
+      "purpose": "AW-3b (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ADMIN_LINK_PREFIXES",
+          "kind": "const"
+        },
+        {
+          "name": "ASK_TOOL_NAMES",
+          "kind": "const"
+        },
+        {
+          "name": "ASK_TOOLS",
+          "kind": "const"
+        },
+        {
+          "name": "AskOutcome",
+          "kind": "type"
+        },
+        {
+          "name": "runAskTool",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-day",
+        "./admin-roles",
+        "./money-problems",
+        "./prisma",
+        "@anthropic-ai/sdk"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/lib/admin-day.ts",
       "lines": 111,
       "purpose": "Platform day boundaries.",
@@ -9931,7 +9971,8 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/stats/route.ts"
+        "src/app/api/admin/stats/route.ts",
+        "src/lib/admin-ask.ts"
       ]
     },
     {
@@ -10023,6 +10064,7 @@
         "src/app/admin/groups/page.tsx",
         "src/app/admin/page.tsx",
         "src/components/admin/AdminSidebar.tsx",
+        "src/lib/admin-ask.ts",
         "src/lib/admin-session.ts"
       ]
     },
@@ -14602,7 +14644,8 @@
       "usedBy": [
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
-        "src/app/api/admin/revenue/route.ts"
+        "src/app/api/admin/revenue/route.ts",
+        "src/lib/admin-ask.ts"
       ]
     },
     {
@@ -15407,6 +15450,7 @@
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
         "src/lib/access-fee.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/admin-session.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-publish.ts",
@@ -18308,6 +18352,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/cancel-booking.ts",
@@ -19150,6 +19195,7 @@
         "src/app/courses/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
@@ -19208,6 +19254,7 @@
       ],
       "readers": [
         "src/app/api/admin/course-groups/route.ts",
+        "src/app/api/admin/search/route.ts",
         "src/app/g/[slug]/page.tsx"
       ]
     },
@@ -19427,6 +19474,7 @@
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/send/route.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/approval-state.ts",
         "src/lib/course-timeline.ts",
         "src/lib/lifecycle.ts",
@@ -20482,6 +20530,7 @@
       ],
       "readers": [
         "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/search/route.ts",
         "src/app/api/admin/stats/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/lib/submit-change-request.ts"
@@ -21510,6 +21559,7 @@
     "src/components/ui/PageHeader.tsx",
     "src/components/ui/SidebarShell.tsx",
     "src/components/ui/StatGroup.tsx",
+    "src/lib/admin-ask.ts",
     "src/lib/api-response.ts",
     "src/lib/data.ts",
     "src/lib/db.ts",
