@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-21 05:03 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 36a4f47</span>
-    <span>2 uncommitted</span>
+    <span>2026-10-21 05:38 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 914a1c5</span>
+    <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">82 runs have shipped that the queue doesn't know about</div>
+<div class="lede">85 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">914a1c5</span><span>AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today</span></li>
+<li><span class="h">b84a2db</span><span>AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card</span></li>
+<li><span class="h">e941200</span><span>Code map and status board</span></li>
 <li><span class="h">39d69df</span><span>AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts</span></li>
 <li><span class="h">3bccfa0</span><span>AW-5: hourly admin checks — urgent alerts once each, and a morning digest</span></li>
 <li><span class="h">2228db8</span><span>AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+</span></li>
@@ -216,11 +219,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
@@ -300,6 +298,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">914a1c5</td><td class="num">2026-10-21</td><td>AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today</td></tr>
+<tr><td class="num">b84a2db</td><td class="num">2026-10-21</td><td>AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card</td></tr>
+<tr><td class="num">e941200</td><td class="num">2026-10-21</td><td>Code map and status board</td></tr>
 <tr><td class="num">39d69df</td><td class="num">2026-10-21</td><td>AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts</td></tr>
 <tr><td class="num">3bccfa0</td><td class="num">2026-10-21</td><td>AW-5: hourly admin checks — urgent alerts once each, and a morning digest</td></tr>
 <tr><td class="num">2228db8</td><td class="num">2026-10-21</td><td>AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+</td></tr>
@@ -309,9 +310,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">905572d</td><td class="num">2026-10-21</td><td>Regenerate code map</td></tr>
 <tr><td class="num">474f3f0</td><td class="num">2026-10-21</td><td>Status board</td></tr>
 <tr><td class="num">e66b258</td><td class="num">2026-10-21</td><td>AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations</td></tr>
-<tr><td class="num">fc9a048</td><td class="num">2026-10-21</td><td>Status board</td></tr>
-<tr><td class="num">5982380</td><td class="num">2026-10-21</td><td>AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step</td></tr>
-<tr><td class="num">2807e2b</td><td class="num">2026-10-21</td><td>AW-1c: re-confirm risky owner actions; owner device list; passkey change emails</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -63,7 +63,7 @@
   "src/app/admin/inquiries/page.tsx": {
     "uppercase": 1,
     "input": 1,
-    "lucide": 3
+    "lucide": 4
   },
   "src/app/admin/login/page.tsx": {
     "uppercase": 2
