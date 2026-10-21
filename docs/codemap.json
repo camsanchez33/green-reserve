@@ -8354,7 +8354,7 @@
     },
     {
       "path": "src/components/admin/InquiryBoard.tsx",
-      "lines": 118,
+      "lines": 121,
       "purpose": "AW-6a (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -14254,7 +14254,7 @@
     },
     {
       "path": "src/lib/inquiry-board.ts",
-      "lines": 69,
+      "lines": 75,
       "purpose": "AW-6a (Cam 2026-10-21):",
       "brain": [],
       "exports": [

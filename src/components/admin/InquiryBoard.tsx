@@ -44,6 +44,8 @@ export default function InquiryBoard<T extends BoardCardInquiry>({ inquiries, si
   cols.setup.sort((a, b) => compareQueue(signal(a), signal(b)));
 
   async function resend(inq: T, kind: 'resend_sheet' | 'resend_preview') {
+    // It emails the course — one tap mustn't do that by accident.
+    if (!window.confirm(kind === 'resend_sheet' ? `Email ${inq.courseName} their setup sheet link again?` : `Email ${inq.courseName} their preview again?`)) return;
     setFire(s => ({ ...s, [inq.id]: 'pending' }));
     try {
       const res = kind === 'resend_sheet'
@@ -75,8 +77,9 @@ export default function InquiryBoard<T extends BoardCardInquiry>({ inquiries, si
               const step = nextStep(inq, s, now);
               const days = daysSince(s.enteredAt, now);
               const call = nextCall(inq.calls ?? [], now);
-              // Same rule as Today: a call on the books is progress, not a stall.
-              const stuck = c.key !== 'live' && s.waitingOn !== 'snoozed' && !call && days >= BOARD_STUCK_DAYS;
+              // Today's rule exactly (src/lib/admin-today.ts): a call still ahead is progress, not a stall.
+              const callAhead = (inq.calls ?? []).some(x => x.outcome === 'scheduled' && new Date(x.scheduledAt) > now);
+              const stuck = c.key !== 'live' && s.waitingOn !== 'snoozed' && !callAhead && days >= BOARD_STUCK_DAYS;
               const firing = fire[inq.id] ?? 'idle';
               const inPlace = step && step.action !== 'open' && canResend;
               return (

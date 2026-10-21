@@ -8,7 +8,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
 import {
   FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES,
-  STATUS_DOT_MAP, STATUS_LABEL, stageEnteredAt, daysSince, queueSignal, compareQueue,
+  STATUS_DOT_MAP, STATUS_LABEL, stageEnteredAt, daysSince, queueSignal,
   type QueueSignal,
 } from '@/lib/inquiry-status';
 // IC-3: the Next-call column and the calls-this-week count.

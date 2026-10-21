@@ -5,7 +5,7 @@
 // says so in its next step. Client-safe: no database, no server imports.
 import { queueSignal, type QueueInput, type QueueSignal } from './inquiry-status';
 import { overdueCall, nextCall, isSameEasternDay, fmtCallClock } from './inquiry-call';
-import { computeOpenChanges, latestPageDecision } from './change-requests';
+import { computeOpenChanges, latestPageDecision, hasRequestedChangesThisRound } from './change-requests';
 
 export type BoardColumn = 'talking' | 'setup' | 'live';
 
@@ -58,10 +58,16 @@ export function nextStep(inq: BoardInquiry, signal: QueueSignal = queueSignal(in
     case 'details_submitted':
       return { label: 'Build the course', action: 'open' };
     case 'building': {
+      // From the ledger, not whose-move: a follow-up date can flip that
+      // without the course having seen anything.
       const events = inq.events ?? [];
-      if (latestPageDecision(events) === 'changes_requested' && computeOpenChanges(events).length > 0) return { label: 'Make their changes', action: 'open' };
-      if (signal.waitingOn === 'them') return { label: 'Resend the preview', action: 'resend_preview' };
-      return { label: 'Finish and go live', action: 'open' };
+      // A first (or updated) preview opens the inquiry: sending one resets the
+      // operator's password, so it stays behind the page's own confirm.
+      if (!events.some(e => e.actorName?.startsWith('Preview sent'))) return { label: 'Send the preview', action: 'open' };
+      if (latestPageDecision(events) === 'approved') return { label: 'Finish and go live', action: 'open' };
+      if (computeOpenChanges(events).length > 0) return { label: 'Make their changes', action: 'open' };
+      if (hasRequestedChangesThisRound(events)) return { label: 'Send the updated preview', action: 'open' };
+      return { label: 'Resend the preview', action: 'resend_preview' };
     }
   }
   return { label: 'Open', action: 'open' };
