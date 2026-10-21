@@ -795,7 +795,8 @@ function InquiryDetailInner() {
   const runStep = () => {
     if (!step) return;
     switch (step.key) {
-      case 'book_call': case 'prep_call': case 'call_today': case 'log_call':
+      case 'prep_call': setCallOpen(true); return;
+      case 'book_call': case 'call_today': case 'log_call':
         setCallFocus({ what: step.key === 'book_call' ? 'setup' : 'log', n: Date.now() }); return;
       case 'send_sheet': setPendingAction('send_sheet'); return;
       case 'resend_sheet': setPendingAction('resend_sheet'); return;
@@ -925,6 +926,18 @@ function InquiryDetailInner() {
                   <button onClick={() => { setMoreOpen(false); setCallFocus({ what: (upcomingCall || missedCall) ? 'log' : 'setup', n: Date.now() }); }}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                     {(upcomingCall || missedCall) ? 'The call…' : 'Set up a call…'}
+                  </button>
+                )}
+                {inq.status === 'details_requested' && step?.key !== 'resend_sheet' && (
+                  <button onClick={() => { setMoreOpen(false); setPendingAction('resend_sheet'); }} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Resend the setup sheet
+                  </button>
+                )}
+                {inq.status === 'details_submitted' && step?.key !== 'build' && (
+                  <button onClick={() => guardBuild('create_draft')} disabled={processing}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
+                    Build the course
                   </button>
                 )}
                 {inq.status === 'building' && !pageChangesRequested && step?.key !== 'go_live' && (
@@ -1190,9 +1203,18 @@ function InquiryDetailInner() {
                   ? <>Call booked for {upcomingCall ? fmtCallTime(upcomingCall.scheduledAt) : 'soon'} ET — the agenda is in the call card.</>
                   : step?.key === 'log_call'
                   ? <>The call time has passed — log how it went.</>
-                  : hasAnswers
-                  ? <>Call done — check the <button onClick={() => pickTab('lead')} className="font-medium text-pine hover:underline">Lead tab</button>, then send the course their setup sheet.</>
-                  : <>Call done — send the course their setup sheet.</>
+                  : step?.key === 'snoozed'
+                  ? <>Snoozed — see the note above. The ⋯ menu still has every step.</>
+                  : step?.key === 'review_resubmit'
+                  ? <>They filled in the interest form again — review what they sent above.</>
+                  : <>{talkedCall
+                      ? 'Call done'
+                      : inq.callSkippedReason?.trim()
+                      ? `Call skipped — ${inq.callSkippedReason.trim()}`
+                      : 'No call yet'}
+                    {hasAnswers
+                      ? <> — check the <button onClick={() => pickTab('lead')} className="font-medium text-pine hover:underline">Lead tab</button>, then send the course their setup sheet.</>
+                      : <> — send the course their setup sheet.</>}</>
               )}
               {inq.status === 'details_requested' && (
                 <>Waiting on {inq.courseName}

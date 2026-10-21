@@ -65,7 +65,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 463 |
 | `/admin/groups` | admin | client-side | page | `src/app/admin/groups/page.tsx` | 208 |
 | `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 947 |
-| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2214 |
+| `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2236 |
 | `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 137 |
 | `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 695 |
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 129 |

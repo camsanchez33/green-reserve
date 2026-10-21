@@ -730,7 +730,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2214,
+      "lines": 2236,
       "purpose": "",
       "brain": [],
       "exports": [
