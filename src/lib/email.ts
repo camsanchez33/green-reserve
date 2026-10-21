@@ -368,12 +368,15 @@ export async function sendBookingModifiedEmail(data: {
   checkedIn?: boolean;
   /** POS-1a: pro-shop items on the booking and GreenReserve's fee on them — added to the total. */
   shopTotalCents?: number; shopFeeCents?: number;
+  /** W2-7 B2: sales tax on those items — added to the total. */
+  shopTaxCents?: number;
 }) {
   const shopRows = (data.shopTotalCents ?? 0) > 0
     ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Pro-shop items</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${((data.shopTotalCents ?? 0) / 100).toFixed(2)}</td></tr>`
       + ((data.shopFeeCents ?? 0) > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${SHOP_FEE_LABEL}</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${((data.shopFeeCents ?? 0) / 100).toFixed(2)}</td></tr>` : '')
+      + ((data.shopTaxCents ?? 0) > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Sales tax on shop items</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${((data.shopTaxCents ?? 0) / 100).toFixed(2)}</td></tr>` : '')
     : '';
-  const grandTotal = data.totalAmount + (data.shopTotalCents ?? 0) + (data.shopFeeCents ?? 0);
+  const grandTotal = data.totalAmount + (data.shopTotalCents ?? 0) + (data.shopFeeCents ?? 0) + (data.shopTaxCents ?? 0);
   const portalUrl = data.courseSlug
     ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}`
     : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
@@ -434,6 +437,8 @@ export async function sendCheckInReceiptEmail(data: {
   totalAmount: number;
   shopLines?: { name: string; unitPriceCents: number; quantity: number }[];
   shopFeeCents?: number;
+  /** W2-7 B2: sales tax on the shop items (already inside totalAmount). */
+  shopTaxCents?: number;
   feeRefunded: boolean; feeRefundAmount: number;
   /** SD review: a fee was owed back and the automatic refund failed — say so, do not go quiet. */
   feeRefundFailed?: boolean;
@@ -453,6 +458,7 @@ export async function sendCheckInReceiptEmail(data: {
         <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${serviceFeeLabel(data.players)}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
         ${(data.shopLines ?? []).map(l => `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${escapeHtml(l.name)}${l.quantity > 1 ? ` &times; ${l.quantity}` : ''}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(l.unitPriceCents * l.quantity / 100).toFixed(2)}</td></tr>`).join('')}
         ${data.shopFeeCents ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${SHOP_FEE_LABEL}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.shopFeeCents / 100).toFixed(2)}</td></tr>` : ''}
+        ${data.shopTaxCents ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Sales tax on shop items</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.shopTaxCents / 100).toFixed(2)}</td></tr>` : ''}
         <tr><td style="padding:10px 0 0;color:#141814;font-size:14px;font-weight:700;border-top:1px solid #E3E4DE;">Total Charged</td><td style="padding:10px 0 0;text-align:right;color:#141814;font-size:18px;font-weight:700;border-top:1px solid #E3E4DE;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>
       </table>
     </div>

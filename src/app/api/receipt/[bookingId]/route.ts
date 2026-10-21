@@ -59,6 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     // POS-1a: pro-shop items charged with the round, and the total with them.
     shopLines: booking.shopTotalCents > 0 ? (await shopLinesFor(booking.id)).map(({ name, unitPriceCents, quantity }) => ({ name, unitPriceCents, quantity })) : [],
     shopFeeCents: booking.shopFeeCents,
+    shopTaxCents: booking.shopTaxCents,
     totalAmount: roundChargedTotal(booking),
     status: booking.status,
     cancellationFeeTotal: booking.cancellationFeeTotal,

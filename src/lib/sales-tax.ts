@@ -91,7 +91,7 @@ export async function setTaxOn(courseId: string, on: boolean): Promise<{ ok: tru
 }
 
 export type TaxLine = { reference: string; amountCents: number; quantity: number; category: string };
-export type TaxQuote = { taxCents: number; calculationId: string };
+export type TaxQuote = { taxCents: number; calculationId: string; /** when Stripe stops accepting it for a record (W2-7 B2); null with no calculation */ expiresAt?: Date | null };
 
 /**
  * Sales tax on a walk-up sale, sold at the course: the course's address is the
@@ -113,7 +113,7 @@ export async function quoteShopTax(courseId: string, lines: TaxLine[]): Promise<
   }, { stripeAccount: course.stripeAccountId });
   // A sale that collects tax must be recordable — never take tax with no calculation to record it against.
   if (!calc.id && calc.tax_amount_exclusive > 0) throw new Error('Stripe returned a tax calculation without an id');
-  return { taxCents: calc.tax_amount_exclusive, calculationId: calc.id ?? '' };
+  return { taxCents: calc.tax_amount_exclusive, calculationId: calc.id ?? '', expiresAt: calc.expires_at ? new Date(calc.expires_at * 1000) : null };
 }
 
 /**

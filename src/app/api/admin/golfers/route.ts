@@ -13,7 +13,7 @@ import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 const BOOKING_SELECT = {
   id: true, status: true, paymentStatus: true,
   players: true, totalAmount: true, accessFeeTotal: true,
-  shopTotalCents: true, shopFeeCents: true, roundChargedCents: true,
+  shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true,
   greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, cancellationFeeTotal: true,
   checkedInAt: true, cancelledAt: true, checkInFailReason: true, cancellationFeeChargedAt: true,
   roundPaymentIntentId: true, stripePaymentMethodId: true, golferAccountId: true,
@@ -28,7 +28,7 @@ const BOOKING_SELECT = {
 } as const;
 
 type BookingRow = {
-  id: string; status: string; paymentStatus: string; players: number; totalAmount: number; accessFeeTotal: number; shopTotalCents: number; shopFeeCents: number; roundChargedCents: number | null;
+  id: string; status: string; paymentStatus: string; players: number; totalAmount: number; accessFeeTotal: number; shopTotalCents: number; shopFeeCents: number; shopTaxCents: number; roundChargedCents: number | null;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; cancellationFeeTotal: number;
   checkedInAt: Date | null; cancelledAt: Date | null; checkInFailReason: string; cancellationFeeChargedAt: Date | null;
   roundPaymentIntentId: string; stripePaymentMethodId: string; golferAccountId: string | null;

@@ -4,6 +4,7 @@ import { performCheckIn, cartAddOnCentsFor } from '@/lib/checkin-booking';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { golferCheckInError } from '@/lib/checkin-errors';
 import { roundChargeCents, roundChargedTotal, shopLinesFor } from '@/lib/shop';
+import { ensureShopTax } from '@/lib/round-shop-tax';
 
 // Public, token-gated check-in endpoint — the golfer doesn't need to be
 // logged in (they may be checking in from a different device than they
@@ -33,6 +34,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
   const token = req.nextUrl.searchParams.get('token');
   const booking = await authorize(bookingId, token);
   if (!booking) return NextResponse.json({ error: 'Invalid or expired check-in link.' }, { status: 404 });
+  // W2-7 B2: the total shown is the total charged — bring the shop items' sales tax up to date first.
+  const tax = await ensureShopTax(booking.id);
+  if (tax.ok) booking.shopTaxCents = tax.shopTaxCents;
 
   return NextResponse.json({
     golferName: booking.golferName,
@@ -55,6 +59,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     totalAmount: roundChargedTotal(booking),
     shopLines: booking.shopTotalCents > 0 ? (await shopLinesFor(booking.id)).map(({ name, unitPriceCents, quantity }) => ({ name, unitPriceCents, quantity })) : [],
     shopFeeCents: booking.shopFeeCents,
+    shopTaxCents: booking.shopTaxCents,
+    // The tax couldn't be worked out just now — the page says so; paying re-tries it.
+    taxError: tax.ok ? '' : tax.error,
     greenFeeTotal: booking.greenFeeTotal,
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,
@@ -85,6 +92,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   // charge path checks it again AFTER freezing the shop items (no gap); this
   // early check just answers before any card work. The cart add-on is part of
   // what they were shown and of the charge (it is on the booking by then).
+  // W2-7 B2: never charge on a stale shop-tax figure.
+  const tax = await ensureShopTax(booking.id);
+  if (!tax.ok) return NextResponse.json({ error: tax.error }, { status: 503 });
+  booking.shopTaxCents = tax.shopTaxCents;
   let expectedRound: number | undefined;
   if (expectedTotalCents != null && booking.status === 'confirmed' && !(booking.paymentStatus === 'paid' && booking.roundPaymentIntentId)) {
     const cartCents = addCart === true ? await cartAddOnCentsFor(booking) : 0;

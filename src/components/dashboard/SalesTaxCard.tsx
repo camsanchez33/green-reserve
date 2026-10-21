@@ -39,7 +39,7 @@ export function SalesTaxCard({ homeState }: { homeState: string }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-ink-soft -mt-1">Stripe works out the sales tax on sales rung up on the Pro shop page from your course&apos;s address and what the item is (clothing, snacks and drinks are taxed differently in some states), adds it to the total, and keeps a record for your tax returns. You still file and pay the tax yourself. Not taxed yet: shop items added to a group&apos;s round from the tee sheet, green fees and carts.</p>
+      <p className="text-sm text-ink-soft -mt-1">Stripe works out the sales tax on pro-shop items — rung up on the Pro shop page or added to a group&apos;s round from the tee sheet — from your course&apos;s address and what the item is (clothing, snacks and drinks are taxed differently in some states), adds it to the total, and keeps a record for your tax returns. You still file and pay the tax yourself. Green fees, carts and the booking fee are not taxed here.</p>
       {loadError && (
         <div className="rounded-md bg-bad/5 border border-bad/20 px-4 py-2.5 flex items-center justify-between gap-3">
           <p className="text-xs text-bad">{loadError}</p>
@@ -51,7 +51,7 @@ export function SalesTaxCard({ homeState }: { homeState: string }) {
       {s && s.connected && (
         <>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <StatusDot status={s.on ? 'ok' : s.active && s.states.length ? 'neutral' : 'warn'} label={s.on ? 'Collecting sales tax on Pro shop page sales' : s.active && s.states.length ? 'Set up, but turned off' : 'Not set up — pro-shop sales have no tax'} />
+            <StatusDot status={s.on ? 'ok' : s.active && s.states.length ? 'neutral' : 'warn'} label={s.on ? 'Collecting sales tax on pro-shop items' : s.active && s.states.length ? 'Set up, but turned off' : 'Not set up — pro-shop sales have no tax'} />
             {s.states.length > 0 && <span className="text-ink-muted">Registered in {s.states.join(', ')}</span>}
           </div>
           {(!s.active || !s.states.length) && (
@@ -60,7 +60,7 @@ export function SalesTaxCard({ homeState }: { homeState: string }) {
                 <select value={state} onChange={e => setState(e.target.value)} className={INPUT + ' w-full'}>
                   {US_STATES.map(x => <option key={x} value={x}>{x}</option>)}
                 </select></label>
-              <button type="button" disabled={busy} onClick={() => call('POST', { states: [state] }, 'Sales tax is set up. Sales on the Pro shop page now include it.')}
+              <button type="button" disabled={busy} onClick={() => call('POST', { states: [state] }, 'Sales tax is set up. Pro-shop items now include it.')}
                 className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm px-4 py-2 disabled:opacity-50">{busy ? 'Setting up…' : 'Set up sales tax'}</button>
             </div>
           )}

@@ -570,6 +570,15 @@ model Booking {
   /// shop items cannot change after it, so the charge and the record agree.
   /// Cleared only when Stripe says, definitively, no money moved.
   shopLockedAt               DateTime?
+  /// W2-7 B2: sales tax on those items (Stripe Tax on the course's account),
+  /// charged with them. lib/round-shop-tax.ts keeps it current: the quote is for
+  /// the lines in shopTaxKey and good until shopTaxExpiresAt; it is recorded for
+  /// the course's tax reports (shopTaxTransactionId) once the round is paid.
+  shopTaxCents               Int               @default(0)
+  shopTaxCalculationId       String            @default("")
+  shopTaxKey                 String            @default("")
+  shopTaxExpiresAt           DateTime?
+  shopTaxTransactionId       String            @default("")
   /// What the round's PaymentIntent actually took (round + shop items + fee).
   /// Refunds and receipts cap against this, never a recomputed figure.
   roundChargedCents          Int?
@@ -1213,6 +1222,8 @@ model BookingShopItem {
   name           String
   unitPriceCents Int
   quantity       Int       @default(1)
+  /// W2-7 B2: how it is taxed (TAX_CATEGORIES key), copied from the item when added.
+  taxCategory    String    @default("general")
   /// Who added it (staff/owner email).
   addedBy        String    @default("")
   createdAt      DateTime  @default(now())

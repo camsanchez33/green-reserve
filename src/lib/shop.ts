@@ -24,14 +24,18 @@ export function shopFeeFor(shopTotalCents: number, on: boolean = SHOP_FEE_ON): n
   return on && shopTotalCents > 0 ? SHOP_SALE_FEE_CENTS : 0;
 }
 
-/** What the round's card charge takes: the round, its shop items and their fee. */
-export function roundChargeCents(b: { totalAmount: number; shopTotalCents?: number | null; shopFeeCents?: number | null }): number {
-  return Math.round(b.totalAmount) + (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0);
+/**
+ * What the round's card charge takes: the round, its shop items, their fee and
+ * (W2-7 B2) the sales tax on them. `shopTaxCents` is required in the type so a
+ * caller that forgets to load it is a compile error, not a charge without tax.
+ */
+export function roundChargeCents(b: { totalAmount: number; shopTotalCents?: number | null; shopFeeCents?: number | null; shopTaxCents: number | null | undefined }): number {
+  return Math.round(b.totalAmount) + (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0) + (b.shopTaxCents ?? 0);
 }
 
 /** What the round's card charge actually took — the stored PaymentIntent amount
  *  when there is one (refunds and receipts cap against this), else the computed total. */
-export function roundChargedTotal(b: { totalAmount: number; shopTotalCents?: number | null; shopFeeCents?: number | null; roundChargedCents?: number | null }): number {
+export function roundChargedTotal(b: { totalAmount: number; shopTotalCents?: number | null; shopFeeCents?: number | null; shopTaxCents: number | null | undefined; roundChargedCents?: number | null }): number {
   return b.roundChargedCents ?? roundChargeCents(b);
 }
 
@@ -118,7 +122,7 @@ export async function addItemToBooking(courseId: string, bookingId: string, shop
     if (!item || item.courseId !== courseId || !item.active || (item.parent && !item.parent.active)) return { ok: false, status: 404, error: 'That item is not in your shop.' } as const;
     // W2-7: an item with sizes/colors is sold by its option, never itself.
     if (item._count.options > 0) return { ok: false, status: 400, error: 'Pick a size or color for that item.' } as const;
-    await tx.bookingShopItem.create({ data: { bookingId, shopItemId: item.id, name: item.name, unitPriceCents: item.priceCents, quantity, addedBy } });
+    await tx.bookingShopItem.create({ data: { bookingId, shopItemId: item.id, name: item.name, unitPriceCents: item.priceCents, quantity, addedBy, taxCategory: item.taxCategory } });
     await takeStock(tx, item.id, quantity);
     return { ok: true, ...(await retotal(tx, bookingId)) } as const;
   }).catch(e => { if (e instanceof ShopCapError) return CAP_RESULT; throw e; });

@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 458,
+    "files": 459,
     "routes": 229,
-    "libs": 144,
+    "libs": 145,
     "models": 43,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3181,7 +3181,7 @@
     },
     {
       "path": "src/app/api/checkin/[bookingId]/route.ts",
-      "lines": 102,
+      "lines": 113,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3207,6 +3207,7 @@
         "@/lib/checkin-errors",
         "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/round-shop-tax",
         "@/lib/shop",
         "next/server"
       ],
@@ -3401,7 +3402,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 241,
+      "lines": 245,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3429,6 +3430,7 @@
         "@/lib/email",
         "@/lib/no-show-fee",
         "@/lib/prisma",
+        "@/lib/round-shop-tax",
         "@/lib/sales-tax",
         "@/lib/stripe",
         "@/lib/tee-time-utils",
@@ -3952,7 +3954,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
-      "lines": 50,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4401,7 +4403,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 348,
+      "lines": 355,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4441,6 +4443,7 @@
         "@/lib/move-booking",
         "@/lib/no-show-fee",
         "@/lib/prisma",
+        "@/lib/round-shop-tax",
         "@/lib/session",
         "@/lib/staff-permissions",
         "@/lib/stripe",
@@ -4452,7 +4455,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/shop/route.ts",
-      "lines": 43,
+      "lines": 52,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4474,6 +4477,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/round-shop-tax",
         "@/lib/session",
         "@/lib/shop",
         "next/server"
@@ -6029,7 +6033,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 73,
+      "lines": 74,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6261,7 +6265,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 373,
+      "lines": 377,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6808,7 +6812,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1464,
+      "lines": 1466,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7519,7 +7523,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 253,
+      "lines": 261,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8574,7 +8578,7 @@
     },
     {
       "path": "src/components/dashboard/ShopItemsForGroup.tsx",
-      "lines": 138,
+      "lines": 150,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [],
       "exports": [
@@ -11671,7 +11675,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 452,
+      "lines": 464,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11699,6 +11703,7 @@
         "./email",
         "./prisma",
         "./residents",
+        "./round-shop-tax",
         "./shop",
         "./stripe"
       ],
@@ -12834,7 +12839,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1925,
+      "lines": 1931,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14952,6 +14957,7 @@
         "src/lib/rate-limit.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/round-shop-tax.ts",
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
@@ -15274,6 +15280,55 @@
       ]
     },
     {
+      "path": "src/lib/round-shop-tax.ts",
+      "lines": 119,
+      "purpose": "W2-7 part B2 (Cam 2026-10-20:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "EnsureResult",
+          "kind": "type"
+        },
+        {
+          "name": "ensureShopTax",
+          "kind": "fn"
+        },
+        {
+          "name": "recordPendingRoundShopTax",
+          "kind": "fn"
+        },
+        {
+          "name": "recordRoundShopTax",
+          "kind": "fn"
+        },
+        {
+          "name": "shopTaxKey",
+          "kind": "fn"
+        },
+        {
+          "name": "TAX_UNAVAILABLE",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./sales-tax",
+        "./stripe"
+      ],
+      "usedBy": [
+        "src/app/api/checkin/[bookingId]/route.ts",
+        "src/app/api/cron/hourly/route.ts",
+        "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/bookings/shop/route.ts",
+        "src/lib/checkin-booking.ts"
+      ]
+    },
+    {
       "path": "src/lib/sales-tax.ts",
       "lines": 176,
       "purpose": "W2-7 part B (Cam 2026-10-20:",
@@ -15350,6 +15405,7 @@
       "usedBy": [
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/operator/sales-tax/route.ts",
+        "src/lib/round-shop-tax.ts",
         "src/lib/shop-sales.ts"
       ]
     },
@@ -16106,7 +16162,7 @@
     },
     {
       "path": "src/lib/shop.ts",
-      "lines": 152,
+      "lines": 156,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [
         "pro-shop"
@@ -16390,6 +16446,7 @@
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/round-shop-tax.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ]
@@ -17611,6 +17668,26 @@
           "type": "DateTime?"
         },
         {
+          "name": "shopTaxCents",
+          "type": "Int"
+        },
+        {
+          "name": "shopTaxCalculationId",
+          "type": "String"
+        },
+        {
+          "name": "shopTaxKey",
+          "type": "String"
+        },
+        {
+          "name": "shopTaxExpiresAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "shopTaxTransactionId",
+          "type": "String"
+        },
+        {
           "name": "roundChargedCents",
           "type": "Int?"
         },
@@ -17644,7 +17721,8 @@
         "src/lib/access-fee.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/lifecycle.ts",
-        "src/lib/refund-booking.ts"
+        "src/lib/refund-booking.ts",
+        "src/lib/round-shop-tax.ts"
       ],
       "readers": [
         "src/app/api/admin/activity/route.ts",
@@ -17687,6 +17765,7 @@
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/round-shop-tax.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -17783,6 +17862,10 @@
         {
           "name": "quantity",
           "type": "Int"
+        },
+        {
+          "name": "taxCategory",
+          "type": "String"
         },
         {
           "name": "addedBy",

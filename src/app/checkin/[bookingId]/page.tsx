@@ -24,6 +24,8 @@ type CheckInInfo = {
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   /** POS-1a: pro-shop items the course added to the round; totalAmount includes them and their fee. */
   shopLines?: { name: string; unitPriceCents: number; quantity: number }[]; shopFeeCents?: number;
+  /** W2-7 B2: sales tax on the shop items, inside the total; taxError when it couldn't be worked out just now. */
+  shopTaxCents?: number; taxError?: string;
   hasCard: boolean;
   /** Paid in cash at the counter — never "charged to your card". */
   paidOffline?: boolean;
@@ -286,6 +288,8 @@ function CheckInPageInner() {
           <div key={i} className="flex justify-between text-ink-soft"><span>{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span><span>${(l.unitPriceCents * l.quantity / 100).toFixed(2)}</span></div>
         ))}
         {(info.shopFeeCents ?? 0) > 0 && <div className="flex justify-between text-ink-soft"><span>{SHOP_FEE_LABEL}</span><span>${((info.shopFeeCents ?? 0) / 100).toFixed(2)}</span></div>}
+        {(info.shopTaxCents ?? 0) > 0 && <div className="flex justify-between text-ink-soft"><span>Sales tax on shop items</span><span>${((info.shopTaxCents ?? 0) / 100).toFixed(2)}</span></div>}
+        {info.taxError && <p className="text-[13px] text-warn">{info.taxError} Refresh before you pay.</p>}
         {/* The number they're about to pay is the biggest thing on the card. */}
         <div className="flex justify-between items-baseline border-t border-line pt-3">
           <span className="font-medium text-ink">Total</span>

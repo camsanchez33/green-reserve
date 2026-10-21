@@ -4,6 +4,7 @@ import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booki
 import { sendCheckInReceiptEmail } from './email';
 import { refundSeparateAccessFee } from './access-fee';
 import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop';
+import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { groupGreenFee, otherPerPlayerCents } from './residents';
 
 /**
@@ -225,11 +226,19 @@ async function chargeBooking(
     // any later one is refused. The lock is lifted only on a definite non-charge.
     // The stamp is this attempt's: only this attempt may lift it, so an
     // overlapping attempt's decline never unfreezes a charge still in flight.
+    // W2-7 B2: the sales tax on the shop items must be current before the
+    // charge — never charge on a stale or missing figure (ensureShopTax quotes
+    // only when the items or the course's tax setting changed).
+    {
+      const taxed = await ensureShopTax(bookingId);
+      if (!taxed.ok) return { error: taxed.error, status: 503 } as const;
+    }
     const lockStamp = new Date();
     {
-      const locked = await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: lockStamp }, select: { shopTotalCents: true, shopFeeCents: true } });
+      const locked = await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: lockStamp }, select: { shopTotalCents: true, shopFeeCents: true, shopTaxCents: true } });
       booking.shopTotalCents = locked.shopTotalCents;
       booking.shopFeeCents = locked.shopFeeCents;
+      booking.shopTaxCents = locked.shopTaxCents;
     }
     const unlock = () => prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: lockStamp }, data: { shopLockedAt: null } });
     if (opts?.expectedTotalCents != null && Number(opts.expectedTotalCents) !== roundChargeCents(booking)) {
@@ -264,7 +273,7 @@ async function chargeBooking(
           // live in their own columns — compare with them added, and never fold
           // them into the round's totalAmount.
           const base = preCart.totalAmount;
-          const shopExtra = roundChargeCents({ totalAmount: 0, shopTotalCents: booking.shopTotalCents, shopFeeCents: booking.shopFeeCents });
+          const shopExtra = roundChargeCents({ totalAmount: 0, shopTotalCents: booking.shopTotalCents, shopFeeCents: booking.shopFeeCents, shopTaxCents: booking.shopTaxCents });
           const matchesCart = prior.amount === base + cartAddedCents + shopExtra && cartAddedCents > 0;
           const matchesBase = prior.amount === base + shopExtra;
           if (!matchesCart && !matchesBase && shopExtra > 0) {
@@ -392,9 +401,11 @@ async function chargeBooking(
         amountCents: booking.totalAmount, playerCount: partialApplied ? (showed as number) : booking.players,
         teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
         stripeId: paymentIntentId || null,
-        metadata: { paidOffline: false, alreadyPaid, cartAddedCents, shopCents: booking.shopTotalCents, shopFeeCents: booking.shopFeeCents },
+        metadata: { paidOffline: false, alreadyPaid, cartAddedCents, shopCents: booking.shopTotalCents, shopFeeCents: booking.shopFeeCents, shopTaxCents: booking.shopTaxCents },
       });
     }
+    // W2-7 B2: the shop items' sales tax goes on the course's tax record now it's paid (the hourly cron retries).
+    await recordRoundShopTax(bookingId);
   }
 
   if (mode.recordCheckIn) {
@@ -413,6 +424,7 @@ async function chargeBooking(
       totalAmount: chargedCents ?? booking.roundChargedCents ?? roundChargeCents(booking),
       shopLines: booking.shopTotalCents > 0 ? await shopLinesFor(bookingId) : [],
       shopFeeCents: booking.shopFeeCents,
+      shopTaxCents: booking.shopTaxCents,
       feeRefunded: feeRefundOk,
       feeRefundFailed: refundPendingFee && !feeRefundOk,
       feeRefundAmount: booking.cancellationFeeTotal,

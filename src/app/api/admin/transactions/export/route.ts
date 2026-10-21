@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   const bookingSelect = {
     id: true, golferName: true, golferEmail: true, players: true,
     totalAmount: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, cancellationFeeTotal: true,
-    shopTotalCents: true, shopFeeCents: true, roundChargedCents: true,
+    shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true,
     checkedInAt: true, cancellationFeeChargedAt: true, roundPaymentIntentId: true, cancellationFeeChargeId: true,
     course: { select: { name: true } }, teeTime: { select: { date: true, time: true } },
   } as const;

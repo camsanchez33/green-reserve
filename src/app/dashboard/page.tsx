@@ -62,6 +62,8 @@ type Booking = {
   shopItems?: ShopLine[];
   shopTotalCents?: number;
   shopFeeCents?: number;
+  /** W2-7 B2: sales tax on the shop items, charged with them. */
+  shopTaxCents?: number;
   /** The round's card charge went through (items lock then). */
   roundPaid?: boolean;
   /** A round charge has been attempted — items are frozen (lib/shop shopLockedReason). */
@@ -71,7 +73,7 @@ type Booking = {
   appliedRate?: string;
 };
 /** POS-1a: what the card is charged beyond the round itself. */
-const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0);
+const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0) + (b.shopTaxCents ?? 0);
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 // SD-3: "today" is the COURSE's today (see courseTz inside the component) —
 // this module-level fallback only seeds state before the course has loaded.
@@ -235,7 +237,7 @@ function DashboardPageInner() {
       const who = checkedInPlayers ?? b.players;
       // POS-1a: shop items on the booking are collected at the counter too (no
       // GreenReserve shop fee on a counter payment, like the booking fee in cash).
-      const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players) + (b.shopTotalCents ?? 0);
+      const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
       if (!confirm(`Mark ${b.golferName} checked in — ${who} of ${b.players} players, paid $${(owed / 100).toFixed(2)} at the counter? No card will be charged.`)) return;
     }
     setRowBusy(b.id);
@@ -643,7 +645,7 @@ function DashboardPageInner() {
         )}
         {/* POS-1a: pro-shop items charged with this round. Same lock as the server (lib/shop shopLockedReason). */}
         <div className="mt-2.5" onClick={e => e.stopPropagation()}>
-          <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0}
+          <ShopItemsForGroup bookingId={b.id} lines={b.shopItems ?? []} shopFeeCents={b.shopFeeCents ?? 0} shopTaxCents={b.shopTaxCents ?? 0}
             editable={b.status === 'confirmed' && !b.paidOffline && !b.shopLocked && !(b.roundPaid && (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded'))}
             canSell={access.can('shop.sell')} showMoney={access.can('money.payments')}
             onChanged={() => loadTimes(selectedDate)} />

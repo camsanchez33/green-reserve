@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { addItemToBooking, removeLineFromBooking, shopLinesFor } from '@/lib/shop';
+import { ensureShopTax } from '@/lib/round-shop-tax';
 
 // POS-1a: add pro-shop items to a group's booking from the tee sheet panel, or
 // take one off. They are charged with the round (check-in or the pay link) with
@@ -17,7 +18,15 @@ async function gate() {
 
 async function respond(bookingId: string, r: Awaited<ReturnType<typeof addItemToBooking>>) {
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-  return NextResponse.json({ success: true, shopTotalCents: r.shopTotalCents, shopFeeCents: r.shopFeeCents, lines: await shopLinesFor(bookingId) });
+  // W2-7 B2: the items changed, so their sales tax is re-quoted now (the booking
+  // is this course's — the write above checked). If Stripe can't be reached the
+  // items still save; the panel says so and the charge re-quotes before it runs.
+  const tax = await ensureShopTax(bookingId);
+  return NextResponse.json({
+    success: true, shopTotalCents: r.shopTotalCents, shopFeeCents: r.shopFeeCents,
+    shopTaxCents: tax.ok ? tax.shopTaxCents : null, taxError: tax.ok ? '' : tax.error,
+    lines: await shopLinesFor(bookingId),
+  });
 }
 
 export async function POST(req: NextRequest) {
