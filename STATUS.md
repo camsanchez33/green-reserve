@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-20 03:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ad6524b` · working tree **25 dirty file(s)**
+Generated 2026-10-20 18:01 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `77187a1` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 44 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 48 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `77187a1` | 2026-10-20 | Status board |
+| `42ff2e4` | 2026-10-20 | W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day |
+| `dea0574` | 2026-10-20 | W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had |
+| `39e62f4` | 2026-10-20 | W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154) |
 | `ad6524b` | 2026-10-19 | W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151) |
 | `bd86947` | 2026-10-19 | Sign-in page: full-screen photo with the sign-in card under the logo (#153) |
 | `fff11a1` | 2026-10-19 | Emails: one clean look for every email (EMAIL-2) (#152) |
@@ -59,31 +63,16 @@ Generated 2026-10-20 03:08 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (25 file(s))
+### Uncommitted working tree (5 file(s))
 
-- `M OPERATOR_REWORK_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/shop-sales-test.ts`
-- `M src/app/api/cron/hourly/route.ts`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/api/shop-sale/[id]/route.ts`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/app/pay/shop/[id]/page.tsx`
-- `M src/components/dashboard/ShopCatalog.tsx`
-- `M src/lib/email.ts`
-- `M src/lib/shop-ai-import.ts`
-- `M src/lib/shop-catalog.ts`
-- `M src/lib/shop-import.ts`
-- `M src/lib/shop-sales.ts`
-- `M src/lib/shop-tree.ts`
-- `?? prisma/migrations/20261020021959_w2_7_shop_sales_tax/`
-- `?? scripts/shop-sales-tax-db-test.ts`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -165,10 +154,10 @@ Nothing awaiting review.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-19 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 2d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 3d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-19 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-19 | 0d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 8d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 12d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 12d |
@@ -204,6 +193,10 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `77187a1` 2026-10-20 — Status board
+- `42ff2e4` 2026-10-20 — W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day
+- `dea0574` 2026-10-20 — W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had
+- `39e62f4` 2026-10-20 — W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)
 - `ad6524b` 2026-10-19 — W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)
 - `bd86947` 2026-10-19 — Sign-in page: full-screen photo with the sign-in card under the logo (#153)
 - `fff11a1` 2026-10-19 — Emails: one clean look for every email (EMAIL-2) (#152)
@@ -212,10 +205,6 @@ Nothing awaiting review.
 - `223121d` 2026-10-19 — Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)
 - `abb4518` 2026-10-19 — queue/spec update (#147)
 - `95da45f` 2026-10-19 — Member portal: show a resident their own spot at the resident rate, as booking charges (#146)
-- `9910cf6` 2026-10-19 — Member portal: show members exactly what booking charges (#145)
-- `dbd4737` 2026-10-19 — Status board: regenerate (#144)
-- `428da80` 2026-10-19 — Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)
-- `0419675` 2026-10-19 — Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)
 
 ---
 

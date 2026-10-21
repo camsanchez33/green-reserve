@@ -1,17 +1,20 @@
 'use client';
 // Settings rework (Cam 2026-10-19: "course details are confusing — needs to be
-// step by step"; "you can't name a nine, it just says 36"). One guided path
-// instead of three loose tools: how many holes and the par → name each nine
-// (27 and 36 only) → the tees → what golfers can book, which is built from the
-// nines rather than typed. Each step says what golfers see. Everything here
-// saves as it goes; the routes are the owner's (they refuse staff), so a staff
-// login reads the same steps without the controls.
+// step by step"). W2-6 (Cam 2026-10-20: "if its only 18 there shouldnt still be
+// the 27 holes from before"): step 1 is ONE save — what kind of course it is,
+// the names, the par and the rounds golfers book — shown as a list of changes
+// before it is made; what the old setup had and the new one doesn't is retired
+// by the same save (lib/course-shape-setup.ts). Then par per nine and the tees,
+// which save as they go. The routes are the owner's (they refuse staff), so a
+// staff login reads the same steps without the controls.
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { teeColour } from '@/lib/tee-colour';
-import { candidateRounds, sameNines } from '@/lib/course-rounds';
+import { sameNines } from '@/lib/course-rounds';
+import { SHAPES, shapeDef, shapeNines, shapeRounds, guessShape, isStockLabel, type ShapeDef, type ShapeKey } from '@/lib/course-shape';
+import type { SetupPreview } from '@/lib/course-shape-setup';
 
 const iBase = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 const iCls = 'w-full ' + iBase;
@@ -97,164 +100,235 @@ export default function CourseLayoutTab({ holes, par, readOnly, onCourseSaved }:
   );
 
   const multi = (holes ?? 0) > 18;
-  const ninesNeeded = multi ? Math.round((holes ?? 0) / 9) : 0;
   const step1Done = !!holes && !!par;
-  const ninesDone = !multi || nines.length >= ninesNeeded;
-  let n = 1;
 
   return (
     <div className="space-y-4">
       {readOnly && (
         <p className="text-sm text-ink-soft">The course layout is set from the course owner&apos;s login. This is what golfers see.</p>
       )}
-      <HolesStep n={n++} holes={holes} par={par} readOnly={readOnly} onSaved={onCourseSaved} />
-      {multi && (
-        <NinesStep n={n++} needed={ninesNeeded} nines={nines} setNines={setNines} readOnly={readOnly}
-          locked={step1Done ? '' : 'Set the holes and par first.'} />
-      )}
-      <TeesStep n={n++} teeSets={teeSets} setTeeSets={setTeeSets} nines={multi ? nines : []} products={products.filter(p => p.active)} readOnly={readOnly}
-        locked={!step1Done ? 'Set the holes and par first.' : !ninesDone ? 'Name your nines first.' : ''} />
-      <RoundsStep n={n++} multi={multi} holes={holes} nines={nines} products={products} setProducts={setProducts} readOnly={readOnly}
-        locked={!step1Done ? 'Set the holes and par first.' : !ninesDone ? 'Name your nines first.' : ''} />
+      <ShapeStep n={1} holes={holes} par={par} nines={nines} products={products} readOnly={readOnly}
+        onSaved={async patch => { onCourseSaved(patch); await load(); }} />
+      {multi && step1Done && <NinePars nines={nines} setNines={setNines} readOnly={readOnly} />}
+      <TeesStep n={2} teeSets={teeSets} setTeeSets={setTeeSets} nines={multi ? nines : []} products={products.filter(p => p.active)} readOnly={readOnly}
+        locked={!step1Done ? 'Set up your course first.' : ''} />
     </div>
   );
 }
 
-// ── 1. Holes and par ─────────────────────────────────────────────────────
-function HolesStep({ n, holes, par, readOnly, onSaved }: { n: number; holes: number | null; par: number | null; readOnly: boolean; onSaved: (p: { holes: number; par: number }) => void }) {
-  const [h, setH] = useState<number>(holes || 18);
-  const [p, setP] = useState<string>(par ? String(par) : '');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [err, setErr] = useState('');
-  const dirty = h !== holes || Number(p) !== par;
-  // The settings form can arrive after this mounts; follow it until edited.
-  useEffect(() => { setH(holes || 18); setP(par ? String(par) : ''); }, [holes, par]);
+// ── 1. Your course: its shape, names, par and rounds (W2-6) ───────────────
+// One save sets all of it, after the owner has seen what changes; whatever the
+// old setup had that the new one doesn't is retired by the same save.
+type RoundPick = { key: string; on: boolean; label: string };
 
-  async function save() {
-    const parN = Number(p);
-    if (!parN || parN < 27 || parN > 80) { setErr(h === 9 ? 'Enter the par for your nine holes, e.g. 36.' : 'Enter the par for 18 holes, e.g. 72.'); return; }
-    if (h === 9 && parN > 40) { setErr('That looks like an 18-hole par. Enter the par for your nine holes, e.g. 36.'); return; }
-    if (h !== 9 && parN < 54) { setErr('Enter the par for 18 holes, e.g. 72.'); return; }
-    setSaving(true); setErr('');
-    const r = await send('/api/operator/settings', 'PATCH', { holes: h, par: parN });
-    setSaving(false);
-    if (!r.ok) { setErr(r.data.error || 'Could not save. Nothing was changed.'); return; }
-    onSaved({ holes: h, par: parN });
-    setSaved(true); setTimeout(() => setSaved(false), 2000);
+function startingNames(shape: ShapeDef, nines: Nine[]): string[] {
+  if (shape.namesAreCourses) return shape.nameFields.map((f, i) => (nines[i * 2]?.name ?? '').replace(/ front$/i, '') || f.default);
+  return shape.nameFields.map((f, i) => nines[i]?.name || f.default);
+}
+
+/** Ticks as the course has them now: a round is on when an active round sells the same nines and holes. */
+function startingRounds(shape: ShapeDef, names: string[], nines: Nine[], products: CourseProduct[]): RoundPick[] {
+  const ids = shapeNines(shape, names).map((_, i) => nines[i]?.id);
+  return shapeRounds(shape, names).map(r => {
+    const want = r.nines.map(i => ids[i]);
+    const p = want.every(Boolean) ? products.find(x => x.active && x.holes === r.holes && x.nineIds.length === want.length && sameNines(x.nineIds, want as string[])) : undefined;
+    // Keep a name the owner gave the round; a name the setup made follows the new shape.
+    return { key: r.key, on: products.length ? !!p : r.on, label: p && !isStockLabel(p.label, nines.map(x => x.name)) ? p.label : '' };
+  });
+}
+
+function previewLines(pv: SetupPreview): string[] {
+  const out: string[] = [];
+  const list = (xs: string[]) => xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+  if (pv.ninesAdded.length) out.push(`Adds ${list(pv.ninesAdded)}.`);
+  for (const r of pv.ninesRenamed) out.push(`Renames ${r.from} to ${r.to}.`);
+  for (const r of pv.roundsRenamed ?? []) out.push(`Golfers will see ${r.from} as ${r.to}.`);
+  if (pv.ninesRemoved.length) out.push(`Removes ${list(pv.ninesRemoved)}, and the tee yardages set for ${pv.ninesRemoved.length === 1 ? 'it' : 'them'}.`);
+  if (pv.roundsStarted.length) out.push(`Golfers can book ${list(pv.roundsStarted)}.`);
+  if (pv.roundsStopped.length) out.push(`Stops selling ${list(pv.roundsStopped)}.${pv.schedulesPaused ? ` ${pv.schedulesPaused === 1 ? 'Its schedule is' : `${pv.schedulesPaused} schedules are`} paused, so no new times are made.` : ''}`);
+  if (pv.bookedTimesKept) out.push(`${pv.bookedTimesKept} booked tee time${pv.bookedTimesKept === 1 ? ' stays' : 's stay'} booked — nobody loses a booking.`);
+  if (pv.schedulesMoved) out.push(`${pv.schedulesMoved === 1 ? 'Your schedule moves' : `Your ${pv.schedulesMoved} schedules move`} onto ${list(pv.schedulesMovedTo)}, so your tee sheet keeps its times. Change their hours on Schedule.`);
+  return out;
+}
+
+function ShapeStep({ n, holes, par, nines, products, readOnly, onSaved }: {
+  n: number; holes: number | null; par: number | null; nines: Nine[]; products: CourseProduct[]; readOnly: boolean;
+  onSaved: (p: { holes: number; par: number }) => Promise<void>;
+}) {
+  const sorted = [...nines].sort((a, b) => a.sortOrder - b.sortOrder);
+  const [shapeKey, setShapeKey] = useState<ShapeKey>(() => {
+    const third = sorted[2]?.id;
+    const alone = !!third && products.some(x => x.active && x.holes === 9 && x.nineIds.length === 1 && x.nineIds[0] === third)
+      && !products.some(x => x.active && x.holes === 18 && x.nineIds.includes(third));
+    return guessShape(holes, nines.length, alone);
+  });
+  const shape = shapeDef(shapeKey)!;
+  const [names, setNames] = useState<string[]>(() => startingNames(shape, sorted));
+  const [p, setP] = useState<string>(par ? String(par) : '');
+  const [picks, setPicks] = useState<RoundPick[]>(() => startingRounds(shape, startingNames(shape, sorted), sorted, products));
+  const [preview, setPreview] = useState<SetupPreview | null>(null);
+  const [busy, setBusy] = useState<'' | 'preview' | 'save'>('');
+  const [err, setErr] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  // Par arrives with the settings form, which can load after this mounts.
+  useEffect(() => { if (par && !p) setP(String(par)); }, [par]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const rounds = shapeRounds(shape, names);
+  const pickOf = (key: string) => picks.find(x => x.key === key);
+  const isOn = (key: string) => pickOf(key)?.on ?? rounds.find(r => r.key === key)?.on ?? false;
+  const edited = () => { setPreview(null); setSaved(false); setErr(''); };
+
+  function pickShape(k: ShapeKey) {
+    const s = shapeDef(k)!;
+    const nm = startingNames(s, sorted);
+    setShapeKey(k); setNames(nm); setPicks(startingRounds(s, nm, sorted, products)); edited();
   }
 
-  const shown = holes && par ? `${holes} holes · Par ${par}, at the top of your booking page.` : 'nothing yet.';
-  if (readOnly) return <Step n={n} title="Holes and par" golfersSee={shown}>{null}</Step>;
+  const body = () => ({
+    shape: shapeKey, names, par: Number(p),
+    rounds: rounds.map(r => ({ key: r.key, on: isOn(r.key), label: pickOf(r.key)?.label || undefined })),
+  });
+
+  async function review() {
+    setBusy('preview'); setErr('');
+    const r = await send('/api/operator/course-shape', 'POST', { ...body(), preview: true });
+    setBusy('');
+    if (!r.ok) { setErr(r.data.error || 'Could not check that. Nothing was changed.'); return; }
+    setPreview(r.data as unknown as SetupPreview);
+  }
+
+  async function save() {
+    setBusy('save'); setErr('');
+    const r = await send('/api/operator/course-shape', 'POST', body());
+    if (!r.ok) { setBusy(''); setErr(r.data.error || 'Could not save. Nothing was changed.'); return; }
+    const pv = r.data as unknown as SetupPreview;
+    await onSaved({ holes: pv.holes, par: pv.par });
+    setBusy(''); setPreview(null); setSaved(true);
+  }
+
+  const active = products.filter(x => x.active);
+  const shown = holes && par
+    ? `${holes} holes · Par ${par} at the top of your booking page${active.length ? `, and ${active.map(x => x.label).join(', ')} when they pick a tee time` : ''}.`
+    : 'nothing yet.';
+  const noSchedule = active.filter(x => !(x.scheduleCount && x.scheduleCount > 0));
+
+  if (readOnly) {
+    return (
+      <Step n={n} title="Your course" golfersSee={shown}>
+        <p className="text-sm text-ink">{holes ? `${holes} holes` : 'Not set up yet.'}{sorted.length > 1 ? ` · ${sorted.map(x => x.name).join(', ')}` : ''}</p>
+      </Step>
+    );
+  }
+
+  const lines = preview ? previewLines(preview) : [];
   return (
-    <Step n={n} title="How many holes?" golfersSee={shown}>
-      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Holes">
-        {[9, 18, 27, 36].map(v => (
-          <button key={v} role="radio" aria-checked={h === v} onClick={() => setH(v)}
-            className={'w-16 py-2 rounded-md border text-sm font-medium tabular-nums transition-colors ' + (h === v ? 'border-pine bg-pine/[0.07] text-pine' : 'border-line bg-white text-ink-soft hover:border-line-strong')}>
-            {v}
-          </button>
+    <Step n={n} title="Your course" golfersSee={shown}>
+      <div>
+        <p className="text-[13px] font-semibold text-ink mb-2">What kind of course is it?</p>
+        <div className="grid sm:grid-cols-2 gap-2" role="radiogroup" aria-label="Kind of course">
+          {SHAPES.map(s => (
+            <button key={s.key} role="radio" aria-checked={shapeKey === s.key} onClick={() => pickShape(s.key)}
+              className={'text-left rounded-md border px-3 py-2.5 transition-colors ' + (shapeKey === s.key ? 'border-pine bg-pine/[0.07]' : 'border-line bg-white hover:border-line-strong')}>
+              <span className={'block text-sm font-medium ' + (shapeKey === s.key ? 'text-pine' : 'text-ink')}>{s.label}</span>
+              <span className="block text-[12.5px] text-ink-soft mt-0.5">{s.example}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        {shape.nameFields.map((f, i) => (
+          <div key={`${shapeKey}-${i}`}>
+            <label className="block text-[13px] font-semibold text-ink mb-1.5" htmlFor={`shape-name-${i}`}>{f.label}</label>
+            <input id={`shape-name-${i}`} value={names[i] ?? ''} placeholder={f.placeholder} className={iCls}
+              onChange={e => { const v = e.target.value; setNames(ns => ns.map((x, j) => j === i ? v : x)); edited(); }} />
+          </div>
         ))}
+        <div>
+          <label className="block text-[13px] font-semibold text-ink mb-1.5" htmlFor="shape-par">{shape.holes === 9 ? 'Par for the nine holes' : 'Par for 18 holes'}</label>
+          <input id="shape-par" type="number" value={p} placeholder={shape.holes === 9 ? '36' : '72'} className={iCls + ' max-w-[140px]'}
+            onChange={e => { setP(e.target.value); edited(); }} />
+        </div>
       </div>
-      {h > 18 && <p className="text-[12.5px] text-ink-soft">With {h} holes you have {h / 9} nines. You&apos;ll name them next, and choose which pairs golfers can book.</p>}
-      <div className="max-w-[220px]">
-        <label className="block text-[13px] font-semibold text-ink mb-1.5">{h === 9 ? 'Par for the nine holes' : 'Par for 18 holes'}</label>
-        <input type="number" value={p} onChange={e => setP(e.target.value)} placeholder={h === 9 ? '36' : '72'} className={iCls} />
+      {shape.namesAreCourses && <p className="text-[12.5px] text-ink-soft">Each course gets a front and a back nine, so you can also sell 9-hole times on it.</p>}
+
+      <div>
+        <p className="text-[13px] font-semibold text-ink mb-1">What golfers can book</p>
+        <p className="text-[12.5px] text-ink-soft mb-1.5">Each round you tick gets its own tab on Schedule, with its own hours and prices.</p>
+        <ul className="divide-y divide-line-soft">
+          {rounds.map(r => {
+            const on = isOn(r.key);
+            return (
+              <li key={r.key} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2">
+                <label className="flex items-start gap-2.5 text-sm cursor-pointer min-w-0">
+                  <input type="checkbox" checked={on} className="accent-pine w-4 h-4 mt-0.5 shrink-0"
+                    onChange={e => { const v = e.target.checked; setPicks(ps => ps.some(x => x.key === r.key) ? ps.map(x => x.key === r.key ? { ...x, on: v } : x) : [...ps, { key: r.key, on: v, label: '' }]); edited(); }} />
+                  <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2.5 min-w-0">
+                    <span className={on ? 'text-ink font-medium' : 'text-ink-soft'}>{pickOf(r.key)?.label || r.label}</span>
+                    <span className="text-[12.5px] text-ink-muted">{r.hint}</span>
+                  </span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
       </div>
+
       <ErrorLine msg={err} />
-      <button onClick={save} disabled={saving || (!dirty && !saved)} className={primaryBtn}>
-        {saving ? 'Saving…' : saved ? 'Saved' : 'Save'}
-      </button>
+      {preview ? (
+        <div className="bg-paper/70 rounded-md px-4 py-3 space-y-2">
+          <p className="text-sm font-semibold text-ink">{lines.length ? 'Saving this:' : 'That’s how your course is set up already.'}</p>
+          {lines.length > 0 && <ul className="text-sm text-ink space-y-1 list-disc pl-5">{lines.map(l => <li key={l}>{l}</li>)}</ul>}
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button onClick={save} disabled={busy !== ''} className={primaryBtn}>{busy === 'save' ? 'Saving…' : 'Save'}</button>
+            <button onClick={() => setPreview(null)} disabled={busy !== ''} className={smallBtn}>Keep editing</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={review} disabled={busy !== '' || !p || saved} className={primaryBtn}>{busy === 'preview' ? 'Checking…' : saved ? 'Saved' : 'Review changes'}</button>
+      )}
+      {saved && noSchedule.length > 0 && (
+        <p className="text-[12.5px] text-ink-soft flex items-center gap-1.5">
+          <StatusDot status="warn" />{noSchedule.map(x => x.label).join(', ')} {noSchedule.length === 1 ? 'has' : 'have'} no hours yet.{' '}
+          <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Set them on Schedule</Link>
+        </p>
+      )}
     </Step>
   );
 }
 
-// ── 2. Name each nine (27 / 36 holes) ────────────────────────────────────
-function NinesStep({ n, needed, nines, setNines, readOnly, locked }: {
-  n: number; needed: number; nines: Nine[]; setNines: (n: Nine[]) => void; readOnly: boolean; locked: string;
-}) {
-  const missing = Math.max(0, needed - nines.length);
-  const [drafts, setDrafts] = useState<{ name: string; par: string }[]>([]);
+// ── Par for each nine (27 / 36 holes) — names come from Your course ─────────
+function NinePars({ nines, setNines, readOnly }: { nines: Nine[]; setNines: (n: Nine[]) => void; readOnly: boolean }) {
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
-  useEffect(() => { setDrafts(Array.from({ length: missing }, () => ({ name: '', par: '36' }))); }, [missing]);
-
-  const parOk = (v: number) => v >= 27 && v <= 40;
-  async function saveNew() {
-    if (drafts.some(d => !d.name.trim())) { setErr('Give every nine a name — North, South, West, or whatever your course calls them.'); return; }
-    if (drafts.some(d => !parOk(Number(d.par)))) { setErr('Each nine’s par is usually 34 to 37.'); return; }
-    setBusy('new'); setErr('');
-    let next = [...nines];
-    for (const d of drafts) {
-      const r = await send('/api/operator/nines', 'POST', { name: d.name.trim(), par: Number(d.par) || 36 });
-      if (!r.ok) { setErr(r.data.error || `Could not add "${d.name}".`); break; }
-      next = [...next, r.data as unknown as Nine];
-    }
-    setNines(next);
-    setBusy('');
-  }
-
-  async function update(nine: Nine, patch: Partial<Nine>) {
+  const sorted = [...nines].sort((a, b) => a.sortOrder - b.sortOrder);
+  async function update(nine: Nine, par: number) {
     setBusy(nine.id); setErr('');
-    const r = await send('/api/operator/nines', 'PATCH', { id: nine.id, ...patch });
+    const r = await send('/api/operator/nines', 'PATCH', { id: nine.id, par });
     setBusy('');
-    if (!r.ok) { setErr(r.data.error || 'Could not save that nine.'); return; }
+    if (!r.ok) { setErr(r.data.error || 'Could not save that par.'); return; }
     setNines(nines.map(x => x.id === nine.id ? r.data as unknown as Nine : x));
   }
-
-  async function remove(nine: Nine) {
-    if (!confirm(`Remove the ${nine.name} nine?`)) return;
-    setBusy(nine.id); setErr('');
-    const r = await send('/api/operator/nines', 'DELETE', { id: nine.id });
-    setBusy('');
-    if (!r.ok) { setErr(r.data.error || 'Could not remove that nine.'); return; }
-    setNines(nines.filter(x => x.id !== nine.id));
-  }
-
-  const shown = nines.length ? `${nines.map(x => `${x.name} (par ${x.par})`).join(', ')}, under “The tees” on your page.` : 'nothing yet.';
+  if (!sorted.length) return null;
   return (
-    <Step n={n} title="Name each nine" golfersSee={shown} locked={locked}>
-      {readOnly ? (
-        <p className="text-sm text-ink">{nines.length ? nines.map(x => `${x.name} · par ${x.par}`).join('   ') : 'No nines named yet.'}</p>
-      ) : (
-        <>
-          <p className="text-sm text-ink-soft">Golfers choose a round by its nines, so use the names on your scorecard.</p>
-          <div className="space-y-2">
-            {nines.map((nine, i) => (
-              <div key={nine.id} className="flex items-center gap-2">
-                <span className="w-16 shrink-0 text-[12.5px] text-ink-muted">Nine {i + 1}</span>
-                <input defaultValue={nine.name} aria-label={`Nine ${i + 1} name`} className={iBase + ' flex-1 min-w-0'}
-                  onBlur={e => { const v = e.target.value.trim(); if (v && v !== nine.name) update(nine, { name: v }); }} />
-                <span className="text-[12.5px] text-ink-muted">Par</span>
-                <input type="number" defaultValue={nine.par} aria-label={`Nine ${i + 1} par`} className={iBase + ' w-16'}
-                  onBlur={e => { const v = Number(e.target.value); if (!v || v === nine.par) return; if (!parOk(v)) { setErr('Each nine’s par is usually 34 to 37.'); e.target.value = String(nine.par); return; } update(nine, { par: v }); }} />
-                {busy === nine.id ? <span className="text-xs text-ink-faint w-14">Saving…</span>
-                  : i >= needed ? <button onClick={() => remove(nine)} className="text-[12.5px] text-ink-muted hover:text-bad w-14">Remove</button>
-                  : <span className="w-14" />}
-              </div>
-            ))}
-            {drafts.map((d, i) => (
-              <div key={`d${i}`} className="flex items-center gap-2">
-                <span className="w-16 shrink-0 text-[12.5px] text-ink-muted">Nine {nines.length + i + 1}</span>
-                <input value={d.name} onChange={e => setDrafts(ds => ds.map((x, j) => j === i ? { ...x, name: e.target.value } : x))}
-                  placeholder={['North', 'South', 'West', 'East'][nines.length + i] ?? 'Name'} aria-label={`Nine ${nines.length + i + 1} name`} className={iBase + ' flex-1 min-w-0'} />
-                <span className="text-[12.5px] text-ink-muted">Par</span>
-                <input type="number" value={d.par} onChange={e => setDrafts(ds => ds.map((x, j) => j === i ? { ...x, par: e.target.value } : x))}
-                  aria-label={`Nine ${nines.length + i + 1} par`} className={iBase + ' w-16'} />
-                <span className="w-14" />
-              </div>
-            ))}
-          </div>
-          {nines.length > needed && <p className="text-[12.5px] text-ink-soft">You have more nines than your {needed * 9} holes need. Remove the extra one, or change the holes above.</p>}
-          <ErrorLine msg={err} />
-          {drafts.length > 0 && (
-            <button onClick={saveNew} disabled={busy === 'new'} className={primaryBtn}>
-              {busy === 'new' ? 'Saving…' : drafts.length === 1 ? 'Save this nine' : `Save ${drafts.length} nines`}
-            </button>
-          )}
-        </>
-      )}
-    </Step>
+    <Card className="p-5">
+      <h3 className="text-[15px] font-semibold text-ink mb-1">Par for each nine</h3>
+      <p className="text-[12.5px] text-ink-muted mb-3">Golfers see it under “The tees” on your page. Saves as you leave the box.</p>
+      <div className="flex flex-wrap gap-x-5 gap-y-2">
+        {sorted.map(nine => (
+          <label key={nine.id} className="flex items-center gap-2 text-sm text-ink">
+            {nine.name}
+            {readOnly ? <span className="tabular-nums">{nine.par}</span> : (
+              <input type="number" defaultValue={nine.par} aria-label={`${nine.name} par`} className={iBase + ' w-16'}
+                onBlur={e => { const v = Number(e.target.value); if (!v || v === nine.par) return; if (v < 27 || v > 40) { setErr('Each nine’s par is usually 34 to 37.'); e.target.value = String(nine.par); return; } update(nine, v); }} />
+            )}
+            {busy === nine.id && <span className="text-xs text-ink-faint">Saving…</span>}
+          </label>
+        ))}
+      </div>
+      <div className="mt-2"><ErrorLine msg={err} /></div>
+    </Card>
   );
 }
 
@@ -414,88 +488,6 @@ function TeesStep({ n, teeSets, setTeeSets, nines, products, readOnly, locked }:
             </div>
           )}
         </div>
-      )}
-    </Step>
-  );
-}
-
-// ── 4. What golfers can book ─────────────────────────────────────────────
-function RoundsStep({ n, multi, holes, nines, products, setProducts, readOnly, locked }: {
-  n: number; multi: boolean; holes: number | null; nines: Nine[]; products: CourseProduct[]; setProducts: (p: CourseProduct[]) => void; readOnly: boolean; locked: string;
-}) {
-  const [busy, setBusy] = useState('');
-  const [err, setErr] = useState('');
-
-  // A simple 9 or 18 with no rounds set up: what golfers book comes from Schedule.
-  if (!multi && products.length === 0) {
-    return (
-      <Step n={n} title="What golfers can book" locked={locked}>
-        <p className="text-sm text-ink">
-          Golfers book {holes === 9 ? '9 holes' : '18 holes'}, plus any 9-hole times your schedule offers.
-          Which times run, and at what price, is on <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Schedule</Link>.
-        </p>
-      </Step>
-    );
-  }
-
-  const candidates = multi ? candidateRounds(nines) : [];
-  const matched = new Set<string>();
-  const rows = candidates.map(c => {
-    const p = products.find(x => sameNines(x.nineIds, c.nineIds) && x.holes === c.holes);
-    if (p) matched.add(p.id);
-    return { key: c.nineIds.join('+') + c.holes, label: p?.label ?? c.label, holes: c.holes, nineIds: c.nineIds, product: p };
-  });
-  // Rounds set up earlier that aren't a plain pair or single nine stay listed.
-  for (const p of products) if (!matched.has(p.id)) rows.push({ key: p.id, label: p.label, holes: p.holes, nineIds: p.nineIds, product: p });
-
-  async function toggle(row: typeof rows[number], on: boolean) {
-    setBusy(row.key); setErr('');
-    const p = row.product;
-    if (p) {
-      if (!on && (p.scheduleCount ?? 0) > 0 && !confirm(`Stop offering ${p.label}? Its schedule stops making new tee times. Times already booked stay booked.`)) { setBusy(''); return; }
-      const r = await send('/api/operator/course-products', 'PATCH', { id: p.id, active: on });
-      setBusy('');
-      if (!r.ok) { setErr(r.data.error || `Could not change ${p.label}.`); return; }
-      setProducts(products.map(x => x.id === p.id ? { ...(r.data as unknown as CourseProduct), scheduleCount: p.scheduleCount } : x));
-    } else {
-      const r = await send('/api/operator/course-products', 'POST', { label: row.label, holes: row.holes, nineIds: row.nineIds, active: true });
-      setBusy('');
-      if (!r.ok) { setErr(r.data.error || `Could not add ${row.label}.`); return; }
-      setProducts([...products, { ...(r.data as unknown as CourseProduct), scheduleCount: 0 }]);
-    }
-  }
-
-  const offered = rows.filter(r => r.product?.active);
-  const noSchedule = offered.filter(r => !(r.product?.scheduleCount && r.product.scheduleCount > 0));
-  // A course can still run schedules with no round attached; those times show as the whole course.
-  const shown = offered.length ? `${offered.map(r => r.label).join(', ')} when they pick a tee time.` : 'no named rounds yet — your schedule’s times show without one.';
-
-  return (
-    <Step n={n} title="What golfers can book" golfersSee={shown} locked={locked}>
-      {!readOnly && <p className="text-sm text-ink-soft">Tick each round you sell. Two rounds that share a nine can&apos;t start at the same time — Schedule keeps them apart.</p>}
-      <ul className="divide-y divide-line-soft">
-        {rows.map(r => {
-          const on = !!r.product?.active;
-          return (
-            <li key={r.key} className="flex items-center justify-between gap-3 py-2">
-              <label className={'flex items-center gap-2.5 text-sm ' + (readOnly ? '' : 'cursor-pointer')}>
-                {readOnly ? <StatusDot status={on ? 'ok' : 'neutral'} /> : (
-                  <input type="checkbox" checked={on} disabled={busy === r.key} onChange={e => toggle(r, e.target.checked)} className="accent-pine w-4 h-4" />
-                )}
-                <span className={on ? 'text-ink font-medium' : 'text-ink-soft'}>{r.label}</span>
-                <span className="text-[12.5px] text-ink-muted">{r.holes} holes</span>
-              </label>
-              {busy === r.key ? <span className="text-xs text-ink-faint">Saving…</span>
-                : on && !(r.product?.scheduleCount && r.product.scheduleCount > 0) ? <span className="text-[12.5px] text-warn">No schedule yet</span> : null}
-            </li>
-          );
-        })}
-      </ul>
-      <ErrorLine msg={err} />
-      {noSchedule.length > 0 && (
-        <p className="text-[12.5px] text-ink-soft">
-          A round makes no tee times until it has a schedule. <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Set the hours on Schedule</Link>.
-        </p>
       )}
     </Step>
   );

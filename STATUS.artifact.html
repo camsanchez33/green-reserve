@@ -117,14 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-20 03:08 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ ad6524b</span>
-    <span>25 uncommitted</span>
+    <span>2026-10-20 18:01 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 77187a1</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">44 runs have shipped that the queue doesn't know about</div>
+<div class="lede">48 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">77187a1</span><span>Status board</span></li>
+<li><span class="h">42ff2e4</span><span>W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day</span></li>
+<li><span class="h">dea0574</span><span>W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had</span></li>
+<li><span class="h">39e62f4</span><span>W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)</span></li>
 <li><span class="h">ad6524b</span><span>W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)</span></li>
 <li><span class="h">bd86947</span><span>Sign-in page: full-screen photo with the sign-in card under the logo (#153)</span></li>
 <li><span class="h">fff11a1</span><span>Emails: one clean look for every email (EMAIL-2) (#152)</span></li>
@@ -179,9 +183,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M OPERATOR_REWORK_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/shop-sales-test.ts</code></li><li><code>M src/app/api/cron/hourly/route.ts</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/app/api/shop-sale/[id]/route.ts</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/app/pay/shop/[id]/page.tsx</code></li><li><code>M src/components/dashboard/ShopCatalog.tsx</code></li><li><code>M src/lib/email.ts</code></li><li><code>M src/lib/shop-ai-import.ts</code></li><li><code>M src/lib/shop-catalog.ts</code></li><li><code>M src/lib/shop-import.ts</code></li><li><code>M src/lib/shop-sales.ts</code></li><li><code>M src/lib/shop-tree.ts</code></li><li><code>?? prisma/migrations/20261020021959_w2_7_shop_sales_tax/</code></li><li><code>?? scripts/shop-sales-tax-db-test.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -224,10 +228,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-19 &middot; 0d</td></tr>
-<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 2d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 3d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 0d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 8d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 12d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 12d</td></tr>
@@ -262,6 +266,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">77187a1</td><td class="num">2026-10-20</td><td>Status board</td></tr>
+<tr><td class="num">42ff2e4</td><td class="num">2026-10-20</td><td>W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day</td></tr>
+<tr><td class="num">dea0574</td><td class="num">2026-10-20</td><td>W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had</td></tr>
+<tr><td class="num">39e62f4</td><td class="num">2026-10-20</td><td>W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)</td></tr>
 <tr><td class="num">ad6524b</td><td class="num">2026-10-19</td><td>W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)</td></tr>
 <tr><td class="num">bd86947</td><td class="num">2026-10-19</td><td>Sign-in page: full-screen photo with the sign-in card under the logo (#153)</td></tr>
 <tr><td class="num">fff11a1</td><td class="num">2026-10-19</td><td>Emails: one clean look for every email (EMAIL-2) (#152)</td></tr>
@@ -270,10 +278,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">223121d</td><td class="num">2026-10-19</td><td>Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)</td></tr>
 <tr><td class="num">abb4518</td><td class="num">2026-10-19</td><td>queue/spec update (#147)</td></tr>
 <tr><td class="num">95da45f</td><td class="num">2026-10-19</td><td>Member portal: show a resident their own spot at the resident rate, as booking charges (#146)</td></tr>
-<tr><td class="num">9910cf6</td><td class="num">2026-10-19</td><td>Member portal: show members exactly what booking charges (#145)</td></tr>
-<tr><td class="num">dbd4737</td><td class="num">2026-10-19</td><td>Status board: regenerate (#144)</td></tr>
-<tr><td class="num">428da80</td><td class="num">2026-10-19</td><td>Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)</td></tr>
-<tr><td class="num">0419675</td><td class="num">2026-10-19</td><td>Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

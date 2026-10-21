@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 452,
-    "routes": 227,
-    "libs": 141,
+    "files": 455,
+    "routes": 228,
+    "libs": 143,
     "models": 43,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4574,6 +4574,32 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/course-shape/route.ts",
+      "lines": 23,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/course-shape",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/course-shape-setup",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/courses/route.ts",
       "lines": 109,
       "purpose": "",
@@ -8222,7 +8248,7 @@
     },
     {
       "path": "src/components/dashboard/CourseLayoutTab.tsx",
-      "lines": 503,
+      "lines": 495,
       "purpose": "Settings rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -8240,6 +8266,8 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/course-rounds",
+        "@/lib/course-shape",
+        "@/lib/course-shape-setup",
         "@/lib/tee-colour",
         "next/link",
         "react"
@@ -9985,6 +10013,7 @@
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
@@ -12038,6 +12067,103 @@
       ]
     },
     {
+      "path": "src/lib/course-shape-setup.ts",
+      "lines": 179,
+      "purpose": "W2-6 (Cam 2026-10-20:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "applyCourseSetup",
+          "kind": "fn"
+        },
+        {
+          "name": "planCourseSetup",
+          "kind": "fn"
+        },
+        {
+          "name": "SetupInput",
+          "kind": "type"
+        },
+        {
+          "name": "SetupPreview",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-shape",
+        "./course-time",
+        "./prisma",
+        "./tee-sheet-engine"
+      ],
+      "usedBy": [
+        "src/app/api/operator/course-shape/route.ts",
+        "src/components/dashboard/CourseLayoutTab.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/course-shape.ts",
+      "lines": 116,
+      "purpose": "W2-6 (Cam 2026-10-20:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "guessShape",
+          "kind": "fn"
+        },
+        {
+          "name": "isStockLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "PlanNine",
+          "kind": "type"
+        },
+        {
+          "name": "PlanRound",
+          "kind": "type"
+        },
+        {
+          "name": "shapeDef",
+          "kind": "fn"
+        },
+        {
+          "name": "ShapeDef",
+          "kind": "type"
+        },
+        {
+          "name": "ShapeKey",
+          "kind": "type"
+        },
+        {
+          "name": "shapeNines",
+          "kind": "fn"
+        },
+        {
+          "name": "shapeRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "SHAPES",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/CourseLayoutTab.tsx",
+        "src/lib/course-shape-setup.ts"
+      ]
+    },
+    {
       "path": "src/lib/course-time.ts",
       "lines": 46,
       "purpose": "SD-3 — course-local time.",
@@ -12097,6 +12223,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/course-shape-setup.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
@@ -14674,6 +14801,7 @@
         "src/lib/claim-tee-time.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-group.ts",
+        "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cron-log.ts",
         "src/lib/frost-delay.ts",
@@ -15425,6 +15553,7 @@
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
@@ -16260,6 +16389,7 @@
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
@@ -18242,6 +18372,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-group.ts",
+        "src/lib/course-shape-setup.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
@@ -18937,6 +19068,7 @@
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
@@ -19660,6 +19792,7 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
+        "src/lib/course-shape-setup.ts",
         "src/lib/schedule-service.ts"
       ]
     },
@@ -20196,6 +20329,7 @@
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/course-shape-setup.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/public-tee-times.ts",
@@ -20376,6 +20510,7 @@
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"
