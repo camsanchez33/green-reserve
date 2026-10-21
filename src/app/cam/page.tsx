@@ -13,7 +13,10 @@ const lCls = 'block text-[13px] font-semibold text-ink mb-1.5';
 
 export default function CamSignInPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'credentials' | 'device' | 'verify'>('credentials');
+  const [step, setStep] = useState<'credentials' | 'device' | 'passkey' | 'verify'>('credentials');
+  // AW-1b: the passkey prompt's options, and whether the authenticator app is there as the backup.
+  const [passkeyOptions, setPasskeyOptions] = useState<Record<string, unknown> | null>(null);
+  const [hasBackup, setHasBackup] = useState(false);
   const [method, setMethod] = useState<'email' | 'totp'>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,10 +37,32 @@ export default function CamSignInPage() {
       if (!res.ok) { setError(String(data.error || `Sign-in failed (${res.status}) — try again.`)); return; }
       if (data.needsDeviceApproval) { setStep('device'); return; }
       if (data.mustChangePassword && data.setPasswordToken) { router.push(`/admin/set-password?token=${encodeURIComponent(String(data.setPasswordToken))}`); return; }
+      if (data.requires2FA && data.method === 'passkey' && data.options) {
+        setPasskeyOptions(data.options as Record<string, unknown>); setHasBackup(data.backup === 'totp'); setStep('passkey');
+        await signInWithPasskey(data.options as Record<string, unknown>);
+        return;
+      }
       if (data.requires2FA) { setMethod(data.method === 'totp' ? 'totp' : 'email'); setStep('verify'); return; }
       setError('Something unexpected came back — try again.');
     } catch {
       setError('Network error — check your connection and try again.');
+    } finally { setLoading(false); }
+  }
+
+  /** AW-1b: Face ID / Touch ID / a security key. The prompt's challenge is good once. */
+  async function signInWithPasskey(options: Record<string, unknown> | null) {
+    if (!options) return;
+    setError(''); setLoading(true);
+    try {
+      const { startAuthentication } = await import('@simplewebauthn/browser');
+      let response;
+      try { response = await startAuthentication({ optionsJSON: options as unknown as Parameters<typeof startAuthentication>[0]['optionsJSON'] }); }
+      catch { setError('The passkey prompt was cancelled or didn’t work on this device.'); setPasskeyOptions(null); return; }
+      const { res, data } = await post({ step: 'passkey', email, response });
+      if (!res.ok) { setError(String(data.error || `Sign-in failed (${res.status}) — start over.`)); setPasskeyOptions(null); return; }
+      window.location.assign('/admin');
+    } catch {
+      setError('Network error — check your connection and start over.'); setPasskeyOptions(null);
     } finally { setLoading(false); }
   }
 
@@ -66,6 +91,7 @@ export default function CamSignInPage() {
           <p className="text-sm text-ink-soft mb-6">
             {step === 'credentials' ? 'Your password, then a second factor.'
               : step === 'device' ? 'This device hasn’t been used to sign in before.'
+              : step === 'passkey' ? 'Confirm it’s you with your passkey — Face ID, Touch ID or your security key.'
               : method === 'totp' ? 'Enter the 6-digit code from your authenticator app — or a recovery code.'
               : `Check ${email} for a 6-digit code.`}
           </p>
@@ -89,6 +115,19 @@ export default function CamSignInPage() {
               <p className="text-[14px] text-ink">We emailed {email} a link to approve it. Open the email, review the device and approve it, then come back here and sign in again.</p>
               <p className="text-[13px] text-ink-muted">The link works for 15 minutes. If you didn’t get it, sign in again for a new one.</p>
               <button type="button" onClick={startOver} className="w-full bg-pine hover:bg-pine-hover text-white text-[13px] font-medium py-2.5 rounded-md transition-colors">I’ve approved it — sign in again</button>
+            </div>
+          )}
+
+          {step === 'passkey' && (
+            <div className="space-y-3">
+              {passkeyOptions ? (
+                <button type="button" onClick={() => signInWithPasskey(passkeyOptions)} disabled={loading} className="w-full bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[13px] font-medium py-2.5 rounded-md transition-colors">{loading ? 'Waiting for your passkey…' : 'Use your passkey'}</button>
+              ) : (
+                <button type="button" onClick={startOver} className="w-full bg-pine hover:bg-pine-hover text-white text-[13px] font-medium py-2.5 rounded-md transition-colors">Start over</button>
+              )}
+              {hasBackup && (
+                <button type="button" onClick={() => { setMethod('totp'); setStep('verify'); setError(''); }} className="w-full text-sm text-ink-soft hover:text-ink text-center transition-colors">Use your authenticator app instead</button>
+              )}
             </div>
           )}
 

@@ -1,17 +1,46 @@
 {
-  "generatedAt": "2026-10-21T03:29:00.571Z",
+  "generatedAt": "2026-10-21T03:45:30.135Z",
   "repo": {
-    "head": "c6ab10b",
+    "head": "00a9007",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 1,
+    "dirtyCount": 2,
     "dirty": [
-      "M src/app/api/cam/login/route.ts"
+      "M ADMIN_V5_SPEC.md",
+      " M src/app/api/cam/login/route.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "00a9007",
+        "date": "2026-10-21T03:41:34+00:00",
+        "subject": "AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ccbfb06",
+        "date": "2026-10-20T23:34:22-04:00",
+        "subject": "AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0671dab",
+        "date": "2026-10-21T03:29:07+00:00",
+        "subject": "Regenerate code map after main merge",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4fda831",
+        "date": "2026-10-21T03:29:01+00:00",
+        "subject": "AW-1a: dummy hash at the real cost; status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "fc3a0fc",
         "date": "2026-10-21T03:27:57+00:00",
@@ -643,7 +672,7 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-21",
+      "lastTouched": "2026-10-20",
       "ageDays": 0
     },
     {
@@ -848,6 +877,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "00a9007",
+      "date": "2026-10-21",
+      "subject": "AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists"
+    },
+    {
+      "h": "ccbfb06",
+      "date": "2026-10-20",
+      "subject": "AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)"
+    },
+    {
+      "h": "0671dab",
+      "date": "2026-10-21",
+      "subject": "Regenerate code map after main merge"
+    },
+    {
+      "h": "4fda831",
+      "date": "2026-10-21",
+      "subject": "AW-1a: dummy hash at the real cost; status board"
+    },
+    {
       "h": "c6ab10b",
       "date": "2026-10-21",
       "subject": "queue/spec update"
@@ -861,6 +910,11 @@
       "h": "eeea53c",
       "date": "2026-10-21",
       "subject": "AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner"
+    },
+    {
+      "h": "efd1438",
+      "date": "2026-10-20",
+      "subject": "queue/spec update (#160)"
     },
     {
       "h": "315e3e3",
@@ -881,31 +935,6 @@
       "h": "063dc87",
       "date": "2026-10-21",
       "subject": "W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid"
-    },
-    {
-      "h": "507507a",
-      "date": "2026-10-20",
-      "subject": "W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158)"
-    },
-    {
-      "h": "85be7e1",
-      "date": "2026-10-21",
-      "subject": "Regenerate code map and status board after main merge"
-    },
-    {
-      "h": "248dc36",
-      "date": "2026-10-21",
-      "subject": "W2-6 slice 3: window-cap test, spec status, status board"
-    },
-    {
-      "h": "d8a856f",
-      "date": "2026-10-21",
-      "subject": "W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping"
-    },
-    {
-      "h": "290c10f",
-      "date": "2026-10-21",
-      "subject": "W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking"
     }
   ]
 }

@@ -821,6 +821,29 @@ model AdminUser {
   /// unbelievably secure"): the owner's sign-ins and trusted devices.
   ownerSessions          OwnerSession[]
   ownerDevices           OwnerDevice[]
+  /// AW-1b: the owner's passkeys, and the one WebAuthn challenge in flight
+  /// (sign-in at /cam, or adding a passkey), good until passkeyChallengeExpiry.
+  ownerPasskeys          OwnerPasskey[]
+  passkeyChallenge       String?
+  passkeyChallengeExpiry DateTime?
+}
+
+/// AW-1b (Cam 2026-10-21: "Passkey" as the owner's second factor): a passkey
+/// (Face ID / Touch ID / security key). Only its public key is stored.
+model OwnerPasskey {
+  id           String    @id @default(cuid())
+  adminId      String
+  admin        AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  /// base64url credential id, as WebAuthn reports it
+  credentialId String    @unique
+  publicKey    Bytes
+  counter      BigInt    @default(0)
+  transports   String[]  @default([])
+  name         String    @default("")
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  @@index([adminId])
 }
 
 /// AW-1: one owner sign-in at /cam. The gr_owner cookie names this row; a
