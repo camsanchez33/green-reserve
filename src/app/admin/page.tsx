@@ -1,9 +1,10 @@
 'use client';
-// AW-4 (Cam 2026-10-21): Today — four sections only. Needs you now (each item
-// with its one fix), Platform health (red/green), Money this month vs the same
-// point last month, Onboarding by stage with stuck courses named. No daily fee
-// tile, no unread count, no ticker. Data: /api/admin/today, which leaves out
-// (null) any section the signed-in role can't see.
+// AW-4b (Cam 2026-10-21, second pass: "as the owner what do I really need to
+// see"): Today is one health line, Needs you now (only what isn't about one
+// course: the inquiry rows), then every course as a card with its own to-dos,
+// "Staff seen" and its fees this month. No Money or Onboarding card (Revenue and
+// Inquiries hold them). Data: /api/admin/today, which leaves out (null) any
+// section the signed-in role can't see.
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -20,24 +21,22 @@ interface ActionRow {
   id: string; who: string; why: string; doThis: string; ageDays: number; severity: 'bad' | 'warn';
   actionLabel: string; href: string; items?: QueueItem[];
   fire?: { kind: 'resend_preview' | 'resend_sheet' | 'send_nudge'; inquiryId?: string; courseId?: string };
+  courseId?: string;
+}
+interface TodayCourse {
+  id: string; name: string; live: boolean;
+  staffSeenAt: string | null; staffQuiet: boolean;
+  feesThisMonth: number;
+  rows: ActionRow[];
 }
 interface Today {
-  needs: { rows: ActionRow[]; redCount: number; amberCount: number } | null;
+  needs: ActionRow[] | null;
   health: {
     jobs: { total: number; bad: { job: string; note: string }[]; notYetRun: number };
     stripeWebhook: { lastAt: string | null; ok: boolean; lastError: string | null };
     payments: { live: number; blocked: number };
   } | null;
-  money: {
-    from: string; daysIn: number;
-    current: { rounds: number; volume: number; fees: number };
-    prior: { rounds: number; volume: number; fees: number };
-    net: { current: number | null; prior: number | null; stripeUnavailable: boolean } | null;
-  } | null;
-  onboarding: {
-    stuckDays: number;
-    stages: { key: string; label: string; count: number; stuck: { id: string; name: string; days: number; waitingOn: string }[] }[];
-  } | null;
+  courses: TodayCourse[] | null;
   at: string;
 }
 
@@ -58,8 +57,10 @@ function Section({ title, href, linkLabel, children }: { title: string; href?: s
   );
 }
 
-function QueueRow({ row, expanded, onToggle, fireStatus, fireError, onFire, canFire }: {
+function QueueRow({ row, expanded, onToggle, fireStatus, fireError, onFire, canFire, hideWho }: {
   row: ActionRow; expanded: boolean; onToggle: () => void; fireStatus: FireStatus; fireError?: string; onFire: () => void; canFire: boolean;
+  /** On a course card the course is the card's heading; the row says only what's wrong. */
+  hideWho?: boolean;
 }) {
   const router = useRouter();
   const hasItems = (row.items?.length ?? 0) > 0;
@@ -68,8 +69,8 @@ function QueueRow({ row, expanded, onToggle, fireStatus, fireError, onFire, canF
       <div className="flex items-center gap-3 py-2.5">
         <StatusDot status={row.severity} />
         <div className="flex-1 min-w-0">
-          <div className="text-[13.5px] font-medium text-ink truncate">{row.who}</div>
-          <div className="text-[12.5px] text-ink-soft truncate">{row.why}{row.ageDays > 0 ? ` · ${row.ageDays}d` : ''}</div>
+          {!hideWho && <div className="text-[13.5px] font-medium text-ink truncate">{row.who}</div>}
+          <div className={hideWho ? 'text-[13.5px] font-medium text-ink truncate' : 'text-[12.5px] text-ink-soft truncate'}>{row.why}{row.ageDays > 0 ? ` · ${row.ageDays}d` : ''}</div>
           <div className="text-[12px] text-ink-muted truncate">{row.doThis}</div>
         </div>
         {row.fire && canFire && (
@@ -104,38 +105,22 @@ function QueueRow({ row, expanded, onToggle, fireStatus, fireError, onFire, canF
   );
 }
 
-/** "vs $X by this day last month", with the move. */
-function Versus({ cur, prior }: { cur: number | null; prior: number | null }) {
-  if (cur === null || prior === null) return <span className="text-[12px] text-ink-muted">last month unavailable</span>;
-  const diff = cur - prior;
-  if (Math.abs(diff) < 0.005) return <span className="text-[12px] text-ink-muted">same as this point last month</span>;
-  return (
-    <span className="text-[12px] text-ink-muted">
-      {fmtMoney(prior)} by now last month · <span className={diff > 0 ? 'text-ok' : 'text-bad'}>{diff > 0 ? '+' : '−'}{fmtMoney(Math.abs(diff))}</span>
-    </span>
-  );
+/** Health as ONE line: green says so in four words; red names every problem. */
+function healthLine(h: NonNullable<Today['health']>): { ok: boolean; text: string } {
+  const problems: string[] = [];
+  for (const j of h.jobs.bad) problems.push(`${j.job} is failing (${j.note})`);
+  if (h.stripeWebhook.lastError) problems.push(`Stripe's last event failed: ${h.stripeWebhook.lastError}`);
+  else if (h.stripeWebhook.lastAt && !h.stripeWebhook.ok) problems.push(`no Stripe event since ${fmtAgo(new Date(h.stripeWebhook.lastAt).getTime(), Date.now())}`);
+  if (h.payments.blocked > 0) problems.push(`${h.payments.blocked} live course${h.payments.blocked === 1 ? '' : 's'} can't take payments`);
+  if (problems.length === 0) return { ok: true, text: 'Everything’s running.' };
+  const t = problems.join('; ');
+  return { ok: false, text: t.charAt(0).toUpperCase() + t.slice(1) + '.' };
 }
 
-function MoneyLine({ label, cur, prior }: { label: string; cur: number | null; prior: number | null }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3 py-2 border-b border-line-soft last:border-0">
-      <span className="text-[13.5px] text-ink">{label}</span>
-      <span className="text-right">
-        <span className="block text-[15px] font-semibold tabular-nums text-ink">{fmtMoney(cur)}</span>
-        <Versus cur={cur} prior={prior} />
-      </span>
-    </div>
-  );
-}
-
-function HealthLine({ ok, text, href }: { ok: boolean | null; text: string; href?: string }) {
-  const body = (
-    <span className="flex items-start gap-2 py-1.5 text-[13.5px] text-ink">
-      <span className="mt-[7px]"><StatusDot status={ok === null ? 'warn' : ok ? 'ok' : 'bad'} /></span>
-      <span>{text}</span>
-    </span>
-  );
-  return href ? <Link href={href} className="block hover:bg-paper/70 rounded-md -mx-1 px-1">{body}</Link> : body;
+function seenText(c: TodayCourse): string {
+  if (!c.live) return 'Not live yet';
+  if (!c.staffSeenAt) return 'Staff haven’t signed in yet';
+  return `Staff seen ${fmtAgo(new Date(c.staffSeenAt).getTime(), Date.now())}`;
 }
 
 export default function AdminTodayPage() {
@@ -201,17 +186,22 @@ export default function AdminTodayPage() {
   }
 
   const needs = data?.needs;
-  const rows = needs ? (showAll ? needs.rows : needs.rows.slice(0, SHOW_ROWS)) : [];
-  const h = data?.health;
-  const m = data?.money;
-  const o = data?.onboarding;
-  const badJobs = h?.jobs.bad ?? [];
+  const rows = needs ? (showAll ? needs : needs.slice(0, SHOW_ROWS)) : [];
+  const health = data?.health ? healthLine(data.health) : null;
+  const courses = data?.courses;
+  const rowProps = (row: ActionRow) => ({
+    row,
+    expanded: expanded.has(row.id),
+    onToggle: () => setExpanded(prev => { const n = new Set(prev); if (n.has(row.id)) n.delete(row.id); else n.add(row.id); return n; }),
+    fireStatus: fireStatuses[row.id] ?? 'idle', fireError: fireErrors[row.id],
+    onFire: () => fire(row), canFire: canFire(row),
+  });
 
   return (
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="overview" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-[1200px]">
+        <div className="px-8 py-7 max-w-[1000px]">
           <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Today</h1>
@@ -219,6 +209,12 @@ export default function AdminTodayPage() {
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 {lastUpdated && <span className="text-ink-muted"> · updated {fmtAgo(lastUpdated, Date.now())}</span>}
               </p>
+              {health && (
+                <Link href="/admin/system" className="mt-2 flex items-center gap-2 text-[13.5px] text-ink hover:underline underline-offset-2">
+                  <StatusDot status={health.ok ? 'ok' : 'bad'} />
+                  <span className={health.ok ? '' : 'text-bad font-medium'}>{health.text}</span>
+                </Link>
+              )}
             </div>
             <button
               type="button" onClick={load} disabled={loading} aria-label="Refresh" title="Refresh"
@@ -236,94 +232,57 @@ export default function AdminTodayPage() {
           )}
           {!data && loading && <p className="text-ink-muted text-center py-20 text-sm">Loading…</p>}
 
-          {data && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+          {data && !needs && !courses && (
+            <p className="text-[13.5px] text-ink-soft">
+              Your role sees <Link href="/admin/inquiries" className="text-pine font-medium hover:underline">Inquiries</Link> and <Link href="/admin/courses" className="text-pine font-medium hover:underline">Courses</Link>.
+            </p>
+          )}
+
+          {data && (needs || courses) && (
+            <div className="space-y-5">
               {needs && (
-                <div className="lg:col-span-2">
-                  <Section title={`Needs you now${needs.rows.length ? ` · ${needs.rows.length}` : ''}`}>
-                    {needs.rows.length === 0 ? (
-                      <p className="text-[13.5px] text-ink flex items-center gap-2"><StatusDot status="ok" />Nothing needs you right now.</p>
-                    ) : (
-                      <>
-                        {rows.map(row => (
-                          <QueueRow
-                            key={row.id} row={row}
-                            expanded={expanded.has(row.id)}
-                            onToggle={() => setExpanded(prev => { const n = new Set(prev); if (n.has(row.id)) n.delete(row.id); else n.add(row.id); return n; })}
-                            fireStatus={fireStatuses[row.id] ?? 'idle'} fireError={fireErrors[row.id]}
-                            onFire={() => fire(row)} canFire={canFire(row)}
-                          />
-                        ))}
-                        {needs.rows.length > SHOW_ROWS && (
-                          <button type="button" onClick={() => setShowAll(v => !v)} className="mt-2 text-[13px] text-ink-soft hover:text-ink">
-                            {showAll ? 'Show fewer' : `Show all ${needs.rows.length}`}
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </Section>
-                </div>
-              )}
-
-              {h && (
-                <Section title="Platform health" href="/admin/system" linkLabel="Open Health">
-                  <HealthLine
-                    ok={badJobs.length > 0 ? false : h.jobs.notYetRun === h.jobs.total ? null : true}
-                    href="/admin/system"
-                    text={badJobs.length > 0
-                      ? `${badJobs.length} scheduled job${badJobs.length === 1 ? '' : 's'} failing: ${badJobs.map(j => `${j.job} — ${j.note}`).join('; ')}`
-                      : h.jobs.notYetRun === h.jobs.total
-                        ? 'No scheduled job has reported a run yet'
-                        : `${h.jobs.total - h.jobs.notYetRun} scheduled job${h.jobs.total - h.jobs.notYetRun === 1 ? '' : 's'} ran on time${h.jobs.notYetRun ? `; ${h.jobs.notYetRun} haven't run yet` : ''}`}
-                  />
-                  <HealthLine
-                    ok={h.stripeWebhook.lastAt === null ? null : h.stripeWebhook.ok}
-                    href="/admin/system"
-                    text={h.stripeWebhook.lastAt === null
-                      ? 'No Stripe event recorded yet'
-                      : h.stripeWebhook.lastError
-                        ? `Stripe's last event failed: ${h.stripeWebhook.lastError}`
-                        : `Stripe events arriving — last ${fmtAgo(new Date(h.stripeWebhook.lastAt).getTime(), Date.now())}${h.stripeWebhook.ok ? '' : ', which is too long ago'}`}
-                  />
-                  <HealthLine
-                    ok={h.payments.blocked === 0}
-                    href="/admin/courses"
-                    text={h.payments.blocked === 0
-                      ? `All ${h.payments.live} live course${h.payments.live === 1 ? '' : 's'} can take payments`
-                      : `${h.payments.blocked} of ${h.payments.live} live courses can't take payments (Stripe not finished)`}
-                  />
+                <Section title={`Needs you now${needs.length ? ` · ${needs.length}` : ''}`} href="/admin/inquiries" linkLabel="Open Inquiries">
+                  {needs.length === 0 ? (
+                    <p className="text-[13.5px] text-ink flex items-center gap-2"><StatusDot status="ok" />No inquiries waiting on you.</p>
+                  ) : (
+                    <>
+                      {rows.map(row => <QueueRow key={row.id} {...rowProps(row)} />)}
+                      {needs.length > SHOW_ROWS && (
+                        <button type="button" onClick={() => setShowAll(v => !v)} className="mt-2 text-[13px] text-ink-soft hover:text-ink">
+                          {showAll ? 'Show fewer' : `Show all ${needs.length}`}
+                        </button>
+                      )}
+                    </>
+                  )}
                 </Section>
               )}
 
-              {m && (
-                <Section title="Money this month" href="/admin/revenue" linkLabel="Open Revenue">
-                  <MoneyLine label="Paid through courses" cur={m.current.volume} prior={m.prior.volume} />
-                  <MoneyLine label="GreenReserve fees" cur={m.current.fees} prior={m.prior.fees} />
-                  {m.net && <MoneyLine label="Net after Stripe and expenses" cur={m.net.current} prior={m.net.prior} />}
-                  <p className="mt-2 text-[12px] text-ink-muted">
-                    {m.current.rounds} round{m.current.rounds === 1 ? '' : 's'} paid since the 1st, against the same {m.daysIn} day{m.daysIn === 1 ? '' : 's'} of last month.
-                    {m.net?.stripeUnavailable && ' Stripe didn’t answer, so net is missing — try again.'}
-                  </p>
-                </Section>
-              )}
-
-              {o && (
-                <Section title="Onboarding" href="/admin/inquiries" linkLabel="Open Inquiries">
-                  {o.stages.map(st => (
-                    <div key={st.key} className="py-2 border-b border-line-soft last:border-0">
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-[13.5px] text-ink">{st.label}</span>
-                        <span className="text-[13.5px] font-semibold tabular-nums text-ink">{st.count}</span>
+              {courses && (
+                <Section title={`Courses · ${courses.filter(c => c.live).length} live`} href="/admin/courses" linkLabel="Open Courses">
+                  {courses.length === 0 ? (
+                    <p className="text-[13.5px] text-ink-soft">No courses yet. A course appears here once it is built from its inquiry.</p>
+                  ) : courses.map(c => (
+                    <div key={c.id} className="py-3 border-b border-line-soft last:border-0">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <Link href={`/admin/courses/${c.id}`} className="text-[14.5px] font-semibold text-ink hover:underline underline-offset-2 truncate">{c.name}</Link>
+                        <Link href={`/admin/courses/${c.id}`} className="shrink-0 text-[13px] text-ink-soft hover:text-ink">Open</Link>
                       </div>
-                      {st.stuck.map(s => (
-                        <Link key={s.id} href={`/admin/inquiries/${s.id}`} className="mt-1 flex items-center gap-2 text-[12.5px] text-ink-soft hover:text-ink">
-                          <StatusDot status="warn" />
-                          <span className="truncate">{s.name} — {s.days} days in this stage{s.waitingOn === 'them' ? ', waiting on the course' : s.waitingOn === 'us' ? ', waiting on us' : ''}</span>
-                        </Link>
-                      ))}
+                      <p className="mt-0.5 text-[13px] text-ink-soft flex items-center gap-2 flex-wrap">
+                        {c.staffQuiet && <StatusDot status="warn" />}
+                        <span className={c.staffQuiet ? 'text-warn' : ''}>{seenText(c)}</span>
+                        {c.live && <span className="text-ink-muted">·</span>}
+                        {c.live && <span className="tabular-nums">{fmtMoney(c.feesThisMonth)} in fees this month</span>}
+                      </p>
+                      {c.rows.length > 0 && (
+                        <div className="mt-1 pl-1">
+                          {c.rows.map(row => <QueueRow key={row.id} {...rowProps(row)} hideWho />)}
+                        </div>
+                      )}
                     </div>
                   ))}
-                  <p className="mt-2 text-[12px] text-ink-muted">Stuck means {o.stuckDays}+ days in one stage, not snoozed.</p>
+                  {courses.some(c => c.staffQuiet) && (
+                    <p className="mt-2 text-[12px] text-ink-muted">Amber: nobody from the course has opened the dashboard in 3 days while it had tee times.</p>
+                  )}
                 </Section>
               )}
             </div>

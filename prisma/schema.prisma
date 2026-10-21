@@ -172,6 +172,9 @@ model Course {
   nines                      Nine[]
   /// IC-1 / CS-1: when we next call the course; null = never scheduled.
   nextCheckInAt              DateTime?
+  /// AW-4b: the last time anyone from the course (owner or staff) used the
+  /// dashboard. Written at most every 15 minutes by resolveDashboardSession.
+  staffLastSeenAt            DateTime?
   calls                      Call[]
   /// AG-1: the name the signer binds ("Hollow Creek Golf Club LLC") — NOT
   /// GreenReserve's entity name, which stays a placeholder per legal README.
@@ -947,6 +950,21 @@ model Message {
 // live from Stripe balance transactions. Monthly/annual costs are prorated
 // into whatever period the revenue page is showing; endedAt lets a cost
 // stop counting without deleting its history.
+/// AW-4b (Cam 2026-10-21): the owner's goals on Admin → Goals. metric:
+/// 'courses_live' (counted now) | 'online_rounds' | 'fees' (counted from
+/// startsAt to dueAt; fees target in cents).
+model AdminGoal {
+  id        String   @id @default(cuid())
+  metric    String
+  target    Int
+  startsAt  DateTime @default(now())
+  dueAt     DateTime
+  createdBy String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([dueAt])
+}
+
 model Expense {
   id          String    @id @default(cuid())
   name        String

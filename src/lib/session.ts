@@ -36,6 +36,26 @@ export function requirePermission(session: Pick<ResolvedSession, 'isStaff' | 'pe
   return can(session, key) ? null : NextResponse.json({ error: deniedMessage(key), permission: key }, { status: 403 });
 }
 
+const SEEN_EVERY_MS = 15 * 60 * 1000;
+
+/**
+ * AW-4b: "Staff seen" on the admin Today page — the last time anyone from the
+ * course used the dashboard. One conditional write, a no-op inside 15 minutes.
+ * Awaited (a route's un-awaited write dies with the function) and never fatal:
+ * a failed write must not sign anyone out.
+ */
+async function touchStaffSeen(courseId: string) {
+  const now = new Date();
+  try {
+    await prisma.course.updateMany({
+      where: { id: courseId, OR: [{ staffLastSeenAt: null }, { staffLastSeenAt: { lt: new Date(now.getTime() - SEEN_EVERY_MS) } }] },
+      data: { staffLastSeenAt: now },
+    });
+  } catch (e) {
+    console.error('[session] staffLastSeenAt write failed', e);
+  }
+}
+
 /**
  * Resolves the courseId for both operator and staff sessions.
  * Use this in all dashboard API routes instead of getOperatorSession() directly.
@@ -58,6 +78,7 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
     // the admin session does.
     const row = await prisma.courseStaff.findUnique({ where: { id: session.staffId }, select: { active: true, courseId: true, permissions: true, permissionsSetAt: true } });
     if (!row || !row.active) return null;
+    await touchStaffSeen(row.courseId);
     return {
       courseId: row.courseId,
       email: session.email,
@@ -87,6 +108,7 @@ export async function resolveDashboardSession(): Promise<ResolvedSession | null>
     if (active && courses.some(c => c.id === active)) courseId = active;
   }
 
+  await touchStaffSeen(courseId);
   return {
     courseId,
     email: session.email,
