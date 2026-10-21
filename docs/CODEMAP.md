@@ -235,7 +235,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/preview/[courseId]` | public | token | GET | `src/app/api/preview/[courseId]/route.ts` | 64 |
 | `/api/preview/[courseId]/approve` | public | token | POST | `src/app/api/preview/[courseId]/approve/route.ts` | 70 |
 | `/api/preview/[courseId]/request-changes` | public | token | POST | `src/app/api/preview/[courseId]/request-changes/route.ts` | 38 |
-| `/api/preview/[courseId]/tee-times` | public | token | GET | `src/app/api/preview/[courseId]/tee-times/route.ts` | 67 |
+| `/api/preview/[courseId]/tee-times` | public | token | GET | `src/app/api/preview/[courseId]/tee-times/route.ts` | 37 |
 | `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 148 |
 | `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 73 |
 | `/api/shop-sale/[id]` | public | token | GET POST | `src/app/api/shop-sale/[id]/route.ts` | 33 |
@@ -295,7 +295,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/rate-limit.ts` | 40 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 34 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
-| `src/lib/money.ts` | 28 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
+| `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
 | `src/lib/agreement-required.ts` | 26 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/course-time.ts` | 26 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/stripe.ts` | 22 | 96 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
@@ -327,7 +327,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/cron-auth.ts` | 7 | 39 |  | `cronAuthFailure` |
 | `src/lib/preview-token.ts` | 7 | 25 |  | `signPreviewToken`, `verifyPreviewToken` |
 | `src/lib/seo.ts` | 7 | 21 | Link previews (Walk 1, 2026-10-19). | `OG_BASE`, `previewFor` |
-| `src/lib/booking-rules.ts` | 6 | 83 | W2-6 slice 3 (Cam 2026-10-20: | `groupSizeError`, `isWalkingPolicy`, `readRoundRules`, `RuleCourse`, `RuleRound`, `Rules`, `rulesFor`, `WALKING_POLICIES` +2 more |
+| `src/lib/booking-rules.ts` | 6 | 84 | W2-6 slice 3 (Cam 2026-10-20: | `groupSizeError`, `isWalkingPolicy`, `readRoundRules`, `RuleCourse`, `RuleRound`, `Rules`, `rulesFor`, `WALKING_POLICIES` +2 more |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
 | `src/lib/cancel-booking.ts` | 6 | 273 |  | `CancellationOptions`, `performCancellation` |
@@ -350,6 +350,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/expenses.ts` | 4 | 77 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +3 more |
 | `src/lib/lifecycle.ts` | 4 | 414 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
 | `src/lib/move-booking.ts` | 4 | 228 | ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07): | `moveBooking`, `MoveCode`, `MoveFail`, `MoveOk`, `MovePricing` |
+| `src/lib/public-tee-times.ts` | 4 | 92 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
 | `src/lib/terms.ts` | 4 | 8 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
 | `src/lib/tier-rates.ts` | 4 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
 | `src/lib/booking-mode.ts` | 3 | 20 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
@@ -364,7 +365,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/money-problems.ts` | 3 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
 | `src/lib/normalize-course.ts` | 3 | 89 |  | `normalizeDbCourse` |
 | `src/lib/public-course.ts` | 3 | 31 | PERF-1: | `loadPublicCourse` |
-| `src/lib/public-tee-times.ts` | 3 | 92 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
 | `src/lib/sales-tax.ts` | 3 | 176 | W2-7 part B (Cam 2026-10-20: | `isTaxCategory`, `quoteShopTax`, `recordPendingShopTax`, `recordShopSaleTax`, `reuseShopTaxQuote`, `setTaxOn`, `setUpTax`, `TAX_CATEGORIES` +6 more |
 | `src/lib/schedule-conflict.ts` | 3 | 143 | COURSE_LAYOUT_SPEC L2 — checks for schedules that share ground. | `checkSchedule`, `ConflictNine`, `ConflictProduct`, `ConflictSchedule`, `findScheduleConflict`, `TURN_MINUTES` |
 | `src/lib/schedule-wire.ts` | 3 | 92 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
@@ -441,7 +441,7 @@ Sorted the same way.
 |---|---|---|---|---|
 | `src/components/ui/Card.tsx` | 49 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/StatusDot.tsx` | 48 | 36 |  | `StatusDot` |
-| `src/components/ui/field.ts` | 29 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
+| `src/components/ui/field.ts` | 30 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/ui/Eyebrow.tsx` | 25 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/admin/AdminSidebar.tsx` | 15 | 267 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
@@ -480,7 +480,7 @@ Sorted the same way.
 | `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 115 | Money rework (Cam 2026-10-19: | `PaymentsPanel`, `paymentStatus` |
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 96 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/dashboard/MoveGroupModal.tsx` | 1 | 154 | ACT-1 (PLATFORM_ROADMAP_SPEC §2): | `default (MoveGroupModal)` |
-| `src/components/dashboard/RoundRulesCard.tsx` | 1 | 104 | W2-6 slice 3 (Cam 2026-10-20): | `CourseRules`, `default (RoundRulesCard)`, `RoundRules` |
+| `src/components/dashboard/RoundRulesCard.tsx` | 1 | 105 | W2-6 slice 3 (Cam 2026-10-20): | `CourseRules`, `default (RoundRulesCard)`, `RoundRules` |
 | `src/components/dashboard/SalesTaxCard.tsx` | 1 | 82 | W2-7 part B (Cam 2026-10-20): | `SalesTaxCard` |
 | `src/components/dashboard/settings/FinishSetup.tsx` | 1 | 54 | Settings rework (Cam 2026-10-19: | `FinishSetup`, `SetupItem` |
 | `src/components/dashboard/settings/WhoPaysWhat.tsx` | 1 | 97 | Settings → Prices & fees: | `WhoPaysWhat` |
@@ -603,11 +603,11 @@ without opening anything.
 
 ### Course
 
-120 fields · 15 writer(s) · 77 reader(s)
+120 fields · 15 writer(s) · 78 reader(s)
 
 - fields: `id`, `slug`, `name`, `type`, `city`, `state`, `zipCode`, `address`, `phone`, `website`, `bookingUrl`, `holes`, `par`, `yardage`, `slope`, `courseRating`, `description`, `amenities`, `walkingAllowed`, `walkingNote`, `cartRequired`, `dresscode`, `minPlayers`, `maxPlayers`, `cancellationHours`, `checkInWindowHours`, `lateCancellationFeeCents`, `lateFeeBasis`, `lateFeeTiming`, `noShowFeeCents`, `noShowFeeBasis`, `autoNoShowMinutes`, `timezone`, `rainCheckPolicy`, `publicAdvanceDays`, `memberAdvanceDays`, `hasMemberPricing`, `hasResidentPricing`, `residentCounty`, `residentState`, `residentProofRequired`, `hasCaddies`, `caddieType`, `caddieLooperRateCents`, `caddieForeRateCents`, `caddieNote`, `hasDrivingRange`, `drivingRangeType`, `rangeBallsFree`, `rangeBallsSmallPriceCents`, `rangeBallsMediumPriceCents`, `rangeBallsLargePriceCents`, `hasPuttingGreen`, `hasShortGameArea`, `hasProShop`, `proShopPhone`, `restaurantType`, `hasCartGirl`, `tournamentFrequency`, `hasLessons`, `hasClubRental`, `clubRentalRateCents`, `hasPushCartRental`, `pushCartRateCents`, `hasBagStorage`, `hasLockerRoom`, `hasGpsCarts`, `hasTournaments`, `stripeAccountId`, `stripeAccountActive`, `shopTaxOn`, `rating`, `reviewCount`, `imageGradient`, `brandColor`, `establishedYear`, `logoUrl`, `heroImageUrl`, `confirmationNote`, `featured`, `active`, `liveStatus`, `firstWentLiveAt`, `offlineAt`, `welcomeEmailSentAt`, `adminNotes`, `archivedAt`, `archivedBy`, `createdAt`, `updatedAt`, `operatorId`, `operator`, `conditions`, `conditionsUpdatedAt`, `giftCardUrl`, `heroPhotoUrl`, `teeTimes`, `bookings`, `schedules`, `blackouts`, `memberships`, `residents`, `groupId`, `group`, `membershipTiers`, `staff`, `teeSets`, `thread`, `photos`, `teeTimeAlerts`, `nines`, `nextCheckInAt`, `calls`, `legalName`, `agreements`, `courseProducts`, `monthlyReviews`, `golferMessages`, `shopItems`, `shopSales`
 - writers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-groups/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/conditions/route.ts`, `src/app/api/operator/courses/route.ts`, `src/app/api/operator/settings/route.ts`, `src/app/api/operator/stripe/callback/route.ts`, `src/app/api/operator/stripe/connect/route.ts`, `src/app/api/operator/upload/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/agreement-sign.ts`, `src/lib/lifecycle.ts`, `src/lib/sales-tax.ts`
-- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-documents/route.ts`, `src/app/api/admin/course-groups/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/revenue/route.ts` +65 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-documents/route.ts`, `src/app/api/admin/course-groups/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/revenue/route.ts` +66 more (see `docs/codemap.json`)
 
 ### CourseGroup
 

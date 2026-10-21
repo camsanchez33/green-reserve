@@ -35,7 +35,8 @@ export function rulesFor(course: RuleCourse, round?: RuleRound): Rules {
     walking,
     cartAlways: !own && !!course.cartRequired,
     minPlayers, maxPlayers,
-    publicAdvanceDays: round?.publicAdvanceDays ?? course.publicAdvanceDays ?? DEFAULT_PUBLIC_DAYS,
+    // A round only shortens the course's window — even if the course's is lowered later.
+    publicAdvanceDays: Math.min(round?.publicAdvanceDays ?? Infinity, course.publicAdvanceDays ?? DEFAULT_PUBLIC_DAYS),
   };
 }
 const clampPlayers = (n: number) => Math.min(8, Math.max(1, Math.round(Number(n) || 1)));

@@ -147,7 +147,8 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [loadingInfo, setLoadingInfo] = useState(!initial);
   const [golfer, setGolfer]   = useState<GolferProfile | null>(null);
   const [confirmedData, setConfirmedData] = useState<ConfirmedData | null>(null);
-  const [cartSelected, setCartSelected] = useState(!!(initial?.course?.cart_required || cartParam));
+  // A required cart is the tee time's call (cart_required folds in the course rule and the round's own) — not the course's alone.
+  const [cartSelected, setCartSelected] = useState(cartParam);
   const [rangeBallsSize, setRangeBallsSize] = useState<'' | 'small' | 'medium' | 'large'>('');
 
   useEffect(() => {
@@ -165,7 +166,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     ]).then(([courseData, teeTimes, golferData]) => {
       if (!courseData) { setLoadError('Course not found.'); setLoadingInfo(false); return; }
       setCourse(courseData);
-      if (courseData.cart_required || cartParam) setCartSelected(true);
+      if (cartParam) setCartSelected(true);
       const match = Array.isArray(teeTimes) ? teeTimes.find((t: LiveTeeTime) => String(t.id) === String(teeTimeId)) : null;
       if (!match) {
         setLoadError('This tee time is no longer available. Please pick another.');
@@ -320,7 +321,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     );
   }
   // The server adds a cart whenever the course, the round or this time's schedule requires one — show the same.
-  const cartForced = !!(course.cart_required || teeTime.cart_required);
+  const cartForced = !!teeTime.cart_required;
   const withCart = cartForced || cartSelected;
   const greenTotal  = residentFee != null ? residentFee + teeTime.green_fee * (players - 1) : teeTime.green_fee * players;
   const cartTotal    = withCart ? teeTime.cart_fee * players : 0;

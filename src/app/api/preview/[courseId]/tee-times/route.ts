@@ -1,39 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { centsToDollarsOr0 } from '@/lib/money';
+import { normalizeDbTeeTime } from '@/lib/public-tee-times';
 import { verifyPreviewToken } from '@/lib/preview-token';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeDbTeeTime(t: any) {
-  const spotsLeft = t.playersAvailable - t.playersBooked;
-  const status = spotsLeft <= 1 ? 'almost_full' : spotsLeft <= 2 ? 'limited' : 'available';
-  return {
-    id: t.id,
-    course_id: t.courseId,
-    date: t.date,
-    time: t.time,
-    holes: t.holes,
-    // L2: which bookable product this slot sells (null on a simple course).
-    product_id: t.productId ?? null,
-    product_label: t.product?.label ?? null,
-    // the round's rating/slope on the course's first tee set, when it was set
-    ...(() => {
-      const r = (t.product?.teeSetRatings ?? []).slice().sort((a: { teeSet: { sortOrder: number } }, b: { teeSet: { sortOrder: number } }) => a.teeSet.sortOrder - b.teeSet.sortOrder)[0];
-      return r && r.rating > 0 ? { product_rating: r.rating, product_slope: r.slope } : {};
-    })(),
-    players_available: spotsLeft,
-    // MP-3 B2c — THE `any` HOLE AGAIN. This mapper takes `t: any` (with an
-    // explicit eslint-disable), so the renamed columns produced NO compile
-    // error: t.greenFee simply read undefined and every tee time on the
-    // preview page would have rendered with no price. Found by grepping the old
-    // names after tsc went green — the same way B2b's normalize-course was.
-    // Cents at rest, dollars on the wire (the UI formats dollars).
-    green_fee: centsToDollarsOr0(t.greenFeeCents),
-    cart_fee: centsToDollarsOr0(t.cartFeeCents),
-    walking_allowed: t.walkingAllowed,
-    status,
-  };
-}
 
 export async function GET(
   req: NextRequest,
@@ -52,7 +20,7 @@ export async function GET(
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId, date, status: { not: 'blocked' } },
     orderBy: { time: 'asc' },
-    include: { product: { select: { label: true, teeSetRatings: { select: { rating: true, slope: true, teeSet: { select: { sortOrder: true } } } } } } },
+    include: { product: { select: { label: true, walkingPolicy: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true, teeSetRatings: { select: { rating: true, slope: true, teeSet: { select: { sortOrder: true } } } } } } },
   });
 
   const nowUtc = new Date();
@@ -62,5 +30,7 @@ export async function GET(
     ? teeTimes.filter(t => t.time > currentTimeStr)
     : teeTimes;
 
-  return NextResponse.json(visible.map(normalizeDbTeeTime));
+  // The same mapping as the live page (lib/public-tee-times), so the preview shows the booking rules golfers get.
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { walkingAllowed: true, cartRequired: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true } });
+  return NextResponse.json(visible.map(t => normalizeDbTeeTime(t, course ?? undefined)));
 }

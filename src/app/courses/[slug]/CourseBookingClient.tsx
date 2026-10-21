@@ -207,7 +207,8 @@ export default function CourseDetailPage({
   // GRP-1: a group page (/g/[slug]) links a time as ?tt={id}; it is picked once
   // the day's times load, if it still has room for the group.
   const pendingPick = useRef(searchParams.get('tt'));
-  const [withCart, setWithCart] = useState(!!initialCourse?.cart_required);
+  // A required cart is each tee time's call (cart_required) — a round can let golfers walk on a cart-required course.
+  const [withCart, setWithCart] = useState(false);
   const [todFilter, setTodFilter] = useState<TimeOfDay>(() => {
     const t = searchParams.get('tod');
     return ['all', 'morning', 'afternoon', 'twilight'].includes(t ?? '') ? (t as TimeOfDay) : 'all';
@@ -250,7 +251,6 @@ export default function CourseDetailPage({
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then((c: CourseWithBrand) => {
         setCourse(c);
-        if (c?.cart_required) setWithCart(true);
         if (previewMode && (c.page_approval_status === 'approved' || c.page_approval_status === 'changes_requested')) {
           setPreviewApprovalStatus(c.page_approval_status);
         }
@@ -1509,7 +1509,7 @@ export default function CourseDetailPage({
                                     </div>
 
                                     {/* Cart toggle */}
-                                    {t.cart_fee > 0 && !course.cart_required && !t.cart_required && (
+                                    {t.cart_fee > 0 && !t.cart_required && (
                                       <button
                                         onClick={() => setWithCart(!withCart)}
                                         className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-md border text-sm font-medium transition-colors"
@@ -1531,7 +1531,7 @@ export default function CourseDetailPage({
                                       </div>
                                       {(withCart || t.cart_required) && t.cart_fee > 0 && (
                                         <div className="flex justify-between text-sm text-ink-soft">
-                                          <span>Cart × {slotPlayers}{t.cart_required && !course.cart_required ? ' (required)' : ''}</span>
+                                          <span>Cart × {slotPlayers}{t.cart_required ? ' (required)' : ''}</span>
                                           <span>${(t.cart_fee * slotPlayers).toFixed(2)}</span>
                                         </div>
                                       )}

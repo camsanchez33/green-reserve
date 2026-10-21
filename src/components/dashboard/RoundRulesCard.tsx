@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { INPUT_COMPACT } from '@/components/ui/field';
 import { walkingWords } from '@/lib/walking';
 import { WALKING_POLICIES } from '@/lib/booking-rules';
 
@@ -18,7 +19,7 @@ const words = (rule: string) => walkingWords(rule).replace(/\.$/, '');
 const WALKING: Record<string, string> = Object.fromEntries(WALKING_POLICIES.map(k => [k, words(k)]));
 const courseWalking = (c: CourseRules) => c.cartRequired ? words('never') : words(c.walkingAllowed);
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2 text-[13.5px] text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10';
+const iCls = `w-full ${INPUT_COMPACT}`;
 const lCls = 'block text-[13px] font-semibold text-ink mb-1.5';
 const s = (n: number | null) => (n == null ? '' : String(n));
 

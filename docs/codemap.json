@@ -5973,7 +5973,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/tee-times/route.ts",
-      "lines": 67,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5990,9 +5990,9 @@
       "auth": "public",
       "guard": "token",
       "imports": [
-        "@/lib/money",
         "@/lib/preview-token",
         "@/lib/prisma",
+        "@/lib/public-tee-times",
         "next/server"
       ],
       "usedBy": []
@@ -6139,7 +6139,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 721,
+      "lines": 722,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8481,7 +8481,7 @@
     },
     {
       "path": "src/components/dashboard/RoundRulesCard.tsx",
-      "lines": 104,
+      "lines": 105,
       "purpose": "W2-6 slice 3 (Cam 2026-10-20):",
       "brain": [],
       "exports": [
@@ -8506,6 +8506,7 @@
       "imports": [
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
+        "@/components/ui/field",
         "@/lib/booking-rules",
         "@/lib/walking",
         "react"
@@ -9516,6 +9517,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
@@ -10936,7 +10938,7 @@
     },
     {
       "path": "src/lib/booking-rules.ts",
-      "lines": 83,
+      "lines": 84,
       "purpose": "W2-6 slice 3 (Cam 2026-10-20:",
       "brain": [],
       "exports": [
@@ -14324,7 +14326,6 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/tiers/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
-        "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/course-wire.ts",
@@ -15063,6 +15064,7 @@
       ],
       "usedBy": [
         "src/app/api/courses/[slug]/tee-times/route.ts",
+        "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/app/book/page.tsx",
         "src/app/g/[slug]/page.tsx"
       ]
@@ -18506,6 +18508,7 @@
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
+        "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/app/api/preview/send/route.ts",
         "src/app/courses/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
