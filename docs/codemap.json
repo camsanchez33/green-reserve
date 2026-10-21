@@ -1,11 +1,11 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 473,
+    "files": 472,
     "routes": 234,
-    "libs": 149,
+    "libs": 148,
     "models": 46,
-    "orphans": 11,
+    "orphans": 10,
     "ungatedRoutes": 3
   },
   "brain": {
@@ -9885,47 +9885,6 @@
       ]
     },
     {
-      "path": "src/lib/admin-ask.ts",
-      "lines": 158,
-      "purpose": "AW-3b (Cam 2026-10-21:",
-      "brain": [],
-      "exports": [
-        {
-          "name": "ADMIN_LINK_PREFIXES",
-          "kind": "const"
-        },
-        {
-          "name": "ASK_TOOL_NAMES",
-          "kind": "const"
-        },
-        {
-          "name": "ASK_TOOLS",
-          "kind": "const"
-        },
-        {
-          "name": "AskOutcome",
-          "kind": "type"
-        },
-        {
-          "name": "runAskTool",
-          "kind": "fn"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "./admin-day",
-        "./admin-roles",
-        "./money-problems",
-        "./prisma",
-        "@anthropic-ai/sdk"
-      ],
-      "usedBy": []
-    },
-    {
       "path": "src/lib/admin-day.ts",
       "lines": 111,
       "purpose": "Platform day boundaries.",
@@ -9971,8 +9930,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/stats/route.ts",
-        "src/lib/admin-ask.ts"
+        "src/app/api/admin/stats/route.ts"
       ]
     },
     {
@@ -10064,7 +10022,6 @@
         "src/app/admin/groups/page.tsx",
         "src/app/admin/page.tsx",
         "src/components/admin/AdminSidebar.tsx",
-        "src/lib/admin-ask.ts",
         "src/lib/admin-session.ts"
       ]
     },
@@ -14644,8 +14601,7 @@
       "usedBy": [
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
-        "src/app/api/admin/revenue/route.ts",
-        "src/lib/admin-ask.ts"
+        "src/app/api/admin/revenue/route.ts"
       ]
     },
     {
@@ -15450,7 +15406,6 @@
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
         "src/lib/access-fee.ts",
-        "src/lib/admin-ask.ts",
         "src/lib/admin-session.ts",
         "src/lib/agreement-gate.ts",
         "src/lib/agreement-publish.ts",
@@ -18352,7 +18307,6 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
-        "src/lib/admin-ask.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/cancel-booking.ts",
@@ -19195,7 +19149,6 @@
         "src/app/courses/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
         "src/app/sitemap.ts",
-        "src/lib/admin-ask.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
@@ -19474,7 +19427,6 @@
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/send/route.ts",
-        "src/lib/admin-ask.ts",
         "src/lib/approval-state.ts",
         "src/lib/course-timeline.ts",
         "src/lib/lifecycle.ts",
@@ -21559,7 +21511,6 @@
     "src/components/ui/PageHeader.tsx",
     "src/components/ui/SidebarShell.tsx",
     "src/components/ui/StatGroup.tsx",
-    "src/lib/admin-ask.ts",
     "src/lib/api-response.ts",
     "src/lib/data.ts",
     "src/lib/db.ts",
