@@ -4,7 +4,7 @@ import { resolveAdminSession, requireOwner } from '@/lib/admin-session';
 import { rateLimit } from '@/lib/rate-limit';
 import { markStepUp } from '@/lib/owner-session';
 import { hasPasskey, authenticationOptions, verifyPasskeySignIn } from '@/lib/owner-passkey';
-import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_USED_PREFIX, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
+import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_USED_PREFIX, TOTP_PENDING, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
 
 // AW-1c (Cam 2026-10-21: risky actions re-confirmed with the passkey): "Confirm
 // it's you" inside a signed-in owner session. GET says which factors this owner
@@ -47,10 +47,19 @@ export async function POST(req: NextRequest) {
       await prisma.adminUser.update({ where: { id: adminId }, data: { twoFactorRecoveryCodes: admin.twoFactorRecoveryCodes.filter((_, i) => i !== idx) } });
     } else {
       const step = totpMatchStep(raw, admin.twoFactorSecret);
-      const usedLive = admin.twoFactorCode?.startsWith(TOTP_USED_PREFIX) && admin.twoFactorCodeExpiry && admin.twoFactorCodeExpiry > new Date() ? admin.twoFactorCode.slice(TOTP_USED_PREFIX.length) : '';
+      // The last used step lives on either marker: 'totp-used:<step>', or carried
+      // on a sign-in in flight as 'totp-pending:<step>' (login's setTotpPending).
+      const live = !!admin.twoFactorCode && !!admin.twoFactorCodeExpiry && admin.twoFactorCodeExpiry > new Date();
+      const pending = live && admin.twoFactorCode!.startsWith(TOTP_PENDING);
+      const usedLive = !live ? ''
+        : admin.twoFactorCode!.startsWith(TOTP_USED_PREFIX) ? admin.twoFactorCode!.slice(TOTP_USED_PREFIX.length)
+        : pending ? admin.twoFactorCode!.slice(TOTP_PENDING.length + 1) : '';
       if (step === null || String(step) === usedLive) return NextResponse.json({ error: 'That code didn’t match — wait for the next one and try again.' }, { status: 400 });
-      // Mark the step used so the same code can't confirm twice.
-      await prisma.adminUser.update({ where: { id: adminId }, data: { twoFactorCode: TOTP_USED_PREFIX + step, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) } });
+      // Mark the step used so the same code can't confirm twice. A sign-in in
+      // flight on another device keeps its pending marker, carrying this step.
+      await prisma.adminUser.update({ where: { id: adminId }, data: pending
+        ? { twoFactorCode: `${TOTP_PENDING}:${step}` }
+        : { twoFactorCode: TOTP_USED_PREFIX + step, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) } });
     }
   } else {
     return NextResponse.json({ error: 'Use your passkey or enter a code.' }, { status: 400 });

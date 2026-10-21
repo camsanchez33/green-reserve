@@ -146,7 +146,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/call/[token]` | public | public | GET | `src/app/api/call/[token]/route.ts` | 80 |
 | `/api/cam/device` | public | token | GET POST | `src/app/api/cam/device/route.ts` | 24 |
 | `/api/cam/login` | public | entry | POST | `src/app/api/cam/login/route.ts` | 288 |
-| `/api/cam/step-up` | admin | file | GET POST | `src/app/api/cam/step-up/route.ts` | 61 |
+| `/api/cam/step-up` | admin | file | GET POST | `src/app/api/cam/step-up/route.ts` | 70 |
 | `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 113 |
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 44 |
 | `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 13 |

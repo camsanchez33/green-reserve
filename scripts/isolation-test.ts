@@ -526,6 +526,17 @@ async function main() {
     const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000) } });
     const r = await api('/api/admin/expenses', { cookie: `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}` });
     checkStatus('Live owner session → owner-only endpoint → 200', r.status, 200);
+    // AW-1c: a risky action needs a confirmation from the last five minutes.
+    const liveCookie = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+    const su = await api('/api/admin/owner-devices', { method: 'DELETE', cookie: liveCookie, body: {} });
+    checkStatus('Owner session never confirmed → remove a device → 403', su.status, 403);
+    check('…asking to confirm (code step_up)', (su.body as { code?: string })?.code === 'step_up');
+    await prisma.ownerSession.update({ where: { id: live.id }, data: { stepUpAt: new Date(Date.now() - 6 * 60_000) } });
+    const su2 = await api('/api/admin/owner-devices', { method: 'DELETE', cookie: liveCookie, body: {} });
+    check('Confirmed six minutes ago → still asked to confirm', su2.status === 403 && (su2.body as { code?: string })?.code === 'step_up');
+    await prisma.ownerSession.update({ where: { id: live.id }, data: { stepUpAt: new Date() } });
+    const su3 = await api('/api/admin/owner-devices', { method: 'DELETE', cookie: liveCookie, body: {} });
+    checkStatus('Just confirmed → the request goes through (no such device → 404)', su3.status, 404);
     await prisma.ownerSession.update({ where: { id: live.id }, data: { revokedAt: new Date() } });
     const r2 = await api('/api/admin/expenses', { cookie: `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}` });
     checkStatus('Revoked owner session (cookie still valid) → 401', r2.status, 401);
@@ -546,6 +557,22 @@ async function main() {
     checkStatus('Employee → owner devices → 403', r.status, 403);
     const s = await api('/api/cam/step-up', { cookie: viewerCookie });
     checkStatus('Employee → owner step-up → 401', s.status, 401);
+  }
+  {
+    // AW-1b/c: the passkey step signs in only right after the password step —
+    // never on a trusted device alone (the pending marker is the gate).
+    const { sha256 } = await import('../src/lib/owner-session');
+    const token = `isoltest-device-${TS}`;
+    await prisma.ownerDevice.create({ data: { adminId: data.adminOwner.id, tokenHash: sha256(token), approvedAt: new Date() } });
+    await prisma.adminUser.update({ where: { id: data.adminOwner.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0 } });
+    const fake = { id: 'x', rawId: 'x', type: 'public-key', response: { clientDataJSON: '', authenticatorData: '', signature: '' }, clientExtensionResults: {} };
+    const body = { step: 'passkey', email: data.adminOwner.email, response: fake };
+    const a = await api('/api/cam/login', { method: 'POST', cookie: `gr_owner_device=${token}`, body });
+    check('Passkey step, trusted device, no password step → 400 start over', a.status === 400 && /start over/.test(String((a.body as { error?: string })?.error)) && !/passkey/.test(String((a.body as { error?: string })?.error)));
+    await prisma.adminUser.update({ where: { id: data.adminOwner.id }, data: { twoFactorCode: 'totp-pending', twoFactorCodeExpiry: new Date(Date.now() + 600_000) } });
+    const b = await api('/api/cam/login', { method: 'POST', cookie: `gr_owner_device=${token}`, body });
+    check('…with the password step done, the same request reaches the passkey check', b.status === 400 && /passkey/.test(String((b.body as { error?: string })?.error)));
+    await prisma.adminUser.update({ where: { id: data.adminOwner.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0 } });
   }
 
   console.log('\n── Member cross-course session isolation ─────────────────────────');
