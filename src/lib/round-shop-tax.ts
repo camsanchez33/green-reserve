@@ -54,6 +54,8 @@ export async function ensureShopTax(bookingId: string, opts?: { ownLock?: Date }
   for (let attempt = 0; attempt < 3; attempt++) {
     const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: SELECT });
     if (!b) return { ok: true, shopTaxCents: 0 };
+    // A charge that finds another attempt's lock stops rather than charge on a figure it didn't check.
+    if (ownLock && b.shopLockedAt && b.shopLockedAt.getTime() !== ownLock.getTime()) return { ok: false, error: 'This round is being charged right now from another screen — wait a moment and refresh.' };
     if (frozen(b, ownLock)) return { ok: true, shopTaxCents: b.shopTaxCents };
     const lines = b.shopItems;
     const key = shopTaxKey(lines);
@@ -122,7 +124,7 @@ export async function recordRoundShopTax(bookingId: string): Promise<void> {
 export async function recordPendingRoundShopTax(limit = 50): Promise<number> {
   const pending = await prisma.booking.findMany({
     // An expired calculation can never be recorded — leave it out (it's logged when it fails) so it can't starve the rest.
-    where: { shopTaxCalculationId: { not: '' }, shopTaxTransactionId: '', OR: [{ paymentStatus: 'paid' }, { paidOffline: true }], NOT: { shopTaxExpiresAt: { lt: new Date() } } },
+    where: { shopTaxCalculationId: { not: '' }, shopTaxTransactionId: '', AND: [{ OR: [{ paymentStatus: 'paid' }, { paidOffline: true }] }, { OR: [{ shopTaxExpiresAt: null }, { shopTaxExpiresAt: { gte: new Date() } }] }] },
     select: { id: true }, take: limit, orderBy: { paidAt: 'asc' },
   });
   for (const b of pending) await recordRoundShopTax(b.id);

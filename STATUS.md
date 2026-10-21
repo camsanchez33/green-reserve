@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 01:57 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7677bc6` · working tree clean
+Generated 2026-10-21 02:55 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `557be09` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 56 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 60 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `557be09` | 2026-10-21 | W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched |
+| `063dc87` | 2026-10-21 | W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid |
+| `507507a` | 2026-10-20 | W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158) |
+| `85be7e1` | 2026-10-21 | Regenerate code map and status board after main merge |
 | `248dc36` | 2026-10-21 | W2-6 slice 3: window-cap test, spec status, status board |
 | `d8a856f` | 2026-10-21 | W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping |
 | `290c10f` | 2026-10-21 | W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking |
@@ -70,6 +74,16 @@ Generated 2026-10-21 01:57 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (4 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/round-shop-tax-db-test.ts`
+- `M src/lib/round-shop-tax.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -150,46 +164,50 @@ Nothing awaiting review.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-19 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-19 | 1d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 3d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-21 | 0d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-19 | 1d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 1d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 8d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 12d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 12d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 12d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 12d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 9d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 13d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 13d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 13d |
 
 ## Recent commits
 
+- `557be09` 2026-10-21 — W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched
+- `063dc87` 2026-10-21 — W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid
+- `507507a` 2026-10-20 — W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158)
+- `85be7e1` 2026-10-21 — Regenerate code map and status board after main merge
 - `248dc36` 2026-10-21 — W2-6 slice 3: window-cap test, spec status, status board
 - `d8a856f` 2026-10-21 — W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping
 - `290c10f` 2026-10-21 — W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking
@@ -198,10 +216,6 @@ Nothing awaiting review.
 - `bc1db3d` 2026-10-21 — W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board
 - `27ef910` 2026-10-21 — W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused
 - `e96323e` 2026-10-20 — W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)
-- `77187a1` 2026-10-20 — Status board
-- `42ff2e4` 2026-10-20 — W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day
-- `dea0574` 2026-10-20 — W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had
-- `39e62f4` 2026-10-20 — W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)
 
 ---
 

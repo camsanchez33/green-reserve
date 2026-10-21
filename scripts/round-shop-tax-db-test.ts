@@ -105,7 +105,8 @@ async function cleanup() {
   const atCharge = await ensureShopTax(b3.id, { ownLock: stamp });                         // …then quotes under its own lock
   const r3 = await prisma.booking.findUniqueOrThrow({ where: { id: b3.id } });
   ok('the charge never carries tax on an item that was taken off', atCharge.ok && atCharge.shopTaxCents === 0 && r3.shopTotalCents === 0 && roundChargeCents(r3) === 5150, JSON.stringify({ atCharge, shop: r3.shopTotalCents, tax: r3.shopTaxCents }));
-  ok('another charge’s lock still freezes the tax', (await ensureShopTax(b3.id, { ownLock: new Date(stamp.getTime() + 1) })).ok && (await prisma.booking.findUniqueOrThrow({ where: { id: b3.id } })).shopTaxCents === 0);
+  ok('a charge that finds another attempt’s lock stops, and the tax is untouched', !(await ensureShopTax(b3.id, { ownLock: new Date(stamp.getTime() + 1) })).ok && (await prisma.booking.findUniqueOrThrow({ where: { id: b3.id } })).shopTaxCents === 0);
+  ok('a screen without a charge sees the frozen figure', (await ensureShopTax(b3.id)).ok);
   const blocked = await addItemToBooking(c.id, b3.id, balls.id, 1, 'staff');
   ok('no item can be added once the charge has started', !blocked.ok);
 
