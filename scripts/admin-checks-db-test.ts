@@ -62,6 +62,16 @@ async function main() {
   check('a failed send', await runMorningDigest(new Date('2031-03-11T12:05:00Z'), null, async () => { throw new Error('down'); }) === 'failed');
   check('…is retried the next hour', await runMorningDigest(new Date('2031-03-11T13:05:00Z'), null, sendDigest) === 'sent' && digests.length === 2);
 
+  // A claim left by a run that died mid-send is taken over after 20 minutes.
+  await prisma.adminAlert.create({ data: { key: 'digest:2031-03-12', kind: 'digest', firstSeenAt: new Date('2031-03-12T12:05:00Z'), lastSeenAt: new Date('2031-03-12T12:05:00Z') } });
+  check('a fresh claim from another run is left alone', await runMorningDigest(new Date('2031-03-12T12:10:00Z'), null, sendDigest) === 'already' && digests.length === 2);
+  check('a stale claim (run killed) is taken over and sent', await runMorningDigest(new Date('2031-03-12T13:05:00Z'), null, sendDigest) === 'sent' && digests.length === 3);
+  // Sent, but marking it failed: never released, so never sent twice.
+  const sentOnce: unknown[] = [];
+  // The sender removes the claim row, so marking it sent then fails.
+  const r = await runMorningDigest(new Date('2031-03-13T12:05:00Z'), null, async d => { sentOnce.push(d); await prisma.adminAlert.deleteMany({ where: { key: 'digest:2031-03-13' } }); });
+  check('…a digest that went out counts as sent', r === 'sent' && sentOnce.length === 1);
+
   const facts = await digestFacts(new Date('2031-03-10T12:05:00Z'));
   check('the digest lists the open problem', facts.urgentOpen.some(u => u.title.includes(TAG)));
   check('a summary with an invented number is dropped', await digestSummary(facts, async () => 'Fees are up 437% on last month.') === '');

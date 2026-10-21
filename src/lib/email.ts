@@ -1998,7 +1998,7 @@ export async function sendAdminUrgentAlert(data: { findings: { title: string; de
     <a href="${adminUrl('/admin')}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">Open Today</a>
   `);
   const subject = n === 1 ? `[GreenReserve] ${data.findings[0].title}` : `[GreenReserve] ${n} things need you`;
-  await getResend().emails.send({ from: FROM, to: ADMIN_INBOX, subject: subject.slice(0, 150), html });
+  await getResend().emails.send({ from: FROM, to: ADMIN_INBOX, subject: subject.replace(/[\r\n]+/g, ' ').slice(0, 150), html });
 }
 
 export async function sendAdminDigest(data: {

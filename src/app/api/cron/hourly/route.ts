@@ -43,6 +43,9 @@ import { runAdminChecks } from '@/lib/admin-checks';
  * 8. ADMIN CHECKS   — AW-5: urgent problems emailed to the admin inbox once each
  *    (lib/admin-checks.ts), and the morning digest on the first run after 7am ET.
  */
+// AW-5: step 8 may make one model call (bounded at 60s) and two Stripe reads, once a day.
+export const maxDuration = 300;
+
 export const GET = cronRoute('hourly', async (req: NextRequest) => {
   // cronRoute authorises before logging; the check stays here too so every
   // cron route is visibly guarded on its own.

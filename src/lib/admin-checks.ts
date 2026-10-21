@@ -23,6 +23,7 @@ const CRONS = ((vercelConfig as { crons?: { path: string; schedule: string }[] }
 export const DIGEST_HOUR_ET = 7;
 const WEBHOOK_QUIET_DAYS = 7;
 const SUMMARY_MODEL = 'claude-opus-5-5';
+const DIGEST_CLAIM_STALE_MS = 20 * 60_000;
 
 export type Finding = { key: string; title: string; detail: string; href: string };
 
@@ -79,8 +80,9 @@ export async function runUrgentChecks(now = new Date(), send: typeof sendAdminUr
   for (const f of found) {
     const row = byKey.get(f.key);
     if (!row) {
-      await prisma.adminAlert.create({ data: { key: f.key, kind: 'urgent', title: f.title, detail: f.detail, href: f.href, firstSeenAt: now, lastSeenAt: now } });
-      fresh.push(f);
+      // upsert: an overlapping run that created it a moment ago must not throw here.
+      const r = await prisma.adminAlert.upsert({ where: { key: f.key }, create: { key: f.key, kind: 'urgent', title: f.title, detail: f.detail, href: f.href, firstSeenAt: now, lastSeenAt: now }, update: { lastSeenAt: now } });
+      if (!r.alertedAt) fresh.push(f);
     } else {
       const reopened = row.resolvedAt !== null;
       await prisma.adminAlert.update({ where: { id: row.id }, data: {
@@ -142,13 +144,14 @@ const SUMMARY_SYSTEM = `You write the first two sentences of GreenReserve's morn
 You get one JSON object of facts the software computed. Say what matters most this morning: anything urgent first, then how the month compares with last month. Use only numbers that appear in the facts, written the same way; never compute a new one (no percentages, no differences). Plain words, no preamble, no sign-off, no lists. Two sentences.`;
 
 async function claudeSummary(facts: DigestFacts): Promise<string> {
-  const client = new Anthropic();
+  // Bounded: this runs inside the hourly cron that charges holds.
+  const client = new Anthropic({ timeout: 60_000, maxRetries: 1 });
   const msg = await client.messages.create({
     model: SUMMARY_MODEL, max_tokens: 4000, system: SUMMARY_SYSTEM,
     output_config: { effort: 'low' },
     messages: [{ role: 'user', content: JSON.stringify(facts) }],
   } as Anthropic.MessageCreateParamsNonStreaming);
-  if (msg.stop_reason !== 'end_turn') return '';
+  if (msg.stop_reason !== 'end_turn') { console.error(JSON.stringify({ ev: 'admin.digest.summary_stop', stop: msg.stop_reason })); return ''; }
   return msg.content.flatMap(b => (b.type === 'text' ? [b.text] : [])).join('').trim();
 }
 
@@ -178,18 +181,30 @@ export async function runAdminChecks(now = new Date()) {
 export async function runMorningDigest(now = new Date(), write?: Summarizer | null, send: typeof sendAdminDigest = sendAdminDigest): Promise<'sent' | 'not_yet' | 'already' | 'failed'> {
   if (platformHour(now) < DIGEST_HOUR_ET) return 'not_yet';
   const key = `digest:${dayKey(now)}`;
-  try {
-    await prisma.adminAlert.create({ data: { key, kind: 'digest', title: `Morning digest ${dayKey(now)}`, firstSeenAt: now, lastSeenAt: now } });
-  } catch {
-    return 'already';
+  // A claim left by a run that was killed mid-send (no alertedAt, 20+ minutes
+  // old) is taken over, so a hung run can't cost the day's digest.
+  const takenOver = await prisma.adminAlert.updateMany({ where: { key, kind: 'digest', alertedAt: null, lastSeenAt: { lt: new Date(now.getTime() - DIGEST_CLAIM_STALE_MS) } }, data: { lastSeenAt: now } });
+  if (takenOver.count !== 1) {
+    try {
+      await prisma.adminAlert.create({ data: { key, kind: 'digest', title: `Morning digest ${dayKey(now)}`, firstSeenAt: now, lastSeenAt: now } });
+    } catch {
+      return 'already';
+    }
   }
+  let sent = false;
   try {
     const facts = await digestFacts(now);
     const summary = await digestSummary(facts, write);
     await send({ facts, summary });
+    sent = true;
     await prisma.adminAlert.update({ where: { key }, data: { alertedAt: now } });
     return 'sent';
   } catch (err) {
+    if (sent) {
+      // It went out; only the bookkeeping failed. Never release, or it would send twice.
+      console.error(JSON.stringify({ ev: 'admin.digest.mark_fail', error: err instanceof Error ? err.message : String(err) }));
+      return 'sent';
+    }
     // Release the claim so the next hourly run tries again.
     await prisma.adminAlert.delete({ where: { key } }).catch(() => {});
     console.error(JSON.stringify({ ev: 'admin.digest.fail', error: err instanceof Error ? err.message : String(err) }));
