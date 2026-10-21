@@ -5,7 +5,9 @@
 // and handlers come from useCourseDetail() via useCourse(). Every piece of state and every handler the page had.
 
 import { stepUpFetch } from '@/lib/step-up-client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { openingTab, setupChecks, tabProblems } from '@/lib/admin-course-tabs';
+import { checkInSignal } from '@/lib/course-checkin';
 import { useParams, useRouter } from 'next/navigation';
 import { useResource } from '@/lib/use-resource';
 import { formatMoney as fmtMoney } from '@/lib/format';
@@ -25,7 +27,14 @@ export function useCourseDetail() {
 
   const [loadError, setLoadError] = useState('');
 
-  const [tab, setTab] = useState<TabName>('overview');
+  // AW-7: set once the course loads — the tab with a problem, else Bookings.
+  const [tab, setTab] = useState<TabName>('bookings');
+  const tabChosen = useRef(false);
+  // AW-7: Setup's "Tee sheet & schedule" section (was the Operate tab).
+  const [operateOpen, setOperateOpen] = useState(false);
+  // AW-7: retrying a failed charge from the Money tab (same route as Revenue).
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [retryMsg, setRetryMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
 
   // CS-3: ?checkin=1 (from the courses sheet's Schedule link) opens the card.
   const [checkinFocus, setCheckinFocus] = useState<{ n: number } | null>(null);
@@ -318,6 +327,16 @@ export function useCourseDetail() {
     if (new URLSearchParams(window.location.search).get('checkin') === '1') setCheckinFocus({ n: Date.now() });
   }, [detail?.course.id]);
 
+  // AW-7: open on the tab that has a problem (or ?tab=, or ?checkin=1 → the
+  // check-in card on Contact & notes) — once, not on every refresh.
+  useEffect(() => {
+    if (!detail || tabChosen.current) return;
+    tabChosen.current = true;
+    const q = new URLSearchParams(window.location.search);
+    const t = q.get('checkin') === '1' ? 'contact' : openingTab(courseProblemsInput(detail), q.get('tab'));
+    selectTab(t);
+  }, [detail?.course.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // eslint-disable-line react-hooks/exhaustive-deps
 
   // CS-3 Setup card: the one action that completes the "verified" step —
@@ -543,8 +562,37 @@ export function useCourseDetail() {
   // MP-5d: Operate loads all three of its panels at once. Transactions'
   // "View" jumps here with a date, so the date is a parameter.
   function openOperate(date = tsDate) {
-    setTab('operate'); setTsDate(date); setOpNote(null);
-    loadTeeSheet(date); loadSchedules(); loadMembers();
+    setTab('setup'); setOperateOpen(true); setTsDate(date); setOpNote(null);
+    loadDocuments(); loadTeeSheet(date); loadSchedules(); loadMembers();
+    setTimeout(() => document.getElementById('tee-sheet-schedule')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+  // AW-7: a tab loads what it shows when it opens.
+  function selectTab(t: TabName) {
+    setTab(t);
+    if (t === 'money') loadTransactions(1, '', '', '');
+    if (t === 'setup') loadDocuments();
+    if (t === 'contact') { loadCourseThread(); loadDocuments(); }
+  }
+
+  // AW-7: the same charge-only retry Revenue offers (manager+, owner step-up).
+  async function retryCharge(p: { bookingId: string; golferName: string; amount: number; teeDate: string; teeTime: string }) {
+    if (!confirm(`Charge ${fmtMoney(p.amount)} to ${p.golferName}'s saved card for their ${p.teeDate} ${p.teeTime} round?\n\nThis collects payment only. They will NOT be checked in and will not be emailed a receipt — check them in as normal when they arrive.`)) return;
+    setRetryingId(p.bookingId); setRetryMsg(null);
+    try {
+      const res = await stepUpFetch(`/api/admin/retry-charge/${p.bookingId}`, { method: 'POST', headers: H(), body: JSON.stringify({ checkIn: false }) });
+      if (res.ok) {
+        setRetryMsg({ id: p.bookingId, ok: true, text: `Charged ${fmtMoney(p.amount)} to ${p.golferName}. They are NOT checked in — check them in when they arrive.` });
+        loadDetail();
+      } else {
+        const e = await res.json().catch(() => ({}));
+        setRetryMsg({ id: p.bookingId, ok: false, text: e.error || 'Retry failed.' });
+      }
+    } catch {
+      setRetryMsg({ id: p.bookingId, ok: false, text: 'Network error — the card may or may not have been charged. Check Stripe before retrying.' });
+    } finally {
+      setRetryingId(null);
+    }
   }
 
   // '' in a member-rate field means "no member rate" — the wire wants null.
@@ -800,6 +848,12 @@ export function useCourseDetail() {
     setLoadError,
     tab,
     setTab,
+    selectTab,
+    operateOpen,
+    setOperateOpen,
+    retryingId,
+    retryMsg,
+    retryCharge,
     checkinFocus,
     setCheckinFocus,
     verifyBusy,
@@ -985,3 +1039,31 @@ export function useCourseDetail() {
 }
 
 export type CourseDetailState = ReturnType<typeof useCourseDetail>;
+
+/** AW-7: what the tab rules read from a loaded course. */
+export function courseSetupChecks(d: CourseDetail) {
+  return setupChecks({
+    stripeAccountActive: d.course.stripeAccountActive,
+    agreements: d.agreements ?? { signed: 0, total: 0, missing: [] },
+    agreementAccepted: d.agreementAccepted,
+    hasSchedule: d.openItems.hasSchedule,
+    owner: d.course.operator,
+    ownerLastLoginAt: d.relationship?.operatorLastLoginAt ?? null,
+    staffCount: d.staff.filter(x => x.active).length,
+  });
+}
+
+export function courseProblemsInput(d: CourseDetail) {
+  return {
+    archived: !!d.course.archivedAt,
+    failedCharges: d.money.failedCharges.length,
+    setup: courseSetupChecks(d),
+    unreadMessages: d.openItems.unreadMessages,
+    // Today's rule (lib/course-action-queue): a live course's check-in call, due or overdue.
+    checkInOverdue: d.course.active && ['due', 'overdue'].includes(checkInSignal(d.course, (d.calls ?? []).filter(x => x.kind !== 'discovery')).state),
+  };
+}
+
+export function courseTabProblems(d: CourseDetail) {
+  return tabProblems(courseProblemsInput(d));
+}

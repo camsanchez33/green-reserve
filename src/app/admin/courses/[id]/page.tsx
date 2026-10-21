@@ -1,23 +1,24 @@
 'use client';
 
-import { ArrowLeft, X, MoreVertical } from 'lucide-react';
+import { ArrowLeft, X, MoreVertical, RefreshCw } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Card } from '@/components/ui/Card';
-import { TABS } from './_parts/shared';
-import { useCourseDetail } from './_parts/useCourseDetail';
+import { COURSE_TABS } from '@/lib/admin-course-tabs';
+import { useCourseDetail, courseSetupChecks, courseTabProblems } from './_parts/useCourseDetail';
 import { CourseDetailContext } from './_parts/context';
 import { CourseDialogs } from './_parts/CourseDialogs';
-import { OverviewTab } from './_parts/OverviewTab';
+import { BookingsTab } from './_parts/BookingsTab';
 import { MoneyTab } from './_parts/MoneyTab';
-import { RecordsTab } from './_parts/RecordsTab';
-import { OperateTab } from './_parts/OperateTab';
-import { MessagesTab } from './_parts/MessagesTab';
 import { SetupTab } from './_parts/SetupTab';
+import { ContactTab } from './_parts/ContactTab';
+
+// AW-7 (Cam 2026-10-21): four tabs — Bookings · Money · Setup · Contact &
+// notes — opening on the one with a problem (lib/admin-course-tabs.ts).
 
 export default function CourseDetailPage() {
   const s = useCourseDetail();
-  const { router, adminReady, detail, loading, loadError, tab, setTab, sendingPreview, previewMsg, setPreviewMsg, setShowPreviewConfirm, requestingReReview, dangerOpen, setDangerOpen, archiveBusy, liveToggleBusy, setClosureError, liveBlockReason, setLiveBlockReason, liveBlockMissing, setLiveBlockMissing, reminderNudgeBusy, reminderNudgeSent, setReminderNudgeSent, reminderNudgeError, setReminderNudgeError, loadTransactions, loadDocuments, loadCourseThread, loadDetail, toggleActive, sendGoLiveReminder, archiveCourse, restoreCourse, openOperate, requestReReview, c } = s;
+  const { router, adminReady, detail, loading, loadError, tab, setTab, sendingPreview, previewMsg, setPreviewMsg, setShowPreviewConfirm, requestingReReview, dangerOpen, setDangerOpen, archiveBusy, liveToggleBusy, setClosureError, liveBlockReason, setLiveBlockReason, liveBlockMissing, setLiveBlockMissing, reminderNudgeBusy, reminderNudgeSent, setReminderNudgeSent, reminderNudgeError, setReminderNudgeError, loadDetail, toggleActive, sendGoLiveReminder, archiveCourse, restoreCourse, selectTab, requestReReview, c } = s;
 
   if (!adminReady || loading) {
     return (
@@ -81,6 +82,7 @@ export default function CourseDetailPage() {
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <span title={detail.health.reason}><StatusDot status={detail.health.dot} label={detail.health.label} /></span>
+                {detail.health.reason && <span className="text-xs text-ink-soft">{detail.health.reason}</span>}
                 <span className="text-xs text-ink-muted">{c.city}, {c.state}</span>
                 <span className="text-xs text-ink-muted capitalize">{c.type}</span>
                 {detail?.approval.approvedAt && (
@@ -141,9 +143,10 @@ export default function CourseDetailPage() {
               </a>
               <button
                 onClick={loadDetail}
-                className="hidden min-[1200px]:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-line text-ink-soft hover:text-ink hover:bg-paper transition-colors"
+                aria-label="Refresh"
+                className="hidden min-[1200px]:flex w-9 h-9 items-center justify-center rounded-md border border-line text-ink-muted hover:text-ink hover:bg-paper transition-colors"
               >
-                Refresh
+                <RefreshCw className="w-3.5 h-3.5" />
               </button>
               <div className="relative">
                 <button
@@ -254,28 +257,26 @@ export default function CourseDetailPage() {
             </div>
           )}
 
-          <div className="flex items-center gap-4 mt-4 overflow-x-auto">
-            <div className="flex gap-0.5 bg-paper border border-line rounded-lg p-1 shrink-0">
-              {TABS.map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => {
-                    if (t.key === 'operate') { openOperate(); return; }
-                    setTab(t.key);
-                    if (t.key === 'money') loadTransactions(1, '', '', '');
-                    if (t.key === 'records') loadDocuments();
-                    if (t.key === 'messages') loadCourseThread();
-                  }}
-                  className={'px-4 py-1.5 rounded-md text-[12px] font-medium transition-colors whitespace-nowrap ' + (tab === t.key ? 'bg-white text-ink border border-line shadow-sm' : 'text-ink-muted hover:text-ink')}
-                >
-                  {t.label}
-                  {t.key === 'messages' && detail.openItems.unreadMessages > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-bad text-white text-[10px] font-medium">{detail.openItems.unreadMessages}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
+          {(() => {
+            const problems = courseTabProblems(detail);
+            const setupDone = courseSetupChecks(detail).every(x => x.done);
+            return (
+              <div role="tablist" className="flex items-center gap-6 mt-5 -mb-5 overflow-x-auto">
+                {COURSE_TABS.map(t => (
+                  <button
+                    key={t.key} role="tab" aria-selected={tab === t.key}
+                    onClick={() => selectTab(t.key)}
+                    className={'flex items-center gap-1.5 pb-3 text-[14px] whitespace-nowrap border-b-2 transition-colors ' + (tab === t.key ? 'border-fairway text-ink font-semibold' : 'border-transparent text-ink-muted hover:text-ink')}
+                  >
+                    {problems[t.key] && <StatusDot status={t.key === 'money' ? 'bad' : 'warn'} />}
+                    {t.label}
+                    {t.key === 'setup' && setupDone && <span className="text-ok" aria-label="all done">✓</span>}
+                    {t.key === 'contact' && detail.openItems.unreadMessages > 0 && <span className="text-[12px] text-bad">{detail.openItems.unreadMessages}</span>}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Archived notice */}
@@ -300,27 +301,10 @@ export default function CourseDetailPage() {
         {/* Tab content */}
         <div className="px-8 py-7 flex-1">
 
-          {/* OVERVIEW */}
-          {tab === 'overview' && <OverviewTab/>}
-
-          {/* MONEY (was Transactions) */}
+          {tab === 'bookings' && <BookingsTab/>}
           {tab === 'money' && <MoneyTab/>}
-
-          {/* RECORDS (was Documents) — A-05 item 5 */}
-          {tab === 'records' && <RecordsTab/>}
-
-          {/* OPERATE — MP-5d: Tee Sheet + Schedule merged. The sheet is the
-              output of the schedules, so they belong on one screen, and every
-              mutation here goes through lib/schedule-service — the same code
-              the operator's own dashboard now calls. Members is a read-only
-              card at the bottom: the admin never had a write on it. */}
-          {tab === 'operate' && <OperateTab/>}
-
-          {/* MESSAGES */}
-          {tab === 'messages' && <MessagesTab/>}
-
-          {/* SETUP */}
           {tab === 'setup' && <SetupTab/>}
+          {tab === 'contact' && <ContactTab/>}
 
         </div>
       </div>

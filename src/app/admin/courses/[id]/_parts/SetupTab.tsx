@@ -3,49 +3,29 @@
 // MP-12 (ADMIN_V4 V4-9): split out of admin/courses/[id]/page.tsx, which had
 // grown to 2,700 lines and 52 useState in one component. Moved verbatim; state
 // and handlers come from useCourseDetail() via useCourse().
+// AW-7: Setup now leads with the four checks and holds documents and the tee
+// sheet/schedule too (SetupSections.tsx).
 
 import { Pause } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatDate as fmtDate } from '@/lib/format';
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
-import { iCls, onboardingSteps } from './shared';
+import { iCls } from './shared';
+import { SetupChecks, GoingLive, BuildFindings, Documents, TeeSheetAndSchedule } from './SetupSections';
 import { useCourse } from './context';
 
 export function SetupTab() {
   const { detail, setupForm, setSetupForm, setupSaving, setupMsg, remindersBusy, remindersError, toggleRemindersPaused, saveSetup, c } = useCourse();
   return (() => {
-            const steps = onboardingSteps(detail);
             const events = detail.timeline ?? [];
             const reminderEvents = events.filter(e => e.type === 'reminder_sent');
             return (
             <div className="space-y-5 max-w-3xl">
-              <div className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-xs text-warn">
-                You&apos;re editing live settings directly. The operator can still adjust their own dashboard, and every change here is logged to their timeline.
-              </div>
-
-              {/* 4a — onboarding checklist as named steps */}
-              <Card className="p-6">
-                <Eyebrow className="mb-4">Onboarding checklist</Eyebrow>
-                <div className="space-y-3">
-                  {steps.map(s => {
-                    // AGREEMENT = GO-LIVE GATE item 3 — a live course missing
-                    // acceptance is a legacy gap, not normal in-progress work.
-                    const legacyGap = s.key === 'agreement_accepted' && !s.done && c.active;
-                    return (
-                      <div key={s.key} className="flex items-center gap-3">
-                        {s.done
-                          ? <StatusDot status="ok" />
-                          : <span className={'w-4 h-4 rounded-full border shrink-0 ' + (legacyGap ? 'border-warn bg-warn/10' : 'border-line-strong')} />}
-                        <span className={'text-sm flex-1 ' + (s.done ? 'text-ink' : legacyGap ? 'text-warn font-medium' : 'text-ink-muted')}>
-                          {s.label}{legacyGap ? ' — legacy' : ''}
-                        </span>
-                        {s.at && <span className="text-xs text-ink-faint">{fmtDate(s.at)}</span>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </Card>
+              {/* AW-7: the four checks first, then what's left to go live. */}
+              <SetupChecks />
+              <GoingLive />
+              <BuildFindings />
 
               {/* 4b — auto-chase reminders */}
               <Card className="p-6">
@@ -76,6 +56,10 @@ export function SetupTab() {
                   </ul>
                 )}
               </Card>
+
+              <div className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-xs text-warn">
+                You&apos;re editing live settings directly. The operator can still adjust their own dashboard, and every change here is logged to their timeline.
+              </div>
 
               {setupMsg && (
                 <div className={'text-sm font-medium px-4 py-2.5 rounded-md border ' + (setupMsg === 'error' ? 'bg-bad/5 text-bad border-bad/20' : 'bg-ok/5 text-ok border-ok/20')}>
@@ -282,6 +266,9 @@ export function SetupTab() {
               >
                 {setupSaving ? 'Saving...' : 'Save settings'}
               </button>
+
+              <Documents />
+              <TeeSheetAndSchedule />
             </div>
             );
           })();

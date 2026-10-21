@@ -13,6 +13,7 @@ import { getCourseTimeline, isRemindersPaused, latestAgreementAcceptance } from 
 import { hasAcceptedAgreement, agreementStatus } from '@/lib/agreement-gate';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { buildRelationshipFeed } from '@/lib/course-feed';
+import { courseWeeks, courseMoney } from '@/lib/admin-course-page';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -74,6 +75,12 @@ export async function GET(req: NextRequest) {
       select: { createdAt: true, senderType: true, senderName: true, body: true, isBroadcast: true },
     }),
   ]);
+
+  // AW-7: the Bookings and Money tabs.
+  const [weeks, money] = await Promise.all([courseWeeks(courseId, course.timezone), courseMoney(courseId)]);
+  // "Staff seen", as on Today: staff use of the dashboard, else the owner's last sign-in.
+  const ownerLogin = course.operator?.lastLoginAt ?? null;
+  const staffSeenAt = course.staffLastSeenAt && (!ownerLogin || course.staffLastSeenAt > ownerLogin) ? course.staffLastSeenAt : ownerLogin;
 
   const bookings30d = revenue._count.id;
   const health = computeCourseHealth({
@@ -187,6 +194,9 @@ export async function GET(req: NextRequest) {
     // and the Overview health block the same way Stripe/approval already do.
     agreementAccepted: timeline ? !!latestAgreementAcceptance(timeline) : false,
     agreements: { signed: agreements.signed, total: agreements.total, missing: agreements.missing },
+    weeks,
+    money,
+    staffSeenAt: staffSeenAt?.toISOString() ?? null,
   });
 }
 
