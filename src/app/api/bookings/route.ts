@@ -14,6 +14,7 @@ import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellat
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { windowFor, withinWindow } from '@/lib/booking-window';
+import { rulesFor, groupSizeError, walkingAllowedAt } from '@/lib/booking-rules';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     where: { id: teeTimeId },
     include: {
       course: { include: { operator: { select: { email: true } } } },
-      product: { select: { label: true } },
+      product: { select: { label: true, walkingPolicy: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true } },
     },
   });
   if (!teeTimeFull) return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
@@ -76,6 +77,11 @@ export async function POST(req: NextRequest) {
   if (isPastIn(teeTimeFull.course.timezone, teeTimeFull.date, teeTimeFull.time)) {
     return NextResponse.json({ error: 'This tee time has already passed.' }, { status: 409 });
   }
+
+  // W2-6 slice 3: the course's booking rules, or the round's own (lib/booking-rules).
+  const rules = rulesFor(teeTimeFull.course, teeTimeFull.product);
+  const sizeError = groupSizeError(rules, players);
+  if (sizeError) return NextResponse.json({ error: sizeError, code: 'group_size', minPlayers: rules.minPlayers, maxPlayers: rules.maxPlayers }, { status: 400 });
 
   // Membership tier lookup — check golfer session first, then member session
   let resolvedGreenFeeOverride: number | null = null;
@@ -119,7 +125,9 @@ export async function POST(req: NextRequest) {
 
   // BOOKING WINDOWS: enforced at creation, not only in the picker — a crafted
   // request for a date past the viewer's window is refused like a past one.
-  const bookingWindow = windowFor(teeTimeFull.course, viewerMembership);
+  // A round may set its own public window; a member never sees less than the public.
+  const baseWindow = windowFor({ ...teeTimeFull.course, publicAdvanceDays: rules.publicAdvanceDays }, viewerMembership);
+  const bookingWindow = baseWindow.scope === 'member' ? { ...baseWindow, days: Math.max(baseWindow.days, rules.publicAdvanceDays) } : baseWindow;
   if (!withinWindow(teeTimeFull.date, bookingWindow.days)) {
     return NextResponse.json({
       error: bookingWindow.scope === 'member'
@@ -135,7 +143,8 @@ export async function POST(req: NextRequest) {
   // there is no float in the money path at all.
   const greenFeePerPlayerCents = resolvedGreenFeeOverride ?? teeTimeFull.greenFeeCents;
   const cartFeePerPlayerCents  = resolvedCartFeeOverride  ?? teeTimeFull.cartFeeCents;
-  const wantsCart = teeTimeFull.course.cartRequired ? true : !!cartSelected;
+  // A cart is required when the course or round says so, or this time's schedule doesn't allow walking.
+  const wantsCart = walkingAllowedAt(rules, teeTimeFull) ? !!cartSelected : true;
 
   // RES-1: a signed-in golfer on the course's resident list pays the resident
   // rate for one player — themselves. A member rate is never combined with it.

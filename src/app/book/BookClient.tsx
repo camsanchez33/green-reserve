@@ -26,6 +26,8 @@ function getStripePromise() {
 export type LiveTeeTime = {
   id: string; date: string; time: string; holes: number; product_label?: string | null;
   players_available: number; green_fee: number; cart_fee: number; status: string;
+  // W2-6 slice 3: this time's booking rules (the course's, or its round's own).
+  cart_required?: boolean; min_players?: number; max_players?: number;
 };
 export type CourseInfo = {
   name: string; city: string; state: string; address: string;
@@ -302,8 +304,26 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   }
 
   const players = Math.min(requestedPlayers, Math.max(teeTime.players_available, 1));
+  const minPlayers = teeTime.min_players ?? 1;
+  if (players < minPlayers) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-lg border border-line p-8 text-center">
+          <h1 className="font-semibold text-ink mb-2">This tee time is for groups of {minPlayers} or more</h1>
+          <p className="text-ink-soft text-sm mb-6">You picked {players} player{players === 1 ? '' : 's'}. Pick another time, or add players and choose this one again.</p>
+          <button onClick={() => router.push(courseSlug ? `/courses/${courseSlug}` : '/')}
+            className="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-pine hover:bg-pine-hover transition-colors">
+            Pick another time
+          </button>
+        </div>
+      </div>
+    );
+  }
+  // The server adds a cart whenever the course, the round or this time's schedule requires one — show the same.
+  const cartForced = !!(course.cart_required || teeTime.cart_required);
+  const withCart = cartForced || cartSelected;
   const greenTotal  = residentFee != null ? residentFee + teeTime.green_fee * (players - 1) : teeTime.green_fee * players;
-  const cartTotal    = cartSelected ? teeTime.cart_fee * players : 0;
+  const cartTotal    = withCart ? teeTime.cart_fee * players : 0;
   const rangeBallsPrice = rangeBallsSize === 'small' ? course.range_balls_small_price
     : rangeBallsSize === 'medium' ? course.range_balls_medium_price
     : rangeBallsSize === 'large' ? course.range_balls_large_price
@@ -346,7 +366,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                     <p className="font-medium text-ink">Cart</p>
                     <p className="text-xs text-ink">${teeTime.cart_fee.toFixed(2)} per player</p>
                   </div>
-                  {course.cart_required ? (
+                  {cartForced ? (
                     <span className="text-xs font-medium text-ink-muted bg-paper px-2.5 py-1 rounded-md border border-line">Required</span>
                   ) : (
                     <button
@@ -420,7 +440,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 teeTimeId={teeTime.id}
                 players={players}
                 golfer={golfer}
-                cartSelected={cartSelected}
+                cartSelected={withCart}
                 rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
                 accent={accent}
                 needsCard={terms.cardNeeded}

@@ -45,6 +45,10 @@ export type TeeTime = {
   green_fee: number;
   cart_fee: number;
   walking_allowed: boolean;
+  /** W2-6 slice 3: this time's booking rules — the course's, or its round's own (lib/booking-rules). */
+  cart_required?: boolean;
+  min_players?: number;
+  max_players?: number;
   status: 'available' | 'limited' | 'almost_full';
 };
 
