@@ -18,6 +18,7 @@ import { sendAgreementBumpNotices } from '@/lib/agreement-required';
 import { sendCallReminders } from '@/lib/call-invite';
 import { recordPendingShopTax } from '@/lib/sales-tax';
 import { recordPendingRoundShopTax } from '@/lib/round-shop-tax';
+import { runAdminChecks } from '@/lib/admin-checks';
 
 /**
  * Runs every hour (Vercel Pro). Handles all time-sensitive booking actions:
@@ -39,6 +40,8 @@ import { recordPendingRoundShopTax } from '@/lib/round-shop-tax';
  *
  * 6. CALL REMINDERS — SC-3: "Talking tomorrow" to the course 24 h before each
  *    scheduled discovery call, once per call (RateLimit key as the belt).
+ * 8. ADMIN CHECKS   — AW-5: urgent problems emailed to the admin inbox once each
+ *    (lib/admin-checks.ts), and the morning digest on the first run after 7am ET.
  */
 export const GET = cronRoute('hourly', async (req: NextRequest) => {
   // cronRoute authorises before logging; the check stays here too so every
@@ -240,5 +243,8 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   let roundShopTaxRecorded = 0;
   try { roundShopTaxRecorded = await recordPendingRoundShopTax(); } catch (err) { console.error('Round shop-item sales tax recording failed:', err); }
 
-  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, roundShopTaxRecorded });
+  // ─── 8: AW-5 — the admin's urgent alerts and the morning digest (last: it only reads, and never blocks the steps above) ──
+  const adminChecks = await runAdminChecks(now);
+
+  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, roundShopTaxRecorded, adminChecks });
 });

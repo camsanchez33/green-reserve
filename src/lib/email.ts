@@ -1978,3 +1978,66 @@ export async function sendOwnerPasskeyChanged(data: { email: string; name: strin
   `);
   await getResend().emails.send({ from: FROM, to: data.email, subject: `GreenReserve passkey ${data.change}`, html });
 }
+
+// AW-5: the admin's own alerts, to the admin inbox. Urgent: the problems that
+// just started (lib/admin-checks.ts emails each once). Digest: every morning.
+const ADMIN_INBOX = 'thegreenreserve@outlook.com';
+const adminUrl = (href: string) => `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}${href}`;
+
+export async function sendAdminUrgentAlert(data: { findings: { title: string; detail: string; href: string }[] }) {
+  const n = data.findings.length;
+  const rows = data.findings.map(f => `
+    <tr><td style="padding:12px 0;border-bottom:1px solid #E3E4DE;">
+      <a href="${adminUrl(f.href)}" style="color:#141814;font-size:15px;font-weight:600;text-decoration:none;">${escHtml(f.title)}</a>
+      <div style="color:#3F453E;font-size:14px;margin-top:2px;">${escHtml(f.detail)}</div>
+    </td></tr>`).join('');
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${n === 1 ? 'Something needs you' : `${n} things need you`}</h1>
+    <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">The hourly check just found ${n === 1 ? 'this' : 'these'}. You won't be emailed about ${n === 1 ? 'it' : 'them'} again unless ${n === 1 ? 'it clears and comes back' : 'one clears and comes back'}.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">${rows}</table>
+    <a href="${adminUrl('/admin')}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">Open Today</a>
+  `);
+  const subject = n === 1 ? `[GreenReserve] ${data.findings[0].title}` : `[GreenReserve] ${n} things need you`;
+  await getResend().emails.send({ from: FROM, to: ADMIN_INBOX, subject: subject.slice(0, 150), html });
+}
+
+export async function sendAdminDigest(data: {
+  summary: string;
+  facts: {
+    date: string;
+    urgentOpen: { title: string; detail: string; since: string }[];
+    needsYou: { total: number; money: number; stalled: number };
+    money: { daysIn: number; volume: number; volumeLastMonth: number; fees: number; feesLastMonth: number; net: number | null; netLastMonth: number | null };
+    onboarding: { stage: string; count: number; stuck: number }[];
+  };
+}) {
+  const f = data.facts;
+  const usd = (v: number | null) => v === null ? '—' : `${v < 0 ? '-' : ''}$${Math.abs(v).toFixed(2)}`;
+  const row = (label: string, value: string, sub = '') => `
+    <tr><td style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${label}</td>
+    <td align="right" style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;">${value}${sub ? `<div style="color:#6B706A;font-size:12px;font-weight:400;">${sub}</div>` : ''}</td></tr>`;
+  const head = (t: string) => `<p style="margin:22px 0 6px;color:#141814;font-size:15px;font-weight:700;">${t}</p>`;
+  const urgent = f.urgentOpen.length
+    ? f.urgentOpen.map(u => `<li style="margin:0 0 6px;"><strong>${escHtml(u.title)}</strong> — ${escHtml(u.detail)} <span style="color:#6B706A;">(since ${u.since})</span></li>`).join('')
+    : '<li style="margin:0;">Nothing urgent.</li>';
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Good morning</h1>
+    ${data.summary ? `<p style="margin:0 0 4px;color:#3F453E;font-size:15px;line-height:1.55;">${escHtml(data.summary)}</p>` : ''}
+    ${head('Urgent')}
+    <ul style="margin:0;padding-left:18px;color:#3F453E;font-size:14px;line-height:1.55;">${urgent}</ul>
+    ${head('Needs you')}
+    <p style="margin:0;color:#3F453E;font-size:14px;">${f.needsYou.total === 0 ? 'Nothing on the list.' : `${f.needsYou.total} on the list — ${f.needsYou.money} about money, ${f.needsYou.stalled} stalled.`}</p>
+    ${head(`This month so far (${f.money.daysIn} day${f.money.daysIn === 1 ? '' : 's'})`)}
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${row('Booked through courses', usd(f.money.volume), `${usd(f.money.volumeLastMonth)} by now last month`)}
+      ${row('GreenReserve fees', usd(f.money.fees), `${usd(f.money.feesLastMonth)} by now last month`)}
+      ${row('Net after Stripe and expenses', usd(f.money.net), f.money.net === null ? 'Stripe didn’t answer' : `${usd(f.money.netLastMonth)} by now last month`)}
+    </table>
+    ${head('Onboarding')}
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${f.onboarding.map(o => row(escHtml(o.stage), String(o.count), o.stuck ? `${o.stuck} stuck` : '')).join('')}
+    </table>
+    <a href="${adminUrl('/admin')}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-top:24px;">Open Today</a>
+  `);
+  await getResend().emails.send({ from: FROM, to: ADMIN_INBOX, subject: `[GreenReserve] Morning digest — ${f.date}`, html });
+}

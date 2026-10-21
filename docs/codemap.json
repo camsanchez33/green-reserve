@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 477,
+    "files": 478,
     "routes": 235,
-    "libs": 152,
-    "models": 46,
+    "libs": 153,
+    "models": 47,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -3544,7 +3544,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 245,
+      "lines": 251,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3561,6 +3561,7 @@
       "auth": "cron",
       "guard": "file",
       "imports": [
+        "@/lib/admin-checks",
         "@/lib/agreement-required",
         "@/lib/agreement-sign",
         "@/lib/booking-events",
@@ -9944,7 +9945,8 @@
         "./thread-signal"
       ],
       "usedBy": [
-        "src/app/api/admin/today/route.ts"
+        "src/app/api/admin/today/route.ts",
+        "src/lib/admin-checks.ts"
       ]
     },
     {
@@ -10012,6 +10014,74 @@
       ]
     },
     {
+      "path": "src/lib/admin-checks.ts",
+      "lines": 199,
+      "purpose": "AW-5 (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DIGEST_HOUR_ET",
+          "kind": "const"
+        },
+        {
+          "name": "digestFacts",
+          "kind": "fn"
+        },
+        {
+          "name": "DigestFacts",
+          "kind": "type"
+        },
+        {
+          "name": "digestSummary",
+          "kind": "fn"
+        },
+        {
+          "name": "Finding",
+          "kind": "type"
+        },
+        {
+          "name": "runAdminChecks",
+          "kind": "fn"
+        },
+        {
+          "name": "runMorningDigest",
+          "kind": "fn"
+        },
+        {
+          "name": "runUrgentChecks",
+          "kind": "fn"
+        },
+        {
+          "name": "Summarizer",
+          "kind": "type"
+        },
+        {
+          "name": "urgentFindings",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "../../vercel.json",
+        "./admin-action-queue",
+        "./admin-day",
+        "./admin-today",
+        "./cron-log",
+        "./email",
+        "./money-problems",
+        "./monthly-review",
+        "./prisma",
+        "@anthropic-ai/sdk"
+      ],
+      "usedBy": [
+        "src/app/api/cron/hourly/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/admin-day.ts",
       "lines": 111,
       "purpose": "Platform day boundaries.",
@@ -10059,6 +10129,7 @@
       "usedBy": [
         "src/app/api/admin/ask/route.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -10375,7 +10446,8 @@
         "./prisma"
       ],
       "usedBy": [
-        "src/app/api/admin/today/route.ts"
+        "src/app/api/admin/today/route.ts",
+        "src/lib/admin-checks.ts"
       ]
     },
     {
@@ -13153,6 +13225,7 @@
         "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -13322,7 +13395,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1981,
+      "lines": 2044,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13347,6 +13420,10 @@
           "kind": "const"
         },
         {
+          "name": "sendAdminDigest",
+          "kind": "fn"
+        },
+        {
           "name": "sendAdminPasswordChangedNotification",
           "kind": "fn"
         },
@@ -13360,6 +13437,10 @@
         },
         {
           "name": "sendAdminTwoFactorCode",
+          "kind": "fn"
+        },
+        {
+          "name": "sendAdminUrgentAlert",
           "kind": "fn"
         },
         {
@@ -13639,6 +13720,7 @@
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/send/route.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
@@ -14777,7 +14859,8 @@
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/lib/admin-action-queue.ts",
-        "src/lib/admin-ask.ts"
+        "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts"
       ]
     },
     {
@@ -14940,7 +15023,8 @@
       ],
       "usedBy": [
         "src/app/api/cron/monthly-review/route.ts",
-        "src/app/api/operator/monthly-reviews/route.ts"
+        "src/app/api/operator/monthly-reviews/route.ts",
+        "src/lib/admin-checks.ts"
       ]
     },
     {
@@ -15584,6 +15668,7 @@
         "src/lib/access-fee.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-session.ts",
         "src/lib/admin-today.ts",
         "src/lib/agreement-gate.ts",
@@ -17798,6 +17883,57 @@
   ],
   "models": [
     {
+      "name": "AdminAlert",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "key",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "name": "detail",
+          "type": "String"
+        },
+        {
+          "name": "href",
+          "type": "String"
+        },
+        {
+          "name": "firstSeenAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "alertedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "resolvedAt",
+          "type": "DateTime?"
+        }
+      ],
+      "writers": [
+        "src/lib/admin-checks.ts"
+      ],
+      "readers": [
+        "src/lib/admin-checks.ts"
+      ]
+    },
+    {
       "name": "AdminAuditLog",
       "fields": [
         {
@@ -18488,6 +18624,7 @@
         "src/lib/access-fee.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
@@ -19332,6 +19469,7 @@
         "src/app/sitemap.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
