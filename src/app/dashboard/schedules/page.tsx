@@ -568,7 +568,7 @@ export default function SchedulesPage() {
                   <div className="mt-4 bg-warn/5 border border-warn/20 rounded-md px-3 py-2.5 space-y-1.5">
                     <p className="text-[13.5px] font-semibold text-ink">Worth a look before you save</p>
                     {pending.preview.warnings.map(w => <p key={w} className="text-[13.5px] text-ink leading-snug">{w}</p>)}
-                    <p className="text-[12.5px] text-ink-muted">You can still save — this is a note, not a block.</p>
+                    <p className="text-[13px] text-ink">You can still save — this is a note, not a block.</p>
                   </div>
                 )}
               </>)}

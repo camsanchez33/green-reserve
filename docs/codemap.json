@@ -16350,7 +16350,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 246,
+      "lines": 247,
       "purpose": "",
       "brain": [],
       "exports": [
