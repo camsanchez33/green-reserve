@@ -13,6 +13,8 @@ import { requestContext, deviceTokenFromCookie, trustedDevice, startDeviceApprov
 // Every refusal before the password is proved reads the same as a wrong
 // password, so this route never confirms that an owner account exists.
 
+const DUMMY_HASH = '$2a$10$CwTycUXWue0Thq9StjUM0uJ8.6PQWQ1vLHgZGdC0ZJ7qXc3nO4yHy';
+
 const when = () => new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET';
 
 /** Signed in: the session, the cookie, and the alert email (a failed email never blocks the sign-in). */
@@ -53,15 +55,14 @@ export async function POST(req: NextRequest) {
     const email = String(rawEmail).trim().toLowerCase();
 
     const admin = await prisma.adminUser.findUnique({ where: { email } });
-    if (!admin || admin.role !== 'owner' || !admin.active) {
-      return NextResponse.json({ error: 'Invalid code' }, { status: 400 });
-    }
+    // No account, no approved device, or no sign-in in progress all read the
+    // SAME — this step takes no password, so it must never say whose email it is.
+    const startOver = () => NextResponse.json({ error: 'No sign-in in progress — please start over.' }, { status: 400 });
+    if (!admin || admin.role !== 'owner' || !admin.active) return startOver();
     // The second factor only counts on an approved device (checked again here, not only at step 1).
     const device = await trustedDevice(admin.id, await deviceTokenFromCookie());
-    if (!device) return NextResponse.json({ error: 'Approve this device from the email we sent, then sign in again.' }, { status: 400 });
-    if (!admin.twoFactorCode || !admin.twoFactorCodeExpiry) {
-      return NextResponse.json({ error: 'No pending verification — please start over' }, { status: 400 });
-    }
+    if (!device) return startOver();
+    if (!admin.twoFactorCode || !admin.twoFactorCodeExpiry) return startOver();
     if (admin.twoFactorCodeExpiry < new Date()) {
       return NextResponse.json({ error: 'Code expired — please start over' }, { status: 400 });
     }
@@ -80,9 +81,7 @@ export async function POST(req: NextRequest) {
       // Only the PENDING marker (written when the password was just verified)
       // admits a second factor. The used-step marker written after a success
       // does not — a recovery code alone must never open a session (review).
-      if (!admin.twoFactorCode.startsWith(TOTP_PENDING)) {
-        return NextResponse.json({ error: 'No pending verification — please start over' }, { status: 400 });
-      }
+      if (!admin.twoFactorCode.startsWith(TOTP_PENDING)) return startOver();
       // A step used by the previous login rides along on the pending marker
       // ("totp-pending:<step>") so the same code cannot be replayed into a
       // fresh login inside its window.
@@ -152,6 +151,8 @@ export async function POST(req: NextRequest) {
 
   const admin = await prisma.adminUser.findUnique({ where: { email } });
   if (!admin || admin.role !== 'owner' || !admin.active) {
+    // Same work as a real check, so the answer's timing doesn't say whose email it is.
+    await bcrypt.compare(String(password), DUMMY_HASH);
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
   }
   if (admin.lockoutUntil && admin.lockoutUntil > new Date()) return lockoutResponse(admin.lockoutUntil);
@@ -179,7 +180,8 @@ export async function POST(req: NextRequest) {
   if (!(await trustedDevice(admin.id, rawDevice))) {
     const ctx = await requestContext();
     const { deviceToken, approvalToken } = await startDeviceApproval(admin.id, rawDevice, ctx);
-    const origin = process.env.NEXT_PUBLIC_URL || req.nextUrl.origin;
+    // Never built from the request's Host: the link carries the approval token.
+    const origin = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
     let res: NextResponse;
     try {
       await sendOwnerDeviceApproval({ email: admin.email, name: admin.name, approvalUrl: `${origin}/cam/approve?token=${approvalToken}`, device: deviceLabel(ctx.userAgent), place: ctx.place, when: when() });

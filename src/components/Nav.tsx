@@ -29,7 +29,7 @@ export default function Nav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [isHome]);
 
-  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
+  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/cam')) return null;
   // /for-courses + /for-courses/details have their own pine hero (with a
   // link home + back link baked in) — stacking the white marketing Nav on
   // top of it was a double logo, not clean.

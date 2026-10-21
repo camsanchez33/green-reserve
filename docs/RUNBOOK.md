@@ -58,7 +58,7 @@ No data is on the laptop. The database is on Neon (cloud). Backups are GitHub Ac
 
 ## Owner 2FA recovery
 
-The owner login (`/admin/owner-login`) asks for a second factor. Once the
+The owner signs in only at `/cam` (AW-1): password, an approved device (a new device is approved from an emailed link), then a second factor. Once the
 owner has enrolled an authenticator app on `/admin/profile`, the app's
 6-digit code (or a single-use recovery code) is required; before enrolment,
 the emailed 6-digit code is used instead. Columns on `AdminUser`:

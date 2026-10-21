@@ -26,7 +26,7 @@ import {
 async function gate() {
   const session = await resolveAdminSession();
   if (!session) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  if (!requireOwner(session)) return { error: NextResponse.json({ error: 'Owner only, and only from a session that signed in with 2FA — use the owner login.' }, { status: 403 }) };
+  if (!requireOwner(session)) return { error: NextResponse.json({ error: 'Owner only — sign in again.' }, { status: 403 }) };
   return { session };
 }
 
