@@ -4,14 +4,20 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 04:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c78b7aa` · working tree **5 dirty file(s)**
+Generated 2026-10-21 05:38 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `914a1c5` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 79 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 85 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `914a1c5` | 2026-10-21 | AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today |
+| `b84a2db` | 2026-10-21 | AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card |
+| `e941200` | 2026-10-21 | Code map and status board |
+| `39d69df` | 2026-10-21 | AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts |
+| `3bccfa0` | 2026-10-21 | AW-5: hourly admin checks — urgent alerts once each, and a morning digest |
+| `2228db8` | 2026-10-21 | AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+ |
 | `c78b7aa` | 2026-10-21 | AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding |
 | `224db02` | 2026-10-21 | Status board and code map |
 | `4c61670` | 2026-10-21 | AW-3b: Ask in the admin search — read-only AI answers with links to admin pages |
@@ -93,17 +99,6 @@ Generated 2026-10-21 04:44 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (5 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/admin-today-db-test.ts`
-- `M src/app/admin/page.tsx`
-- `M src/lib/admin-today.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -224,18 +219,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `914a1c5` 2026-10-21 — AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today
+- `b84a2db` 2026-10-21 — AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card
+- `e941200` 2026-10-21 — Code map and status board
+- `39d69df` 2026-10-21 — AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts
+- `3bccfa0` 2026-10-21 — AW-5: hourly admin checks — urgent alerts once each, and a morning digest
+- `2228db8` 2026-10-21 — AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+
 - `c78b7aa` 2026-10-21 — AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding
 - `224db02` 2026-10-21 — Status board and code map
 - `4c61670` 2026-10-21 — AW-3b: Ask in the admin search — read-only AI answers with links to admin pages
 - `905572d` 2026-10-21 — Regenerate code map
 - `474f3f0` 2026-10-21 — Status board
 - `e66b258` 2026-10-21 — AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations
-- `fc9a048` 2026-10-21 — Status board
-- `5982380` 2026-10-21 — AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step
-- `2807e2b` 2026-10-21 — AW-1c: re-confirm risky owner actions; owner device list; passkey change emails
-- `5fc7ad8` 2026-10-21 — Regenerate code map
-- `a6a13af` 2026-10-21 — AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board
-- `00a9007` 2026-10-21 — AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists
 
 ---
 

@@ -1321,3 +1321,22 @@ model BookingShopItem {
   @@index([bookingId])
   @@index([shopItemId])
 }
+
+/// AW-5 (Cam 2026-10-21): the admin's own alerts. One row per problem the
+/// hourly check has seen (key = what it is, e.g. "cron:hourly", "nostripe:<course>"),
+/// so each is emailed once when it starts and marked resolved when it clears;
+/// and one row per morning digest ("digest:YYYY-MM-DD"), so it goes out once.
+model AdminAlert {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  kind        String // "urgent" | "digest"
+  title       String    @default("")
+  detail      String    @default("")
+  href        String    @default("")
+  firstSeenAt DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  alertedAt   DateTime?
+  resolvedAt  DateTime?
+
+  @@index([kind, resolvedAt])
+}

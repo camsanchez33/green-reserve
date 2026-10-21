@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 480,
+    "files": 483,
     "routes": 237,
-    "libs": 153,
-    "models": 47,
+    "libs": 155,
+    "models": 48,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -793,7 +793,7 @@
     },
     {
       "path": "src/app/admin/inquiries/page.tsx",
-      "lines": 990,
+      "lines": 947,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -810,10 +810,13 @@
       "imports": [
         "@/components/EmptyState",
         "@/components/admin/AdminSidebar",
+        "@/components/admin/InquiryBoard",
         "@/components/ui/Card",
         "@/components/ui/Eyebrow",
         "@/components/ui/Modal",
         "@/components/ui/StatusDot",
+        "@/lib/admin-roles",
+        "@/lib/admin-session-context",
         "@/lib/format",
         "@/lib/inquiry-call",
         "@/lib/inquiry-needs",
@@ -3607,13 +3610,17 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 245,
+      "lines": 254,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "GET",
           "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
         }
       ],
       "route": "/api/cron/hourly",
@@ -3624,6 +3631,7 @@
       "auth": "cron",
       "guard": "file",
       "imports": [
+        "@/lib/admin-checks",
         "@/lib/agreement-required",
         "@/lib/agreement-sign",
         "@/lib/booking-events",
@@ -8409,6 +8417,39 @@
       ]
     },
     {
+      "path": "src/components/admin/InquiryBoard.tsx",
+      "lines": 121,
+      "purpose": "AW-6a (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BoardCardInquiry",
+          "kind": "type"
+        },
+        {
+          "name": "default (InquiryBoard)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/inquiry-board",
+        "@/lib/inquiry-call",
+        "@/lib/inquiry-status",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/inquiries/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/admin/InquiryCallCards.tsx",
       "lines": 914,
       "purpose": "INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page.",
@@ -9570,6 +9611,7 @@
         "src/app/pay/shop/[id]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
+        "src/components/admin/InquiryBoard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerDevicesCard.tsx",
         "src/components/admin/OwnerPasskeysCard.tsx",
@@ -9845,6 +9887,7 @@
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
+        "src/components/admin/InquiryBoard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerPasskeysCard.tsx",
         "src/components/birdie/ConfirmCard.tsx",
@@ -10012,6 +10055,7 @@
       ],
       "usedBy": [
         "src/app/api/admin/today/route.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -10080,6 +10124,74 @@
       ]
     },
     {
+      "path": "src/lib/admin-checks.ts",
+      "lines": 214,
+      "purpose": "AW-5 (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DIGEST_HOUR_ET",
+          "kind": "const"
+        },
+        {
+          "name": "digestFacts",
+          "kind": "fn"
+        },
+        {
+          "name": "DigestFacts",
+          "kind": "type"
+        },
+        {
+          "name": "digestSummary",
+          "kind": "fn"
+        },
+        {
+          "name": "Finding",
+          "kind": "type"
+        },
+        {
+          "name": "runAdminChecks",
+          "kind": "fn"
+        },
+        {
+          "name": "runMorningDigest",
+          "kind": "fn"
+        },
+        {
+          "name": "runUrgentChecks",
+          "kind": "fn"
+        },
+        {
+          "name": "Summarizer",
+          "kind": "type"
+        },
+        {
+          "name": "urgentFindings",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "../../vercel.json",
+        "./admin-action-queue",
+        "./admin-day",
+        "./admin-today",
+        "./cron-log",
+        "./email",
+        "./money-problems",
+        "./monthly-review",
+        "./prisma",
+        "@anthropic-ai/sdk"
+      ],
+      "usedBy": [
+        "src/app/api/cron/hourly/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/admin-day.ts",
       "lines": 111,
       "purpose": "Platform day boundaries.",
@@ -10128,6 +10240,7 @@
         "src/app/api/admin/ask/route.ts",
         "src/app/api/admin/goals/route.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -10262,6 +10375,7 @@
       "usedBy": [
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
+        "src/app/admin/inquiries/page.tsx",
         "src/app/admin/page.tsx",
         "src/components/admin/AdminSidebar.tsx",
         "src/lib/admin-ask.ts",
@@ -10305,6 +10419,7 @@
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
+        "src/app/admin/inquiries/page.tsx",
         "src/app/admin/layout.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/page.tsx",
@@ -10512,6 +10627,7 @@
       ],
       "usedBy": [
         "src/app/api/admin/today/route.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-goals.ts"
       ]
     },
@@ -12289,6 +12405,7 @@
         "src/app/dashboard/page.tsx",
         "src/lib/approval-state.ts",
         "src/lib/inquiry-action-queue.ts",
+        "src/lib/inquiry-board.ts",
         "src/lib/inquiry-status.ts",
         "src/lib/submit-change-request.ts"
       ]
@@ -13291,6 +13408,7 @@
         "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -13460,7 +13578,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 1981,
+      "lines": 2044,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13485,6 +13603,10 @@
           "kind": "const"
         },
         {
+          "name": "sendAdminDigest",
+          "kind": "fn"
+        },
+        {
           "name": "sendAdminPasswordChangedNotification",
           "kind": "fn"
         },
@@ -13498,6 +13620,10 @@
         },
         {
           "name": "sendAdminTwoFactorCode",
+          "kind": "fn"
+        },
+        {
+          "name": "sendAdminUrgentAlert",
           "kind": "fn"
         },
         {
@@ -13777,6 +13903,7 @@
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/send/route.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
@@ -14265,6 +14392,59 @@
       ]
     },
     {
+      "path": "src/lib/inquiry-board.ts",
+      "lines": 75,
+      "purpose": "AW-6a (Cam 2026-10-21):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BOARD_COLUMNS",
+          "kind": "const"
+        },
+        {
+          "name": "BOARD_STUCK_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "boardColumn",
+          "kind": "fn"
+        },
+        {
+          "name": "BoardColumn",
+          "kind": "type"
+        },
+        {
+          "name": "BoardInquiry",
+          "kind": "type"
+        },
+        {
+          "name": "LIVE_ON_BOARD_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "nextStep",
+          "kind": "fn"
+        },
+        {
+          "name": "NextStep",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./change-requests",
+        "./inquiry-call",
+        "./inquiry-status"
+      ],
+      "usedBy": [
+        "src/components/admin/InquiryBoard.tsx"
+      ]
+    },
+    {
       "path": "src/lib/inquiry-call.ts",
       "lines": 175,
       "purpose": "INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share.",
@@ -14374,9 +14554,11 @@
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/calcom/webhook/route.ts",
         "src/components/admin/CourseCheckInCard.tsx",
+        "src/components/admin/InquiryBoard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/lib/call-invite.ts",
         "src/lib/inquiry-action-queue.ts",
+        "src/lib/inquiry-board.ts",
         "src/lib/inquiry-needs.ts",
         "src/lib/inquiry-status.ts"
       ]
@@ -14631,12 +14813,14 @@
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/route.ts",
         "src/app/api/inquiries/signin-code/route.ts",
+        "src/components/admin/InquiryBoard.tsx",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-today.ts",
         "src/lib/call-invite.ts",
         "src/lib/course-checkin.ts",
         "src/lib/course-feed.ts",
-        "src/lib/inquiry-action-queue.ts"
+        "src/lib/inquiry-action-queue.ts",
+        "src/lib/inquiry-board.ts"
       ]
     },
     {
@@ -14916,7 +15100,8 @@
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/lib/admin-action-queue.ts",
-        "src/lib/admin-ask.ts"
+        "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts"
       ]
     },
     {
@@ -15079,7 +15264,8 @@
       ],
       "usedBy": [
         "src/app/api/cron/monthly-review/route.ts",
-        "src/app/api/operator/monthly-reviews/route.ts"
+        "src/app/api/operator/monthly-reviews/route.ts",
+        "src/lib/admin-checks.ts"
       ]
     },
     {
@@ -15724,6 +15910,7 @@
         "src/lib/access-fee.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-goals.ts",
         "src/lib/admin-session.ts",
         "src/lib/admin-today.ts",
@@ -17943,6 +18130,57 @@
   ],
   "models": [
     {
+      "name": "AdminAlert",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "key",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "title",
+          "type": "String"
+        },
+        {
+          "name": "detail",
+          "type": "String"
+        },
+        {
+          "name": "href",
+          "type": "String"
+        },
+        {
+          "name": "firstSeenAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "alertedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "resolvedAt",
+          "type": "DateTime?"
+        }
+      ],
+      "writers": [
+        "src/lib/admin-checks.ts"
+      ],
+      "readers": [
+        "src/lib/admin-checks.ts"
+      ]
+    },
+    {
       "name": "AdminAuditLog",
       "fields": [
         {
@@ -18673,6 +18911,7 @@
         "src/lib/access-fee.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-goals.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
@@ -19522,6 +19761,7 @@
         "src/app/sitemap.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-checks.ts",
         "src/lib/admin-goals.ts",
         "src/lib/admin-today.ts",
         "src/lib/agreement-required.ts",
