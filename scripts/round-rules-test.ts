@@ -21,6 +21,7 @@ ok('a round can let golfers walk when the course requires a cart', walkingAllowe
 ok("…but not past a schedule that doesn't allow it", !walkingAllowedAt(twilight9, { ...mon, walkingAllowed: false }));
 ok('a round can cap the group and shorten the window', twilight9.maxPlayers === 2 && twilight9.minPlayers === 1 && twilight9.publicAdvanceDays === 3);
 ok('a round can require a cart on a walking course', !walkingAllowedAt(rulesFor(course, { walkingPolicy: 'never' }), mon));
+ok('a saved round window never reaches past a course window lowered later', rulesFor({ ...course, publicAdvanceDays: 3 }, { publicAdvanceDays: 5 }).publicAdvanceDays === 3);
 ok('blank round fields fall back to the course', rulesFor(course, { walkingPolicy: null, minPlayers: null, maxPlayers: null, publicAdvanceDays: null }).maxPlayers === 4);
 
 // Group size.

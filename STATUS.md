@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 01:23 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `27ef910` · working tree **4 dirty file(s)**
+Generated 2026-10-21 01:57 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d8a856f` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 51 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 55 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `d8a856f` | 2026-10-21 | W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping |
+| `290c10f` | 2026-10-21 | W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking |
+| `ddb40f0` | 2026-10-20 | W2-6 slice 2: schedule overlaps warn instead of block (#156) |
+| `bc1db3d` | 2026-10-21 | W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board |
 | `27ef910` | 2026-10-21 | W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused |
 | `e96323e` | 2026-10-20 | W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155) |
 | `77187a1` | 2026-10-20 | Status board |
@@ -66,15 +70,13 @@ Generated 2026-10-21 01:23 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/dashboard/schedules/page.tsx`
-- `M src/lib/tee-sheet-engine.ts`
+- `M OPERATOR_REWORK_SPEC.md`
+- `M scripts/round-rules-test.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -157,9 +159,9 @@ Nothing awaiting review.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-19 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 3d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-19 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-21 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-19 | 1d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 1d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 8d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 12d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 12d |
@@ -195,6 +197,10 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `d8a856f` 2026-10-21 — W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping
+- `290c10f` 2026-10-21 — W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking
+- `ddb40f0` 2026-10-20 — W2-6 slice 2: schedule overlaps warn instead of block (#156)
+- `bc1db3d` 2026-10-21 — W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board
 - `27ef910` 2026-10-21 — W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused
 - `e96323e` 2026-10-20 — W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)
 - `77187a1` 2026-10-20 — Status board
@@ -203,10 +209,6 @@ Nothing awaiting review.
 - `39e62f4` 2026-10-20 — W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)
 - `773326d` 2026-10-20 — W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales)
 - `ad6524b` 2026-10-19 — W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)
-- `bd86947` 2026-10-19 — Sign-in page: full-screen photo with the sign-in card under the logo (#153)
-- `fff11a1` 2026-10-19 — Emails: one clean look for every email (EMAIL-2) (#152)
-- `8287f54` 2026-10-19 — Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150)
-- `cb98de8` 2026-10-19 — W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)
 
 ---
 

@@ -1,20 +1,46 @@
 {
-  "generatedAt": "2026-10-21T01:23:21.843Z",
+  "generatedAt": "2026-10-21T01:57:05.641Z",
   "repo": {
-    "head": "27ef910",
+    "head": "d8a856f",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 4,
+    "dirtyCount": 2,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/dashboard/schedules/page.tsx",
-      " M src/lib/tee-sheet-engine.ts"
+      "M OPERATOR_REWORK_SPEC.md",
+      " M scripts/round-rules-test.ts"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "d8a856f",
+        "date": "2026-10-21T01:56:13+00:00",
+        "subject": "W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "290c10f",
+        "date": "2026-10-21T01:49:22+00:00",
+        "subject": "W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ddb40f0",
+        "date": "2026-10-20T21:37:51-04:00",
+        "subject": "W2-6 slice 2: schedule overlaps warn instead of block (#156)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bc1db3d",
+        "date": "2026-10-21T01:23:23+00:00",
+        "subject": "W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "27ef910",
         "date": "2026-10-21T01:18:43+00:00",
@@ -547,22 +573,22 @@
       "ageDays": 3
     },
     {
+      "file": "OPERATOR_REWORK_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 0
+    },
+    {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 0
-    },
-    {
-      "file": "OPERATOR_REWORK_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "AGREEMENT_SPEC.md",
@@ -760,6 +786,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d8a856f",
+      "date": "2026-10-21",
+      "subject": "W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping"
+    },
+    {
+      "h": "290c10f",
+      "date": "2026-10-21",
+      "subject": "W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking"
+    },
+    {
+      "h": "ddb40f0",
+      "date": "2026-10-20",
+      "subject": "W2-6 slice 2: schedule overlaps warn instead of block (#156)"
+    },
+    {
+      "h": "bc1db3d",
+      "date": "2026-10-21",
+      "subject": "W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board"
+    },
+    {
       "h": "27ef910",
       "date": "2026-10-21",
       "subject": "W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused"
@@ -798,26 +844,6 @@
       "h": "ad6524b",
       "date": "2026-10-19",
       "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)"
-    },
-    {
-      "h": "bd86947",
-      "date": "2026-10-19",
-      "subject": "Sign-in page: full-screen photo with the sign-in card under the logo (#153)"
-    },
-    {
-      "h": "fff11a1",
-      "date": "2026-10-19",
-      "subject": "Emails: one clean look for every email (EMAIL-2) (#152)"
-    },
-    {
-      "h": "8287f54",
-      "date": "2026-10-19",
-      "subject": "Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150)"
-    },
-    {
-      "h": "cb98de8",
-      "date": "2026-10-19",
-      "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)"
     }
   ]
 }
