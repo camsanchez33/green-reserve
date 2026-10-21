@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 01:57 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d8a856f` · working tree **2 dirty file(s)**
+Generated 2026-10-21 01:57 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7677bc6` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 55 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 56 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `248dc36` | 2026-10-21 | W2-6 slice 3: window-cap test, spec status, status board |
 | `d8a856f` | 2026-10-21 | W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping |
 | `290c10f` | 2026-10-21 | W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking |
 | `ddb40f0` | 2026-10-20 | W2-6 slice 2: schedule overlaps warn instead of block (#156) |
@@ -69,14 +70,6 @@ Generated 2026-10-21 01:57 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (2 file(s))
-
-- `M OPERATOR_REWORK_SPEC.md`
-- `M scripts/round-rules-test.ts`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -197,8 +190,10 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `248dc36` 2026-10-21 — W2-6 slice 3: window-cap test, spec status, status board
 - `d8a856f` 2026-10-21 — W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping
 - `290c10f` 2026-10-21 — W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking
+- `08e01e2` 2026-10-20 — queue/spec update (#157)
 - `ddb40f0` 2026-10-20 — W2-6 slice 2: schedule overlaps warn instead of block (#156)
 - `bc1db3d` 2026-10-21 — W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board
 - `27ef910` 2026-10-21 — W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused
@@ -207,8 +202,6 @@ Nothing awaiting review.
 - `42ff2e4` 2026-10-20 — W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day
 - `dea0574` 2026-10-20 — W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had
 - `39e62f4` 2026-10-20 — W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)
-- `773326d` 2026-10-20 — W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales)
-- `ad6524b` 2026-10-19 — W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)
 
 ---
 

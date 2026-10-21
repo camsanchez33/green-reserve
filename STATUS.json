@@ -1,18 +1,22 @@
 {
-  "generatedAt": "2026-10-21T01:57:05.641Z",
+  "generatedAt": "2026-10-21T01:57:21.754Z",
   "repo": {
-    "head": "d8a856f",
+    "head": "7677bc6",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
-    "dirty": [
-      "M OPERATOR_REWORK_SPEC.md",
-      " M scripts/round-rules-test.ts"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "248dc36",
+        "date": "2026-10-21T01:57:06+00:00",
+        "subject": "W2-6 slice 3: window-cap test, spec status, status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d8a856f",
         "date": "2026-10-21T01:56:13+00:00",
@@ -786,6 +790,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "248dc36",
+      "date": "2026-10-21",
+      "subject": "W2-6 slice 3: window-cap test, spec status, status board"
+    },
+    {
       "h": "d8a856f",
       "date": "2026-10-21",
       "subject": "W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping"
@@ -794,6 +803,11 @@
       "h": "290c10f",
       "date": "2026-10-21",
       "subject": "W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking"
+    },
+    {
+      "h": "08e01e2",
+      "date": "2026-10-20",
+      "subject": "queue/spec update (#157)"
     },
     {
       "h": "ddb40f0",
@@ -834,16 +848,6 @@
       "h": "39e62f4",
       "date": "2026-10-20",
       "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)"
-    },
-    {
-      "h": "773326d",
-      "date": "2026-10-20",
-      "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales)"
-    },
-    {
-      "h": "ad6524b",
-      "date": "2026-10-19",
-      "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)"
     }
   ]
 }
