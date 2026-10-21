@@ -1,23 +1,19 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS, OWNER_ONLY } from '@/lib/admin-roles';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
-import { BarChart2, AlertCircle, Building2, Hammer, Users, Activity, MessageSquare, UserCircle, ChevronLeft, ChevronRight, DollarSign, Search, UserSearch, Wrench, LogOut, FileLock2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 
-export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company';
-
-const LS_KEY = 'admin-sidebar-collapsed';
+export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
   pendingInquiries?: number;
   unreadMessages?: number;
 }) {
-  const router = useRouter();
   const [unread, setUnread] = useState(unreadMessages);
   // MP-6a: failed charges, all-time. Red because it is money that should
   // exist and does not, and because the Revenue page is the only place to fix it.
@@ -33,22 +29,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const { role, name } = useAdminSession();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(LS_KEY) === 'true';
-  });
-
   useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
-
-  // MP-2e: both failure notices render only when expanded, and `collapsed` is
-  // persisted in localStorage — so for anyone whose last session left the rail
-  // collapsed, these states could not reach a JSX site at all. That is the
-  // third time this run series shipped state that cannot render. Rather than
-  // build a second collapsed-only treatment, uncollapse when there is something
-  // the user must actually read.
-  useEffect(() => {
-    if (signOutError) setCollapsed(false);
-  }, [signOutError]);
 
   // MP-8a: ONE fetch for all three badges (was two, and none for inquiries).
   // A page that passes a live prop (Messages passes unread; Overview passes
@@ -68,28 +49,6 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     return () => { cancelled = true; };
   }, [role, pendingInquiries, unreadMessages]);
 
-  // Apply CSS class and persist
-  useEffect(() => {
-    if (collapsed) {
-      document.documentElement.classList.add('sidebar-collapsed');
-    } else {
-      document.documentElement.classList.remove('sidebar-collapsed');
-    }
-    localStorage.setItem(LS_KEY, collapsed ? 'true' : 'false');
-  }, [collapsed]);
-
-  // Keyboard shortcut [
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === '[' && !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
-        setCollapsed(v => !v);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
-
-  const toggle = useCallback(() => setCollapsed(v => !v), []);
   const openPalette = useCallback(() => window.dispatchEvent(new CustomEvent('open-cmd-palette')), []);
 
   // MP-2d B4: no try/catch and no res.ok check. If the request rejected, the
@@ -116,150 +75,125 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   }
 
   // MP-2c: the nav is a map of the company, and it was showing every role a
-  // door it could not open. MP-2's gates made Employees, Messages, Courses,
-  // Broadcasts, Revenue and Golfers 403 for lower roles, and the pages then
-  // rendered that denial as "no data" — a class of bug three reviews kept
-  // finding. Not offering the link is the root fix; the pages still handle 403
-  // for anyone who types the URL.
+  // door it could not open. Not offering the link is the root fix; the pages
+  // still handle 403 for anyone who types the URL. `minRole` mirrors the API
+  // gate on each surface. Today and My profile are open to every role.
   //
-  // `minRole` mirrors the API gate on each surface. Overview and My profile are
-  // deliberately open to every role.
-  type NavItem = { key: AdminNavKey; label: string; href: string; icon: React.ReactNode; minRole?: string[] };
+  // AW-3 (Cam 2026-10-21, option A): grouped by the job, not by the table.
+  // Leads, Expenses and Marketing join their groups when they are built — a
+  // link to a page that doesn't exist yet is a dead end. Activity and Manual
+  // build sit under System until AW-12 / AW-13 decide what they become. No
+  // icons beside the labels (TYPE-3), so the rail no longer collapses to them.
+  type NavItem = { key: AdminNavKey; label: string; href: string; minRole?: string[] };
+  type NavGroup = { label: string | null; items: NavItem[] };
 
-  const allMainNav: NavItem[] = [
-    { key: 'overview',   label: 'Overview',   href: '/admin',            icon: <BarChart2 className="w-[18px] h-[18px]"/> },
-    { key: 'inquiries',  label: 'Inquiries',  href: '/admin/inquiries',  icon: <AlertCircle className="w-[18px] h-[18px]"/>, minRole: VIEWER_PLUS },
-    { key: 'courses',    label: 'Courses',    href: '/admin/courses',    icon: <Building2 className="w-[18px] h-[18px]"/>, minRole: VIEWER_PLUS },
-    { key: 'messages',   label: 'Messages',   href: '/admin/messages',   icon: <MessageSquare className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
-    { key: 'revenue',    label: 'Revenue',    href: '/admin/revenue',    icon: <DollarSign className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
-    { key: 'golfers',    label: 'Golfers',    href: '/admin/golfers',    icon: <UserSearch className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
-    { key: 'employees',  label: 'Employees',  href: '/admin/employees',  icon: <Users className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
-    { key: 'activity',   label: 'Activity',   href: '/admin/activity',   icon: <Activity className="w-[18px] h-[18px]"/>, minRole: SUPPORT_PLUS },
-  ];
-
-  const allBottomNav: NavItem[] = [
-    { key: 'create',  label: 'Manual build', href: '/admin/create',   icon: <Hammer className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
-    { key: 'system',  label: 'System',       href: '/admin/system',  icon: <Wrench className="w-[18px] h-[18px]"/>, minRole: MANAGER_PLUS },
-    // CO-DOCS: the company's own paperwork (LLC filing, EIN, bank) — owner only.
-    { key: 'company', label: 'Company docs', href: '/admin/company-documents', icon: <FileLock2 className="w-[18px] h-[18px]"/>, minRole: OWNER_ONLY },
-    { key: 'profile', label: 'My profile',   href: '/admin/profile',  icon: <UserCircle className="w-[18px] h-[18px]"/> },
+  const allGroups: NavGroup[] = [
+    { label: null, items: [
+      { key: 'overview', label: 'Today', href: '/admin' },
+    ] },
+    { label: 'Courses', items: [
+      { key: 'inquiries', label: 'Inquiries',     href: '/admin/inquiries', minRole: VIEWER_PLUS },
+      { key: 'courses',   label: 'Courses',       href: '/admin/courses',   minRole: VIEWER_PLUS },
+      { key: 'groups',    label: 'Course groups', href: '/admin/groups',    minRole: SUPPORT_PLUS },
+      { key: 'messages',  label: 'Messages',      href: '/admin/messages',  minRole: SUPPORT_PLUS },
+    ] },
+    { label: 'Money', items: [
+      { key: 'revenue', label: 'Revenue', href: '/admin/revenue', minRole: SUPPORT_PLUS },
+    ] },
+    { label: 'People', items: [
+      { key: 'employees', label: 'Employees',     href: '/admin/employees', minRole: MANAGER_PLUS },
+      { key: 'golfers',   label: 'Golfer lookup', href: '/admin/golfers',   minRole: SUPPORT_PLUS },
+    ] },
+    { label: 'System', items: [
+      { key: 'system',   label: 'Health',       href: '/admin/system',   minRole: MANAGER_PLUS },
+      { key: 'activity', label: 'Activity',     href: '/admin/activity', minRole: SUPPORT_PLUS },
+      { key: 'create',   label: 'Manual build', href: '/admin/create',   minRole: MANAGER_PLUS },
+      // CO-DOCS: the company's own paperwork (LLC filing, EIN, bank) — owner only.
+      { key: 'company',  label: 'Company docs', href: '/admin/company-documents', minRole: OWNER_ONLY },
+    ] },
   ];
 
   const canSee = (item: NavItem) => !item.minRole || item.minRole.includes(role);
-  const mainNav = allMainNav.filter(canSee);
-  const bottomNav = allBottomNav.filter(canSee);
+  const groups = allGroups.map(g => ({ ...g, items: g.items.filter(canSee) })).filter(g => g.items.length > 0);
 
-  const w = collapsed ? 'w-14' : 'w-56';
+  const chip = (n: number, tone: string, title?: string) => n > 0 ? (
+    <span className={`${tone} text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-md`} title={title}>
+      {n > 99 ? '99+' : n}
+    </span>
+  ) : undefined;
+  const badges: Partial<Record<AdminNavKey, React.ReactNode>> = {
+    inquiries: chip(pending, 'bg-warn'),
+    // MP-6a: failed charges — money that should exist and does not.
+    revenue: chip(moneyProblems, 'bg-bad', `${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`),
+    messages: chip(unread, 'bg-ok'),
+  };
 
-  function NavItem({ item, badge }: { item: typeof mainNav[0]; badge?: React.ReactNode }) {
+  function NavLink({ item }: { item: NavItem }) {
     const isActive = active === item.key;
-    const cls = `w-full flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 text-[13px] font-medium transition-colors text-left relative group ${
-      isActive ? 'bg-pine/[0.07] text-pine font-semibold rounded-md' : 'text-ink-soft hover:text-ink hover:bg-paper rounded-md'
-    }`;
     return (
       // MP-8a: a real link — middle-click and cmd-click open a tab, the
       // browser shows the destination, and the nav works before hydration.
-      <Link href={item.href} className={cls} title={collapsed ? item.label : undefined}>
-        <span className="shrink-0">{item.icon}</span>
-        {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-        {!collapsed && badge}
-        {collapsed && badge && (
-          <span className="absolute top-1 right-1">{badge}</span>
-        )}
-        {collapsed && (
-          <span className="pointer-events-none absolute left-full ml-2 px-2 py-1 bg-ink text-paper text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-            {item.label}
-          </span>
-        )}
+      <Link
+        href={item.href}
+        aria-current={isActive ? 'page' : undefined}
+        className={`w-full flex items-center gap-2 px-3 py-1.5 text-[13.5px] rounded-md transition-colors ${
+          isActive ? 'bg-pine/[0.07] text-pine font-semibold' : 'text-ink-soft hover:text-ink hover:bg-paper'
+        }`}
+      >
+        <span className="flex-1">{item.label}</span>
+        {badges[item.key]}
       </Link>
     );
   }
 
-  const inquiriesBadge = pending > 0 ? (
-    <span className="bg-warn text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-md">
-      {pending > 99 ? '99+' : pending}
-    </span>
-  ) : undefined;
-
-  const revenueBadge = moneyProblems > 0 ? (
-    <span className="bg-bad text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-md" title={`${moneyProblems} money problem${moneyProblems === 1 ? '' : 's'} — failed charges and open chargebacks`}>
-      {moneyProblems > 99 ? '99+' : moneyProblems}
-    </span>
-  ) : undefined;
-
-  const messagesBadge = unread > 0 ? (
-    <span className="bg-ok text-white text-[10px] px-1.5 py-0.5 font-semibold leading-none shrink-0 rounded-md">
-      {unread > 99 ? '99+' : unread}
-    </span>
-  ) : undefined;
+  const profile: NavItem = { key: 'profile', label: 'My profile', href: '/admin/profile' };
 
   return (
     <>
     <CommandPalette/>
-    <div className={`fixed left-0 top-0 h-full ${w} bg-white border-r border-line flex flex-col z-10 transition-[width] duration-200 ease-in-out`}>
-      {/* Wordmark / logo mark */}
-      <div className={`${collapsed ? 'px-0 flex items-center justify-center' : 'px-5'} py-5`}>
-        {collapsed ? (
-          <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md border border-line flex items-center justify-center hover:bg-paper transition-colors">
-            <Search className="w-4 h-4 text-ink-muted"/>
-          </button>
-        ) : (
-          <>
-            {/* FLOW-1: a light rail with the real lockup, as on the homepage —
-                the solid pine slab read as a separate product. */}
-            <div className="flex items-center justify-between gap-2">
-              <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={150} height={28} className="w-[150px] h-auto" />
-              <button onClick={openPalette} title="Search (Ctrl+K)" className="w-7 h-7 rounded-md border border-line flex items-center justify-center hover:bg-paper transition-colors shrink-0">
-                <Search className="w-3.5 h-3.5 text-ink-muted"/>
-              </button>
-            </div>
-          </>
-        )}
+    <div className="fixed left-0 top-0 h-full w-56 bg-white border-r border-line flex flex-col z-10">
+      <div className="px-4 pt-4 pb-3 space-y-3">
+        {/* FLOW-1: a light rail with the real lockup, as on the homepage. */}
+        <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={150} height={28} className="w-[150px] h-auto ml-1" />
+        {/* AW-3: search sits on top of the rail (Cam: "find anything"). */}
+        <button
+          type="button"
+          onClick={openPalette}
+          className="w-full flex items-center gap-2 text-left bg-paper border border-line rounded-md px-2.5 py-2 text-[13px] text-ink-muted hover:border-line-strong transition-colors"
+        >
+          <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+          <span className="flex-1">Search anything</span>
+          <kbd className="text-[11px] text-ink-faint">Ctrl K</kbd>
+        </button>
       </div>
 
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-        {mainNav.map(item => (
-          <NavItem
-            key={item.key}
-            item={item}
-            badge={item.key === 'inquiries' ? inquiriesBadge : item.key === 'messages' ? messagesBadge : item.key === 'revenue' ? revenueBadge : undefined}
-          />
+      <nav aria-label="Admin" className="flex-1 px-2 pb-2 space-y-3 overflow-y-auto">
+        {groups.map(g => (
+          <div key={g.label ?? 'top'} className="space-y-0.5">
+            {g.label && <div className="px-3 pb-1 text-[12px] font-semibold text-ink-muted">{g.label}</div>}
+            {g.items.map(item => <NavLink key={item.key} item={item} />)}
+          </div>
         ))}
       </nav>
 
-      {/* Bottom cluster */}
-      <div className="p-2 border-t border-line space-y-0.5">
-        {!collapsed && (
-          <div className="px-3 pt-2 pb-2 text-[12.5px] text-ink-muted truncate">{name || 'Signed in'} · {role}</div>
-        )}
-        {bottomNav.map(item => <NavItem key={item.key} item={item} />)}
-        <button
-          onClick={signOut}
-          disabled={signingOut}
-          className={`w-full flex items-center ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2 text-[13px] text-ink-muted hover:text-ink hover:bg-paper rounded-md transition-colors disabled:opacity-50`}
-          title={collapsed ? 'Sign out' : undefined}
-        >
-          {collapsed ? (
-            <LogOut className="w-[18px] h-[18px]" />
-          ) : (
-            <span>{signingOut ? 'Signing out…' : 'Sign out'}</span>
-          )}
-        </button>
-        {signOutError && !collapsed && (
-          <p className="px-3 pb-1 text-[11px] text-bad leading-snug">
+      <div className="px-2 py-2 border-t border-line">
+        <div className="px-3 pt-1 text-[12.5px] text-ink-muted truncate">{name || 'Signed in'} · {role}</div>
+        <div className="flex items-center gap-1">
+          <Link href={profile.href} aria-current={active === 'profile' ? 'page' : undefined} className={`px-3 py-1.5 text-[13px] rounded-md transition-colors ${active === 'profile' ? 'bg-pine/[0.07] text-pine font-semibold' : 'text-ink-soft hover:text-ink hover:bg-paper'}`}>{profile.label}</Link>
+          <button
+            onClick={signOut}
+            disabled={signingOut}
+            className="px-3 py-1.5 text-[13px] text-ink-muted hover:text-ink hover:bg-paper rounded-md transition-colors disabled:opacity-50"
+          >
+            {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
+        </div>
+        {signOutError && (
+          <p role="alert" className="px-3 pb-1 text-[11px] text-bad leading-snug">
             Sign-out failed — you are still signed in. Check your connection and try again.
           </p>
         )}
       </div>
-
-      {/* Collapse toggle */}
-      <button
-        onClick={toggle}
-        title={`${collapsed ? 'Expand' : 'Collapse'} sidebar ([)`}
-        className="absolute -right-3 top-[72px] w-6 h-6 rounded-full bg-white border border-line flex items-center justify-center text-ink-muted hover:text-ink transition-colors z-20"
-      >
-        {collapsed ? <ChevronRight className="w-3 h-3"/> : <ChevronLeft className="w-3 h-3"/>}
-      </button>
     </div>
     </>
   );

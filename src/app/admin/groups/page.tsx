@@ -157,7 +157,7 @@ export default function AdminGroupsPage() {
 
   return (
     <div className="min-h-screen bg-paper flex">
-      <AdminSidebar active="courses" />
+      <AdminSidebar active="groups" />
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-8 py-7 max-w-4xl">
           <div className="flex items-center justify-between mb-2">

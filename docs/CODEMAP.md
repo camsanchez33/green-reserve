@@ -57,7 +57,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 211 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 163 |
-| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 523 |
+| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 522 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 334 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 761 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 407 |
@@ -115,7 +115,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/retry-charge/[bookingId]` | admin | file | POST | `src/app/api/admin/retry-charge/[bookingId]/route.ts` | 39 |
 | `/api/admin/revenue` | admin | file | GET | `src/app/api/admin/revenue/route.ts` | 331 |
 | `/api/admin/schedule` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/schedule/route.ts` | 67 |
-| `/api/admin/search` | admin | file | GET | `src/app/api/admin/search/route.ts` | 169 |
+| `/api/admin/search` | admin | file | GET | `src/app/api/admin/search/route.ts` | 219 |
 | `/api/admin/send-golive-reminder` | admin | file | POST | `src/app/api/admin/send-golive-reminder/route.ts` | 44 |
 | `/api/admin/session` | admin | file | GET | `src/app/api/admin/session/route.ts` | 14 |
 | `/api/admin/set-password` | admin | entry | POST | `src/app/api/admin/set-password/route.ts` | 73 |
@@ -452,7 +452,7 @@ Sorted the same way.
 | `src/components/ui/StatusDot.tsx` | 49 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 32 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/ui/Eyebrow.tsx` | 24 | 19 |  | `Eyebrow`, `EYEBROW` |
-| `src/components/admin/AdminSidebar.tsx` | 15 | 267 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/admin/AdminSidebar.tsx` | 15 | 201 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 11 | 288 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/dashboard/LoadError.tsx` | 10 | 16 | SD-10. | `LoadError` |
@@ -471,7 +471,7 @@ Sorted the same way.
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
 | `src/components/ui/Btn.tsx` | 2 | 27 |  | `Btn` |
 | `src/components/admin/AgreementVersionsCard.tsx` | 1 | 117 | AG-3 — Admin → System → Agreement versions (Cam 2026-10-12: | `default (AgreementVersionsCard)` |
-| `src/components/admin/CommandPalette.tsx` | 1 | 236 |  | `default (CommandPalette)` |
+| `src/components/admin/CommandPalette.tsx` | 1 | 237 |  | `default (CommandPalette)` |
 | `src/components/admin/InquiryCallCards.tsx` | 1 | 914 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
 | `src/components/admin/OwnerDevicesCard.tsx` | 1 | 61 | AW-1c (Cam 2026-10-21): | `default (OwnerDevicesCard)` |
 | `src/components/admin/OwnerPasskeysCard.tsx` | 1 | 94 | AW-1b (Cam 2026-10-21): | `default (OwnerPasskeysCard)` |
@@ -624,11 +624,11 @@ without opening anything.
 
 ### CourseGroup
 
-7 fields · 1 writer(s) · 2 reader(s)
+7 fields · 1 writer(s) · 3 reader(s)
 
 - fields: `id`, `name`, `slug`, `description`, `createdAt`, `updatedAt`, `courses`
 - writers: `src/app/api/admin/course-groups/route.ts`
-- readers: `src/app/api/admin/course-groups/route.ts`, `src/app/g/[slug]/page.tsx`
+- readers: `src/app/api/admin/course-groups/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/g/[slug]/page.tsx`
 
 ### CourseInquiry
 
@@ -752,11 +752,11 @@ without opening anything.
 
 ### MessageThread
 
-9 fields · 3 writer(s) · 4 reader(s)
+9 fields · 3 writer(s) · 5 reader(s)
 
 - fields: `id`, `courseId`, `adminLastEmailAt`, `operatorLastEmailAt`, `closedAt`, `updatedAt`, `createdAt`, `course`, `messages`
 - writers: `src/app/api/admin/messages/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/submit-change-request.ts`
-- readers: `src/app/api/admin/messages/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/submit-change-request.ts`
+- readers: `src/app/api/admin/messages/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/submit-change-request.ts`
 
 ### MonthlyReview
 

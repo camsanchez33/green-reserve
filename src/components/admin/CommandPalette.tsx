@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 
 interface SearchResult {
-  type: 'course' | 'inquiry' | 'golfer' | 'guest' | 'employee' | 'nav';
+  type: 'course' | 'inquiry' | 'golfer' | 'guest' | 'employee' | 'group' | 'thread' | 'booking' | 'nav';
   id: string;
   label: string;
   sub: string;
@@ -31,6 +31,9 @@ const TYPE_LABEL: Record<SearchResult['type'], string> = {
   golfer:   'Golfer',
   guest:    'Guest golfer',
   employee: 'Employee',
+  group:    'Course group',
+  thread:   'Conversation',
+  booking:  'Booking',
   nav:      'Go to',
 };
 
@@ -170,7 +173,7 @@ export default function CommandPalette() {
       <div className="absolute inset-0 bg-ink/30"/>
 
       {/* Palette */}
-      <div className="relative w-full max-w-xl mx-4 bg-card border border-line rounded-lg shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-xl mx-4 bg-card rounded-lg shadow-card overflow-hidden">
         {/* Search input — uncontrolled to prevent keystroke drops */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-line">
           <Search className="w-4 h-4 text-ink-faint shrink-0"/>
@@ -178,7 +181,7 @@ export default function CommandPalette() {
             ref={inputRef}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
-            placeholder="Search courses, inquiries, golfers, pages…"
+            placeholder="Course, inquiry, golfer, email, phone, booking id, page…"
             className="flex-1 bg-transparent text-sm text-ink placeholder-ink-faint outline-none"
           />
           {loading && <span className="text-[11px] text-ink-muted shrink-0">Searching…</span>}
@@ -210,8 +213,6 @@ export default function CommandPalette() {
                   }`}
                   onMouseEnter={() => setSelectedIdx(idx)}
                 >
-                  <div className="w-6 h-6 rounded-md bg-paper border border-line flex items-center justify-center shrink-0">
-                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-ink truncate">{item.label}</div>
                     <div className="text-[11px] text-ink-muted truncate">{TYPE_LABEL[item.type]} · {item.sub}</div>

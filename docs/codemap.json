@@ -545,7 +545,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 523,
+      "lines": 522,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2364,7 +2364,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 169,
+      "lines": 219,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8178,7 +8178,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 267,
+      "lines": 201,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8203,7 +8203,6 @@
         "lucide-react",
         "next/image",
         "next/link",
-        "next/navigation",
         "react"
       ],
       "usedBy": [
@@ -8256,7 +8255,7 @@
     },
     {
       "path": "src/components/admin/CommandPalette.tsx",
-      "lines": 236,
+      "lines": 237,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -19208,6 +19207,7 @@
       ],
       "readers": [
         "src/app/api/admin/course-groups/route.ts",
+        "src/app/api/admin/search/route.ts",
         "src/app/g/[slug]/page.tsx"
       ]
     },
@@ -20482,6 +20482,7 @@
       ],
       "readers": [
         "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/search/route.ts",
         "src/app/api/admin/stats/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/lib/submit-change-request.ts"

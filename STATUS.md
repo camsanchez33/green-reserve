@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 04:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5982380` · working tree clean
+Generated 2026-10-21 04:16 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e66b258` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 72 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 74 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e66b258` | 2026-10-21 | AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations |
+| `fc9a048` | 2026-10-21 | Status board |
 | `5982380` | 2026-10-21 | AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step |
 | `2807e2b` | 2026-10-21 | AW-1c: re-confirm risky owner actions; owner device list; passkey change emails |
 | `5fc7ad8` | 2026-10-21 | Regenerate code map |
@@ -86,6 +88,14 @@ Generated 2026-10-21 04:07 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (2 file(s))
+
+- `?? src/app/api/admin/ask/`
+- `?? src/lib/admin-ask.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -206,6 +216,8 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `e66b258` 2026-10-21 — AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations
+- `fc9a048` 2026-10-21 — Status board
 - `5982380` 2026-10-21 — AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step
 - `2807e2b` 2026-10-21 — AW-1c: re-confirm risky owner actions; owner device list; passkey change emails
 - `5fc7ad8` 2026-10-21 — Regenerate code map
@@ -216,8 +228,6 @@ Nothing awaiting review.
 - `4fda831` 2026-10-21 — AW-1a: dummy hash at the real cost; status board
 - `c6ab10b` 2026-10-21 — queue/spec update
 - `fc3a0fc` 2026-10-21 — AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails
-- `eeea53c` 2026-10-21 — AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner
-- `efd1438` 2026-10-20 — queue/spec update (#160)
 
 ---
 
