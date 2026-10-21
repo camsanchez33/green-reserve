@@ -244,6 +244,13 @@ model CourseProduct {
   active        Boolean               @default(true)
   sortOrder     Int                   @default(0)
   createdAt     DateTime              @default(now())
+  /// W2-6 slice 3: this round's own booking rules. Null = the course's rule
+  /// (Course.walkingAllowed + cartRequired, minPlayers, maxPlayers,
+  /// publicAdvanceDays). lib/booking-rules.ts merges them.
+  walkingPolicy     String?
+  minPlayers        Int?
+  maxPlayers        Int?
+  publicAdvanceDays Int?
   teeSetRatings CourseProductTeeSet[]
   /// L2: schedules and generated slots scoped to this product.
   schedules     TeeTimeSchedule[]

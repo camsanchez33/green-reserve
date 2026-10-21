@@ -207,7 +207,8 @@ export default function CourseDetailPage({
   // GRP-1: a group page (/g/[slug]) links a time as ?tt={id}; it is picked once
   // the day's times load, if it still has room for the group.
   const pendingPick = useRef(searchParams.get('tt'));
-  const [withCart, setWithCart] = useState(!!initialCourse?.cart_required);
+  // A required cart is each tee time's call (cart_required) — a round can let golfers walk on a cart-required course.
+  const [withCart, setWithCart] = useState(false);
   const [todFilter, setTodFilter] = useState<TimeOfDay>(() => {
     const t = searchParams.get('tod');
     return ['all', 'morning', 'afternoon', 'twilight'].includes(t ?? '') ? (t as TimeOfDay) : 'all';
@@ -250,7 +251,6 @@ export default function CourseDetailPage({
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then((c: CourseWithBrand) => {
         setCourse(c);
-        if (c?.cart_required) setWithCart(true);
         if (previewMode && (c.page_approval_status === 'approved' || c.page_approval_status === 'changes_requested')) {
           setPreviewApprovalStatus(c.page_approval_status);
         }
@@ -441,11 +441,20 @@ export default function CourseDetailPage({
     return c.length ? Math.max(...c) : 0;
   }, [memberSession, memberTeeTimes, teeTimes, players]);
 
+  // W2-6 slice 3: when every open time today is for a bigger group than picked, say so.
+  const groupMin = useMemo(() => {
+    const source: ActiveTeeTime[] = memberSession ? memberTeeTimes : teeTimes;
+    const open = source.filter(t => t.players_available >= players);
+    return open.length && open.every(t => (t.min_players ?? 1) > players) ? Math.min(...open.map(t => t.min_players ?? 1)) : 0;
+  }, [memberSession, memberTeeTimes, teeTimes, players]);
+
   const filtered = useMemo(() => {
     const source: ActiveTeeTime[] = memberSession ? memberTeeTimes : teeTimes;
     return source.filter(t => {
       // Full slots (0 seats) always show greyed — player filter doesn't hide them
       if (t.players_available > 0 && t.players_available < players) return false;
+      // W2-6 slice 3: a round can be for bigger groups only.
+      if (t.players_available > 0 && (t.min_players ?? 1) > players) return false;
       if (todFilter !== 'all' && todOf(t) !== todFilter) return false;
       if (maxPrice !== null && t.green_fee > maxPrice) return false;
       if (holesFilter !== 'all') {
@@ -1330,6 +1339,13 @@ export default function CourseDetailPage({
                       </div>
                     ) : (
                       <div>
+                        {groupMin > players ? (<>
+                          <p className="font-serif font-semibold text-ink text-xl mb-1.5">These times are for groups of {groupMin} or more</p>
+                          <p className="text-ink text-sm mb-5">You picked {players} player{players === 1 ? '' : 's'}. Add players to see them.</p>
+                          <button onClick={() => setPlayers(groupMin)} className="inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-white transition-colors mr-2 mb-2" style={{ backgroundColor: accent }}>
+                            Show times for {groupMin} players
+                          </button>
+                        </>) : (<>
                         <p className="font-serif font-semibold text-ink text-xl mb-1.5">No times match your filters</p>
                         <p className="text-ink text-sm mb-5">There are tee times on this date — your filters rule them all out.</p>
                         {/* B-4: same day, smaller party. */}
@@ -1349,6 +1365,7 @@ export default function CourseDetailPage({
                         >
                           Clear filters
                         </button>
+                        </>)}
                       </div>
                     )}
                   </div>
@@ -1372,7 +1389,7 @@ export default function CourseDetailPage({
                             const slotPlayers = Math.min(players, t.players_available || players);
                             const hasMemberRate = !!(t.member_green_fee != null && t.has_member_rate && t.member_green_fee < t.green_fee);
                             const displayGreenFee = hasMemberRate ? t.member_green_fee! : t.green_fee;
-                            const cartFee = isSel && withCart && t.cart_fee > 0 ? t.cart_fee : 0;
+                            const cartFee = isSel && (withCart || t.cart_required) && t.cart_fee > 0 ? t.cart_fee : 0;
                             const slotTotal = (displayGreenFee + cartFee) * slotPlayers + 1.5 * slotPlayers;
 
                             return (
@@ -1474,7 +1491,7 @@ export default function CourseDetailPage({
                                       <div className="text-[13px] font-semibold text-ink mb-2">Players</div>
                                       <div className="flex gap-1.5">
                                         {([1, 2, 3, 4] as const).map(n => {
-                                          const ok = n <= t.players_available;
+                                          const ok = n <= t.players_available && n >= (t.min_players ?? 1);
                                           return (
                                             <button
                                               key={n}
@@ -1492,7 +1509,7 @@ export default function CourseDetailPage({
                                     </div>
 
                                     {/* Cart toggle */}
-                                    {t.cart_fee > 0 && !course.cart_required && (
+                                    {t.cart_fee > 0 && !t.cart_required && (
                                       <button
                                         onClick={() => setWithCart(!withCart)}
                                         className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-md border text-sm font-medium transition-colors"
@@ -1512,9 +1529,9 @@ export default function CourseDetailPage({
                                         <span>Green fee{hasMemberRate ? ' (member)' : ''} × {slotPlayers}</span>
                                         <span>${(displayGreenFee * slotPlayers).toFixed(2)}</span>
                                       </div>
-                                      {withCart && t.cart_fee > 0 && (
+                                      {(withCart || t.cart_required) && t.cart_fee > 0 && (
                                         <div className="flex justify-between text-sm text-ink-soft">
-                                          <span>Cart × {slotPlayers}</span>
+                                          <span>Cart × {slotPlayers}{t.cart_required ? ' (required)' : ''}</span>
                                           <span>${(t.cart_fee * slotPlayers).toFixed(2)}</span>
                                         </div>
                                       )}

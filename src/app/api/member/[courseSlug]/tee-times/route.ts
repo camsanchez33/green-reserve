@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { getMemberSession, getGolferMembership, golferResident } from '@/lib/member-session';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
+import { rulesFor, walkingAllowedAt } from '@/lib/booking-rules';
 import { applyTierRates } from '@/lib/tier-rates';
 
 export async function GET(
@@ -49,15 +50,17 @@ export async function GET(
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: course.id, date, status: { not: 'blocked' } },
     orderBy: { time: 'asc' },
-    include: { product: { select: { label: true } } },
+    include: { product: { select: { label: true, walkingPolicy: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true } } },
   });
 
   // Strip past slots on today — on the course's clock (SD-3).
   const todayLocal = todayIn(course.timezone);
   const nowLocal = clockIn(course.timezone);
-  const visible = date === todayLocal
+  const visible = (date === todayLocal
     ? teeTimes.filter(t => t.time > nowLocal)
-    : teeTimes;
+    : teeTimes)
+    // W2-6 slice 3: a round's shorter public window holds for a non-member here too.
+    .filter(t => win.scope === 'member' || withinWindow(date, rulesFor(course, t.product).publicAdvanceDays));
 
   // A member pays exactly what applyTierRates says — the one function booking
   // (api/bookings), moves and check-in pricing use. This list used to carry its
@@ -74,9 +77,12 @@ export async function GET(
 
   return NextResponse.json(
     visible.map(t => {
-      const spotsLeft = t.playersAvailable - t.playersBooked;
+      // W2-6 slice 3: the time's booking rules; spots are what one booking may take.
+      const rules = rulesFor(course, t.product);
+      const spotsLeft = Math.min(t.playersAvailable - t.playersBooked, rules.maxPlayers);
+      const open = t.playersAvailable - t.playersBooked; // how full it really is
       const slotStatus =
-        spotsLeft <= 1 ? 'almost_full' : spotsLeft <= 2 ? 'limited' : 'available';
+        open <= 1 ? 'almost_full' : open <= 2 ? 'limited' : 'available';
       const rates = pricingTier ? applyTierRates(t, pricingTier) : null;
       const hasMemberRate = !!pricingTier && (hasTierPrice || t.memberRateCents != null);
 
@@ -92,7 +98,10 @@ export async function GET(
         green_fee: centsToDollarsOr0(t.greenFeeCents),
         member_green_fee: centsToDollarsOr0(rates?.greenFeeCents ?? t.greenFeeCents),
         cart_fee: centsToDollarsOr0(rates?.cartFeeCents ?? t.cartFeeCents),
-        walking_allowed: t.walkingAllowed,
+        walking_allowed: walkingAllowedAt(rules, t),
+        cart_required: !walkingAllowedAt(rules, t),
+        min_players: rules.minPlayers,
+        max_players: rules.maxPlayers,
         status: slotStatus,
         has_member_rate: hasMemberRate,
         // What the signed-in golfer pays for their own spot as a resident (one

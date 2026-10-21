@@ -7,6 +7,7 @@ import { canManageBooking } from '@/lib/manage-access';
 import { bookingWindowHours, rescalePartyFees } from '@/lib/cancel-policy';
 import { teeTimeInstant } from '@/lib/booking-events';
 import { groupGreenFee, otherPerPlayerCents } from '@/lib/residents';
+import { rulesFor, groupSizeError } from '@/lib/booking-rules';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -35,8 +36,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
           greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
           paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true,
-          teeTime: { select: { date: true, time: true, greenFeeCents: true } },
-          course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true } },
+          teeTime: { select: { date: true, time: true, greenFeeCents: true, product: { select: { minPlayers: true, maxPlayers: true } } } },
+          course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true, minPlayers: true, maxPlayers: true } },
         },
       });
 
@@ -45,6 +46,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       if (!authorized) throw Object.assign(new Error(), { code: 'INVALID' });
       if (booking.status !== 'confirmed') throw Object.assign(new Error(), { code: 'NOT_CONFIRMED' });
       if (booking.players === newPlayers) throw Object.assign(new Error(), { code: 'SAME' });
+      // W2-6 slice 3: the course's (or the round's) group size holds on a change too.
+      const sizeError = groupSizeError(rulesFor(booking.course, booking.teeTime.product), newPlayers);
+      if (sizeError) throw Object.assign(new Error(), { code: 'SIZE', msg: sizeError });
       // A payment taken or started (or a hold already charged) carries the old party's price.
       if (booking.paymentStatus === 'paid' || booking.paymentStatus === 'cancellation_fee_charged' || booking.roundPaymentIntentId || booking.shopLockedAt) throw Object.assign(new Error(), { code: 'PAID' });
       // Launch security review 2026-10-18: once the cutoff has passed at a course
@@ -112,11 +116,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
 
     return NextResponse.json(result);
   } catch (err) {
-    const e = err as { code?: string; max?: number };
+    const e = err as { code?: string; max?: number; msg?: string };
     if (e.code === 'INVALID') return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
     if (e.code === 'NOT_CONFIRMED') return NextResponse.json({ error: 'This booking cannot be modified' }, { status: 409 });
     if (e.code === 'PAID') return NextResponse.json({ error: 'This round has already been paid. Ask the course to change the party size.' }, { status: 409 });
     if (e.code === 'CUTOFF') return NextResponse.json({ error: 'The free-change window for this booking has closed. Call the course to change the party size.' }, { status: 409 });
+    if (e.code === 'SIZE') return NextResponse.json({ error: e.msg }, { status: 400 });
     if (e.code === 'SAME') return NextResponse.json({ error: 'Party size is already set to that' }, { status: 409 });
     if (e.code === 'FULL') return NextResponse.json({ error: `Only ${e.max} spot${e.max === 1 ? '' : 's'} available for this tee time` }, { status: 409 });
     if ((err as { code?: string }).code === 'P2034') {

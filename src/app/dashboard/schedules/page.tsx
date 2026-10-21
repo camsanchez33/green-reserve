@@ -17,6 +17,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
+import RoundRulesCard, { type RoundRules, type CourseRules } from '@/components/dashboard/RoundRulesCard';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
@@ -42,7 +43,7 @@ type Schedule = {
   residentRateWeekday: number | null; residentRateWeekend: number | null;
   cartFee: number; walkingAllowed: boolean; active: boolean; createdAt: string;
 };
-type ProductOpt = { id: string; label: string; holes: number; active: boolean };
+type ProductOpt = { id: string; label: string; holes: number; active: boolean } & RoundRules;
 type Preview = { days: number; added: number; removed: number; repriced: number; bookedKept: number; refusal?: string | null; warnings?: string[] };
 type Pending = { title: string; doing: string; preview: Preview | null; error: string; run: () => Promise<void> };
 
@@ -97,6 +98,7 @@ export default function SchedulesPage() {
   const [month, setMonth] = useState(() => new Date().toLocaleDateString('en-CA').slice(0, 8) + '01');
   const [windows, setWindows] = useState<{ publicAdvanceDays: number | null; memberAdvanceDays: number | null }>({ publicAdvanceDays: null, memberAdvanceDays: null });
   const [windowsError, setWindowsError] = useState('');
+  const [courseRules, setCourseRules] = useState<CourseRules | null>(null);
 
   const loadSchedules = useCallback(async () => {
     setLoading(true);
@@ -106,11 +108,12 @@ export default function SchedulesPage() {
     setLoading(false);
   }, []);
   const loadWindows = useCallback(async () => {
-    const r = await dfetch<{ hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; memberAdvanceDays?: number }>('/api/operator/settings');
+    const r = await dfetch<{ hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; memberAdvanceDays?: number; walkingAllowed?: string; cartRequired?: boolean; minPlayers?: number; maxPlayers?: number }>('/api/operator/settings');
     if (!r.ok || !r.data) { setWindowsError(r.ok ? 'Settings came back empty — refresh.' : r.error); return; }
     const c = r.data;
     setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing);
     setWindows({ publicAdvanceDays: typeof c.publicAdvanceDays === 'number' ? c.publicAdvanceDays : null, memberAdvanceDays: typeof c.memberAdvanceDays === 'number' ? c.memberAdvanceDays : null });
+    setCourseRules({ walkingAllowed: c.walkingAllowed ?? 'always', cartRequired: !!c.cartRequired, minPlayers: c.minPlayers ?? 1, maxPlayers: c.maxPlayers ?? 4, publicAdvanceDays: c.publicAdvanceDays ?? 7 });
     setWindowsError('');
   }, []);
   const loadProducts = useCallback(async () => {
@@ -444,6 +447,15 @@ export default function SchedulesPage() {
                 </ul>
               )}
             </Card>
+
+            {(() => {
+              const round = multi && view !== 'other' ? activeProducts.find(p => p.id === view) : null;
+              return round ? (
+                <RoundRulesCard productId={round.id} label={round.label} course={courseRules} canEdit={!pageAccess.isStaff}
+                  rules={{ walkingPolicy: round.walkingPolicy ?? null, minPlayers: round.minPlayers ?? null, maxPlayers: round.maxPlayers ?? null, publicAdvanceDays: round.publicAdvanceDays ?? null }}
+                  onSaved={r => setProducts(ps => ps.map(p => p.id === round.id ? { ...p, ...r } : p))} />
+              ) : null;
+            })()}
 
             <Card className="p-5">
               <h2 className="text-[15px] font-semibold text-ink">How far ahead golfers can book</h2>

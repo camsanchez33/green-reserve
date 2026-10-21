@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 455,
-    "routes": 228,
-    "libs": 143,
+    "files": 458,
+    "routes": 229,
+    "libs": 144,
     "models": 43,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3052,7 +3052,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 384,
+      "lines": 393,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3075,6 +3075,7 @@
       "guard": "public for POST",
       "imports": [
         "@/lib/auth",
+        "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/cancel-policy",
         "@/lib/claim-tee-time",
@@ -3889,7 +3890,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/change-players/route.ts",
-      "lines": 129,
+      "lines": 134,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3908,6 +3909,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/booking-events",
+        "@/lib/booking-rules",
         "@/lib/cancel-policy",
         "@/lib/manage-access",
         "@/lib/prisma",
@@ -4108,7 +4110,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "lines": 105,
+      "lines": 114,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4125,6 +4127,7 @@
       "auth": "member",
       "guard": "file",
       "imports": [
+        "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/course-time",
         "@/lib/member-session",
@@ -5197,6 +5200,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/round-rules/route.ts",
+      "lines": 32,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PUT",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/round-rules",
+      "kind": "api",
+      "methods": [
+        "PUT"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/booking-rules",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/sales-tax/route.ts",
       "lines": 55,
       "purpose": "",
@@ -5943,7 +5973,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/tee-times/route.ts",
-      "lines": 67,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5960,9 +5990,9 @@
       "auth": "public",
       "guard": "token",
       "imports": [
-        "@/lib/money",
         "@/lib/preview-token",
         "@/lib/prisma",
+        "@/lib/public-tee-times",
         "next/server"
       ],
       "usedBy": []
@@ -6109,7 +6139,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 701,
+      "lines": 722,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6312,7 +6342,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1820,
+      "lines": 1837,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6869,7 +6899,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 585,
+      "lines": 597,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -6886,6 +6916,7 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/RoundRulesCard",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
@@ -8449,6 +8480,42 @@
       ]
     },
     {
+      "path": "src/components/dashboard/RoundRulesCard.tsx",
+      "lines": 105,
+      "purpose": "W2-6 slice 3 (Cam 2026-10-20):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CourseRules",
+          "kind": "type"
+        },
+        {
+          "name": "default (RoundRulesCard)",
+          "kind": "component"
+        },
+        {
+          "name": "RoundRules",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/booking-rules",
+        "@/lib/walking",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/schedules/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/SalesTaxCard.tsx",
       "lines": 82,
       "purpose": "W2-7 part B (Cam 2026-10-20):",
@@ -9116,6 +9183,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
+        "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
@@ -9389,6 +9457,7 @@
         "src/components/dashboard/AgreementNotice.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
+        "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
@@ -9448,6 +9517,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
@@ -10022,6 +10092,7 @@
         "src/app/api/operator/photos/[id]/route.ts",
         "src/app/api/operator/photos/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/sales-tax/route.ts",
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/settings/route.ts",
@@ -10863,6 +10934,68 @@
       ],
       "usedBy": [
         "src/app/api/operator/bookings/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/booking-rules.ts",
+      "lines": 84,
+      "purpose": "W2-6 slice 3 (Cam 2026-10-20:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "groupSizeError",
+          "kind": "fn"
+        },
+        {
+          "name": "isWalkingPolicy",
+          "kind": "fn"
+        },
+        {
+          "name": "readRoundRules",
+          "kind": "fn"
+        },
+        {
+          "name": "RuleCourse",
+          "kind": "type"
+        },
+        {
+          "name": "RuleRound",
+          "kind": "type"
+        },
+        {
+          "name": "Rules",
+          "kind": "type"
+        },
+        {
+          "name": "rulesFor",
+          "kind": "fn"
+        },
+        {
+          "name": "WALKING_POLICIES",
+          "kind": "const"
+        },
+        {
+          "name": "walkingAllowedAt",
+          "kind": "fn"
+        },
+        {
+          "name": "WalkingPolicy",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/bookings/route.ts",
+        "src/app/api/manage/[bookingId]/change-players/route.ts",
+        "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/app/api/operator/round-rules/route.ts",
+        "src/components/dashboard/RoundRulesCard.tsx",
+        "src/lib/public-tee-times.ts"
       ]
     },
     {
@@ -12414,7 +12547,7 @@
     },
     {
       "path": "src/lib/courses-data.ts",
-      "lines": 320,
+      "lines": 324,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14193,7 +14326,6 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/tiers/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
-        "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/course-wire.ts",
@@ -14756,6 +14888,7 @@
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/residents/route.ts",
+        "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
@@ -14900,7 +15033,7 @@
     },
     {
       "path": "src/lib/public-tee-times.ts",
-      "lines": 81,
+      "lines": 92,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
@@ -14923,6 +15056,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/course-time",
         "@/lib/money",
@@ -14930,6 +15064,7 @@
       ],
       "usedBy": [
         "src/app/api/courses/[slug]/tee-times/route.ts",
+        "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/app/book/page.tsx",
         "src/app/g/[slug]/page.tsx"
       ]
@@ -15582,6 +15717,7 @@
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/residents/route.ts",
+        "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/sales-tax/route.ts",
         "src/app/api/operator/schedule/preview/route.ts",
         "src/app/api/operator/schedule/route.ts",
@@ -16774,7 +16910,8 @@
       "imports": [],
       "usedBy": [
         "src/app/courses/[slug]/CourseBookingClient.tsx",
-        "src/app/dashboard/settings/page.tsx"
+        "src/app/dashboard/settings/page.tsx",
+        "src/components/dashboard/RoundRulesCard.tsx"
       ]
     },
     {
@@ -18358,6 +18495,7 @@
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
@@ -18370,6 +18508,7 @@
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
+        "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/app/api/preview/send/route.ts",
         "src/app/courses/[slug]/page.tsx",
         "src/app/preview/[courseId]/page.tsx",
@@ -19056,6 +19195,22 @@
           "type": "DateTime"
         },
         {
+          "name": "walkingPolicy",
+          "type": "String?"
+        },
+        {
+          "name": "minPlayers",
+          "type": "Int?"
+        },
+        {
+          "name": "maxPlayers",
+          "type": "Int?"
+        },
+        {
+          "name": "publicAdvanceDays",
+          "type": "Int?"
+        },
+        {
           "name": "teeSetRatings",
           "type": "CourseProductTeeSet[]"
         },
@@ -19070,12 +19225,14 @@
       ],
       "writers": [
         "src/app/api/admin/inquiries/route.ts",
-        "src/app/api/operator/course-products/route.ts"
+        "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/round-rules/route.ts"
       ],
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/nines/route.ts",
+        "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/course-shape-setup.ts",

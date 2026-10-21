@@ -5,6 +5,7 @@ import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
+import { rulesFor, walkingAllowedAt, type RuleCourse } from '@/lib/booking-rules';
 
 /**
  * Maps a Prisma TeeTime row (camelCase, real availability counts) onto the
@@ -12,9 +13,14 @@ import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window
  * reads green_fee, cart_fee, players_available, walking_allowed, status).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function normalizeDbTeeTime(t: any) {
-  const spotsLeft = t.playersAvailable - t.playersBooked;
-  const status = spotsLeft <= 1 ? 'almost_full' : spotsLeft <= 2 ? 'limited' : 'available';
+export function normalizeDbTeeTime(t: any, course?: RuleCourse) {
+  // W2-6 slice 3: the time's booking rules (the course's, or its round's own).
+  // Spots are what ONE booking may take — capped at the group-size maximum — so
+  // every players picker on the golfer pages respects it without knowing why.
+  const rules = rulesFor(course ?? {}, t.product);
+  const spotsLeft = Math.min(t.playersAvailable - t.playersBooked, rules.maxPlayers);
+  const open = t.playersAvailable - t.playersBooked; // how full it really is
+  const status = open <= 1 ? 'almost_full' : open <= 2 ? 'limited' : 'available';
   return {
     id: t.id,
     course_id: t.courseId,
@@ -38,7 +44,10 @@ export function normalizeDbTeeTime(t: any) {
     // Cents at rest, dollars on the wire (the UI formats dollars).
     green_fee: centsToDollarsOr0(t.greenFeeCents),
     cart_fee: centsToDollarsOr0(t.cartFeeCents),
-    walking_allowed: t.walkingAllowed,
+    walking_allowed: walkingAllowedAt(rules, t),
+    cart_required: !walkingAllowedAt(rules, t),
+    min_players: rules.minPlayers,
+    max_players: rules.maxPlayers,
     status,
   };
 }
@@ -64,7 +73,7 @@ export async function loadPublicTeeTimes(slug: string, date: string): Promise<Pu
   const teeTimes = await prisma.teeTime.findMany({
     where: { courseId: dbCourse.id, date, status: { not: 'blocked' } },
     orderBy: { time: 'asc' },
-    include: { product: { select: { label: true, teeSetRatings: { select: { rating: true, slope: true, teeSet: { select: { sortOrder: true } } } } } } },
+    include: { product: { select: { label: true, walkingPolicy: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true, teeSetRatings: { select: { rating: true, slope: true, teeSet: { select: { sortOrder: true } } } } } } },
   });
 
   // SD-3: strip slots that have passed on the COURSE's clock. TeeTime.time is
@@ -72,9 +81,11 @@ export async function loadPublicTeeTimes(slug: string, date: string): Promise<Pu
   // wrong hours for any course outside UTC.
   const todayLocal = todayIn(dbCourse.timezone);
   const nowLocal = clockIn(dbCourse.timezone);
-  const visible = date === todayLocal
+  const visible = (date === todayLocal
     ? teeTimes.filter(t => t.time > nowLocal)
-    : teeTimes;
+    : teeTimes)
+    // A round with a shorter window of its own isn't shown past it.
+    .filter(t => withinWindow(date, rulesFor(dbCourse, t.product).publicAdvanceDays));
 
-  return { ok: true, teeTimes: visible.map(normalizeDbTeeTime) };
+  return { ok: true, teeTimes: visible.map(t => normalizeDbTeeTime(t, dbCourse)) };
 }

@@ -117,14 +117,19 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-21 01:23 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 27ef910</span>
-    <span>4 uncommitted</span>
+    <span>2026-10-21 01:57 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 7677bc6</span>
+    <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">51 runs have shipped that the queue doesn't know about</div>
+<div class="lede">56 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">248dc36</span><span>W2-6 slice 3: window-cap test, spec status, status board</span></li>
+<li><span class="h">d8a856f</span><span>W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping</span></li>
+<li><span class="h">290c10f</span><span>W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking</span></li>
+<li><span class="h">ddb40f0</span><span>W2-6 slice 2: schedule overlaps warn instead of block (#156)</span></li>
+<li><span class="h">bc1db3d</span><span>W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board</span></li>
 <li><span class="h">27ef910</span><span>W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused</span></li>
 <li><span class="h">e96323e</span><span>W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)</span></li>
 <li><span class="h">77187a1</span><span>Status board</span></li>
@@ -185,11 +190,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li><li><code>M src/lib/tee-sheet-engine.ts</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
@@ -232,9 +232,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-19 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 3d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
-<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 0d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 0d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 1d</td></tr>
+<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 1d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 8d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 12d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 12d</td></tr>
@@ -269,18 +269,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 12d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">248dc36</td><td class="num">2026-10-21</td><td>W2-6 slice 3: window-cap test, spec status, status board</td></tr>
+<tr><td class="num">d8a856f</td><td class="num">2026-10-21</td><td>W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping</td></tr>
+<tr><td class="num">290c10f</td><td class="num">2026-10-21</td><td>W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking</td></tr>
+<tr><td class="num">08e01e2</td><td class="num">2026-10-20</td><td>queue/spec update (#157)</td></tr>
+<tr><td class="num">ddb40f0</td><td class="num">2026-10-20</td><td>W2-6 slice 2: schedule overlaps warn instead of block (#156)</td></tr>
+<tr><td class="num">bc1db3d</td><td class="num">2026-10-21</td><td>W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board</td></tr>
 <tr><td class="num">27ef910</td><td class="num">2026-10-21</td><td>W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused</td></tr>
 <tr><td class="num">e96323e</td><td class="num">2026-10-20</td><td>W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)</td></tr>
 <tr><td class="num">77187a1</td><td class="num">2026-10-20</td><td>Status board</td></tr>
 <tr><td class="num">42ff2e4</td><td class="num">2026-10-20</td><td>W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day</td></tr>
 <tr><td class="num">dea0574</td><td class="num">2026-10-20</td><td>W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had</td></tr>
 <tr><td class="num">39e62f4</td><td class="num">2026-10-20</td><td>W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)</td></tr>
-<tr><td class="num">773326d</td><td class="num">2026-10-20</td><td>W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales)</td></tr>
-<tr><td class="num">ad6524b</td><td class="num">2026-10-19</td><td>W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)</td></tr>
-<tr><td class="num">bd86947</td><td class="num">2026-10-19</td><td>Sign-in page: full-screen photo with the sign-in card under the logo (#153)</td></tr>
-<tr><td class="num">fff11a1</td><td class="num">2026-10-19</td><td>Emails: one clean look for every email (EMAIL-2) (#152)</td></tr>
-<tr><td class="num">8287f54</td><td class="num">2026-10-19</td><td>Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150)</td></tr>
-<tr><td class="num">cb98de8</td><td class="num">2026-10-19</td><td>W2-4/5: price periods inside one schedule; Prices &amp; fees reorganised (#149)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
