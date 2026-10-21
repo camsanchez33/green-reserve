@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 19:48 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fe16f64` · working tree **2 dirty file(s)**
+Generated 2026-10-21 20:50 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6b0ebeb` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 92 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 96 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `6b0ebeb` | 2026-10-21 | AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links |
+| `821ddf9` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (in review) |
+| `4abfebb` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (#171) |
+| `a526731` | 2026-10-21 | Codemap and status board |
 | `fe16f64` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review) |
 | `d58220f` | 2026-10-21 | AW-6b: inquiry page — the one next step first (#169) |
 | `a85a078` | 2026-10-21 | AW-4b: Today shows each course with its own to-dos; Goals tab (#170) |
@@ -234,6 +238,10 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `6b0ebeb` 2026-10-21 — AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links
+- `821ddf9` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)
+- `4abfebb` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (#171)
+- `a526731` 2026-10-21 — Codemap and status board
 - `fe16f64` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)
 - `d58220f` 2026-10-21 — AW-6b: inquiry page — the one next step first (#169)
 - `a85a078` 2026-10-21 — AW-4b: Today shows each course with its own to-dos; Goals tab (#170)
@@ -242,10 +250,6 @@ Nothing awaiting review.
 - `ec245d5` 2026-10-21 — AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card
 - `adf590b` 2026-10-21 — Status board
 - `914a1c5` 2026-10-21 — AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today
-- `b84a2db` 2026-10-21 — AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card
-- `e941200` 2026-10-21 — Code map and status board
-- `39d69df` 2026-10-21 — AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts
-- `3bccfa0` 2026-10-21 — AW-5: hourly admin checks — urgent alerts once each, and a morning digest
 
 ---
 
