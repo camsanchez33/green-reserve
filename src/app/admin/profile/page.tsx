@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
+import OwnerPasskeysCard from '@/components/admin/OwnerPasskeysCard';
 import OwnerSignOutEverywhere from '@/components/admin/OwnerSignOutEverywhere';
 import OwnerTwoFactorCard from '@/components/admin/OwnerTwoFactorCard';
 import { Card } from '@/components/ui/Card';
@@ -81,6 +82,7 @@ export default function ProfilePage() {
           </Card>
 
           {/* OWNER TOTP 2FA — enrolment lives here, owner only. */}
+          {session.role === 'owner' && <OwnerPasskeysCard />}
           {session.role === 'owner' && <OwnerTwoFactorCard mfaSession={session.mfa === true} />}
 
           {/* Change password */}

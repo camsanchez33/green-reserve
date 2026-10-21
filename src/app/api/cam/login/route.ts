@@ -5,6 +5,7 @@ import { sendAdminTwoFactorCode, sendOwnerDeviceApproval, sendOwnerSignInAlert }
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
+import { hasPasskey, authenticationOptions, verifyPasskeySignIn } from '@/lib/owner-passkey';
 import { requestContext, deviceTokenFromCookie, trustedDevice, startDeviceApproval, setDeviceCookie, createOwnerSession, deviceLabel } from '@/lib/owner-session';
 
 // AW-1 (Cam 2026-10-20): the owner's ONLY sign-in, at /cam. Password → an
@@ -14,6 +15,17 @@ import { requestContext, deviceTokenFromCookie, trustedDevice, startDeviceApprov
 // password, so this route never confirms that an owner account exists.
 
 // Same cost (12) as real admin passwords, so an unknown email takes as long as a real one.
+/** Arm the authenticator-app step (the password was just proved). */
+async function setTotpPending(admin: { id: string; twoFactorCode: string | null; twoFactorCodeExpiry: Date | null }) {
+  // Carry a still-live used step onto the pending marker (replay guard).
+  const carried = admin.twoFactorCode?.startsWith(TOTP_USED_PREFIX) && admin.twoFactorCodeExpiry && admin.twoFactorCodeExpiry > new Date()
+    ? ':' + admin.twoFactorCode.slice(TOTP_USED_PREFIX.length) : '';
+  await prisma.adminUser.update({
+    where: { id: admin.id },
+    data: { twoFactorCode: TOTP_PENDING + carried, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), twoFactorAttempts: 0 },
+  });
+}
+
 const DUMMY_HASH = '$2a$12$x9I/Ln7XwBr4.techzuhLufMEVbOz1lhUde8CTW8YVHD9pGubcv7u';
 
 const when = () => new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET';
@@ -45,6 +57,33 @@ function lockoutResponse(lockoutUntil: Date) {
 export async function POST(req: NextRequest) {
   const ip = clientIp(req);
   const body = await req.json();
+
+  // ── Step 2a (AW-1b): a passkey ───────────────────────────────────────
+  if (body.step === 'passkey') {
+    const allowed = await rateLimit(`2fa:admin:${ip}`, 10, 300);
+    if (!allowed) return NextResponse.json({ error: 'Too many attempts, try again in a few minutes.' }, { status: 429 });
+    const email = String(body.email ?? '').trim().toLowerCase();
+    const admin = email ? await prisma.adminUser.findUnique({ where: { email } }) : null;
+    const startOver = () => NextResponse.json({ error: 'No sign-in in progress — please start over.' }, { status: 400 });
+    if (!admin || admin.role !== 'owner' || !admin.active) return startOver();
+    const device = await trustedDevice(admin.id, await deviceTokenFromCookie());
+    if (!device) return startOver();
+    // Only right after the password step (a challenge from adding a passkey can't sign anyone in).
+    if (!admin.twoFactorCode?.startsWith(TOTP_PENDING) || !admin.twoFactorCodeExpiry || admin.twoFactorCodeExpiry < new Date()) return startOver();
+    if (admin.twoFactorAttempts >= MAX_2FA_ATTEMPTS) {
+      await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, passkeyChallenge: null, passkeyChallengeExpiry: null } });
+      return NextResponse.json({ error: 'Too many incorrect attempts. Please start over.' }, { status: 400 });
+    }
+    if (!(await verifyPasskeySignIn(admin.id, body.response))) {
+      const attempts = admin.twoFactorAttempts + 1;
+      const clear = attempts >= MAX_2FA_ATTEMPTS;
+      await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorAttempts: clear ? 0 : attempts, ...(clear ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}) } });
+      return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'That passkey didn’t check out — start over and try again, or use your authenticator app.' }, { status: 400 });
+    }
+    // The backup step is no longer needed: clear its pending marker.
+    await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() } });
+    return signIn(admin, device.id, 'passkey');
+  }
 
   // ── Step 2: verify 2FA code ──────────────────────────────────────────
   if (body.step === 'verify') {
@@ -205,16 +244,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ mustChangePassword: true, setPasswordToken: token });
   }
 
+  // AW-1b: a passkey is the second factor once one exists. The authenticator
+  // app stays ready as the backup (its pending marker is set below too), and
+  // an owner with a passkey never gets an emailed code.
+  if (await hasPasskey(admin.id)) {
+    // The pending marker is also the proof, checked by the passkey step, that
+    // the password was just verified here.
+    await setTotpPending(admin);
+    const options = await authenticationOptions(admin.id);
+    return NextResponse.json({ requires2FA: true, method: 'passkey', options, backup: admin.twoFactorSecret ? 'totp' : null });
+  }
+
   // OWNER TOTP 2FA: enrolled → no email; the app has the code. The pending
   // marker is what the verify step checks for.
   if (admin.twoFactorSecret) {
-    // Carry a still-live used step onto the pending marker (replay guard).
-    const carried = admin.twoFactorCode?.startsWith(TOTP_USED_PREFIX) && admin.twoFactorCodeExpiry && admin.twoFactorCodeExpiry > new Date()
-      ? ':' + admin.twoFactorCode.slice(TOTP_USED_PREFIX.length) : '';
-    await prisma.adminUser.update({
-      where: { id: admin.id },
-      data: { twoFactorCode: TOTP_PENDING + carried, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), twoFactorAttempts: 0 },
-    });
+    await setTotpPending(admin);
     return NextResponse.json({ requires2FA: true, method: 'totp' });
   }
 

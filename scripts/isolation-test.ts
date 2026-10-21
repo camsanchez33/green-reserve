@@ -535,6 +535,11 @@ async function main() {
     const r4 = await api('/api/admin/expenses', { cookie: `gr_owner=${await signOwnerToken(live.id, data.adminViewer?.id ?? 'someone-else', live.expiresAt)}` });
     checkStatus('Owner session id under another admin\'s name → 401', r4.status, 401);
   }
+  {
+    // AW-1b: an employee can't list, add or remove the owner's passkeys.
+    const r = await api('/api/admin/passkeys', { cookie: viewerCookie });
+    checkStatus('Employee → owner passkeys → 403', r.status, 403);
+  }
 
   console.log('\n── Member cross-course session isolation ─────────────────────────');
   {

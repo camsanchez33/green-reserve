@@ -86,3 +86,5 @@ Earlier admin specs: ADMIN_REBUILD_SPEC, ADMIN_V2..V4_SPEC.
 - **AW-4 Today (overview):** four sections only — Needs you now (each item with its one fix button), Platform health (red/green), Money this month vs the same point last month (volume through courses, GreenReserve fees, net after Stripe and expenses), Onboarding by stage with stuck courses flagged. No daily fee tile, no unread count, no ticker.
 - **AW-5 AI checks:** hourly; a morning digest email plus an immediate alert for anything urgent (payments failing, site errors, a course stuck).
 - **AW-17 new areas:** Expenses gets its own page (today a drawer in Revenue); Leads (courses being chased before they inquire, feeding Inquiries); Marketing & advertising (campaigns, spend, what each brought in).
+
+Status (2026-10-21): AW-1a shipped (camsanchez33/green-reserve#161). AW-1b passkeys built (SimpleWebAuthn 13.3.x, pinned); AW-1c (step-up on risky actions + a device list) next, then AW-3/AW-4.
