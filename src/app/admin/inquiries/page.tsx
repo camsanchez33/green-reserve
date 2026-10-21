@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Trash2, ArchiveRestore } from 'lucide-react';
+import { Search, Trash2, ArchiveRestore, RefreshCw } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
@@ -18,6 +18,9 @@ import { formatDate as fmtDate, formatEasternDay as fmtDay, formatEasternDate as
 import { Modal } from '@/components/ui/Modal';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Card } from '@/components/ui/Card';
+import InquiryBoard from '@/components/admin/InquiryBoard';
+import { useAdminSession } from '@/lib/admin-session-context';
+import { MANAGER_PLUS } from '@/lib/admin-roles';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -44,19 +47,13 @@ interface Inquiry {
   stillNeed?: NeedItem[];
 }
 
-// MP-4b: this page is a WORK QUEUE, not a CRM browser. It used to be three UIs
-// stapled together — a queue, a tabbed record browser with four filters and
-// four sorts with per-tab memory, and a records console — five control layers
-// over one row of data, at a volume where none of them earned their keep.
+// AW-6a (Cam 2026-10-21): the default view is the BOARD (InquiryBoard) —
+// Talking · Setting up · Live, one next step per card. "All" and "Closed" are
+// footer links that keep the table (with bulk Send sheet / Archive in All).
 //
-// Now: the funnel strip on top narrows the queue (click a stage, click it
-// again to clear); the body is the ranked queue, split by whose move it is so
-// nothing an inquiry is waiting on is invisible; "All" and "Closed" are footer
-// links, not peers of the work.
-//
-// The `?tab=` param keeps its old name and its old values on purpose — the
-// Overview deep-links (?tab=new, ?tab=sheet-sent, ?tab=building, ?tab=live)
-// and any bookmark keep working. 'your-move' and '' both mean the whole queue.
+// The `?tab=` param keeps its old values on purpose so old deep links and
+// bookmarks still land here: 'all' and 'archived' open those views; any other
+// value (a stage key from before the board) just shows the board.
 const SEGMENT_KEYS = FUNNEL_SEGMENTS.map(s => s.key) as string[];
 const VIEW_ALL = 'all';
 const VIEW_CLOSED = 'archived';
@@ -105,6 +102,7 @@ function whyArchived(inq: Inquiry): { reason: string; date: string } {
 function InquiriesListInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { role } = useAdminSession();
 
   // MP-11a: the layout resolved the session; a page never re-checks it.
   const adminReady = true;
@@ -132,7 +130,6 @@ function InquiriesListInner() {
   );
   const view: 'queue' | 'all' | 'closed' =
     tab === VIEW_ALL ? 'all' : tab === VIEW_CLOSED ? 'closed' : 'queue';
-  const stage = view === 'queue' && SEGMENT_KEYS.includes(tab) ? tab : null;
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -287,21 +284,8 @@ function InquiriesListInner() {
     inq.city.toLowerCase().includes(q)
   );
   const newestFirst = (a: Inquiry, b: Inquiry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  const byQueue = (a: Inquiry, b: Inquiry) => compareQueue(sig(a), sig(b));
 
   const visible = inquiries.filter(matchesSearch);
-
-  // The queue body. With no stage selected it is the whole active pipeline
-  // (live is a destination, not work); with one selected it narrows to that
-  // stage — including Live, which has no "move" and so renders flat.
-  const queueBase = visible.filter(i => stage
-    ? segmentOf(i.status) === stage
-    : (ACTIVE_STATUSES as readonly string[]).includes(i.status));
-  const secYours = queueBase.filter(i => sig(i).yourMove).sort(byQueue);
-  const secThem = queueBase.filter(i => !sig(i).yourMove && sig(i).waitingOn === 'them').sort(byQueue);
-  const secSoon = queueBase.filter(i => !sig(i).yourMove && sig(i).waitingOn === 'us').sort(byQueue);
-  const secSnoozed = queueBase.filter(i => sig(i).waitingOn === 'snoozed').sort(byQueue);
-  const liveRows = stage === 'live' ? [...queueBase].sort(newestFirst) : [];
 
   const allRows = visible.filter(i => (ALIVE_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
   const closedRows = visible.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
@@ -345,7 +329,9 @@ function InquiriesListInner() {
 
   // Bulk lives with the work. Closed is a graveyard (row actions only) and the
   // All browse mixes live courses in, where a mis-aimed Archive is expensive.
-  const canBulkSelect = view === 'queue' && stage !== 'live';
+  // AW-6a: the board has no checkboxes; bulk Send sheet / Archive lives in
+  // All, on rows still in the pipeline (a live course is archived from its page).
+  const canBulkSelect = view === 'all';
   const selectedRows = inquiries.filter(i => selected.has(i.id));
   const canSendSheet = selectedRows.length > 0 && selectedRows.every(i => i.status === 'pending');
 
@@ -510,7 +496,7 @@ function InquiriesListInner() {
     const days = stageDays(inq);
     const overdue = mode === 'queue' && s.pressureDays > 0;
     const closed = mode === 'closed' ? whyArchived(inq) : null;
-    const selectable = canBulkSelect && mode === 'queue';
+    const selectable = canBulkSelect && (ACTIVE_STATUSES as readonly string[]).includes(inq.status);
     // U-A: pine left edge = your move, faded = stalled. Same signals as before.
     const yourMove = mode === 'queue' && s.yourMove;
     const stalled = mode === 'queue' && !s.yourMove && days >= STALLED_DAYS;
@@ -675,8 +661,6 @@ function InquiriesListInner() {
     );
   };
 
-  const queueEmpty = secYours.length === 0 && secThem.length === 0 && secSoon.length === 0 && secSnoozed.length === 0;
-  const stageLabel = stage ? (FUNNEL_SEGMENTS.find(s => s.key === stage)?.label || stage) : '';
 
   return (
     <div className="min-h-screen bg-paper flex">
@@ -685,7 +669,7 @@ function InquiriesListInner() {
         <div className="px-8 py-7">
 
           {/* Title + pipeline summary, search + refresh */}
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
             <div>
               <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Inquiries</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
@@ -710,10 +694,10 @@ function InquiriesListInner() {
                 />
               </div>
               <button
-                onClick={loadInquiries}
-                className="flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-line transition-colors"
+                onClick={loadInquiries} disabled={loading} aria-label="Refresh" title="Refresh"
+                className="w-9 h-9 flex items-center justify-center text-ink-soft hover:text-ink rounded-md hover:bg-white border border-line transition-colors disabled:opacity-50"
               >
-                Refresh
+                <RefreshCw aria-hidden="true" className={`w-4 h-4 ${loading ? 'animate-spin motion-reduce:animate-none' : ''}`} />
               </button>
               {/* IC-3 §5: every alive + closed row as a CSV, same auth as the list. */}
               <a
@@ -776,39 +760,12 @@ function InquiriesListInner() {
             </div>
           )}
 
-          {/* IC-4: a deep link (Overview tiles, bookmarks) narrowed the sheet — say so, once. */}
-          {!loading && !loadError && view === 'queue' && stage && (
-            <div className="mb-3 inline-flex items-center gap-2 bg-white border border-line rounded-md px-3 py-1.5 text-xs">
-              <span className="text-ink-muted">Showing:</span>
-              <span className="font-medium text-ink">{stageLabel}</span>
-              <button onClick={() => goTo('')} className="text-ink-faint hover:text-ink transition-colors">· Clear</button>
-            </div>
-          )}
-
-          {/* THE QUEUE — ranked, split by whose move it is. Every active
-              inquiry lands in exactly one of these sections, so none can be
-              invisible the way waiting-on-them ones used to be. IC-3: the
-              sections are <tbody> groups of one fixed-column table. */}
-          {!loading && !loadError && view === 'queue' && stage !== 'live' && (
-            <div>
-              {renderTable([
-                { key: 'yours', title: 'Your move', hint: 'needs you now — most overdue first', rows: secYours, mode: 'queue' },
-                { key: 'them', title: 'Waiting on the course', hint: 'sent, not answered yet', rows: secThem, mode: 'queue' },
-                { key: 'soon', title: 'No action due yet', hint: 'yours to work, still inside its window', rows: secSoon, mode: 'queue' },
-                { key: 'snoozed', title: 'Snoozed', hint: 'deliberately parked — they come back on their date', rows: secSnoozed, mode: 'queue' },
-              ])}
-              {queueEmpty && (
-                <EmptyState message={q ? 'No results — clear your search' : stage ? `Nothing in ${stageLabel}.` : 'Queue is clear — nothing is waiting.'} />
-              )}
-            </div>
-          )}
-
-          {/* Live is a destination, not work — no move to rank. */}
-          {!loading && !loadError && view === 'queue' && stage === 'live' && (
-            <div>
-              {liveRows.length === 0 && <EmptyState message={q ? 'No results — clear your search' : 'No courses have gone live yet.'} />}
-              {renderTable([{ key: 'live', title: '', hint: '', rows: liveRows, mode: 'flat' }])}
-            </div>
+          {/* AW-6a: the board IS the queue — Talking · Setting up · Live, one
+              next step per card. All and Closed (below) keep the table. */}
+          {!loading && !loadError && view === 'queue' && (
+            q && visible.length === 0
+              ? <EmptyState message="No results — clear your search" />
+              : <InquiryBoard inquiries={visible} signal={sig} href={detailHref} canResend={MANAGER_PLUS.includes(role)} />
           )}
 
           {!loading && !loadError && view === 'all' && (
