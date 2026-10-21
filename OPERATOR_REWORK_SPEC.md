@@ -213,6 +213,6 @@ Decisions (asked 2026-10-20):
 - Overlaps WARN, never block (only an exact same start on the same first tee stays refused): e.g. back-nine starts while 18s are making the turn get a plain "leave a gap around 9:15" note.
 - Booking rules stay course-wide, with per-round exceptions (walking/cart, group size, how far ahead) set on that round's Schedule tab. Dress code and the cancellation policy stay course-wide (the policy carries fees).
 
-Not built yet — next after W2-7 part B.
+Status (2026-10-21): slice 1, the one-save "Your course" setup with shape-change retire, shipped (camsanchez33/green-reserve#155). Slice 2, overlaps warn instead of block (lib/schedule-conflict checkSchedule: refused only when one tee time would be sold twice; notes shown in the Schedule save preview), is in review. Slice 3, per-round booking-rule exceptions, is next.
 
 W2-7 part B ships in two steps (2026-10-20): B1 = walk-up sales on the Pro shop page (cash and pay links), with the Settings copy saying so; B2 = shop items added to a round (they ride roundChargeCents and are NOT taxed until B2 lands). Known gaps: a card refund made in the Stripe dashboard doesn't reverse the tax record; who pays Stripe Tax per calculation on Express accounts is still unconfirmed (Cam asked to check with Stripe).

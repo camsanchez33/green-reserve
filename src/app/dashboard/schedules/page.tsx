@@ -23,7 +23,7 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { Card } from '@/components/ui/Card';
 import { formatTeeTime as fmtTime } from '@/lib/format';
-import { groupSchedules, snapToGrid, checkPeriods, normDays, type PlanGroup } from '@/lib/schedule-plans';
+import { groupSchedules, snapToGrid, checkPeriods, type PlanGroup } from '@/lib/schedule-plans';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const WEEK = [1, 2, 3, 4, 5, 6, 0]; // Monday first, the way a course reads its week
@@ -43,7 +43,7 @@ type Schedule = {
   cartFee: number; walkingAllowed: boolean; active: boolean; createdAt: string;
 };
 type ProductOpt = { id: string; label: string; holes: number; active: boolean };
-type Preview = { days: number; added: number; removed: number; repriced: number; bookedKept: number };
+type Preview = { days: number; added: number; removed: number; repriced: number; bookedKept: number; refusal?: string | null; warnings?: string[] };
 type Pending = { title: string; doing: string; preview: Preview | null; error: string; run: () => Promise<void> };
 
 type PeriodForm = {
@@ -205,17 +205,7 @@ export default function SchedulesPage() {
     const body = plan();
     const why = checkPeriods(body.periods, body.intervalMinutes);
     if (why) return toast(why, 'warn');
-    const mine = new Set(editGroup?.ids ?? []);
-    const clash = schedules.find(s => {
-      if (mine.has(s.id)) return false;
-      if (!s.active || (s.productId ?? '') !== (form.productId ?? '')) return false;
-      if (!normDays(s.daysOfWeek).some(d => form.daysOfWeek.includes(d))) return false;
-      return form.startTime < s.endTime && s.startTime < form.endTime;
-    });
-    if (clash) {
-      const days = normDays(clash.daysOfWeek).filter(d => form.daysOfWeek.includes(d)).map(d => DAYS[d]).join(', ');
-      return toast(`That overlaps "${clash.tierName === 'standard' ? 'your tee times' : clash.tierName}" on ${days} (${fmtTime(clash.startTime)} – ${fmtTime(clash.endTime)}). Change the hours so they don't overlap, or edit that one instead.`, 'warn');
-    }
+    // W2-6: overlaps are the server's call — the preview refuses one tee time sold twice and notes the rest.
     submit(editGroup ? 'Save this schedule?' : 'Add this schedule?', 'Saving', body, 'Saved. Your tee sheet is updated.');
   }
 
@@ -567,12 +557,24 @@ export default function SchedulesPage() {
             {pending.error ? <p className="text-[13.5px] text-bad mt-3">Couldn&apos;t work out what this changes — {pending.error}. You can still go ahead; booked times never change.</p>
               : !pending.preview ? <p className="text-[13.5px] text-ink-muted mt-3">Checking what this changes on your tee sheet…</p>
               : (<>
-                <p className="text-[13.5px] text-ink-soft mt-2">On your tee sheet over the next {pending.preview.days} days, this:</p>
-                <ul className="mt-2 space-y-1.5">{previewLines(pending.preview).map(l => <li key={l} className="text-[14px] text-ink leading-snug pl-4 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-2 before:h-0.5 before:bg-fairway">{l}</li>)}</ul>
+                {!pending.preview.refusal && <>
+                  <p className="text-[13.5px] text-ink-soft mt-2">On your tee sheet over the next {pending.preview.days} days, this:</p>
+                  <ul className="mt-2 space-y-1.5">{previewLines(pending.preview).map(l => <li key={l} className="text-[14px] text-ink leading-snug pl-4 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-2 before:h-0.5 before:bg-fairway">{l}</li>)}</ul>
+                </>}
+                {pending.preview.refusal && (
+                  <p className="mt-4 bg-bad/5 border border-bad/20 rounded-md px-3 py-2.5 text-[13.5px] text-ink leading-snug" role="alert">This can&apos;t be saved: {pending.preview.refusal}</p>
+                )}
+                {!pending.preview.refusal && !!pending.preview.warnings?.length && (
+                  <div className="mt-4 bg-warn/5 border border-warn/20 rounded-md px-3 py-2.5 space-y-1.5">
+                    <p className="text-[13.5px] font-semibold text-ink">Worth a look before you save</p>
+                    {pending.preview.warnings.map(w => <p key={w} className="text-[13.5px] text-ink leading-snug">{w}</p>)}
+                    <p className="text-[13px] text-ink">You can still save — this is a note, not a block.</p>
+                  </div>
+                )}
               </>)}
             <div className="flex justify-end gap-2 mt-6">
               <button onClick={() => setPending(null)} disabled={busy} className="px-4 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Go back</button>
-              <button onClick={runPending} disabled={busy || (!pending.preview && !pending.error)} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50">{busy ? `${pending.doing}…` : 'Go ahead'}</button>
+              <button onClick={runPending} disabled={busy || (!pending.preview && !pending.error) || !!pending.preview?.refusal} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50">{busy ? `${pending.doing}…` : 'Go ahead'}</button>
             </div>
           </Card>
         </div>

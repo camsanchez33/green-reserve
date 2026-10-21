@@ -1,21 +1,34 @@
 {
-  "generatedAt": "2026-10-20T18:01:44.591Z",
+  "generatedAt": "2026-10-21T01:23:21.843Z",
   "repo": {
-    "head": "77187a1",
+    "head": "27ef910",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 5,
+    "dirtyCount": 4,
     "dirty": [
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/lib/tee-sheet-engine.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "27ef910",
+        "date": "2026-10-21T01:18:43+00:00",
+        "subject": "W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e96323e",
+        "date": "2026-10-20T21:09:55-04:00",
+        "subject": "W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "77187a1",
         "date": "2026-10-20T18:01:18+00:00",
@@ -41,6 +54,13 @@
         "h": "39e62f4",
         "date": "2026-10-20T13:36:31-04:00",
         "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "773326d",
+        "date": "2026-10-20T03:08:59+00:00",
+        "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales)",
         "ids": [],
         "matches": []
       },
@@ -541,7 +561,7 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-20",
+      "lastTouched": "2026-10-21",
       "ageDays": 0
     },
     {
@@ -740,6 +760,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "27ef910",
+      "date": "2026-10-21",
+      "subject": "W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused"
+    },
+    {
+      "h": "e96323e",
+      "date": "2026-10-20",
+      "subject": "W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)"
+    },
+    {
       "h": "77187a1",
       "date": "2026-10-20",
       "subject": "Status board"
@@ -758,6 +788,11 @@
       "h": "39e62f4",
       "date": "2026-10-20",
       "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)"
+    },
+    {
+      "h": "773326d",
+      "date": "2026-10-20",
+      "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales)"
     },
     {
       "h": "ad6524b",
@@ -783,21 +818,6 @@
       "h": "cb98de8",
       "date": "2026-10-19",
       "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)"
-    },
-    {
-      "h": "223121d",
-      "date": "2026-10-19",
-      "subject": "Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)"
-    },
-    {
-      "h": "abb4518",
-      "date": "2026-10-19",
-      "subject": "queue/spec update (#147)"
-    },
-    {
-      "h": "95da45f",
-      "date": "2026-10-19",
-      "subject": "Member portal: show a resident their own spot at the resident rate, as booking charges (#146)"
     }
   ]
 }

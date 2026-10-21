@@ -61,11 +61,11 @@ async function resolveProduct(courseId: string, productId: unknown) {
   return product;
 }
 
-/** L2: refuse a save that would put one nine in two places at once. */
-async function assertNoConflict(courseId: string, candidate: { id?: string | null; productId: string | null; daysOfWeek: number[]; startTime: string; endTime: string; active: boolean }) {
+/** L2 / W2-6: refuse a save that would sell one tee time twice (overlaps that don't are only warned about, in the preview). */
+async function assertNoConflict(courseId: string, candidate: { id?: string | null; productId: string | null; daysOfWeek: number[]; startTime: string; endTime: string; intervalMinutes: number; active: boolean }) {
   const [others, products, nines] = await Promise.all([
-    prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, active: true } }),
-    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true } }),
+    prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, intervalMinutes: true, active: true } }),
+    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true, holes: true } }),
     prisma.nine.findMany({ where: { courseId }, select: { id: true, name: true } }),
   ]);
   const why = findScheduleConflict(candidate, others, products, nines);
@@ -75,7 +75,7 @@ async function assertNoConflict(courseId: string, candidate: { id?: string | nul
 export async function createSchedule(courseId: string, body: Record<string, unknown>, opts: ScheduleScope = {}) {
   const product = await resolveProduct(courseId, body.productId);
   const daysOfWeek = (body.daysOfWeek as number[]) ?? [];
-  await assertNoConflict(courseId, { productId: product?.id ?? null, daysOfWeek, startTime: body.startTime as string, endTime: body.endTime as string, active: true });
+  await assertNoConflict(courseId, { productId: product?.id ?? null, daysOfWeek, startTime: body.startTime as string, endTime: body.endTime as string, intervalMinutes: Number(body.intervalMinutes) || 8, active: true });
   const schedule = await prisma.teeTimeSchedule.create({
     data: {
       courseId,
@@ -125,6 +125,7 @@ export async function updateSchedule(id: string, data: Record<string, unknown>, 
     daysOfWeek: (data.daysOfWeek as number[] | undefined) ?? existing.daysOfWeek,
     startTime: (data.startTime as string | undefined) ?? existing.startTime,
     endTime: (data.endTime as string | undefined) ?? existing.endTime,
+    intervalMinutes: data.intervalMinutes !== undefined ? (Number(data.intervalMinutes) || existing.intervalMinutes) : existing.intervalMinutes,
   };
   await assertNoConflict(existing.courseId, { id: existing.id, productId: nextProductId, ...next });
   const nextHoles = nextProductId
@@ -233,13 +234,13 @@ export async function saveSchedulePlan(courseId: string, plan: SchedulePlan, opt
   // checked against the course's OTHER schedules (the old rows are going away).
   if (active) {
     const [rows, products, nines] = await Promise.all([
-      prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, active: true } }),
-      prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true } }),
+      prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, intervalMinutes: true, active: true } }),
+      prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true, holes: true } }),
       prisma.nine.findMany({ where: { courseId }, select: { id: true, name: true } }),
     ]);
     const others = rows.filter(r => !replaces.includes(r.id));
     for (const p of periods) {
-      const clash = findScheduleConflict({ productId, daysOfWeek, startTime: String(p.startTime), endTime: String(p.endTime), active: true }, others, products, nines);
+      const clash = findScheduleConflict({ productId, daysOfWeek, startTime: String(p.startTime), endTime: String(p.endTime), intervalMinutes, active: true }, others, products, nines);
       if (clash) throw new ScheduleConflictError(clash);
     }
   }

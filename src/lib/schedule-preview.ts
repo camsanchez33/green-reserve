@@ -9,6 +9,7 @@ import { todayIn, addDaysStr } from './course-time';
 import { desiredSlots, slotKey, type ScheduleForSlots } from './tee-sheet-engine';
 import { scheduleMoneyForCreate, scheduleMoneyFromWire } from './schedule-wire';
 import type { SchedulePlan } from './schedule-service';
+import { checkSchedule } from './schedule-conflict';
 
 /** How many days regenerateUpcoming() rebuilds — the preview covers the same days. */
 export const PREVIEW_DAYS = 8;
@@ -26,6 +27,10 @@ export type SchedulePreview = {
   removed: number;      // empty tee times that go away
   repriced: number;     // empty tee times that stay but change price
   bookedKept: number;   // booked or blocked times the change would have touched, left exactly as they are
+  // W2-6: for a schedule save — the reason it would be refused (one tee time sold
+  // twice), else notes on overlaps the owner may accept. lib/schedule-conflict.
+  refusal?: string | null;
+  warnings?: string[];
 };
 
 type Existing = { productId: string | null; time: string; playersBooked: number; status: string; greenFeeCents: number; memberRateCents: number | null; residentRateCents: number | null; cartFeeCents: number; bookings: number };
@@ -120,5 +125,24 @@ export async function previewScheduleChange(courseId: string, change: ScheduleCh
     const d = diffDay(existing, desiredSlots(date, schedules, products));
     total.added += d.added; total.removed += d.removed; total.repriced += d.repriced; total.bookedKept += d.bookedKept;
   }
+  if (change.op === 'plan' && change.plan.active !== false) Object.assign(total, await planChecks(courseId, change.plan));
   return total;
+}
+
+/** W2-6: what lib/schedule-conflict says about each price period against the course's other schedules. */
+async function planChecks(courseId: string, plan: SchedulePlan): Promise<{ refusal: string | null; warnings: string[] }> {
+  const [rows, products, nines] = await Promise.all([
+    prisma.teeTimeSchedule.findMany({ where: { courseId }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, intervalMinutes: true, active: true } }),
+    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true, holes: true } }),
+    prisma.nine.findMany({ where: { courseId }, select: { id: true, name: true } }),
+  ]);
+  const replaces = (plan.replaces ?? []).map(String);
+  const others = rows.filter(r => !replaces.includes(r.id));
+  const warnings: string[] = [];
+  for (const p of plan.periods ?? []) {
+    const r = checkSchedule({ productId: plan.productId || null, daysOfWeek: plan.daysOfWeek ?? [], startTime: String(p.startTime ?? ''), endTime: String(p.endTime ?? ''), intervalMinutes: Number(plan.intervalMinutes) || 8, active: true }, others, products, nines);
+    if (r.refusal) return { refusal: r.refusal, warnings: [] };
+    for (const w of r.warnings) if (!warnings.includes(w)) warnings.push(w);
+  }
+  return { refusal: null, warnings };
 }

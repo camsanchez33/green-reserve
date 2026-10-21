@@ -8,8 +8,8 @@ import { findScheduleConflict } from '@/lib/schedule-conflict';
 /** L2 review: after a product's nines change, every pair of running schedules must still be legal. */
 async function conflictAfterNineChange(courseId: string, productId: string, nineIds: string[]): Promise<string | null> {
   const [schedules, products, nines] = await Promise.all([
-    prisma.teeTimeSchedule.findMany({ where: { courseId, active: true }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, active: true } }),
-    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true } }),
+    prisma.teeTimeSchedule.findMany({ where: { courseId, active: true }, select: { id: true, productId: true, daysOfWeek: true, startTime: true, endTime: true, intervalMinutes: true, active: true } }),
+    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true, holes: true } }),
     prisma.nine.findMany({ where: { courseId }, select: { id: true, name: true } }),
   ]);
   const next = products.map(p => (p.id === productId ? { ...p, nineIds } : p));

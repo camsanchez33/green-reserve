@@ -77,8 +77,9 @@ export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], pro
 
   // Build the desired slot map (product|time -> data) from schedules. Two
   // schedules for the SAME scope overlapping on a time: the later one wins —
-  // one row per product per time. Two products may share a start time (their
-  // nines do not overlap; the schedule editor refuses the case where they do).
+  // one row per product per time. Two products may share a start time when
+  // they start on different nines; the same first tee at the same minute is
+  // refused when the schedule is saved (lib/schedule-conflict, W2-6).
   // MP-3 B2c+B2d: cents throughout. Because TeeTimeSchedule and TeeTime were
   // converted in the SAME migration, this copy stays a straight pass-through —
   // no x100 anywhere in the generation path.
