@@ -817,6 +817,52 @@ model AdminUser {
   // outstanding token for this admin at once. Added while migrations are cheap.
   sessionVersion         Int             @default(0)
   auditLogs              AdminAuditLog[]
+  /// AW-1 (Cam 2026-10-20: "My owner sign in should be /cam and should be
+  /// unbelievably secure"): the owner's sign-ins and trusted devices.
+  ownerSessions          OwnerSession[]
+  ownerDevices           OwnerDevice[]
+}
+
+/// AW-1: one owner sign-in at /cam. The gr_owner cookie names this row; a
+/// session is good only while it is neither revoked nor expired (4 hours), so
+/// "sign out everywhere" and a stolen cookie both end at the database.
+model OwnerSession {
+  id         String       @id @default(cuid())
+  adminId    String
+  admin      AdminUser    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  deviceId   String?
+  device     OwnerDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  /// How the second factor was proved: 'passkey' | 'totp' | 'recovery' | 'email'.
+  method     String
+  ip         String       @default("")
+  userAgent  String       @default("")
+  createdAt  DateTime     @default(now())
+  expiresAt  DateTime
+  lastSeenAt DateTime     @default(now())
+  revokedAt  DateTime?
+
+  @@index([adminId])
+}
+
+/// AW-1: a device the owner has approved from an emailed link. The browser
+/// keeps a random token (gr_owner_device cookie); only its SHA-256 is stored.
+/// A device is trusted once approvedAt is set and until revokedAt.
+model OwnerDevice {
+  id                String         @id @default(cuid())
+  adminId           String
+  admin             AdminUser      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash         String         @unique
+  label             String         @default("")
+  ip                String         @default("")
+  approvalTokenHash String?        @unique
+  approvalExpiresAt DateTime?
+  approvedAt        DateTime?
+  revokedAt         DateTime?
+  createdAt         DateTime       @default(now())
+  lastUsedAt        DateTime?
+  sessions          OwnerSession[]
+
+  @@index([adminId])
 }
 
 model Announcement {

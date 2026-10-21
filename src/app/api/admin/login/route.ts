@@ -48,12 +48,10 @@ export async function POST(req: NextRequest) {
   // 401 above, so the 403 only ever reaches someone who already holds the
   // owner's password. Clear the failure counter first — the password was
   // correct — but do not stamp lastLoginAt, since no login happened.
+  // AW-1 (Cam 2026-10-20): /admin is the employees' door and never mentions an
+  // owner — the owner's password here reads exactly like a wrong one.
   if (admin.role === 'owner') {
-    await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts: 0, lockoutUntil: null } });
-    return NextResponse.json(
-      { error: 'Owner accounts sign in through the owner door.', ownerRedirect: true },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
   await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts: 0, lockoutUntil: null, lastLoginAt: new Date() } });

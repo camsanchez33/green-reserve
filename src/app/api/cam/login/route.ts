@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { signAdminToken, signAdminSetPasswordToken } from '@/lib/admin-session';
-import { sendAdminTwoFactorCode } from '@/lib/email';
+import { signAdminSetPasswordToken } from '@/lib/admin-session';
+import { sendAdminTwoFactorCode, sendOwnerDeviceApproval, sendOwnerSignInAlert } from '@/lib/email';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
-import { cookies } from 'next/headers';
+import { requestContext, deviceTokenFromCookie, trustedDevice, startDeviceApproval, setDeviceCookie, createOwnerSession, deviceLabel } from '@/lib/owner-session';
+
+// AW-1 (Cam 2026-10-20): the owner's ONLY sign-in, at /cam. Password → an
+// approved device (a new one is approved from an emailed link) → a second
+// factor → a 4-hour OwnerSession (gr_owner cookie) and an email saying so.
+// Every refusal before the password is proved reads the same as a wrong
+// password, so this route never confirms that an owner account exists.
+
+const when = () => new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET';
+
+/** Signed in: the session, the cookie, and the alert email (a failed email never blocks the sign-in). */
+async function signIn(admin: { id: string; email: string; name: string }, deviceId: string, method: string) {
+  const ctx = await requestContext();
+  const res = NextResponse.json({ success: true });
+  await createOwnerSession(res, { adminId: admin.id, deviceId, method, ip: ctx.ip, userAgent: ctx.userAgent });
+  try { await sendOwnerSignInAlert({ email: admin.email, name: admin.name, device: deviceLabel(ctx.userAgent), place: ctx.place, when: when(), method }); }
+  catch (err) { console.error(JSON.stringify({ ev: 'owner.signin_alert.fail', adminId: admin.id, error: err instanceof Error ? err.message : String(err) })); }
+  return res;
+}
 import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_PENDING, TOTP_USED_PREFIX, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
 
 const MAX_2FA_ATTEMPTS = 5;
@@ -38,6 +56,9 @@ export async function POST(req: NextRequest) {
     if (!admin || admin.role !== 'owner' || !admin.active) {
       return NextResponse.json({ error: 'Invalid code' }, { status: 400 });
     }
+    // The second factor only counts on an approved device (checked again here, not only at step 1).
+    const device = await trustedDevice(admin.id, await deviceTokenFromCookie());
+    if (!device) return NextResponse.json({ error: 'Approve this device from the email we sent, then sign in again.' }, { status: 400 });
     if (!admin.twoFactorCode || !admin.twoFactorCodeExpiry) {
       return NextResponse.json({ error: 'No pending verification — please start over' }, { status: 400 });
     }
@@ -68,8 +89,10 @@ export async function POST(req: NextRequest) {
       const carriedStep = admin.twoFactorCode.slice(TOTP_PENDING.length + 1);
       const raw = String(code).trim();
       let ok = false;
+      let method = 'totp';
       let data: Record<string, unknown> = {};
       if (looksLikeRecoveryCode(raw)) {
+        method = 'recovery';
         const idx = await matchRecoveryCode(raw, admin.twoFactorRecoveryCodes);
         if (idx >= 0) {
           ok = true;
@@ -93,10 +116,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
       }
       await prisma.adminUser.update({ where: { id: admin.id }, data: { ...data, twoFactorAttempts: 0, lastLoginAt: new Date() } });
-      const token = await signAdminToken({ adminId: admin.id, email: admin.email, name: admin.name, role: admin.role, mfa: true });
-      const cookieStore = await cookies();
-      cookieStore.set('admin_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 60 * 60 * 12 });
-      return NextResponse.json({ success: true });
+      return signIn(admin, device.id, method);
     }
 
     const valid = await bcrypt.compare(String(code).trim(), admin.twoFactorCode);
@@ -118,19 +138,8 @@ export async function POST(req: NextRequest) {
       data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() },
     });
 
-    // mfa: true is set HERE and nowhere else — this is the only code path in
-    // the app that has seen a second factor. Owner-only gates assert it.
-    const token = await signAdminToken({ adminId: admin.id, email: admin.email, name: admin.name, role: admin.role, mfa: true });
-    const cookieStore = await cookies();
-    cookieStore.set('admin_session', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 12,
-    });
-
-    return NextResponse.json({ success: true });
+    // The only path that has seen a second factor makes the owner session.
+    return signIn(admin, device.id, 'email');
   }
 
   // ── Step 1: verify password, send 2FA code ───────────────────────────
@@ -142,17 +151,16 @@ export async function POST(req: NextRequest) {
   const email = String(rawEmail).trim().toLowerCase();
 
   const admin = await prisma.adminUser.findUnique({ where: { email } });
-  if (!admin || admin.role !== 'owner') {
+  if (!admin || admin.role !== 'owner' || !admin.active) {
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
   }
-  if (!admin.active) return NextResponse.json({ error: 'Account inactive' }, { status: 403 });
   if (admin.lockoutUntil && admin.lockoutUntil > new Date()) return lockoutResponse(admin.lockoutUntil);
 
   // Same guard as /api/admin/login:31 — bcrypt.compare throws on a null hash,
   // so an owner row created but never activated would 500 instead of getting
   // the actionable "not activated" message.
   if (!admin.passwordHash)
-    return NextResponse.json({ error: 'Account not activated — check your email for a set-password link' }, { status: 401 });
+    return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
 
   const valid = await bcrypt.compare(String(password), admin.passwordHash);
   if (!valid) {
@@ -164,6 +172,26 @@ export async function POST(req: NextRequest) {
   }
 
   await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts: 0, lockoutUntil: null } });
+
+  // A device the owner hasn't approved: email the approval link and stop here.
+  // Only after the password is proved, so nobody else can make the inbox ring.
+  const rawDevice = await deviceTokenFromCookie();
+  if (!(await trustedDevice(admin.id, rawDevice))) {
+    const ctx = await requestContext();
+    const { deviceToken, approvalToken } = await startDeviceApproval(admin.id, rawDevice, ctx);
+    const origin = process.env.NEXT_PUBLIC_URL || req.nextUrl.origin;
+    let res: NextResponse;
+    try {
+      await sendOwnerDeviceApproval({ email: admin.email, name: admin.name, approvalUrl: `${origin}/cam/approve?token=${approvalToken}`, device: deviceLabel(ctx.userAgent), place: ctx.place, when: when() });
+      res = NextResponse.json({ needsDeviceApproval: true });
+    } catch (err) {
+      console.error(JSON.stringify({ ev: 'owner.device_approval_email.fail', adminId: admin.id, error: err instanceof Error ? err.message : String(err) }));
+      res = NextResponse.json({ error: 'Your password was right, but the device-approval email did not send. Wait a minute and try again.' }, { status: 502 });
+    }
+    // The browser keeps its device token either way, so a retry re-sends for the SAME device.
+    setDeviceCookie(res, deviceToken);
+    return res;
+  }
 
   if (admin.mustChangePassword) {
     const token = await signAdminSetPasswordToken({ adminId: admin.id, email: admin.email });

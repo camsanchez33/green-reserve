@@ -3,7 +3,7 @@
 //
 // Decision (Cam, 2026-08-26): TOTP over SMS. Holding the owner inbox is no
 // longer enough to take the platform; SIM swap is not in the picture at all.
-// While `twoFactorSecret` is null the email-code path in api/admin/owner-login
+// While `twoFactorSecret` is null the email-code path in api/cam/login
 // stays exactly as it was — enrolment is what makes TOTP mandatory, so the
 // migration can deploy before Cam enrols without locking him out.
 import { authenticator } from 'otplib';

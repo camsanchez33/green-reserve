@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
+import { ownerSessionFromCookie } from './owner-session';
 
 const rawSecret =
   process.env.JWT_SECRET ||
@@ -16,7 +17,7 @@ export interface AdminSession {
   name: string;
   role: string;
   /**
-   * True only for sessions minted by the /api/admin/owner-login verify step,
+   * True only for sessions minted by a /cam sign-in (AW-1: an OwnerSession behind the gr_owner cookie),
    * i.e. after a second factor was actually presented. Absent on every other
    * path. Owner-only gates assert this, which turns "owner sessions are
    * 2FA-backed" from an inference into an enforced invariant.
@@ -62,7 +63,7 @@ export function requireRole(session: AdminSession, roles: string[]): boolean {
  */
 export function ownerGateError(session: AdminSession): string {
   return session.role === 'owner'
-    ? 'Owner sign-in required — this session was not verified with a second factor. Sign in again at /admin/owner-login.'
+    ? 'Owner sign-in required — sign in again.'
     : 'Forbidden — owner only';
 }
 
@@ -88,6 +89,17 @@ export async function signAdminToken(payload: AdminSession) {
  * which no later row change retroactively alters.
  */
 export async function resolveAdminSession(): Promise<AdminSession | null> {
+  // AW-1: the owner signs in at /cam only, and only the gr_owner cookie (backed
+  // by a live OwnerSession row) makes an owner session. Its second factor was
+  // proved at /cam, so mfa is true.
+  let owner: Awaited<ReturnType<typeof ownerSessionFromCookie>>;
+  try { owner = await ownerSessionFromCookie(); }
+  catch (err) {
+    console.error(JSON.stringify({ ev: 'owner_session.db_unavailable', error: err instanceof Error ? err.message : String(err) }));
+    throw new AdminSessionUnavailable();
+  }
+  if (owner) return { adminId: owner.admin.id, email: owner.admin.email, name: owner.admin.name, role: 'owner', mfa: true };
+
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_session')?.value;
   if (!token) return null;
@@ -127,6 +139,9 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
 
   // Deleted or deactivated since the token was minted — the session is over.
   if (!admin || !admin.active) return null;
+  // AW-1: the employees' cookie never carries the owner (an old owner token, or an
+  // employee promoted to owner, signs in again at /cam).
+  if (admin.role === 'owner') return null;
 
   return { adminId: claims.adminId, email: claims.email, name: claims.name, role: admin.role, mfa: claims.mfa === true };
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
+import OwnerSignOutEverywhere from '@/components/admin/OwnerSignOutEverywhere';
 import OwnerTwoFactorCard from '@/components/admin/OwnerTwoFactorCard';
 import { Card } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
@@ -76,13 +77,7 @@ export default function ProfilePage() {
                 <span className="text-sm text-ink font-medium">{ROLE_LABELS[session.role ?? ''] ?? session.role}</span>
               </div>
             </div>
-            {session.role === 'owner' && (
-              <div className="mt-4 pt-3 border-t border-line-soft">
-                <a href="/admin/owner-login" className="text-xs text-pine underline hover:text-pine-hover transition-colors">
-                  Use secure owner login (with 2FA) next time
-                </a>
-              </div>
-            )}
+            {session.role === 'owner' && <OwnerSignOutEverywhere />}
           </Card>
 
           {/* OWNER TOTP 2FA — enrolment lives here, owner only. */}

@@ -503,53 +503,37 @@ async function main() {
     checkStatus('Viewer can access admin stats (aggregated, no PII) → 200', r.status, 200);
   }
 
-  console.log('\n── Admin owner auth boundary ─────────────────────────────────────');
+  console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
   {
-    // (a) The password-only door must refuse owner accounts — AFTER checking
-    // the password, so it never reveals which emails are owners.
-    const r = await api('/api/admin/login', {
-      method: 'POST',
-      body: { email: `${TS}-owner@test.local`, password: PASS },
-    });
-    checkStatus('Owner at /api/admin/login (correct password) → 403', r.status, 403);
-    check(
-      'Owner rejection carries ownerRedirect so the page can point at the owner door',
-      (r.body as { ownerRedirect?: boolean })?.ownerRedirect === true,
-    );
+    // (a) The employees' door never mentions an owner: the owner's correct
+    // password reads exactly like a wrong one.
+    const r = await api('/api/admin/login', { method: 'POST', body: { email: `${TS}-owner@test.local`, password: PASS } });
+    checkStatus('Owner at /api/admin/login (correct password) → 401, like a wrong password', r.status, 401);
+    check('…with no owner hint', !JSON.stringify(r.body ?? {}).toLowerCase().includes('owner'));
+    const w = await api('/api/admin/login', { method: 'POST', body: { email: `${TS}-owner@test.local`, password: 'WrongPassword#1234' } });
+    check('…and the same body as a wrong password', JSON.stringify(w.body) === JSON.stringify(r.body));
   }
   {
-    // Enumeration guard: a wrong password for an owner email must look exactly
-    // like a wrong password for any other account.
-    const r = await api('/api/admin/login', {
-      method: 'POST',
-      body: { email: `${TS}-owner@test.local`, password: 'WrongPassword#1234' },
-    });
-    checkStatus('Owner email + wrong password → generic 401, not 403', r.status, 401);
-    check(
-      'Wrong-password response does not leak ownerRedirect',
-      (r.body as { ownerRedirect?: boolean })?.ownerRedirect !== true,
-    );
-  }
-  {
-    // (d) A hand-minted owner session WITHOUT the mfa claim — what every
-    // session issued before this shipped looks like — must not reach an
-    // owner-only endpoint.
+    // (b) An owner on the employees' cookie is refused — even one claiming a second factor.
     const { signAdminToken } = await import('../src/lib/admin-session');
-    const noMfa = await signAdminToken({
-      adminId: data.adminOwner.id, email: data.adminOwner.email,
-      name: data.adminOwner.name, role: 'owner',
-    });
-    const r = await api('/api/admin/expenses', { cookie: `admin_session=${noMfa}` });
-    checkStatus('Password-only owner session → owner-only endpoint → 403', r.status, 403);
-
-    // …and the same session WITH the claim must pass, so this proves a gate
-    // rather than a uniformly broken endpoint.
-    const withMfa = await signAdminToken({
-      adminId: data.adminOwner.id, email: data.adminOwner.email,
-      name: data.adminOwner.name, role: 'owner', mfa: true,
-    });
-    const r2 = await api('/api/admin/expenses', { cookie: `admin_session=${withMfa}` });
-    checkStatus('2FA-backed owner session → owner-only endpoint → 200', r2.status, 200);
+    const withMfa = await signAdminToken({ adminId: data.adminOwner.id, email: data.adminOwner.email, name: data.adminOwner.name, role: 'owner', mfa: true });
+    const r = await api('/api/admin/expenses', { cookie: `admin_session=${withMfa}` });
+    checkStatus('Owner token on the employees\' cookie → owner-only endpoint → 401', r.status, 401);
+  }
+  {
+    // (c) Only a live OwnerSession behind gr_owner opens owner-only endpoints.
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000) } });
+    const r = await api('/api/admin/expenses', { cookie: `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}` });
+    checkStatus('Live owner session → owner-only endpoint → 200', r.status, 200);
+    await prisma.ownerSession.update({ where: { id: live.id }, data: { revokedAt: new Date() } });
+    const r2 = await api('/api/admin/expenses', { cookie: `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}` });
+    checkStatus('Revoked owner session (cookie still valid) → 401', r2.status, 401);
+    const old = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() - 1000) } });
+    const r3 = await api('/api/admin/expenses', { cookie: `gr_owner=${await signOwnerToken(old.id, data.adminOwner.id, new Date(Date.now() + 3600_000))}` });
+    checkStatus('Expired owner session (cookie claims longer) → 401', r3.status, 401);
+    const r4 = await api('/api/admin/expenses', { cookie: `gr_owner=${await signOwnerToken(live.id, data.adminViewer?.id ?? 'someone-else', live.expiresAt)}` });
+    checkStatus('Owner session id under another admin\'s name → 401', r4.status, 401);
   }
 
   console.log('\n── Member cross-course session isolation ─────────────────────────');

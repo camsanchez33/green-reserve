@@ -125,7 +125,7 @@ export default function EmployeesPage() {
 
   // MP-2b: all three actions discarded the response. MP-2 made this endpoint
   // assert the mfa claim and wrote deliberate recovery copy for the failure
-  // ("Sign in again at /admin/owner-login") — and the page threw it away, so an
+  // ("Sign in again at /cam") — and the page threw it away, so an
   // mfa-less owner clicked Deactivate and simply nothing happened.
   async function runEmployeeAction(key: string, body: Record<string, unknown>): Promise<Record<string, unknown> | null> {
     setActionLoading(key); setActionError('');

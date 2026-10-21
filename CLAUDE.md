@@ -152,7 +152,7 @@ Staff logins are permissioned PER PERSON by the course owner (Settings → Staff
 | Surface | Cookie | JWT TTL | Renewal |
 |---------|--------|---------|---------|
 | Admin employees (viewer/support/manager) | `admin_session` | 12h absolute | None — re-authenticate after 12h |
-| Admin owner | `admin_session` | 12h absolute | None — 2FA at each login |
+| Admin owner (AW-1, Cam 2026-10-20) | `gr_owner` → an `OwnerSession` row | 4h absolute | None — signs in ONLY at `/cam`: password → an approved device (new devices approved from an emailed link) → second factor; every sign-in emailed; revocable ("Sign out everywhere"). `/admin` refuses the owner and never mentions it (`src/lib/owner-session.ts`) |
 | Operator/staff dashboard | `gr_operator` | 7 days sliding | Reissued when >50% elapsed |
 | Golfer | `gr_golfer` | 90 days sliding | Reissued when >50% elapsed |
 | Member (per-course) | `gr_member` | 90 days absolute | None |
