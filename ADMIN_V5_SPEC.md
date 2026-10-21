@@ -77,3 +77,12 @@ Earlier admin specs: ADMIN_REBUILD_SPEC, ADMIN_V2..V4_SPEC.
 - **AW-15 Company docs.** Organise.
 - **AW-16 My profile.** Rework, more organised.
 - **AW-17 New areas?** Cam asks whether to add Expenses, Marketing, Leads, Advertising.
+
+## Decisions (Cam 2026-10-21)
+
+- **AW-1 /cam:** passkey as the second factor (authenticator app + recovery codes as backup; email codes off for the owner once a passkey exists); owner session 4 hours, risky actions re-confirmed with the passkey; an email on every sign-in; new devices approved from an emailed link; the owner's own cookie; /admin never mentions the owner and /cam is linked nowhere and not indexed. Built in three parts: AW-1a (/cam, devices, sessions, alerts), AW-1b (passkeys), AW-1c (step-up on risky actions, plus a device list to revoke one).
+- **AW-3 navigation:** the LEFT RAIL, grouped by job — Today · Courses (Leads, Inquiries, Courses, Course groups, Messages) · Money (Revenue, Expenses, Marketing) · People (Employees, Golfer lookup) · System (Health, Company docs). Mockups: https://claude.ai/artifact/LymjV9nP8oEqeutpdb7eb7 (option A chosen).
+- **Search on top of the rail (Cam: "I do like that search bar AI feature where I can find anything"):** typing a name, email, phone or id is an instant plain search across courses, inquiries, golfers, bookings, messages and admin pages; asking a question ("which courses had no bookings this week") goes to an AI answer that reads data through read-only tools and links to what it found — it never changes anything.
+- **AW-4 Today (overview):** four sections only — Needs you now (each item with its one fix button), Platform health (red/green), Money this month vs the same point last month (volume through courses, GreenReserve fees, net after Stripe and expenses), Onboarding by stage with stuck courses flagged. No daily fee tile, no unread count, no ticker.
+- **AW-5 AI checks:** hourly; a morning digest email plus an immediate alert for anything urgent (payments failing, site errors, a course stuck).
+- **AW-17 new areas:** Expenses gets its own page (today a drawer in Revenue); Leads (courses being chased before they inquire, feeding Inquiries); Marketing & advertising (campaigns, spend, what each brought in).
