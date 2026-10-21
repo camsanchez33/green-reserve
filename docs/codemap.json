@@ -6869,7 +6869,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 583,
+      "lines": 585,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -15220,10 +15220,14 @@
     },
     {
       "path": "src/lib/schedule-conflict.ts",
-      "lines": 78,
-      "purpose": "COURSE_LAYOUT_SPEC L2 — conflict detection for product-scoped schedules.",
+      "lines": 143,
+      "purpose": "COURSE_LAYOUT_SPEC L2 — checks for schedules that share ground.",
       "brain": [],
       "exports": [
+        {
+          "name": "checkSchedule",
+          "kind": "fn"
+        },
         {
           "name": "ConflictNine",
           "kind": "type"
@@ -15239,6 +15243,10 @@
         {
           "name": "findScheduleConflict",
           "kind": "fn"
+        },
+        {
+          "name": "TURN_MINUTES",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -15249,6 +15257,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/operator/course-products/route.ts",
+        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
     },
@@ -15296,7 +15305,7 @@
     },
     {
       "path": "src/lib/schedule-preview.ts",
-      "lines": 125,
+      "lines": 149,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -15329,6 +15338,7 @@
       "imports": [
         "./course-time",
         "./prisma",
+        "./schedule-conflict",
         "./schedule-service",
         "./schedule-wire",
         "./tee-sheet-engine"
@@ -15339,7 +15349,7 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 309,
+      "lines": 310,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [
@@ -19793,6 +19803,7 @@
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
     },
