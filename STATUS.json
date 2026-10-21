@@ -1,15 +1,35 @@
 {
-  "generatedAt": "2026-10-21T04:27:02.179Z",
+  "generatedAt": "2026-10-21T04:44:32.377Z",
   "repo": {
-    "head": "0c7421f",
+    "head": "c78b7aa",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 5,
+    "dirty": [
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/admin-today-db-test.ts",
+      " M src/app/admin/page.tsx",
+      " M src/lib/admin-today.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "c78b7aa",
+        "date": "2026-10-21T04:38:36+00:00",
+        "subject": "AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "224db02",
+        "date": "2026-10-21T04:27:03+00:00",
+        "subject": "Status board and code map",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "4c61670",
         "date": "2026-10-21T04:27:00+00:00",
@@ -937,6 +957,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c78b7aa",
+      "date": "2026-10-21",
+      "subject": "AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding"
+    },
+    {
+      "h": "224db02",
+      "date": "2026-10-21",
+      "subject": "Status board and code map"
+    },
+    {
       "h": "4c61670",
       "date": "2026-10-21",
       "subject": "AW-3b: Ask in the admin search — read-only AI answers with links to admin pages"
@@ -985,16 +1015,6 @@
       "h": "00a9007",
       "date": "2026-10-21",
       "subject": "AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists"
-    },
-    {
-      "h": "ccbfb06",
-      "date": "2026-10-20",
-      "subject": "AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)"
-    },
-    {
-      "h": "0671dab",
-      "date": "2026-10-21",
-      "subject": "Regenerate code map after main merge"
     }
   ]
 }

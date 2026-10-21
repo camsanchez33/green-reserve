@@ -1,203 +1,102 @@
 'use client';
+// AW-4 (Cam 2026-10-21): Today — four sections only. Needs you now (each item
+// with its one fix), Platform health (red/green), Money this month vs the same
+// point last month, Onboarding by stage with stuck courses named. No daily fee
+// tile, no unread count, no ticker. Data: /api/admin/today, which leaves out
+// (null) any section the signed-in role can't see.
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, RefreshCw } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-roles';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { formatMoney as fmtMoney, formatRelative as fmtAgo } from '@/lib/format';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Card } from '@/components/ui/Card';
+import { formatMoney as fmtMoney, formatRelative as fmtAgo } from '@/lib/format';
 
-interface QueueItem { id: string; label: string; ageDays: number; }
+interface QueueItem { id: string; label: string; ageDays: number }
 interface ActionRow {
-  id: string; who: string; why: string; doThis: string; ageDays: number;
-  actionLabel: string; href: string; amount?: string; count?: number; items?: QueueItem[];
+  id: string; who: string; why: string; doThis: string; ageDays: number; severity: 'bad' | 'warn';
+  actionLabel: string; href: string; items?: QueueItem[];
   fire?: { kind: 'resend_preview' | 'resend_sheet' | 'send_nudge'; inquiryId?: string; courseId?: string };
 }
-
-interface Stats {
-  pendingInquiries: number;
-  topStrip: {
-    feesToday: number | null; bookingsToday: number; playersToday?: number; checkInsToday: number; cancellationsToday: number;
-    unreadMessages: number; unreadNewestSender: string | null;
-    waitingNewInquiries: number; waitingOldestAgeDays: number | null;
-    waitingDrafts: number; waitingDraftsList: { id: string; name: string }[];
-  };
-  actionQueue: { red: ActionRow[]; redCount: number; amber: ActionRow[]; amberCount: number };
-  // MP-2e: /api/admin/stats nulls every money field below SUPPORT_PLUS
-  // (MP-2d). The interface still said `number`, so tsc could not see the
-  // mismatch and fmtMoney(null) threw on render — a viewer's only page was a
-  // blank client-exception screen. The type describes the wire format now.
-  revenue: {
-    day: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
-    week: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
-    month: { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number }[];
+interface Today {
+  needs: { rows: ActionRow[]; redCount: number; amberCount: number } | null;
+  health: {
+    jobs: { total: number; bad: { job: string; note: string }[]; notYetRun: number };
+    stripeWebhook: { lastAt: string | null; ok: boolean; lastError: string | null };
+    payments: { live: number; blocked: number };
   } | null;
-  thirtyDay: {
-    activeCourses: number; totalCourses: number; archivedCourses: number;
-    newCourses30d: number; newCoursesPrev30d: number;
-    bookings30d: number; bookingsPrev30d: number;
-    fees30d: number | null; feesPrev30d: number | null;
-  };
-  bottomTrio: {
-    pipeline: { newInquiries: number; sheetsOut: number; building: number; wentLive: number };
-    teeSheetToday: { roundsToday: number; checkInsDone: number; grFeesExpected: number | null; grossExpected: number | null };
-    courseHealthWatchlist: { id: string; name: string; reason: string }[];
-  };
+  money: {
+    from: string; daysIn: number;
+    current: { rounds: number; volume: number; fees: number };
+    prior: { rounds: number; volume: number; fees: number };
+    net: { current: number | null; prior: number | null; stripeUnavailable: boolean } | null;
+  } | null;
+  onboarding: {
+    stuckDays: number;
+    stages: { key: string; label: string; count: number; stuck: { id: string; name: string; days: number; waitingOn: string }[] }[];
+  } | null;
+  at: string;
 }
 
-// MP-11a: role lists come from ONE place. Local copies were the mechanism by
-// which the owner's view and an employee's could drift (LAW rule 2).
 const REFRESH_MS = 5 * 60 * 1000;
-
-function Trend({ current, prev, suffix = 'vs prior 30d' }: { current: number | null; prev: number | null; suffix?: string }) {
-  // MP-2e: null means the value is above the viewer's access level. Computing
-  // (null-null)/null*100 rendered "NaN% vs prior 30d".
-  if (current == null || prev == null) return null;
-  if (prev === 0 && current === 0) return null;
-  if (prev === 0) return <span className="text-[11px] text-ink-muted">— {suffix}</span>;
-  const delta = ((current - prev) / prev) * 100;
-  const up = delta >= 0;
-  const cls = up ? 'text-ok' : 'text-bad';
-  return (
-    <span className={`flex items-center gap-0.5 text-[11px] font-medium ${cls}`}>
-      {up ? '+' : '−'}{Math.abs(delta).toFixed(0)}% {suffix}
-    </span>
-  );
-}
-
-type Gran = 'day' | 'week' | 'month';
-type TickerPoint = { t: number; gross: number; fees: number; ghostGross: number; ghostFees: number };
-
-const GRAN_COPY: Record<Gran, { period: string; periodLower: string; suffix: string; start: string; now: string }> = {
-  day:   { period: 'Today',     periodLower: 'today',      suffix: 'vs yesterday, same time', start: '12am',  now: 'Now' },
-  week:  { period: 'This week', periodLower: 'this week',  suffix: 'vs last week, same day',  start: 'Mon',   now: 'Today' },
-  month: { period: 'This month', periodLower: 'this month', suffix: 'vs last month, same day', start: '1st',  now: 'Today' },
-};
-
-function RevenueChart({ data, gran }: { data: TickerPoint[]; gran: Gran }) {
-  const [showGross, setShowGross] = useState(false);
-  if (!data.length) return <div className="text-center text-ink-muted py-12 text-sm">No bookings yet</div>;
-  const copy = GRAN_COPY[gran];
-  const latest = data[data.length - 1];
-  const noDataYet = latest.fees === 0 && latest.gross === 0;
-
-  const tMin = data[0].t, tMax = data[data.length - 1].t;
-  const vMax = Math.max(
-    ...data.map(d => d.fees), ...data.map(d => d.ghostFees),
-    showGross ? Math.max(...data.map(d => d.gross), ...data.map(d => d.ghostGross)) : 0,
-    0.01,
-  );
-  const xFor = (t: number) => (tMax > tMin ? ((t - tMin) / (tMax - tMin)) * 100 : 100);
-  const yFor = (v: number) => 38 - (v / vMax) * 36;
-  const pointsFor = (key: 'fees' | 'ghostFees' | 'gross' | 'ghostGross') => data.map(d => `${xFor(d.t)},${yFor(d[key])}`).join(' ');
-  const tipX = xFor(latest.t);
-  const tipY = (yFor(latest.fees) / 40) * 100;
-
-  return (
-    <div>
-      <div className="flex items-center gap-6 mb-4">
-        {noDataYet ? (
-          <div className="text-sm text-ink-muted">No bookings yet {copy.periodLower}</div>
-        ) : (
-          <>
-            <div>
-              <Eyebrow>{copy.period} — GR Fees</Eyebrow>
-              <div className="flex items-baseline gap-2">
-                <div className="text-xl font-semibold tabular-nums text-ok">{fmtMoney(latest.fees)}</div>
-                <Trend current={latest.fees} prev={latest.ghostFees} suffix={copy.suffix}/>
-              </div>
-            </div>
-            {showGross && (
-              <div>
-                <Eyebrow>{copy.period} — Gross</Eyebrow>
-                <div className="flex items-baseline gap-2">
-                  <div className="text-xl font-semibold tabular-nums text-ink">{fmtMoney(latest.gross)}</div>
-                  <Trend current={latest.gross} prev={latest.ghostGross} suffix={copy.suffix}/>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-        <div className="ml-auto flex items-center gap-4 text-[11px] text-ink-muted">
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ok inline-block"/>GR Fees</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ok/25 inline-block"/>Ghost (prior period)</span>
-          <button
-            onClick={() => setShowGross(v => !v)}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md border transition-colors ${showGross ? 'border-line-strong text-ink' : 'border-line-soft text-ink-faint hover:text-ink-soft'}`}
-          >
-            <span className="w-2.5 h-2.5 rounded-sm bg-line-strong inline-block"/>Gross
-          </button>
-        </div>
-      </div>
-      <div className="relative w-full h-40">
-        <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-full h-full overflow-visible">
-          {showGross && <polyline points={pointsFor('ghostGross')} fill="none" vectorEffect="non-scaling-stroke" className="stroke-line-strong/20" strokeWidth="1"/>}
-          {showGross && <polyline points={pointsFor('gross')} fill="none" vectorEffect="non-scaling-stroke" className="stroke-line-strong/70" strokeWidth="1.2"/>}
-          <polyline points={pointsFor('ghostFees')} fill="none" vectorEffect="non-scaling-stroke" className="stroke-ok/25" strokeWidth="1.2"/>
-          <polyline points={pointsFor('fees')} fill="none" vectorEffect="non-scaling-stroke" className="stroke-ok" strokeWidth="1.8"/>
-        </svg>
-        <div className="absolute w-2 h-2 rounded-full bg-ok ring-2 ring-white shadow-sm" style={{ left: `${tipX}%`, top: `${tipY}%`, transform: 'translate(-50%, -50%)' }}/>
-        <div className="absolute text-xs font-medium text-ok whitespace-nowrap" style={{ left: `${tipX}%`, top: `${tipY}%`, transform: tipX > 85 ? 'translate(-100%, -140%)' : 'translate(8px, -50%)' }}>
-          {fmtMoney(latest.fees)}
-        </div>
-      </div>
-      <div className="flex justify-between mt-1 text-[10px] text-ink-faint">
-        <span>{copy.start}</span>
-        <span>{copy.now}</span>
-      </div>
-    </div>
-  );
-}
-
+const SHOW_ROWS = 8;
 type FireStatus = 'idle' | 'pending' | 'success' | 'error';
 const FIRE_LABELS: Record<string, string> = { resend_preview: 'Resend preview', resend_sheet: 'Resend sheet', send_nudge: 'Send nudge' };
 
-function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus, fireError, onFire, canFire }: {
-  row: ActionRow; severity: 'bad' | 'warn'; router: ReturnType<typeof useRouter>;
-  expanded: boolean; onToggleExpand: () => void; fireStatus: FireStatus; fireError?: string; onFire: () => void; canFire: boolean;
+function Section({ title, href, linkLabel, children }: { title: string; href?: string; linkLabel?: string; children: React.ReactNode }) {
+  return (
+    <Card className="p-5">
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
+        {href && <Link href={href} className="text-[13px] text-ink-soft hover:text-ink">{linkLabel}</Link>}
+      </div>
+      {children}
+    </Card>
+  );
+}
+
+function QueueRow({ row, expanded, onToggle, fireStatus, fireError, onFire, canFire }: {
+  row: ActionRow; expanded: boolean; onToggle: () => void; fireStatus: FireStatus; fireError?: string; onFire: () => void; canFire: boolean;
 }) {
+  const router = useRouter();
   const hasItems = (row.items?.length ?? 0) > 0;
   return (
-    <div className="bg-paper/70 hover:bg-paper rounded-md transition-colors">
-      <div
-        onClick={() => (hasItems ? onToggleExpand() : router.push(row.href))}
-        className="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-pointer"
-      >
-        <StatusDot status={severity}/>
+    <div className="border-b border-line-soft last:border-0">
+      <div className="flex items-center gap-3 py-2.5">
+        <StatusDot status={row.severity} />
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-ink truncate">{row.who}</div>
-          <div className="text-xs text-ink-muted mt-0.5 truncate">{row.why} · {row.ageDays}d</div>
-          <div className="text-xs text-ink-faint mt-1 truncate">Do this: {row.doThis}</div>
+          <div className="text-[13.5px] font-medium text-ink truncate">{row.who}</div>
+          <div className="text-[12.5px] text-ink-soft truncate">{row.why}{row.ageDays > 0 ? ` · ${row.ageDays}d` : ''}</div>
+          <div className="text-[12px] text-ink-muted truncate">{row.doThis}</div>
         </div>
         {row.fire && canFire && (
           fireStatus === 'success' ? (
             <span className="shrink-0 text-xs font-medium text-ok flex items-center gap-1"><StatusDot status="ok" />Sent</span>
           ) : (
             <button
-              onClick={e => { e.stopPropagation(); onFire(); }}
-              disabled={fireStatus === 'pending'}
-              className="shrink-0 text-xs font-medium text-pine hover:text-pine-hover px-2 py-1 rounded-md border border-line hover:border-pine/40 transition-colors disabled:opacity-50"
+              type="button" onClick={onFire} disabled={fireStatus === 'pending'}
+              className="shrink-0 text-xs font-medium text-pine px-2.5 py-1.5 rounded-md border border-line hover:border-pine/40 transition-colors disabled:opacity-50"
             >
               {fireStatus === 'pending' ? 'Sending…' : fireStatus === 'error' ? 'Failed — retry' : FIRE_LABELS[row.fire.kind]}
             </button>
           )
         )}
-        <button onClick={e => { e.stopPropagation(); router.push(row.href); }} className="shrink-0 text-xs font-medium text-pine">{row.actionLabel}</button>
-        <ChevronRight aria-hidden="true" className={`w-3.5 h-3.5 text-ink-faint shrink-0 transition-transform ${hasItems && expanded ? 'rotate-90' : ''}`}/>
+        <button type="button" onClick={() => router.push(row.href)} className="shrink-0 text-xs font-medium text-white bg-pine hover:bg-pine-hover px-2.5 py-1.5 rounded-md">{row.actionLabel}</button>
+        {hasItems && (
+          <button type="button" onClick={onToggle} aria-label={expanded ? 'Hide the list' : 'Show the list'} aria-expanded={expanded} className="shrink-0 text-ink-faint hover:text-ink">
+            <ChevronRight aria-hidden="true" className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+          </button>
+        )}
       </div>
       {/* RV-2: a failed quick action says why — a 409 (already approved) can never succeed on retry. */}
-      {fireStatus === 'error' && fireError && (
-        <div className="px-3 pb-2 -mt-1 text-xs text-bad">{fireError}</div>
-      )}
+      {fireStatus === 'error' && fireError && <p role="alert" className="pb-2 -mt-1 text-xs text-bad">{fireError}</p>}
       {hasItems && expanded && (
-        <div className="border-t border-line-soft px-3 py-2 space-y-1 bg-paper/50">
+        <div className="pb-2 pl-5 space-y-1">
           {row.items!.map(it => (
-            <div key={it.id} className="text-xs text-ink-muted flex justify-between">
-              <span>{it.label}</span><span>{it.ageDays}d</span>
-            </div>
+            <div key={it.id} className="text-xs text-ink-soft flex justify-between"><span>{it.label}</span><span className="text-ink-muted">{it.ageDays}d</span></div>
           ))}
         </div>
       )}
@@ -205,60 +104,80 @@ function QueueRow({ row, severity, router, expanded, onToggleExpand, fireStatus,
   );
 }
 
-export default function AdminOverviewPage() {
-  const router = useRouter();
-  // MP-11a: the layout resolved the session; a page never re-checks it.
-  const adminReady = true;
+/** "vs $X by this day last month", with the move. */
+function Versus({ cur, prior }: { cur: number | null; prior: number | null }) {
+  if (cur === null || prior === null) return <span className="text-[12px] text-ink-muted">last month unavailable</span>;
+  const diff = cur - prior;
+  if (Math.abs(diff) < 0.005) return <span className="text-[12px] text-ink-muted">same as this point last month</span>;
+  return (
+    <span className="text-[12px] text-ink-muted">
+      {fmtMoney(prior)} by now last month · <span className={diff > 0 ? 'text-ok' : 'text-bad'}>{diff > 0 ? '+' : '−'}{fmtMoney(Math.abs(diff))}</span>
+    </span>
+  );
+}
+
+function MoneyLine({ label, cur, prior }: { label: string; cur: number | null; prior: number | null }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-2 border-b border-line-soft last:border-0">
+      <span className="text-[13.5px] text-ink">{label}</span>
+      <span className="text-right">
+        <span className="block text-[15px] font-semibold tabular-nums text-ink">{fmtMoney(cur)}</span>
+        <Versus cur={cur} prior={prior} />
+      </span>
+    </div>
+  );
+}
+
+function HealthLine({ ok, text, href }: { ok: boolean | null; text: string; href?: string }) {
+  const body = (
+    <span className="flex items-start gap-2 py-1.5 text-[13.5px] text-ink">
+      <span className="mt-[7px]"><StatusDot status={ok === null ? 'warn' : ok ? 'ok' : 'bad'} /></span>
+      <span>{text}</span>
+    </span>
+  );
+  return href ? <Link href={href} className="block hover:bg-paper/70 rounded-md -mx-1 px-1">{body}</Link> : body;
+}
+
+export default function AdminTodayPage() {
   const { role } = useAdminSession();
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [data, setData] = useState<Today | null>(null);
   const [loading, setLoading] = useState(false);
-  const [statsError, setStatsError] = useState('');
-  const [gran, setGran] = useState<Gran>('day');
+  const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [, setTick] = useState(0);
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [showAll, setShowAll] = useState(false);
   const [fireStatuses, setFireStatuses] = useState<Record<string, FireStatus>>({});
   const [fireErrors, setFireErrors] = useState<Record<string, string>>({});
 
-  const loadStats = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch('/api/admin/stats', { headers: { 'Content-Type': 'application/json' } });
-      // MP-2b: no else branch meant a deactivated admin clicked Refresh, the
-      // spinner turned, and every number stayed stale with no error — the
-      // session guard only runs once at mount.
-      if (r.ok) { setStats(await r.json()); setLastUpdated(Date.now()); setStatsError(''); }
-      else setStatsError(r.status === 401 ? 'Your session ended — sign in again to refresh these numbers.' : 'Could not refresh. These numbers may be out of date.');
+      const r = await fetch('/api/admin/today');
+      if (r.ok) { setData(await r.json()); setLastUpdated(Date.now()); setError(''); }
+      else setError(r.status === 401 ? 'Your session ended — sign in again to refresh.' : 'Couldn’t refresh — what you see may be out of date.');
     } catch {
-      setStatsError('Network error — these numbers may be out of date.');
+      setError('Network error — what you see may be out of date.');
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (!adminReady) return;
-    loadStats();
-    const refreshInterval = setInterval(loadStats, REFRESH_MS);
-    const tickInterval = setInterval(() => setTick(t => t + 1), 15000);
-    return () => { clearInterval(refreshInterval); clearInterval(tickInterval); };
-  }, [adminReady, loadStats]);
+    load();
+    const refresh = setInterval(load, REFRESH_MS);
+    const tick = setInterval(() => setTick(t => t + 1), 15000);
+    return () => { clearInterval(refresh); clearInterval(tick); };
+  }, [load]);
 
-  function toggleExpand(id: string) {
-    setExpandedRows(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }
-
-  function canFireRow(row: ActionRow) {
+  function canFire(row: ActionRow) {
     if (!row.fire) return false;
     if (row.fire.kind === 'resend_sheet') return MANAGER_PLUS.includes(role);
     if (row.fire.kind === 'send_nudge') return SUPPORT_PLUS.includes(role);
-    return true;
+    // /api/preview/send is manager+.
+    return MANAGER_PLUS.includes(role);
   }
 
-  async function fireAction(row: ActionRow) {
+  async function fire(row: ActionRow) {
     if (!row.fire) return;
     setFireStatuses(s => ({ ...s, [row.id]: 'pending' }));
     try {
@@ -281,261 +200,134 @@ export default function AdminOverviewPage() {
     }
   }
 
-  if (!adminReady) return null;
-
-  const isSupportPlus = SUPPORT_PLUS.includes(role);
+  const needs = data?.needs;
+  const rows = needs ? (showAll ? needs.rows : needs.rows.slice(0, SHOW_ROWS)) : [];
+  const h = data?.health;
+  const m = data?.money;
+  const o = data?.onboarding;
+  const badJobs = h?.jobs.bad ?? [];
 
   return (
     <div className="min-h-screen bg-paper flex">
-      <AdminSidebar active="overview" pendingInquiries={stats?.pendingInquiries ?? 0} unreadMessages={stats?.topStrip.unreadMessages ?? 0} />
+      <AdminSidebar active="overview" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7">
-          <div className="flex items-center justify-between mb-7">
+        <div className="px-8 py-7 max-w-[1200px]">
+          <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Platform overview</h1>
+              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Today</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                {lastUpdated && <span className="text-ink-faint"> · updated {fmtAgo(lastUpdated, Date.now())}</span>}
+                {lastUpdated && <span className="text-ink-muted"> · updated {fmtAgo(lastUpdated, Date.now())}</span>}
               </p>
             </div>
-            <button onClick={loadStats} disabled={loading} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors disabled:opacity-50">
-              {loading ? 'Refreshing…' : 'Refresh'}
+            <button
+              type="button" onClick={load} disabled={loading} aria-label="Refresh" title="Refresh"
+              className="w-9 h-9 flex items-center justify-center rounded-md text-ink-soft hover:text-ink hover:bg-white border border-transparent hover:border-line transition-colors disabled:opacity-50"
+            >
+              <RefreshCw aria-hidden="true" className={`w-4 h-4 ${loading ? 'animate-spin motion-reduce:animate-none' : ''}`} />
             </button>
           </div>
 
-          {statsError && (
-            <div className="mb-5 rounded-md border border-bad/20 bg-bad/5 px-4 py-2.5 flex items-start justify-between gap-3">
-              <p className="text-xs text-bad">{statsError}</p>
-              <button onClick={() => loadStats()} className="text-xs font-medium text-ink-soft hover:text-ink shrink-0">Retry</button>
+          {error && (
+            <div role="alert" className="mb-5 rounded-md border border-bad/20 bg-bad/5 px-4 py-2.5 flex items-start justify-between gap-3">
+              <p className="text-xs text-bad">{error}</p>
+              <button type="button" onClick={load} className="text-xs font-medium text-ink-soft hover:text-ink shrink-0">Try again</button>
             </div>
           )}
-          {!stats && loading && <div className="text-ink-muted text-center py-20 text-sm">Loading...</div>}
-          {!stats && !loading && !statsError && <div className="text-ink-muted text-center py-20 text-sm">No data yet.</div>}
+          {!data && loading && <p className="text-ink-muted text-center py-20 text-sm">Loading…</p>}
 
-          {stats && <>
-            {/* 1. TOP STRIP — the morning pulse */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <Card onClick={() => router.push('/admin/revenue')} className="p-5 cursor-pointer hover:shadow-[0_0_0_1px_rgba(20,24,20,.14),0_1px_2px_rgba(20,24,20,.05)] transition-shadow">
-                <div className="flex items-start justify-between mb-2">
-                  
-                </div>
-                <div className="text-[30px] leading-none font-semibold tabular-nums text-pine mb-1">{fmtMoney(stats.topStrip.feesToday)}</div>
-                <Eyebrow>GreenReserve fees today</Eyebrow>
-                <div className="flex items-center gap-3 mt-2 text-xs text-ink-faint">
-                  {/* U-A: the fee is per PLAYER — say players first, never derive them from bookings. */}
-                  {typeof stats.topStrip.playersToday === 'number' && <><span>{stats.topStrip.playersToday} player{stats.topStrip.playersToday === 1 ? '' : 's'}</span><span>·</span></>}
-                  <span>{stats.topStrip.bookingsToday} booking{stats.topStrip.bookingsToday === 1 ? '' : 's'}</span>
-                  <span>·</span>
-                  <span>{stats.topStrip.checkInsToday} check-in{stats.topStrip.checkInsToday === 1 ? '' : 's'}</span>
-                  <span>·</span>
-                  <span>{stats.topStrip.cancellationsToday} cancelled</span>
-                </div>
-              </Card>
-
-              <Card onClick={() => router.push('/admin/messages')} className="p-5 cursor-pointer hover:shadow-[0_0_0_1px_rgba(20,24,20,.14),0_1px_2px_rgba(20,24,20,.05)] transition-shadow">
-                <div className="flex items-start justify-between mb-2">
-                  
-                </div>
-                <div className="text-[30px] leading-none font-semibold tabular-nums text-ink mb-1">{isSupportPlus ? stats.topStrip.unreadMessages : '—'}</div>
-                <Eyebrow>Unread</Eyebrow>
-                <div className="text-xs text-ink-faint mt-2">
-                  {!isSupportPlus ? 'Requires support access' : stats.topStrip.unreadNewestSender ? `Newest: ${stats.topStrip.unreadNewestSender}` : 'All caught up'}
-                </div>
-              </Card>
-
-              <Card className="p-5">
-                <div className="flex items-start justify-between mb-2">
-                  
-                </div>
-                <Eyebrow className="mb-2">Waiting</Eyebrow>
-                <div className="space-y-1.5">
-                  {stats.topStrip.waitingNewInquiries > 0 ? (
-                    <button onClick={() => router.push('/admin/inquiries')} className="w-full text-left text-sm text-ink hover:text-pine transition-colors">
-                      {stats.topStrip.waitingNewInquiries} inquir{stats.topStrip.waitingNewInquiries === 1 ? 'y' : 'ies'} waiting · oldest {stats.topStrip.waitingOldestAgeDays}d
-                    </button>
-                  ) : (
-                    <div className="text-sm text-ink-faint">No new inquiries waiting</div>
-                  )}
-                  {stats.topStrip.waitingDrafts === 1 && stats.topStrip.waitingDraftsList[0] ? (
-                    <button onClick={() => router.push(`/admin/courses?courseId=${stats.topStrip.waitingDraftsList[0].id}&tab=overview`)} className="w-full text-left text-sm text-ink hover:text-pine transition-colors">
-                      1 draft to review — {stats.topStrip.waitingDraftsList[0].name}
-                    </button>
-                  ) : stats.topStrip.waitingDrafts > 1 ? (
-                    <button onClick={() => router.push('/admin/courses')} className="w-full text-left text-sm text-ink hover:text-pine transition-colors">
-                      {stats.topStrip.waitingDrafts} drafts to review
-                    </button>
-                  ) : null}
-                </div>
-              </Card>
-            </div>
-
-            {/* 2. ACTION QUEUE — blockers + stalls only */}
-            <Card className="p-5 mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <StatusDot status="warn" />
-                <Eyebrow>Action queue</Eyebrow>
-              </div>
-
-              {stats.actionQueue.redCount === 0 && stats.actionQueue.amberCount === 0 ? (
-                <div className="flex items-center gap-2 text-sm text-ok py-2">
-                  <StatusDot status="ok" />
-                  <span>All clear — nothing stuck.</span>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {stats.actionQueue.redCount > 0 && (
-                    <div>
-                      <div className="text-[13px] font-semibold text-bad mb-2">Money broken ({stats.actionQueue.redCount})</div>
-                      <div className="space-y-1.5">
-                        {stats.actionQueue.red.map(row => (
-                          <QueueRow key={row.id} row={row} severity="bad" router={router}
-                            expanded={expandedRows.has(row.id)} onToggleExpand={() => toggleExpand(row.id)}
-                            fireStatus={fireStatuses[row.id] ?? 'idle'} fireError={fireErrors[row.id]} onFire={() => fireAction(row)} canFire={canFireRow(row)}/>
+          {data && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+              {needs && (
+                <div className="lg:col-span-2">
+                  <Section title={`Needs you now${needs.rows.length ? ` · ${needs.rows.length}` : ''}`}>
+                    {needs.rows.length === 0 ? (
+                      <p className="text-[13.5px] text-ink flex items-center gap-2"><StatusDot status="ok" />Nothing needs you right now.</p>
+                    ) : (
+                      <>
+                        {rows.map(row => (
+                          <QueueRow
+                            key={row.id} row={row}
+                            expanded={expanded.has(row.id)}
+                            onToggle={() => setExpanded(prev => { const n = new Set(prev); if (n.has(row.id)) n.delete(row.id); else n.add(row.id); return n; })}
+                            fireStatus={fireStatuses[row.id] ?? 'idle'} fireError={fireErrors[row.id]}
+                            onFire={() => fire(row)} canFire={canFire(row)}
+                          />
                         ))}
-                      </div>
-                      {stats.actionQueue.redCount > stats.actionQueue.red.length && (
-                        <button onClick={() => router.push('/admin/revenue')} className="text-xs text-ink-muted hover:text-ink mt-2 flex items-center gap-1">
-                          View all {stats.actionQueue.redCount} 
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  {stats.actionQueue.amberCount > 0 && (
-                    <div>
-                      <div className="text-[13px] font-semibold text-warn mb-2">Stalled ({stats.actionQueue.amberCount})</div>
-                      <div className="space-y-1.5">
-                        {stats.actionQueue.amber.map(row => (
-                          <QueueRow key={row.id} row={row} severity="warn" router={router}
-                            expanded={expandedRows.has(row.id)} onToggleExpand={() => toggleExpand(row.id)}
-                            fireStatus={fireStatuses[row.id] ?? 'idle'} fireError={fireErrors[row.id]} onFire={() => fireAction(row)} canFire={canFireRow(row)}/>
-                        ))}
-                      </div>
-                      {stats.actionQueue.amberCount > stats.actionQueue.amber.length && (
-                        <button onClick={() => router.push('/admin/inquiries')} className="text-xs text-ink-muted hover:text-ink mt-2 flex items-center gap-1">
-                          View all {stats.actionQueue.amberCount} 
-                        </button>
-                      )}
-                    </div>
-                  )}
+                        {needs.rows.length > SHOW_ROWS && (
+                          <button type="button" onClick={() => setShowAll(v => !v)} className="mt-2 text-[13px] text-ink-soft hover:text-ink">
+                            {showAll ? 'Show fewer' : `Show all ${needs.rows.length}`}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </Section>
                 </div>
               )}
-            </Card>
 
-            {/* 3. REVENUE CHART */}
-            <Card className="p-6 mb-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  
-                  <Eyebrow>Revenue</Eyebrow>
-                </div>
-                <div className="flex gap-1 bg-paper border border-line rounded-md p-0.5">
-                  {(['day', 'week', 'month'] as Gran[]).map(g => (
-                    <button
-                      key={g}
-                      onClick={() => setGran(g)}
-                      className={`px-3 py-1 text-xs font-medium rounded transition-colors capitalize ${gran === g ? 'bg-pine text-white' : 'text-ink-soft hover:text-ink'}`}
-                    >
-                      {g}
-                    </button>
+              {h && (
+                <Section title="Platform health" href="/admin/system" linkLabel="Open Health">
+                  <HealthLine
+                    ok={badJobs.length > 0 ? false : h.jobs.notYetRun === h.jobs.total ? null : true}
+                    href="/admin/system"
+                    text={badJobs.length > 0
+                      ? `${badJobs.length} scheduled job${badJobs.length === 1 ? '' : 's'} failing: ${badJobs.map(j => `${j.job} — ${j.note}`).join('; ')}`
+                      : h.jobs.notYetRun === h.jobs.total
+                        ? 'No scheduled job has reported a run yet'
+                        : `${h.jobs.total - h.jobs.notYetRun} scheduled job${h.jobs.total - h.jobs.notYetRun === 1 ? '' : 's'} ran on time${h.jobs.notYetRun ? `; ${h.jobs.notYetRun} haven't run yet` : ''}`}
+                  />
+                  <HealthLine
+                    ok={h.stripeWebhook.lastAt === null ? null : h.stripeWebhook.ok}
+                    href="/admin/system"
+                    text={h.stripeWebhook.lastAt === null
+                      ? 'No Stripe event recorded yet'
+                      : h.stripeWebhook.lastError
+                        ? `Stripe's last event failed: ${h.stripeWebhook.lastError}`
+                        : `Stripe events arriving — last ${fmtAgo(new Date(h.stripeWebhook.lastAt).getTime(), Date.now())}${h.stripeWebhook.ok ? '' : ', which is too long ago'}`}
+                  />
+                  <HealthLine
+                    ok={h.payments.blocked === 0}
+                    href="/admin/courses"
+                    text={h.payments.blocked === 0
+                      ? `All ${h.payments.live} live course${h.payments.live === 1 ? '' : 's'} can take payments`
+                      : `${h.payments.blocked} of ${h.payments.live} live courses can't take payments (Stripe not finished)`}
+                  />
+                </Section>
+              )}
+
+              {m && (
+                <Section title="Money this month" href="/admin/revenue" linkLabel="Open Revenue">
+                  <MoneyLine label="Paid through courses" cur={m.current.volume} prior={m.prior.volume} />
+                  <MoneyLine label="GreenReserve fees" cur={m.current.fees} prior={m.prior.fees} />
+                  {m.net && <MoneyLine label="Net after Stripe and expenses" cur={m.net.current} prior={m.net.prior} />}
+                  <p className="mt-2 text-[12px] text-ink-muted">
+                    {m.current.rounds} round{m.current.rounds === 1 ? '' : 's'} paid since the 1st, against the same {m.daysIn} day{m.daysIn === 1 ? '' : 's'} of last month.
+                    {m.net?.stripeUnavailable && ' Stripe didn’t answer, so net is missing — try again.'}
+                  </p>
+                </Section>
+              )}
+
+              {o && (
+                <Section title="Onboarding" href="/admin/inquiries" linkLabel="Open Inquiries">
+                  {o.stages.map(st => (
+                    <div key={st.key} className="py-2 border-b border-line-soft last:border-0">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-[13.5px] text-ink">{st.label}</span>
+                        <span className="text-[13.5px] font-semibold tabular-nums text-ink">{st.count}</span>
+                      </div>
+                      {st.stuck.map(s => (
+                        <Link key={s.id} href={`/admin/inquiries/${s.id}`} className="mt-1 flex items-center gap-2 text-[12.5px] text-ink-soft hover:text-ink">
+                          <StatusDot status="warn" />
+                          <span className="truncate">{s.name} — {s.days} days in this stage{s.waitingOn === 'them' ? ', waiting on the course' : s.waitingOn === 'us' ? ', waiting on us' : ''}</span>
+                        </Link>
+                      ))}
+                    </div>
                   ))}
-                </div>
-              </div>
-              {stats.revenue
-                ? <RevenueChart data={stats.revenue[gran]} gran={gran}/>
-                : <div className="py-12 text-center text-sm text-ink-muted">Revenue detail requires support access.</div>}
-            </Card>
-
-            {/* 4. 30-DAY ROW */}
-            <Card className="mb-5 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-line-soft">
-              <div onClick={() => router.push('/admin/courses')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
-                <div>
-                  <Eyebrow className="mb-1">Live courses</Eyebrow>
-                  <div className="text-xl font-semibold tabular-nums text-ink">{stats.thirtyDay.activeCourses}</div>
-                  <div className="text-xs text-ink-faint mt-0.5">{stats.thirtyDay.archivedCourses > 0 ? `${stats.thirtyDay.totalCourses} active · ${stats.thirtyDay.archivedCourses} archived` : `${stats.thirtyDay.totalCourses} total`}</div>
-                </div>
-                <Trend current={stats.thirtyDay.newCourses30d} prev={stats.thirtyDay.newCoursesPrev30d}/>
-              </div>
-              <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
-                <div>
-                  <Eyebrow className="mb-1">Bookings (30d)</Eyebrow>
-                  <div className="text-xl font-semibold tabular-nums text-ink">{stats.thirtyDay.bookings30d}</div>
-                </div>
-                <Trend current={stats.thirtyDay.bookings30d} prev={stats.thirtyDay.bookingsPrev30d}/>
-              </div>
-              <div onClick={() => router.push('/admin/activity')} className="p-5 cursor-pointer hover:bg-paper transition-colors flex items-center justify-between">
-                <div>
-                  <Eyebrow className="mb-1">GreenReserve fees (30d)</Eyebrow>
-                  <div className="text-xl font-semibold tabular-nums text-ok">{fmtMoney(stats.thirtyDay.fees30d)}</div>
-                </div>
-                <Trend current={stats.thirtyDay.fees30d} prev={stats.thirtyDay.feesPrev30d}/>
-              </div>
-            </Card>
-
-            {/* 5. BOTTOM TRIO — pipeline funnel, today's tee sheet, course health watchlist */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-              <Card className="p-5">
-                <Eyebrow className="mb-3">Pipeline (MTD)</Eyebrow>
-                <div className="space-y-1">
-                  {([
-                    { label: 'New inquiries', value: stats.bottomTrio.pipeline.newInquiries, href: '/admin/inquiries?tab=new' },
-                    { label: 'Sheets out', value: stats.bottomTrio.pipeline.sheetsOut, href: '/admin/inquiries?tab=sheet-sent' },
-                    { label: 'Building', value: stats.bottomTrio.pipeline.building, href: '/admin/inquiries?tab=building' },
-                    { label: 'Went live', value: stats.bottomTrio.pipeline.wentLive, href: '/admin/inquiries?tab=live' },
-                  ] as const).map((stage, idx, arr) => (
-                    <button key={stage.label} onClick={() => router.push(stage.href)} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
-                      <span className="text-sm text-ink">{stage.label}</span>
-                      <span className="flex items-center gap-2">
-                        {idx > 0 && arr[idx - 1].value > 0 && (
-                          <span className="text-[10px] text-ink-faint">{Math.round((stage.value / arr[idx - 1].value) * 100)}%</span>
-                        )}
-                        <span className="text-sm font-medium text-ink">{stage.value}</span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </Card>
-
-              <Card className="p-5">
-                <Eyebrow className="mb-3">Today's tee sheet</Eyebrow>
-                <div className="space-y-1">
-                  <button onClick={() => router.push('/admin/activity')} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
-                    <span className="text-sm text-ink">Rounds today</span>
-                    <span className="text-sm font-medium text-ink">{stats.bottomTrio.teeSheetToday.roundsToday}</span>
-                  </button>
-                  <button onClick={() => router.push('/admin/activity')} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
-                    <span className="text-sm text-ink">Checked in</span>
-                    <span className="text-sm font-medium text-ink">{stats.bottomTrio.teeSheetToday.checkInsDone} / {stats.bottomTrio.teeSheetToday.roundsToday}</span>
-                  </button>
-                  <button onClick={() => router.push('/admin/revenue')} className="w-full flex items-center justify-between text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
-                    <span className="text-sm text-ink">GreenReserve fees expected</span>
-                    <span className="text-sm font-medium text-ok">{fmtMoney(stats.bottomTrio.teeSheetToday.grFeesExpected)}</span>
-                  </button>
-                  <div className="px-2 text-xs text-ink-faint">courses will collect ~{fmtMoney(stats.bottomTrio.teeSheetToday.grossExpected)}</div>
-                </div>
-              </Card>
-
-              <Card className="p-5">
-                <Eyebrow className="mb-3">Course health watchlist</Eyebrow>
-                {stats.bottomTrio.courseHealthWatchlist.length === 0 ? (
-                  <div className="text-xs text-ink-faint py-4">No courses trending down.</div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {stats.bottomTrio.courseHealthWatchlist.map(c => (
-                      <button key={c.id} onClick={() => router.push(`/admin/courses?courseId=${c.id}`)} className="w-full text-left px-2 py-1.5 -mx-2 rounded-md hover:bg-paper transition-colors">
-                        <div className="text-sm font-medium text-ink truncate">{c.name}</div>
-                        <div className="text-xs text-bad mt-0.5">{c.reason}</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </Card>
+                  <p className="mt-2 text-[12px] text-ink-muted">Stuck means {o.stuckDays}+ days in one stage, not snoozed.</p>
+                </Section>
+              )}
             </div>
-
-            {/* Systems — one dot, detail lives on /admin/system */}
-            <button onClick={() => router.push('/admin/system')} className="flex items-center gap-2 px-1 py-2 text-xs text-ink-faint hover:text-ink-soft transition-colors">
-              <StatusDot status="neutral"/>Systems
-            </button>
-          </>}
+          )}
         </div>
       </div>
     </div>

@@ -74,8 +74,7 @@
     "lucide": 2
   },
   "src/app/admin/page.tsx": {
-    "uppercase": 13,
-    "lucide": 1
+    "lucide": 2
   },
   "src/app/admin/profile/page.tsx": {
     "uppercase": 6

@@ -298,7 +298,7 @@ async function main() {
     checkStatus('Golfer route without cookie → 401', r.status, 401);
   }
   {
-    const r = await api('/api/admin/stats');
+    const r = await api('/api/admin/today');
     checkStatus('Admin route without cookie → 401', r.status, 401);
   }
 
@@ -316,7 +316,7 @@ async function main() {
     checkStatus('Operator token on golfer route → 401', r.status, 401);
   }
   {
-    const r = await api('/api/admin/stats', { cookie: 'admin_session=tampered.invalid.token' });
+    const r = await api('/api/admin/today', { cookie: 'admin_session=tampered.invalid.token' });
     checkStatus('Tampered admin token → 401', r.status, 401);
   }
 
@@ -498,9 +498,13 @@ async function main() {
     checkStatus('Viewer cannot access course-members (golfer PII) → 403', r.status, 403);
   }
   {
-    // Viewer CAN access non-PII admin stats
-    const r = await api('/api/admin/stats', { cookie: viewerCookie });
-    checkStatus('Viewer can access admin stats (aggregated, no PII) → 200', r.status, 200);
+    // AW-4: a viewer opens Today but sees only Onboarding — no money, no golfer
+    // names in the queue, no system health (each is gated like its own page).
+    const r = await api('/api/admin/today', { cookie: viewerCookie });
+    checkStatus('Viewer can open Today → 200', r.status, 200);
+    const b = r.body as { needs?: unknown; money?: unknown; health?: unknown; onboarding?: unknown };
+    check('…without Needs you now, Money or Platform health', b?.needs === null && b?.money === null && b?.health === null);
+    check('…with Onboarding', !!b?.onboarding);
   }
 
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
