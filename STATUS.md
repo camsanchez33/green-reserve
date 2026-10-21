@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 05:38 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `914a1c5` · working tree clean
+Generated 2026-10-21 06:18 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `cbcfb8c` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 85 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 88 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `cbcfb8c` | 2026-10-21 | AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen |
+| `ec245d5` | 2026-10-21 | AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card |
+| `adf590b` | 2026-10-21 | Status board |
 | `914a1c5` | 2026-10-21 | AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today |
 | `b84a2db` | 2026-10-21 | AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card |
 | `e941200` | 2026-10-21 | Code map and status board |
@@ -219,6 +222,9 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `cbcfb8c` 2026-10-21 — AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen
+- `ec245d5` 2026-10-21 — AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card
+- `adf590b` 2026-10-21 — Status board
 - `914a1c5` 2026-10-21 — AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today
 - `b84a2db` 2026-10-21 — AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card
 - `e941200` 2026-10-21 — Code map and status board
@@ -228,9 +234,6 @@ Nothing awaiting review.
 - `c78b7aa` 2026-10-21 — AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding
 - `224db02` 2026-10-21 — Status board and code map
 - `4c61670` 2026-10-21 — AW-3b: Ask in the admin search — read-only AI answers with links to admin pages
-- `905572d` 2026-10-21 — Regenerate code map
-- `474f3f0` 2026-10-21 — Status board
-- `e66b258` 2026-10-21 — AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations
 
 ---
 

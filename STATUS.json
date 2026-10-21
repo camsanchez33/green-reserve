@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-21T05:38:54.406Z",
+  "generatedAt": "2026-10-21T06:18:08.405Z",
   "repo": {
-    "head": "914a1c5",
+    "head": "cbcfb8c",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 0,
     "dirty": [],
@@ -10,6 +10,27 @@
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "cbcfb8c",
+        "date": "2026-10-21T06:17:17+00:00",
+        "subject": "AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ec245d5",
+        "date": "2026-10-21T06:12:43+00:00",
+        "subject": "AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "adf590b",
+        "date": "2026-10-21T05:38:55+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "914a1c5",
         "date": "2026-10-21T05:38:12+00:00",
@@ -993,6 +1014,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "cbcfb8c",
+      "date": "2026-10-21",
+      "subject": "AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen"
+    },
+    {
+      "h": "ec245d5",
+      "date": "2026-10-21",
+      "subject": "AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card"
+    },
+    {
+      "h": "adf590b",
+      "date": "2026-10-21",
+      "subject": "Status board"
+    },
+    {
       "h": "914a1c5",
       "date": "2026-10-21",
       "subject": "AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today"
@@ -1036,21 +1072,6 @@
       "h": "4c61670",
       "date": "2026-10-21",
       "subject": "AW-3b: Ask in the admin search — read-only AI answers with links to admin pages"
-    },
-    {
-      "h": "905572d",
-      "date": "2026-10-21",
-      "subject": "Regenerate code map"
-    },
-    {
-      "h": "474f3f0",
-      "date": "2026-10-21",
-      "subject": "Status board"
-    },
-    {
-      "h": "e66b258",
-      "date": "2026-10-21",
-      "subject": "AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations"
     }
   ]
 }
