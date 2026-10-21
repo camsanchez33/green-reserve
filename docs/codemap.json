@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 480,
-    "routes": 235,
-    "libs": 154,
-    "models": 47,
+    "files": 483,
+    "routes": 237,
+    "libs": 155,
+    "models": 48,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -665,6 +665,32 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/goals/page.tsx",
+      "lines": 163,
+      "purpose": "AW-4b (Cam 2026-10-21):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (AdminGoalsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/goals",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/format",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/admin/golfers/page.tsx",
       "lines": 463,
       "purpose": "",
@@ -897,8 +923,8 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 336,
-      "purpose": "AW-4 (Cam 2026-10-21):",
+      "lines": 295,
+      "purpose": "AW-4b (Cam 2026-10-21, second pass:",
       "brain": [],
       "exports": [
         {
@@ -1866,6 +1892,43 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/goals/route.ts",
+      "lines": 53,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DELETE",
+          "kind": "route"
+        },
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/goals",
+      "kind": "api",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-day",
+        "@/lib/admin-goals",
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/golfers/route.ts",
       "lines": 250,
       "purpose": "",
@@ -2400,7 +2463,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 219,
+      "lines": 220,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2573,7 +2636,7 @@
     },
     {
       "path": "src/app/api/admin/today/route.ts",
-      "lines": 30,
+      "lines": 29,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8213,7 +8276,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 201,
+      "lines": 202,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8247,6 +8310,7 @@
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
+        "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -9521,6 +9585,7 @@
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
+        "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -9801,6 +9866,7 @@
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
+        "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -9871,6 +9937,7 @@
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
+        "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -9956,7 +10023,7 @@
     },
     {
       "path": "src/lib/admin-action-queue.ts",
-      "lines": 113,
+      "lines": 115,
       "purpose": "AW-4 (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -9989,7 +10056,8 @@
       ],
       "usedBy": [
         "src/app/api/admin/today/route.ts",
-        "src/lib/admin-checks.ts"
+        "src/lib/admin-checks.ts",
+        "src/lib/admin-today.ts"
       ]
     },
     {
@@ -10171,6 +10239,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/ask/route.ts",
+        "src/app/api/admin/goals/route.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-today.ts"
@@ -10229,6 +10298,50 @@
         "src/components/ui/ErrorState.tsx",
         "src/lib/admin-session-context.tsx",
         "src/lib/use-resource.ts"
+      ]
+    },
+    {
+      "path": "src/lib/admin-goals.ts",
+      "lines": 48,
+      "purpose": "AW-4b (Cam 2026-10-21):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GOAL_METRICS",
+          "kind": "const"
+        },
+        {
+          "name": "goalCurrent",
+          "kind": "fn"
+        },
+        {
+          "name": "GoalMetric",
+          "kind": "type"
+        },
+        {
+          "name": "goalPace",
+          "kind": "fn"
+        },
+        {
+          "name": "isGoalMetric",
+          "kind": "fn"
+        },
+        {
+          "name": "listGoals",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-today",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/goals/route.ts"
       ]
     },
     {
@@ -10420,6 +10533,7 @@
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
+        "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/golfers/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/login/route.ts",
@@ -10455,13 +10569,33 @@
     },
     {
       "path": "src/lib/admin-today.ts",
-      "lines": 100,
+      "lines": 189,
       "purpose": "",
       "brain": [],
       "exports": [
         {
+          "name": "paidWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "STAFF_QUIET_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "staffSeenSignal",
+          "kind": "fn"
+        },
+        {
           "name": "STUCK_DAYS",
           "kind": "const"
+        },
+        {
+          "name": "TodayCourse",
+          "kind": "type"
+        },
+        {
+          "name": "todayCourses",
+          "kind": "fn"
         },
         {
           "name": "todayHealth",
@@ -10483,7 +10617,9 @@
       "guard": null,
       "imports": [
         "../../vercel.json",
+        "./admin-action-queue",
         "./admin-day",
+        "./course-time",
         "./cron-log",
         "./expenses",
         "./inquiry-status",
@@ -10492,7 +10628,8 @@
       ],
       "usedBy": [
         "src/app/api/admin/today/route.ts",
-        "src/lib/admin-checks.ts"
+        "src/lib/admin-checks.ts",
+        "src/lib/admin-goals.ts"
       ]
     },
     {
@@ -12957,6 +13094,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/g/[slug]/page.tsx",
+        "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
@@ -13980,6 +14118,7 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/courses/page.tsx",
+        "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
@@ -15651,6 +15790,7 @@
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
         "src/app/api/admin/forgot-password/route.ts",
+        "src/app/api/admin/goals/route.ts",
         "src/app/api/admin/golfers/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/login/route.ts",
@@ -15777,6 +15917,7 @@
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
+        "src/lib/admin-goals.ts",
         "src/lib/admin-session.ts",
         "src/lib/admin-today.ts",
         "src/lib/agreement-gate.ts",
@@ -16570,7 +16711,7 @@
     },
     {
       "path": "src/lib/session.ts",
-      "lines": 99,
+      "lines": 120,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16597,6 +16738,10 @@
         {
           "name": "STAFF_FORBIDDEN",
           "kind": "const"
+        },
+        {
+          "name": "touchStaffSeen",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -18079,9 +18224,49 @@
       ],
       "writers": [
         "src/app/api/admin/agreement-versions/route.ts",
-        "src/app/api/admin/company-documents/route.ts"
+        "src/app/api/admin/company-documents/route.ts",
+        "src/app/api/admin/goals/route.ts"
       ],
       "readers": []
+    },
+    {
+      "name": "AdminGoal",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "metric",
+          "type": "String"
+        },
+        {
+          "name": "target",
+          "type": "Int"
+        },
+        {
+          "name": "startsAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "dueAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/goals/route.ts"
+      ],
+      "readers": [
+        "src/lib/admin-goals.ts"
+      ]
     },
     {
       "name": "AdminUser",
@@ -18733,6 +18918,7 @@
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
+        "src/lib/admin-goals.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
@@ -19467,6 +19653,10 @@
           "type": "DateTime?"
         },
         {
+          "name": "staffLastSeenAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "calls",
           "type": "Call[]"
         },
@@ -19578,6 +19768,7 @@
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
+        "src/lib/admin-goals.ts",
         "src/lib/admin-today.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
@@ -21746,6 +21937,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",

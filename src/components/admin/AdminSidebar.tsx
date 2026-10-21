@@ -7,7 +7,7 @@ import { Search } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 
-export type AdminNavKey = 'overview' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company';
+export type AdminNavKey = 'overview' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -90,6 +90,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   const allGroups: NavGroup[] = [
     { label: null, items: [
       { key: 'overview', label: 'Today', href: '/admin' },
+      { key: 'goals',    label: 'Goals', href: '/admin/goals', minRole: SUPPORT_PLUS },
     ] },
     { label: 'Courses', items: [
       { key: 'inquiries', label: 'Inquiries',     href: '/admin/inquiries', minRole: VIEWER_PLUS },

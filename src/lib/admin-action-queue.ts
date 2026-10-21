@@ -16,6 +16,8 @@ export type ActionRow = {
   actionLabel: string; href: string; amount?: string; count?: number; items?: QueueItem[];
   fire?: { kind: 'resend_preview' | 'resend_sheet' | 'send_nudge'; inquiryId?: string; courseId?: string };
   severity: 'bad' | 'warn';
+  /** AW-4b: the course the row is about; absent for an inquiry (not a course yet). */
+  courseId?: string;
 };
 
 const days = (now: Date, d: Date) => Math.floor((now.getTime() - d.getTime()) / 86_400_000);
@@ -61,7 +63,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
       const total = g.items.reduce((s, i) => s + i.amount, 0);
       const oldest = Math.max(...g.items.map(i => i.ageDays));
       return {
-        id: `fc-${courseId}`, who: g.courseName, severity: 'bad',
+        id: `fc-${courseId}`, courseId, who: g.courseName, severity: 'bad',
         why: `${g.items.length} failed charge${g.items.length === 1 ? '' : 's'} · $${total.toFixed(2)}`,
         doThis: 'Card on file is failing at check-in — contact the golfer(s) to update payment, then retry from Revenue.',
         ageDays: oldest, actionLabel: 'Review', href: '/admin/revenue', count: g.items.length,
@@ -69,7 +71,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
       };
     }),
     ...noStripe.map((c): ActionRow => ({
-      id: `ns-${c.id}`, who: c.name, severity: 'bad',
+      id: `ns-${c.id}`, courseId: c.id, who: c.name, severity: 'bad',
       why: 'Live but can’t take payments — Stripe incomplete',
       doThis: 'Operator hasn’t finished connecting their bank account — check their Setup tab and follow up if they’re stuck.',
       ageDays: 0, actionLabel: 'Fix Stripe', href: `/admin/courses?courseId=${c.id}&tab=overview`,
@@ -80,7 +82,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
   // MP-4d: one row per inquiry, from the same derivation the Inquiries list uses.
   const pipelineRows: ActionRow[] = buildInquiryQueueRows(activePipeline, now).map(r => ({ ...r, severity: 'warn' }));
   const draftRows: ActionRow[] = draftsAmber.map(c => ({
-    id: `dr-${c.id}`, who: c.name, severity: 'warn', why: 'Draft not yet live',
+    id: `dr-${c.id}`, courseId: c.id, who: c.name, severity: 'warn', why: 'Draft not yet live',
     doThis: 'Course was built but setup was never finished — complete it and go live from its Overview tab.',
     ageDays: days(now, c.createdAt), actionLabel: 'Review', href: `/admin/courses?courseId=${c.id}&tab=overview`,
   }));
@@ -89,7 +91,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
     .map(t => ({ t, signal: threadSignal(t.messages, now), last: t.messages.find(m => !m.isBroadcast) }))
     .filter(x => x.signal.overdue && x.last)
     .map(({ t, signal, last }) => ({
-      id: `msg-${t.id}`, who: t.course.name, severity: 'warn' as const,
+      id: `msg-${t.id}`, courseId: t.courseId, who: t.course.name, severity: 'warn' as const,
       why: `Message from ${last!.senderName}, unanswered`,
       doThis: 'They’re waiting on a reply — send a quick nudge or a full response.',
       ageDays: signal.ageDays, actionLabel: 'Reply', href: `/admin/messages?courseId=${t.courseId}`,
@@ -97,10 +99,10 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
     }));
   // CS-1 §4: check-in calls due — never a second row for a course already red.
   const alreadyRed = new Set<string>([...noStripe.map(c => c.id), ...failedByCourse.keys()]);
-  const checkInRows: ActionRow[] = buildCourseCheckInRows(activeCourses, now).filter(r => !alreadyRed.has(r.id.slice(3))).map(r => ({ ...r, severity: 'warn' }));
+  const checkInRows: ActionRow[] = buildCourseCheckInRows(activeCourses, now).filter(r => !alreadyRed.has(r.id.slice(3))).map(r => ({ ...r, courseId: r.id.slice(3), severity: 'warn' }));
   // AG-3 §4: one row per course past its re-acceptance deadline.
   const agreementRows: ActionRow[] = overdueAgreements.map(c => ({
-    id: `ag-${c.id}`, who: c.name, severity: 'warn',
+    id: `ag-${c.id}`, courseId: c.id, who: c.name, severity: 'warn',
     why: `Operator Agreement re-acceptance overdue since ${c.by.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
     doThis: `Call ${c.operatorName || 'the operator'} — their course settings are read-only until they sign the new version from their dashboard.`,
     ageDays: Math.max(0, days(now, c.by)), actionLabel: 'Open', href: `/admin/courses/${c.id}`,
