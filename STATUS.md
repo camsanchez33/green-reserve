@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 03:29 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c6ab10b` · working tree **1 dirty file(s)**
+Generated 2026-10-21 03:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `00a9007` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 64 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 68 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `00a9007` | 2026-10-21 | AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists |
+| `ccbfb06` | 2026-10-20 | AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161) |
+| `0671dab` | 2026-10-21 | Regenerate code map after main merge |
+| `4fda831` | 2026-10-21 | AW-1a: dummy hash at the real cost; status board |
 | `fc3a0fc` | 2026-10-21 | AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails |
 | `eeea53c` | 2026-10-21 | AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner |
 | `315e3e3` | 2026-10-20 | W2-7 B2: sales tax on pro-shop items added to a round (#159) |
@@ -79,8 +83,9 @@ Generated 2026-10-21 03:29 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (2 file(s))
 
+- `M ADMIN_V5_SPEC.md`
 - `M src/app/api/cam/login/route.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
@@ -168,7 +173,7 @@ Nothing awaiting review.
 | `CLAUDE.md` | 1 | 2026-10-21 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 3d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-21 | 0d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 1d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 9d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 13d |
@@ -205,18 +210,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `00a9007` 2026-10-21 — AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists
+- `ccbfb06` 2026-10-20 — AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)
+- `0671dab` 2026-10-21 — Regenerate code map after main merge
+- `4fda831` 2026-10-21 — AW-1a: dummy hash at the real cost; status board
 - `c6ab10b` 2026-10-21 — queue/spec update
 - `fc3a0fc` 2026-10-21 — AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails
 - `eeea53c` 2026-10-21 — AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner
+- `efd1438` 2026-10-20 — queue/spec update (#160)
 - `315e3e3` 2026-10-20 — W2-7 B2: sales tax on pro-shop items added to a round (#159)
 - `2798d62` 2026-10-21 — W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board
 - `557be09` 2026-10-21 — W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched
 - `063dc87` 2026-10-21 — W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid
-- `507507a` 2026-10-20 — W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158)
-- `85be7e1` 2026-10-21 — Regenerate code map and status board after main merge
-- `248dc36` 2026-10-21 — W2-6 slice 3: window-cap test, spec status, status board
-- `d8a856f` 2026-10-21 — W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping
-- `290c10f` 2026-10-21 — W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking
 
 ---
 

@@ -117,14 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-21 03:29 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ c6ab10b</span>
-    <span>1 uncommitted</span>
+    <span>2026-10-21 03:45 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 00a9007</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">64 runs have shipped that the queue doesn't know about</div>
+<div class="lede">68 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">00a9007</span><span>AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists</span></li>
+<li><span class="h">ccbfb06</span><span>AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)</span></li>
+<li><span class="h">0671dab</span><span>Regenerate code map after main merge</span></li>
+<li><span class="h">4fda831</span><span>AW-1a: dummy hash at the real cost; status board</span></li>
 <li><span class="h">fc3a0fc</span><span>AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails</span></li>
 <li><span class="h">eeea53c</span><span>AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner</span></li>
 <li><span class="h">315e3e3</span><span>W2-7 B2: sales tax on pro-shop items added to a round (#159)</span></li>
@@ -201,7 +205,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M src/app/api/cam/login/route.ts</code></li></ul>
+<ul class="plain"><li><code>M ADMIN_V5_SPEC.md</code></li><li><code>M src/app/api/cam/login/route.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -246,7 +250,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-21 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 3d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 0d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 0d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 0d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 1d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 9d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
@@ -282,18 +286,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">00a9007</td><td class="num">2026-10-21</td><td>AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists</td></tr>
+<tr><td class="num">ccbfb06</td><td class="num">2026-10-20</td><td>AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)</td></tr>
+<tr><td class="num">0671dab</td><td class="num">2026-10-21</td><td>Regenerate code map after main merge</td></tr>
+<tr><td class="num">4fda831</td><td class="num">2026-10-21</td><td>AW-1a: dummy hash at the real cost; status board</td></tr>
 <tr><td class="num">c6ab10b</td><td class="num">2026-10-21</td><td>queue/spec update</td></tr>
 <tr><td class="num">fc3a0fc</td><td class="num">2026-10-21</td><td>AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails</td></tr>
 <tr><td class="num">eeea53c</td><td class="num">2026-10-21</td><td>AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner</td></tr>
+<tr><td class="num">efd1438</td><td class="num">2026-10-20</td><td>queue/spec update (#160)</td></tr>
 <tr><td class="num">315e3e3</td><td class="num">2026-10-20</td><td>W2-7 B2: sales tax on pro-shop items added to a round (#159)</td></tr>
 <tr><td class="num">2798d62</td><td class="num">2026-10-21</td><td>W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board</td></tr>
 <tr><td class="num">557be09</td><td class="num">2026-10-21</td><td>W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched</td></tr>
 <tr><td class="num">063dc87</td><td class="num">2026-10-21</td><td>W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid</td></tr>
-<tr><td class="num">507507a</td><td class="num">2026-10-20</td><td>W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158)</td></tr>
-<tr><td class="num">85be7e1</td><td class="num">2026-10-21</td><td>Regenerate code map and status board after main merge</td></tr>
-<tr><td class="num">248dc36</td><td class="num">2026-10-21</td><td>W2-6 slice 3: window-cap test, spec status, status board</td></tr>
-<tr><td class="num">d8a856f</td><td class="num">2026-10-21</td><td>W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping</td></tr>
-<tr><td class="num">290c10f</td><td class="num">2026-10-21</td><td>W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

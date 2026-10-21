@@ -88,3 +88,4 @@ Earlier admin specs: ADMIN_REBUILD_SPEC, ADMIN_V2..V4_SPEC.
 - **AW-17 new areas:** Expenses gets its own page (today a drawer in Revenue); Leads (courses being chased before they inquire, feeding Inquiries); Marketing & advertising (campaigns, spend, what each brought in).
 
 Status (2026-10-21): AW-1a shipped (camsanchez33/green-reserve#161). AW-1b passkeys built (SimpleWebAuthn 13.3.x, pinned); AW-1c (step-up on risky actions + a device list) next, then AW-3/AW-4.
+AW-1c also covers (AW-1b review notes): adding or removing a passkey re-confirms (passkey or authenticator code) and emails the owner; a route-level test that the passkey step without the password-proved marker returns the start-over 400.

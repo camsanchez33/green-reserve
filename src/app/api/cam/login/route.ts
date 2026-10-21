@@ -80,8 +80,13 @@ export async function POST(req: NextRequest) {
       await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorAttempts: clear ? 0 : attempts, ...(clear ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}) } });
       return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'That passkey didn’t check out — start over and try again, or use your authenticator app.' }, { status: 400 });
     }
-    // The backup step is no longer needed: clear its pending marker.
-    await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() } });
+    // The backup step is no longer needed: clear its pending marker — but keep a
+    // still-live used authenticator step it carried, so that code can't be replayed.
+    const carried = admin.twoFactorCode.slice(TOTP_PENDING.length + 1);
+    await prisma.adminUser.update({ where: { id: admin.id }, data: {
+      ...(carried ? { twoFactorCode: TOTP_USED_PREFIX + carried, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) } : { twoFactorCode: null, twoFactorCodeExpiry: null }),
+      twoFactorAttempts: 0, lastLoginAt: new Date(),
+    } });
     return signIn(admin, device.id, 'passkey');
   }
 
