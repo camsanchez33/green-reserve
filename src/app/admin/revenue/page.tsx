@@ -378,7 +378,7 @@ export default function RevenuePage() {
               <span>
                 Owner sections (expenses, net P&amp;L, Stripe balance) are hidden — this session
                 was not verified with a second factor.{' '}
-                <a href="/admin/owner-login" className="text-pine font-medium hover:underline">Sign in again at owner sign-in →</a>
+                <a href="/cam" className="text-pine font-medium hover:underline">Sign in again →</a>
               </span>
             </div>
           )}

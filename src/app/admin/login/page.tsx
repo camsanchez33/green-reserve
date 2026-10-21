@@ -13,7 +13,6 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [ownerRedirect, setOwnerRedirect] = useState(false);
   const [loading, setLoading] = useState(false);
   // MP-2b: MP-2's per-request active check means a session can now end
   // mid-shift, and 14 admin pages bounce here when it does. Landing on a bare
@@ -33,7 +32,6 @@ export default function AdminLoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    setOwnerRedirect(false);
     setLoading(true);
     try {
       const res = await fetch('/api/admin/login', {
@@ -45,7 +43,6 @@ export default function AdminLoginPage() {
       if (!res.ok) {
         // Owner accounts are rejected here by design — point at the door that
         // does have a second factor rather than leaving them stuck.
-        if (data.ownerRedirect) { setOwnerRedirect(true); return; }
         setError(data.error || 'Login failed');
         return;
       }
@@ -86,17 +83,6 @@ export default function AdminLoginPage() {
             </div>
           )}
 
-          {ownerRedirect && (
-            <div className="bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink mb-5">
-              <p className="font-medium mb-0.5">This is an owner account.</p>
-              <p className="text-ink-soft text-[13px]">
-                Owner accounts sign in with a second factor.{' '}
-                <a href="/admin/owner-login" className="text-pine font-medium hover:underline">
-                  Continue to owner sign-in →
-                </a>
-              </p>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -142,9 +128,6 @@ export default function AdminLoginPage() {
         </Card>
 
         <p className="mt-5 text-center text-xs text-ink-soft">
-          Owner? <a href="/admin/owner-login" className="text-pine font-medium hover:underline">Owner sign-in →</a>
-        </p>
-        <p className="mt-2 text-center text-xs text-ink-soft">
           Course operator? <a href="/dashboard/login" className="text-pine font-medium hover:underline">Sign in at your dashboard →</a>
         </p>
       </div>

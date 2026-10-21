@@ -122,7 +122,7 @@ export default function AdminSystemPage() {
   // MP-2e: MP-2d gated this GET at requireOwner (role owner AND mfa), so the
   // panel silently disappeared for managers and for any owner on a
   // password-only session — the route even carries ownerGateError copy telling
-  // them to sign in at /admin/owner-login, and this threw it away. A 403 is
+  // them to sign in at /cam, and this threw it away. A 403 is
   // expected for managers, so it is a quiet note rather than an error banner.
   const checkOrphans = useCallback(async () => {
     setOrphanChecking(true);

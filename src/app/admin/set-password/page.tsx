@@ -61,7 +61,7 @@ function SetPasswordForm() {
       // Owners are rejected by /admin/login — send a freshly activated owner
       // to the door with the second factor instead of bouncing them straight
       // back out.
-      if (data.role === 'owner') setSignInUrl('/admin/owner-login');
+      if (data.role === 'owner') setSignInUrl('/cam');
       setDone(true);
     } catch {
       setError('Network error');

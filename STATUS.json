@@ -1,20 +1,45 @@
 {
-  "generatedAt": "2026-10-21T02:55:07.341Z",
+  "generatedAt": "2026-10-21T03:29:00.571Z",
   "repo": {
-    "head": "557be09",
+    "head": "c6ab10b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 4,
+    "dirtyCount": 1,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/round-shop-tax-db-test.ts",
-      " M src/lib/round-shop-tax.ts"
+      "M src/app/api/cam/login/route.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "fc3a0fc",
+        "date": "2026-10-21T03:27:57+00:00",
+        "subject": "AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "eeea53c",
+        "date": "2026-10-21T03:20:36+00:00",
+        "subject": "AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "315e3e3",
+        "date": "2026-10-20T23:06:50-04:00",
+        "subject": "W2-7 B2: sales tax on pro-shop items added to a round (#159)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2798d62",
+        "date": "2026-10-21T02:55:08+00:00",
+        "subject": "W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "557be09",
         "date": "2026-10-21T02:52:44+00:00",
@@ -600,8 +625,8 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-19",
-      "ageDays": 1
+      "lastTouched": "2026-10-21",
+      "ageDays": 0
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -610,16 +635,16 @@
       "ageDays": 3
     },
     {
-      "file": "OPERATOR_REWORK_SPEC.md",
+      "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-21",
       "ageDays": 0
     },
     {
-      "file": "ADMIN_V5_SPEC.md",
+      "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 1
+      "lastTouched": "2026-10-21",
+      "ageDays": 0
     },
     {
       "file": "HOMEPAGE_SPEC.md",
@@ -823,6 +848,31 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c6ab10b",
+      "date": "2026-10-21",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "fc3a0fc",
+      "date": "2026-10-21",
+      "subject": "AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails"
+    },
+    {
+      "h": "eeea53c",
+      "date": "2026-10-21",
+      "subject": "AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner"
+    },
+    {
+      "h": "315e3e3",
+      "date": "2026-10-20",
+      "subject": "W2-7 B2: sales tax on pro-shop items added to a round (#159)"
+    },
+    {
+      "h": "2798d62",
+      "date": "2026-10-21",
+      "subject": "W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board"
+    },
+    {
       "h": "557be09",
       "date": "2026-10-21",
       "subject": "W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched"
@@ -856,31 +906,6 @@
       "h": "290c10f",
       "date": "2026-10-21",
       "subject": "W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking"
-    },
-    {
-      "h": "08e01e2",
-      "date": "2026-10-20",
-      "subject": "queue/spec update (#157)"
-    },
-    {
-      "h": "ddb40f0",
-      "date": "2026-10-20",
-      "subject": "W2-6 slice 2: schedule overlaps warn instead of block (#156)"
-    },
-    {
-      "h": "bc1db3d",
-      "date": "2026-10-21",
-      "subject": "W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board"
-    },
-    {
-      "h": "27ef910",
-      "date": "2026-10-21",
-      "subject": "W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused"
-    },
-    {
-      "h": "e96323e",
-      "date": "2026-10-20",
-      "subject": "W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)"
     }
   ]
 }

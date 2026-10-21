@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-459 source files · 229 routes · 145 libraries · 43 models
+464 source files · 231 routes · 146 libraries · 45 models
 
 ## Single sources of truth
 
@@ -66,10 +66,9 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/groups` | admin | client-side | page | `src/app/admin/groups/page.tsx` | 208 |
 | `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 990 |
 | `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2262 |
-| `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 154 |
+| `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 137 |
 | `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 695 |
-| `/admin/owner-login` | admin | client-side | page | `src/app/admin/owner-login/page.tsx` | 147 |
-| `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 130 |
+| `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 125 |
 | `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 917 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
 | `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 540 |
@@ -101,12 +100,11 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/forgot-password` | admin | entry | POST | `src/app/api/admin/forgot-password/route.ts` | 45 |
 | `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 250 |
 | `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1201 |
-| `/api/admin/login` | admin | entry | POST | `src/app/api/admin/login/route.ts` | 90 |
-| `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 14 |
+| `/api/admin/login` | admin | entry | POST | `src/app/api/admin/login/route.ts` | 88 |
+| `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 19 |
 | `/api/admin/messages` | admin | file | GET PATCH POST | `src/app/api/admin/messages/route.ts` | 211 |
 | `/api/admin/nav-badges` | admin | file | GET | `src/app/api/admin/nav-badges/route.ts` | 36 |
 | `/api/admin/orphan-sweep` | admin | file | GET POST | `src/app/api/admin/orphan-sweep/route.ts` | 45 |
-| `/api/admin/owner-login` | admin | entry | POST | `src/app/api/admin/owner-login/route.ts` | 209 |
 | `/api/admin/platform-stripe` | admin | file | GET | `src/app/api/admin/platform-stripe/route.ts` | 117 |
 | `/api/admin/reconcile-lifecycle-pairs` | admin | file | POST | `src/app/api/admin/reconcile-lifecycle-pairs/route.ts` | 19 |
 | `/api/admin/refund` | admin | file | POST | `src/app/api/admin/refund/route.ts` | 23 |
@@ -144,6 +142,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/bookings/setup-intent` | public | public | POST | `src/app/api/bookings/setup-intent/route.ts` | 73 |
 | `/api/calcom/webhook` | public | public | POST | `src/app/api/calcom/webhook/route.ts` | 219 |
 | `/api/call/[token]` | public | public | GET | `src/app/api/call/[token]/route.ts` | 80 |
+| `/api/cam/device` | public | token | GET POST | `src/app/api/cam/device/route.ts` | 24 |
+| `/api/cam/login` | public | entry | POST | `src/app/api/cam/login/route.ts` | 240 |
 | `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 113 |
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 44 |
 | `/api/courses/[slug]` | public | public | GET | `src/app/api/courses/[slug]/route.ts` | 13 |
@@ -243,6 +243,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |
 | `/book` | public | public | page | `src/app/book/page.tsx` | 33 |
 | `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 141 |
+| `/cam` | public | public | page | `src/app/cam/page.tsx` | 116 |
+| `/cam/approve` | public | token | page | `src/app/cam/approve/page.tsx` | 64 |
 | `/checkin/[bookingId]` | golfer | token | page | `src/app/checkin/[bookingId]/page.tsx` | 377 |
 | `/contact` | public | public | page | `src/app/contact/page.tsx` | 79 |
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 50 |
@@ -288,11 +290,11 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 191 | 15 |  | `prisma` |
-| `src/lib/admin-session.ts` | 54 | 149 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
+| `src/lib/prisma.ts` | 192 | 15 |  | `prisma` |
+| `src/lib/admin-session.ts` | 54 | 164 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +5 more |
 | `src/lib/session.ts` | 51 | 99 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN` |
-| `src/lib/email.ts` | 50 | 1931 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail` +55 more |
-| `src/lib/rate-limit.ts` | 40 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
+| `src/lib/email.ts` | 50 | 1965 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail`, `sendAdminSetPasswordEmail` +57 more |
+| `src/lib/rate-limit.ts` | 41 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 34 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
@@ -351,6 +353,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/expenses.ts` | 4 | 77 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +3 more |
 | `src/lib/lifecycle.ts` | 4 | 414 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
 | `src/lib/move-booking.ts` | 4 | 228 | ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07): | `moveBooking`, `MoveCode`, `MoveFail`, `MoveOk`, `MovePricing` |
+| `src/lib/owner-session.ts` | 4 | 159 | AW-1 (Cam 2026-10-20: | `approveDevice`, `clearOwnerCookie`, `createOwnerSession`, `DEVICE_COOKIE`, `deviceForApproval`, `deviceLabel`, `deviceTokenFromCookie`, `OWNER_COOKIE` +10 more |
 | `src/lib/public-tee-times.ts` | 4 | 92 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
 | `src/lib/sales-tax.ts` | 4 | 176 | W2-7 part B (Cam 2026-10-20: | `isTaxCategory`, `quoteShopTax`, `recordPendingShopTax`, `recordShopSaleTax`, `reuseShopTaxQuote`, `setTaxOn`, `setUpTax`, `TAX_CATEGORIES` +6 more |
 | `src/lib/terms.ts` | 4 | 8 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
@@ -440,10 +443,10 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/Card.tsx` | 49 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/Card.tsx` | 50 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/StatusDot.tsx` | 48 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 30 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
-| `src/components/ui/Eyebrow.tsx` | 25 | 19 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/ui/Eyebrow.tsx` | 24 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/admin/AdminSidebar.tsx` | 15 | 267 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 11 | 288 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
@@ -465,6 +468,7 @@ Sorted the same way.
 | `src/components/admin/AgreementVersionsCard.tsx` | 1 | 117 | AG-3 — Admin → System → Agreement versions (Cam 2026-10-12: | `default (AgreementVersionsCard)` |
 | `src/components/admin/CommandPalette.tsx` | 1 | 236 |  | `default (CommandPalette)` |
 | `src/components/admin/InquiryCallCards.tsx` | 1 | 914 | INQUIRY_CALL_SPEC IC-2 — the two discovery-call cards on the inquiry detail page. | `CallFocus`, `CallRow`, `default (InquiryCallCards)`, `describeCall` |
+| `src/components/admin/OwnerSignOutEverywhere.tsx` | 1 | 27 | AW-1: | `default (OwnerSignOutEverywhere)` |
 | `src/components/admin/OwnerTwoFactorCard.tsx` | 1 | 159 | OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only). | `default (OwnerTwoFactorCard)` |
 | `src/components/AnnouncementBanner.tsx` | 1 | 51 |  | `default (AnnouncementBanner)` |
 | `src/components/birdie/BirdieWidget.tsx` | 1 | 229 | BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its launcher in the bottom corner on every screen (W2-1, Cam 2026-10-19). | `default (BirdieWidget)` |
@@ -516,11 +520,11 @@ without opening anything.
 
 ### AdminUser
 
-21 fields · 8 writer(s) · 11 reader(s)
+23 fields · 8 writer(s) · 11 reader(s)
 
-- fields: `id`, `email`, `name`, `passwordHash`, `role`, `active`, `mustChangePassword`, `lastLoginAt`, `createdAt`, `setPasswordToken`, `setPasswordTokenExpiry`, `twoFactorCode`, `twoFactorCodeExpiry`, `twoFactorAttempts`, `twoFactorSecret`, `twoFactorEnrolledAt`, `twoFactorRecoveryCodes`, `failedLoginAttempts`, `lockoutUntil`, `sessionVersion`, `auditLogs`
-- writers: `src/app/api/admin/bootstrap/route.ts`, `src/app/api/admin/change-password/route.ts`, `src/app/api/admin/employees/route.ts`, `src/app/api/admin/forgot-password/route.ts`, `src/app/api/admin/login/route.ts`, `src/app/api/admin/owner-login/route.ts`, `src/app/api/admin/set-password/route.ts`, `src/app/api/admin/two-factor/route.ts`
-- readers: `src/app/api/admin/bootstrap/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/change-password/route.ts`, `src/app/api/admin/employees/route.ts`, `src/app/api/admin/forgot-password/route.ts`, `src/app/api/admin/login/route.ts`, `src/app/api/admin/owner-login/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/set-password/route.ts`, `src/app/api/admin/two-factor/route.ts`, `src/lib/admin-session.ts`
+- fields: `id`, `email`, `name`, `passwordHash`, `role`, `active`, `mustChangePassword`, `lastLoginAt`, `createdAt`, `setPasswordToken`, `setPasswordTokenExpiry`, `twoFactorCode`, `twoFactorCodeExpiry`, `twoFactorAttempts`, `twoFactorSecret`, `twoFactorEnrolledAt`, `twoFactorRecoveryCodes`, `failedLoginAttempts`, `lockoutUntil`, `sessionVersion`, `auditLogs`, `ownerSessions`, `ownerDevices`
+- writers: `src/app/api/admin/bootstrap/route.ts`, `src/app/api/admin/change-password/route.ts`, `src/app/api/admin/employees/route.ts`, `src/app/api/admin/forgot-password/route.ts`, `src/app/api/admin/login/route.ts`, `src/app/api/admin/set-password/route.ts`, `src/app/api/admin/two-factor/route.ts`, `src/app/api/cam/login/route.ts`
+- readers: `src/app/api/admin/bootstrap/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/change-password/route.ts`, `src/app/api/admin/employees/route.ts`, `src/app/api/admin/forgot-password/route.ts`, `src/app/api/admin/login/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/set-password/route.ts`, `src/app/api/admin/two-factor/route.ts`, `src/app/api/cam/login/route.ts`, `src/lib/admin-session.ts`
 
 ### AgreementAcceptance
 
@@ -761,6 +765,22 @@ without opening anything.
 - fields: `id`, `courseId`, `course`, `name`, `par`, `sortOrder`, `createdAt`, `teeSetYardages`
 - writers: `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/nines/route.ts`
 - readers: `src/app/api/admin/course-detail/route.ts`, `src/app/api/operator/course-products/route.ts`, `src/app/api/operator/nines/route.ts`, `src/app/api/operator/tee-sets/route.ts`, `src/lib/course-shape-setup.ts`, `src/lib/schedule-preview.ts`, `src/lib/schedule-service.ts`
+
+### OwnerDevice
+
+13 fields · 1 writer(s) · 1 reader(s)
+
+- fields: `id`, `adminId`, `admin`, `tokenHash`, `label`, `ip`, `approvalTokenHash`, `approvalExpiresAt`, `approvedAt`, `revokedAt`, `createdAt`, `lastUsedAt`, `sessions`
+- writers: `src/lib/owner-session.ts`
+- readers: `src/lib/owner-session.ts`
+
+### OwnerSession
+
+12 fields · 1 writer(s) · 1 reader(s)
+
+- fields: `id`, `adminId`, `admin`, `deviceId`, `device`, `method`, `ip`, `userAgent`, `createdAt`, `expiresAt`, `lastSeenAt`, `revokedAt`
+- writers: `src/lib/owner-session.ts`
+- readers: `src/lib/owner-session.ts`
 
 ### PaymentEvent
 

@@ -1928,3 +1928,37 @@ export async function sendShopSalePayLinkEmail(data: {
   await getResend().emails.send({ from: FROM, to: data.email, subject: `Pay for your pro shop items — ${data.courseName}`, html });
 }
 
+
+// AW-1: the owner signed in at /cam from a device that hasn't been approved.
+// The link opens a confirm page (a click there approves) — mail scanners that
+// follow links can't approve a device. Sent only after a correct password.
+export async function sendOwnerDeviceApproval(data: { email: string; name: string; approvalUrl: string; device: string; place: string; when: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Approve a new device</h1>
+    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — someone with your password is signing in to the GreenReserve owner account from a device it hasn't seen before.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Device</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.device)}</td></tr>
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Where</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.place || 'Unknown')}</td></tr>
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">When</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.when)}</td></tr>
+    </table>
+    <a href="${data.approvalUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Review this device</a>
+    <p style="margin:0;color:#6B706A;font-size:13px;">The link works for 15 minutes. If this wasn't you, don't approve it — change your password now, because whoever it was knows it.</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.email, subject: 'Approve a new device for GreenReserve', html });
+}
+
+// AW-1: every owner sign-in, so a break-in is seen at once.
+export async function sendOwnerSignInAlert(data: { email: string; name: string; device: string; place: string; when: string; method: string }) {
+  const how = data.method === 'passkey' ? 'a passkey' : data.method === 'totp' ? 'your authenticator app' : data.method === 'recovery' ? 'a recovery code' : 'an emailed code';
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You signed in</h1>
+    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — the GreenReserve owner account just signed in with ${how}.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Device</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.device)}</td></tr>
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Where</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.place || 'Unknown')}</td></tr>
+      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">When</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.when)}</td></tr>
+    </table>
+    <p style="margin:0;color:#6B706A;font-size:13px;">Not you? Sign in, go to My profile and choose “Sign out everywhere”, then change your password.</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.email, subject: 'GreenReserve owner sign-in', html });
+}

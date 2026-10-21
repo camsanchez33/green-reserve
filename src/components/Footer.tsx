@@ -7,7 +7,7 @@ import { isBookingMode, isCourseWorld } from '@/lib/booking-mode';
 export default function Footer() {
   const pathname = usePathname();
 
-  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard')) return null;
+  if (pathname.startsWith('/admin') || pathname.startsWith('/dashboard') || pathname.startsWith('/cam')) return null;
 
   // Course-world pages (course page, member portal, golfer portal) get the
   // minimal text-only "Powered by GreenReserve" footer — no marketing links,

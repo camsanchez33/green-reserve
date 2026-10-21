@@ -24,7 +24,7 @@ export interface AdminSessionView {
 }
 
 /** Pages that must render with NO session — they are how you get one. */
-const AUTH_PATHS = ['/admin/login', '/admin/owner-login', '/admin/forgot-password', '/admin/set-password'];
+const AUTH_PATHS = ['/admin/login', '/admin/forgot-password', '/admin/set-password'];
 export function isAdminAuthPath(pathname: string | null): boolean {
   return !!pathname && AUTH_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
 }

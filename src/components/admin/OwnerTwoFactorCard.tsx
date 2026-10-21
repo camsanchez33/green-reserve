@@ -79,7 +79,7 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
       <p className="text-xs text-ink-soft mb-4">An authenticator app on your phone replaces the emailed code. Once set up, the owner login requires it — holding the inbox is no longer enough.</p>
 
       {!mfaSession && (
-        <p className="text-sm text-ink-soft">Sign in through the <a href="/admin/owner-login" className="text-pine underline">owner login</a> (with 2FA) to manage this.</p>
+        <p className="text-sm text-ink-soft"><a href="/cam" className="text-pine underline">Sign in again</a> to manage this.</p>
       )}
       {mfaSession && loadError && (
         <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm flex items-center justify-between gap-3">{loadError}<button onClick={load} className="text-xs underline">Retry</button></div>
