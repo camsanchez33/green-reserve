@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { todayCourses, staffSeenSignal, STAFF_QUIET_DAYS } from '../src/lib/admin-today';
 import { goalPace, goalCurrent } from '../src/lib/admin-goals';
 import type { ActionRow } from '../src/lib/admin-action-queue';
+import { touchStaffSeen } from '../src/lib/session';
 
 const prisma = new PrismaClient();
 const TAG = 'admintodaycourses';
@@ -20,7 +21,7 @@ async function cleanup() {
   await prisma.booking.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
-  await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
+  await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
 }
 
 async function main() {
@@ -76,6 +77,27 @@ async function main() {
   check('a course row lands on its course', by(open.id).rows.length === 1 && by(open.id).rows[0].id === `fc-${open.id}`);
   check('an inquiry row lands on no course', list.every(c => c.rows.every(r => r.id !== 'inq-1')));
   check('a course with a red to-do sorts first', list[0].id === open.id, list.map(c => c.name).join(', '));
+
+  // Fallback: no staffLastSeenAt yet, but the owner signed in yesterday → not amber.
+  const op2 = await prisma.courseOperator.create({ data: { name: 'Fallback', email: `${TAG}-2@test.local`, password: 'x', lastLoginAt: new Date(now.getTime() - DAY) } });
+  const fb = await prisma.course.create({ data: { name: `${TAG} Fallback`, slug: `${TAG}-fallback`, operatorId: op2.id, address: '1', city: 'T', state: 'CA', zipCode: '90210', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
+  await tee(fb.id, '2031-07-15');
+  const fbRow = (await todayCourses(now, [])).find(c => c.id === fb.id)!;
+  check('no staff record yet: the owner\'s last sign-in counts', !fbRow.staffQuiet && fbRow.staffSeenAt === op2.lastLoginAt!.toISOString());
+
+  // The write: sets once, then nothing for 15 minutes, and never touches updatedAt.
+  const before = (await prisma.course.findUnique({ where: { id: fb.id }, select: { updatedAt: true } }))!.updatedAt;
+  const t0 = new Date();
+  await touchStaffSeen(fb.id, t0);
+  const a1 = await prisma.course.findUnique({ where: { id: fb.id }, select: { staffLastSeenAt: true, updatedAt: true } });
+  check('touch: sets staffLastSeenAt', a1?.staffLastSeenAt?.getTime() === t0.getTime());
+  check('touch: leaves updatedAt alone', a1?.updatedAt.getTime() === before.getTime());
+  await touchStaffSeen(fb.id, new Date(t0.getTime() + 10 * 60_000));
+  const a2 = await prisma.course.findUnique({ where: { id: fb.id }, select: { staffLastSeenAt: true } });
+  check('touch: no write inside 15 minutes', a2?.staffLastSeenAt?.getTime() === t0.getTime());
+  await touchStaffSeen(fb.id, new Date(t0.getTime() + 16 * 60_000));
+  const a3 = await prisma.course.findUnique({ where: { id: fb.id }, select: { staffLastSeenAt: true } });
+  check('touch: writes again after 15 minutes', a3?.staffLastSeenAt?.getTime() === t0.getTime() + 16 * 60_000);
 
   const from = new Date('2031-07-01T00:00:00Z');
   const online = await goalCurrent('online_rounds', from, due, now);

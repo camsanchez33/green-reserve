@@ -44,13 +44,12 @@ const SEEN_EVERY_MS = 15 * 60 * 1000;
  * Awaited (a route's un-awaited write dies with the function) and never fatal:
  * a failed write must not sign anyone out.
  */
-async function touchStaffSeen(courseId: string) {
-  const now = new Date();
+export async function touchStaffSeen(courseId: string, now = new Date()) {
   try {
-    await prisma.course.updateMany({
-      where: { id: courseId, OR: [{ staffLastSeenAt: null }, { staffLastSeenAt: { lt: new Date(now.getTime() - SEEN_EVERY_MS) } }] },
-      data: { staffLastSeenAt: now },
-    });
+    // Raw SQL on purpose: Prisma's update would also bump Course.updatedAt,
+    // which the sitemap and Admin → System read as "the course changed".
+    await prisma.$executeRaw`UPDATE "Course" SET "staffLastSeenAt" = ${now}
+      WHERE "id" = ${courseId} AND ("staffLastSeenAt" IS NULL OR "staffLastSeenAt" < ${new Date(now.getTime() - SEEN_EVERY_MS)})`;
   } catch (e) {
     console.error('[session] staffLastSeenAt write failed', e);
   }

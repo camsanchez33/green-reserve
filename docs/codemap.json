@@ -10453,7 +10453,7 @@
     },
     {
       "path": "src/lib/admin-today.ts",
-      "lines": 185,
+      "lines": 189,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16518,7 +16518,7 @@
     },
     {
       "path": "src/lib/session.ts",
-      "lines": 121,
+      "lines": 120,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16545,6 +16545,10 @@
         {
           "name": "STAFF_FORBIDDEN",
           "kind": "const"
+        },
+        {
+          "name": "touchStaffSeen",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -19455,8 +19459,7 @@
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/lifecycle.ts",
-        "src/lib/sales-tax.ts",
-        "src/lib/session.ts"
+        "src/lib/sales-tax.ts"
       ],
       "readers": [
         "src/app/api/admin/activity/route.ts",

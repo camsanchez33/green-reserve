@@ -116,7 +116,7 @@ export default function AdminGoalsPage() {
                         </button>
                       )}
                     </div>
-                    <div className="mt-2 h-1.5 rounded-full bg-line-soft overflow-hidden" aria-hidden="true">
+                    <div className="mt-2 h-1.5 bg-line-soft overflow-hidden" aria-hidden="true">
                       <div className="h-full bg-pine" style={{ width: `${Math.round(share * 100)}%` }} />
                     </div>
                     <p className="mt-1.5 text-[13px] text-ink flex items-center gap-2 flex-wrap">

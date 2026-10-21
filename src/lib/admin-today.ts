@@ -139,7 +139,7 @@ export type TodayCourse = {
 export async function todayCourses(now: Date, rows: ActionRow[]): Promise<TodayCourse[]> {
   const courses = await prisma.course.findMany({
     where: { archivedAt: null },
-    select: { id: true, name: true, active: true, timezone: true, staffLastSeenAt: true },
+    select: { id: true, name: true, active: true, timezone: true, staffLastSeenAt: true, operator: { select: { lastLoginAt: true } } },
     orderBy: { name: 'asc' },
   });
   if (courses.length === 0) return [];
@@ -171,10 +171,14 @@ export async function todayCourses(now: Date, rows: ActionRow[]): Promise<TodayC
     const windowStart = addDaysStr(today, -(STAFF_QUIET_DAYS - 1));
     const hadTeeTimes = (datesByCourse.get(c.id) ?? []).some(d => d >= windowStart && d <= today);
     // A draft has no staff working it yet; "Draft not yet live" is its to-do.
-    const seen = staffSeenSignal(c.staffLastSeenAt, c.active && hadTeeTimes, now);
+    // Before staffLastSeenAt existed (or before staff next open the dashboard)
+    // the owner's last sign-in is the best we know.
+    const lastLogin = c.operator?.lastLoginAt ?? null;
+    const lastSeen = c.staffLastSeenAt && (!lastLogin || c.staffLastSeenAt > lastLogin) ? c.staffLastSeenAt : lastLogin;
+    const seen = staffSeenSignal(lastSeen, c.active && hadTeeTimes, now);
     return {
       id: c.id, name: c.name, live: c.active,
-      staffSeenAt: c.staffLastSeenAt?.toISOString() ?? null, staffQuiet: seen.quiet,
+      staffSeenAt: lastSeen?.toISOString() ?? null, staffQuiet: seen.quiet,
       feesThisMonth: (feeCents.get(c.id) ?? 0) / 100,
       rows: rowsByCourse.get(c.id) ?? [],
     };

@@ -498,13 +498,24 @@ async function main() {
     checkStatus('Viewer cannot access course-members (golfer PII) → 403', r.status, 403);
   }
   {
-    // AW-4: a viewer opens Today but sees only Onboarding — no money, no golfer
-    // names in the queue, no system health (each is gated like its own page).
+    // AW-4b: a viewer opens Today but sees nothing on it — no golfer names in
+    // the queue, no fees on the course cards, no system health (each is gated
+    // like its own page; the page points a viewer at Inquiries and Courses).
     const r = await api('/api/admin/today', { cookie: viewerCookie });
     checkStatus('Viewer can open Today → 200', r.status, 200);
-    const b = r.body as { needs?: unknown; money?: unknown; health?: unknown; onboarding?: unknown };
-    check('…without Needs you now, Money or Platform health', b?.needs === null && b?.money === null && b?.health === null);
-    check('…with Onboarding', !!b?.onboarding);
+    const b = r.body as { needs?: unknown; courses?: unknown; health?: unknown };
+    check('…without Needs you now, Courses or Platform health', b?.needs === null && b?.courses === null && b?.health === null);
+  }
+  {
+    // AW-4b: Goals — support+ reads, only the owner writes.
+    const r = await api('/api/admin/goals', { cookie: viewerCookie });
+    checkStatus('Viewer cannot read Goals → 403', r.status, 403);
+    const w = await api('/api/admin/goals', { method: 'POST', cookie: viewerCookie, body: { metric: 'courses_live', target: 1, dueDate: '2099-01-01' } });
+    checkStatus('Viewer cannot add a goal → 403', w.status, 403);
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const mgr = `admin_session=${await signAdminToken({ adminId: data.adminViewer.id, email: data.adminViewer.email, name: data.adminViewer.name, role: 'manager', mfa: true })}`;
+    const m = await api('/api/admin/goals', { method: 'POST', cookie: mgr, body: { metric: 'courses_live', target: 1, dueDate: '2099-01-01' } });
+    checkStatus('A token claiming manager (a viewer in the database) cannot add a goal → 403', m.status, 403);
   }
 
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
@@ -549,6 +560,18 @@ async function main() {
     checkStatus('Expired owner session (cookie claims longer) → 401', r3.status, 401);
     const r4 = await api('/api/admin/expenses', { cookie: `gr_owner=${await signOwnerToken(live.id, data.adminViewer?.id ?? 'someone-else', live.expiresAt)}` });
     checkStatus('Owner session id under another admin\'s name → 401', r4.status, 401);
+    // AW-4b: the owner adds and removes a goal (a fresh live session; the one above is revoked).
+    const g = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000) } });
+    const gc = `gr_owner=${await signOwnerToken(g.id, data.adminOwner.id, g.expiresAt)}`;
+    const add = await api('/api/admin/goals', { method: 'POST', cookie: gc, body: { metric: 'fees', target: 12.5, dueDate: '2099-01-01' } });
+    checkStatus('Owner adds a goal → 200', add.status, 200);
+    const gid = (add.body as { id?: string })?.id ?? '';
+    const stored = await prisma.adminGoal.findUnique({ where: { id: gid } });
+    check('…a fees target is kept in cents', stored?.target === 1250);
+    const list = await api('/api/admin/goals', { cookie: gc });
+    check('Owner reads Goals with canEdit', list.status === 200 && (list.body as { canEdit?: boolean })?.canEdit === true);
+    const del = await api(`/api/admin/goals?id=${encodeURIComponent(gid)}`, { method: 'DELETE', cookie: gc });
+    checkStatus('Owner removes the goal → 200', del.status, 200);
   }
   {
     // AW-1b: an employee can't list, add or remove the owner's passkeys.
