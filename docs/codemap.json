@@ -893,7 +893,7 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 335,
+      "lines": 336,
       "purpose": "AW-4 (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -10339,7 +10339,7 @@
     },
     {
       "path": "src/lib/admin-today.ts",
-      "lines": 98,
+      "lines": 100,
       "purpose": "",
       "brain": [],
       "exports": [

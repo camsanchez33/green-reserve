@@ -67,14 +67,17 @@ async function main() {
   await inquiry('Old', STUCK_DAYS + 3);
   await inquiry('Fresh', 2);
   await inquiry('Snoozed', STUCK_DAYS + 5, true);
+  const called = await inquiry('Called', STUCK_DAYS + 4);
+  await prisma.call.create({ data: { inquiryId: called.id, kind: 'discovery', outcome: 'scheduled', scheduledAt: new Date(now.getTime() + 2 * 86_400_000) } });
   const o = await todayOnboarding(now);
   const sent = o.stages.find(s => s.key === 'sheet-sent')!;
   const mine = sent.stuck.filter(s => s.name.startsWith(TAG));
   check('stuck: the one 10 days in the stage is named', mine.some(s => s.name.endsWith('Old') && s.days === STUCK_DAYS + 3), JSON.stringify(mine));
   check('stuck: a fresh one is not', !mine.some(s => s.name.endsWith('Fresh')));
   check('stuck: a snoozed one is not', !mine.some(s => s.name.endsWith('Snoozed')));
+  check('stuck: one with a discovery call booked is not', !mine.some(s => s.name.endsWith('Called')));
   check('all six stages, in order', o.stages.map(s => s.key).join(',') === 'new,in-review,sheet-sent,sheet-in,building,live');
-  check('the stage count includes every inquiry in it', sent.count >= 3);
+  check('the stage count includes every inquiry in it', sent.count >= 4);
 
   await cleanup();
   await prisma.$disconnect();

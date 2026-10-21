@@ -173,7 +173,8 @@ export default function AdminTodayPage() {
     if (!row.fire) return false;
     if (row.fire.kind === 'resend_sheet') return MANAGER_PLUS.includes(role);
     if (row.fire.kind === 'send_nudge') return SUPPORT_PLUS.includes(role);
-    return true;
+    // /api/preview/send is manager+.
+    return MANAGER_PLUS.includes(role);
   }
 
   async function fire(row: ActionRow) {
@@ -296,7 +297,7 @@ export default function AdminTodayPage() {
 
               {m && (
                 <Section title="Money this month" href="/admin/revenue" linkLabel="Open Revenue">
-                  <MoneyLine label="Booked through courses" cur={m.current.volume} prior={m.prior.volume} />
+                  <MoneyLine label="Paid through courses" cur={m.current.volume} prior={m.prior.volume} />
                   <MoneyLine label="GreenReserve fees" cur={m.current.fees} prior={m.prior.fees} />
                   {m.net && <MoneyLine label="Net after Stripe and expenses" cur={m.net.current} prior={m.net.prior} />}
                   <p className="mt-2 text-[12px] text-ink-muted">

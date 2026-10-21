@@ -53,7 +53,7 @@ this script with a non-zero exit — that is the point of the tag.
 | url | auth | guard | methods | file | lines |
 |---|---|---|---|---|---|
 | `/` | public | public | page | `src/app/page.tsx` | 15 |
-| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 335 |
+| `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 336 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 211 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 163 |
@@ -414,7 +414,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-action-queue.ts` | 1 | 113 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
 | `src/lib/admin-ask-links.ts` | 1 | 15 | AW-3b: | `ADMIN_LINK`, `safeAdminPath` |
 | `src/lib/admin-ask.ts` | 1 | 156 | AW-3b (Cam 2026-10-21: | `ASK_TOOL_NAMES`, `ASK_TOOLS`, `AskOutcome`, `runAskTool` |
-| `src/lib/admin-today.ts` | 1 | 98 |  | `STUCK_DAYS`, `todayHealth`, `todayMoney`, `todayOnboarding` |
+| `src/lib/admin-today.ts` | 1 | 100 |  | `STUCK_DAYS`, `todayHealth`, `todayMoney`, `todayOnboarding` |
 | `src/lib/agreement-pdf.tsx` | 1 | 129 | AGREEMENT_SPEC AG-2 §2 — the signed-agreement PDF. | `AgreementPdf`, `markdownBlocks`, `renderAgreementPdf`, `SignatureBlock` |
 | `src/lib/birdie/course-context.ts` | 1 | 72 | BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course. | `describeCourseContext`, `operatorCourseContext`, `OperatorCourseContext` |
 | `src/lib/birdie/knowledge-operator.ts` | 1 | 64 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |

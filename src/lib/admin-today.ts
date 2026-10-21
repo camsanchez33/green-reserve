@@ -87,7 +87,9 @@ export async function todayOnboarding(now: Date) {
     const here = inquiries.filter(i => (seg.statuses as readonly string[]).includes(i.status));
     const stuck = seg.key === 'live' ? [] : here
       .map(i => ({ i, s: queueSignal(i, now) }))
-      .filter(({ s }) => s.waitingOn !== 'snoozed' && daysSince(s.enteredAt, now) >= STUCK_DAYS)
+      .filter(({ i, s }) => s.waitingOn !== 'snoozed' && daysSince(s.enteredAt, now) >= STUCK_DAYS
+        // A discovery call on the books is progress, not a stall (the Inquiries queue reads it the same way).
+        && !(i.calls ?? []).some(c => c.outcome === 'scheduled' && new Date(c.scheduledAt) > now))
       .map(({ i, s }) => ({ id: i.id, name: i.courseName, days: daysSince(s.enteredAt, now), waitingOn: s.waitingOn }))
       .sort((a, b) => b.days - a.days);
     return { key: seg.key, label: seg.key === 'live' ? 'Went live this month' : seg.label, count: here.length, stuck };

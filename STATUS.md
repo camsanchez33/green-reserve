@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 04:27 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `0c7421f` · working tree clean
+Generated 2026-10-21 04:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c78b7aa` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 77 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 79 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `c78b7aa` | 2026-10-21 | AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding |
+| `224db02` | 2026-10-21 | Status board and code map |
 | `4c61670` | 2026-10-21 | AW-3b: Ask in the admin search — read-only AI answers with links to admin pages |
 | `905572d` | 2026-10-21 | Regenerate code map |
 | `474f3f0` | 2026-10-21 | Status board |
@@ -91,6 +93,17 @@ Generated 2026-10-21 04:27 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (5 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/admin-today-db-test.ts`
+- `M src/app/admin/page.tsx`
+- `M src/lib/admin-today.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -211,6 +224,8 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `c78b7aa` 2026-10-21 — AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding
+- `224db02` 2026-10-21 — Status board and code map
 - `4c61670` 2026-10-21 — AW-3b: Ask in the admin search — read-only AI answers with links to admin pages
 - `905572d` 2026-10-21 — Regenerate code map
 - `474f3f0` 2026-10-21 — Status board
@@ -221,8 +236,6 @@ Nothing awaiting review.
 - `5fc7ad8` 2026-10-21 — Regenerate code map
 - `a6a13af` 2026-10-21 — AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board
 - `00a9007` 2026-10-21 — AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists
-- `ccbfb06` 2026-10-20 — AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)
-- `0671dab` 2026-10-21 — Regenerate code map after main merge
 
 ---
 
