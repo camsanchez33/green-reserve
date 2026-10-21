@@ -7,7 +7,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { EmptyState } from '@/components/EmptyState';
 import {
-  FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES,
+  FUNNEL_SEGMENTS, ARCHIVED_STATUSES, ACTIVE_STATUSES, ALIVE_STATUSES, KNOWN_STATUSES, LEAD_STATUS,
   STATUS_DOT_MAP, STATUS_LABEL, stageEnteredAt, daysSince, queueSignal,
   type QueueSignal,
 } from '@/lib/inquiry-status';
@@ -48,7 +48,7 @@ interface Inquiry {
 }
 
 // AW-6a (Cam 2026-10-21): the default view is the BOARD (InquiryBoard) —
-// Talking · Setting up · Live, one next step per card. "All" and "Closed" are
+// Leads · Talking · Setting up · Live, one next step per card. "All" and "Closed" are
 // footer links that keep the table (with bulk Send sheet / Archive in All).
 //
 // The `?tab=` param keeps its old values on purpose so old deep links and
@@ -287,7 +287,8 @@ function InquiriesListInner() {
 
   const visible = inquiries.filter(matchesSearch);
 
-  const allRows = visible.filter(i => (ALIVE_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
+  // AW-6c: leads are listed in All too (they are on the board), outside the funnel.
+  const allRows = visible.filter(i => i.status === LEAD_STATUS || (ALIVE_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
   const closedRows = visible.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).sort(newestFirst);
   const flatRows = view === 'all' ? allRows : view === 'closed' ? closedRows : [];
   const totalPages = Math.max(1, Math.ceil(flatRows.length / PAGE_SIZE));
@@ -299,6 +300,7 @@ function InquiriesListInner() {
   const activeCount = inquiries.filter(i => (ACTIVE_STATUSES as readonly string[]).includes(i.status)).length;
   const needsYouCount = inquiries.filter(i => signals.get(i.id)?.yourMove).length;
   const liveAllTimeCount = inquiries.filter(i => i.status === 'live').length;
+  const leadCount = inquiries.filter(i => i.status === LEAD_STATUS).length;
   const closedCount = inquiries.filter(i => (ARCHIVED_STATUSES as readonly string[]).includes(i.status)).length;
   // IC-3 §4: scheduled calls Mon–Sun of the current Eastern week.
   const callsThisWeek = (() => {
@@ -325,7 +327,7 @@ function InquiriesListInner() {
   const invariantBroken = unmappedCount > 0
     || funnelSum !== activeCount + liveAllTimeCount
     || aliveCount !== funnelSum
-    || unmappedCount + aliveCount + closedCount !== inquiries.length;
+    || unmappedCount + leadCount + aliveCount + closedCount !== inquiries.length;
 
   // Bulk lives with the work. Closed is a graveyard (row actions only) and the
   // All browse mixes live courses in, where a mis-aimed Archive is expensive.
@@ -673,7 +675,7 @@ function InquiriesListInner() {
             <div>
               <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Inquiries</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
-                {activeCount} active · {needsYouCount} needs you · {callsThisWeek} call{callsThisWeek === 1 ? '' : 's'} this week · {liveAllTimeCount} live all-time · {closedCount} closed
+                {leadCount} lead{leadCount === 1 ? '' : 's'} · {activeCount} active · {needsYouCount} needs you · {callsThisWeek} call{callsThisWeek === 1 ? '' : 's'} this week · {liveAllTimeCount} live all-time · {closedCount} closed
               </p>
               {invariantBroken && (
                 <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-white bg-bad rounded-md px-2 py-1">
@@ -760,12 +762,12 @@ function InquiriesListInner() {
             </div>
           )}
 
-          {/* AW-6a: the board IS the queue — Talking · Setting up · Live, one
+          {/* AW-6a: the board IS the queue — Leads · Talking · Setting up · Live, one
               next step per card. All and Closed (below) keep the table. */}
           {!loading && !loadError && view === 'queue' && (
             q && visible.length === 0
               ? <EmptyState message="No results — clear your search" />
-              : <InquiryBoard inquiries={visible} signal={sig} href={detailHref} canResend={MANAGER_PLUS.includes(role)} />
+              : <InquiryBoard inquiries={visible} signal={sig} href={detailHref} canResend={MANAGER_PLUS.includes(role)} onChanged={loadInquiries} />
           )}
 
           {!loading && !loadError && view === 'all' && (
@@ -826,7 +828,7 @@ function InquiriesListInner() {
                 onClick={() => goTo(VIEW_ALL)}
                 className={'transition-colors ' + (view === 'all' ? 'text-ink font-medium' : 'text-ink-muted hover:text-ink')}
               >
-                All active ({aliveCount})
+                All active ({aliveCount + leadCount})
               </button>
               <button
                 onClick={() => goTo(VIEW_CLOSED)}

@@ -8,7 +8,7 @@ import { latestPageDecision } from './change-requests';
 
 
 export type InquiryStatus =
-  | 'pending' | 'in_review' | 'details_requested' | 'details_submitted'
+  | 'lead' | 'pending' | 'in_review' | 'details_requested' | 'details_submitted'
   | 'building' | 'live' | 'rejected' | 'archived';
 
 // Statuses that count as "in the active pipeline" (not live, not archived/rejected).
@@ -24,17 +24,27 @@ export const ARCHIVED_STATUSES: InquiryStatus[] = ['rejected', 'archived'];
 // (the funnel total) — closed records live only in the Closed tab.
 export const ALIVE_STATUSES: InquiryStatus[] = [...ACTIVE_STATUSES, 'live'];
 
+// AW-6c (Cam 2026-10-21: "one pipeline"): a lead is a course WE added — a
+// cold call, a referral — that has not inquired or talked to us yet. It is
+// deliberately in none of the lists above: the public interest form, Cal.com,
+// the call-invite page, the action queue and Today all read those lists, so a
+// lead never matches a submission, gets an email or counts as onboarding. On
+// a lead the admin route allows only LEAD_ACTIONS; "Move to Talking" turns it
+// into an ordinary in_review inquiry.
+export const LEAD_STATUS = 'lead' as const;
+export const LEAD_ACTIONS = ['start_talking', 'add_note', 'update_contact', 'set_source', 'snooze', 'unsnooze', 'reject'] as const;
+
 // Every status the app knows about. Anything outside this set is "unmapped" —
 // a bug, not a silent omission.
-export const KNOWN_STATUSES: InquiryStatus[] = [...ACTIVE_STATUSES, 'live', ...ARCHIVED_STATUSES];
+export const KNOWN_STATUSES: InquiryStatus[] = [LEAD_STATUS, ...ACTIVE_STATUSES, 'live', ...ARCHIVED_STATUSES];
 
 export const STATUS_DOT_MAP: Record<string, string> = {
-  pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
+  lead: 'neutral', pending: 'warn', in_review: 'neutral', details_requested: 'neutral',
   details_submitted: 'neutral', building: 'warn', live: 'ok', rejected: 'bad', archived: 'neutral',
 };
 
 export const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pending', in_review: 'In Review', details_requested: 'Sheet Sent',
+  lead: 'Lead', pending: 'Pending', in_review: 'In Review', details_requested: 'Sheet Sent',
   details_submitted: 'Sheet In', building: 'Building', live: 'Live', rejected: 'Rejected',
   archived: 'Archived',
 };
@@ -347,6 +357,11 @@ export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSigna
       // Ranked below everything live, furthest-out snooze last.
       pressureDays: -daysSince(now, snoozeUntil),
       reason: `Snoozed until ${shortDate(snoozeUntil)}` };
+  }
+
+  // AW-6c: a lead is waiting on us, but nothing is due — it never nags.
+  if (status === LEAD_STATUS) {
+    return { ...base, waitingOn: 'us', yourMove: false, pressureDays: -1, reason: 'Lead — not in touch yet' };
   }
 
   // IC-1 §4: calls, applied after snooze and before the stage-stall clocks.

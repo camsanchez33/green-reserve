@@ -1,6 +1,7 @@
 // AW-6a: the Inquiries board — which column an inquiry sits in, and its one
 // next step. Pure. Run: npx tsx scripts/inquiry-board-test.ts
-import { boardColumn, nextStep, type BoardInquiry } from '../src/lib/inquiry-board';
+import { boardColumn, nextStep, BOARD_COLUMNS, type BoardInquiry } from '../src/lib/inquiry-board';
+import { queueSignal, KNOWN_STATUSES, ALIVE_STATUSES, ACTIVE_STATUSES } from '../src/lib/inquiry-status';
 import { encodeChangesRequested, encodeChangeAddressed } from '../src/lib/change-requests';
 
 let failed = 0;
@@ -13,6 +14,16 @@ const inq = (status: string, o: Partial<BoardInquiry> = {}): BoardInquiry => ({
   calls: [], ...o,
 });
 const step = (i: BoardInquiry) => nextStep(i, undefined, now);
+
+// AW-6c: leads.
+check('the board is Leads → Talking → Setting up → Live', BOARD_COLUMNS.map(c => c.key).join(',') === 'leads,talking,setup,live');
+check('a lead is in Leads', boardColumn('lead') === 'leads');
+const lead = inq('lead', { events: [{ fromStatus: 'lead', toStatus: 'lead', actorName: 'Lead added by Cam', createdAt: days(10) }] });
+check('a lead → Move to Talking, in place', step(lead)?.label === 'Move to Talking' && step(lead)?.action === 'start_talking');
+check('a lead never nags (not your move, so not on Today)', queueSignal(lead, now).yourMove === false);
+check('a lead is a known status', (KNOWN_STATUSES as readonly string[]).includes('lead'));
+check('…but outside the alive/active lists the public form, Cal.com and Today read', !(ALIVE_STATUSES as readonly string[]).includes('lead') && !(ACTIVE_STATUSES as readonly string[]).includes('lead'));
+check('a snoozed lead says snoozed', step(inq('lead', { snoozeUntil: new Date(now.getTime() + 5 * 86_400_000).toISOString() }))?.key === 'snoozed');
 
 check('pending and in review are Talking', boardColumn('pending') === 'talking' && boardColumn('in_review') === 'talking');
 check('sheet out, sheet in and building are Setting up', ['details_requested', 'details_submitted', 'building'].every(s => boardColumn(s) === 'setup'));
