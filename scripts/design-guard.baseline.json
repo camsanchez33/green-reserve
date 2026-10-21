@@ -57,7 +57,7 @@
   },
   "src/app/admin/inquiries/[id]/page.tsx": {
     "card": 2,
-    "uppercase": 12,
+    "uppercase": 10,
     "lucide": 9
   },
   "src/app/admin/inquiries/page.tsx": {
