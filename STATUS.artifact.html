@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-21 04:44 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ c78b7aa</span>
-    <span>5 uncommitted</span>
+    <span>2026-10-21 05:03 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 36a4f47</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">79 runs have shipped that the queue doesn't know about</div>
+<div class="lede">82 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">39d69df</span><span>AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts</span></li>
+<li><span class="h">3bccfa0</span><span>AW-5: hourly admin checks — urgent alerts once each, and a morning digest</span></li>
+<li><span class="h">2228db8</span><span>AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+</span></li>
 <li><span class="h">c78b7aa</span><span>AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding</span></li>
 <li><span class="h">224db02</span><span>Status board and code map</span></li>
 <li><span class="h">4c61670</span><span>AW-3b: Ask in the admin search — read-only AI answers with links to admin pages</span></li>
@@ -214,9 +217,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/admin-today-db-test.ts</code></li><li><code>M src/app/admin/page.tsx</code></li><li><code>M src/lib/admin-today.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -297,6 +300,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">39d69df</td><td class="num">2026-10-21</td><td>AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts</td></tr>
+<tr><td class="num">3bccfa0</td><td class="num">2026-10-21</td><td>AW-5: hourly admin checks — urgent alerts once each, and a morning digest</td></tr>
+<tr><td class="num">2228db8</td><td class="num">2026-10-21</td><td>AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+</td></tr>
 <tr><td class="num">c78b7aa</td><td class="num">2026-10-21</td><td>AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding</td></tr>
 <tr><td class="num">224db02</td><td class="num">2026-10-21</td><td>Status board and code map</td></tr>
 <tr><td class="num">4c61670</td><td class="num">2026-10-21</td><td>AW-3b: Ask in the admin search — read-only AI answers with links to admin pages</td></tr>
@@ -306,9 +312,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">fc9a048</td><td class="num">2026-10-21</td><td>Status board</td></tr>
 <tr><td class="num">5982380</td><td class="num">2026-10-21</td><td>AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step</td></tr>
 <tr><td class="num">2807e2b</td><td class="num">2026-10-21</td><td>AW-1c: re-confirm risky owner actions; owner device list; passkey change emails</td></tr>
-<tr><td class="num">5fc7ad8</td><td class="num">2026-10-21</td><td>Regenerate code map</td></tr>
-<tr><td class="num">a6a13af</td><td class="num">2026-10-21</td><td>AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board</td></tr>
-<tr><td class="num">00a9007</td><td class="num">2026-10-21</td><td>AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

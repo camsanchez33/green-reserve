@@ -3544,13 +3544,17 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 251,
+      "lines": 254,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "GET",
           "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
         }
       ],
       "route": "/api/cron/hourly",
@@ -10015,7 +10019,7 @@
     },
     {
       "path": "src/lib/admin-checks.ts",
-      "lines": 199,
+      "lines": 214,
       "purpose": "AW-5 (Cam 2026-10-21:",
       "brain": [],
       "exports": [
