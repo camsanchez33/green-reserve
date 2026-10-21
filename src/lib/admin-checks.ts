@@ -59,7 +59,7 @@ export async function urgentFindings(now = new Date()): Promise<Finding[]> {
     out.push({ key: 'webhook:stripe:quiet', title: 'No Stripe events for a week', detail: 'Check the webhook is still registered in Stripe.', href: '/admin/system' });
   }
   for (const c of noStripe) {
-    out.push({ key: `nostripe:${c.id}`, title: `Live but can't take payments — ${c.name}`, detail: 'Stripe setup isn’t finished.', href: `/admin/courses?courseId=${c.id}&tab=overview` });
+    out.push({ key: `nostripe:${c.id}`, title: `Live but can't take payments — ${c.name}`, detail: 'Stripe setup isn’t finished.', href: `/admin/courses?courseId=${c.id}&tab=setup` });
   }
   for (const st of onboarding.stages) {
     for (const s of st.stuck) {

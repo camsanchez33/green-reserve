@@ -12,6 +12,7 @@ import { counterFeesUncollected } from './access-fee';
 import { FAILED_CHARGE_WHERE } from './money-problems';
 import { bucketWeeks, weekStart, COURSE_WEEKS, type WeekRow } from './admin-course-tabs';
 import { roundChargeCents } from './shop';
+import { friendlyStripeError } from './stripe-errors';
 
 export async function courseWeeks(courseId: string, timezone: string | null, now = new Date()): Promise<WeekRow[]> {
   const today = todayIn(timezone, now);
@@ -50,7 +51,8 @@ export async function courseMoney(courseId: string, now = new Date()) {
     failedCharges: failed.map((b): FailedChargeRow => ({
       // What the card is asked for — the round plus any shop items (POS-1a), as on Revenue.
       bookingId: b.id, golferName: b.golferName, golferEmail: b.golferEmail, amount: roundChargeCents(b) / 100,
-      teeDate: b.teeTime.date, teeTime: b.teeTime.time, reason: b.checkInFailReason,
+      // Plain English, never Stripe's own prose (as on Revenue).
+      teeDate: b.teeTime.date, teeTime: b.teeTime.time, reason: friendlyStripeError(b.checkInFailReason),
     })),
   };
 }

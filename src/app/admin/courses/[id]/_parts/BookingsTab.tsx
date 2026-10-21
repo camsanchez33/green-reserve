@@ -36,8 +36,8 @@ export function BookingsTab() {
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-[15px] font-semibold text-ink">Players by week</h2>
           <div className="flex items-center gap-4 text-[12px] text-ink-muted">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-pine" />Online</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-line-strong" />Counter or phone</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-pine" />Online</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-line-strong" />Counter or phone</span>
           </div>
         </div>
         <div className="divide-y divide-line-soft">

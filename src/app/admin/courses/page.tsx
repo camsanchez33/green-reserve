@@ -108,7 +108,9 @@ function CoursesContent() {
     if (!adminReady) return;
     loadCourses(view);
     const courseId = params.get('courseId');
-    if (courseId) router.replace('/admin/courses/' + courseId);
+    // AW-7: a ?tab= rides along so a link can open a course on the tab it means.
+    const tab = params.get('tab');
+    if (courseId) router.replace('/admin/courses/' + courseId + (tab ? '?tab=' + encodeURIComponent(tab) : ''));
   }, [adminReady, view, loadCourses, params, router]);
 
   const goTo = (v: 'sheet' | 'archived') => {

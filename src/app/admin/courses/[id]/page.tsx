@@ -234,14 +234,14 @@ export default function CourseDetailPage() {
                 {reminderNudgeError && <span className="block mt-0.5">{reminderNudgeError}</span>}
               </p>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => { setLiveBlockReason(''); setLiveBlockMissing(null); setReminderNudgeSent(false); setReminderNudgeError(''); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+                <button onClick={() => { setLiveBlockReason(''); setLiveBlockMissing(null); setReminderNudgeSent(null); setReminderNudgeError(''); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
                 {liveBlockMissing && (
                   <button
                     onClick={() => sendGoLiveReminder(liveBlockMissing)}
-                    disabled={reminderNudgeBusy || reminderNudgeSent}
+                    disabled={reminderNudgeBusy || reminderNudgeSent === liveBlockMissing}
                     className="text-xs font-medium px-3 py-1 rounded-md bg-bad text-white hover:bg-bad/90 transition-colors disabled:opacity-50"
                   >
-                    {reminderNudgeBusy ? 'Sending…' : reminderNudgeSent ? 'Sent' : 'Send reminder'}
+                    {reminderNudgeBusy ? 'Sending…' : reminderNudgeSent === liveBlockMissing ? 'Sent' : 'Send reminder'}
                   </button>
                 )}
               </div>

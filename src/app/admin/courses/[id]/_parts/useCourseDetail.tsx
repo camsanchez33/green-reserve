@@ -194,7 +194,8 @@ export function useCourseDetail() {
 
   const [reminderNudgeBusy, setReminderNudgeBusy] = useState(false);
 
-  const [reminderNudgeSent, setReminderNudgeSent] = useState(false);
+  // Which reminder went out — the Stripe and agreement buttons sit side by side on Setup.
+  const [reminderNudgeSent, setReminderNudgeSent] = useState<'stripe' | 'agreement' | null>(null);
 
   const [reminderNudgeError, setReminderNudgeError] = useState('');
 
@@ -402,7 +403,7 @@ export function useCourseDetail() {
       const r = await fetch('/api/admin/send-golive-reminder', {
         method: 'POST', headers: H(), body: JSON.stringify({ courseId, missing }),
       });
-      if (r.ok) setReminderNudgeSent(true);
+      if (r.ok) setReminderNudgeSent(missing);
       else { const d = await r.json().catch(() => ({})); setReminderNudgeError(d.error || 'The reminder did not send — try again.'); }
     } catch {
       setReminderNudgeError('Network error — the reminder was not sent.');

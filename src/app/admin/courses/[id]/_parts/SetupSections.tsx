@@ -22,7 +22,7 @@ export function SetupChecks() {
   const checks = courseSetupChecks(detail);
   const action = (key: string) => {
     if (key === 'stripe' || key === 'agreement') {
-      return <button onClick={() => sendGoLiveReminder(key)} disabled={reminderNudgeBusy || reminderNudgeSent} className={linkBtn}>{reminderNudgeBusy ? 'Sending…' : reminderNudgeSent ? 'Reminder sent' : 'Email them a reminder'}</button>;
+      return <button onClick={() => sendGoLiveReminder(key)} disabled={reminderNudgeBusy || reminderNudgeSent === key} className={linkBtn}>{reminderNudgeBusy ? 'Sending…' : reminderNudgeSent === key ? 'Reminder sent' : 'Email them a reminder'}</button>;
     }
     if (key === 'schedule') return <button onClick={() => openOperate()} className={linkBtn}>Open the schedule</button>;
     if (key === 'staff' && c.operator && !c.operator.emailVerified) {
@@ -67,7 +67,7 @@ export function GoingLive() {
       return <button onClick={sendCoursePreview} disabled={sendingPreview || !c.operator?.email} className={linkBtn}>{sendingPreview ? 'Sending…' : 'Send preview'}</button>;
     }
     if (key === 'verified') return <button onClick={markVerified} disabled={verifyBusy || !c.operator?.email} className={linkBtn}>{verifyBusy ? 'Working…' : 'Mark verified'}</button>;
-    if (key === 'stripe') return <button onClick={() => sendGoLiveReminder('stripe')} disabled={reminderNudgeBusy || reminderNudgeSent} className={linkBtn}>{reminderNudgeBusy ? 'Sending…' : reminderNudgeSent ? 'Reminder sent' : 'Send Stripe reminder'}</button>;
+    if (key === 'stripe') return <button onClick={() => sendGoLiveReminder('stripe')} disabled={reminderNudgeBusy || reminderNudgeSent === 'stripe'} className={linkBtn}>{reminderNudgeBusy ? 'Sending…' : reminderNudgeSent === 'stripe' ? 'Reminder sent' : 'Send Stripe reminder'}</button>;
     if (key === 'live') return <button onClick={() => toggleActive(true)} disabled={liveToggleBusy} className={linkBtn}>{liveToggleBusy ? 'Working…' : 'Set live'}</button>;
     return null;
   };
