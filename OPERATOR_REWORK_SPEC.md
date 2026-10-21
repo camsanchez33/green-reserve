@@ -229,3 +229,24 @@ Cam: price period naming and juggling separate schedules for different times, pr
 Visible bugs on the current Add a schedule form (screenshot 2026-10-21): the round picker reads "18 holes · 18 holes" (name and hole count repeated); Minutes apart shows "010"; the "Golfers can walk 6:30 AM – 3:00 PM" line sits inside the price block.
 
 Still open for Cam: 27/36-hole crossover courses at launch — fully self-serve, or set up with GreenReserve's help (W2-6 says launch courses include 27 holes / 3 nines).
+
+### W2-9 Tournaments & Outings tab (Cam 2026-10-21, asked in session)
+
+Cam: "should help walk through a course working how to input a outing or tournament, help with organization and preparation." A dashboard tab of its own (the hidden "Soon" Tournaments / Outings placeholders become one "Events" tab — name to confirm with Cam).
+
+- **Guided setup, step by step** (Birdie can also draft an event and its checklist from a description, via a propose tool — never writes): event type (outing / tournament / league night / other) → date and start (shotgun on N holes, or tee times from a time) → groups / players → organizer contact, price per player and what's included (cart, range, food) → payment (below) → review. Saving blocks the tee sheet and builds the checklist.
+- **Block the tee sheet:** the times are held so golfers can't book them; shotgun blocks every tee on the chosen holes for the round's length. Uses the existing block machinery; the blocked times show the event's name on the board.
+- **Prep checklist** with due dates counted back from the event: confirm headcount, pairings, cart signs, scorecards, rules sheet, food order, final invoice. Staff tick items off; overdue items show on the event and on the tee sheet day.
+- **Player list + pairings:** add or import players (paste / CSV), put them into groups and starting holes, print or send the pairings.
+- **Payment — every common way, chosen per event:**
+  1. Pay at the course (cash/card at the counter, recorded on the event; no GreenReserve fee, like `paid_offline`).
+  2. Organizer pays: a deposit link, then a balance link once the headcount is final.
+  3. Per-player pay links: text/email each player their own link from the player list.
+  4. Player sign-up page: a public page where players register and pay themselves.
+  All online payments are a direct charge on the course's Stripe account (same as pay links), with **GreenReserve's $1.50 per player added** (Cam 2026-10-21) — on the organizer's bill it is $1.50 × players. Money = overseer only. BEFORE charging it: the fee must be in the Operator Agreement and `legal/LQ-2_FEE_COPY.md` (Cam's sign-off).
+- **Refunds / cancellations:** the course writes its own deposit and refund terms on each event; staff refund from the event page when they decide to (no fixed GreenReserve rule).
+- **Build order** (so whatever misses Nov 1 is the last piece, not half of everything): (a) setup, block, contact/price, checklist, players/pairings; (b) pay at the course + organizer deposit/balance links; (c) per-player pay links; (d) the sign-up page.
+
+### 27 / 36-hole courses (Cam 2026-10-21)
+
+GreenReserve sets up 27/36-hole layouts (named nines, which pairs make an 18, crossovers, what's bookable) from information the course gives in the **onboarding details sheet** — add layout questions there. After setup the course can change and adjust everything itself in Your course / Schedule (W2-6).
