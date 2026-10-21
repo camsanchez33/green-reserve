@@ -14,6 +14,7 @@ type NeedsInquiry = InquiryLike & {
 export function stillNeed(inq: NeedsInquiry, sheet: SheetLike, needs: NeedsLike, calls: CallLike[]): NeedItem[] {
   const reviewed = (inq.events ?? []).some(e => e.toStatus && e.toStatus !== 'pending');
   if (inq.status === 'pending' && !reviewed) return [];
+  if (inq.status === 'lead') return []; // AW-6c: they haven't been asked for anything yet
 
   const out: NeedItem[] = [];
   const push = (key: string, label: string) => { if (!out.some(o => o.key === key)) out.push({ key, label }); };

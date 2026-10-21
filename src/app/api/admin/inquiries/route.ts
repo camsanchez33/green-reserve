@@ -4,7 +4,7 @@ import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import {
   ACTIVE_STATUSES, ARCHIVED_STATUSES, ALIVE_STATUSES, INQUIRY_SOURCES, CLOSED_REASONS,
   RESUBMIT_PREFIX, RESUBMIT_REVIEWED_ACTOR, RESUBMIT_FIELDS, RESUBMIT_FIELD_LABEL,
-  decodeResubmit, stageEnteredAt, daysSince, STATUS_LABEL, type InquiryStatus,
+  decodeResubmit, stageEnteredAt, daysSince, STATUS_LABEL, LEAD_STATUS, LEAD_ACTIONS, type InquiryStatus,
 } from '@/lib/inquiry-status';
 import { stillNeed } from '@/lib/inquiry-needs';
 import { randomBytes } from 'crypto';
@@ -138,6 +138,27 @@ async function handleAction(
   if (!inquiry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const adminName = session?.name || 'Admin';
+
+  // AW-6c: a lead has not talked to us, and may have no email or address yet.
+  // Every other action emails the course, books a call or builds — none of
+  // which fits a lead. Move it to Talking first.
+  if (inquiry.status === LEAD_STATUS && !(LEAD_ACTIONS as readonly string[]).includes(action)) {
+    return NextResponse.json({ error: 'This is still a lead — move it to Talking first.' }, { status: 400 });
+  }
+  if (action === 'start_talking') {
+    if (inquiry.status !== LEAD_STATUS) return NextResponse.json({ error: 'Only a lead can be moved to Talking.' }, { status: 400 });
+    // Everything in Talking emails them (call invite, setup sheet), so an
+    // email is needed here — taken from the dialog when the lead has none.
+    const given = String(payload?.email ?? '').trim().toLowerCase();
+    if (given && !EMAIL_RE.test(given)) return NextResponse.json({ error: 'That email doesn’t look right.' }, { status: 400 });
+    const email = given || inquiry.email;
+    if (!email) return NextResponse.json({ error: 'Add their email first — everything in Talking emails them.' }, { status: 400 });
+    // Conditional on still being a lead, so a double click moves it once.
+    const moved = await prisma.courseInquiry.updateMany({ where: { id: inquiryId, status: LEAD_STATUS }, data: { status: 'in_review', email } });
+    if (moved.count === 0) return NextResponse.json({ error: 'It was already moved — refresh.' }, { status: 409 });
+    await logEvent(inquiryId, LEAD_STATUS, 'in_review', 'admin', `Moved to Talking by ${adminName}`);
+    return NextResponse.json({ success: true, status: 'in_review' });
+  }
 
   // ── IC-1: the discovery call ─────────────────────────────────────────
   const CLOSED = ['rejected', 'archived', 'live'];
@@ -362,7 +383,8 @@ async function handleAction(
     // join that pile. The caller is told whether it actually went.
     let emailSent: boolean | null = null;
     let emailError: string | null = null;
-    if (payload?.sendEmail === true) {
+    // A lead never asked us for anything, so it is never sent a decline.
+    if (payload?.sendEmail === true && from !== LEAD_STATUS) {
       try {
         await sendInquiryDeclinedEmail({
           contactName: inquiry.contactName,
@@ -440,7 +462,7 @@ async function handleAction(
   // snoozeUntil suppresses the queue verdict; nextFollowUpAt outlives the
   // snooze so that when the date lands the queue can say WHY it came back.
   if (action === 'snooze') {
-    if (!(ALIVE_STATUSES as readonly string[]).includes(inquiry.status)) {
+    if (!(ALIVE_STATUSES as readonly string[]).includes(inquiry.status) && inquiry.status !== LEAD_STATUS) {
       return NextResponse.json({ error: 'Only an open inquiry can be snoozed' }, { status: 400 });
     }
     const until = new Date(String(payload?.until ?? ''));
@@ -665,7 +687,8 @@ async function handleAction(
     // completeness fix — always land on a real pipeline stage, never a
     // lifecycle state.
     const prior = closingEvent?.fromStatus ?? '';
-    const target = ACTIVE_STATUSES.includes(prior as InquiryStatus) ? prior : 'in_review';
+    // A closed lead goes back to being a lead (AW-6c).
+    const target = ACTIVE_STATUSES.includes(prior as InquiryStatus) || prior === LEAD_STATUS ? prior : 'in_review';
     const from = inquiry.status;
     // MP-4c: the close reason described a decision that has just been undone.
     // Leaving it would make a reopened lead read as "Rejected · Price" the
@@ -1173,11 +1196,59 @@ export async function PATCH(req: NextRequest) {
   return handleAction(inquiryId, body.action, body, session);
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// AW-6c: "Add a lead" — a course we found, not one that inquired. Only the
+// course name is required; everything else can come later (Edit contact).
+// No email goes anywhere and no call invite is minted: a lead is ours alone
+// until it is moved to Talking.
+async function createLead(body: Record<string, unknown>, session: AdminSession) {
+  const str = (v: unknown, max: number) => String(v ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, max);
+  const courseName = str(body.courseName, 200);
+  if (!courseName) return NextResponse.json({ error: 'Course name is required.' }, { status: 400 });
+  const email = str(body.email, 200).toLowerCase();
+  if (email && !EMAIL_RE.test(email)) return NextResponse.json({ error: 'That email doesn’t look right.' }, { status: 400 });
+  const source = str(body.source, 60) || 'Cold outreach';
+  if (!(INQUIRY_SOURCES as readonly string[]).includes(source)) return NextResponse.json({ error: `Unknown source "${source}"` }, { status: 400 });
+  const city = str(body.city, 100);
+  const state = str(body.state, 40);
+  // Same identity as the public form's duplicate guard (name + town), across
+  // leads and the open pipeline — a course already in it is not a new lead.
+  const existing = await prisma.courseInquiry.findFirst({
+    where: {
+      status: { in: [LEAD_STATUS, ...ALIVE_STATUSES] },
+      courseName: { equals: courseName, mode: 'insensitive' },
+      ...(city ? { city: { equals: city, mode: 'insensitive' as const } } : {}),
+      ...(state ? { state: { equals: state, mode: 'insensitive' as const } } : {}),
+    },
+    select: { id: true, status: true },
+  });
+  if (existing && body.force !== true) {
+    return NextResponse.json({ error: 'duplicate', id: existing.id, stage: STATUS_LABEL[existing.status] || existing.status }, { status: 409 });
+  }
+  // The same "[date]\nnote" shape add_note writes, so the notes read as one log.
+  const note = String(body.notes ?? '').trim().slice(0, 4000);
+  const stamp = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const contactName = str(body.contactName, 120);
+  const [firstName, ...rest] = contactName.split(' ');
+  const lead = await prisma.courseInquiry.create({
+    data: {
+      status: LEAD_STATUS, courseName, contactName, firstName: firstName || '', lastName: rest.join(' '),
+      contactTitle: str(body.contactTitle, 120), email, phone: str(body.phone, 40),
+      address: '', city, state, zipCode: '', website: str(body.website, 200), courseType: '',
+      lookingFor: [], source, adminNotes: note ? `[${stamp}]\n${note}` : '',
+    },
+  });
+  await logEvent(lead.id, LEAD_STATUS, LEAD_STATUS, 'admin', `Lead added by ${session.name}`);
+  return NextResponse.json({ success: true, id: lead.id });
+}
+
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json();
+  if (body.action === 'create_lead') return createLead(body, session);
   const inquiryId = body.id || body.inquiryId;
   return handleAction(inquiryId, body.action, body, session);
 }

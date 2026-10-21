@@ -1,5 +1,5 @@
 // AW-6a (Cam 2026-10-21): the Inquiries board. Four stages, in Cam's words —
-// Lead → Talking → Setting up → Live (Lead arrives with AW-6c) — over the
+// Lead → Talking → Setting up → Live (Lead since AW-6c) — over the
 // existing statuses, which stay as they are underneath: a card in "Setting up"
 // still knows whether the sheet is out, in, or the course is being built, and
 // says so in its next step. Client-safe: no database, no server imports.
@@ -7,9 +7,10 @@ import { queueSignal, type QueueInput, type QueueSignal } from './inquiry-status
 import { overdueCall, nextCall, isSameEasternDay, fmtCallClock } from './inquiry-call';
 import { computeOpenChanges, latestPageDecision, hasRequestedChangesThisRound } from './change-requests';
 
-export type BoardColumn = 'talking' | 'setup' | 'live';
+export type BoardColumn = 'leads' | 'talking' | 'setup' | 'live';
 
 export const BOARD_COLUMNS: { key: BoardColumn; label: string; hint: string }[] = [
+  { key: 'leads', label: 'Leads', hint: 'Courses we found, not in touch yet' },
   { key: 'talking', label: 'Talking', hint: 'Inquired, call to book or have' },
   { key: 'setup', label: 'Setting up', hint: 'Sheet out, sheet in, building' },
   { key: 'live', label: 'Live', hint: 'Went live in the last 30 days' },
@@ -21,6 +22,7 @@ export const LIVE_ON_BOARD_DAYS = 30;
 export const BOARD_STUCK_DAYS = 7;
 
 export function boardColumn(status: string): BoardColumn | null {
+  if (status === 'lead') return 'leads';
   if (status === 'pending' || status === 'in_review') return 'talking';
   if (status === 'details_requested' || status === 'details_submitted' || status === 'building') return 'setup';
   if (status === 'live') return 'live';
@@ -30,8 +32,9 @@ export function boardColumn(status: string): BoardColumn | null {
 /** What the card's button does: open the inquiry, or fire one of the existing resend actions in place. */
 export type StepKey =
   | 'log_call' | 'call_today' | 'review_resubmit' | 'snoozed' | 'prep_call' | 'book_call' | 'send_sheet'
-  | 'resend_sheet' | 'build' | 'send_preview' | 'go_live' | 'make_changes' | 'send_updated_preview' | 'resend_preview' | 'open';
-export type NextStep = { key: StepKey; label: string; action: 'open' | 'resend_sheet' | 'resend_preview' } | null;
+  | 'resend_sheet' | 'build' | 'send_preview' | 'go_live' | 'make_changes' | 'send_updated_preview' | 'resend_preview'
+  | 'start_talking' | 'open';
+export type NextStep = { key: StepKey; label: string; action: 'open' | 'resend_sheet' | 'resend_preview' | 'start_talking' } | null;
 
 export type BoardInquiry = QueueInput & {
   id: string;
@@ -49,6 +52,8 @@ export function nextStep(inq: BoardInquiry, signal: QueueSignal = queueSignal(in
   if (signal.resubmits > 0) return { key: 'review_resubmit', label: 'Review what they resent', action: 'open' };
   if (signal.waitingOn === 'snoozed') return { key: 'snoozed', label: 'Snoozed — open', action: 'open' };
   switch (inq.status) {
+    case 'lead':
+      return { key: 'start_talking', label: 'Move to Talking', action: 'start_talking' };
     case 'pending':
     case 'in_review': {
       const callDone = calls.some(c => c.outcome === 'talked');

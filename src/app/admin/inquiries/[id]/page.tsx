@@ -25,6 +25,7 @@ import { Modal as ModalShell, ModalActions } from '@/components/ui/Modal';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Card } from '@/components/ui/Card';
 import { INPUT } from '@/components/ui/field';
+import { MoveToTalkingDialog } from '@/components/admin/LeadDialogs';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -79,18 +80,22 @@ type CheckpointState = 'done' | 'current' | 'pending' | 'skipped';
 interface Checkpoint { key: string; label: string; state: CheckpointState; date?: string; sub?: string; }
 
 // AW-6b (Cam 2026-10-21): the board's stages — Talking → Setting up → Live —
-// with where it is inside a stage said under the current one.
+// with where it is inside a stage said under the current one. AW-6c: Lead
+// leads them, for an inquiry that started as one.
 function getCheckpoints(inq: Inquiry, hasSheet: boolean): Checkpoint[] {
   const setupEvent = inq.events.find(e => ['details_requested', 'details_submitted', 'building'].includes(e.toStatus));
   const liveEvent = [...inq.events].reverse().find(e => e.toStatus === 'live');
   const talking = inq.status === 'pending' || inq.status === 'in_review';
   const setup = ['details_requested', 'details_submitted', 'building'].includes(inq.status);
   const live = inq.status === 'live';
+  const lead = inq.status === 'lead';
+  const leadEvent = inq.events.find(e => e.fromStatus === 'lead' && e.toStatus !== 'lead');
   const setupSub = inq.status === 'details_requested' ? 'Sheet out'
     : inq.status === 'details_submitted' ? 'Sheet in'
     : inq.status === 'building' ? (hasSheet ? 'Building' : 'Building, no sheet') : undefined;
   return [
-    { key: 'talking', label: 'Talking', state: talking ? 'current' : 'done', date: talking ? undefined : inq.createdAt, sub: talking ? (inq.status === 'pending' ? 'New' : 'In review') : undefined },
+    ...(lead || leadEvent ? [{ key: 'lead', label: 'Lead', state: (lead ? 'current' : 'done') as CheckpointState, date: lead ? undefined : inq.createdAt, sub: lead ? 'Not in touch yet' : undefined }] : []),
+    { key: 'talking', label: 'Talking', state: lead ? 'pending' : talking ? 'current' : 'done', date: lead || talking ? undefined : (leadEvent?.createdAt ?? inq.createdAt), sub: talking ? (inq.status === 'pending' ? 'New' : 'In review') : undefined },
     { key: 'setup', label: 'Setting up', state: setup ? 'current' : live ? 'done' : 'pending', date: live ? setupEvent?.createdAt : undefined, sub: setupSub },
     { key: 'live', label: 'Live', state: live ? 'done' : 'pending', date: liveEvent?.createdAt },
   ];
@@ -334,6 +339,8 @@ function InquiryDetailInner() {
   const [previewMsg, setPreviewMsg] = useState('');
   const [nameConflict, setNameConflict] = useState<{ existingCourseId: string; existingCourseName: string; message: string } | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  // AW-6c: "Move to Talking" on a lead.
+  const [moveOpen, setMoveOpen] = useState(false);
   const [changesExpanded, setChangesExpanded] = useState(false);
   const [addressingCategory, setAddressingCategory] = useState<string | null>(null);
   const [requestingReReview, setRequestingReReview] = useState(false);
@@ -691,6 +698,7 @@ function InquiryDetailInner() {
   }
 
   const isArchived = TERMINAL_STATUSES.has(inq.status);
+  const isLead = inq.status === 'lead';
   const dot = (STATUS_DOT_MAP[inq.status] || 'neutral') as 'ok' | 'bad' | 'warn' | 'neutral';
   // MP-4a: days in the CURRENT stage from the event ledger, not updatedAt —
   // identical derivation to the list page so the two can't disagree.
@@ -805,6 +813,7 @@ function InquiryDetailInner() {
       case 'make_changes': setChangesExpanded(true); document.getElementById('next-step-detail')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
       case 'go_live': setPendingAction('go_live'); return;
       case 'review_resubmit': document.getElementById('resubmit')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+      case 'start_talking': setMoveOpen(true); return;
     }
   };
 
@@ -838,7 +847,7 @@ function InquiryDetailInner() {
               <h1 className="text-[30px] font-serif font-semibold text-ink leading-snug">{inq.courseName}</h1>
               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                 <StatusDot status={dot} label={STATUS_LABEL[inq.status] || inq.status} />
-                <span className="text-sm text-ink-muted">{inq.city}, {inq.state}</span>
+                {(inq.city || inq.state) && <span className="text-sm text-ink-muted">{[inq.city, inq.state].filter(Boolean).join(', ')}</span>}
                 {!isArchived && <span className="text-sm text-ink-faint">{days}d in stage</span>}
                 {!isArchived && upcomingCall && (
                   <span className="flex items-center gap-1.5 text-xs text-pine font-medium">
@@ -892,7 +901,7 @@ function InquiryDetailInner() {
               )}
 
               <MoreMenu open={moreOpen} onToggle={() => setMoreOpen(v => !v)} onClose={() => setMoreOpen(false)}>
-                {!isArchived && (
+                {!isArchived && !isLead && (
                   <div className="px-2 py-1.5">
                     <div className="text-[13px] font-semibold text-ink mb-1">Override stage</div>
                     <select
@@ -922,7 +931,7 @@ function InquiryDetailInner() {
                     Send the setup sheet now
                   </button>
                 )}
-                {!isArchived && inq.status !== 'live' && (
+                {!isArchived && !isLead && inq.status !== 'live' && (
                   <button onClick={() => { setMoreOpen(false); setCallFocus({ what: (upcomingCall || missedCall) ? 'log' : 'setup', n: Date.now() }); }}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                     {(upcomingCall || missedCall) ? 'The call…' : 'Set up a call…'}
@@ -958,16 +967,16 @@ function InquiryDetailInner() {
                     Clear snooze
                   </button>
                 )}
-                {!inq.builtCourseId && !isArchived && inq.status !== 'building' && (
+                {!inq.builtCourseId && !isArchived && !isLead && inq.status !== 'building' && (
                   <button onClick={() => { setMoreOpen(false); router.push('/admin/create?' + wizardParams.toString()); }}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-ink hover:bg-paper rounded-md transition-colors">
                     Manual build (in person)
                   </button>
                 )}
-                {(inq.status === 'pending' || inq.status === 'in_review' || inq.status === 'details_requested' || inq.status === 'details_submitted') && (
-                  <button onClick={() => { setMoreOpen(false); setPendingAction('reject'); }} disabled={processing}
+                {(isLead || inq.status === 'pending' || inq.status === 'in_review' || inq.status === 'details_requested' || inq.status === 'details_submitted') && (
+                  <button onClick={() => { setMoreOpen(false); if (isLead) setRejectNotify(false); setPendingAction('reject'); }} disabled={processing}
                     className="w-full flex items-center gap-2 px-2 py-2 text-xs text-bad hover:bg-bad/5 rounded-md transition-colors">
-                    <StatusDot status="bad" />Reject
+                    <StatusDot status="bad" />{isLead ? 'Close this lead' : 'Reject'}
                   </button>
                 )}
                 {inq.status === 'in_review' && (
@@ -1196,6 +1205,11 @@ function InquiryDetailInner() {
           {!isArchived && inq.status !== 'rejected' && (
             <div id="next-step-detail" className="mt-3 text-sm text-ink max-w-3xl">
               {/* AW-6b: says the same thing as the next-step button. */}
+              {isLead && (
+                step?.key === 'snoozed'
+                  ? <>Snoozed — see the note above.</>
+                  : <>A lead — not in touch yet. Once you’ve talked to them, move it to Talking to book the call and send the setup sheet.</>
+              )}
               {(inq.status === 'pending' || inq.status === 'in_review') && (
                 step?.key === 'book_call'
                   ? <>Book a discovery call — it’s needed before the course is built. The setup sheet can go out before or after (⋯ menu).</>
@@ -1278,7 +1292,7 @@ function InquiryDetailInner() {
           {/* IC-2: the discovery call — set it up, or log it. */}
           {/* AW-6b: in a dialog, opened by the next step, the ⋯ menu, the
               build gate or ?call=1 — the page leads with the next step, not a form. */}
-          {!isArchived && inq.status !== 'rejected' && callOpen && (
+          {!isArchived && !isLead && inq.status !== 'rejected' && callOpen && (
             <ModalShell title={(upcomingCall || missedCall) ? 'The call' : 'Set up the call'} titleNode={<span className="sr-only">{(upcomingCall || missedCall) ? 'The call' : 'Set up the call'}</span>} size="lg" onClose={() => { setCallOpen(false); setCallFocus(null); }}>
               <InquiryCallCards
                 inDialog
@@ -1290,6 +1304,9 @@ function InquiryDetailInner() {
                 onNotAFit={() => { setCallOpen(false); setCallFocus(null); setRejectReason('Not a fit'); setRejectNotify(true); setPendingAction('reject'); }}
               />
             </ModalShell>
+          )}
+          {isLead && moveOpen && (
+            <MoveToTalkingDialog lead={inq} onClose={() => setMoveOpen(false)} onMoved={() => { setMoveOpen(false); loadInquiry(); }} />
           )}
           {callGateNotice && (
             <div className="mt-3 max-w-3xl bg-warn/5 border border-warn/20 rounded-md px-4 py-3">
@@ -1453,7 +1470,7 @@ function InquiryDetailInner() {
                       {INQUIRY_SOURCES.map(src => <option key={src} value={src}>{src}</option>)}
                     </select>
                   ))}
-                  {leadRow('Submitted', fmtDate(inq.createdAt))}
+                  {leadRow(isLead || inq.events.some(e => e.fromStatus === 'lead') ? 'Added' : 'Submitted', fmtDate(inq.createdAt))}
                 </Card>
               )}
             </div>
@@ -2039,7 +2056,7 @@ function InquiryDetailInner() {
         }
         if (pendingAction === 'reject') {
           return (
-            <ModalShell title="Reject this inquiry?" danger onClose={close}>
+            <ModalShell title={isLead ? 'Close this lead?' : 'Reject this inquiry?'} danger onClose={close}>
               <p className="text-sm text-ink-soft mb-3">Moves it to Closed.</p>
               <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Why are we losing this one?</span>
               <select value={rejectReason} onChange={e => { setRejectReason(e.target.value); setRejectNotify(e.target.value !== 'Duplicate'); }} className={iCls}>
@@ -2049,7 +2066,7 @@ function InquiryDetailInner() {
               <p className="text-[11px] text-ink-soft mt-1.5">
                 Stored on the inquiry and named in the timeline — this is the only place &quot;why do we lose leads&quot; ever gets answered.
               </p>
-              <label className="flex items-start gap-2 mt-4 cursor-pointer">
+              {!isLead && <label className="flex items-start gap-2 mt-4 cursor-pointer">
                 <input type="checkbox" checked={rejectNotify} onChange={e => setRejectNotify(e.target.checked)} className="mt-0.5" />
                 <span className="text-xs text-ink-soft">
                   Email {inq.contactName} that we are not moving forward
@@ -2057,15 +2074,15 @@ function InquiryDetailInner() {
                     A short, polite note. It never names the reason above — that stays internal.
                   </span>
                 </span>
-              </label>
-              {rejectReason === 'Duplicate' && rejectNotify && (
+              </label>}
+              {!isLead && rejectReason === 'Duplicate' && rejectNotify && (
                 <p className="mt-2 text-[11px] text-bad">
                   This course is already in the pipeline under another inquiry — a decline email would tell them
                   they have been turned down while we are still onboarding them.
                 </p>
               )}
-              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('reject', { closedReason: rejectReason, sendEmail: rejectNotify }))}
-                confirmLabel="Reject" danger disabled={!rejectReason || processing}/>
+              <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('reject', { closedReason: rejectReason, sendEmail: rejectNotify && !isLead }))}
+                confirmLabel={isLead ? 'Close' : 'Reject'} danger disabled={!rejectReason || processing}/>
             </ModalShell>
           );
         }

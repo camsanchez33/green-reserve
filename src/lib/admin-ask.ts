@@ -46,7 +46,7 @@ export const ASK_TOOLS: Anthropic.Beta.BetaTool[] = [
     input_schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', description: 'Only this stage, e.g. pending or details_requested.' },
+        status: { type: 'string', description: 'Only this stage, e.g. lead (a course we added, not in touch yet), pending or details_requested.' },
         unchangedForDays: { type: 'integer', description: 'Only inquiries that have not changed for at least this many days.' },
       },
       additionalProperties: false,
