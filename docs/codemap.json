@@ -5232,7 +5232,7 @@
     },
     {
       "path": "src/app/api/operator/sales-tax/route.ts",
-      "lines": 55,
+      "lines": 58,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5260,6 +5260,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/round-shop-tax",
         "@/lib/sales-tax",
         "@/lib/session",
         "next/server",
@@ -15281,7 +15282,7 @@
     },
     {
       "path": "src/lib/round-shop-tax.ts",
-      "lines": 119,
+      "lines": 144,
       "purpose": "W2-7 part B2 (Cam 2026-10-20:",
       "brain": [],
       "exports": [
@@ -15299,6 +15300,10 @@
         },
         {
           "name": "recordRoundShopTax",
+          "kind": "fn"
+        },
+        {
+          "name": "refreshOpenRoundShopTax",
           "kind": "fn"
         },
         {
@@ -15325,6 +15330,7 @@
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/bookings/shop/route.ts",
+        "src/app/api/operator/sales-tax/route.ts",
         "src/lib/checkin-booking.ts"
       ]
     },

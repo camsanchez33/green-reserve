@@ -226,21 +226,21 @@ async function chargeBooking(
     // any later one is refused. The lock is lifted only on a definite non-charge.
     // The stamp is this attempt's: only this attempt may lift it, so an
     // overlapping attempt's decline never unfreezes a charge still in flight.
-    // W2-7 B2: the sales tax on the shop items must be current before the
-    // charge — never charge on a stale or missing figure (ensureShopTax quotes
-    // only when the items or the course's tax setting changed).
-    {
-      const taxed = await ensureShopTax(bookingId);
-      if (!taxed.ok) return { error: taxed.error, status: 503 } as const;
-    }
     const lockStamp = new Date();
     {
-      const locked = await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: lockStamp }, select: { shopTotalCents: true, shopFeeCents: true, shopTaxCents: true } });
+      const locked = await prisma.booking.update({ where: { id: bookingId }, data: { shopLockedAt: lockStamp }, select: { shopTotalCents: true, shopFeeCents: true } });
       booking.shopTotalCents = locked.shopTotalCents;
       booking.shopFeeCents = locked.shopFeeCents;
-      booking.shopTaxCents = locked.shopTaxCents;
     }
     const unlock = () => prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: lockStamp }, data: { shopLockedAt: null } });
+    // W2-7 B2: the sales tax on the shop items, worked out NOW — under this
+    // charge's own lock, so it is for exactly the items being charged (no shop
+    // write can land in between). Never charge on a stale or missing figure.
+    {
+      const taxed = await ensureShopTax(bookingId, { ownLock: lockStamp });
+      if (!taxed.ok) { await unlock(); return { error: taxed.error, status: 503 } as const; }
+      booking.shopTaxCents = taxed.shopTaxCents;
+    }
     if (opts?.expectedTotalCents != null && Number(opts.expectedTotalCents) !== roundChargeCents(booking)) {
       await unlock();
       return { error: 'The total changed since this page loaded — the course updated the round. Refresh to see the new total, then pay.', status: 409 } as const;

@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { taxStatus, setUpTax, setTaxOn } from '@/lib/sales-tax';
+import { refreshOpenRoundShopTax } from '@/lib/round-shop-tax';
 
 // W2-7 part B: the course's pro-shop sales tax (Stripe Tax on its own Stripe
 // account). The owner's alone, like everything Stripe — staff never set it.
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
   try {
     const r = await setUpTax(g.session.courseId, states);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+    await refreshOpenRoundShopTax(g.session.courseId); // W2-7 B2: open rounds' shop items now carry tax
     return NextResponse.json(r.status);
   } catch (err) { return stripeDown(err); }
 }
@@ -49,6 +51,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const r = await setTaxOn(g.session.courseId, body.on);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
+    await refreshOpenRoundShopTax(g.session.courseId); // W2-7 B2: open rounds' shop items follow the switch
     return NextResponse.json(await taxStatus(g.session.courseId));
   } catch (err) { return stripeDown(err); }
 }

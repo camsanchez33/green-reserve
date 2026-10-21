@@ -27,9 +27,14 @@ const EXPIRY_MARGIN_MS = 24 * 3600 * 1000;
 export type EnsureResult = { ok: true; shopTaxCents: number } | { ok: false; error: string };
 export const TAX_UNAVAILABLE = 'Couldn’t work out sales tax on the shop items just now — try again in a minute.';
 
-/** A charge has started or the round is paid: the tax on it is final. */
-function frozen(b: { status: string; paymentStatus: string; paidOffline: boolean; shopLockedAt: Date | null }) {
-  return !!b.shopLockedAt || b.paidOffline || b.status !== 'confirmed' || b.paymentStatus === 'paid' || b.paymentStatus === 'refunded';
+/**
+ * A charge has started or the round is paid: the tax on it is final. `ownLock`
+ * is the charge's own shopLockedAt stamp — the charge freezes the items FIRST,
+ * then quotes under its own lock, so the quote and the charge see the same lines.
+ */
+function frozen(b: { status: string; paymentStatus: string; paidOffline: boolean; shopLockedAt: Date | null }, ownLock?: Date) {
+  const lockedByOther = !!b.shopLockedAt && !(ownLock && b.shopLockedAt.getTime() === ownLock.getTime());
+  return lockedByOther || b.paidOffline || b.status !== 'confirmed' || b.paymentStatus === 'paid' || b.paymentStatus === 'refunded';
 }
 
 const SELECT = {
@@ -44,17 +49,18 @@ const SELECT = {
  * Fails (never throws) only when Stripe can't be reached for a needed quote —
  * the caller then must not take a card payment on a stale figure.
  */
-export async function ensureShopTax(bookingId: string): Promise<EnsureResult> {
+export async function ensureShopTax(bookingId: string, opts?: { ownLock?: Date }): Promise<EnsureResult> {
+  const ownLock = opts?.ownLock;
   for (let attempt = 0; attempt < 3; attempt++) {
     const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: SELECT });
     if (!b) return { ok: true, shopTaxCents: 0 };
-    if (frozen(b)) return { ok: true, shopTaxCents: b.shopTaxCents };
+    if (frozen(b, ownLock)) return { ok: true, shopTaxCents: b.shopTaxCents };
     const lines = b.shopItems;
     const key = shopTaxKey(lines);
     const want = b.course.shopTaxOn && lines.length > 0;
     if (!want) {
       if (!b.shopTaxCents && !b.shopTaxCalculationId) return { ok: true, shopTaxCents: 0 };
-      if (await write(bookingId, key, { shopTaxCents: 0, shopTaxCalculationId: '', shopTaxKey: '', shopTaxExpiresAt: null })) return { ok: true, shopTaxCents: 0 };
+      if (await write(bookingId, key, { shopTaxCents: 0, shopTaxCalculationId: '', shopTaxKey: '', shopTaxExpiresAt: null }, ownLock)) return { ok: true, shopTaxCents: 0 };
       continue;
     }
     const fresh = b.shopTaxCalculationId && b.shopTaxKey === key && b.shopTaxExpiresAt && b.shopTaxExpiresAt.getTime() > Date.now() + EXPIRY_MARGIN_MS;
@@ -67,7 +73,7 @@ export async function ensureShopTax(bookingId: string): Promise<EnsureResult> {
       console.error(JSON.stringify({ ev: 'round_shop_tax.quote.fail', bookingId, error: err instanceof Error ? err.message : String(err) }));
       return { ok: false, error: TAX_UNAVAILABLE };
     }
-    if (await write(bookingId, key, { shopTaxCents: quote.taxCents, shopTaxCalculationId: quote.calculationId, shopTaxKey: key, shopTaxExpiresAt: quote.expiresAt ?? null })) {
+    if (await write(bookingId, key, { shopTaxCents: quote.taxCents, shopTaxCalculationId: quote.calculationId, shopTaxKey: key, shopTaxExpiresAt: quote.expiresAt ?? null }, ownLock)) {
       return { ok: true, shopTaxCents: quote.taxCents };
     }
     // The lines changed (or a charge started) while Stripe answered — look again.
@@ -76,11 +82,11 @@ export async function ensureShopTax(bookingId: string): Promise<EnsureResult> {
 }
 
 /** Write the tax only if the lines are still the ones quoted and no charge has started. */
-async function write(bookingId: string, key: string, data: { shopTaxCents: number; shopTaxCalculationId: string; shopTaxKey: string; shopTaxExpiresAt: Date | null }): Promise<boolean> {
+async function write(bookingId: string, key: string, data: { shopTaxCents: number; shopTaxCalculationId: string; shopTaxKey: string; shopTaxExpiresAt: Date | null }, ownLock?: Date): Promise<boolean> {
   return prisma.$transaction(async tx => {
     await tx.$queryRaw`SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE`;
     const now = await tx.booking.findUnique({ where: { id: bookingId }, select: { status: true, paymentStatus: true, paidOffline: true, shopLockedAt: true, shopItems: { select: { id: true, unitPriceCents: true, quantity: true, taxCategory: true } } } });
-    if (!now || frozen(now) || shopTaxKey(now.shopItems) !== key) return false;
+    if (!now || frozen(now, ownLock) || shopTaxKey(now.shopItems) !== key) return false;
     await tx.booking.update({ where: { id: bookingId }, data });
     return true;
   });
@@ -93,9 +99,14 @@ async function write(bookingId: string, key: string, data: { shopTaxCents: numbe
  * hourly cron retries any it missed.
  */
 export async function recordRoundShopTax(bookingId: string): Promise<void> {
-  const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: { status: true, paymentStatus: true, paidOffline: true, shopTaxCents: true, shopTaxCalculationId: true, shopTaxTransactionId: true, course: { select: { stripeAccountId: true } } } });
+  const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: { status: true, paymentStatus: true, paidOffline: true, shopTaxCents: true, shopTaxCalculationId: true, shopTaxTransactionId: true, shopTaxKey: true, course: { select: { stripeAccountId: true } }, shopItems: { select: { id: true, unitPriceCents: true, quantity: true, taxCategory: true } } } });
   if (!b || !b.shopTaxCalculationId || b.shopTaxTransactionId || !b.course.stripeAccountId) return;
   if (!(b.paymentStatus === 'paid' || b.paidOffline)) return;
+  // Never record a quote made for different lines (a counter payment while Stripe was down).
+  if (shopTaxKey(b.shopItems) !== b.shopTaxKey) {
+    console.error(JSON.stringify({ ev: 'round_shop_tax.record.stale_quote', bookingId }));
+    return;
+  }
   try {
     const tx = await stripe.tax.transactions.createFromCalculation(
       { calculation: b.shopTaxCalculationId, reference: `round-shop-${bookingId}`, metadata: { bookingId } },
@@ -110,9 +121,23 @@ export async function recordRoundShopTax(bookingId: string): Promise<void> {
 /** Hourly: record shop tax for paid rounds still missing their record. */
 export async function recordPendingRoundShopTax(limit = 50): Promise<number> {
   const pending = await prisma.booking.findMany({
-    where: { shopTaxCalculationId: { not: '' }, shopTaxTransactionId: '', OR: [{ paymentStatus: 'paid' }, { paidOffline: true }] },
+    // An expired calculation can never be recorded — leave it out (it's logged when it fails) so it can't starve the rest.
+    where: { shopTaxCalculationId: { not: '' }, shopTaxTransactionId: '', OR: [{ paymentStatus: 'paid' }, { paidOffline: true }], NOT: { shopTaxExpiresAt: { lt: new Date() } } },
     select: { id: true }, take: limit, orderBy: { paidAt: 'asc' },
   });
   for (const b of pending) await recordRoundShopTax(b.id);
   return pending.length;
+}
+
+/**
+ * The course turned sales tax on or off: bring every open round with shop
+ * items up to date, so the tee sheet shows what a check-in will charge.
+ * Best effort — a round Stripe can't quote now is quoted again before it's paid.
+ */
+export async function refreshOpenRoundShopTax(courseId: string, limit = 200): Promise<void> {
+  const open = await prisma.booking.findMany({
+    where: { courseId, status: 'confirmed', shopTotalCents: { gt: 0 }, shopLockedAt: null },
+    select: { id: true }, take: limit, orderBy: { createdAt: 'asc' },
+  });
+  for (const b of open) await ensureShopTax(b.id);
 }

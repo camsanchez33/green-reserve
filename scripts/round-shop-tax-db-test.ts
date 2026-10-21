@@ -92,7 +92,33 @@ async function cleanup() {
   ok('once a charge starts, the tax never changes', t6.ok && t6.shopTaxCents === before.shopTaxCents && createCalls === n);
   await prisma.bookingShopItem.updateMany({ where: { bookingId: b.id }, data: { quantity: 1 } });
 
-  // Recorded once paid.
+  // Review BLOCK: a shop write between the quote and the charge lock. The charge
+  // freezes the items first and quotes under its OWN lock, so tax = the items charged.
+  const b3 = await prisma.booking.create({ data: { teeTimeId: tt.id, courseId: c.id, golferName: 'Cy', golferEmail: `${TAG}3@g.local`, players: 1, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'no_payment_method' } });
+  await prisma.shopItem.update({ where: { id: balls.id }, data: { taxCategory: 'general' } });
+  await addItemToBooking(c.id, b3.id, balls.id, 1, 'staff');
+  await ensureShopTax(b3.id);                                   // the panel's quote: $3.58
+  const l3 = await prisma.bookingShopItem.findFirstOrThrow({ where: { bookingId: b3.id } });
+  await removeLineFromBooking(c.id, b3.id, l3.id);              // staff take it off just before check-in
+  const stamp = new Date();
+  await prisma.booking.update({ where: { id: b3.id }, data: { shopLockedAt: stamp } });   // the charge freezes the items…
+  const atCharge = await ensureShopTax(b3.id, { ownLock: stamp });                         // …then quotes under its own lock
+  const r3 = await prisma.booking.findUniqueOrThrow({ where: { id: b3.id } });
+  ok('the charge never carries tax on an item that was taken off', atCharge.ok && atCharge.shopTaxCents === 0 && r3.shopTotalCents === 0 && roundChargeCents(r3) === 5150, JSON.stringify({ atCharge, shop: r3.shopTotalCents, tax: r3.shopTaxCents }));
+  ok('another charge’s lock still freezes the tax', (await ensureShopTax(b3.id, { ownLock: new Date(stamp.getTime() + 1) })).ok && (await prisma.booking.findUniqueOrThrow({ where: { id: b3.id } })).shopTaxCents === 0);
+  const blocked = await addItemToBooking(c.id, b3.id, balls.id, 1, 'staff');
+  ok('no item can be added once the charge has started', !blocked.ok);
+
+  // A counter payment on a quote made for different lines is never recorded.
+  const b4 = await prisma.booking.create({ data: { teeTimeId: tt.id, courseId: c.id, golferName: 'Di', golferEmail: `${TAG}4@g.local`, players: 1, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'no_payment_method' } });
+  await addItemToBooking(c.id, b4.id, balls.id, 1, 'staff');
+  await ensureShopTax(b4.id);
+  await addItemToBooking(c.id, b4.id, balls.id, 1, 'staff');   // changed, and Stripe was down so no new quote
+  await prisma.booking.update({ where: { id: b4.id }, data: { status: 'completed', paidOffline: true, paymentStatus: 'paid_offline', paidAt: new Date() } });
+  const before4 = recorded.length;
+  await recordRoundShopTax(b4.id);
+  ok('a quote for different lines is not recorded', recorded.length === before4 && (await prisma.booking.findUniqueOrThrow({ where: { id: b4.id } })).shopTaxTransactionId === '');
+
   await recordRoundShopTax(b.id);
   ok('not recorded before it is paid', recorded.length === 0);
   await prisma.booking.update({ where: { id: b.id }, data: { paymentStatus: 'paid', roundPaymentIntentId: 'pi_x', paidAt: new Date() } });
