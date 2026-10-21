@@ -13,7 +13,8 @@ import { requestContext, deviceTokenFromCookie, trustedDevice, startDeviceApprov
 // Every refusal before the password is proved reads the same as a wrong
 // password, so this route never confirms that an owner account exists.
 
-const DUMMY_HASH = '$2a$10$CwTycUXWue0Thq9StjUM0uJ8.6PQWQ1vLHgZGdC0ZJ7qXc3nO4yHy';
+// Same cost (12) as real admin passwords, so an unknown email takes as long as a real one.
+const DUMMY_HASH = '$2a$12$x9I/Ln7XwBr4.techzuhLufMEVbOz1lhUde8CTW8YVHD9pGubcv7u';
 
 const when = () => new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET';
 
