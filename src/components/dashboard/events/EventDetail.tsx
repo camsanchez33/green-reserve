@@ -108,7 +108,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack }: {
                 <ul className="mt-1 text-ink-soft">{toMove.map(b => <li key={b.time}>{formatTeeTime(b.time)} — {b.golfers}</li>)}</ul>
               </>}
               {data.unheld.length > 0 && (
-                <p className={toMove.length ? 'mt-2' : ''}>{data.unheld.length === 1 ? `${formatTeeTime(data.unheld[0])} is` : `${data.unheld.length} times are`} open in the window and golfers can book {data.unheld.length === 1 ? 'it' : 'them'}. Hold {data.unheld.length === 1 ? 'it' : 'them'} for the event:</p>
+                <p className={toMove.length ? 'mt-2' : ''}>{data.unheld.length === 1 ? `${formatTeeTime(data.unheld[0])} is` : `${data.unheld.map(formatTeeTime).join(', ')} are`} open in the window and golfers can book {data.unheld.length === 1 ? 'it' : 'them'}. Hold {data.unheld.length === 1 ? 'it' : 'them'} for the event:</p>
               )}
               <button disabled={!!busy} onClick={() => act('rehold', { action: 'rehold' }, r => {
                 const h = (r.hold as { held: number } | undefined)?.held ?? 0;

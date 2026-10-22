@@ -109,10 +109,10 @@ export async function unheldTimes(event: HoldEvent & { courseId: string; date: s
 }
 
 /** Release every tee time the event holds (never one a person blocked by hand). */
-export async function releaseHold(eventId: string): Promise<number> {
-  // A held time on a day the course has since closed stays blocked — it only leaves the event.
-  const ev = await prisma.courseEvent.findUnique({ where: { id: eventId }, select: { courseId: true, date: true } });
-  const closed = ev ? !!(await prisma.blackout.findFirst({ where: { courseId: ev.courseId, date: ev.date }, select: { id: true } })) : false;
+export async function releaseHold(eventId: string, day: { courseId: string; date: string }): Promise<number> {
+  // `day` is the day being released — the event's date BEFORE a move. A held
+  // time on a day the course has since closed stays blocked; it only leaves the event.
+  const closed = !!(await prisma.blackout.findFirst({ where: { courseId: day.courseId, date: day.date }, select: { id: true } }));
   const r = closed ? { count: 0 } : await prisma.teeTime.updateMany({ where: { eventId, status: 'blocked', playersBooked: 0 }, data: { status: 'available', eventId: null } });
   // A held time that somehow carries players keeps its block but loses the link.
   await prisma.teeTime.updateMany({ where: { eventId }, data: { eventId: null } });
@@ -239,7 +239,7 @@ export async function updateEvent(courseId: string, id: string, input: EventInpu
     await prisma.$transaction(tasks.map(t => prisma.courseEventTask.update({ where: { id: t.id }, data: { dueDate: addDaysStr(t.dueDate!, shift) } })));
   }
   if (moved) {
-    await releaseHold(id);
+    await releaseHold(id, existing);
     // Released times go back to what the schedule makes (a time it no longer makes is removed).
     if (existing.date >= todayIn((await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } }))?.timezone)) await generateTeeTimes(courseId, existing.date);
   }
@@ -252,7 +252,7 @@ export async function cancelEvent(courseId: string, id: string) {
   const existing = await prisma.courseEvent.findFirst({ where: { id, courseId } });
   if (!existing) return null;
   await prisma.courseEvent.update({ where: { id }, data: { status: 'cancelled' } });
-  const released = await releaseHold(id);
+  const released = await releaseHold(id, existing);
   if (existing.date >= todayIn((await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } }))?.timezone)) await generateTeeTimes(courseId, existing.date);
   return { released };
 }
