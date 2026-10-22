@@ -15,7 +15,7 @@ check('the rail lists its items', items.length >= 10);
 
 // The gate of the API behind each page (the page's own data route).
 const GATE: Record<string, string[] | null> = {
-  overview: null, inquiries: VIEWER_PLUS, courses: VIEWER_PLUS, groups: SUPPORT_PLUS, messages: SUPPORT_PLUS,
+  overview: null, inquiries: VIEWER_PLUS, courses: VIEWER_PLUS, groups: SUPPORT_PLUS, messages: SUPPORT_PLUS, announcements: SUPPORT_PLUS,
   revenue: SUPPORT_PLUS, goals: SUPPORT_PLUS, employees: MANAGER_PLUS, golfers: SUPPORT_PLUS, system: MANAGER_PLUS,
   activity: SUPPORT_PLUS, create: MANAGER_PLUS, company: OWNER_ONLY, audit: OWNER_ONLY,
 };

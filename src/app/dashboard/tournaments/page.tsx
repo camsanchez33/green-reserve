@@ -1,26 +1,4 @@
-'use client';
-import Image from 'next/image';
-import Link from 'next/link';
-import OperatorSidebar from '@/components/OperatorSidebar';
+import { redirect } from 'next/navigation';
 
-export default function TournamentsPage() {
-  const prefill = encodeURIComponent("I'd like to use Tournament tools for my course — here's what I need: ");
-  return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
-      <OperatorSidebar active="tournaments"/>
-      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <div className="max-w-2xl mx-auto px-6 py-16 text-center">
-          <Image src="/brand/golfer.svg" unoptimized alt="" width={64} height={79} className="mx-auto mb-5" />
-          <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink mb-3">Tournaments are on the way.</h1>
-          <p className="text-[13.5px] text-ink-soft leading-relaxed mb-8">
-            Shotgun-start and tee-time-block tournaments, with group registration, flighting, and one entry fee per player.
-          </p>
-          <Link href={`/dashboard/messages?prefill=${prefill}`}
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-md font-medium text-white text-[12.5px] bg-pine hover:bg-pine-hover transition-colors">
-            Tell us what your course needs →
-          </Link>
-        </div>
-      </main>
-    </div>
-  );
-}
+// W2-9 (Cam 2026-10-22): the Tournaments and Outings placeholders became one Events tab.
+export default function Page() { redirect('/dashboard/events'); }

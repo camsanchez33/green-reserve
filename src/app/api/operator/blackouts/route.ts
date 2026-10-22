@@ -53,7 +53,7 @@ export async function DELETE(req: NextRequest) {
   // A past day is history: reopening it only removes the block record.
   const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
   if (blackout.date < todayIn(course?.timezone)) return NextResponse.json({ success: true, reopened: 0, created: 0 });
-  const held = await prisma.teeTime.updateMany({ where: { courseId: session.courseId, date: blackout.date, status: 'blocked' }, data: { status: 'available' } });
+  const held = await prisma.teeTime.updateMany({ where: { courseId: session.courseId, date: blackout.date, status: 'blocked', eventId: null }, data: { status: 'available' } }); // W2-9: an event's held times stay held
   const created = await generateTeeTimes(session.courseId, blackout.date);
   return NextResponse.json({ success: true, reopened: held.count, created });
 }

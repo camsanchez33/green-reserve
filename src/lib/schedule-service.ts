@@ -22,6 +22,7 @@ import { regenerateUpcoming } from './tee-sheet-engine';
 import { logSettingsChanged } from './course-timeline';
 import { findScheduleConflict } from './schedule-conflict';
 import { checkPeriods } from './schedule-plans';
+import { checkPlan, compilePlan, checkRows, type CoursePlan, type PlanRound } from './course-plan';
 
 export type ScheduleScope = { scopeCourseId?: string; actor?: string };
 
@@ -268,6 +269,52 @@ export async function saveSchedulePlan(courseId: string, plan: SchedulePlan, opt
   return listSchedules(courseId);
 }
 
+/** W2-6: what golfers can book — the course's live rounds, or the course as a whole when it has none. */
+export async function planRounds(courseId: string): Promise<PlanRound[]> {
+  const [products, course] = await Promise.all([
+    prisma.courseProduct.findMany({ where: { courseId, active: true }, orderBy: { sortOrder: 'asc' }, select: { id: true, label: true, holes: true } }),
+    prisma.course.findUnique({ where: { id: courseId }, select: { holes: true } }),
+  ]);
+  return products.length ? products.map(p => ({ key: p.id, label: p.label, holes: p.holes })) : [{ key: '', label: 'Tee times', holes: course?.holes ?? 18 }];
+}
+
+/** W2-6: the rows a course plan makes, checked. Throws SchedulePlanError / ScheduleConflictError. */
+export async function compileCoursePlan(courseId: string, plan: CoursePlan) {
+  if (!plan || typeof plan !== 'object' || !plan.usual || !Array.isArray(plan.rounds) || !Array.isArray(plan.different)) throw new SchedulePlanError('Tell us what you are changing.');
+  const rounds = await planRounds(courseId);
+  const why = checkPlan(plan, rounds);
+  if (why) throw new SchedulePlanError(why);
+  const rows = compilePlan(plan, rounds);
+  const [products, nines] = await Promise.all([
+    prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, label: true, nineIds: true, holes: true } }),
+    prisma.nine.findMany({ where: { courseId }, select: { id: true, name: true } }),
+  ]);
+  const checks = checkRows(rows, products, nines);
+  return { rows, checks };
+}
+
+/**
+ * W2-6 Schedule simplification: save the whole course plan — open hours, the
+ * rounds sold, one price table — as the course's schedule rows, replacing
+ * every row it had, in one transaction, then rebuild the coming days. Booked
+ * and blocked tee times are never touched by the rebuild.
+ */
+export async function saveCoursePlan(courseId: string, plan: CoursePlan, opts: ScheduleScope = {}) {
+  const { rows, checks } = await compileCoursePlan(courseId, plan);
+  if (checks.refusal) throw new ScheduleConflictError(checks.refusal);
+  await prisma.$transaction([
+    prisma.teeTimeSchedule.deleteMany({ where: { courseId } }),
+    ...rows.map(r => prisma.teeTimeSchedule.create({ data: {
+      courseId, productId: r.productId, daysOfWeek: r.daysOfWeek, startTime: r.startTime, endTime: r.endTime,
+      intervalMinutes: r.intervalMinutes, holes: r.holes, tierName: r.tierName, walkingAllowed: true, active: true,
+      ...scheduleMoneyForCreate(r),
+    } })),
+  ]);
+  if (opts.actor) await logSettingsChanged(courseId, [{ field: 'schedule', from: 'changed', to: `${rows.length} run${rows.length === 1 ? '' : 's'} of tee times` }], opts.actor);
+  await regenerateUpcoming(courseId);
+  return listSchedules(courseId);
+}
+
 /** Returns false when nothing matched (so the caller can 404). */
 export async function deleteSchedule(id: string, opts: ScheduleScope = {}): Promise<boolean> {
   const existing = await prisma.teeTimeSchedule.findFirst({
@@ -303,7 +350,8 @@ export async function setTeeTimeBlocked(teeTimeId: string, blocked: boolean, opt
   if (!existing) return null;
   const row = await prisma.teeTime.update({
     where: { id: existing.id },
-    data: { status: blocked ? 'blocked' : 'available' },
+    // W2-9: reopening a time an event held takes it out of the event (staff chose to sell it).
+    data: blocked ? { status: 'blocked' } : { status: 'available', eventId: null },
   });
   return teeTimeToWire(row);
 }

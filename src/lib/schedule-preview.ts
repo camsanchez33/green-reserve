@@ -8,7 +8,8 @@ import { prisma } from './prisma';
 import { todayIn, addDaysStr } from './course-time';
 import { desiredSlots, slotKey, type ScheduleForSlots } from './tee-sheet-engine';
 import { scheduleMoneyForCreate, scheduleMoneyFromWire } from './schedule-wire';
-import type { SchedulePlan } from './schedule-service';
+import { compileCoursePlan, type SchedulePlan } from './schedule-service';
+import type { CoursePlan } from './course-plan';
 import { checkSchedule } from './schedule-conflict';
 
 /** How many days regenerateUpcoming() rebuilds — the preview covers the same days. */
@@ -19,7 +20,9 @@ export type ScheduleChange =
   | { op: 'update'; id: string; data: Record<string, unknown> }
   | { op: 'delete'; id: string }
   // W2-4: a whole schedule (its price periods) saved at once — lib/schedule-service saveSchedulePlan.
-  | { op: 'plan'; plan: SchedulePlan };
+  | { op: 'plan'; plan: SchedulePlan }
+  // W2-6 Schedule simplification: the whole course plan (lib/course-plan).
+  | { op: 'course'; plan: CoursePlan };
 
 export type SchedulePreview = {
   days: number;
@@ -62,6 +65,7 @@ function asSchedule(row: Record<string, unknown>): ScheduleForSlots {
 
 /** The course's schedules as they would be after `change`, in creation order. */
 async function proposedSchedules(courseId: string, change: ScheduleChange): Promise<ScheduleForSlots[] | null> {
+  if (change.op === 'course') return (await compileCoursePlan(courseId, change.plan)).rows.map(r => asSchedule({ ...r, ...scheduleMoneyForCreate(r) }));
   const rows = await prisma.teeTimeSchedule.findMany({ where: { courseId }, orderBy: { createdAt: 'asc' } });
   if (change.op === 'create') {
     const b = change.body;
@@ -126,6 +130,7 @@ export async function previewScheduleChange(courseId: string, change: ScheduleCh
     total.added += d.added; total.removed += d.removed; total.repriced += d.repriced; total.bookedKept += d.bookedKept;
   }
   if (change.op === 'plan' && change.plan.active !== false) Object.assign(total, await planChecks(courseId, change.plan));
+  if (change.op === 'course') Object.assign(total, (await compileCoursePlan(courseId, change.plan)).checks);
   return total;
 }
 

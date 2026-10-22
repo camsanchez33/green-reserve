@@ -7,7 +7,7 @@ import { Search } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 
-export type AdminNavKey = 'overview' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit';
+export type AdminNavKey = 'overview' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -97,6 +97,8 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       { key: 'courses',   label: 'Courses',       href: '/admin/courses',   minRole: VIEWER_PLUS },
       { key: 'groups',    label: 'Course groups', href: '/admin/groups',    minRole: SUPPORT_PLUS },
       { key: 'messages',  label: 'Messages',      href: '/admin/messages',  minRole: SUPPORT_PLUS },
+      // AW-8a: its own page, no longer a tab inside Messages.
+      { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS },
     ] },
     { label: 'Money', items: [
       { key: 'revenue', label: 'Revenue', href: '/admin/revenue', minRole: SUPPORT_PLUS },

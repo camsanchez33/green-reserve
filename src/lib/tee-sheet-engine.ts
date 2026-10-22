@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { heldBy } from './event-hold';
 import { todayIn, addDaysStr } from './course-time';
 import { generationHorizonDays } from './booking-window';
 
@@ -138,6 +139,8 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   const schedules = await prisma.teeTimeSchedule.findMany({ where: { courseId, active: true } });
   const products = await prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true, nineIds: true } });
   const desired = desiredSlots(dateStr, schedules, products);
+  // W2-9: a time inside a planned event's window is created already held for it.
+  const events = await prisma.courseEvent.findMany({ where: { courseId, date: dateStr, status: 'planned' }, select: { id: true, format: true, holdFrom: true, holdTo: true, productId: true, status: true } });
 
   const existing = await prisma.teeTime.findMany({
     where: { courseId, date: dateStr },
@@ -186,6 +189,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     // (they came back the next night, then vanished again). Only a row that
     // survived the delete (cancelled bookings only) is kept as is.
     if (existingSlot && !deleted.has(existingSlot.id)) continue;
+    const event = heldBy(events, slot.productId, slot.time);
     await prisma.teeTime.create({
       data: {
         courseId,
@@ -201,7 +205,8 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
         cartFeeCents: slot.cartFeeCents,
         walkingAllowed: slot.walkingAllowed,
         tierName: slot.tierName,
-        status: 'available',
+        status: event ? 'blocked' : 'available',
+        eventId: event?.id ?? null,
       },
     });
     created++;
