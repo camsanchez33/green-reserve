@@ -45,6 +45,6 @@ check('…then the window is rebuilt', /saveSchedulePlan[\s\S]*await regenerateU
 const route = readFileSync('src/app/api/operator/schedule/route.ts', 'utf8');
 check('PUT needs schedule.edit and a current agreement', /export async function PUT[\s\S]{0,400}requirePermission\(session, 'schedule\.edit'\)[\s\S]{0,200}requireAgreementCurrent/.test(route));
 const page = readFileSync('src/app/dashboard/schedules/page.tsx', 'utf8');
-check('the editor adds price periods', page.includes('Add a price period') && page.includes("method: 'PUT'"));
+check('the page adds price changes and saves with PUT', page.includes('+ Add a price change') && page.includes("method: 'PUT'"));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

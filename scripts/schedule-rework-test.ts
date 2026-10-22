@@ -38,17 +38,17 @@ check('an unchanged open time is not counted', diffDay([row('07:00', 5500)], des
 
 const page = readFileSync('src/app/dashboard/schedules/page.tsx', 'utf8');
 check('no Apply-to-tee-sheet button', !page.includes('Apply to tee sheet') && !page.includes('regenerate-tee-times'));
-// W2-4: save, pause and delete all go through submit(), which previews first.
-check('every save, pause and delete shows the preview first', /function submit[\s\S]{0,200}confirmWithPreview\(/.test(page) && (page.match(/\bsubmit\(/g) || []).length >= 4 && page.includes('/api/operator/schedule/preview'));
-check('the week view, prices and closed days', page.includes('>Your week</h2>') && page.includes('>Prices</h2>') && page.includes('>Closed days</h2>'));
-check('runs are named by the course', page.includes('Morning, Twilight'));
+// W2-6 simplification: one save for the whole page, and only after the preview has answered.
+check('every save shows the preview first', page.includes("JSON.stringify({ op: 'course', plan })") && page.includes('/api/operator/schedule/preview') && page.includes("disabled={busy || !pending.preview || !!pending.preview.refusal}"));
+check('open hours, what golfers can book, what it costs, closed days', ["When you&apos;re open", '>What golfers can book</h2>', '>What it costs</h2>', '>Closed days</h2>'].every(h => page.includes(h)));
+check('price names are automatic and the course can rename them', page.includes('Tap a name to rename it') && page.includes('columnNames(d)'));
 const engine = readFileSync('src/lib/tee-sheet-engine.ts', 'utf8');
 check('the generator uses the same desiredSlots as the preview', engine.includes('const desired = desiredSlots(dateStr, schedules, products);'));
 const bo = readFileSync('src/app/api/operator/blackouts/route.ts', 'utf8');
 check('reopening a closed day rebuilds it', bo.includes('await generateTeeTimes(session.courseId, blackout.date)'));
 const prev = readFileSync('src/app/api/operator/schedule/preview/route.ts', 'utf8');
 check('the preview needs the edit permission and writes nothing', prev.includes("requirePermission(session, 'schedule.edit')") && !/prisma\.\w+\.(create|update|delete)/.test(readFileSync('src/lib/schedule-preview.ts', 'utf8')));
-check('schedules for no round or a switched-off round stay findable', page.includes("label: `Other (${orphans.length})`") && page.includes('!activeProducts.some(p => p.id === s.productId)'));
+check('a round switched on is priced in every column of every set of days', page.includes('A round switched on gets prices in every column'));
 check('the editor stacks on phones', !page.includes('<div className="grid grid-cols-3 gap-3">'));
 check('closing a day never tries to delete a row with cancelled bookings', bo.includes('bookings: { none: {} }'));
 check('reopening a past day does not regenerate it', bo.includes('if (blackout.date < todayIn(course?.timezone))'));
