@@ -825,6 +825,11 @@ model AdminUser {
   // is a deliberate "sign out everywhere" lever: bump it to invalidate every
   // outstanding token for this admin at once. Added while migrations are cheap.
   sessionVersion         Int             @default(0)
+  /// AW-11 (Cam 2026-10-22, "per-person access"): the admin areas this employee
+  /// can open (lib/admin-areas.ts), set by the owner on Team. areasSetAt null =
+  /// never set: every area their role reaches. Ignored for the owner.
+  areas                  String[]        @default([])
+  areasSetAt             DateTime?
   auditLogs              AdminAuditLog[]
   /// AW-1 (Cam 2026-10-20: "My owner sign in should be /cam and should be
   /// unbelievably secure"): the owner's sign-ins and trusted devices.
@@ -994,6 +999,20 @@ model SentMessage {
   @@index([bookingId])
   @@index([inquiryId])
   @@index([createdAt])
+}
+
+/// BRAIN-2a: a problem's history — opened, cleared, reopened (the hourly check),
+/// claimed, assigned, noted, snoozed (people). Append-only.
+model AdminAlertEvent {
+  id        String     @id @default(cuid())
+  alertId   String
+  alert     AdminAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  kind      String
+  actorName String     @default("")
+  text      String     @default("")
+  createdAt DateTime   @default(now())
+
+  @@index([alertId, createdAt])
 }
 
 model Expense {
@@ -1379,8 +1398,18 @@ model AdminAlert {
   lastSeenAt  DateTime  @default(now())
   alertedAt   DateTime?
   resolvedAt  DateTime?
+  /// BRAIN-2a (Cam 2026-10-22): the Problems page. Who is on it, the course it is
+  /// about (when it is about one), and a snooze — never a manual "resolved": a
+  /// problem clears only when the hourly check stops seeing it.
+  ownerId      String?
+  ownerName    String    @default("")
+  courseId     String?
+  snoozedUntil DateTime?
+  snoozeReason String    @default("")
+  events       AdminAlertEvent[]
 
   @@index([kind, resolvedAt])
+  @@index([courseId])
 }
 
 /// W2-9 Events (Cam 2026-10-21/22): an outing, tournament, league night or

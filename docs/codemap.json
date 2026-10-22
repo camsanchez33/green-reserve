@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 511,
-    "routes": 248,
-    "libs": 164,
-    "models": 54,
+    "files": 523,
+    "routes": 253,
+    "libs": 171,
+    "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -161,7 +161,7 @@
     },
     {
       "path": "src/app/admin/company-documents/page.tsx",
-      "lines": 163,
+      "lines": 165,
       "purpose": "CO-DOCS (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -178,9 +178,8 @@
       "imports": [
         "@/components/admin/AdminSidebar",
         "@/components/ui/Btn",
-        "@/components/ui/Card",
         "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/company-documents",
@@ -591,7 +590,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 1090,
+      "lines": 1092,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -738,12 +737,12 @@
     },
     {
       "path": "src/app/admin/employees/page.tsx",
-      "lines": 410,
-      "purpose": "",
+      "lines": 278,
+      "purpose": "AW-11 (Cam 2026-10-22, \"per-person access\"; ADMIN-C look):",
       "brain": [],
       "exports": [
         {
-          "name": "default (EmployeesPage)",
+          "name": "default (TeamPage)",
           "kind": "component"
         }
       ],
@@ -754,17 +753,16 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
         "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/admin-areas",
         "@/lib/admin-fetch",
         "@/lib/admin-session-context",
+        "@/lib/format",
         "@/lib/step-up-client",
         "lucide-react",
         "next/link",
-        "next/navigation",
         "react"
       ],
       "usedBy": []
@@ -823,7 +821,7 @@
     },
     {
       "path": "src/app/admin/golfers/page.tsx",
-      "lines": 463,
+      "lines": 457,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -840,8 +838,6 @@
       "imports": [
         "@/components/EmptyState",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/components/ui/Modal",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -927,7 +923,7 @@
     },
     {
       "path": "src/app/admin/inquiries/page.tsx",
-      "lines": 957,
+      "lines": 963,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -965,7 +961,7 @@
     },
     {
       "path": "src/app/admin/layout.tsx",
-      "lines": 43,
+      "lines": 50,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -990,10 +986,12 @@
       "imports": [
         "@/components/admin/ReasonDialog",
         "@/components/admin/StepUpDialog",
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "@/lib/admin-session-context",
         "@/lib/staff-fonts",
-        "next"
+        "next",
+        "next/font/google"
       ],
       "usedBy": []
     },
@@ -1054,12 +1052,12 @@
     },
     {
       "path": "src/app/admin/page.tsx",
-      "lines": 295,
-      "purpose": "AW-4b (Cam 2026-10-21, second pass:",
+      "lines": 453,
+      "purpose": "ADMIN-C (Cam 2026-10-22, mockup C \"Clean hub\", after Stripe's dashboard):",
       "brain": [],
       "exports": [
         {
-          "name": "default (AdminTodayPage)",
+          "name": "default (AdminHomePage)",
           "kind": "component"
         }
       ],
@@ -1070,21 +1068,45 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
         "@/lib/format",
         "lucide-react",
         "next/link",
-        "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/admin/problems/page.tsx",
+      "lines": 221,
+      "purpose": "BRAIN-2a / ADMIN-C (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (AdminProblemsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/problems",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "@/components/admin/AdminSidebar",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/format",
+        "next/link",
         "react"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/admin/profile/page.tsx",
-      "lines": 129,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1104,8 +1126,6 @@
         "@/components/admin/OwnerPasskeysCard",
         "@/components/admin/OwnerSignOutEverywhere",
         "@/components/admin/OwnerTwoFactorCard",
-        "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/components/ui/field",
         "@/lib/admin-session-context",
         "react"
@@ -1114,12 +1134,12 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 918,
-      "purpose": "",
+      "lines": 1074,
+      "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
       "brain": [],
       "exports": [
         {
-          "name": "default (RevenuePage)",
+          "name": "default (MoneyPage)",
           "kind": "component"
         }
       ],
@@ -1130,17 +1150,16 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
-        "@/components/ui/Modal",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/admin-roles",
+        "@/lib/admin-session-context",
         "@/lib/expenses",
         "@/lib/format",
+        "@/lib/money-tabs",
         "@/lib/step-up-client",
         "lucide-react",
         "next/link",
-        "next/navigation",
         "react"
       ],
       "usedBy": []
@@ -1174,7 +1193,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 569,
+      "lines": 595,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1191,9 +1210,7 @@
       "imports": [
         "@/components/admin/AdminSidebar",
         "@/components/admin/AgreementVersionsCard",
-        "@/components/ui/Card",
         "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
         "@/components/ui/Modal",
         "@/components/ui/StatusDot",
         "@/lib/admin-fetch",
@@ -1207,7 +1224,7 @@
     },
     {
       "path": "src/app/api/admin/activity/route.ts",
-      "lines": 145,
+      "lines": 147,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1265,7 +1282,7 @@
     },
     {
       "path": "src/app/api/admin/archive-course/route.ts",
-      "lines": 77,
+      "lines": 79,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1401,7 +1418,7 @@
     },
     {
       "path": "src/app/api/admin/broadcasts/route.ts",
-      "lines": 136,
+      "lines": 140,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1460,7 +1477,7 @@
     },
     {
       "path": "src/app/api/admin/company-documents/download/route.ts",
-      "lines": 35,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1487,7 +1504,7 @@
     },
     {
       "path": "src/app/api/admin/company-documents/route.ts",
-      "lines": 69,
+      "lines": 71,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1526,7 +1543,7 @@
     },
     {
       "path": "src/app/api/admin/company-documents/upload/route.ts",
-      "lines": 46,
+      "lines": 48,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1553,7 +1570,7 @@
     },
     {
       "path": "src/app/api/admin/course-calls/route.ts",
-      "lines": 121,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1582,7 +1599,7 @@
     },
     {
       "path": "src/app/api/admin/course-detail/route.ts",
-      "lines": 341,
+      "lines": 345,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1626,7 +1643,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/download/route.ts",
-      "lines": 59,
+      "lines": 61,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1652,7 +1669,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/record/route.ts",
-      "lines": 39,
+      "lines": 41,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1680,7 +1697,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/route.ts",
-      "lines": 85,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1717,7 +1734,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/upload/route.ts",
-      "lines": 60,
+      "lines": 62,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1743,7 +1760,7 @@
     },
     {
       "path": "src/app/api/admin/course-feed/route.ts",
-      "lines": 20,
+      "lines": 22,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1768,7 +1785,7 @@
     },
     {
       "path": "src/app/api/admin/course-groups/route.ts",
-      "lines": 109,
+      "lines": 111,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1811,7 +1828,7 @@
     },
     {
       "path": "src/app/api/admin/course-members/route.ts",
-      "lines": 51,
+      "lines": 53,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1836,8 +1853,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/course-payouts/route.ts",
+      "lines": 49,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/course-payouts",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "@/lib/stripe",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/course-reminders/route.ts",
-      "lines": 20,
+      "lines": 22,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1863,7 +1906,7 @@
     },
     {
       "path": "src/app/api/admin/course-settings/route.ts",
-      "lines": 79,
+      "lines": 83,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1896,7 +1939,7 @@
     },
     {
       "path": "src/app/api/admin/courses/route.ts",
-      "lines": 244,
+      "lines": 246,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1929,7 +1972,7 @@
     },
     {
       "path": "src/app/api/admin/create-course/route.ts",
-      "lines": 188,
+      "lines": 192,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1963,8 +2006,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
+      "lines": 29,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/disputes/[bookingId]/evidence",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/dispute-evidence",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/employees/route.ts",
-      "lines": 117,
+      "lines": 146,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1991,6 +2060,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/prisma",
@@ -2093,7 +2163,7 @@
     },
     {
       "path": "src/app/api/admin/goals/route.ts",
-      "lines": 55,
+      "lines": 61,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2131,7 +2201,7 @@
     },
     {
       "path": "src/app/api/admin/golfers/route.ts",
-      "lines": 251,
+      "lines": 255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2165,7 +2235,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1287,
+      "lines": 1295,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2274,7 +2344,7 @@
     },
     {
       "path": "src/app/api/admin/messages/route.ts",
-      "lines": 215,
+      "lines": 221,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2314,7 +2384,7 @@
     },
     {
       "path": "src/app/api/admin/nav-badges/route.ts",
-      "lines": 36,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2331,9 +2401,12 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
+        "@/lib/admin-today",
         "@/lib/money-problems",
         "@/lib/prisma",
+        "@/lib/problems",
         "next/server"
       ],
       "usedBy": []
@@ -2469,6 +2542,38 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/problems/route.ts",
+      "lines": 98,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/problems",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "@/lib/problems",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/reconcile-lifecycle-pairs/route.ts",
       "lines": 23,
       "purpose": "",
@@ -2496,7 +2601,7 @@
     },
     {
       "path": "src/app/api/admin/refund/route.ts",
-      "lines": 28,
+      "lines": 30,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2522,7 +2627,7 @@
     },
     {
       "path": "src/app/api/admin/request-re-review/route.ts",
-      "lines": 39,
+      "lines": 41,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2549,7 +2654,7 @@
     },
     {
       "path": "src/app/api/admin/resend-staff-setup/route.ts",
-      "lines": 47,
+      "lines": 49,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2577,7 +2682,7 @@
     },
     {
       "path": "src/app/api/admin/retry-charge/[bookingId]/route.ts",
-      "lines": 44,
+      "lines": 46,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2604,7 +2709,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 331,
+      "lines": 359,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2625,6 +2730,7 @@
         "@/lib/admin-session",
         "@/lib/course-metrics",
         "@/lib/expenses",
+        "@/lib/fees-by-day",
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
@@ -2636,7 +2742,7 @@
     },
     {
       "path": "src/app/api/admin/schedule/route.ts",
-      "lines": 75,
+      "lines": 83,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2677,7 +2783,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 220,
+      "lines": 235,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2694,6 +2800,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "@/lib/prisma",
         "next/server"
@@ -2702,7 +2809,7 @@
     },
     {
       "path": "src/app/api/admin/send-golive-reminder/route.ts",
-      "lines": 48,
+      "lines": 50,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2730,7 +2837,7 @@
     },
     {
       "path": "src/app/api/admin/sentry-test/route.ts",
-      "lines": 21,
+      "lines": 23,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2756,7 +2863,7 @@
     },
     {
       "path": "src/app/api/admin/session/route.ts",
-      "lines": 14,
+      "lines": 17,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2773,6 +2880,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "next/server"
       ],
@@ -2807,8 +2915,35 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/stripe-match/route.ts",
+      "lines": 29,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/stripe-match",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/platform-stripe",
+        "@/lib/prisma",
+        "@/lib/stripe-match",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/system/route.ts",
-      "lines": 107,
+      "lines": 109,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2838,7 +2973,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 122,
+      "lines": 128,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2878,7 +3013,7 @@
     },
     {
       "path": "src/app/api/admin/today/route.ts",
-      "lines": 29,
+      "lines": 52,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2896,15 +3031,19 @@
       "guard": "file",
       "imports": [
         "@/lib/admin-action-queue",
+        "@/lib/admin-areas",
+        "@/lib/admin-goals",
+        "@/lib/admin-home",
         "@/lib/admin-session",
         "@/lib/admin-today",
+        "@/lib/problems",
         "next/server"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 91,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2930,7 +3069,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/route.ts",
-      "lines": 141,
+      "lines": 143,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2991,7 +3130,7 @@
     },
     {
       "path": "src/app/api/admin/verify-operator/route.ts",
-      "lines": 42,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6606,7 +6745,7 @@
     },
     {
       "path": "src/app/api/preview/send/route.ts",
-      "lines": 152,
+      "lines": 154,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6637,7 +6776,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 74,
+      "lines": 76,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6654,6 +6793,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -8721,7 +8861,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 206,
+      "lines": 236,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8741,9 +8881,10 @@
       "guard": null,
       "imports": [
         "@/components/admin/CommandPalette",
+        "@/components/ui/StatusDot",
+        "@/lib/admin-areas",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
-        "lucide-react",
         "next/image",
         "next/link",
         "react"
@@ -8764,6 +8905,7 @@
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/page.tsx",
+        "src/app/admin/problems/page.tsx",
         "src/app/admin/profile/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx"
@@ -10214,7 +10356,6 @@
         "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
-        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/MessagesTab.tsx",
@@ -10226,19 +10367,13 @@
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
-        "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/goals/page.tsx",
-        "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
-        "src/app/admin/page.tsx",
-        "src/app/admin/profile/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
-        "src/app/admin/system/page.tsx",
         "src/app/cam/approve/page.tsx",
         "src/app/cam/page.tsx",
         "src/app/contact/page.tsx",
@@ -10339,22 +10474,16 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
-        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
-        "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
-        "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
-        "src/app/admin/profile/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
-        "src/app/admin/system/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/StaffPermissions.tsx"
@@ -10388,7 +10517,6 @@
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/LeadDialogs.tsx",
@@ -10505,6 +10633,7 @@
       "usedBy": [
         "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
@@ -10522,6 +10651,7 @@
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/page.tsx",
+        "src/app/admin/problems/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
@@ -10537,6 +10667,7 @@
         "src/app/dashboard/shop/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/components/admin/AdminSidebar.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/InquiryBoard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -10596,6 +10727,7 @@
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/login/page.tsx",
+        "src/app/admin/problems/page.tsx",
         "src/app/admin/profile/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
@@ -10700,6 +10832,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/admin-course-page.ts",
+        "src/lib/admin-home.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/no-show-fee.ts",
@@ -10746,6 +10879,58 @@
       ]
     },
     {
+      "path": "src/lib/admin-areas.ts",
+      "lines": 44,
+      "purpose": "AW-11 (Cam 2026-10-22:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ADMIN_AREAS",
+          "kind": "const"
+        },
+        {
+          "name": "AdminArea",
+          "kind": "type"
+        },
+        {
+          "name": "ALL_AREAS",
+          "kind": "const"
+        },
+        {
+          "name": "effectiveAreas",
+          "kind": "fn"
+        },
+        {
+          "name": "hasArea",
+          "kind": "fn"
+        },
+        {
+          "name": "isAdminArea",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/employees/page.tsx",
+        "src/app/admin/layout.tsx",
+        "src/app/api/admin/employees/route.ts",
+        "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/search/route.ts",
+        "src/app/api/admin/session/route.ts",
+        "src/app/api/admin/today/route.ts",
+        "src/app/api/receipt/[bookingId]/route.ts",
+        "src/components/admin/AdminSidebar.tsx",
+        "src/lib/admin-ask.ts",
+        "src/lib/admin-session-context.tsx",
+        "src/lib/admin-session.ts"
+      ]
+    },
+    {
       "path": "src/lib/admin-ask-links.ts",
       "lines": 15,
       "purpose": "AW-3b:",
@@ -10772,7 +10957,7 @@
     },
     {
       "path": "src/lib/admin-ask.ts",
-      "lines": 156,
+      "lines": 159,
       "purpose": "AW-3b (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -10799,6 +10984,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./admin-areas",
         "./admin-day",
         "./admin-roles",
         "./money-problems",
@@ -10811,7 +10997,7 @@
     },
     {
       "path": "src/lib/admin-audit.ts",
-      "lines": 188,
+      "lines": 191,
       "purpose": "BRAIN-1a (Cam 2026-10-22):",
       "brain": [],
       "exports": [
@@ -10895,6 +11081,7 @@
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
@@ -10905,6 +11092,7 @@
         "src/app/api/admin/orphan-sweep/route.ts",
         "src/app/api/admin/owner-devices/route.ts",
         "src/app/api/admin/passkeys/route.ts",
+        "src/app/api/admin/problems/route.ts",
         "src/app/api/admin/reconcile-lifecycle-pairs/route.ts",
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
@@ -10922,7 +11110,7 @@
     },
     {
       "path": "src/lib/admin-checks.ts",
-      "lines": 214,
+      "lines": 222,
       "purpose": "AW-5 (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -11153,6 +11341,7 @@
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
+        "src/lib/admin-home.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -11255,7 +11444,47 @@
         "./prisma"
       ],
       "usedBy": [
-        "src/app/api/admin/goals/route.ts"
+        "src/app/api/admin/goals/route.ts",
+        "src/app/api/admin/today/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/admin-home.ts",
+      "lines": 128,
+      "purpose": "ADMIN-C (Cam 2026-10-22, mockup C \"Clean hub\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "homeCourseStats",
+          "kind": "fn"
+        },
+        {
+          "name": "HomeCourseStats",
+          "kind": "type"
+        },
+        {
+          "name": "homeOverview",
+          "kind": "fn"
+        },
+        {
+          "name": "homeToday",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./access-fee",
+        "./admin-day",
+        "./admin-today",
+        "./course-time",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/today/route.ts"
       ]
     },
     {
@@ -11292,6 +11521,7 @@
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/page.tsx",
+        "src/app/admin/revenue/page.tsx",
         "src/components/admin/AdminSidebar.tsx",
         "src/lib/admin-ask.ts",
         "src/lib/admin-session.ts"
@@ -11299,7 +11529,7 @@
     },
     {
       "path": "src/lib/admin-session-context.tsx",
-      "lines": 77,
+      "lines": 80,
       "purpose": "MP-11a (ADMIN_V4 V4-7, LAW rule 2):",
       "brain": [],
       "exports": [
@@ -11326,6 +11556,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-fetch",
         "next/navigation",
         "react"
@@ -11339,13 +11570,14 @@
         "src/app/admin/layout.tsx",
         "src/app/admin/page.tsx",
         "src/app/admin/profile/page.tsx",
+        "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/components/admin/AdminSidebar.tsx"
       ]
     },
     {
       "path": "src/lib/admin-session.ts",
-      "lines": 183,
+      "lines": 201,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11356,6 +11588,10 @@
         {
           "name": "AdminSessionUnavailable",
           "kind": "class"
+        },
+        {
+          "name": "areaGate",
+          "kind": "fn"
         },
         {
           "name": "MANAGER_PLUS",
@@ -11412,6 +11648,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./admin-areas",
         "./admin-roles",
         "./owner-session",
         "./prisma",
@@ -11441,10 +11678,12 @@
         "src/app/api/admin/course-feed/route.ts",
         "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-members/route.ts",
+        "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
@@ -11459,6 +11698,7 @@
         "src/app/api/admin/owner-devices/route.ts",
         "src/app/api/admin/passkeys/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
+        "src/app/api/admin/problems/route.ts",
         "src/app/api/admin/reconcile-lifecycle-pairs/route.ts",
         "src/app/api/admin/refund/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
@@ -11471,6 +11711,7 @@
         "src/app/api/admin/sentry-test/route.ts",
         "src/app/api/admin/session/route.ts",
         "src/app/api/admin/set-password/route.ts",
+        "src/app/api/admin/stripe-match/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/today/route.ts",
@@ -11545,10 +11786,12 @@
         "./prisma"
       ],
       "usedBy": [
+        "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/today/route.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
-        "src/lib/admin-goals.ts"
+        "src/lib/admin-goals.ts",
+        "src/lib/admin-home.ts"
       ]
     },
     {
@@ -13220,6 +13463,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/lib/cancel-booking.ts",
+        "src/lib/dispute-evidence.ts",
         "src/lib/email.ts",
         "src/lib/move-booking.ts",
         "src/lib/normalize-course.ts",
@@ -14250,6 +14494,7 @@
         "src/app/g/[slug]/page.tsx",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-course-tabs.ts",
+        "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
@@ -14797,6 +15042,38 @@
       ]
     },
     {
+      "path": "src/lib/dispute-evidence.ts",
+      "lines": 117,
+      "purpose": "ADMIN-C Money → Disputes (PR2b):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "EvidenceInput",
+          "kind": "type"
+        },
+        {
+          "name": "evidenceText",
+          "kind": "fn"
+        },
+        {
+          "name": "loadEvidence",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./cancel-policy",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/disputes/[bookingId]/evidence/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/email.ts",
       "lines": 2107,
       "purpose": "",
@@ -15286,7 +15563,7 @@
     },
     {
       "path": "src/lib/expenses.ts",
-      "lines": 77,
+      "lines": 88,
       "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
       "brain": [],
       "exports": [
@@ -15320,6 +15597,10 @@
         },
         {
           "name": "isExpenseCategory",
+          "kind": "fn"
+        },
+        {
+          "name": "monthlyEquivalentCents",
           "kind": "fn"
         },
         {
@@ -15413,6 +15694,31 @@
       ]
     },
     {
+      "path": "src/lib/fees-by-day.ts",
+      "lines": 28,
+      "purpose": "ADMIN-C Money → Overview chart:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "feesByDay",
+          "kind": "fn"
+        },
+        {
+          "name": "Window",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/revenue/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/format.ts",
       "lines": 78,
       "purpose": "MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time.",
@@ -15482,12 +15788,14 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/courses/page.tsx",
+        "src/app/admin/employees/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/messages/page.tsx",
         "src/app/admin/page.tsx",
+        "src/app/admin/problems/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/api/event-payment/[id]/route.ts",
@@ -16492,6 +16800,39 @@
       ]
     },
     {
+      "path": "src/lib/money-tabs.ts",
+      "lines": 15,
+      "purpose": "ADMIN-C Money:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "isMoneyTab",
+          "kind": "fn"
+        },
+        {
+          "name": "MONEY_TABS",
+          "kind": "const"
+        },
+        {
+          "name": "MoneyTab",
+          "kind": "type"
+        },
+        {
+          "name": "visibleMoneyTab",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/revenue/page.tsx"
+      ]
+    },
+    {
       "path": "src/lib/money.ts",
       "lines": 50,
       "purpose": "Money conversions, in one place.",
@@ -17096,6 +17437,7 @@
       "usedBy": [
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/stripe-match/route.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -17165,6 +17507,7 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-members/route.ts",
+        "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
@@ -17181,12 +17524,14 @@
         "src/app/api/admin/owner-devices/route.ts",
         "src/app/api/admin/passkeys/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
+        "src/app/api/admin/problems/route.ts",
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/set-password/route.ts",
+        "src/app/api/admin/stripe-match/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
@@ -17305,6 +17650,7 @@
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-goals.ts",
+        "src/lib/admin-home.ts",
         "src/lib/admin-session.ts",
         "src/lib/admin-today.ts",
         "src/lib/agreement-gate.ts",
@@ -17330,6 +17676,7 @@
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cron-log.ts",
+        "src/lib/dispute-evidence.ts",
         "src/lib/event-payments.ts",
         "src/lib/frost-delay.ts",
         "src/lib/go-live-preflight.ts",
@@ -17343,6 +17690,7 @@
         "src/lib/no-show-fee.ts",
         "src/lib/owner-passkey.ts",
         "src/lib/owner-session.ts",
+        "src/lib/problems.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/rate-limit.ts",
@@ -17400,6 +17748,43 @@
         "src/app/api/admin/course-documents/upload/route.ts",
         "src/lib/agreement-sign.ts",
         "src/lib/company-documents.ts"
+      ]
+    },
+    {
+      "path": "src/lib/problems.ts",
+      "lines": 61,
+      "purpose": "BRAIN-2a (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "listProblems",
+          "kind": "fn"
+        },
+        {
+          "name": "openProblemCount",
+          "kind": "fn"
+        },
+        {
+          "name": "ProblemView",
+          "kind": "type"
+        },
+        {
+          "name": "SNOOZE_DAYS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/problems/route.ts",
+        "src/app/api/admin/today/route.ts"
       ]
     },
     {
@@ -18887,6 +19272,35 @@
       ]
     },
     {
+      "path": "src/lib/stripe-match.ts",
+      "lines": 25,
+      "purpose": "ADMIN-C Money → Disputes:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "lastFullMonths",
+          "kind": "fn"
+        },
+        {
+          "name": "matchResult",
+          "kind": "fn"
+        },
+        {
+          "name": "MonthWindow",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/stripe-match/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/stripe.ts",
       "lines": 96,
       "purpose": "Every charge, refund and SetupIntent GreenReserve makes goes through here.",
@@ -18929,6 +19343,7 @@
       ],
       "usedBy": [
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
@@ -19639,15 +20054,80 @@
         {
           "name": "resolvedAt",
           "type": "DateTime?"
+        },
+        {
+          "name": "ownerId",
+          "type": "String?"
+        },
+        {
+          "name": "ownerName",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String?"
+        },
+        {
+          "name": "snoozedUntil",
+          "type": "DateTime?"
+        },
+        {
+          "name": "snoozeReason",
+          "type": "String"
+        },
+        {
+          "name": "events",
+          "type": "AdminAlertEvent[]"
         }
       ],
       "writers": [
+        "src/app/api/admin/problems/route.ts",
         "src/lib/admin-checks.ts"
       ],
       "readers": [
+        "src/app/api/admin/problems/route.ts",
         "src/lib/admin-checks.ts",
-        "src/lib/course-timeline.ts"
+        "src/lib/course-timeline.ts",
+        "src/lib/problems.ts"
       ]
+    },
+    {
+      "name": "AdminAlertEvent",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "alertId",
+          "type": "String"
+        },
+        {
+          "name": "alert",
+          "type": "AdminAlert"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "actorName",
+          "type": "String"
+        },
+        {
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/admin/problems/route.ts",
+        "src/lib/admin-checks.ts"
+      ],
+      "readers": []
     },
     {
       "name": "AdminAuditLog",
@@ -19750,7 +20230,8 @@
       ],
       "readers": [
         "src/app/api/admin/goals/route.ts",
-        "src/lib/admin-goals.ts"
+        "src/lib/admin-goals.ts",
+        "src/lib/admin-home.ts"
       ]
     },
     {
@@ -19837,6 +20318,14 @@
           "type": "Int"
         },
         {
+          "name": "areas",
+          "type": "String[]"
+        },
+        {
+          "name": "areasSetAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "auditLogs",
           "type": "AdminAuditLog[]"
         },
@@ -19882,6 +20371,7 @@
         "src/app/api/admin/forgot-password/route.ts",
         "src/app/api/admin/login/route.ts",
         "src/app/api/admin/passkeys/route.ts",
+        "src/app/api/admin/problems/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/set-password/route.ts",
         "src/app/api/admin/two-factor/route.ts",
@@ -20384,6 +20874,7 @@
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/search/route.ts",
+        "src/app/api/admin/stripe-match/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/bookings/cancel/route.ts",
@@ -20409,6 +20900,7 @@
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-goals.ts",
+        "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
@@ -20417,6 +20909,7 @@
         "src/lib/course-closure.ts",
         "src/lib/course-metrics.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/dispute-evidence.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/no-show-fee.ts",
@@ -20483,6 +20976,7 @@
       "readers": [
         "src/lib/analytics.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/dispute-evidence.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"
       ]
@@ -21212,6 +21706,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-groups/route.ts",
+        "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
@@ -21270,6 +21765,7 @@
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-goals.ts",
+        "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
         "src/lib/agreement-required.ts",
         "src/lib/agreement-sign.ts",
@@ -21287,6 +21783,7 @@
         "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
         "src/lib/monthly-review.ts",
+        "src/lib/problems.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/sales-tax.ts",
@@ -23393,6 +23890,7 @@
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
         "src/lib/course-timeline.ts",
         "src/lib/money-problems.ts",
@@ -23471,7 +23969,8 @@
         "src/lib/sent-messages.ts"
       ],
       "readers": [
-        "src/lib/course-timeline.ts"
+        "src/lib/course-timeline.ts",
+        "src/lib/dispute-evidence.ts"
       ]
     },
     {
@@ -23940,6 +24439,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",

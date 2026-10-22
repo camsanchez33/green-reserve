@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { auditAdmin } from '@/lib/admin-audit';
 
 // BRAIN-1b (Cam 2026-10-22): "Send a test error" on Admin → Health — proves the
@@ -8,6 +8,8 @@ import { auditAdmin } from '@/lib/admin-audit';
 export async function POST() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
+  const noArea = areaGate(session, 'company');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Health is for managers and the owner.' }, { status: 403 });
   if (!Sentry.getClient()) {
     return NextResponse.json({ error: 'Sentry isn’t loaded on the server — SENTRY_DSN is missing in Vercel, or the site hasn’t been redeployed since it was added.' }, { status: 503 });

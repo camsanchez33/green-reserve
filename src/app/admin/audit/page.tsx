@@ -79,7 +79,7 @@ function AuditInner() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="audit" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-[900px]">
+        <div className="px-10 py-8">
           <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Audit</h1>
           <p className="text-[13.5px] text-ink-soft mt-2">Every change made in the admin: who, what, when and why.{courseLabel ? ` Showing ${courseLabel}.` : ''}</p>
 

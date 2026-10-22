@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS, VIEWER_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, VIEWER_PLUS, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { getApprovalState } from '@/lib/approval-state';
 import { latestPageDecision } from '@/lib/change-requests';
@@ -13,6 +13,8 @@ import { agreementDueByCourse } from '@/lib/agreement-required';
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   // MP-2b / viewer bug: the list is open to viewers, but HARDENING_SPEC gives
   // viewer no financial ledger and no PII — so below SUPPORT_PLUS the rows are
   // shaped (operator email, revenue30d, adminNotes, stripeAccountId removed)

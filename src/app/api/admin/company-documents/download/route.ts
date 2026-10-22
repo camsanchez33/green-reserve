@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { get } from '@vercel/blob';
-import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError, areaGate } from '@/lib/admin-session';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
 import { describeCompanyPath, companyDocPathOf } from '@/lib/company-documents';
 
@@ -11,6 +11,8 @@ import { describeCompanyPath, companyDocPathOf } from '@/lib/company-documents';
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'company');
+  if (noArea) return noArea;
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
 
   const url = req.nextUrl.searchParams.get('url') || '';

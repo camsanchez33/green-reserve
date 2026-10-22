@@ -159,7 +159,7 @@ export default function AdminGroupsPage() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="groups" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-4xl">
+        <div className="px-10 py-8">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Course groups</h1>
             <button onClick={load} className="text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">Refresh</button>

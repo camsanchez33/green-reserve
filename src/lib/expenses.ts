@@ -74,3 +74,14 @@ export function prorateExpenseCents(expense: ProratableExpense, periodStart: Dat
 export function sumExpensesForPeriodCents(expenses: ProratableExpense[], periodStart: Date, periodEnd: Date): number {
   return expenses.reduce((sum, e) => sum + prorateExpenseCents(e, periodStart, periodEnd), 0);
 }
+
+/**
+ * ADMIN-C Money → Expenses: what a running cost comes to in a month — the
+ * monthly amount, an annual one over 12. A one-time cost has no monthly rate
+ * (0); it lands whole in the period it started (prorateExpenseCents).
+ */
+export function monthlyEquivalentCents(expense: Pick<ProratableExpense, 'amountCents' | 'cadence'>): number {
+  if (expense.cadence === 'annual') return Math.round(expense.amountCents / 12);
+  if (expense.cadence === 'one-time') return 0;
+  return expense.amountCents;
+}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { list, head, del } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError, areaGate } from '@/lib/admin-session';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
 import { COMPANY_DOC_PREFIX, describeCompanyPath, isAllowedCompanyPath, companyDocPathOf } from '@/lib/company-documents';
 import { needReason, reasonOf, auditAdmin, bodyWithReason } from '@/lib/admin-audit';
@@ -13,6 +13,8 @@ import { needReason, reasonOf, auditAdmin, bodyWithReason } from '@/lib/admin-au
 async function gate() {
   const session = await resolveAdminSession();
   if (!session) return { res: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
+  const noArea = areaGate(session, 'company');
+  if (noArea) return { res: noArea };
   if (!requireRole(session, OWNER_ONLY)) return { res: NextResponse.json({ error: ownerGateError(session) }, { status: 403 }) };
   const token = privateBlobToken();
   if (!token) return { res: NextResponse.json({ error: PRIVATE_STORAGE_MISSING }, { status: 503 }) };

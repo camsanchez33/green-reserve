@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
-import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError, areaGate } from '@/lib/admin-session';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING } from '@/lib/private-blob';
 import { COMPANY_DOC_MAX_BYTES, COMPANY_DOC_TYPES, isAllowedCompanyPath } from '@/lib/company-documents';
 
@@ -12,6 +12,8 @@ import { COMPANY_DOC_MAX_BYTES, COMPANY_DOC_TYPES, isAllowedCompanyPath } from '
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'company');
+  if (noArea) return noArea;
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
 
   const token = privateBlobToken();

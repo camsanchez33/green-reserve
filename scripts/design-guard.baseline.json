@@ -6,7 +6,6 @@
     "lucide": 1
   },
   "src/app/admin/company-documents/page.tsx": {
-    "uppercase": 2,
     "lucide": 3
   },
   "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx": {
@@ -40,15 +39,13 @@
     "lucide": 4
   },
   "src/app/admin/employees/page.tsx": {
-    "uppercase": 8,
     "lucide": 1
   },
   "src/app/admin/forgot-password/page.tsx": {
     "uppercase": 1
   },
   "src/app/admin/golfers/page.tsx": {
-    "uppercase": 7,
-    "lucide": 5
+    "lucide": 3
   },
   "src/app/admin/inquiries/[id]/page.tsx": {
     "card": 2,
@@ -68,20 +65,15 @@
     "lucide": 1
   },
   "src/app/admin/page.tsx": {
-    "lucide": 2
-  },
-  "src/app/admin/profile/page.tsx": {
-    "uppercase": 6
+    "lucide": 1
   },
   "src/app/admin/revenue/page.tsx": {
-    "uppercase": 8,
-    "lucide": 8
+    "lucide": 5
   },
   "src/app/admin/set-password/page.tsx": {
     "uppercase": 2
   },
   "src/app/admin/system/page.tsx": {
-    "uppercase": 1,
     "lucide": 1
   },
   "src/app/book/BookClient.tsx": {
@@ -211,9 +203,6 @@
   },
   "src/components/OperatorSidebar.tsx": {
     "lucide": 11
-  },
-  "src/components/admin/AdminSidebar.tsx": {
-    "lucide": 1
   },
   "src/components/admin/CommandPalette.tsx": {
     "lucide": 1

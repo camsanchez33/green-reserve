@@ -1407,7 +1407,7 @@ function InquiryDetailInner() {
         </div>
 
         {/* ── Tab content ──────────────────────────────────────────── */}
-        <div className="flex-1 px-8 py-7">
+        <div className="flex-1 px-10 py-8">
 
           {/* Lead tab — who they are, then what they told us. */}
           {activeTab === 'lead' && (

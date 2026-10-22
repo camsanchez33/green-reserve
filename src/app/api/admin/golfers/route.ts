@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { reasonOf, auditAdmin, REASON_MIN } from '@/lib/admin-audit';
 import { sendBookingConfirmation, sendCheckInReceiptEmail } from '@/lib/email';
 import { performCancellation } from '@/lib/cancel-booking';
@@ -74,6 +74,8 @@ export async function GET(req: NextRequest) {
   if (!session || !requireRole(session, SUPPORT_PLUS)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+  const noArea = areaGate(session, 'golfers');
+  if (noArea) return noArea;
 
   const { searchParams } = req.nextUrl;
   const golferId = searchParams.get('id');
@@ -181,6 +183,8 @@ export async function POST(req: NextRequest) {
   if (!session || !requireRole(session, SUPPORT_PLUS)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+  const noArea = areaGate(session, 'golfers');
+  if (noArea) return noArea;
 
   const body = await req.json().catch(() => ({}));
   const bookingId = String(body.bookingId || '');
