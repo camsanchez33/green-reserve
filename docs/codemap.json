@@ -9731,7 +9731,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 354,
+      "lines": 355,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [

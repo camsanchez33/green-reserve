@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 03:18 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `47c769e` · working tree **11 dirty file(s)**
+Generated 2026-10-22 21:27 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fc5c6aa` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 123 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 125 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `fc5c6aa` | 2026-10-22 | W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through) |
+| `694230a` | 2026-10-22 | W2-9c Events: each player's own pay link; paid at the course per player |
 | `b9fe29f` | 2026-10-22 | W2-9b: event pay-link email and text say what they are (BRAIN-1b message log) |
 | `40be0a7` | 2026-10-22 | Status board |
 | `e449074` | 2026-10-22 | W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close |
@@ -138,19 +140,12 @@ Generated 2026-10-22 03:18 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (4 file(s))
 
-- `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/event-payments-db-test.ts`
 - `M src/app/api/operator/events/[id]/payments/route.ts`
-- `M src/app/api/operator/events/[id]/route.ts`
 - `M src/components/dashboard/events/EventDetail.tsx`
-- `M src/components/dashboard/events/EventMoney.tsx`
-- `M src/lib/event-payments.ts`
-- `?? prisma/migrations/20261022030847_w2_9c_player_payments/`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -167,7 +162,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 91d | `b88c8bf` | `RUN_QUEUE.md:2357` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 92d | `b88c8bf` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -235,8 +230,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-21 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 4d |
+| `CLAUDE.md` | 1 | 2026-10-21 | 1d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
@@ -275,6 +270,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
+- `694230a` 2026-10-22 — W2-9c Events: each player's own pay link; paid at the course per player
 - `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
 - `40be0a7` 2026-10-22 — Status board
 - `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
@@ -285,8 +282,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `478ec76` 2026-10-22 — W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet
 - `4bd2042` 2026-10-21 — BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)
 - `512e214` 2026-10-22 — queue/spec update
-- `8c73613` 2026-10-22 — W2-9a: releasing an event's hold checks the day being released, not the day it moved to
-- `e85978d` 2026-10-22 — W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit
 
 ---
 

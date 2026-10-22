@@ -89,7 +89,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           where: { eventId: id }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
           include: { payments: { select: { status: true, amountCents: true, refundedCents: true } } },
         });
-        const asked: string[] = [], noContact: string[] = [], failed: string[] = [], notSent: string[] = [];
+        const asked: string[] = [], noContact: string[] = [], failed: string[] = [], notSent: string[] = [], removed: string[] = [];
         let already = 0;
         const started = Date.now();
         for (const pl of players) {
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           const r = await createPayLink(courseId, id, { playerId: pl.id, amount: body.amount, label: body.label }, session.email);
           if (!r.ok) {
             if (r.status === 409) { already++; continue; } // someone sent one meanwhile
-            if (r.status === 404) { failed.push(`${pl.name}: removed from the list meanwhile`); continue; }
+            if (r.status === 404) { removed.push(pl.name); continue; }
             // A bad amount is the same for everyone: stop, and say who was already asked.
             return NextResponse.json({ error: asked.length ? `${r.error} (${asked.length} link${asked.length === 1 ? ' was' : 's were'} already sent: ${asked.join(', ')}.)` : r.error }, { status: r.status });
           }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           const err = await sendLink(courseId, pay, event, event.course.name, via, session.email, { bulk: true });
           if (err) failed.push(`${pl.name}: ${err}`); else asked.push(pl.name);
         }
-        return NextResponse.json({ ok: true, asked: asked.length, already, noContact, failed, notSent });
+        return NextResponse.json({ ok: true, asked: asked.length, already, noContact, failed, notSent, removed });
       }
       case 'resend': {
         if (!own || own.status !== 'open') return bad('Only an unpaid link can be sent again.', 409);

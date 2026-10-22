@@ -244,11 +244,12 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             ev.preventDefault();
             await payAct('ask', { action: 'player_links', amount: askAmount, via: askVia }, r => {
               const asked = Number(r.asked ?? 0), already = Number(r.already ?? 0);
-              const none = (r.noContact as string[] | undefined) ?? [], failed = (r.failed as string[] | undefined) ?? [], late = (r.notSent as string[] | undefined) ?? [];
+              const none = (r.noContact as string[] | undefined) ?? [], failed = (r.failed as string[] | undefined) ?? [], late = (r.notSent as string[] | undefined) ?? [], gone = (r.removed as string[] | undefined) ?? [];
               return [`Sent ${asked} pay link${asked === 1 ? '' : 's'}.`, already ? `${already} had already paid or had a link.` : '',
                 none.length ? `No email or phone for ${none.join(', ')} — take theirs at the course.` : '',
                 failed.length ? `Didn\u2019t send: ${failed.join('; ')} — their links are made; copy them below.` : '',
-                late.length ? `Ran out of time before ${late.join(', ')} — press it again for them.` : ''].filter(Boolean).join(' ');
+                late.length ? `Ran out of time before ${late.join(', ')} — press it again for them.` : '',
+                gone.length ? `${gone.join(', ')} ${gone.length === 1 ? 'was' : 'were'} removed from the list meanwhile — not asked.` : ''].filter(Boolean).join(' ');
             });
           }}>
             <label className="block"><span className="block text-[13px] font-medium text-ink mb-1">Ask the {unpaid} player{unpaid === 1 ? '' : 's'} who haven’t paid for</span>

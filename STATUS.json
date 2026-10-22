@@ -1,27 +1,34 @@
 {
-  "generatedAt": "2026-10-22T03:18:19.745Z",
+  "generatedAt": "2026-10-22T21:27:18.482Z",
   "repo": {
-    "head": "47c769e",
+    "head": "fc5c6aa",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 11,
+    "dirtyCount": 4,
     "dirty": [
-      "M OPERATOR_REWORK_SPEC.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/event-payments-db-test.ts",
       " M src/app/api/operator/events/[id]/payments/route.ts",
-      " M src/app/api/operator/events/[id]/route.ts",
-      " M src/components/dashboard/events/EventDetail.tsx",
-      " M src/components/dashboard/events/EventMoney.tsx",
-      " M src/lib/event-payments.ts",
-      "?? prisma/migrations/20261022030847_w2_9c_player_payments/"
+      " M src/components/dashboard/events/EventDetail.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "fc5c6aa",
+        "date": "2026-10-22T21:25:22+00:00",
+        "subject": "W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "694230a",
+        "date": "2026-10-22T03:18:20+00:00",
+        "subject": "W2-9c Events: each player's own pay link; paid at the course per player",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "b9fe29f",
         "date": "2026-10-22T02:50:47+00:00",
@@ -910,7 +917,7 @@
       "line": 2357,
       "hash": "b88c8bf",
       "shipDate": "2026-07-22",
-      "ageDays": 91
+      "ageDays": 92
     }
   ],
   "next": [
@@ -1052,13 +1059,13 @@
       "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-10-21",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
-      "ageDays": 4
+      "ageDays": 5
     },
     {
       "file": "ADMIN_V5_SPEC.md",
@@ -1274,6 +1281,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "fc5c6aa",
+      "date": "2026-10-22",
+      "subject": "W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)"
+    },
+    {
+      "h": "694230a",
+      "date": "2026-10-22",
+      "subject": "W2-9c Events: each player's own pay link; paid at the course per player"
+    },
+    {
       "h": "b9fe29f",
       "date": "2026-10-22",
       "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
@@ -1322,16 +1339,6 @@
       "h": "512e214",
       "date": "2026-10-22",
       "subject": "queue/spec update"
-    },
-    {
-      "h": "8c73613",
-      "date": "2026-10-22",
-      "subject": "W2-9a: releasing an event's hold checks the day being released, not the day it moved to"
-    },
-    {
-      "h": "e85978d",
-      "date": "2026-10-22",
-      "subject": "W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit"
     }
   ]
 }
