@@ -8,7 +8,7 @@
 //     can be tested again. Only a course marked isTest can be reset.
 //
 // Every table in prisma/schema.prisma is named in exactly one of WIPED_TABLES
-// and KEPT_TABLES; scripts/data-reset-test.ts fails when a new model is in
+// and KEPT_TABLES; scripts/data-reset-db-test.ts fails when a new model is in
 // neither, so a table added later is never silently left behind or wiped.
 // Stripe is not touched: money already charged stays in Stripe.
 import type { Prisma } from '@prisma/client';
@@ -81,7 +81,7 @@ export async function wipeAll(now = new Date(), db: Db = prisma): Promise<{ ok: 
 
 /** A test course's activity, by kind — what a reset clears. Setup is kept. */
 async function courseActivity(courseId: string) {
-  const [bookings, members, residents, shopSales, events, reviews, threads, courseMessages, alerts, sent, bookingEvents, teeTimeAlerts, heldTeeTimes] = await Promise.all([
+  const [bookings, members, residents, shopSales, events, reviews, threads, courseMessages, alerts, sent, bookingEvents, teeTimeAlerts, heldTeeTimes, eventHeldTimes] = await Promise.all([
     prisma.booking.count({ where: { courseId } }),
     prisma.courseMembership.count({ where: { courseId } }),
     prisma.courseResident.count({ where: { courseId } }),
@@ -95,8 +95,9 @@ async function courseActivity(courseId: string) {
     prisma.bookingEvent.count({ where: { courseId } }),
     prisma.teeTimeAlert.count({ where: { courseId } }),
     prisma.teeTime.count({ where: { courseId, status: { not: 'blocked' }, playersBooked: { gt: 0 } } }),
+    prisma.teeTime.count({ where: { courseId, eventId: { not: null } } }),
   ]);
-  return { bookings, members, residents, shopSales, events, reviews, threads, courseMessages, alerts, sent, bookingEvents, teeTimeAlerts, heldTeeTimes };
+  return { bookings, members, residents, shopSales, events, reviews, threads, courseMessages, alerts, sent, bookingEvents, teeTimeAlerts, heldTeeTimes, eventHeldTimes };
 }
 
 export type CourseResetPreview = { courseId: string; name: string; isTest: boolean; activity: Awaited<ReturnType<typeof courseActivity>> };
@@ -120,7 +121,10 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
   if (!course) return { ok: false, status: 404, error: 'That course no longer exists — refresh the page.' };
   if (!course.isTest) return { ok: false, status: 400, error: 'Only a course marked as a test course can be reset. Mark it as a test course first.' };
   const cleared = await courseActivity(courseId);
+  // As releaseHold() does: a time an event held opens again, unless the course closed that day.
+  const closedDays = (await prisma.blackout.findMany({ where: { courseId }, select: { date: true } })).map(b => b.date);
   await prisma.$transaction([
+    prisma.teeTime.updateMany({ where: { courseId, eventId: { not: null }, status: 'blocked', date: { notIn: closedDays } }, data: { status: 'available', eventId: null } }),
     // Booking children (PaymentEvent, BookingShopItem) go with their booking (cascade).
     prisma.bookingEvent.deleteMany({ where: { courseId } }),
     prisma.sentMessage.deleteMany({ where: { courseId } }),
@@ -129,13 +133,13 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
     prisma.courseMembership.deleteMany({ where: { courseId } }),
     prisma.courseResident.deleteMany({ where: { courseId } }),
     prisma.shopSale.deleteMany({ where: { courseId } }),
-    // An event's tasks, players, payments and refunds cascade; its tee times are released (SetNull).
+    // An event's tasks, players, payments and refunds cascade; its held times were opened above.
     prisma.courseEvent.deleteMany({ where: { courseId } }),
     prisma.monthlyReview.deleteMany({ where: { courseId } }),
     prisma.messageThread.deleteMany({ where: { courseId } }),
     prisma.courseMessage.deleteMany({ where: { courseId } }),
     prisma.adminAlert.deleteMany({ where: { courseId } }),
-    // Every tee time opens back up; a time the course blocked stays blocked.
+    // Every booked tee time opens back up; a time the course blocked by hand stays blocked.
     prisma.teeTime.updateMany({ where: { courseId, status: { not: 'blocked' } }, data: { playersBooked: 0, status: 'available' } }),
   ]);
   return { ok: true, cleared };

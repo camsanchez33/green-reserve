@@ -7,6 +7,7 @@
 // Needs a database. Run: npx tsx scripts/data-reset-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
+import { applyHold } from '../src/lib/course-events';
 import { WIPED_TABLES, KEPT_TABLES, WIPE_ALL_UNTIL, wipeAll, wipeAllOpen, resetTestCourse, previewCourseReset } from '../src/lib/data-reset';
 
 const TAG = 'resetdbtest';
@@ -34,8 +35,10 @@ async function seedCourse(n: string, isTest: boolean) {
   await prisma.courseResident.create({ data: { courseId: course.id, name: 'R' } });
   const item = await prisma.shopItem.create({ data: { courseId: course.id, name: 'Balls', priceCents: 500 } });
   await prisma.shopSale.create({ data: { courseId: course.id, totalCents: 500, status: 'paid_cash' } });
-  await prisma.courseEvent.create({ data: { courseId: course.id, name: 'Outing', date: '2030-06-11', startTime: '08:00', holdFrom: '08:00', holdTo: '09:00' } });
-  return { course, tt, blocked, tier, item };
+  const evTime = await prisma.teeTime.create({ data: { courseId: course.id, date: '2030-06-11', time: '08:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 0, status: 'available' } });
+  const ev = await prisma.courseEvent.create({ data: { courseId: course.id, name: 'Outing', date: '2030-06-11', startTime: '08:00', holdFrom: '08:00', holdTo: '08:00' } });
+  await applyHold(ev);
+  return { course, tt, blocked, tier, item, evTime };
 }
 
 async function main() {
@@ -65,7 +68,7 @@ async function main() {
   check('…and nothing of it is touched', (await prisma.booking.count({ where: { courseId: r.course.id } })) === 1);
 
   const pre = await previewCourseReset(t.course.id);
-  check('the preview counts the test course activity', !!pre && pre.activity.bookings === 1 && pre.activity.members === 1 && pre.activity.shopSales === 1 && pre.activity.events === 1, pre?.activity);
+  check('the preview counts the test course activity', !!pre && pre.activity.bookings === 1 && pre.activity.members === 1 && pre.activity.shopSales === 1 && pre.activity.events === 1 && pre.activity.eventHeldTimes === 1, pre?.activity);
 
   const res = await resetTestCourse(t.course.id);
   check('a test course resets', res.ok);
@@ -79,6 +82,8 @@ async function main() {
   const bl = await prisma.teeTime.findUnique({ where: { id: t.blocked.id } });
   check('its booked tee time opens back up', tt?.playersBooked === 0 && tt?.status === 'available');
   check('a time it blocked stays blocked', bl?.status === 'blocked');
+  const evt = await prisma.teeTime.findUnique({ where: { id: t.evTime.id } });
+  check('a time its event held opens again, with no event left on it', evt?.status === 'available' && evt?.eventId === null, evt);
   check('its setup is kept: the course, its login, tiers and shop catalogue',
     !!(await prisma.course.findUnique({ where: { id: c } })) && !!(await prisma.membershipTier.findUnique({ where: { id: t.tier.id } })) && !!(await prisma.shopItem.findUnique({ where: { id: t.item.id } })));
   check('the other course is untouched',

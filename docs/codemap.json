@@ -15101,7 +15101,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 143,
+      "lines": 147,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -20790,6 +20790,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/course-events.ts",
+        "src/lib/data-reset.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"

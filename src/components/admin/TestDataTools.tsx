@@ -127,7 +127,7 @@ export function TestCourseCard({ courseId }: { courseId: string }) {
     const r = await adminFetch('/api/admin/test-course', { method: 'POST', body: JSON.stringify({ courseId, confirm: typed }), action: 'save', subject: 'the reset' });
     setBusy(false);
     if (!r.ok) { setError(r.message); return; }
-    setNote('Reset — its activity is cleared and every booked time is open again.');
+    setNote('Reset — its activity is cleared, and every booked or event-held time is open again.');
     setConfirming(false); setTyped('');
     load();
   }
