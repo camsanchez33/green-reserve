@@ -310,6 +310,11 @@ function MessagesContent() {
                       {closing ? 'Saving…' : thread.closedAt ? 'Reopen' : 'Close'}
                     </button>
                   )}
+                  {/* The side panel hides below lg; keep the way to the course. */}
+                  <button onClick={() => router.push('/admin/courses/' + selectedCourseId)}
+                    className="lg:hidden text-xs font-medium text-ink-soft hover:text-pine border border-line hover:border-pine/30 px-3 py-1.5 rounded-md transition-colors">
+                    Open the course
+                  </button>
                   <button
                     onClick={() => loadThread(selectedCourseId)}
                     className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors"
