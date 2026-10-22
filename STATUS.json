@@ -1,899 +1,36 @@
 {
-  "generatedAt": "2026-10-22T21:37:34.754Z",
+  "generatedAt": "2026-10-22T22:22:52.394Z",
   "repo": {
-    "head": "9935d2e",
+    "head": "67e5ac4",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 14,
+    "dirtyCount": 20,
     "dirty": [
-      "M  OPERATOR_REWORK_SPEC.md",
+      "M  CLAUDE.md",
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
       "M  docs/CODEMAP.md",
       "M  docs/codemap.json",
-      "A  prisma/migrations/20261022030847_w2_9c_player_payments/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/event-payments-db-test.ts",
-      "M  src/app/api/operator/events/[id]/payments/route.ts",
-      "M  src/app/api/operator/events/[id]/route.ts",
-      "M  src/components/dashboard/events/EventDetail.tsx",
-      "M  src/components/dashboard/events/EventMoney.tsx",
-      "M  src/lib/event-payments.ts"
+      "M  scripts/operator-nav-test.ts",
+      "M  scripts/tt-card-test.ts",
+      "M  src/app/dashboard/analytics/page.tsx",
+      "M  src/app/dashboard/events/page.tsx",
+      "M  src/app/dashboard/layout.tsx",
+      "M  src/app/dashboard/members/page.tsx",
+      "M  src/app/dashboard/messages/page.tsx",
+      "M  src/app/dashboard/money/page.tsx",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/app/dashboard/schedules/page.tsx",
+      "M  src/app/dashboard/settings/page.tsx",
+      "M  src/app/dashboard/shop/page.tsx",
+      "M  src/app/globals.css",
+      "M  src/components/OperatorSidebar.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-10-19T10:10:52-04:00",
-    "unrecorded": [
-      {
-        "h": "9935d2e",
-        "date": "2026-10-22T21:29:58+00:00",
-        "subject": "Regenerate status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ad8c721",
-        "date": "2026-10-22T21:25:56+00:00",
-        "subject": "Regenerate status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "da32563",
-        "date": "2026-10-22T21:25:22+00:00",
-        "subject": "Event pay-link email: say a reply reaches the course",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "6ea9b46",
-        "date": "2026-10-22T17:11:35-04:00",
-        "subject": "Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "3c63c5d",
-        "date": "2026-10-22T17:05:00-04:00",
-        "subject": "AW-11 Team: per-person access — each employee's role and areas (#186)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "75ac7d5",
-        "date": "2026-10-22T16:47:47-04:00",
-        "subject": "AW-10 Golfers: lookup only, in the new admin look (#185)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "95e1b37",
-        "date": "2026-10-22T16:38:28-04:00",
-        "subject": "Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a5c912b",
-        "date": "2026-10-22T16:13:13-04:00",
-        "subject": "Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "5e73b48",
-        "date": "2026-10-22T15:18:57-04:00",
-        "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "b9fe29f",
-        "date": "2026-10-22T02:50:47+00:00",
-        "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "40be0a7",
-        "date": "2026-10-22T02:38:33+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e449074",
-        "date": "2026-10-22T02:37:10+00:00",
-        "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "4438d60",
-        "date": "2026-10-22T02:31:31+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "b001c14",
-        "date": "2026-10-22T02:30:57+00:00",
-        "subject": "W2-9b: narrow the recorded payment in the test (typecheck)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "4086e37",
-        "date": "2026-10-22T02:30:40+00:00",
-        "subject": "W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "f4bc1a4",
-        "date": "2026-10-22T02:28:03+00:00",
-        "subject": "Regenerate status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "58642d3",
-        "date": "2026-10-22T02:22:34+00:00",
-        "subject": "Regenerate status board and code map",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "d8306c5",
-        "date": "2026-10-22T02:21:38+00:00",
-        "subject": "MAIL-1: a cancellation that refunded money also comes from billing@",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "c39a10c",
-        "date": "2026-10-22T02:19:10+00:00",
-        "subject": "MAIL-1: a cancellation that kept a fee comes from billing@",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "7feae5c",
-        "date": "2026-10-22T02:17:50+00:00",
-        "subject": "W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "478ec76",
-        "date": "2026-10-22T02:09:53+00:00",
-        "subject": "W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "4bd2042",
-        "date": "2026-10-21T22:06:00-04:00",
-        "subject": "BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "8c73613",
-        "date": "2026-10-22T01:49:58+00:00",
-        "subject": "W2-9a: releasing an event's hold checks the day being released, not the day it moved to",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e85978d",
-        "date": "2026-10-22T01:43:26+00:00",
-        "subject": "W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ce88bd1",
-        "date": "2026-10-22T01:40:22+00:00",
-        "subject": "Codemap and status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "087c1a2",
-        "date": "2026-10-22T01:36:48+00:00",
-        "subject": "W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "28a5f3a",
-        "date": "2026-10-22T01:33:45+00:00",
-        "subject": "W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "164896a",
-        "date": "2026-10-21T21:10:24-04:00",
-        "subject": "BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "0cb3627",
-        "date": "2026-10-22T01:08:38+00:00",
-        "subject": "W2-8b: a regular who has booked again is not 'gone quiet'",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "21a19af",
-        "date": "2026-10-22T01:06:34+00:00",
-        "subject": "test-email.js: send from support@ (hello@ no longer exists)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "1301b0a",
-        "date": "2026-10-22T01:05:18+00:00",
-        "subject": "Regenerate status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "8860edb",
-        "date": "2026-10-22T01:03:19+00:00",
-        "subject": "MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ffcefc6",
-        "date": "2026-10-22T01:03:12+00:00",
-        "subject": "W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "aad9ee0",
-        "date": "2026-10-22T01:01:01+00:00",
-        "subject": "W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "f367f8d",
-        "date": "2026-10-22T00:59:54+00:00",
-        "subject": "W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e8c4fe4",
-        "date": "2026-10-22T00:59:39+00:00",
-        "subject": "W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "1d2a5db",
-        "date": "2026-10-21T20:55:20-04:00",
-        "subject": "BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "4cd3e1a",
-        "date": "2026-10-22T00:38:03+00:00",
-        "subject": "W2-6 Schedule simplification: open hours, what golfers can book, one price table",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e59ed92",
-        "date": "2026-10-22T00:17:07+00:00",
-        "subject": "Codemap and status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "f8d9737",
-        "date": "2026-10-22T00:16:31+00:00",
-        "subject": "Messages: keep Open the course in the header below lg",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "3020c49",
-        "date": "2026-10-22T00:13:32+00:00",
-        "subject": "AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "f31213a",
-        "date": "2026-10-21T20:04:52-04:00",
-        "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "42adddb",
-        "date": "2026-10-21T20:50:21+00:00",
-        "subject": "Codemap and status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "6b0ebeb",
-        "date": "2026-10-21T20:49:35+00:00",
-        "subject": "AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "821ddf9",
-        "date": "2026-10-21T20:46:15+00:00",
-        "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "4abfebb",
-        "date": "2026-10-21T16:30:41-04:00",
-        "subject": "AW-6c: Leads column, Add a lead, Move to Talking (#171)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a526731",
-        "date": "2026-10-21T19:48:07+00:00",
-        "subject": "Codemap and status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "fe16f64",
-        "date": "2026-10-21T19:46:07+00:00",
-        "subject": "AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "d58220f",
-        "date": "2026-10-21T09:02:53-04:00",
-        "subject": "AW-6b: inquiry page — the one next step first (#169)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a85a078",
-        "date": "2026-10-21T02:37:29-04:00",
-        "subject": "AW-4b: Today shows each course with its own to-dos; Goals tab (#170)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "27af530",
-        "date": "2026-10-21T06:18:09+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "cbcfb8c",
-        "date": "2026-10-21T06:17:17+00:00",
-        "subject": "AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ec245d5",
-        "date": "2026-10-21T06:12:43+00:00",
-        "subject": "AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "adf590b",
-        "date": "2026-10-21T05:38:55+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "914a1c5",
-        "date": "2026-10-21T05:38:12+00:00",
-        "subject": "AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "b84a2db",
-        "date": "2026-10-21T05:33:33+00:00",
-        "subject": "AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e941200",
-        "date": "2026-10-21T05:03:57+00:00",
-        "subject": "Code map and status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "39d69df",
-        "date": "2026-10-21T04:54:22+00:00",
-        "subject": "AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "3bccfa0",
-        "date": "2026-10-21T04:46:50+00:00",
-        "subject": "AW-5: hourly admin checks — urgent alerts once each, and a morning digest",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "2228db8",
-        "date": "2026-10-21T04:44:33+00:00",
-        "subject": "AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "c78b7aa",
-        "date": "2026-10-21T04:38:36+00:00",
-        "subject": "AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "224db02",
-        "date": "2026-10-21T04:27:03+00:00",
-        "subject": "Status board and code map",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "4c61670",
-        "date": "2026-10-21T04:27:00+00:00",
-        "subject": "AW-3b: Ask in the admin search — read-only AI answers with links to admin pages",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "905572d",
-        "date": "2026-10-21T04:20:06+00:00",
-        "subject": "Regenerate code map",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "474f3f0",
-        "date": "2026-10-21T04:16:04+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e66b258",
-        "date": "2026-10-21T04:14:57+00:00",
-        "subject": "AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "fc9a048",
-        "date": "2026-10-21T04:07:08+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "5982380",
-        "date": "2026-10-21T04:06:16+00:00",
-        "subject": "AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "2807e2b",
-        "date": "2026-10-21T03:59:12+00:00",
-        "subject": "AW-1c: re-confirm risky owner actions; owner device list; passkey change emails",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "5fc7ad8",
-        "date": "2026-10-21T03:45:32+00:00",
-        "subject": "Regenerate code map",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a6a13af",
-        "date": "2026-10-21T03:45:31+00:00",
-        "subject": "AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "00a9007",
-        "date": "2026-10-21T03:41:34+00:00",
-        "subject": "AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ccbfb06",
-        "date": "2026-10-20T23:34:22-04:00",
-        "subject": "AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "0671dab",
-        "date": "2026-10-21T03:29:07+00:00",
-        "subject": "Regenerate code map after main merge",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "4fda831",
-        "date": "2026-10-21T03:29:01+00:00",
-        "subject": "AW-1a: dummy hash at the real cost; status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "fc3a0fc",
-        "date": "2026-10-21T03:27:57+00:00",
-        "subject": "AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "eeea53c",
-        "date": "2026-10-21T03:20:36+00:00",
-        "subject": "AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "315e3e3",
-        "date": "2026-10-20T23:06:50-04:00",
-        "subject": "W2-7 B2: sales tax on pro-shop items added to a round (#159)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "2798d62",
-        "date": "2026-10-21T02:55:08+00:00",
-        "subject": "W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "557be09",
-        "date": "2026-10-21T02:52:44+00:00",
-        "subject": "W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "063dc87",
-        "date": "2026-10-21T02:46:21+00:00",
-        "subject": "W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "507507a",
-        "date": "2026-10-20T22:38:04-04:00",
-        "subject": "W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "85be7e1",
-        "date": "2026-10-21T01:57:22+00:00",
-        "subject": "Regenerate code map and status board after main merge",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "248dc36",
-        "date": "2026-10-21T01:57:06+00:00",
-        "subject": "W2-6 slice 3: window-cap test, spec status, status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "d8a856f",
-        "date": "2026-10-21T01:56:13+00:00",
-        "subject": "W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "290c10f",
-        "date": "2026-10-21T01:49:22+00:00",
-        "subject": "W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ddb40f0",
-        "date": "2026-10-20T21:37:51-04:00",
-        "subject": "W2-6 slice 2: schedule overlaps warn instead of block (#156)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "bc1db3d",
-        "date": "2026-10-21T01:23:23+00:00",
-        "subject": "W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "27ef910",
-        "date": "2026-10-21T01:18:43+00:00",
-        "subject": "W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e96323e",
-        "date": "2026-10-20T21:09:55-04:00",
-        "subject": "W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "77187a1",
-        "date": "2026-10-20T18:01:18+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "42ff2e4",
-        "date": "2026-10-20T17:59:51+00:00",
-        "subject": "W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "dea0574",
-        "date": "2026-10-20T17:52:55+00:00",
-        "subject": "W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "39e62f4",
-        "date": "2026-10-20T13:36:31-04:00",
-        "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "773326d",
-        "date": "2026-10-20T03:08:59+00:00",
-        "subject": "W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ad6524b",
-        "date": "2026-10-19T23:08:11-04:00",
-        "subject": "W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "bd86947",
-        "date": "2026-10-19T22:39:15-04:00",
-        "subject": "Sign-in page: full-screen photo with the sign-in card under the logo (#153)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "fff11a1",
-        "date": "2026-10-19T22:27:05-04:00",
-        "subject": "Emails: one clean look for every email (EMAIL-2) (#152)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "8287f54",
-        "date": "2026-10-19T22:02:10-04:00",
-        "subject": "Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "cb98de8",
-        "date": "2026-10-19T21:36:27-04:00",
-        "subject": "W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "223121d",
-        "date": "2026-10-19T21:23:57-04:00",
-        "subject": "Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "95da45f",
-        "date": "2026-10-19T19:55:12-04:00",
-        "subject": "Member portal: show a resident their own spot at the resident rate, as booking charges (#146)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "9910cf6",
-        "date": "2026-10-19T17:31:18-04:00",
-        "subject": "Member portal: show members exactly what booking charges (#145)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "dbd4737",
-        "date": "2026-10-19T16:39:42-04:00",
-        "subject": "Status board: regenerate (#144)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "428da80",
-        "date": "2026-10-19T16:35:14-04:00",
-        "subject": "Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "0419675",
-        "date": "2026-10-19T16:20:24-04:00",
-        "subject": "Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "b14b998",
-        "date": "2026-10-19T16:10:34-04:00",
-        "subject": "Course groups: one golfer page and one resident list for courses run together (#141)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "662f294",
-        "date": "2026-10-19T15:03:28-04:00",
-        "subject": "Members: import a list, and each member's last round (#140)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "9aba8a1",
-        "date": "2026-10-19T14:22:40-04:00",
-        "subject": "Settings: Who pays what, one table of every kind of golfer and their price (#139)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a8c71b9",
-        "date": "2026-10-19T14:09:30-04:00",
-        "subject": "Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "c17100d",
-        "date": "2026-10-19T13:49:05-04:00",
-        "subject": "Dashboard nav: every tab fits on every screen (#137)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "668b8ce",
-        "date": "2026-10-19T13:34:56-04:00",
-        "subject": "Residents: staff keep a resident list; residents book at the resident rate (#136)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "73245fc",
-        "date": "2026-10-19T12:38:16-04:00",
-        "subject": "Status board after Settings part 2 and the pro shop (#135)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "cb884f2",
-        "date": "2026-10-19T12:15:35-04:00",
-        "subject": "Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "cd9c3a1",
-        "date": "2026-10-19T11:28:33-04:00",
-        "subject": "Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "1cf8419",
-        "date": "2026-10-19T11:19:04-04:00",
-        "subject": "Homepage hero: Learn more instead of Book a demo (#133)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a37365e",
-        "date": "2026-10-19T11:19:01-04:00",
-        "subject": "Email: log Resend's message id and accept time for every send (#132)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "e226ed7",
-        "date": "2026-10-19T11:18:58-04:00",
-        "subject": "Members: a self-joined member put on a tier gets a pay link, and dues emails reach them (#130)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "27e358a",
-        "date": "2026-10-19T10:44:33-04:00",
-        "subject": "Members: list first, one plain dues line per member, remind count matches who actually gets emailed (#128)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "49d373a",
-        "date": "2026-10-19T10:38:17-04:00",
-        "subject": "Settings part 1: sections in setup order, a \"Finish setting up\" list, Staff and Your account split (#129)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "fc1c99e",
-        "date": "2026-10-19T10:34:18-04:00",
-        "subject": "Schedule rework: your week at a glance, named price periods, closed-days calendar, every save shows what it changes (#127)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "45ac49a",
-        "date": "2026-10-19T10:29:27-04:00",
-        "subject": "Add time: warn and ask once when a new time is within 5 minutes of another (#120)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "33ae355",
-        "date": "2026-10-19T10:29:24-04:00",
-        "subject": "Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "92cdf08",
-        "date": "2026-10-19T10:10:56-04:00",
-        "subject": "Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124)",
-        "ids": [],
-        "matches": []
-      }
-    ]
+    "queueLastCommit": "2026-10-22T21:48:15+00:00",
+    "unrecorded": []
   },
   "counts": {
     "runDone": 298,
@@ -1074,7 +211,13 @@
       "ageDays": 0
     },
     {
-      "file": "OPERATOR_REWORK_SPEC.md",
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
       "ageDays": 0
@@ -1082,8 +225,38 @@
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
+      "file": "ONBOARDING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
+      "file": "ONBOARDING_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
+      "file": "OPERATOR_REWORK_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
+      "file": "PUBLIC_SITE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
+      "file": "RECEIPT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -1116,12 +289,6 @@
       "ageDays": 3
     },
     {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 3
-    },
-    {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
@@ -1135,12 +302,6 @@
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 3
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
       "ageDays": 3
@@ -1218,18 +379,6 @@
       "ageDays": 3
     },
     {
-      "file": "ONBOARDING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 3
-    },
-    {
-      "file": "ONBOARDING_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 3
-    },
-    {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
@@ -1237,18 +386,6 @@
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 3
-    },
-    {
-      "file": "PUBLIC_SITE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 3
-    },
-    {
-      "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
       "ageDays": 3
@@ -1281,14 +418,29 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "67e5ac4",
+      "date": "2026-10-22",
+      "subject": "queue/spec update: old addresses replaced in specs, legal queue and design prototypes"
+    },
+    {
       "h": "9935d2e",
       "date": "2026-10-22",
       "subject": "Regenerate status board"
     },
     {
+      "h": "91df6b9",
+      "date": "2026-10-22",
+      "subject": "W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send"
+    },
+    {
       "h": "ad8c721",
       "date": "2026-10-22",
       "subject": "Regenerate status board"
+    },
+    {
+      "h": "fc5c6aa",
+      "date": "2026-10-22",
+      "subject": "W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)"
     },
     {
       "h": "da32563",
@@ -1324,21 +476,6 @@
       "h": "5e73b48",
       "date": "2026-10-22",
       "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)"
-    },
-    {
-      "h": "b9fe29f",
-      "date": "2026-10-22",
-      "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
-    },
-    {
-      "h": "40be0a7",
-      "date": "2026-10-22",
-      "subject": "Status board"
-    },
-    {
-      "h": "e449074",
-      "date": "2026-10-22",
-      "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close"
     }
   ]
 }

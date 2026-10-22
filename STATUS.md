@@ -4,157 +4,34 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 21:37 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `9935d2e` · working tree **14 dirty file(s)**
+Generated 2026-10-22 22:22 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `67e5ac4` · working tree **20 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-19**. 124 commit(s) since then are not mentioned anywhere in it:
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-| commit | date | subject |
-|---|---|---|
-| `9935d2e` | 2026-10-22 | Regenerate status board |
-| `ad8c721` | 2026-10-22 | Regenerate status board |
-| `da32563` | 2026-10-22 | Event pay-link email: say a reply reaches the course |
-| `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
-| `3c63c5d` | 2026-10-22 | AW-11 Team: per-person access — each employee's role and areas (#186) |
-| `75ac7d5` | 2026-10-22 | AW-10 Golfers: lookup only, in the new admin look (#185) |
-| `95e1b37` | 2026-10-22 | Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184) |
-| `a5c912b` | 2026-10-22 | Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183) |
-| `5e73b48` | 2026-10-22 | ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182) |
-| `b9fe29f` | 2026-10-22 | W2-9b: event pay-link email and text say what they are (BRAIN-1b message log) |
-| `40be0a7` | 2026-10-22 | Status board |
-| `e449074` | 2026-10-22 | W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close |
-| `4438d60` | 2026-10-22 | Status board |
-| `b001c14` | 2026-10-22 | W2-9b: narrow the recorded payment in the test (typecheck) |
-| `4086e37` | 2026-10-22 | W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds |
-| `f4bc1a4` | 2026-10-22 | Regenerate status board |
-| `58642d3` | 2026-10-22 | Regenerate status board and code map |
-| `d8306c5` | 2026-10-22 | MAIL-1: a cancellation that refunded money also comes from billing@ |
-| `c39a10c` | 2026-10-22 | MAIL-1: a cancellation that kept a fee comes from billing@ |
-| `7feae5c` | 2026-10-22 | W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup |
-| `478ec76` | 2026-10-22 | W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet |
-| `4bd2042` | 2026-10-21 | BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179) |
-| `8c73613` | 2026-10-22 | W2-9a: releasing an event's hold checks the day being released, not the day it moved to |
-| `e85978d` | 2026-10-22 | W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit |
-| `ce88bd1` | 2026-10-22 | Codemap and status board |
-| `087c1a2` | 2026-10-22 | W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks |
-| `28a5f3a` | 2026-10-22 | W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings |
-| `164896a` | 2026-10-21 | BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175) |
-| `0cb3627` | 2026-10-22 | W2-8b: a regular who has booked again is not 'gone quiet' |
-| `21a19af` | 2026-10-22 | test-email.js: send from support@ (hello@ no longer exists) |
-| `1301b0a` | 2026-10-22 | Regenerate status board |
-| `8860edb` | 2026-10-22 | MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@ |
-| `ffcefc6` | 2026-10-22 | W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet |
-| `aad9ee0` | 2026-10-22 | W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players |
-| `f367f8d` | 2026-10-22 | W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents |
-| `e8c4fe4` | 2026-10-22 | W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan |
-| `1d2a5db` | 2026-10-21 | BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174) |
-| `4cd3e1a` | 2026-10-22 | W2-6 Schedule simplification: open hours, what golfers can book, one price table |
-| `e59ed92` | 2026-10-22 | Codemap and status board |
-| `f8d9737` | 2026-10-22 | Messages: keep Open the course in the header below lg |
-| `3020c49` | 2026-10-22 | AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review) |
-| `f31213a` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (#172) |
-| `42adddb` | 2026-10-21 | Codemap and status board |
-| `6b0ebeb` | 2026-10-21 | AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links |
-| `821ddf9` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (in review) |
-| `4abfebb` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (#171) |
-| `a526731` | 2026-10-21 | Codemap and status board |
-| `fe16f64` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review) |
-| `d58220f` | 2026-10-21 | AW-6b: inquiry page — the one next step first (#169) |
-| `a85a078` | 2026-10-21 | AW-4b: Today shows each course with its own to-dos; Goals tab (#170) |
-| `27af530` | 2026-10-21 | Status board |
-| `cbcfb8c` | 2026-10-21 | AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen |
-| `ec245d5` | 2026-10-21 | AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card |
-| `adf590b` | 2026-10-21 | Status board |
-| `914a1c5` | 2026-10-21 | AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today |
-| `b84a2db` | 2026-10-21 | AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card |
-| `e941200` | 2026-10-21 | Code map and status board |
-| `39d69df` | 2026-10-21 | AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts |
-| `3bccfa0` | 2026-10-21 | AW-5: hourly admin checks — urgent alerts once each, and a morning digest |
-| `2228db8` | 2026-10-21 | AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+ |
-| `c78b7aa` | 2026-10-21 | AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding |
-| `224db02` | 2026-10-21 | Status board and code map |
-| `4c61670` | 2026-10-21 | AW-3b: Ask in the admin search — read-only AI answers with links to admin pages |
-| `905572d` | 2026-10-21 | Regenerate code map |
-| `474f3f0` | 2026-10-21 | Status board |
-| `e66b258` | 2026-10-21 | AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations |
-| `fc9a048` | 2026-10-21 | Status board |
-| `5982380` | 2026-10-21 | AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step |
-| `2807e2b` | 2026-10-21 | AW-1c: re-confirm risky owner actions; owner device list; passkey change emails |
-| `5fc7ad8` | 2026-10-21 | Regenerate code map |
-| `a6a13af` | 2026-10-21 | AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board |
-| `00a9007` | 2026-10-21 | AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists |
-| `ccbfb06` | 2026-10-20 | AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161) |
-| `0671dab` | 2026-10-21 | Regenerate code map after main merge |
-| `4fda831` | 2026-10-21 | AW-1a: dummy hash at the real cost; status board |
-| `fc3a0fc` | 2026-10-21 | AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails |
-| `eeea53c` | 2026-10-21 | AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner |
-| `315e3e3` | 2026-10-20 | W2-7 B2: sales tax on pro-shop items added to a round (#159) |
-| `2798d62` | 2026-10-21 | W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board |
-| `557be09` | 2026-10-21 | W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched |
-| `063dc87` | 2026-10-21 | W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid |
-| `507507a` | 2026-10-20 | W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158) |
-| `85be7e1` | 2026-10-21 | Regenerate code map and status board after main merge |
-| `248dc36` | 2026-10-21 | W2-6 slice 3: window-cap test, spec status, status board |
-| `d8a856f` | 2026-10-21 | W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping |
-| `290c10f` | 2026-10-21 | W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking |
-| `ddb40f0` | 2026-10-20 | W2-6 slice 2: schedule overlaps warn instead of block (#156) |
-| `bc1db3d` | 2026-10-21 | W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board |
-| `27ef910` | 2026-10-21 | W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused |
-| `e96323e` | 2026-10-20 | W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155) |
-| `77187a1` | 2026-10-20 | Status board |
-| `42ff2e4` | 2026-10-20 | W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day |
-| `dea0574` | 2026-10-20 | W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had |
-| `39e62f4` | 2026-10-20 | W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154) |
-| `773326d` | 2026-10-20 | W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) |
-| `ad6524b` | 2026-10-19 | W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151) |
-| `bd86947` | 2026-10-19 | Sign-in page: full-screen photo with the sign-in card under the logo (#153) |
-| `fff11a1` | 2026-10-19 | Emails: one clean look for every email (EMAIL-2) (#152) |
-| `8287f54` | 2026-10-19 | Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150) |
-| `cb98de8` | 2026-10-19 | W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149) |
-| `223121d` | 2026-10-19 | Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148) |
-| `95da45f` | 2026-10-19 | Member portal: show a resident their own spot at the resident rate, as booking charges (#146) |
-| `9910cf6` | 2026-10-19 | Member portal: show members exactly what booking charges (#145) |
-| `dbd4737` | 2026-10-19 | Status board: regenerate (#144) |
-| `428da80` | 2026-10-19 | Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143) |
-| `0419675` | 2026-10-19 | Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142) |
-| `b14b998` | 2026-10-19 | Course groups: one golfer page and one resident list for courses run together (#141) |
-| `662f294` | 2026-10-19 | Members: import a list, and each member's last round (#140) |
-| `9aba8a1` | 2026-10-19 | Settings: Who pays what, one table of every kind of golfer and their price (#139) |
-| `a8c71b9` | 2026-10-19 | Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138) |
-| `c17100d` | 2026-10-19 | Dashboard nav: every tab fits on every screen (#137) |
-| `668b8ce` | 2026-10-19 | Residents: staff keep a resident list; residents book at the resident rate (#136) |
-| `73245fc` | 2026-10-19 | Status board after Settings part 2 and the pro shop (#135) |
-| `cb884f2` | 2026-10-19 | Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134) |
-| `cd9c3a1` | 2026-10-19 | Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131) |
-| `1cf8419` | 2026-10-19 | Homepage hero: Learn more instead of Book a demo (#133) |
-| `a37365e` | 2026-10-19 | Email: log Resend's message id and accept time for every send (#132) |
-| `e226ed7` | 2026-10-19 | Members: a self-joined member put on a tier gets a pay link, and dues emails reach them (#130) |
-| `27e358a` | 2026-10-19 | Members: list first, one plain dues line per member, remind count matches who actually gets emailed (#128) |
-| `49d373a` | 2026-10-19 | Settings part 1: sections in setup order, a "Finish setting up" list, Staff and Your account split (#129) |
-| `fc1c99e` | 2026-10-19 | Schedule rework: your week at a glance, named price periods, closed-days calendar, every save shows what it changes (#127) |
-| `45ac49a` | 2026-10-19 | Add time: warn and ask once when a new time is within 5 minutes of another (#120) |
-| `33ae355` | 2026-10-19 | Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126) |
-| `92cdf08` | 2026-10-19 | Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124) |
+### Uncommitted working tree (20 file(s))
 
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (14 file(s))
-
-- `M  OPERATOR_REWORK_SPEC.md`
+- `M  CLAUDE.md`
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
 - `M  docs/CODEMAP.md`
 - `M  docs/codemap.json`
-- `A  prisma/migrations/20261022030847_w2_9c_player_payments/migration.sql`
-- `M  prisma/schema.prisma`
-- `M  scripts/event-payments-db-test.ts`
-- `M  src/app/api/operator/events/[id]/payments/route.ts`
-- `M  src/app/api/operator/events/[id]/route.ts`
-- `M  src/components/dashboard/events/EventDetail.tsx`
-- `M  src/components/dashboard/events/EventMoney.tsx`
-- `M  src/lib/event-payments.ts`
+- `M  scripts/operator-nav-test.ts`
+- `M  scripts/tt-card-test.ts`
+- `M  src/app/dashboard/analytics/page.tsx`
+- `M  src/app/dashboard/events/page.tsx`
+- `M  src/app/dashboard/layout.tsx`
+- `M  src/app/dashboard/members/page.tsx`
+- `M  src/app/dashboard/messages/page.tsx`
+- `M  src/app/dashboard/money/page.tsx`
+- `M  src/app/dashboard/page.tsx`
+- `M  src/app/dashboard/schedules/page.tsx`
+- `M  src/app/dashboard/settings/page.tsx`
+- `M  src/app/dashboard/shop/page.tsx`
+- `M  src/app/globals.css`
+- `M  src/components/OperatorSidebar.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -241,18 +118,22 @@ Nothing awaiting review.
 | `CLAUDE.md` | 1 | 2026-10-22 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 3d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 3d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `ADMIN_V3_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `ADMIN_V4_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `ARCHITECTURE.md` | 0 | 2026-10-19 | 3d |
 | `BACKUP_OPS_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `CODEMAP_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `COURSES_SHEET_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-19 | 3d |
@@ -265,12 +146,8 @@ Nothing awaiting review.
 | `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-19 | 3d |
@@ -278,8 +155,11 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `67e5ac4` 2026-10-22 — queue/spec update: old addresses replaced in specs, legal queue and design prototypes
 - `9935d2e` 2026-10-22 — Regenerate status board
+- `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
 - `ad8c721` 2026-10-22 — Regenerate status board
+- `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 - `da32563` 2026-10-22 — Event pay-link email: say a reply reaches the course
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
 - `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
@@ -287,9 +167,6 @@ Nothing awaiting review.
 - `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
 - `a5c912b` 2026-10-22 — Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)
 - `5e73b48` 2026-10-22 — ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)
-- `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
-- `40be0a7` 2026-10-22 — Status board
-- `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
 
 ---
 
