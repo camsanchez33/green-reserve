@@ -1,22 +1,43 @@
 {
-  "generatedAt": "2026-10-22T22:10:32.040Z",
+  "generatedAt": "2026-10-22T22:15:44.190Z",
   "repo": {
-    "head": "2734cbd",
+    "head": "04301ce",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 20,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/event-signup-db-test.ts",
-      " M src/app/api/event-payment/[id]/route.ts",
-      " M src/app/api/operator/events/[id]/route.ts",
-      " M src/lib/event-signup.ts"
+      "M  CLAUDE.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "M  scripts/operator-nav-test.ts",
+      "M  scripts/tt-card-test.ts",
+      "M  src/app/dashboard/analytics/page.tsx",
+      "M  src/app/dashboard/events/page.tsx",
+      "M  src/app/dashboard/layout.tsx",
+      "M  src/app/dashboard/members/page.tsx",
+      "M  src/app/dashboard/messages/page.tsx",
+      "M  src/app/dashboard/money/page.tsx",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/app/dashboard/schedules/page.tsx",
+      "M  src/app/dashboard/settings/page.tsx",
+      "M  src/app/dashboard/shop/page.tsx",
+      "M  src/app/globals.css",
+      "M  src/components/OperatorSidebar.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "04301ce",
+        "date": "2026-10-22T22:10:32+00:00",
+        "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "2734cbd",
         "date": "2026-10-22T22:04:58+00:00",
@@ -1339,6 +1360,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "04301ce",
+      "date": "2026-10-22",
+      "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses"
+    },
+    {
       "h": "2734cbd",
       "date": "2026-10-22",
       "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later"
@@ -1392,11 +1418,6 @@
       "h": "b9fe29f",
       "date": "2026-10-22",
       "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
-    },
-    {
-      "h": "40be0a7",
-      "date": "2026-10-22",
-      "subject": "Status board"
     }
   ]
 }

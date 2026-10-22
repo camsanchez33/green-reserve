@@ -668,7 +668,7 @@ function DashboardPageInner() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active={tab} onAlertClick={() => { setAlertEmail(false); setShowConditions(true); }}/>
 
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
@@ -972,7 +972,7 @@ function DashboardPageInner() {
         const open = panelSlot.playersAvailable - panelSlot.playersBooked;
         const past = selectedDate < today() || (selectedDate === today() && panelSlot.time < nowHM);
         return (
-          <div className="fixed inset-0 z-40 md:inset-auto md:top-28 md:right-4 md:bottom-4 md:w-[min(520px,calc(100vw-2rem))]">
+          <div className="fixed inset-0 z-40 md:inset-auto md:top-4 md:right-4 md:bottom-4 md:w-[min(520px,calc(100vw-2rem))]">
             <div className="absolute inset-0 bg-ink/20 md:hidden" aria-hidden="true" onClick={() => setPanelId(null)} />
             <aside role="dialog" aria-label={`${fmtTime(panelSlot.time)} tee time`}
               className="tt-card absolute inset-x-0 bottom-0 top-12 md:static md:h-full flex flex-col bg-white rounded-t-lg md:rounded-lg shadow-card overflow-hidden">

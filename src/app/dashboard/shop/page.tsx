@@ -129,7 +129,7 @@ export default function ShopPage() {
   const todayTotal = (sales ?? []).filter(s => (s.status === 'paid_cash' || s.status === 'paid_card') && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString()).reduce((t, s) => t + s.totalCents, 0);
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active="shop" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8">
         {access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (
