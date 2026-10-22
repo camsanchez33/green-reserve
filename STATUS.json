@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-22T02:31:31.281Z",
+  "generatedAt": "2026-10-22T02:38:32.947Z",
   "repo": {
-    "head": "b001c14",
+    "head": "e449074",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 0,
     "dirty": [],
@@ -10,6 +10,20 @@
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "e449074",
+        "date": "2026-10-22T02:37:10+00:00",
+        "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4438d60",
+        "date": "2026-10-22T02:31:31+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "b001c14",
         "date": "2026-10-22T02:30:57+00:00",
@@ -1227,6 +1241,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e449074",
+      "date": "2026-10-22",
+      "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close"
+    },
+    {
+      "h": "4438d60",
+      "date": "2026-10-22",
+      "subject": "Status board"
+    },
+    {
       "h": "b001c14",
       "date": "2026-10-22",
       "subject": "W2-9b: narrow the recorded payment in the test (typecheck)"
@@ -1275,16 +1299,6 @@
       "h": "28a5f3a",
       "date": "2026-10-22",
       "subject": "W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings"
-    },
-    {
-      "h": "164896a",
-      "date": "2026-10-21",
-      "subject": "BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)"
-    },
-    {
-      "h": "0cb3627",
-      "date": "2026-10-22",
-      "subject": "W2-8b: a regular who has booked again is not 'gone quiet'"
     }
   ]
 }

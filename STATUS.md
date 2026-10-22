@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 02:31 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b001c14` · working tree clean
+Generated 2026-10-22 02:38 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e449074` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 118 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 120 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e449074` | 2026-10-22 | W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close |
+| `4438d60` | 2026-10-22 | Status board |
 | `b001c14` | 2026-10-22 | W2-9b: narrow the recorded payment in the test (typecheck) |
 | `4086e37` | 2026-10-22 | W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds |
 | `7feae5c` | 2026-10-22 | W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup |
@@ -253,6 +255,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
+- `4438d60` 2026-10-22 — Status board
 - `b001c14` 2026-10-22 — W2-9b: narrow the recorded payment in the test (typecheck)
 - `4086e37` 2026-10-22 — W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds
 - `7feae5c` 2026-10-22 — W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup
@@ -263,8 +267,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ce88bd1` 2026-10-22 — Codemap and status board
 - `087c1a2` 2026-10-22 — W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks
 - `28a5f3a` 2026-10-22 — W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings
-- `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
-- `0cb3627` 2026-10-22 — W2-8b: a regular who has booked again is not 'gone quiet'
 
 ---
 
