@@ -38,6 +38,10 @@ model CourseOperator {
 
 model Course {
   id                         String                @id @default(cuid())
+  /// TEST-1 (Cam 2026-10-22): a test course (e.g. "The GreenReserve Test Course").
+  /// Only these can be reset from the admin. Keeping them out of the
+  /// platform's numbers and Problems is TEST-2 (not built yet).
+  isTest                     Boolean               @default(false)
   slug                       String                @unique
   name                       String
   type                       String                @default("public")

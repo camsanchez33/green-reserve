@@ -9,6 +9,7 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatDateTime as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
 import { Modal } from '@/components/ui/Modal';
+import { LaunchWipeCard } from '@/components/admin/TestDataTools';
 import AgreementVersionsCard from '@/components/admin/AgreementVersionsCard';
 
 interface SystemData {
@@ -550,6 +551,13 @@ export default function AdminSystemPage() {
                 </div>
               )}
             </Section>
+
+            {/* TEST-1 (Cam 2026-10-22): the one-time launch wipe — owner only, closes Nov 1. */}
+            {isOwner && (
+              <Section id="wipe" title="Before launch: clear test data">
+                <LaunchWipeCard />
+              </Section>
+            )}
           </div>
         </div>
       </div>

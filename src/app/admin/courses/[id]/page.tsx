@@ -13,12 +13,15 @@ import { TimelineTab } from './_parts/TimelineTab';
 import { MoneyTab } from './_parts/MoneyTab';
 import { SetupTab } from './_parts/SetupTab';
 import { ContactTab } from './_parts/ContactTab';
+import { TestCourseCard } from '@/components/admin/TestDataTools';
+import { useAdminSession } from '@/lib/admin-session-context';
 
 // AW-7 (Cam 2026-10-21): four tabs — Bookings · Money · Setup · Contact &
 // notes — opening on the one with a problem (lib/admin-course-tabs.ts).
 
 export default function CourseDetailPage() {
   const s = useCourseDetail();
+  const isOwnerView = useAdminSession().role === 'owner';
   const { router, adminReady, detail, loading, loadError, tab, setTab, sendingPreview, previewMsg, setPreviewMsg, setShowPreviewConfirm, requestingReReview, dangerOpen, setDangerOpen, archiveBusy, liveToggleBusy, setClosureError, liveBlockReason, setLiveBlockReason, liveBlockMissing, setLiveBlockMissing, reminderNudgeBusy, reminderNudgeSent, setReminderNudgeSent, reminderNudgeError, setReminderNudgeError, loadDetail, toggleActive, sendGoLiveReminder, archiveCourse, restoreCourse, selectTab, requestReReview, c } = s;
 
   if (!adminReady || loading) {
@@ -224,6 +227,9 @@ export default function CourseDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* TEST-1: the owner marks a test course here and can reset its activity. */}
+          {isOwnerView && <div className="mt-3"><TestCourseCard courseId={c.id} /></div>}
 
           {/* AGREEMENT = GO-LIVE GATE / STRIPE RULE FINAL (RUN_QUEUE) — two
               absolutes, no override, ever. A blocked go-live gets a one-click

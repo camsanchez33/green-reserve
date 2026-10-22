@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 528,
-    "routes": 255,
-    "libs": 172,
+    "files": 532,
+    "routes": 257,
+    "libs": 173,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -640,7 +640,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/page.tsx",
-      "lines": 320,
+      "lines": 326,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -664,9 +664,11 @@
         "./_parts/context",
         "./_parts/useCourseDetail",
         "@/components/admin/AdminSidebar",
+        "@/components/admin/TestDataTools",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/admin-course-tabs",
+        "@/lib/admin-session-context",
         "lucide-react"
       ],
       "usedBy": []
@@ -1193,7 +1195,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 595,
+      "lines": 603,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1210,6 +1212,7 @@
       "imports": [
         "@/components/admin/AdminSidebar",
         "@/components/admin/AgreementVersionsCard",
+        "@/components/admin/TestDataTools",
         "@/components/ui/ErrorState",
         "@/components/ui/Modal",
         "@/components/ui/StatusDot",
@@ -2001,6 +2004,37 @@
         "@/lib/prisma",
         "bcryptjs",
         "crypto",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/data-reset/route.ts",
+      "lines": 32,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/data-reset",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/data-reset",
         "next/server"
       ],
       "usedBy": []
@@ -3007,6 +3041,43 @@
         "@/lib/course-metrics",
         "@/lib/prisma",
         "@/lib/schedule-service",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/test-course/route.ts",
+      "lines": 53,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/test-course",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/data-reset",
+        "@/lib/prisma",
         "next/server"
       ],
       "usedBy": []
@@ -9360,6 +9431,37 @@
       ]
     },
     {
+      "path": "src/components/admin/TestDataTools.tsx",
+      "lines": 170,
+      "purpose": "TEST-1 (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "LaunchWipeCard",
+          "kind": "component"
+        },
+        {
+          "name": "TestCourseCard",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/admin-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx",
+        "src/app/admin/system/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/birdie/BirdieWidget.tsx",
       "lines": 229,
       "purpose": "BIRDIE_AI_SPEC B1 — Birdie's chat panel for the operator dashboard, and its launcher in the bottom corner on every screen (W2-1, Cam 2026-10-19).",
@@ -10798,6 +10900,7 @@
         "src/components/admin/InquiryBoard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/OwnerPasskeysCard.tsx",
+        "src/components/admin/TestDataTools.tsx",
         "src/components/birdie/ConfirmCard.tsx",
         "src/components/dashboard/AgreementNotice.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
@@ -10871,6 +10974,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/admin/ReasonDialog.tsx",
         "src/components/admin/StepUpDialog.tsx",
+        "src/components/admin/TestDataTools.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
@@ -11126,7 +11230,7 @@
     },
     {
       "path": "src/lib/admin-audit.ts",
-      "lines": 191,
+      "lines": 194,
       "purpose": "BRAIN-1a (Cam 2026-10-22):",
       "brain": [],
       "exports": [
@@ -11210,6 +11314,7 @@
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/data-reset/route.ts",
         "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
@@ -11231,6 +11336,7 @@
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/sentry-test/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/admin/test-course/route.ts",
         "src/app/api/admin/two-factor/route.ts",
         "src/app/api/admin/verify-operator/route.ts",
         "src/app/api/preview/send/route.ts",
@@ -11527,6 +11633,7 @@
         "src/app/admin/messages/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
+        "src/components/admin/TestDataTools.tsx",
         "src/components/ui/ErrorState.tsx",
         "src/lib/admin-session-context.tsx",
         "src/lib/use-resource.ts"
@@ -11692,6 +11799,7 @@
       ],
       "usedBy": [
         "src/app/admin/announcements/page.tsx",
+        "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
@@ -11812,6 +11920,7 @@
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/data-reset/route.ts",
         "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
@@ -11843,6 +11952,7 @@
         "src/app/api/admin/stripe-match/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/admin/test-course/route.ts",
         "src/app/api/admin/today/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/admin/transactions/route.ts",
@@ -15120,6 +15230,71 @@
       ]
     },
     {
+      "path": "src/lib/data-reset.ts",
+      "lines": 147,
+      "purpose": "TEST-1 (Cam 2026-10-22:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CourseResetPreview",
+          "kind": "type"
+        },
+        {
+          "name": "KEPT_TABLES",
+          "kind": "const"
+        },
+        {
+          "name": "previewCourseReset",
+          "kind": "fn"
+        },
+        {
+          "name": "previewWipeAll",
+          "kind": "fn"
+        },
+        {
+          "name": "resetTestCourse",
+          "kind": "fn"
+        },
+        {
+          "name": "TableCounts",
+          "kind": "type"
+        },
+        {
+          "name": "WIPE_ALL_UNTIL",
+          "kind": "const"
+        },
+        {
+          "name": "WIPE_CONFIRM_WORDS",
+          "kind": "const"
+        },
+        {
+          "name": "wipeAll",
+          "kind": "fn"
+        },
+        {
+          "name": "wipeAllOpen",
+          "kind": "fn"
+        },
+        {
+          "name": "WIPED_TABLES",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/admin/data-reset/route.ts",
+        "src/app/api/admin/test-course/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/data.ts",
       "lines": 3,
       "purpose": "Deprecated — use @/lib/courses-data instead",
@@ -17775,6 +17950,7 @@
         "src/app/api/admin/stripe-match/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/admin/test-course/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/admin/two-factor/route.ts",
@@ -17918,6 +18094,7 @@
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cron-log.ts",
+        "src/lib/data-reset.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
@@ -20326,12 +20503,14 @@
       ],
       "writers": [
         "src/app/api/admin/problems/route.ts",
-        "src/lib/admin-checks.ts"
+        "src/lib/admin-checks.ts",
+        "src/lib/data-reset.ts"
       ],
       "readers": [
         "src/app/api/admin/problems/route.ts",
         "src/lib/admin-checks.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/data-reset.ts",
         "src/lib/problems.ts"
       ]
     },
@@ -20855,6 +21034,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/course-events.ts",
+        "src/lib/data-reset.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -21104,6 +21284,7 @@
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
         "src/lib/refund-booking.ts",
         "src/lib/round-shop-tax.ts"
@@ -21153,6 +21334,7 @@
         "src/lib/course-closure.ts",
         "src/lib/course-metrics.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/data-reset.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
@@ -21216,10 +21398,13 @@
           "type": "Json?"
         }
       ],
-      "writers": [],
+      "writers": [
+        "src/lib/data-reset.ts"
+      ],
       "readers": [
         "src/lib/analytics.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/data-reset.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"
@@ -21439,6 +21624,10 @@
         {
           "name": "id",
           "type": "String"
+        },
+        {
+          "name": "isTest",
+          "type": "Boolean"
         },
         {
           "name": "slug",
@@ -21931,6 +22120,7 @@
         "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/test-course/route.ts",
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/settings/route.ts",
@@ -21960,6 +22150,7 @@
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/system/route.ts",
+        "src/app/api/admin/test-course/route.ts",
         "src/app/api/alerts/route.ts",
         "src/app/api/birdie/chat/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
@@ -22022,6 +22213,7 @@
         "src/lib/course-group.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/data-reset.ts",
         "src/lib/event-payments.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
@@ -22196,13 +22388,15 @@
       ],
       "writers": [
         "src/app/api/operator/events/[id]/route.ts",
-        "src/lib/course-events.ts"
+        "src/lib/course-events.ts",
+        "src/lib/data-reset.ts"
       ],
       "readers": [
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/lib/course-events.ts",
+        "src/lib/data-reset.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
         "src/lib/tee-sheet-engine.ts"
@@ -22879,6 +23073,7 @@
         "src/app/api/golfer/memberships/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
+        "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts"
       ],
@@ -22903,6 +23098,7 @@
         "src/app/api/operator/tiers/route.ts",
         "src/lib/analytics.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts"
@@ -22961,10 +23157,12 @@
         }
       ],
       "writers": [
+        "src/lib/data-reset.ts",
         "src/lib/golfer-messages.ts"
       ],
       "readers": [
-        "src/app/api/operator/golfer-messages/route.ts"
+        "src/app/api/operator/golfer-messages/route.ts",
+        "src/lib/data-reset.ts"
       ]
     },
     {
@@ -23308,10 +23506,12 @@
         }
       ],
       "writers": [
-        "src/app/api/operator/residents/route.ts"
+        "src/app/api/operator/residents/route.ts",
+        "src/lib/data-reset.ts"
       ],
       "readers": [
         "src/app/api/operator/residents/route.ts",
+        "src/lib/data-reset.ts",
         "src/lib/member-session.ts"
       ]
     },
@@ -23821,6 +24021,7 @@
       "writers": [
         "src/app/api/admin/messages/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/lib/data-reset.ts",
         "src/lib/submit-change-request.ts"
       ],
       "readers": [
@@ -23828,6 +24029,7 @@
         "src/app/api/admin/search/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/lib/admin-action-queue.ts",
+        "src/lib/data-reset.ts",
         "src/lib/submit-change-request.ts"
       ]
     },
@@ -23888,10 +24090,12 @@
         }
       ],
       "writers": [
+        "src/lib/data-reset.ts",
         "src/lib/monthly-review.ts"
       ],
       "readers": [
         "src/app/api/operator/monthly-reviews/route.ts",
+        "src/lib/data-reset.ts",
         "src/lib/monthly-review.ts"
       ]
     },
@@ -24257,10 +24461,12 @@
         }
       ],
       "writers": [
+        "src/lib/data-reset.ts",
         "src/lib/sent-messages.ts"
       ],
       "readers": [
         "src/lib/course-timeline.ts",
+        "src/lib/data-reset.ts",
         "src/lib/dispute-evidence.ts"
       ]
     },
@@ -24435,12 +24641,14 @@
         }
       ],
       "writers": [
+        "src/lib/data-reset.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ],
       "readers": [
         "src/app/api/operator/shop-sales/route.ts",
         "src/lib/analytics.ts",
+        "src/lib/data-reset.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ]
@@ -24712,6 +24920,7 @@
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/course-events.ts",
+        "src/lib/data-reset.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/schedule-service.ts",
@@ -24737,6 +24946,7 @@
         "src/lib/birdie/tools.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/data-reset.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/public-tee-times.ts",
@@ -24810,13 +25020,15 @@
         "src/app/api/alerts/route.ts",
         "src/app/api/alerts/unsubscribe/[token]/route.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts"
       ],
       "readers": [
         "src/app/api/alerts/route.ts",
         "src/app/api/alerts/unsubscribe/[token]/route.ts",
         "src/lib/analytics.ts",
-        "src/lib/cancel-booking.ts"
+        "src/lib/cancel-booking.ts",
+        "src/lib/data-reset.ts"
       ]
     },
     {
