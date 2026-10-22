@@ -2,6 +2,9 @@
   "src/app/admin/activity/page.tsx": {
     "uppercase": 2
   },
+  "src/app/admin/announcements/page.tsx": {
+    "lucide": 1
+  },
   "src/app/admin/company-documents/page.tsx": {
     "uppercase": 2,
     "lucide": 3
@@ -61,9 +64,8 @@
     "uppercase": 2
   },
   "src/app/admin/messages/page.tsx": {
-    "uppercase": 4,
     "input": 3,
-    "lucide": 2
+    "lucide": 1
   },
   "src/app/admin/page.tsx": {
     "lucide": 2

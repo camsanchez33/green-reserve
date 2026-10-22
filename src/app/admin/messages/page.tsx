@@ -3,15 +3,11 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Send, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { compareThreads, type ThreadSignal } from '@/lib/thread-signal';
 import { formatStamp as fmtFull, formatDateTime as fmtDate } from '@/lib/format';
-import { Card } from '@/components/ui/Card';
-import { Eyebrow } from '@/components/ui/Eyebrow';
-import { INPUT } from '@/components/ui/field';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
@@ -37,16 +33,6 @@ interface FullThread {
     openItems?: { changeRequests: number; failedCharges: number; inquiryId: string | null };
   } | null;
 }
-interface Broadcast {
-  id: string; title: string; body: string; emailSent: boolean;
-  sentByName: string; createdAt: string; dismissalCount: number;
-}
-interface SendOutcome {
-  courses: number;
-  emailRequested: boolean; emailRecipients: number; emailsSent: number; emailFailures: string[];
-}
-
-type View = 'conversations' | 'announcements';
 
 const fmtTime = (d: string) => {
   const dt = new Date(d);
@@ -61,15 +47,11 @@ const fmtTime = (d: string) => {
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-const iCls = `${INPUT} w-full`;
-
 function MessagesContent() {
   const router = useRouter();
   const params = useSearchParams();
   // MP-11a: the layout resolved the session; a page never re-checks it.
   const adminReady = true;
-  const isOwner = useAdminSession().role === 'owner';
-  const [view, setView] = useState<View>('conversations');
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [thread, setThread] = useState<FullThread | null>(null);
@@ -127,8 +109,9 @@ function MessagesContent() {
     loadThreads();
     const cid = params.get('courseId');
     if (cid) setSelectedCourseId(cid);
-    if (params.get('view') === 'announcements') setView('announcements');
-  }, [adminReady, loadThreads, params]);
+    // AW-8a: Announcements has its own page now.
+    if (params.get('view') === 'announcements') router.replace('/admin/announcements');
+  }, [adminReady, loadThreads, params, router]);
 
   useEffect(() => {
     if (selectedCourseId) loadThread(selectedCourseId);
@@ -183,8 +166,11 @@ function MessagesContent() {
   // MP-7a: waiting-on-us first, oldest wait at the top, then by activity —
   // the order the Overview already implied and this list never had.
   const matched = (q ? threads.filter(t => t.courseName.toLowerCase().includes(q)) : threads).slice().sort(compareThreads);
-  // MP-7b: closed conversations sink into their own group.
-  const filteredThreads = matched.filter(t => !t.closedAt);
+  // AW-8a (Cam 2026-10-21): three groups — waiting on you (oldest wait first),
+  // waiting on them (most recent first), closed (folded away).
+  const openThreads = matched.filter(t => !t.closedAt);
+  const waitingOnYou = openThreads.filter(t => t.signal.waitingOnUs);
+  const waitingOnThem = openThreads.filter(t => !t.signal.waitingOnUs);
   const closedThreads = matched.filter(t => t.closedAt);
   const totalUnread = threads.reduce((s, t) => s + t.unreadCount, 0);
   const waitingCount = threads.filter(t => t.signal.waitingOnUs).length;
@@ -194,11 +180,11 @@ function MessagesContent() {
   const composerLocked = denied || archivedThread;
 
   const renderRow = (t: ThreadSummary) => {
-              const isSelected = t.courseId === selectedCourseId && view === 'conversations';
+              const isSelected = t.courseId === selectedCourseId;
               return (
                 <button
                   key={t.id}
-                  onClick={() => { setView('conversations'); setSelectedCourseId(t.courseId); }}
+                  onClick={() => setSelectedCourseId(t.courseId)}
                   className={
                     'w-full text-left px-4 py-3.5 border-b border-line transition-colors flex items-start gap-3 ' +
                     (isSelected ? 'bg-pine/5' : 'hover:bg-paper') + (t.courseArchived ? ' opacity-70' : '')
@@ -223,8 +209,8 @@ function MessagesContent() {
                     {(t.signal.waitingOnUs || t.courseArchived || !t.courseActive) && (
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         {t.signal.waitingOnUs && (
-                          <span className={'text-[10px] font-medium ' + (t.signal.overdue ? 'text-warn' : 'text-ink-muted')}>
-                            Waiting on you · {t.signal.ageDays === 0 ? 'today' : `${t.signal.ageDays}d`}
+                          <span className={'text-[11px] font-medium ' + (t.signal.overdue ? 'text-warn' : 'text-ink-muted')}>
+                            {t.signal.ageDays === 0 ? 'Since today' : `${t.signal.ageDays} day${t.signal.ageDays === 1 ? '' : 's'}`}
                           </span>
                         )}
                         {t.courseArchived
@@ -258,16 +244,6 @@ function MessagesContent() {
                 <span className="text-[11px] text-warn font-medium">{waitingCount} waiting on you</span>
               )}
             </div>
-            {/* MP-7a: Broadcasts merged in. A broadcast is a message inserted
-                into every thread, so its composer belongs in the same room. */}
-            <div className="flex gap-0.5 bg-paper border border-line rounded-md p-0.5 mb-3">
-              {([['conversations', 'Conversations'], ['announcements', 'Announcements']] as [View, string][]).map(([v, label]) => (
-                <button key={v} onClick={() => setView(v)}
-                  className={'flex-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ' + (view === v ? 'bg-white text-ink border border-line' : 'text-ink-muted hover:text-ink')}>
-                  {label}
-                </button>
-              ))}
-            </div>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -276,17 +252,21 @@ function MessagesContent() {
             />
           </div>
           <div className="flex-1 overflow-y-auto">
-            {filteredThreads.length === 0 && (
-              <div className={'px-4 py-8 text-center text-xs ' + (listError ? 'text-bad' : 'text-ink-muted')}>
-                {listError ? listError.msg : threads.length === 0 ? 'No messages yet.' : closedThreads.length > 0 ? 'Nothing open — every conversation is closed.' : 'No matches.'}
-              </div>
-            )}
-            {filteredThreads.map(renderRow)}
-            {closedThreads.length > 0 && (
+            {listError && <div className="px-4 py-8 text-center text-xs text-bad">{listError.msg}</div>}
+            {!listError && threads.length === 0 && <div className="px-4 py-8 text-center text-xs text-ink-muted">No messages yet.</div>}
+            {!listError && threads.length > 0 && matched.length === 0 && <div className="px-4 py-8 text-center text-xs text-ink-muted">No matches.</div>}
+            {!listError && matched.length > 0 && (
               <>
-                <button onClick={() => setShowClosed(v => !v)} className="w-full text-left px-4 py-2.5 text-[12px] font-medium text-ink-muted hover:text-ink border-b border-line bg-paper/70">
-                  Closed · {closedThreads.length} {showClosed ? '— hide' : '— show'}
-                </button>
+                <div className="px-4 pt-4 pb-1.5 text-[13px] font-semibold text-ink border-b border-line">Waiting on you <span className="font-normal text-ink-muted">{waitingOnYou.length}</span></div>
+                {waitingOnYou.length === 0 && <div className="px-4 py-3 text-xs text-ink-muted border-b border-line">Nobody is waiting on a reply.</div>}
+                {waitingOnYou.map(renderRow)}
+                <div className="px-4 pt-4 pb-1.5 text-[13px] font-semibold text-ink border-b border-line">Waiting on them <span className="font-normal text-ink-muted">{waitingOnThem.length}</span></div>
+                {waitingOnThem.map(renderRow)}
+                {closedThreads.length > 0 && (
+                  <button onClick={() => setShowClosed(v => !v)} aria-expanded={showClosed} className="w-full text-left px-4 pt-4 pb-1.5 text-[13px] font-semibold text-ink-muted hover:text-ink border-b border-line">
+                    Closed <span className="font-normal">{closedThreads.length}</span> <span className="font-normal">{showClosed ? '· hide' : '· show'}</span>
+                  </button>
+                )}
                 {showClosed && closedThreads.map(renderRow)}
               </>
             )}
@@ -295,9 +275,7 @@ function MessagesContent() {
 
         {/* Right pane */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {view === 'announcements' && <AnnouncementsPane isOwner={isOwner} onSent={loadThreads} />}
-
-          {view === 'conversations' && !selectedCourseId && (
+          {!selectedCourseId && (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
               
               <div className="text-sm font-medium text-ink mb-1">Select a conversation</div>
@@ -309,7 +287,7 @@ function MessagesContent() {
             </div>
           )}
 
-          {view === 'conversations' && selectedCourseId && (
+          {selectedCourseId && (
             <>
               {/* Thread header */}
               <div className="px-6 py-4 border-b border-line shrink-0 flex items-center justify-between bg-white">
@@ -324,26 +302,6 @@ function MessagesContent() {
                       : thread?.closedAt ? `Closed ${fmtDate(thread.closedAt)} — a new message from either side reopens it.`
                       : 'Conversation with this course operator'}
                   </div>
-                  {/* MP-7b: context for the reply, so it doesn't need a tab hop. */}
-                  {thread?.context && (
-                    <div className="text-xs text-ink-soft mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
-                      {thread.context.operator && (
-                        <span>{thread.context.operator.name} · <a href={`mailto:${thread.context.operator.email}`} className="hover:text-pine">{thread.context.operator.email}</a>{thread.context.operator.phone ? ` · ${thread.context.operator.phone}` : ''}</span>
-                      )}
-                      <span>{thread.context.operator?.lastLoginAt ? `Last dashboard login ${fmtTime(thread.context.operator.lastLoginAt)}` : 'Never logged in'}</span>
-                      <span>{thread.context.bookings30d} booking{thread.context.bookings30d === 1 ? '' : 's'} in 30 days{thread.context.lastBookingAt ? ` · last ${fmtTime(thread.context.lastBookingAt)}` : ''}</span>
-                      {thread.context.openItems && (thread.context.openItems.changeRequests > 0 || thread.context.openItems.failedCharges > 0) ? (
-                        <span className="text-warn">
-                          {thread.context.openItems.changeRequests > 0 && (thread.context.openItems.inquiryId
-                            ? <button onClick={() => router.push(`/admin/inquiries/${thread.context!.openItems!.inquiryId}`)} className="hover:underline">{thread.context.openItems.changeRequests} open change request{thread.context.openItems.changeRequests === 1 ? '' : 's'}</button>
-                            : <>{thread.context.openItems.changeRequests} open change request{thread.context.openItems.changeRequests === 1 ? '' : 's'}</>)}
-                          {thread.context.openItems.changeRequests > 0 && thread.context.openItems.failedCharges > 0 ? ' · ' : ''}
-                          {thread.context.openItems.failedCharges > 0 && <button onClick={() => router.push('/admin/revenue')} className="hover:underline">{thread.context.openItems.failedCharges} failed charge{thread.context.openItems.failedCharges === 1 ? '' : 's'}</button>}
-                        </span>
-                      ) : <span>No open items</span>}
-                      <span>{thread.context.firstWentLiveAt ? `Live since ${new Date(thread.context.firstWentLiveAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Never gone live'}</span>
-                    </div>
-                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {thread?.id && !archivedThread && !denied && (
@@ -352,6 +310,11 @@ function MessagesContent() {
                       {closing ? 'Saving…' : thread.closedAt ? 'Reopen' : 'Close'}
                     </button>
                   )}
+                  {/* The side panel hides below lg; keep the way to the course. */}
+                  <button onClick={() => router.push('/admin/courses/' + selectedCourseId)}
+                    className="lg:hidden text-xs font-medium text-ink-soft hover:text-pine border border-line hover:border-pine/30 px-3 py-1.5 rounded-md transition-colors">
+                    Open the course
+                  </button>
                   <button
                     onClick={() => loadThread(selectedCourseId)}
                     className="w-8 h-8 flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-paper transition-colors"
@@ -359,12 +322,7 @@ function MessagesContent() {
                   >
                     <RefreshCw className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => router.push('/admin/courses/' + selectedCourseId)}
-                    className="flex items-center gap-1.5 text-xs font-medium text-ink-soft hover:text-pine border border-line hover:border-pine/30 px-3 py-1.5 rounded-md transition-colors"
-                  >
-                    View course 
-                  </button>
+
                 </div>
               </div>
 
@@ -457,229 +415,55 @@ function MessagesContent() {
             </>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
 
-// MP-7a: the old /admin/broadcasts page, moved in. Composer is owner-only
-// (the API requires the 2FA-backed owner session and says so); history is
-// readable by support+.
-function AnnouncementsPane({ isOwner, onSent }: { isOwner: boolean; onSent: () => void }) {
-  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
-  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [sendEmail, setSendEmail] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [reviewing, setReviewing] = useState(false);
-  // From the SAME filter the send uses — never a client-side guess.
-  const [reach, setReach] = useState<{ courses: number; operators: number } | null>(null);
-  const [outcome, setOutcome] = useState<SendOutcome | null>(null);
-  const [sendErr, setSendErr] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
-  // MP-7b: send-test-to-self — emails only the signed-in admin, records nothing.
-  const [testing, setTesting] = useState(false);
-  const [testNote, setTestNote] = useState('');
-
-  async function sendTest() {
-    if (!title.trim() || !body.trim() || testing) return;
-    setTesting(true); setTestNote(''); setSendErr(null);
-    try {
-      const res = await adminFetch<{ sentTo: string }>('/api/admin/broadcasts', {
-        method: 'POST',
-        body: JSON.stringify({ title: title.trim(), body: body.trim(), test: true }),
-        subject: 'the test email',
-        action: 'send',
-      });
-      if (!res.ok) { setSendErr({ msg: res.message, kind: res.kind }); return; }
-      setTestNote(`Test sent to ${res.data.sentTo} — nobody else got it.`);
-    } finally {
-      setTesting(false);
-    }
-  }
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const res = await adminFetch<Broadcast[]>('/api/admin/broadcasts', { subject: 'announcements' });
-    if (!res.ok) { setBroadcasts([]); setLoadError({ msg: res.message, kind: res.kind }); }
-    else { setBroadcasts(res.data); setLoadError(null); }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => {
-    adminFetch<{ courses: number; operators: number }>('/api/admin/broadcasts?recipients=1', { subject: 'the recipient list' })
-      .then(res => setReach(res.ok ? res.data : null));
-  }, []);
-
-  async function sendBroadcast() {
-    if (!title.trim() || !body.trim() || sending) return;
-    setSending(true); setOutcome(null); setSendErr(null);
-    try {
-      const res = await adminFetch<SendOutcome>('/api/admin/broadcasts', {
-        method: 'POST',
-        body: JSON.stringify({ title: title.trim(), body: body.trim(), sendEmail }),
-        subject: 'this announcement',
-        action: 'send',
-      });
-      if (!res.ok) { setSendErr({ msg: res.message, kind: res.kind }); return; }
-      setOutcome(res.data);
-      setTitle(''); setBody(''); setSendEmail(false); setReviewing(false);
-      load(); onSent();
-    } finally {
-      setSending(false);
-    }
-  }
-
-  const outcomeBad = outcome && (outcome.emailFailures.length > 0 || (outcome.emailRequested && outcome.emailsSent === 0));
-
-  return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="px-8 py-7 max-w-3xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-[18px] font-serif font-semibold tracking-tight text-ink">Announcements</h2>
-            <p className="text-sm text-ink-soft mt-0.5">
-              Shown on every live course&apos;s dashboard{reach ? ` — ${reach.courses} course${reach.courses === 1 ? '' : 's'}, ${reach.operators} operator${reach.operators === 1 ? '' : 's'} right now` : ''}.
-            </p>
-          </div>
-          <button onClick={load} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
-            Refresh
-          </button>
-        </div>
-
-        {loadError && <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => load()} />}
-
-        {/* What actually happened — counted from results, never from the
-            recipient list. */}
-        {outcome && (
-          <div className={'rounded-md px-4 py-3 text-sm mb-5 border ' + (outcomeBad ? 'bg-warn/5 border-warn/20 text-ink' : 'bg-ok/5 border-ok/20 text-ok')}>
-            <div className="font-medium">
-              Posted to {outcome.courses} course dashboard{outcome.courses === 1 ? '' : 's'}
-              {outcome.emailRequested ? ` · ${outcome.emailsSent} of ${outcome.emailRecipients} email${outcome.emailRecipients === 1 ? '' : 's'} delivered to Resend` : ' · no email'}
-            </div>
-            {outcome.emailFailures.length > 0 && (
-              <div className="text-xs text-bad mt-1">Email failed for: {outcome.emailFailures.join(', ')} — they still see it on their dashboard.</div>
-            )}
-          </div>
-        )}
-
-        {isOwner ? (
-          <Card className="p-6 mb-7">
-            <div className="flex items-center gap-2 mb-4">
-              
-              <span className="text-sm font-medium text-ink">{reviewing ? 'Review before sending' : 'New announcement'}</span>
-              {reviewing && (
-                <button onClick={() => setReviewing(false)} className="ml-auto text-xs text-ink-muted hover:text-ink transition-colors">Edit</button>
+        {/* AW-8a (Cam 2026-10-21: "side panel"): who you're talking to and
+            what's open at their course, beside the thread (MP-7b's context,
+            moved out of the header line). */}
+        {selectedCourseId && (
+          <aside className="w-72 shrink-0 border-l border-line bg-white overflow-y-auto hidden lg:block">
+            <div className="px-5 py-5 space-y-5">
+              <button onClick={() => router.push('/admin/courses/' + selectedCourseId)}
+                className="w-full text-center text-[13px] font-medium text-white bg-pine hover:bg-pine-hover rounded-md px-3 py-2">
+                Open the course
+              </button>
+              {!thread?.context ? (
+                <p className="text-xs text-ink-muted">{loading ? 'Loading…' : 'No course details.'}</p>
+              ) : (
+                <>
+                  <section>
+                    <h2 className="text-[13px] font-semibold text-ink mb-1.5">Owner</h2>
+                    {thread.context.operator ? (
+                      <div className="text-sm space-y-1">
+                        <div className="text-ink">{thread.context.operator.name}</div>
+                        {thread.context.operator.phone && <a href={`tel:${thread.context.operator.phone.replace(/[^\d+]/g, '')}`} className="block text-pine hover:text-pine-hover">{thread.context.operator.phone}</a>}
+                        <a href={`mailto:${thread.context.operator.email}`} className="block text-ink-soft hover:text-pine break-all">{thread.context.operator.email}</a>
+                        <div className="text-xs text-ink-muted">{thread.context.operator.lastLoginAt ? `Last in their dashboard ${fmtTime(thread.context.operator.lastLoginAt)}` : 'Never signed in'}</div>
+                      </div>
+                    ) : <p className="text-sm text-bad">No owner login.</p>}
+                  </section>
+                  <section>
+                    <h2 className="text-[13px] font-semibold text-ink mb-1.5">The course</h2>
+                    <div className="text-sm text-ink-soft space-y-1">
+                      <div>{!thread.course.active ? 'Not live' : thread.context.firstWentLiveAt ? `Live since ${new Date(thread.context.firstWentLiveAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Live'}</div>
+                      <div>{thread.context.bookings30d} booking{thread.context.bookings30d === 1 ? '' : 's'} in 30 days{thread.context.lastBookingAt ? ` · last ${fmtTime(thread.context.lastBookingAt)}` : ''}</div>
+                    </div>
+                  </section>
+                  <section>
+                    <h2 className="text-[13px] font-semibold text-ink mb-1.5">Open at their course</h2>
+                    {thread.context.openItems && (thread.context.openItems.changeRequests > 0 || thread.context.openItems.failedCharges > 0) ? (
+                      <div className="text-sm space-y-1">
+                        {thread.context.openItems.changeRequests > 0 && (thread.context.openItems.inquiryId
+                          ? <button onClick={() => router.push(`/admin/inquiries/${thread.context!.openItems!.inquiryId}`)} className="block text-warn hover:underline text-left">{thread.context.openItems.changeRequests} change request{thread.context.openItems.changeRequests === 1 ? '' : 's'} to their page</button>
+                          : <div className="text-warn">{thread.context.openItems.changeRequests} change request{thread.context.openItems.changeRequests === 1 ? '' : 's'} to their page</div>)}
+                        {thread.context.openItems.failedCharges > 0 && <button onClick={() => router.push(`/admin/courses/${selectedCourseId}?tab=money`)} className="block text-bad hover:underline text-left">{thread.context.openItems.failedCharges} failed charge{thread.context.openItems.failedCharges === 1 ? '' : 's'}</button>}
+                      </div>
+                    ) : <p className="text-sm text-ink-muted">Nothing open.</p>}
+                  </section>
+                </>
               )}
             </div>
-            {sendErr && <ErrorBanner message={sendErr.msg} kind={sendErr.kind} onDismiss={() => setSendErr(null)} />}
-
-            {!reviewing ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Title</Eyebrow>
-                  <input value={title} onChange={e => setTitle(e.target.value)} className={iCls} placeholder="Maintenance window this weekend"/></label>
-                </div>
-                <div>
-                  <label className="block"><Eyebrow as="span" className="block mb-1.5">Message</Eyebrow>
-                  <textarea value={body} onChange={e => setBody(e.target.value)} rows={5} className={iCls + ' resize-none'} placeholder="Write your message here. Separate paragraphs with blank lines."/></label>
-                </div>
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <label className="flex items-center gap-3 cursor-pointer select-none">
-                    <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} className="w-4 h-4 accent-pine rounded" />
-                    <div>
-                      <div className="text-sm font-medium text-ink flex items-center gap-1.5">
-                        Also send as email
-                      </div>
-                      <div className="text-xs text-ink-muted mt-0.5">
-                        {reach ? `To ${reach.operators} operator${reach.operators === 1 ? '' : 's'} of live courses` : 'To every operator of a live course'}
-                      </div>
-                    </div>
-                  </label>
-                  <button
-                    onClick={() => setReviewing(true)}
-                    disabled={!title.trim() || !body.trim()}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
-                  >
-                    Preview &amp; confirm
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-paper border border-line rounded-lg p-4">
-                  <Eyebrow className="mb-2">Preview</Eyebrow>
-                  <div className="text-sm font-medium text-ink mb-2">{title}</div>
-                  <div className="text-sm text-ink-soft whitespace-pre-line leading-relaxed">{body}</div>
-                </div>
-                <div className="text-xs text-ink-soft bg-pine/5 border border-pine/20 rounded-md px-3 py-2">
-                  Shows on {reach ? `${reach.courses} course dashboard${reach.courses === 1 ? '' : 's'}` : 'every live course’s dashboard'}
-                  {sendEmail ? ` and emails ${reach ? `${reach.operators} operator${reach.operators === 1 ? '' : 's'}` : 'their operators'}.` : '. No email.'}
-                  {' '}This cannot be recalled.
-                </div>
-                {testNote && <div className="text-xs text-ok">{testNote}</div>}
-                <div className="flex flex-wrap gap-3 pt-1">
-                  <button
-                    onClick={() => setReviewing(false)}
-                    className="px-4 py-2.5 border border-line text-ink-soft hover:text-ink hover:border-line-strong rounded-md text-[12.5px] font-medium transition-colors"
-                  >
-                    Back to edit
-                  </button>
-                  <button
-                    onClick={sendTest}
-                    disabled={testing || sending}
-                    className="flex items-center gap-2 px-4 py-2.5 border border-line text-ink-soft hover:text-ink hover:border-line-strong disabled:opacity-40 rounded-md text-[12.5px] font-medium transition-colors"
-                  >
-                    {testing ? 'Sending test…' : 'Send test to me'}
-                  </button>
-                  <button
-                    onClick={sendBroadcast}
-                    disabled={sending}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white font-medium rounded-md text-[12.5px] transition-colors"
-                  >
-                    
-                    {sending ? 'Sending…' : 'Confirm & send'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </Card>
-        ) : (
-          <div className="bg-paper border border-line rounded-lg px-5 py-4 mb-7 text-sm text-ink-soft">
-            Only the owner can send an announcement. The history is below.
-          </div>
+          </aside>
         )}
-
-        <div>
-          <Eyebrow className="mb-3">History</Eyebrow>
-          {loading && <div className="text-ink-muted text-sm py-8 text-center">Loading...</div>}
-          {!loading && !loadError && broadcasts.length === 0 && (
-            <Card className="text-ink-muted text-sm py-12 text-center">
-              No announcements yet
-            </Card>
-          )}
-          <div className="space-y-3">
-            {broadcasts.map(b => (
-              <Card key={b.id} className="p-5">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <div className="font-medium text-ink text-sm">{b.title}</div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {b.emailSent && <StatusDot status="ok" label="Emailed" />}
-                    {b.dismissalCount > 0 && (
-                      <span className="flex items-center gap-1 text-[11px] text-ink-muted">
-                        {b.dismissalCount} dismissed
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-sm text-ink-soft whitespace-pre-line line-clamp-3 mb-3">{b.body}</div>
-                <div className="text-xs text-ink-muted">{fmtDate(b.createdAt)} · by {b.sentByName}</div>
-              </Card>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

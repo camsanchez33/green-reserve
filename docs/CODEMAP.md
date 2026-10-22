@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-492 source files · 239 routes · 158 libraries · 48 models
+493 source files · 240 routes · 158 libraries · 48 models
 
 ## Single sources of truth
 
@@ -55,8 +55,9 @@ this script with a non-zero exit — that is the point of the tag.
 | `/` | public | public | page | `src/app/page.tsx` | 15 |
 | `/admin` | admin | client-side | page | `src/app/admin/page.tsx` | 295 |
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 211 |
+| `/admin/announcements` | admin | client-side | page | `src/app/admin/announcements/page.tsx` | 261 |
 | `/admin/audit` | admin | client-side | page | `src/app/admin/audit/page.tsx` | 137 |
-| `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
+| `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 12 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 163 |
 | `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 524 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 318 |
@@ -69,7 +70,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 957 |
 | `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2254 |
 | `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 137 |
-| `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 695 |
+| `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 479 |
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 129 |
 | `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 918 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
@@ -303,8 +304,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/email.ts` | 52 | 2044 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +60 more |
 | `src/lib/session.ts` | 51 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/rate-limit.ts` | 44 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
+| `src/lib/format.ts` | 37 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/admin-audit.ts` | 36 | 188 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
-| `src/lib/format.ts` | 36 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/course-time.ts` | 29 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
@@ -313,8 +314,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/dashboard-fetch.ts` | 18 | 43 | SD-10 (from the SD review). | `dfetch`, `DFetchResult` |
 | `src/lib/change-requests.ts` | 17 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
 | `src/lib/inquiry-status.ts` | 16 | 480 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +23 more |
+| `src/lib/admin-fetch.ts` | 15 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/inquiry-call.ts` | 15 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
-| `src/lib/admin-fetch.ts` | 14 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/cancel-policy.ts` | 14 | 240 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardRequired`, `chargesNoShow`, `chargesOnLateCancel` +14 more |
 | `src/lib/course-timeline.ts` | 14 | 165 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload`, `getCourseTimeline` +20 more |
 | `src/lib/shop.ts` | 13 | 156 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
@@ -464,15 +465,15 @@ Sorted the same way.
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
 | `src/components/ui/Card.tsx` | 56 | 17 |  | `Card`, `CARD` |
-| `src/components/ui/StatusDot.tsx` | 51 | 36 |  | `StatusDot` |
+| `src/components/ui/StatusDot.tsx` | 52 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 36 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
-| `src/components/ui/Eyebrow.tsx` | 21 | 19 |  | `Eyebrow`, `EYEBROW` |
-| `src/components/admin/AdminSidebar.tsx` | 17 | 204 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/ui/Eyebrow.tsx` | 20 | 19 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/admin/AdminSidebar.tsx` | 18 | 206 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 11 | 288 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
 | `src/components/dashboard/LoadError.tsx` | 10 | 16 | SD-10. | `LoadError` |
+| `src/components/ui/ErrorState.tsx` | 10 | 96 |  | `ErrorBanner`, `LoadFailure` |
 | `src/components/ui/Modal.tsx` | 10 | 141 | MP-9 (ADMIN_V4 V4-6 §4) — the one dialog. | `Modal`, `ModalActions` |
-| `src/components/ui/ErrorState.tsx` | 9 | 96 |  | `ErrorBanner`, `LoadFailure` |
 | `src/components/CourseHeaderBar.tsx` | 6 | 46 | White-label rule: | `CourseHeaderBar` |
 | `src/components/AuthPhotoShell.tsx` | 4 | 23 |  | `AUTH_PHOTO_LINK`, `AUTH_PHOTO_LINKS`, `AuthPhotoShell` |
 | `src/components/dashboard/money/types.ts` | 4 | 18 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |

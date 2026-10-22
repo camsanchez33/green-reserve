@@ -1,18 +1,71 @@
 {
-  "generatedAt": "2026-10-21T20:50:20.214Z",
+  "generatedAt": "2026-10-22T01:39:30.315Z",
   "repo": {
-    "head": "6b0ebeb",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
+    "head": "e59ed92",
+    "branch": "HEAD",
+    "dirtyCount": 58,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M  ADMIN_V5_SPEC.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  prisma/migrations/20261022003636_brain1a_admin_audit/migration.sql",
+      "M  prisma/schema.prisma",
+      "A  scripts/admin-audit-test.ts",
+      "M  scripts/admin-nav-test.ts",
+      "M  scripts/isolation-test.ts",
+      "A  src/app/admin/audit/page.tsx",
+      "M  src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
+      "M  src/app/admin/employees/page.tsx",
+      "M  src/app/admin/goals/page.tsx",
+      "M  src/app/admin/inquiries/[id]/page.tsx",
+      "M  src/app/admin/inquiries/page.tsx",
+      "M  src/app/admin/layout.tsx",
+      "M  src/app/admin/revenue/page.tsx",
+      "M  src/app/api/admin/agreement-versions/route.ts",
+      "M  src/app/api/admin/archive-course/route.ts",
+      "A  src/app/api/admin/audit/route.ts",
+      "M  src/app/api/admin/backfill-orphaned-inquiries/route.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "e59ed92",
+        "date": "2026-10-22T00:17:07+00:00",
+        "subject": "Codemap and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f8d9737",
+        "date": "2026-10-22T00:16:31+00:00",
+        "subject": "Messages: keep Open the course in the header below lg",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3020c49",
+        "date": "2026-10-22T00:13:32+00:00",
+        "subject": "AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f31213a",
+        "date": "2026-10-21T20:04:52-04:00",
+        "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "42adddb",
+        "date": "2026-10-21T20:50:21+00:00",
+        "subject": "Codemap and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "6b0ebeb",
         "date": "2026-10-21T20:49:35+00:00",
@@ -862,7 +915,7 @@
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-21",
+      "lastTouched": "2026-10-22",
       "ageDays": 0
     },
     {
@@ -875,7 +928,7 @@
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "AGREEMENT_SPEC.md",
@@ -1073,6 +1126,31 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e59ed92",
+      "date": "2026-10-22",
+      "subject": "Codemap and status board"
+    },
+    {
+      "h": "f8d9737",
+      "date": "2026-10-22",
+      "subject": "Messages: keep Open the course in the header below lg"
+    },
+    {
+      "h": "3020c49",
+      "date": "2026-10-22",
+      "subject": "AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)"
+    },
+    {
+      "h": "f31213a",
+      "date": "2026-10-21",
+      "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)"
+    },
+    {
+      "h": "42adddb",
+      "date": "2026-10-21",
+      "subject": "Codemap and status board"
+    },
+    {
       "h": "6b0ebeb",
       "date": "2026-10-21",
       "subject": "AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links"
@@ -1106,31 +1184,6 @@
       "h": "a85a078",
       "date": "2026-10-21",
       "subject": "AW-4b: Today shows each course with its own to-dos; Goals tab (#170)"
-    },
-    {
-      "h": "27af530",
-      "date": "2026-10-21",
-      "subject": "Status board"
-    },
-    {
-      "h": "cbcfb8c",
-      "date": "2026-10-21",
-      "subject": "AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen"
-    },
-    {
-      "h": "ec245d5",
-      "date": "2026-10-21",
-      "subject": "AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card"
-    },
-    {
-      "h": "adf590b",
-      "date": "2026-10-21",
-      "subject": "Status board"
-    },
-    {
-      "h": "914a1c5",
-      "date": "2026-10-21",
-      "subject": "AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today"
     }
   ]
 }

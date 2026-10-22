@@ -117,14 +117,19 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-21 20:50 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 6b0ebeb</span>
-    <span>2 uncommitted</span>
+    <span>2026-10-22 01:39 UTC</span><span>HEAD @ e59ed92</span>
+    <span>58 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">96 runs have shipped that the queue doesn't know about</div>
+<div class="lede">101 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">e59ed92</span><span>Codemap and status board</span></li>
+<li><span class="h">f8d9737</span><span>Messages: keep Open the course in the header below lg</span></li>
+<li><span class="h">3020c49</span><span>AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)</span></li>
+<li><span class="h">f31213a</span><span>AW-7: course page — Bookings, Money, Setup, Contact &amp; notes (#172)</span></li>
+<li><span class="h">42adddb</span><span>Codemap and status board</span></li>
 <li><span class="h">6b0ebeb</span><span>AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links</span></li>
 <li><span class="h">821ddf9</span><span>AW-7: course page — Bookings, Money, Setup, Contact &amp; notes (in review)</span></li>
 <li><span class="h">4abfebb</span><span>AW-6c: Leads column, Add a lead, Move to Talking (#171)</span></li>
@@ -231,9 +236,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M  ADMIN_V5_SPEC.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  prisma/migrations/20261022003636_brain1a_admin_audit/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>A  scripts/admin-audit-test.ts</code></li><li><code>M  scripts/admin-nav-test.ts</code></li><li><code>M  scripts/isolation-test.ts</code></li><li><code>A  src/app/admin/audit/page.tsx</code></li><li><code>M  src/app/admin/courses/[id]/_parts/useCourseDetail.tsx</code></li><li><code>M  src/app/admin/employees/page.tsx</code></li><li><code>M  src/app/admin/goals/page.tsx</code></li><li><code>M  src/app/admin/inquiries/[id]/page.tsx</code></li><li><code>M  src/app/admin/inquiries/page.tsx</code></li><li><code>M  src/app/admin/layout.tsx</code></li><li><code>M  src/app/admin/revenue/page.tsx</code></li><li><code>M  src/app/api/admin/agreement-versions/route.ts</code></li><li><code>M  src/app/api/admin/archive-course/route.ts</code></li><li><code>A  src/app/api/admin/audit/route.ts</code></li><li><code>M  src/app/api/admin/backfill-orphaned-inquiries/route.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -277,9 +282,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-21 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 4d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 0d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 0d</td></tr>
-<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 1d</td></tr>
+<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 2d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 9d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
@@ -314,6 +319,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">e59ed92</td><td class="num">2026-10-22</td><td>Codemap and status board</td></tr>
+<tr><td class="num">f8d9737</td><td class="num">2026-10-22</td><td>Messages: keep Open the course in the header below lg</td></tr>
+<tr><td class="num">3020c49</td><td class="num">2026-10-22</td><td>AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)</td></tr>
+<tr><td class="num">f31213a</td><td class="num">2026-10-21</td><td>AW-7: course page — Bookings, Money, Setup, Contact &amp; notes (#172)</td></tr>
+<tr><td class="num">42adddb</td><td class="num">2026-10-21</td><td>Codemap and status board</td></tr>
 <tr><td class="num">6b0ebeb</td><td class="num">2026-10-21</td><td>AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links</td></tr>
 <tr><td class="num">821ddf9</td><td class="num">2026-10-21</td><td>AW-7: course page — Bookings, Money, Setup, Contact &amp; notes (in review)</td></tr>
 <tr><td class="num">4abfebb</td><td class="num">2026-10-21</td><td>AW-6c: Leads column, Add a lead, Move to Talking (#171)</td></tr>
@@ -321,11 +331,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">fe16f64</td><td class="num">2026-10-21</td><td>AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)</td></tr>
 <tr><td class="num">d58220f</td><td class="num">2026-10-21</td><td>AW-6b: inquiry page — the one next step first (#169)</td></tr>
 <tr><td class="num">a85a078</td><td class="num">2026-10-21</td><td>AW-4b: Today shows each course with its own to-dos; Goals tab (#170)</td></tr>
-<tr><td class="num">27af530</td><td class="num">2026-10-21</td><td>Status board</td></tr>
-<tr><td class="num">cbcfb8c</td><td class="num">2026-10-21</td><td>AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen</td></tr>
-<tr><td class="num">ec245d5</td><td class="num">2026-10-21</td><td>AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card</td></tr>
-<tr><td class="num">adf590b</td><td class="num">2026-10-21</td><td>Status board</td></tr>
-<tr><td class="num">914a1c5</td><td class="num">2026-10-21</td><td>AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

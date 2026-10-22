@@ -4,14 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 20:50 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6b0ebeb` · working tree **2 dirty file(s)**
+Generated 2026-10-22 01:39 UTC · branch `HEAD` · HEAD `e59ed92` · working tree **58 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 96 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 101 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e59ed92` | 2026-10-22 | Codemap and status board |
+| `f8d9737` | 2026-10-22 | Messages: keep Open the course in the header below lg |
+| `3020c49` | 2026-10-22 | AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review) |
+| `f31213a` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (#172) |
+| `42adddb` | 2026-10-21 | Codemap and status board |
 | `6b0ebeb` | 2026-10-21 | AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links |
 | `821ddf9` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (in review) |
 | `4abfebb` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (#171) |
@@ -111,13 +116,31 @@ Generated 2026-10-21 20:50 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (58 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `M  ADMIN_V5_SPEC.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  prisma/migrations/20261022003636_brain1a_admin_audit/migration.sql`
+- `M  prisma/schema.prisma`
+- `A  scripts/admin-audit-test.ts`
+- `M  scripts/admin-nav-test.ts`
+- `M  scripts/isolation-test.ts`
+- `A  src/app/admin/audit/page.tsx`
+- `M  src/app/admin/courses/[id]/_parts/useCourseDetail.tsx`
+- `M  src/app/admin/employees/page.tsx`
+- `M  src/app/admin/goals/page.tsx`
+- `M  src/app/admin/inquiries/[id]/page.tsx`
+- `M  src/app/admin/inquiries/page.tsx`
+- `M  src/app/admin/layout.tsx`
+- `M  src/app/admin/revenue/page.tsx`
+- `M  src/app/api/admin/agreement-versions/route.ts`
+- `M  src/app/api/admin/archive-course/route.ts`
+- `A  src/app/api/admin/audit/route.ts`
+- `M  src/app/api/admin/backfill-orphaned-inquiries/route.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -200,9 +223,9 @@ Nothing awaiting review.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-21 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 4d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 1d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 9d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 13d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 13d |
@@ -238,6 +261,11 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `e59ed92` 2026-10-22 — Codemap and status board
+- `f8d9737` 2026-10-22 — Messages: keep Open the course in the header below lg
+- `3020c49` 2026-10-22 — AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)
+- `f31213a` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)
+- `42adddb` 2026-10-21 — Codemap and status board
 - `6b0ebeb` 2026-10-21 — AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links
 - `821ddf9` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)
 - `4abfebb` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (#171)
@@ -245,11 +273,6 @@ Nothing awaiting review.
 - `fe16f64` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)
 - `d58220f` 2026-10-21 — AW-6b: inquiry page — the one next step first (#169)
 - `a85a078` 2026-10-21 — AW-4b: Today shows each course with its own to-dos; Goals tab (#170)
-- `27af530` 2026-10-21 — Status board
-- `cbcfb8c` 2026-10-21 — AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen
-- `ec245d5` 2026-10-21 — AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card
-- `adf590b` 2026-10-21 — Status board
-- `914a1c5` 2026-10-21 — AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today
 
 ---
 
