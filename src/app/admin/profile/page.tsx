@@ -7,8 +7,6 @@ import OwnerPasskeysCard from '@/components/admin/OwnerPasskeysCard';
 import OwnerDevicesCard from '@/components/admin/OwnerDevicesCard';
 import OwnerSignOutEverywhere from '@/components/admin/OwnerSignOutEverywhere';
 import OwnerTwoFactorCard from '@/components/admin/OwnerTwoFactorCard';
-import { Card } from '@/components/ui/Card';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 import { INPUT_COMPACT } from '@/components/ui/field';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -49,77 +47,73 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar active="profile" />
       <div className="admin-content flex-1 min-h-screen">
         <div className="px-10 py-8 max-w-xl">
 
-          <div className="mb-6">
-            <h1 className="text-[30px] leading-none font-serif text-ink">My profile</h1>
-            <p className="text-sm text-ink-soft mt-0.5">Account details and password</p>
+          <div className="mb-8">
+            <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">My profile</h1>
+            <p className="mt-2 text-[14px] text-ink-soft">Your account, your password and how you sign in.</p>
           </div>
 
-          {/* Account info */}
-          <Card className="p-5 mb-5">
-            <div className="flex items-center gap-2 mb-4">
-              
-              <span className="text-sm font-medium text-ink">Account</span>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b border-line-soft">
-                <Eyebrow as="span">Name</Eyebrow>
+          {/* ADMIN-C (AW-16, "rework, make more organized"): who you are, your
+              password, then — for the owner — everything that guards the owner door. */}
+          <section className="mb-8">
+            <h2 className="text-[20px] font-bold text-ink">Your account</h2>
+            <div className="mt-3 border border-line rounded-lg divide-y divide-line-soft">
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-[13.5px] text-ink-soft">Name</span>
                 <span className="text-sm text-ink font-medium">{session.name}</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-line-soft">
-                <Eyebrow as="span">Email</Eyebrow>
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-[13.5px] text-ink-soft">Email</span>
                 <span className="text-sm text-ink">{session.email}</span>
               </div>
-              <div className="flex items-center justify-between py-2">
-                <Eyebrow as="span">Role</Eyebrow>
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-[13.5px] text-ink-soft">Role</span>
                 <span className="text-sm text-ink font-medium">{ROLE_LABELS[session.role ?? ''] ?? session.role}</span>
               </div>
             </div>
-            {session.role === 'owner' && <OwnerSignOutEverywhere />}
-          </Card>
+          </section>
 
-          {/* OWNER TOTP 2FA — enrolment lives here, owner only. */}
-          {session.role === 'owner' && <OwnerPasskeysCard />}
-          {session.role === 'owner' && <OwnerDevicesCard />}
-          {session.role === 'owner' && <OwnerTwoFactorCard mfaSession={session.mfa === true} />}
-
-          {/* Change password */}
-          <Card className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              
-              <span className="text-sm font-medium text-ink">Change password</span>
-            </div>
+          <section className="mb-8">
+            <h2 className="text-[20px] font-bold text-ink">Password</h2>
             {cpError && (
-              <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mb-4">{cpError}</div>
+              <div role="alert" className="mt-3 bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm">{cpError}</div>
             )}
             {cpSuccess && (
-              <div className="bg-ok/5 border border-ok/20 rounded-md px-3 py-2 text-ok text-sm mb-4">{cpSuccess}</div>
+              <div role="status" className="mt-3 bg-ok/5 border border-ok/20 rounded-md px-3 py-2 text-ok text-sm">{cpSuccess}</div>
             )}
-            <form onSubmit={handleChangePassword} className="space-y-3">
-              <div>
-                <label className="block"><Eyebrow as="span" className="block mb-1.5">Current password</Eyebrow>
-                <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required className={iCls} /></label>
-              </div>
-              <div>
-                <label className="block"><Eyebrow as="span" className="block mb-1.5">New password</Eyebrow>
-                <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required placeholder="Min 8 characters" className={iCls} /></label>
-              </div>
-              <div>
-                <label className="block"><Eyebrow as="span" className="block mb-1.5">Confirm new password</Eyebrow>
-                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required className={iCls} /></label>
-              </div>
+            <form onSubmit={handleChangePassword} className="mt-3 space-y-3">
+              <label className="block"><span className="block mb-1.5 text-[13.5px] text-ink-soft">Current password</span>
+              <input type="password" value={cpCurrent} onChange={e => setCpCurrent(e.target.value)} required className={iCls} /></label>
+              <label className="block"><span className="block mb-1.5 text-[13.5px] text-ink-soft">New password</span>
+              <input type="password" value={cpNew} onChange={e => setCpNew(e.target.value)} required placeholder="Min 8 characters" className={iCls} /></label>
+              <label className="block"><span className="block mb-1.5 text-[13.5px] text-ink-soft">Confirm new password</span>
+              <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required className={iCls} /></label>
               <div className="pt-1">
                 <button type="submit" disabled={cpLoading || !cpCurrent || !cpNew || !cpConfirm}
-                  className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium px-5 py-2 rounded-md transition-colors">
+                  className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[13px] font-medium px-5 py-2 rounded-md transition-colors">
                   {cpLoading ? 'Saving…' : 'Update password'}
                 </button>
               </div>
             </form>
-          </Card>
+          </section>
+
+          {/* OWNER: passkeys, trusted devices, the authenticator app, sign out everywhere. */}
+          {session.role === 'owner' && (
+            <section className="flex flex-col gap-5">
+              <div>
+                <h2 className="text-[20px] font-bold text-ink">Owner security</h2>
+                <p className="mt-1 text-[14px] text-ink-soft">How you prove it&rsquo;s you at /cam, and which devices are signed in.</p>
+              </div>
+              <OwnerPasskeysCard />
+              <OwnerDevicesCard />
+              <OwnerTwoFactorCard mfaSession={session.mfa === true} />
+              <OwnerSignOutEverywhere />
+            </section>
+          )}
 
         </div>
       </div>
