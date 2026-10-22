@@ -20,6 +20,8 @@ async function cleanup() {
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.courseEvent.deleteMany({ where: { courseId } });
   await prisma.teeTimeSchedule.deleteMany({ where: { courseId } });
+  await prisma.courseProduct.deleteMany({ where: { courseId } });
+  await prisma.nine.deleteMany({ where: { courseId } });
   await prisma.blackout.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
@@ -153,6 +155,32 @@ async function main() {
   const left = await prisma.teeTime.findMany({ where: { courseId, date: openDay, time: { gte: '07:00', lte: '12:30' } }, select: { status: true, eventId: true } });
   check('moving an event onto a closed day reopens the day it left', left.length === 34 && left.every(t => t.status === 'available' && t.eventId === null), JSON.stringify(left.filter(t => t.status !== 'available').length));
   await cancelEvent(courseId, ce.event.id);
+
+  // Sharing the course (Cam 2026-10-22): a shotgun on the front nine, with 8:00 kept open.
+  const two = await prisma.course.create({ data: { name: 'W29b', slug: `${TAG}-2`, operatorId: op.id, address: '1', city: 'T', state: 'NJ', zipCode: '07000', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC' } });
+  const front = await prisma.nine.create({ data: { courseId: two.id, name: 'Front' } });
+  const back = await prisma.nine.create({ data: { courseId: two.id, name: 'Back' } });
+  const f9 = await prisma.courseProduct.create({ data: { courseId: two.id, label: 'Front 9', holes: 9, nineIds: [front.id] } });
+  const b9 = await prisma.courseProduct.create({ data: { courseId: two.id, label: 'Back 9', holes: 9, nineIds: [back.id] } });
+  for (const pr of [f9, b9]) await prisma.teeTimeSchedule.create({ data: { courseId: two.id, productId: pr.id, daysOfWeek: [], startTime: '07:00', endTime: '10:00', intervalMinutes: 10, holes: 9, greenFeeWeekdayCents: 3000, greenFeeWeekendCents: 3500 } });
+  const shareDay = '2031-08-05';
+  await generateTeeTimes(two.id, shareDay);
+  const shared = { name: 'Front nine scramble', kind: 'outing', date: shareDay, format: 'shotgun', startTime: '08:00', holes: 9, shareCourse: true, holdNineIds: [front.id], keepOpen: ['08:00'] };
+  const spv = await previewEvent(two.id, shared);
+  check('preview lists every time the shared event could take', spv.windowTimes.includes('08:00') && spv.windowTimes[0] === '07:00', JSON.stringify(spv.windowTimes.slice(0, 3)));
+  const se = await createEvent(two.id, shared, 'x');
+  const at = (pid: string, time: string) => prisma.teeTime.findFirstOrThrow({ where: { courseId: two.id, date: shareDay, productId: pid, time } });
+  check('a shared shotgun holds its nine', (await at(f9.id, '07:30')).eventId === se.event.id);
+  check('…leaves the other nine on sale', (await at(b9.id, '07:30')).status === 'available');
+  check('…and keeps the chosen time open', (await at(f9.id, '08:00')).status === 'available');
+  // Changing which times stay open moves the hold with it.
+  await updateEvent(two.id, se.event.id, { ...shared, keepOpen: ['08:10'] });
+  check('a time no longer kept open is held', (await at(f9.id, '08:00')).eventId === se.event.id);
+  check('a newly kept-open time goes back on sale', (await at(f9.id, '08:10')).status === 'available');
+  const otherCourseNine = await prisma.nine.create({ data: { courseId, name: 'Elsewhere' } });
+  let nineRefused = false;
+  try { await createEvent(two.id, { ...shared, holdNineIds: [otherCourseNine.id] }, 'x'); } catch (e) { nineRefused = e instanceof EventError; }
+  check('another course\u2019s nine is refused', nineRefused);
 
   // Validation.
   const bad = async (i: Record<string, unknown>) => { try { await createEvent(courseId, i, 'x'); return ''; } catch (e) { return e instanceof EventError ? e.message : 'other'; } };

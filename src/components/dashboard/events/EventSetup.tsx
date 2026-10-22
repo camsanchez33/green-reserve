@@ -13,10 +13,13 @@ import { formatTeeDay, formatTeeTime } from '@/lib/format';
 export type EventForm = {
   name: string; kind: string; date: string; format: 'shotgun' | 'tee_times'; startTime: string; holes: number;
   groups: string; players: string; productId: string; holdTo: string;
+  /** Cam 2026-10-22: false = the event closes the course in its window; true = it shares it. */
+  shareCourse: boolean; holdNineIds: string[]; keepOpen: string[];
   organizerName: string; organizerEmail: string; organizerPhone: string;
   pricePerPlayer: string; includes: string[]; terms: string; notes: string;
 };
-type Preview = { holdFrom: string; holdTo: string; teeTimes: number; teeTimesFound: number | null; booked: { time: string; golfers: string }[]; otherEvent: boolean };
+type Preview = { holdFrom: string; holdTo: string; teeTimes: number; teeTimesFound: number | null; booked: { time: string; golfers: string }[]; otherEvent: boolean; windowTimes: string[] };
+export type NineOpt = { id: string; name: string };
 export type Product = { id: string; label: string; holes: number };
 
 export const KINDS: { key: string; label: string; hint: string }[] = [
@@ -29,7 +32,7 @@ const INCLUDES = ['Cart', 'Range balls', 'Food', 'Drinks', 'Prizes', 'Gift bag']
 const STEPS = ['What it is', 'When', 'Who and what', 'Review'];
 
 export const blankForm = (date: string): EventForm => ({
-  name: '', kind: 'outing', date, format: 'shotgun', startTime: '08:00', holes: 18, groups: '', players: '', productId: '', holdTo: '',
+  name: '', kind: 'outing', date, format: 'shotgun', startTime: '08:00', holes: 18, groups: '', players: '', productId: '', holdTo: '', shareCourse: false, holdNineIds: [], keepOpen: [],
   organizerName: '', organizerEmail: '', organizerPhone: '', pricePerPlayer: '', includes: [], terms: '', notes: '',
 });
 
@@ -38,8 +41,8 @@ const BTN = 'px-4 py-2.5 rounded-md text-[13.5px] font-medium transition-colors 
 const PRIMARY = BTN + ' bg-pine hover:bg-pine-hover text-white';
 const SECONDARY = BTN + ' bg-white border border-line text-ink hover:bg-paper';
 
-export default function EventSetup({ initial, eventId, products, courseHoles, onSaved, onCancel }: {
-  initial: EventForm; eventId?: string; products: Product[]; courseHoles: number;
+export default function EventSetup({ initial, eventId, products, nines, courseHoles, onSaved, onCancel }: {
+  initial: EventForm; eventId?: string; products: Product[]; nines: NineOpt[]; courseHoles: number;
   onSaved: (id: string, held: number, booked: number) => void; onCancel: () => void;
 }) {
   const [f, setF] = useState<EventForm>(initial);
@@ -51,7 +54,7 @@ export default function EventSetup({ initial, eventId, products, courseHoles, on
   const [custom, setCustom] = useState('');
   // Changing the hold's end keeps the review on screen but has to be checked again before saving.
   const [stale, setStale] = useState(false);
-  const set = <K extends keyof EventForm>(k: K, v: EventForm[K]) => { setF(p => ({ ...p, [k]: v })); if (k === 'holdTo') setStale(true); else setPreview(null); };
+  const set = <K extends keyof EventForm>(k: K, v: EventForm[K]) => { setF(p => ({ ...p, [k]: v })); if (k === 'holdTo' || k === 'keepOpen') setStale(true); else setPreview(null); };
 
   const body = () => ({
     ...f,
@@ -181,6 +184,39 @@ export default function EventSetup({ initial, eventId, products, courseHoles, on
               ? `A shotgun holds every tee time from an hour before the start to the end of the round (${f.holes === 9 ? '2¼' : '4½'} hours after). You can end the hold at another time on the last step.`
               : 'The event holds that many tee times in a row from the first one.'}
           </p>
+          <div>
+            <span className={LABEL}>How much of the course does it use?</span>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {([[false, f.format === 'tee_times' && f.productId ? 'All of that round' : 'The whole course', f.format === 'tee_times' && f.productId ? 'None of that round\u2019s times in the event\u2019s hours can be booked.' : 'Nothing in the event\u2019s hours can be booked. Most events.'],
+                 [true, 'Part of it', 'Choose the holes it uses and which times golfers can still book.']] as const).map(([v, l, h]) => (
+                <button key={l} onClick={() => { set('shareCourse', v); if (!v) { set('holdNineIds', []); set('keepOpen', []); } }} aria-pressed={f.shareCourse === v}
+                  className={'text-left rounded-md border px-3.5 py-3 transition-colors ' + (f.shareCourse === v ? 'border-pine bg-pine/[0.05]' : 'border-line bg-white hover:bg-paper')}>
+                  <div className="text-[14px] font-medium text-ink">{l}</div>
+                  <div className="text-[12.5px] text-ink-soft mt-0.5">{h}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          {f.shareCourse && f.format === 'shotgun' && nines.length > 1 && (
+            <fieldset>
+              <legend className={LABEL}>Holes it uses</legend>
+              <div className="flex flex-wrap gap-2">
+                {nines.map(n => {
+                  const on = f.holdNineIds.length === 0 || f.holdNineIds.includes(n.id);
+                  const next = on ? (f.holdNineIds.length === 0 ? nines.map(x => x.id) : f.holdNineIds).filter(id => id !== n.id) : [...f.holdNineIds, n.id];
+                  return (
+                    <label key={n.id} className="flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-[13.5px] text-ink">
+                      <input type="checkbox" className="accent-pine" checked={on} disabled={on && next.length === 0}
+                        onChange={() => set('holdNineIds', next.length === nines.length ? [] : next)} />
+                      {n.name}
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-[12.5px] text-ink-soft mt-1.5">Rounds on the other nines stay on sale.</p>
+            </fieldset>
+          )}
+          {f.shareCourse && <p className="text-[13px] text-ink-soft">On the last step you can pick times in the event&apos;s hours that golfers can still book.</p>}
         </div>
       )}
 
@@ -267,6 +303,22 @@ export default function EventSetup({ initial, eventId, products, courseHoles, on
                   <input type="time" step={60} className={INPUT + ' w-36'} value={f.holdTo || preview.holdTo} onChange={e => set('holdTo', e.target.value)} />
                   {f.holdTo && <button onClick={() => set('holdTo', '')} className="text-[13px] text-ink-soft underline">Reset</button>}
                 </label>
+                {f.shareCourse && preview.windowTimes.length > 0 && (
+                  <fieldset className="pt-1">
+                    <legend className="text-ink-soft mb-1.5">Tap a time to keep it open for golfers</legend>
+                    <div className="flex flex-wrap gap-1.5">
+                      {preview.windowTimes.map(t => {
+                        const open = f.keepOpen.includes(t);
+                        return (
+                          <button key={t} type="button" aria-pressed={open} onClick={() => set('keepOpen', open ? f.keepOpen.filter(x => x !== t) : [...f.keepOpen, t].sort())}
+                            className={'px-2.5 py-1.5 rounded-md border text-[12.5px] tabular-nums ' + (open ? 'border-pine bg-pine/[0.06] text-ink font-medium' : 'border-line bg-white text-ink-soft')}>
+                            {formatTeeTime(t)}{open ? ' · open' : ''}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
                 {stale && <button onClick={loadPreview} disabled={busy} className="text-[13px] text-ink underline">Check the new hold</button>}
               </div>
             )}

@@ -22,6 +22,15 @@ const tt = ev({ id: 't', format: 'tee_times', holdFrom: '13:00', holdTo: '13:20'
 check('a tee-times event on one round holds only that round', heldBy([tt], 'front', '13:10')?.id === 't' && heldBy([tt], 'back', '13:10') === null);
 check('a tee-times event on every round holds them all', heldBy([ev({ format: 'tee_times', productId: null })], 'back', '08:00') !== null);
 
+// Sharing the course (Cam 2026-10-22): only the chosen nines, minus the times kept open.
+const share = ev({ id: 's', shareCourse: true, holdNineIds: ['front'], keepOpen: ['08:00'] });
+check('a shared event holds a round on its nine', heldBy([share], 'f9', '07:30', ['front'])?.id === 's');
+check('…an 18 that plays its nine too', heldBy([share], 'f18', '07:30', ['front', 'back'])?.id === 's');
+check('…but not a round on the other nine', heldBy([share], 'b9', '07:30', ['back']) === null);
+check('…nor a time kept open for golfers', heldBy([share], 'f9', '08:00', ['front']) === null);
+check('a round with no nines (a simple course) counts as using every nine', heldBy([share], null, '07:30', null)?.id === 's');
+check('keepOpen and nines mean nothing unless the course is shared', heldBy([ev({ keepOpen: ['08:00'], holdNineIds: ['front'] })], 'b9', '08:00', ['back'])?.id === 'e');
+
 const ps = Array.from({ length: 10 }, (_, i) => ({ id: `p${i}` }));
 const four = autoPairings(ps, 4, true, 18);
 check('pairs of four in list order', four.map(p => p.groupNo).join('') === '1111222233', four);

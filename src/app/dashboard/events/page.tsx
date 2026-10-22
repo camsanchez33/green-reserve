@@ -9,7 +9,7 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
-import EventSetup, { blankForm, KINDS, type EventForm, type Product } from '@/components/dashboard/events/EventSetup';
+import EventSetup, { blankForm, KINDS, type EventForm, type Product, type NineOpt } from '@/components/dashboard/events/EventSetup';
 import EventDetail, { type EventData } from '@/components/dashboard/events/EventDetail';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
@@ -19,7 +19,7 @@ type Row = {
   id: string; name: string; kind: string; date: string; format: string; startTime: string; holes: number; status: string;
   players: number; entrantCount: number; heldCount: number; tasksOpen: number; tasksOverdue: number;
 };
-type List = { today: string; courseHoles: number; products: Product[]; events: Row[] };
+type List = { today: string; courseHoles: number; products: Product[]; nines: NineOpt[]; events: Row[] };
 
 // Printing the pairings prints only the sheet: the bar, tabs and assistant stay off paper.
 const PRINT_CSS = '@media print { header, nav, [data-print-hide] { display: none !important; } body { background: #fff; } }';
@@ -31,6 +31,7 @@ function toForm(d: EventData): EventForm {
     groups: e.groups ? String(e.groups) : '', players: e.players ? String(e.players) : '', productId: e.productId ?? '',
     // Keep a hold end the course set by hand; an automatic one is worked out again.
     holdTo: e.holdToCustom ? e.holdTo : '',
+    shareCourse: e.shareCourse, holdNineIds: e.holdNineIds, keepOpen: e.keepOpen,
     organizerName: e.organizerName, organizerEmail: e.organizerEmail, organizerPhone: e.organizerPhone,
     pricePerPlayer: e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '', includes: e.includes, terms: e.terms, notes: e.notes,
   };
@@ -59,6 +60,13 @@ function EventsInner() {
     if (!r.ok) { setLoadError(r.error); return; }
     setDetail(r.data);
   }, []);
+  // After a payment action: refresh in place (the event stays on screen).
+  const refreshDetail = useCallback(async () => {
+    if (!id) return;
+    const r = await dfetch<EventData>(`/api/operator/events/${id}`);
+    if (!r.ok) { setNote(`Saved, but the page couldn\u2019t refresh: ${r.error}`); return; }
+    setDetail(r.data); loadList();
+  }, [id, loadList]);
 
   useEffect(() => { loadList(); }, [loadList]);
   useEffect(() => { if (id) loadDetail(id); else setDetail(null); }, [id, loadDetail]);
@@ -113,13 +121,14 @@ function EventsInner() {
                 key={mode + (detail?.event.id ?? '')}
                 initial={mode === 'edit' && detail ? toForm(detail) : blankForm(list.today)}
                 eventId={mode === 'edit' ? detail?.event.id : undefined}
-                products={list.products} courseHoles={list.courseHoles}
+                products={list.products} nines={list.nines} courseHoles={list.courseHoles}
                 onSaved={saved} onCancel={() => setMode('view')} />
             )}
 
             {mode === 'view' && id && detail && (
               <EventDetail data={detail} onChange={d => { setDetail(d); loadList(); }} onEdit={() => { setNote(''); setMode('edit'); }}
-                onBack={() => { setNote(''); router.push('/dashboard/events'); }} />
+                onBack={() => { setNote(''); router.push('/dashboard/events'); }}
+                canRefund={!access.loaded || access.can('money.refund')} reload={refreshDetail} />
             )}
             {mode === 'view' && id && !detail && !loadError && <p className="text-sm text-ink-muted">Loading the event…</p>}
 

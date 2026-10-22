@@ -117,16 +117,26 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-22 01:48 UTC</span><span>pr-w29 @ b5e43a0</span>
-    <span>27 uncommitted</span>
+    <span>2026-10-22 02:39 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 40be0a7</span>
+    <span>24 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">111 runs have shipped that the queue doesn't know about</div>
+<div class="lede">121 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">40be0a7</span><span>Status board</span></li>
+<li><span class="h">e449074</span><span>W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close</span></li>
+<li><span class="h">4438d60</span><span>Status board</span></li>
+<li><span class="h">b001c14</span><span>W2-9b: narrow the recorded payment in the test (typecheck)</span></li>
+<li><span class="h">4086e37</span><span>W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds</span></li>
+<li><span class="h">7feae5c</span><span>W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup</span></li>
+<li><span class="h">478ec76</span><span>W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet</span></li>
+<li><span class="h">8c73613</span><span>W2-9a: releasing an event's hold checks the day being released, not the day it moved to</span></li>
+<li><span class="h">e85978d</span><span>W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit</span></li>
 <li><span class="h">ce88bd1</span><span>Codemap and status board</span></li>
 <li><span class="h">087c1a2</span><span>W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks</span></li>
+<li><span class="h">28a5f3a</span><span>W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings</span></li>
 <li><span class="h">164896a</span><span>BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)</span></li>
 <li><span class="h">0cb3627</span><span>W2-8b: a regular who has booked again is not 'gone quiet'</span></li>
 <li><span class="h">ffcefc6</span><span>W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet</span></li>
@@ -248,7 +258,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  OPERATOR_REWORK_SPEC.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  prisma/migrations/20261022010603_w2_9_events/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>M  scripts/design-guard.baseline.json</code></li><li><code>A  scripts/events-db-test.ts</code></li><li><code>A  scripts/events-test.ts</code></li><li><code>M  src/app/api/operator/blackouts/route.ts</code></li><li><code>A  src/app/api/operator/events/[id]/route.ts</code></li><li><code>A  src/app/api/operator/events/route.ts</code></li><li><code>M  src/app/api/operator/tee-times/route.ts</code></li><li><code>A  src/app/dashboard/events/page.tsx</code></li><li><code>M  src/app/dashboard/outings/page.tsx</code></li><li><code>M  src/app/dashboard/page.tsx</code></li><li><code>M  src/app/dashboard/tournaments/page.tsx</code></li><li><code>M  src/components/OperatorSidebar.tsx</code></li><li><code>M  src/components/dashboard/StaffPermissions.tsx</code></li><li><code>M  src/components/dashboard/TeeSheetBoard.tsx</code></li><li><code>A  src/components/dashboard/events/EventDetail.tsx</code></li></ul>
+<ul class="plain"><li><code>M  ADMIN_V5_SPEC.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>M  scripts/admin-course-page-test.ts</code></li><li><code>A  scripts/course-feed-db-test.ts</code></li><li><code>A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx</code></li><li><code>M  src/app/admin/courses/[id]/page.tsx</code></li><li><code>M  src/app/admin/system/page.tsx</code></li><li><code>A  src/app/api/admin/course-feed/route.ts</code></li><li><code>M  src/app/api/admin/resend-staff-setup/route.ts</code></li><li><code>A  src/app/api/admin/sentry-test/route.ts</code></li><li><code>M  src/app/api/operator/bookings/route.ts</code></li><li><code>M  src/app/api/operator/events/[id]/route.ts</code></li><li><code>M  src/app/api/operator/shop-sales/route.ts</code></li><li><code>M  src/lib/admin-audit.ts</code></li><li><code>M  src/lib/admin-course-tabs.ts</code></li><li><code>A  src/lib/course-timeline-groups.ts</code></li><li><code>M  src/lib/course-timeline.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -295,52 +305,52 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 2d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 9d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 10d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">40be0a7</td><td class="num">2026-10-22</td><td>Status board</td></tr>
+<tr><td class="num">e449074</td><td class="num">2026-10-22</td><td>W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close</td></tr>
+<tr><td class="num">4438d60</td><td class="num">2026-10-22</td><td>Status board</td></tr>
+<tr><td class="num">b001c14</td><td class="num">2026-10-22</td><td>W2-9b: narrow the recorded payment in the test (typecheck)</td></tr>
+<tr><td class="num">4086e37</td><td class="num">2026-10-22</td><td>W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds</td></tr>
+<tr><td class="num">7feae5c</td><td class="num">2026-10-22</td><td>W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup</td></tr>
+<tr><td class="num">478ec76</td><td class="num">2026-10-22</td><td>W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet</td></tr>
+<tr><td class="num">512e214</td><td class="num">2026-10-22</td><td>queue/spec update</td></tr>
+<tr><td class="num">8c73613</td><td class="num">2026-10-22</td><td>W2-9a: releasing an event's hold checks the day being released, not the day it moved to</td></tr>
+<tr><td class="num">e85978d</td><td class="num">2026-10-22</td><td>W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit</td></tr>
 <tr><td class="num">ce88bd1</td><td class="num">2026-10-22</td><td>Codemap and status board</td></tr>
 <tr><td class="num">087c1a2</td><td class="num">2026-10-22</td><td>W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks</td></tr>
-<tr><td class="num">164896a</td><td class="num">2026-10-21</td><td>BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)</td></tr>
-<tr><td class="num">0cb3627</td><td class="num">2026-10-22</td><td>W2-8b: a regular who has booked again is not 'gone quiet'</td></tr>
-<tr><td class="num">ffcefc6</td><td class="num">2026-10-22</td><td>W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet</td></tr>
-<tr><td class="num">aad9ee0</td><td class="num">2026-10-22</td><td>W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players</td></tr>
-<tr><td class="num">f367f8d</td><td class="num">2026-10-22</td><td>W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents</td></tr>
-<tr><td class="num">e8c4fe4</td><td class="num">2026-10-22</td><td>W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan</td></tr>
-<tr><td class="num">1d2a5db</td><td class="num">2026-10-21</td><td>BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)</td></tr>
-<tr><td class="num">4cd3e1a</td><td class="num">2026-10-22</td><td>W2-6 Schedule simplification: open hours, what golfers can book, one price table</td></tr>
-<tr><td class="num">e59ed92</td><td class="num">2026-10-22</td><td>Codemap and status board</td></tr>
-<tr><td class="num">f8d9737</td><td class="num">2026-10-22</td><td>Messages: keep Open the course in the header below lg</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

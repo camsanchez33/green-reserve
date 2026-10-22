@@ -23,7 +23,7 @@ export async function GET() {
   const courseId = g.session.courseId;
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true, holes: true } });
   const today = todayIn(course?.timezone);
-  const [events, products] = await Promise.all([
+  const [events, products, nines] = await Promise.all([
     prisma.courseEvent.findMany({
       where: { courseId },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
@@ -34,11 +34,14 @@ export async function GET() {
       },
     }),
     prisma.courseProduct.findMany({ where: { courseId, active: true }, select: { id: true, label: true, holes: true }, orderBy: { sortOrder: 'asc' } }),
+    // Sharing the course: a shotgun can use some of the nines.
+    prisma.nine.findMany({ where: { courseId }, select: { id: true, name: true }, orderBy: { sortOrder: 'asc' } }),
   ]);
   return NextResponse.json({
     today,
     courseHoles: course?.holes ?? 18,
     products,
+    nines,
     events: events.map(({ tasks, _count, ...e }) => ({
       ...e,
       entrantCount: _count.entrants,

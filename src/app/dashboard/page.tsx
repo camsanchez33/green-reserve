@@ -999,7 +999,7 @@ function DashboardPageInner() {
                   ? <ul className="divide-y divide-line-soft">{groups.map(b => groupRow(b, panelSlot))}</ul>
                   : <p className="py-6 text-[13.5px] text-ink-soft">{panelSlot.status === 'blocked'
                       ? (panelSlot.event
-                        ? <>Held for {access.can('events.manage') ? <Link href={`/dashboard/events?id=${panelSlot.event.id}`} className="text-ink underline">{panelSlot.event.name}</Link> : panelSlot.event.name} — golfers can’t book it. Unblocking takes it out of the event.</>
+                        ? <>Held for {access.can('events.manage') ? <Link href={`/dashboard/events?id=${panelSlot.event.id}`} className="text-ink underline">{panelSlot.event.name}</Link> : panelSlot.event.name} — golfers can’t book it. To sell this time, change the event.</>
                         : 'This time is blocked — golfers can’t book it.')
                       : 'Nobody is booked yet.'}</p>}
               </div>
@@ -1008,12 +1008,12 @@ function DashboardPageInner() {
                 {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (
                   <button onClick={() => setWalkInSlot(panelSlot)} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add a walk-in or phone booking</button>
                 )}
-                {access.can('sheet.block') && (
+                {access.can('sheet.block') && !panelSlot.event && (
                   <button onClick={() => toggleBlock(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">
                     {slotBusy === panelSlot.id ? '…' : panelSlot.status === 'blocked' ? 'Unblock' : 'Block this time'}
                   </button>
                 )}
-                {access.can('sheet.edit_times') && !past && (
+                {access.can('sheet.edit_times') && !past && !panelSlot.event && (
                   <button onClick={() => deleteTime(panelSlot)} disabled={slotBusy === panelSlot.id} className="ml-auto px-2 min-h-[36px] rounded-md text-[13px] font-medium text-ink-muted hover:text-bad disabled:opacity-50">Delete time</button>
                 )}
               </div>

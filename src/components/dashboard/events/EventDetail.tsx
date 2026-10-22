@@ -9,17 +9,18 @@ import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { KINDS } from './EventSetup';
+import EventMoney, { type EventPayment, type Money } from './EventMoney';
 
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
 export type EventPlayer = { id: string; name: string; email: string; phone: string; groupNo: number | null; startHole: number | null };
 export type EventFull = {
-  id: string; name: string; kind: string; date: string; format: string; startTime: string; holdFrom: string; holdTo: string; holdToCustom: boolean;
+  id: string; name: string; kind: string; date: string; format: string; startTime: string; holdFrom: string; holdTo: string; holdToCustom: boolean; shareCourse: boolean; holdNineIds: string[]; keepOpen: string[];
   productId: string | null; holes: number; groups: number; players: number;
   organizerName: string; organizerEmail: string; organizerPhone: string; pricePerPlayerCents: number; includes: string[];
-  terms: string; notes: string; status: string; tasks: EventTask[]; entrants: EventPlayer[];
+  terms: string; notes: string; status: string; tasks: EventTask[]; entrants: EventPlayer[]; payments: EventPayment[];
 };
 export type EventData = {
-  event: EventFull; today: string; courseHoles: number;
+  event: EventFull; today: string; courseHoles: number; money: Money; feeOn: boolean;
   held: { id: string; time: string; round: string | null }[];
   toMove: { time: string; golfers: string }[]; blockedOther: number; unheld: string[];
 };
@@ -28,8 +29,9 @@ const BTN = 'px-3 py-2 rounded-md text-[13px] font-medium transition-colors disa
 const PRIMARY = BTN + ' bg-pine hover:bg-pine-hover text-white';
 const SECONDARY = BTN + ' bg-white border border-line text-ink hover:bg-paper';
 
-export default function EventDetail({ data, onChange, onEdit, onBack }: {
+export default function EventDetail({ data, onChange, onEdit, onBack, canRefund, reload }: {
   data: EventData; onChange: (d: EventData) => void; onEdit: () => void; onBack: () => void;
+  canRefund: boolean; reload: () => Promise<void>;
 }) {
   const { event: e, today, held, toMove } = data;
   const [busy, setBusy] = useState('');
@@ -82,7 +84,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack }: {
               {!confirmCancel
                 ? <button onClick={() => setConfirmCancel(true)} className={SECONDARY + ' text-bad'}>Cancel event</button>
                 : <span className="flex items-center gap-2">
-                    <button disabled={!!busy} onClick={async () => { if (await act('cancel', { action: 'cancel' }, r => `Cancelled. ${Number(r.released ?? 0)} tee time${r.released === 1 ? '' : 's'} went back on sale.`)) setConfirmCancel(false); }}
+                    <button disabled={!!busy} onClick={async () => { if (await act('cancel', { action: 'cancel' }, r => { const errs = (r.linkErrors as string[] | undefined) ?? []; const v = Number(r.linksVoided ?? 0); return `Cancelled. ${Number(r.released ?? 0)} tee time${r.released === 1 ? '' : 's'} went back on sale.${v ? ` ${v} unpaid pay link${v === 1 ? ' was' : 's were'} cancelled.` : ''}${errs.length ? ` ${errs.length === 1 ? 'A pay link' : `${errs.length} pay links`} couldn\u2019t be cancelled — cancel ${errs.length === 1 ? 'it' : 'them'} under Money: ${errs.join('; ')}` : ''}`; })) setConfirmCancel(false); }}
                       className={BTN + ' bg-bad text-white'}>{busy === 'cancel' ? 'Cancelling…' : 'Yes, cancel it'}</button>
                     <button onClick={() => setConfirmCancel(false)} className={SECONDARY}>Keep it</button>
                   </span>}
@@ -101,6 +103,12 @@ export default function EventDetail({ data, onChange, onEdit, onBack }: {
           {held.length === 0 && live
             ? <p className="text-[13.5px] text-ink">No tee times held yet{toMove.length ? '' : ' — the day’s tee times will be held as they are made'}.</p>
             : <p className="text-[13.5px] text-ink">{live ? 'Holding' : 'Held'} {formatTeeTime(e.holdFrom)} to {formatTeeTime(e.holdTo)}{held.length ? ` — ${held.length} tee time${held.length === 1 ? '' : 's'}` : ''}.</p>}
+          {e.shareCourse && (
+            <p className="text-[13px] text-ink-soft mt-1">
+              Shares the course{e.holdNineIds.length ? ' — only the holes chosen for it are held' : ''}.
+              {e.keepOpen.length > 0 && ` Kept open for golfers: ${e.keepOpen.map(formatTeeTime).join(', ')}.`}
+            </p>
+          )}
           {(toMove.length > 0 || data.unheld.length > 0) && (
             <div className="border-l-[3px] border-warn pl-3 mt-3 text-[13.5px] text-ink">
               {toMove.length > 0 && <>
@@ -163,6 +171,11 @@ export default function EventDetail({ data, onChange, onEdit, onBack }: {
             </form>
           )}
         </Card>
+      </div>
+
+      <div className="print:hidden">
+        <EventMoney eventId={e.id} live={live} pricePerPlayerCents={e.pricePerPlayerCents} money={data.money} payments={e.payments} canRefund={canRefund} reload={reload}
+          organizer={{ name: e.organizerName, email: e.organizerEmail, phone: e.organizerPhone }} />
       </div>
 
       <Card className="p-5 print:shadow-none print:p-0">
