@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 21:51 UTC · branch `claude/test-data-reset` · HEAD `8fd8e0f` · working tree **13 dirty file(s)**
+Generated 2026-10-22 22:02 UTC · branch `claude/test-data-reset` · HEAD `2a4d5ec` · working tree **20 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 132 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 134 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `2a4d5ec` | 2026-10-22 | TEST-1 review: a reset releases event-held tee times; wording fixes |
+| `0d72aad` | 2026-10-22 | TEST-1: launch wipe of test data and resettable test courses |
 | `91df6b9` | 2026-10-22 | W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send |
 | `fc5c6aa` | 2026-10-22 | W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through) |
 | `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
@@ -147,21 +149,28 @@ Generated 2026-10-22 21:51 UTC · branch `claude/test-data-reset` · HEAD `8fd8e
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (20 file(s))
 
-- `M CLAUDE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M src/app/admin/courses/[id]/page.tsx`
-- `M src/app/admin/system/page.tsx`
-- `M src/lib/admin-audit.ts`
-- `?? prisma/migrations/20261022214444_test1_course_is_test/`
-- `?? scripts/data-reset-db-test.ts`
-- `?? src/app/api/admin/data-reset/`
-- `?? src/app/api/admin/test-course/`
-- `?? src/components/admin/TestDataTools.tsx`
-- `?? src/lib/data-reset.ts`
+- `M  CLAUDE.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `M  scripts/operator-nav-test.ts`
+- `M  scripts/tt-card-test.ts`
+- `M  src/app/dashboard/analytics/page.tsx`
+- `M  src/app/dashboard/events/page.tsx`
+- `M  src/app/dashboard/layout.tsx`
+- `M  src/app/dashboard/members/page.tsx`
+- `M  src/app/dashboard/messages/page.tsx`
+- `M  src/app/dashboard/money/page.tsx`
+- `M  src/app/dashboard/page.tsx`
+- `M  src/app/dashboard/schedules/page.tsx`
+- `M  src/app/dashboard/settings/page.tsx`
+- `M  src/app/dashboard/shop/page.tsx`
+- `M  src/app/globals.css`
+- `M  src/components/OperatorSidebar.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -286,6 +295,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `2a4d5ec` 2026-10-22 — TEST-1 review: a reset releases event-held tee times; wording fixes
+- `0d72aad` 2026-10-22 — TEST-1: launch wipe of test data and resettable test courses
 - `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
 - `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
@@ -296,8 +307,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `5e73b48` 2026-10-22 — ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)
 - `694230a` 2026-10-22 — W2-9c Events: each player's own pay link; paid at the course per player
 - `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
-- `40be0a7` 2026-10-22 — Status board
-- `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
 
 ---
 

@@ -1,29 +1,50 @@
 {
-  "generatedAt": "2026-10-22T21:51:21.608Z",
+  "generatedAt": "2026-10-22T22:02:12.215Z",
   "repo": {
-    "head": "8fd8e0f",
+    "head": "2a4d5ec",
     "branch": "claude/test-data-reset",
-    "dirtyCount": 13,
+    "dirtyCount": 20,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M src/app/admin/courses/[id]/page.tsx",
-      " M src/app/admin/system/page.tsx",
-      " M src/lib/admin-audit.ts",
-      "?? prisma/migrations/20261022214444_test1_course_is_test/",
-      "?? scripts/data-reset-db-test.ts",
-      "?? src/app/api/admin/data-reset/",
-      "?? src/app/api/admin/test-course/",
-      "?? src/components/admin/TestDataTools.tsx",
-      "?? src/lib/data-reset.ts"
+      "M  CLAUDE.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "M  scripts/operator-nav-test.ts",
+      "M  scripts/tt-card-test.ts",
+      "M  src/app/dashboard/analytics/page.tsx",
+      "M  src/app/dashboard/events/page.tsx",
+      "M  src/app/dashboard/layout.tsx",
+      "M  src/app/dashboard/members/page.tsx",
+      "M  src/app/dashboard/messages/page.tsx",
+      "M  src/app/dashboard/money/page.tsx",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/app/dashboard/schedules/page.tsx",
+      "M  src/app/dashboard/settings/page.tsx",
+      "M  src/app/dashboard/shop/page.tsx",
+      "M  src/app/globals.css",
+      "M  src/components/OperatorSidebar.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "2a4d5ec",
+        "date": "2026-10-22T22:00:32+00:00",
+        "subject": "TEST-1 review: a reset releases event-held tee times; wording fixes",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0d72aad",
+        "date": "2026-10-22T21:51:22+00:00",
+        "subject": "TEST-1: launch wipe of test data and resettable test courses",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "91df6b9",
         "date": "2026-10-22T21:27:19+00:00",
@@ -1339,6 +1360,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "2a4d5ec",
+      "date": "2026-10-22",
+      "subject": "TEST-1 review: a reset releases event-held tee times; wording fixes"
+    },
+    {
+      "h": "0d72aad",
+      "date": "2026-10-22",
+      "subject": "TEST-1: launch wipe of test data and resettable test courses"
+    },
+    {
       "h": "91df6b9",
       "date": "2026-10-22",
       "subject": "W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send"
@@ -1387,16 +1418,6 @@
       "h": "b9fe29f",
       "date": "2026-10-22",
       "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
-    },
-    {
-      "h": "40be0a7",
-      "date": "2026-10-22",
-      "subject": "Status board"
-    },
-    {
-      "h": "e449074",
-      "date": "2026-10-22",
-      "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close"
     }
   ]
 }

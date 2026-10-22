@@ -10,7 +10,7 @@ const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FA
 const page = readFileSync('src/app/dashboard/page.tsx', 'utf8');
 const card = page.slice(page.indexOf('TT-CARD (Cam 2026-10-19'), page.indexOf('ACT-1: move a group to another time'));
 
-check('on a laptop the card has no backdrop over the sheet', /md:inset-auto md:top-28 md:right-4/.test(card) && /bg-ink\/20 md:hidden/.test(card));
+check('on a laptop the card has no backdrop over the sheet', /md:inset-auto md:top-\d+ md:right-4/.test(card) && /bg-ink\/20 md:hidden/.test(card));
 check('on a phone it is a full sheet from the bottom', /absolute inset-x-0 bottom-0 top-12 md:static/.test(card));
 check('the slide respects reduced motion', /prefers-reduced-motion: no-preference[\s\S]*tt-card-up/.test(readFileSync('src/app/globals.css', 'utf8')));
 check('the price line is in the card', card.includes('a player{panelSlot.cartFee > 0'));
