@@ -15,7 +15,8 @@ for (const n of ['sendTwoFactorCodeEmail', 'sendGolferOtpEmail', 'sendAdminTwoFa
   check(`${n} is sent from noreply@ and never asks for a reply`, fn(n).includes('from: FROM_NOREPLY') && !/[Rr]eply (to this email|here)/.test(fn(n)));
 for (const n of ['sendCheckInReceiptEmail', 'sendRefundEmail', 'sendCancellationFeeChargedEmail', 'sendMembershipReceiptEmail'])
   check(`${n} is sent from billing@`, fn(n).includes('from: FROM_BILLING') && fn(n).includes(', BILLING_EMAIL);'));
-for (const n of ['sendBookingConfirmation', 'sendCancellationEmail', 'sendReminderEmail'])
+check('a cancellation that kept a fee comes from billing@, a free one from support@', fn('sendCancellationEmail').includes('from: data.feeCharged ? FROM_BILLING : FROM_SUPPORT'));
+for (const n of ['sendBookingConfirmation', 'sendReminderEmail', 'sendCheckInAvailableEmail'])
   check(`${n} is sent from support@`, fn(n).includes('from: FROM_SUPPORT'));
 for (const n of ['sendInquiryConfirmation', 'sendSignedAgreementsEmail', 'sendCourseLiveOrientationEmail'])
   check(`${n} is sent from admin@`, fn(n).includes('from: FROM_ADMIN') && fn(n).includes(', ADMIN_EMAIL);'));
