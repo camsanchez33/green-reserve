@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 01:39 UTC · branch `HEAD` · HEAD `e59ed92` · working tree **58 dirty file(s)**
+Generated 2026-10-22 01:40 UTC · branch `pr-w26` · HEAD `679076b` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 101 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 105 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `164896a` | 2026-10-21 | BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175) |
+| `e8c4fe4` | 2026-10-22 | W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan |
+| `1d2a5db` | 2026-10-21 | BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174) |
+| `4cd3e1a` | 2026-10-22 | W2-6 Schedule simplification: open hours, what golfers can book, one price table |
 | `e59ed92` | 2026-10-22 | Codemap and status board |
 | `f8d9737` | 2026-10-22 | Messages: keep Open the course in the header below lg |
 | `3020c49` | 2026-10-22 | AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review) |
@@ -116,31 +120,13 @@ Generated 2026-10-22 01:39 UTC · branch `HEAD` · HEAD `e59ed92` · working tre
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (58 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M  ADMIN_V5_SPEC.md`
-- `UU docs/CODEMAP.md`
-- `UU docs/codemap.json`
-- `A  prisma/migrations/20261022003636_brain1a_admin_audit/migration.sql`
-- `M  prisma/schema.prisma`
-- `A  scripts/admin-audit-test.ts`
-- `M  scripts/admin-nav-test.ts`
-- `M  scripts/isolation-test.ts`
-- `A  src/app/admin/audit/page.tsx`
-- `M  src/app/admin/courses/[id]/_parts/useCourseDetail.tsx`
-- `M  src/app/admin/employees/page.tsx`
-- `M  src/app/admin/goals/page.tsx`
-- `M  src/app/admin/inquiries/[id]/page.tsx`
-- `M  src/app/admin/inquiries/page.tsx`
-- `M  src/app/admin/layout.tsx`
-- `M  src/app/admin/revenue/page.tsx`
-- `M  src/app/api/admin/agreement-versions/route.ts`
-- `M  src/app/api/admin/archive-course/route.ts`
-- `A  src/app/api/admin/audit/route.ts`
-- `M  src/app/api/admin/backfill-orphaned-inquiries/route.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -152,7 +138,9 @@ the queue header's `git checkout -- .` cleanup until that run has committed, or 
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-Nothing awaiting review.
+| item | shipped | age | commit | source |
+|---|---|---|---|---|
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 91d | `b88c8bf` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -160,8 +148,7 @@ Nothing awaiting review.
 2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
 3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
 4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2357`
-6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
@@ -224,7 +211,7 @@ Nothing awaiting review.
 | `CLAUDE.md` | 1 | 2026-10-21 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 4d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 9d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 13d |
@@ -261,6 +248,10 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
+- `e8c4fe4` 2026-10-22 — W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan
+- `1d2a5db` 2026-10-21 — BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)
+- `4cd3e1a` 2026-10-22 — W2-6 Schedule simplification: open hours, what golfers can book, one price table
 - `e59ed92` 2026-10-22 — Codemap and status board
 - `f8d9737` 2026-10-22 — Messages: keep Open the course in the header below lg
 - `3020c49` 2026-10-22 — AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)
@@ -269,11 +260,7 @@ Nothing awaiting review.
 - `6b0ebeb` 2026-10-21 — AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links
 - `821ddf9` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)
 - `4abfebb` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (#171)
-- `a526731` 2026-10-21 — Codemap and status board
-- `fe16f64` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)
-- `d58220f` 2026-10-21 — AW-6b: inquiry page — the one next step first (#169)
-- `a85a078` 2026-10-21 — AW-4b: Today shows each course with its own to-dos; Goals tab (#170)
 
 ---
 
-**Totals:** 298 done · 0 awaiting review · 1 in flight · 6 not started · 8 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 8 revise pages open · 17 ideas · 7 parked.
