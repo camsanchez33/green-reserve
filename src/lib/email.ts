@@ -2104,7 +2104,7 @@ export async function sendEventPayLinkEmail(data: {
     </table>
     <a href="${data.payUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin:16px 0;">Pay ${money(total)}</a>
     ${data.terms ? `<p style="margin:0 0 12px;color:#3F453E;font-size:13px;"><strong>${e(data.courseName)}&rsquo;s terms:</strong> ${e(data.terms)}</p>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Apple Pay, Google Pay or card. The charge comes from ${e(data.courseName)}. Questions? Reply to this email.</p>
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Apple Pay, Google Pay or card. The charge comes from ${e(data.courseName)}. Reply to this email to reach ${e(data.courseName)}.</p>
   `, BILLING_EMAIL);
   await getResend().emails.send({ meta: { kind: 'event_pay_link_email', courseId: data.courseId }, from: FROM_BILLING, to: data.email, replyTo: data.replyTo, subject: `${data.label} for ${data.eventName} — ${data.courseName}`, html });
 }
