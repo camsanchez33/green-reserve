@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 516,
+    "files": 517,
     "routes": 250,
-    "libs": 167,
+    "libs": 168,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -1139,7 +1139,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 930,
+      "lines": 940,
       "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
       "brain": [],
       "exports": [
@@ -1159,6 +1159,7 @@
         "@/components/ui/field",
         "@/lib/expenses",
         "@/lib/format",
+        "@/lib/money-tabs",
         "@/lib/step-up-client",
         "lucide-react",
         "next/link",
@@ -16617,6 +16618,39 @@
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts"
+      ]
+    },
+    {
+      "path": "src/lib/money-tabs.ts",
+      "lines": 15,
+      "purpose": "ADMIN-C Money:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "isMoneyTab",
+          "kind": "fn"
+        },
+        {
+          "name": "MONEY_TABS",
+          "kind": "const"
+        },
+        {
+          "name": "MoneyTab",
+          "kind": "type"
+        },
+        {
+          "name": "visibleMoneyTab",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/revenue/page.tsx"
       ]
     },
     {

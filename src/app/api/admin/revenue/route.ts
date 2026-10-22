@@ -198,7 +198,7 @@ export async function GET(req: NextRequest) {
   const [counter, counterAll, paidRows] = await Promise.all([
     counterFeesUncollected(inCurrent),
     // ADMIN-C Money → Not collected: the all-time figure beside the period's.
-    counterFeesUncollected({ gte: new Date(0), lt: current.end }),
+    counterFeesUncollected({ gte: new Date(0), lt: new Date() }),
     // ADMIN-C Money → Overview chart: the headline's own rows (round fees on
     // paid rounds, by paidAt), this period and the prior one to the same point.
     prisma.booking.findMany({ where: { ...PAID, paidAt: { gte: prior.start, lt: current.end } }, select: { paidAt: true, accessFeeTotal: true } }),

@@ -3,6 +3,7 @@
 // Run: npx tsx scripts/money-tabs-test.ts
 import { feesByDay } from '../src/lib/fees-by-day';
 import { monthlyEquivalentCents } from '../src/lib/expenses';
+import { visibleMoneyTab, isMoneyTab } from '../src/lib/money-tabs';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${!ok && detail !== undefined ? ' — ' + JSON.stringify(detail) : ''}`); if (!ok) failed++; };
@@ -28,6 +29,12 @@ check('the prior line is never longer than the current one', longPrior.prior.len
 check('monthly costs count in full each month', monthlyEquivalentCents({ amountCents: 2000, cadence: 'monthly' }) === 2000);
 check('a yearly cost counts a twelfth a month', monthlyEquivalentCents({ amountCents: 120000, cadence: 'annual' }) === 10000);
 check('a one-time cost has no monthly rate', monthlyEquivalentCents({ amountCents: 50000, cadence: 'one-time' }) === 0);
+
+check('a link to Expenses from someone who is not the owner opens Overview', visibleMoneyTab('expenses', false) === 'overview');
+check('…and Payouts too', visibleMoneyTab('payouts', false) === 'overview');
+check('the owner gets the tab the link names', visibleMoneyTab('expenses', true) === 'expenses');
+check('everyone gets Not collected and Disputes', visibleMoneyTab('uncollected', false) === 'uncollected' && visibleMoneyTab('disputes', false) === 'disputes');
+check('an unknown ?tab= is ignored', !isMoneyTab('ledger') && isMoneyTab('disputes'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

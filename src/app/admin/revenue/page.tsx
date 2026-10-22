@@ -20,11 +20,12 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, EXPENSE_CADENCE_LABEL, monthlyEquivalentCents } from '@/lib/expenses';
 import { formatMoney as fmtMoney } from '@/lib/format';
 import { INPUT_COMPACT } from '@/components/ui/field';
+import { isMoneyTab, visibleMoneyTab, type MoneyTab } from '@/lib/money-tabs';
 
 const fmtCount = (n: number) => n.toLocaleString('en-US');
 
 type PeriodKind = 'day' | 'week' | 'mtd' | 'custom';
-type Tab = 'overview' | 'uncollected' | 'disputes' | 'payouts' | 'expenses';
+type Tab = MoneyTab;
 interface Delta { pct: number | null; direction: 'up' | 'down' | 'flat' | null }
 
 interface CourseRow {
@@ -167,6 +168,7 @@ export default function MoneyPage() {
   // Money coming in + Not collected
   const [motionDay, setMotionDay] = useState<'today' | 'tomorrow'>('today');
   const [showAllComing, setShowAllComing] = useState(false);
+  const [showAllLate, setShowAllLate] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [retryMsg, setRetryMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
 
@@ -221,7 +223,7 @@ export default function MoneyPage() {
     if (initRef.current) return;
     initRef.current = true;
     const t = new URLSearchParams(window.location.search).get('tab');
-    if (t === 'uncollected' || t === 'disputes' || t === 'payouts' || t === 'expenses') setTab(t);
+    if (isMoneyTab(t)) setTab(t);
     load('mtd', '', '');
   }, [load]);
   useEffect(() => { if (data?.isOwner && tab === 'payouts' && !platform && !platformLoading && !platformError) loadPlatform(); }, [data?.isOwner, tab, platform, platformLoading, platformError, loadPlatform]);
@@ -378,6 +380,9 @@ export default function MoneyPage() {
     { key: 'disputes', label: 'Disputes', count: disputes.length },
     ...(isOwner ? [{ key: 'payouts' as Tab, label: 'Payouts' }, { key: 'expenses' as Tab, label: 'Expenses' }] : []),
   ];
+  // A link to Payouts or Expenses opened by someone who can't see them (or the
+  // owner on a session without a second factor) lands on Overview, never a blank page.
+  const shown: Tab = data ? visibleMoneyTab(tab, isOwner) : tab;
   const activeExpenses = (expenses ?? []).filter(e => !e.endedAt);
   const monthly = activeExpenses.reduce((s, e) => s + monthlyEquivalentCents(e), 0);
   const byCategory = EXPENSE_CATEGORIES
@@ -396,7 +401,7 @@ export default function MoneyPage() {
               {/* U-A: courses collect their green fees on their own Stripe accounts; none of that is here. */}
               <p className="mt-2 text-[14px] text-ink-soft">GreenReserve&rsquo;s money — not the courses&rsquo;.</p>
             </div>
-            {tab === 'overview' && (
+            {shown === 'overview' && (
               <div className="flex items-center gap-1.5 flex-wrap">
                 {([['day', 'Day'], ['week', 'Week'], ['mtd', 'Month to date'], ['custom', 'Custom']] as [PeriodKind, string][]).map(([p, lbl]) => (
                   <button key={p} type="button" onClick={() => changePeriod(p)} aria-pressed={period === p}
@@ -408,7 +413,7 @@ export default function MoneyPage() {
             )}
           </div>
 
-          {tab === 'overview' && period === 'custom' && (
+          {shown === 'overview' && period === 'custom' && (
             <div className="flex items-center gap-2 -mt-2">
               <input type="date" aria-label="From" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className={INPUT_COMPACT}/>
               <span className="text-ink-muted text-sm">to</span>
@@ -419,8 +424,8 @@ export default function MoneyPage() {
 
           <div role="tablist" aria-label="Money" className="flex gap-7 border-b border-line text-[14.5px] overflow-x-auto">
             {tabs.map(t => (
-              <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} onClick={() => pickTab(t.key)}
-                className={'pb-2.5 -mb-px border-b-2 whitespace-nowrap ' + (tab === t.key ? 'border-fairway text-ink font-semibold' : 'border-transparent text-ink-soft hover:text-ink')}>
+              <button key={t.key} type="button" role="tab" aria-selected={shown === t.key} onClick={() => pickTab(t.key)}
+                className={'pb-2.5 -mb-px border-b-2 whitespace-nowrap ' + (shown === t.key ? 'border-fairway text-ink font-semibold' : 'border-transparent text-ink-soft hover:text-ink')}>
                 {t.label}{t.count ? <span className="ml-1.5 text-bad font-semibold tabular-nums">{t.count}</span> : null}
               </button>
             ))}
@@ -442,7 +447,7 @@ export default function MoneyPage() {
           {loading && !data && <p className="py-16 text-center text-ink-muted text-sm">Loading…</p>}
 
           {/* ── Overview ─────────────────────────────────────────────── */}
-          {data && pnl && tab === 'overview' && (
+          {data && pnl && shown === 'overview' && (
             <div className="flex flex-wrap gap-8 items-start">
               <div className="flex-[1_1_640px] min-w-0 flex flex-col gap-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 border border-line rounded-lg">
@@ -543,7 +548,7 @@ export default function MoneyPage() {
                               <td className="py-3 pr-4 tabular-nums">{r.counterRounds > 0 ? <>{fmtMoney(r.counterFeesUncollected)} <span className="text-ink-muted">· {fmtCount(r.counterRounds)}</span></> : <span className="text-ink-faint">—</span>}</td>
                               <td className="py-3 pr-4 tabular-nums">{fmtMoney(r.greenFeeVolume)}</td>
                               <td className="py-3 pr-4 tabular-nums">{r.failedCharges > 0 ? <button type="button" onClick={() => pickTab('uncollected')} className="text-bad font-medium hover:underline">{r.failedCharges}</button> : <span className="text-ink-faint">—</span>}</td>
-                              <td className="py-3"><StatusDot status={r.stripeActive ? 'ok' : 'bad'} label={r.stripeActive ? 'Connected' : 'Not connected'}/></td>
+                              <td className="py-3"><StatusDot status={r.stripeActive ? 'ok' : 'warn'} label={r.stripeActive ? 'Connected' : 'Not connected'}/></td>
                             </tr>
                           ))}
                         </tbody>
@@ -623,12 +628,17 @@ export default function MoneyPage() {
                     {/* Charged with applicationFeeCents 0 — the course's money, refunded if the golfer checks in anyway. */}
                     <p className="mt-1 text-[12.5px] text-ink-muted">The course keeps these; GreenReserve takes $0.</p>
                     <div className="mt-2 flex flex-col gap-1.5">
-                      {motion!.lateCancelFees.slice(0, 8).map(f => (
+                      {(showAllLate ? motion!.lateCancelFees : motion!.lateCancelFees.slice(0, 8)).map(f => (
                         <Link key={f.bookingId} href={`/admin/courses/${f.courseId}`} className="flex justify-between gap-3 hover:underline">
                           <span className="truncate">{f.golferName} · {f.courseName} · {f.teeDate}</span>
                           <span className={'shrink-0 tabular-nums ' + (f.status === 'refunded' ? 'text-ink-muted' : '')}>{f.status === 'refunded' ? 'refunded' : fmtMoney(f.fee)}</span>
                         </Link>
                       ))}
+                      {motion!.lateCancelFees.length > 8 && (
+                        <button type="button" onClick={() => setShowAllLate(v => !v)} className="self-start text-[13px] text-pine hover:underline">
+                          {showAllLate ? 'Show fewer' : `All ${motion!.lateCancelFees.length}`}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -637,7 +647,7 @@ export default function MoneyPage() {
           )}
 
           {/* ── Not collected (all time) ─────────────────────────────── */}
-          {data && tab === 'uncollected' && (
+          {data && shown === 'uncollected' && (
             <div className="flex flex-col gap-8">
               <p className="-mt-2 text-[14px] text-ink-soft">Money a golfer owes that hasn&rsquo;t reached anyone yet. All time — the period doesn&rsquo;t apply here.</p>
 
@@ -727,7 +737,7 @@ export default function MoneyPage() {
           )}
 
           {/* ── Disputes ─────────────────────────────────────────────── */}
-          {data && tab === 'disputes' && (
+          {data && shown === 'disputes' && (
             <div className="flex flex-col gap-8">
               <section>
                 <h2 className={H2}>Open disputes {disputes.length > 0 && <span className="font-medium text-bad">{disputes.length} · {fmtMoney(disputes.reduce((s, d) => s + d.amount, 0))}</span>}</h2>
@@ -785,7 +795,7 @@ export default function MoneyPage() {
           )}
 
           {/* ── Payouts (owner) ──────────────────────────────────────── */}
-          {data && isOwner && tab === 'payouts' && (
+          {data && isOwner && shown === 'payouts' && (
             <div className="flex flex-col gap-8">
               <section>
                 <div className="flex justify-between items-baseline gap-3">
@@ -850,7 +860,7 @@ export default function MoneyPage() {
           )}
 
           {/* ── Expenses (owner) ─────────────────────────────────────── */}
-          {data && isOwner && tab === 'expenses' && (
+          {data && isOwner && shown === 'expenses' && (
             <div className="flex flex-wrap gap-8 items-start">
               <section className="flex-[1_1_640px] min-w-0">
                 <h2 className={H2}>What we pay for {expenses && <span className="font-medium">{fmtMoney(monthly / 100)} a month</span>}</h2>
