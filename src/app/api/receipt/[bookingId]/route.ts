@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { hasArea } from '@/lib/admin-areas';
 import { receiptCharges, chargedNowCents } from '@/lib/receipt-charges';
 import { roundChargedTotal, shopLinesFor } from '@/lib/shop';
 
@@ -18,7 +19,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
   // authorizes a card charge via /api/checkin/[bookingId], so support staff
   // were being given charge power just to view a receipt.
   const adminSession = await resolveAdminSession();
-  const adminMayView = !!adminSession && requireRole(adminSession, SUPPORT_PLUS);
+  // AW-11: receipts open from a course page or a golfer lookup — either area will do.
+  const adminMayView = !!adminSession && requireRole(adminSession, SUPPORT_PLUS) && (hasArea(adminSession, 'golfers') || hasArea(adminSession, 'courses'));
 
   const token = req.nextUrl.searchParams.get('token');
   if (!token && !adminMayView) return NextResponse.json({ error: 'Missing token' }, { status: 401 });

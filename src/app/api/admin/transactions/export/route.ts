@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 
 // MP-6c: a transaction-level export for an accountant. One row per money
@@ -20,6 +20,8 @@ const money = (cents: number) => (cents / 100).toFixed(2);
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'money');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'The transaction export needs manager access.' }, { status: 403 });
 
   const sp = req.nextUrl.searchParams;

@@ -11,7 +11,7 @@ import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail, sendInquiryDeclinedEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
-import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession, areaGate } from '@/lib/admin-session';
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
 import { validateAnswers, flatSummaries, parseCallAnswers, toSheetPrefill, callRecapLines, LIVE_BY_OPTIONS } from '@/lib/call-answers';
 import { sendCallInvite, issueCallInvite } from '@/lib/call-invite';
@@ -39,6 +39,8 @@ function stripSecrets<T extends { detailsToken?: string | null; callInviteToken?
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'pipeline');
+  if (noArea) return noArea;
   if (!requireRole(session, VIEWER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const id = req.nextUrl.searchParams.get('id');
   if (id) {
@@ -1191,6 +1193,8 @@ async function handleAction(
 async function patchInquiry(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'pipeline');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json();
   const inquiryId = body.id || body.inquiryId;
@@ -1247,6 +1251,8 @@ async function createLead(body: Record<string, unknown>, session: AdminSession) 
 async function postInquiry(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'pipeline');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json();
   if (body.action === 'create_lead') return createLead(body, session);
@@ -1257,6 +1263,8 @@ async function postInquiry(req: NextRequest) {
 async function deleteInquiry(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'pipeline');
+  if (noArea) return noArea;
   if (!requireOwner(session)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');

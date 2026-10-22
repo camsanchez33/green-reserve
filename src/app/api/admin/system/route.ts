@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { birdieEnabled, birdieUsageToday, PLATFORM_PER_DAY, BIRDIE_MODEL } from '@/lib/birdie/guardrails';
 import { prisma } from '@/lib/prisma';
 import { calcomStatus } from '@/lib/calcom';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { ACCESS_FEE_CENTS } from '@/lib/booking-fees';
 import { cronHealth, lastStripeWebhook } from '@/lib/cron-log';
 import vercelConfig from '../../../../../vercel.json';
@@ -35,6 +35,8 @@ function describeSchedule(s: string): string {
 export async function GET() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'company');
+  if (noArea) return noArea;
   // MP-2d: the nav hides System at MANAGER_PLUS; hiding a link is not a gate, so make the claim true.
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 

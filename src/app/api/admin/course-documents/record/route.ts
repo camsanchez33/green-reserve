@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { head } from '@vercel/blob';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { logDocumentUploaded } from '@/lib/course-timeline';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING, isBlobStoreUrl } from '@/lib/private-blob';
 import { auditAdmin } from '@/lib/admin-audit';
@@ -13,6 +13,8 @@ import { auditAdmin } from '@/lib/admin-audit';
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const token = privateBlobToken();

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { prisma } from '@/lib/prisma';
 import { resolveStaffPermissions } from '@/lib/staff-permissions';
-import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { sendCourseLiveOrientationEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
@@ -19,6 +19,8 @@ import { needReason, reasonOf, auditAdmin, changedFields } from '@/lib/admin-aud
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   // MP-2c: this is the per-course twin of /api/admin/courses. Gating the list and leaving this open just meant iterating detail calls instead.
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const courseId = req.nextUrl.searchParams.get('courseId');
@@ -204,6 +206,8 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json();
   const { courseId, active, featured, cancelBookings } = body;

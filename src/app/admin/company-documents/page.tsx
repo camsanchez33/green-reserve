@@ -9,10 +9,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Download, Trash2, Upload } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { StatusDot } from '@/components/ui/StatusDot';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { LoadFailure, ErrorBanner } from '@/components/ui/ErrorState';
-import { Card } from '@/components/ui/Card';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Btn } from '@/components/ui/Btn';
 import { INPUT_COMPACT } from '@/components/ui/field';
 import { formatDateTime } from '@/lib/format';
@@ -79,22 +78,23 @@ export default function CompanyDocumentsPage() {
     await load();
   }
 
+  // ADMIN-C (AW-15, "important, needs to be organized"): every category shows,
+  // filed or not, so a missing insurance policy is as visible as a filed one.
   const groups = COMPANY_DOC_CATEGORIES
-    .map(c => ({ ...c, docs: (docs ?? []).filter(d => d.category === c.key) }))
-    .filter(g => g.docs.length);
+    .map(c => ({ ...c, docs: (docs ?? []).filter(d => d.category === c.key) }));
 
   return (
-    <div className="min-h-screen bg-paper flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar active="company" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-3xl">
+        <div className="px-10 pt-6 pb-10 max-w-4xl">
           <div className="mb-7">
-            <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Company documents</h1>
-            <p className="text-[13.5px] text-ink-soft mt-2">GreenReserve LLC&apos;s own paperwork: formation, tax, banking, insurance and contracts. Stored privately and visible only to the owner. Never put these in the code repository; it is public.</p>
+            <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">Company docs</h1>
+            <p className="text-[14px] text-ink-soft mt-2">GreenReserve LLC&apos;s own paperwork: formation, tax, banking, insurance and contracts. Stored privately and visible only to the owner. Never put these in the code repository; it is public.</p>
           </div>
 
-          <Card className="p-5 mb-5">
-            <Eyebrow>Add a document</Eyebrow>
+          <section className="bg-paper rounded-lg p-5 mb-6">
+            <h2 className="text-[16px] font-semibold text-ink">Add a document</h2>
             <div className="flex flex-wrap items-end gap-3 mt-3">
               <label className="text-[13px] text-ink-soft">
                 <span className="block mb-1">Category</span>
@@ -108,9 +108,9 @@ export default function CompanyDocumentsPage() {
               <Btn onClick={() => fileRef.current?.click()} disabled={uploading}>
                 <span className="inline-flex items-center gap-2">{uploading ? 'Uploading…' : 'Choose file'}</span>
               </Btn>
-              <span className="text-xs text-ink-muted">PDF, PNG or JPEG, up to 25 MB.</span>
+              <span className="text-[13px] text-ink-muted">PDF, PNG or JPEG, up to 25 MB.</span>
             </div>
-          </Card>
+          </section>
 
           {actionError && <ErrorBanner message={actionError} onDismiss={() => setActionError('')} />}
           {notice && <p className="mb-4 text-[13px] text-ok">{notice}</p>}
@@ -119,19 +119,20 @@ export default function CompanyDocumentsPage() {
             <LoadFailure message={loadError.msg} kind={loadError.kind} onRetry={load} compact />
           ) : docs === null ? (
             <p className="text-sm text-ink-soft">Loading documents…</p>
-          ) : docs.length === 0 ? (
-            <Card className="p-6 text-center">
-              <p className="text-sm text-ink-soft">No company documents yet. Add the LLC filing first: choose Formation, then the PDF.</p>
-            </Card>
           ) : (
-            <div className="space-y-5">
+            <div className="space-y-7">
+              {docs.length === 0 && <p className="text-[14px] text-ink-soft">No company documents yet. Add the LLC filing first: choose Formation, then the PDF.</p>}
               {groups.map(g => (
-                <Card key={g.key} className="p-0">
-                  <div className="px-5 pt-4 pb-2"><Eyebrow>{g.label}</Eyebrow></div>
-                  <ul>
+                <section key={g.key}>
+                  <h2 className="text-[16px] font-semibold text-ink flex items-center gap-2">
+                    {g.label} <span className="font-normal text-ink-muted text-[14px]">{g.docs.length || ''}</span>
+                  </h2>
+                  {g.docs.length === 0 ? (
+                    <p className="mt-1.5 text-[13.5px] text-ink-muted flex items-center gap-2"><StatusDot status="neutral" />Nothing filed yet.</p>
+                  ) : (
+                  <ul className="mt-2 border border-line rounded-lg divide-y divide-line-soft">
                     {g.docs.map(d => (
-                      <li key={d.url} className="flex items-center gap-3 px-5 py-3 border-t border-line">
-                        
+                      <li key={d.url} className="flex items-center gap-3 px-4 py-3">
                         <div className="min-w-0 flex-1">
                           <a href={downloadHref(d.url)} target="_blank" rel="noopener" className="text-sm font-medium text-ink hover:underline break-all">{d.name}</a>
                           <div className="text-xs text-ink-muted">{fmtSize(d.size)} · added {formatDateTime(d.uploadedAt)}</div>
@@ -151,7 +152,8 @@ export default function CompanyDocumentsPage() {
                       </li>
                     ))}
                   </ul>
-                </Card>
+                  )}
+                </section>
               ))}
             </div>
           )}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { get } from '@vercel/blob';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING, isBlobStoreUrl } from '@/lib/private-blob';
 
 // MP-5a. Signed contracts used to be uploaded as `access: 'public'` Vercel
@@ -14,6 +14,8 @@ import { privateBlobToken, PRIVATE_STORAGE_MISSING, isBlobStoreUrl } from '@/lib
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   // Same gate as the Documents tab that lists these — no wider.
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 

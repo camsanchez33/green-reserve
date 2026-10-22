@@ -25,9 +25,10 @@ const WEBHOOK_QUIET_DAYS = 7;
 const SUMMARY_MODEL = 'claude-opus-5-5';
 const DIGEST_CLAIM_STALE_MS = 20 * 60_000;
 
-export type Finding = { key: string; title: string; detail: string; href: string };
+/** BRAIN-2a: `courseId` when the problem is about one course — the Problems page and the course timeline file it there. */
+export type Finding = { key: string; title: string; detail: string; href: string; courseId?: string | null };
 
-/** Everything urgent right now. Site errors aren't here: nothing records them yet (no error tracker is wired). */
+/** Everything urgent right now. Site errors go to Sentry (BRAIN-0), not here. */
 export async function urgentFindings(now = new Date()): Promise<Finding[]> {
   const [failed, disputes, jobs, webhook, noStripe, onboarding] = await Promise.all([
     prisma.booking.findMany({ where: FAILED_CHARGE_WHERE, select: { courseId: true, totalAmount: true, course: { select: { name: true } } } }),
@@ -45,10 +46,10 @@ export async function urgentFindings(now = new Date()): Promise<Finding[]> {
     g.n++; g.cents += b.totalAmount; byCourse.set(b.courseId, g);
   }
   for (const [courseId, g] of byCourse) {
-    out.push({ key: `failed:${courseId}`, title: `Card declined at check-in — ${g.name}`, detail: `${g.n} round${g.n === 1 ? '' : 's'}, $${(g.cents / 100).toFixed(2)} not collected.`, href: '/admin/revenue' });
+    out.push({ key: `failed:${courseId}`, title: `Card declined at check-in — ${g.name}`, detail: `${g.n} round${g.n === 1 ? '' : 's'}, $${(g.cents / 100).toFixed(2)} not collected.`, href: '/admin/revenue?tab=uncollected', courseId });
   }
   for (const d of disputes) {
-    out.push({ key: `dispute:${d.id}`, title: `Chargeback opened — ${d.booking?.course.name ?? 'a course'}`, detail: `$${(d.amountCents / 100).toFixed(2)} from ${d.booking?.golferName ?? 'a golfer'}. Answer it in Stripe before the deadline.`, href: '/admin/revenue' });
+    out.push({ key: `dispute:${d.id}`, title: `Chargeback opened — ${d.booking?.course.name ?? 'a course'}`, detail: `$${(d.amountCents / 100).toFixed(2)} from ${d.booking?.golferName ?? 'a golfer'}. Answer it in Stripe before the deadline.`, href: '/admin/revenue?tab=disputes', courseId: d.booking?.course.id ?? null });
   }
   for (const j of jobs.filter(j => j.status === 'bad')) {
     out.push({ key: `cron:${j.job}`, title: `Scheduled job failing — ${j.job}`, detail: j.note, href: '/admin/system' });
@@ -59,7 +60,7 @@ export async function urgentFindings(now = new Date()): Promise<Finding[]> {
     out.push({ key: 'webhook:stripe:quiet', title: 'No Stripe events for a week', detail: 'Check the webhook is still registered in Stripe.', href: '/admin/system' });
   }
   for (const c of noStripe) {
-    out.push({ key: `nostripe:${c.id}`, title: `Live but can't take payments — ${c.name}`, detail: 'Stripe setup isn’t finished.', href: `/admin/courses?courseId=${c.id}&tab=setup` });
+    out.push({ key: `nostripe:${c.id}`, title: `Live but can't take payments — ${c.name}`, detail: 'Stripe setup isn’t finished.', href: `/admin/courses?courseId=${c.id}&tab=setup`, courseId: c.id });
   }
   for (const st of onboarding.stages) {
     for (const s of st.stuck) {
@@ -81,19 +82,26 @@ export async function runUrgentChecks(now = new Date(), send: typeof sendAdminUr
     const row = byKey.get(f.key);
     if (!row) {
       // upsert: an overlapping run that created it a moment ago must not throw here.
-      const r = await prisma.adminAlert.upsert({ where: { key: f.key }, create: { key: f.key, kind: 'urgent', title: f.title, detail: f.detail, href: f.href, firstSeenAt: now, lastSeenAt: now }, update: { lastSeenAt: now } });
+      const r = await prisma.adminAlert.upsert({ where: { key: f.key }, create: { key: f.key, kind: 'urgent', title: f.title, detail: f.detail, href: f.href, courseId: f.courseId ?? null, firstSeenAt: now, lastSeenAt: now }, update: { lastSeenAt: now } });
+      // BRAIN-2a: the problem's history starts here (once, even if two runs overlap).
+      if (r.firstSeenAt.getTime() === now.getTime()) await prisma.adminAlertEvent.create({ data: { alertId: r.id, kind: 'opened', actorName: 'hourly check', text: f.detail, createdAt: now } });
       if (!r.alertedAt) fresh.push(f);
     } else {
       const reopened = row.resolvedAt !== null;
       await prisma.adminAlert.update({ where: { id: row.id }, data: {
-        title: f.title, detail: f.detail, href: f.href, lastSeenAt: now,
-        ...(reopened ? { resolvedAt: null, firstSeenAt: now, alertedAt: null } : {}),
+        title: f.title, detail: f.detail, href: f.href, courseId: f.courseId ?? row.courseId, lastSeenAt: now,
+        // A problem that came back starts unowned and unsnoozed: it is a new occurrence.
+        ...(reopened ? { resolvedAt: null, firstSeenAt: now, alertedAt: null, ownerId: null, ownerName: '', snoozedUntil: null, snoozeReason: '' } : {}),
       } });
+      if (reopened) await prisma.adminAlertEvent.create({ data: { alertId: row.id, kind: 'reopened', actorName: 'hourly check', text: f.detail, createdAt: now } });
       // Not emailed yet (a new one, a reopened one, or last hour's email failed).
       if (reopened || !row.alertedAt) fresh.push(f);
     }
   }
-  const resolved = await prisma.adminAlert.updateMany({ where: { kind: 'urgent', resolvedAt: null, key: { notIn: keys } }, data: { resolvedAt: now } });
+  // Cleared: the check no longer sees it. Each gets a history line.
+  const clearing = await prisma.adminAlert.findMany({ where: { kind: 'urgent', resolvedAt: null, key: { notIn: keys } }, select: { id: true } });
+  const resolved = await prisma.adminAlert.updateMany({ where: { id: { in: clearing.map(c => c.id) }, resolvedAt: null }, data: { resolvedAt: now } });
+  if (clearing.length) await prisma.adminAlertEvent.createMany({ data: clearing.map(c => ({ alertId: c.id, kind: 'cleared', actorName: 'hourly check', createdAt: now })) });
   let alerted = 0;
   if (fresh.length) {
     try {

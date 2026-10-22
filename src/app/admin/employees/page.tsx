@@ -1,407 +1,275 @@
 'use client';
+// AW-11 (Cam 2026-10-22, "per-person access"; ADMIN-C look): Team. Everyone
+// with an admin login, what they can do (role) and where (areas), when they
+// last signed in, and what they did. The owner adds people, changes role and
+// areas, resets passwords and turns access off; managers can read the list.
+// Your own password is on My profile now — not here. Rules: /api/admin/employees.
 import Link from 'next/link';
 import { stepUpFetch } from '@/lib/step-up-client';
-import { useState, useEffect, useCallback, Fragment } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import { Copy } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
 import { ErrorBanner } from '@/components/ui/ErrorState';
-import { Card } from '@/components/ui/Card';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 import { INPUT_COMPACT } from '@/components/ui/field';
+import { ADMIN_AREAS, ALL_AREAS, type AdminArea } from '@/lib/admin-areas';
+import { formatRelative } from '@/lib/format';
 
 interface Admin {
   id: string; email: string; name: string; role: string;
   active: boolean; mustChangePassword: boolean; lastLoginAt: string | null; createdAt: string;
+  /** null = never set: every area the role reaches. */
+  areas: AdminArea[] | null;
 }
 
 const ROLES = [
-  { value: 'owner',   label: 'Owner',   desc: 'Full access, manages employees & broadcasts' },
-  { value: 'manager', label: 'Manager', desc: 'Courses, inquiries, messages; no employees or broadcasts' },
-  { value: 'support', label: 'Support', desc: 'View + reply to messages; no create/edit/delete' },
-  { value: 'viewer',  label: 'Viewer',  desc: 'Read-only: Overview, inquiries and the courses list. No money, golfer data, messages or course settings.' },
+  { value: 'manager', label: 'Manager', desc: 'Does everything in their areas: changes, refunds, retries, sends.' },
+  { value: 'support', label: 'Support', desc: 'Reads everything in their areas, answers messages, takes problems. No refunds, settings or deletes.' },
+  { value: 'viewer',  label: 'Viewer',  desc: 'Read-only, and only Pipeline and the Courses list — no money, golfers or messages.' },
+  { value: 'owner',   label: 'Owner',   desc: 'Everything, everywhere. Signs in at the owner door, not here.' },
 ];
-
-// A role is not a status, so it is plain text, not a tinted pill (CLAUDE.md
-// BANNED); the owner reads in the accent, the rest step down in weight.
-function roleTextClass(role: string) {
-  if (role === 'owner') return 'text-pine font-medium';
-  if (role === 'manager') return 'text-ink font-medium';
-  if (role === 'support') return 'text-ink-soft';
-  return 'text-ink-muted';
-}
-
-const iCls = INPUT_COMPACT;
-
-function fmt(d: string | null) {
-  if (!d) return 'Never';
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
+const H2 = 'text-[20px] font-bold text-ink';
+const BTN = 'text-[13px] font-medium px-3 py-1.5 rounded-md border border-line text-ink hover:border-pine/40 disabled:opacity-50';
 
 function TempPasswordBox({ label, pwd, onDismiss }: { label: string; pwd: string; onDismiss: () => void }) {
   const [copied, setCopied] = useState(false);
-  function copy() {
-    navigator.clipboard.writeText(pwd);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const [copyError, setCopyError] = useState(false);
+  async function copy() {
+    try { await navigator.clipboard.writeText(pwd); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    catch { setCopyError(true); }
   }
   return (
     <div className="bg-ok/5 border border-ok/20 rounded-md px-4 py-3 flex items-start justify-between gap-3">
       <div>
-        <div className="text-xs font-medium text-ok mb-1">{label}</div>
+        <div className="text-[13px] font-medium text-ok mb-1">{label}</div>
         <div className="flex items-center gap-2">
           <code className="text-sm font-mono text-ink bg-white border border-line rounded px-2 py-0.5 tracking-wider">{pwd}</code>
-          <button onClick={copy} className="text-ink-muted hover:text-pine transition-colors" title="Copy">
-            {copied ? <span className="text-ok text-xs">Copied</span> : <Copy className="w-3.5 h-3.5" />}
+          <button type="button" onClick={copy} className="text-ink-muted hover:text-pine" aria-label="Copy the password">
+            {copied ? <span className="text-ok text-xs">Copied</span> : <Copy aria-hidden="true" className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <div className="text-[10px] text-ok/70 mt-1">Share this with the employee — it will only be shown once. They must change it on first login.</div>
+        <div className="text-[12px] text-ink-soft mt-1">{copyError ? 'Couldn’t copy — select it and copy by hand. ' : ''}Shown once. Give it to them; they set their own on first sign-in.</div>
       </div>
-      <button onClick={onDismiss} className="text-xs text-ink-faint hover:text-ink shrink-0">Dismiss</button>
+      <button type="button" onClick={onDismiss} className="text-[13px] text-ink-soft hover:text-ink shrink-0">Dismiss</button>
     </div>
   );
 }
 
-export default function EmployeesPage() {
-  const router = useRouter();
+function AreaPicker({ value, onChange, disabled, idPrefix }: { value: AdminArea[]; onChange: (v: AdminArea[]) => void; disabled?: boolean; idPrefix: string }) {
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-2">
+      {ADMIN_AREAS.map(a => (
+        <label key={a.key} htmlFor={`${idPrefix}-${a.key}`} title={a.help} className="flex items-center gap-1.5 text-[13.5px] text-ink cursor-pointer select-none">
+          <input id={`${idPrefix}-${a.key}`} type="checkbox" className="accent-pine" disabled={disabled}
+            checked={value.includes(a.key)}
+            onChange={e => onChange(e.target.checked ? ALL_AREAS.filter(k => k === a.key || value.includes(k)) : value.filter(k => k !== a.key))} />
+          {a.label}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function areasText(a: Admin): string {
+  if (a.role === 'owner') return 'Everything';
+  if (a.areas === null) return 'Everything their role reaches (never limited)';
+  if (a.areas.length === 0) return 'Nothing — only Home and My profile';
+  if (a.areas.length === ALL_AREAS.length) return 'Every area';
+  return a.areas.map(k => ADMIN_AREAS.find(x => x.key === k)?.label ?? k).join(', ');
+}
+
+export default function TeamPage() {
   const session = useAdminSession();
+  const isOwner = session.role === 'owner';
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
+  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
+
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
-  const [newRole, setNewRole] = useState('manager');
+  const [newRole, setNewRole] = useState('support');
+  const [newAreas, setNewAreas] = useState<AdminArea[]>([]);
+  const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
-  const [createTempPwd, setCreateTempPwd] = useState('');
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [actionError, setActionError] = useState('');
-  const [loadError, setLoadError] = useState<{ msg: string; kind: AdminFetchFailure } | null>(null);
-  const [resetPwds, setResetPwds] = useState<Record<string, string>>({});
+  const [created, setCreated] = useState<{ name: string; pwd: string } | null>(null);
 
-  const [cpCurrentPassword, setCpCurrentPassword] = useState('');
-  const [cpNewPassword, setCpNewPassword] = useState('');
-  const [cpConfirm, setCpConfirm] = useState('');
-  const [cpLoading, setCpLoading] = useState(false);
-  const [cpError, setCpError] = useState('');
-  const [cpSuccess, setCpSuccess] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
+  const [rowError, setRowError] = useState<Record<string, string>>({});
+  const [resetPwds, setResetPwds] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<{ id: string; areas: AdminArea[] } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // MP-2b: the roster is MANAGER_PLUS since MP-2. Parsing a 403 body as data
-      // told a support/viewer employee the company has zero admin accounts.
-      // MP-2c: one classifier, and the banner renders above the table rather
-      // than inside the empty-row cell — MP-2b's version could not display the
-      // catch branch at all, because that branch left a loaded roster on screen
-      // and the cell only renders when admins.length === 0.
-      const res = await adminFetch<Admin[]>('/api/admin/employees', { subject: 'employee accounts' });
+      const res = await adminFetch<Admin[]>('/api/admin/employees', { subject: 'your team' });
       if (!res.ok) { setAdmins([]); setLoadError({ msg: res.message, kind: res.kind }); return; }
       setAdmins(res.data);
       setLoadError(null);
-    } catch { setAdmins([]); setLoadError({ msg: 'Network error loading employee accounts. Check your connection and try again.', kind: 'network' }); }
+    } catch { setAdmins([]); setLoadError({ msg: 'Network error loading your team. Check your connection and try again.', kind: 'network' }); }
     finally { setLoading(false); }
-  }, [router]);
-
+  }, []);
   useEffect(() => { load(); }, [load]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    setCreateError(''); setCreateTempPwd(''); setCreating(true);
+    if (newRole !== 'owner' && newAreas.length === 0) { setCreateError('Tick at least one area they can open.'); return; }
+    setCreateError(''); setCreated(null); setCreating(true);
     try {
       const res = await stepUpFetch('/api/admin/employees', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName, email: newEmail, role: newRole }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName, email: newEmail, role: newRole, areas: newRole === 'owner' ? undefined : newAreas }),
       });
-      const data = await res.json();
-      if (!res.ok) { setCreateError(data.error || 'Failed'); return; }
-      setCreateTempPwd(data.tempPassword);
-      setNewName(''); setNewEmail(''); setNewRole('manager');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setCreateError(data.error || `Couldn’t add them (${res.status}).`); return; }
+      setCreated({ name: newName, pwd: data.tempPassword });
+      setNewName(''); setNewEmail(''); setNewRole('support'); setNewAreas([]);
       load();
-    } catch { setCreateError('Network error'); }
+    } catch { setCreateError('Network error — nobody was added. Try again.'); }
     finally { setCreating(false); }
   }
 
-  // MP-2b: all three actions discarded the response. MP-2 made this endpoint
-  // assert the mfa claim and wrote deliberate recovery copy for the failure
-  // ("Sign in again at /cam") — and the page threw it away, so an
-  // mfa-less owner clicked Deactivate and simply nothing happened.
-  async function runEmployeeAction(key: string, body: Record<string, unknown>): Promise<Record<string, unknown> | null> {
-    setActionLoading(key); setActionError('');
+  // Every change answers on its own row; nothing fails quietly (MP-2b).
+  async function patch(admin: Admin, key: string, body: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+    setBusy(admin.id + key); setRowError(r => ({ ...r, [admin.id]: '' }));
     try {
-      const res = await stepUpFetch('/api/admin/employees', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const res = await stepUpFetch('/api/admin/employees', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: admin.id, ...body }) });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setActionError(data.error || 'That did not work. Try again.'); return null; }
+      if (!res.ok) { setRowError(r => ({ ...r, [admin.id]: data.error || 'That didn’t work. Try again.' })); return null; }
       return data;
     } catch {
-      setActionError('Network error — nothing was changed. Check your connection and try again.');
+      setRowError(r => ({ ...r, [admin.id]: 'Network error — nothing was changed. Try again.' }));
       return null;
-    } finally {
-      setActionLoading(null);
-    }
+    } finally { setBusy(null); }
   }
 
-  async function toggleActive(admin: Admin) {
-    const ok = await runEmployeeAction(admin.id + '_active', { id: admin.id, active: !admin.active });
-    if (ok) load();
+  async function saveAreas(admin: Admin) {
+    if (!editing) return;
+    if (editing.areas.length === 0 && !confirm(`Leave ${admin.name} with no areas? They’ll only see Home and My profile.`)) return;
+    if (await patch(admin, '_areas', { action: 'areas', areas: editing.areas })) { setEditing(null); load(); }
   }
-
-  async function changeRole(admin: Admin, newRoleVal: string) {
-    const ok = await runEmployeeAction(admin.id + '_role', { id: admin.id, role: newRoleVal });
-    if (ok) load();
-  }
-
+  async function changeRole(admin: Admin, role: string) { if (await patch(admin, '_role', { role })) load(); }
+  async function toggleActive(admin: Admin) { if (await patch(admin, '_active', { active: !admin.active })) load(); }
   async function resetPassword(admin: Admin) {
-    if (!confirm(`Reset ${admin.name}'s password? They will be required to change it on next login.`)) return;
-    const data = await runEmployeeAction(admin.id + '_reset', { id: admin.id, action: 'reset_password' });
-    if (data?.tempPassword) {
-      setResetPwds(p => ({ ...p, [admin.id]: String(data.tempPassword) }));
-      load();
-    }
+    if (!confirm(`Reset ${admin.name}'s password? They'll set a new one when they next sign in.`)) return;
+    const data = await patch(admin, '_reset', { action: 'reset_password' });
+    if (data?.tempPassword) { setResetPwds(p => ({ ...p, [admin.id]: String(data.tempPassword) })); load(); }
   }
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    setCpError(''); setCpSuccess('');
-    if (cpNewPassword !== cpConfirm) { setCpError('New passwords do not match'); return; }
-    if (cpNewPassword.length < 8) { setCpError('New password must be at least 8 characters'); return; }
-    setCpLoading(true);
-    try {
-      const res = await fetch('/api/admin/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword: cpCurrentPassword, newPassword: cpNewPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setCpError(data.error || 'Failed to change password'); return; }
-      setCpSuccess('Password changed successfully');
-      setCpCurrentPassword(''); setCpNewPassword(''); setCpConfirm('');
-    } catch { setCpError('Network error'); }
-    finally { setCpLoading(false); }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-paper flex items-center justify-center">
-        <div className="text-ink-muted text-sm">Loading...</div>
-      </div>
-    );
-  }
-
-  const isOwner = session?.role === 'owner';
 
   return (
-    <div className="min-h-screen bg-paper flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar active="employees" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-4xl">
-
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Employees</h1>
-              <p className="text-[13.5px] text-ink-soft mt-2">Admin account management</p>
-            </div>
-            <button onClick={load} className="flex items-center gap-2 text-sm text-ink-soft hover:text-ink px-3 py-2 rounded-md hover:bg-white border border-transparent hover:border-line transition-colors">
-              Refresh
-            </button>
+        <div className="px-10 pt-6 pb-10 flex flex-col gap-7">
+          <div>
+            <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">Team</h1>
+            <p className="mt-2 text-[14px] text-ink-soft">
+              Everyone with an admin login. The role says how much they can do; the areas say where. Change your own password on <Link href="/admin/profile" className="text-pine hover:underline">My profile</Link>.
+            </p>
           </div>
 
-          {/* Role reference */}
-          <Card className="p-4 mb-6">
-            <Eyebrow className="mb-2.5">Role permissions</Eyebrow>
-            <div className="grid grid-cols-2 gap-2">
-              {ROLES.map(r => (
-                <div key={r.value} className="flex items-start gap-2">
-                  <span className={`text-[12.5px] font-semibold shrink-0 ${roleTextClass(r.value)}`}>{r.label}</span>
-                  <span className="text-xs text-ink-muted">{r.desc}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
+          {loadError && <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => load()} />}
+          {loading && admins.length === 0 && !loadError && <p className="py-10 text-center text-ink-muted text-sm">Loading…</p>}
 
-          {/* Add employee — owner only */}
-          {isOwner && (
-            <Card className="p-5 mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                
-                <span className="text-sm font-medium text-ink">Add employee</span>
-              </div>
-              {createError && (
-                <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mb-4">{createError}</div>
-              )}
-              {createTempPwd && (
-                <div className="mb-4">
-                  <TempPasswordBox
-                    label={`Account created — temp password for ${newName || 'new employee'}:`}
-                    pwd={createTempPwd}
-                    onDismiss={() => setCreateTempPwd('')}
-                  />
-                </div>
-              )}
-              <form onSubmit={handleCreate} className="flex gap-3 flex-wrap">
-                <input value={newName} onChange={e => setNewName(e.target.value)} required placeholder="Full name" className={iCls + ' flex-1 min-w-32'}/>
-                <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required placeholder="Email" className={iCls + ' flex-1 min-w-48'}/>
-                <select value={newRole} onChange={e => setNewRole(e.target.value)} className={iCls + ' cursor-pointer'}>
-                  <option value="manager">Manager</option>
-                  <option value="support">Support</option>
-                  <option value="viewer">Viewer</option>
-                  <option value="owner">Owner</option>
-                </select>
-                <button type="submit" disabled={creating}
-                  className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium px-4 py-2 rounded-md transition-colors">
-                  {creating ? 'Creating...' : 'Create account'}
-                </button>
-              </form>
-            </Card>
-          )}
-
-          {loadError && (
-            <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => load()} />
-          )}
-          {actionError && (
-            <ErrorBanner message={actionError} onDismiss={() => setActionError('')} />
-          )}
-
-
-          {/* Employee list */}
-          <Card className="overflow-x-auto mb-6">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-line bg-paper">
-                  <Eyebrow as="th" className="text-left px-5 py-3">Name</Eyebrow>
-                  <Eyebrow as="th" className="text-left px-5 py-3">Role</Eyebrow>
-                  <Eyebrow as="th" className="text-left px-5 py-3">Last login</Eyebrow>
-                  <Eyebrow as="th" className="text-left px-5 py-3">Status</Eyebrow>
-                  {isOwner && <th className="px-5 py-3 w-56"/>}
-                </tr>
-              </thead>
-              <tbody>
-                {admins.map((admin, i) => (
-                  <Fragment key={admin.id}>
-                    <tr className={'transition-colors ' + (i < admins.length - 1 && !resetPwds[admin.id] ? 'border-b border-line-soft' : '')}>
-                      <td className="px-5 py-3.5">
-                        <div className="text-sm font-medium text-ink">{admin.name}</div>
-                        <div className="text-xs text-ink-soft">{admin.email}</div>
-                        {admin.id === session?.adminId && <div className="text-[10px] text-ink-faint mt-0.5">You</div>}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {isOwner && admin.id !== session?.adminId ? (
-                          <select
-                            value={admin.role}
-                            onChange={e => changeRole(admin, e.target.value)}
-                            disabled={actionLoading === admin.id + '_role'}
-                            className="text-[11px] border border-line rounded px-2 py-1 bg-paper text-ink cursor-pointer focus:outline-none focus:border-pine/40 disabled:opacity-50"
-                          >
+          {admins.length > 0 && (
+            <section className="flex flex-col">
+              {admins.map(a => {
+                const me = a.id === session.adminId;
+                // As before: the owner can change anyone but themselves; areas don't apply to an owner.
+                const canEdit = isOwner && !me;
+                const canAreas = canEdit && a.role !== 'owner';
+                return (
+                  <div key={a.id} className="py-4 border-b border-line-soft last:border-0">
+                    <div className="flex flex-wrap items-start gap-x-8 gap-y-2">
+                      <div className="min-w-[220px] flex-1">
+                        <div className="text-[15px] font-medium text-ink">{a.name}{me && <span className="ml-2 text-[12.5px] text-ink-muted">you</span>}</div>
+                        <div className="text-[13px] text-ink-soft">{a.email}</div>
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-[12.5px]">
+                          {a.active ? <StatusDot status="ok" label="Active" /> : <StatusDot status="neutral" label="Turned off" />}
+                          <span className="text-ink-muted">{a.lastLoginAt ? `Signed in ${formatRelative(new Date(a.lastLoginAt).getTime())}` : 'Never signed in'}</span>
+                          {a.mustChangePassword && <span className="text-warn">Hasn’t set their own password yet</span>}
+                        </div>
+                      </div>
+                      <div className="w-[160px]">
+                        <div className="text-[12.5px] text-ink-muted mb-1">Role</div>
+                        {canEdit ? (
+                          <select aria-label={`${a.name}'s role`} value={a.role} disabled={!!busy} onChange={e => changeRole(a, e.target.value)} className={INPUT_COMPACT + ' w-full'}>
                             {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                           </select>
-                        ) : (
-                          <span className={`text-[12.5px] font-semibold ${roleTextClass(admin.role)}`}>
-                            {ROLES.find(r => r.value === admin.role)?.label || admin.role}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-ink-soft tabular-nums">{fmt(admin.lastLoginAt)}</td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex flex-col gap-0.5">
-                          {admin.active
-                            ? <StatusDot status="ok" label="Active" />
-                            : <StatusDot status="neutral" label="Inactive" />}
-                          {admin.mustChangePassword && (
-                            <span className="text-[10px] text-warn font-medium">Must change pwd</span>
-                          )}
-                        </div>
-                      </td>
-                      {isOwner && (
-                        <td className="px-5 py-3.5">
-                          {/* BRAIN-1a: what this person has done in the admin. */}
-                          <div className="flex justify-end mb-1"><Link href={`/admin/audit?admin=${admin.id}`} className="text-xs text-pine font-medium hover:underline">What they did</Link></div>
-                          {admin.id !== session?.adminId && (
-                            <div className="flex items-center gap-1.5 justify-end">
-                              <button
-                                onClick={() => resetPassword(admin)}
-                                disabled={!!actionLoading}
-                                className="flex items-center gap-1 text-xs text-ink-soft hover:text-ink px-2 py-1 rounded hover:bg-paper border border-line hover:border-line-strong transition-colors disabled:opacity-50"
-                                title="Generate new temp password"
-                              >
-                                Reset pwd
-                              </button>
-                              <button
-                                onClick={() => toggleActive(admin)}
-                                disabled={actionLoading === admin.id + '_active'}
-                                className="text-xs text-ink-soft hover:text-ink px-2 py-1 rounded hover:bg-paper transition-colors disabled:opacity-50"
-                              >
-                                {admin.active ? 'Deactivate' : 'Reactivate'}
-                              </button>
+                        ) : <div className="text-[14px] text-ink">{ROLES.find(r => r.value === a.role)?.label ?? a.role}</div>}
+                      </div>
+                      <div className="flex-[2_1_320px] min-w-0">
+                        <div className="text-[12.5px] text-ink-muted mb-1">Can open</div>
+                        {editing?.id === a.id ? (
+                          <div className="flex flex-col gap-2">
+                            <AreaPicker idPrefix={`areas-${a.id}`} value={editing.areas} onChange={v => setEditing({ id: a.id, areas: v })} disabled={!!busy} />
+                            <div className="flex gap-2">
+                              <button type="button" onClick={() => saveAreas(a)} disabled={!!busy} className="text-[13px] font-medium px-3 py-1.5 rounded-md bg-pine hover:bg-pine-hover text-white disabled:opacity-50">{busy === a.id + '_areas' ? 'Saving…' : 'Save'}</button>
+                              <button type="button" onClick={() => setEditing(null)} className="text-[13px] text-ink-soft hover:text-ink">Cancel</button>
                             </div>
-                          )}
-                        </td>
+                          </div>
+                        ) : (
+                          <div className="text-[14px] text-ink">
+                            {areasText(a)}
+                            {canAreas && <button type="button" onClick={() => setEditing({ id: a.id, areas: a.areas ?? ALL_AREAS })} className="ml-2 text-[13px] text-pine hover:underline">Change</button>}
+                          </div>
+                        )}
+                      </div>
+                      {isOwner && (
+                        <div className="flex flex-wrap gap-2 items-start">
+                          <Link href={`/admin/audit?admin=${a.id}`} className={BTN}>What they did</Link>
+                          {canEdit && <button type="button" onClick={() => resetPassword(a)} disabled={!!busy} className={BTN}>{busy === a.id + '_reset' ? 'Resetting…' : 'Reset password'}</button>}
+                          {canEdit && <button type="button" onClick={() => toggleActive(a)} disabled={!!busy} className={BTN}>{busy === a.id + '_active' ? 'Saving…' : a.active ? 'Turn off' : 'Turn back on'}</button>}
+                        </div>
                       )}
-                    </tr>
-                    {resetPwds[admin.id] && (
-                      <tr key={admin.id + '_pwd'} className={i < admins.length - 1 ? 'border-b border-line-soft' : ''}>
-                        <td colSpan={isOwner ? 5 : 4} className="px-5 pb-3.5">
-                          <TempPasswordBox
-                            label={`Temp password for ${admin.name}:`}
-                            pwd={resetPwds[admin.id]}
-                            onDismiss={() => setResetPwds(p => { const n = { ...p }; delete n[admin.id]; return n; })}
-                          />
-                        </td>
-                      </tr>
+                    </div>
+                    {rowError[a.id] && <p role="alert" className="mt-2 text-[13px] text-bad">{rowError[a.id]}</p>}
+                    {resetPwds[a.id] && (
+                      <div className="mt-3">
+                        <TempPasswordBox label={`New password for ${a.name}:`} pwd={resetPwds[a.id]} onDismiss={() => setResetPwds(p => { const n = { ...p }; delete n[a.id]; return n; })} />
+                      </div>
                     )}
-                  </Fragment>
-                ))}
-                {admins.length === 0 && !loadError && (
-                  <tr>
-                    <td colSpan={isOwner ? 5 : 4} className="px-5 py-8 text-center text-sm text-ink-muted">
-                      No admin accounts yet
-                    </td>
-                  </tr>
+                  </div>
+                );
+              })}
+            </section>
+          )}
+
+          {isOwner && (
+            <section className="bg-paper rounded-lg p-5 max-w-[880px]">
+              <h2 className={H2}>Add someone</h2>
+              {createError && <p role="alert" className="mt-2 text-[13px] text-bad">{createError}</p>}
+              {created && <div className="mt-3"><TempPasswordBox label={`${created.name || 'They'} can sign in at /admin with:`} pwd={created.pwd} onDismiss={() => setCreated(null)} /></div>}
+              <form onSubmit={handleCreate} className="mt-3 flex flex-col gap-3">
+                <div className="flex flex-wrap gap-3">
+                  <label className="flex flex-col gap-1 text-[13px] text-ink-soft flex-1 min-w-[180px]">Name<input value={newName} onChange={e => setNewName(e.target.value)} required className={INPUT_COMPACT} /></label>
+                  <label className="flex flex-col gap-1 text-[13px] text-ink-soft flex-1 min-w-[220px]">Email<input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required className={INPUT_COMPACT} /></label>
+                  <label className="flex flex-col gap-1 text-[13px] text-ink-soft w-[160px]">Role
+                    <select value={newRole} onChange={e => setNewRole(e.target.value)} className={INPUT_COMPACT}>
+                      {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                    </select>
+                  </label>
+                </div>
+                <p className="text-[13px] text-ink-soft">{ROLES.find(r => r.value === newRole)?.desc}</p>
+                {newRole !== 'owner' && (
+                  <div>
+                    <div className="text-[13px] text-ink-soft mb-1.5">Can open</div>
+                    <AreaPicker idPrefix="new" value={newAreas} onChange={setNewAreas} />
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </Card>
+                <div><button type="submit" disabled={creating} className="text-[13px] font-medium px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white disabled:opacity-50">{creating ? 'Adding…' : 'Add to the team'}</button></div>
+              </form>
+            </section>
+          )}
 
-          {/* Change own password */}
-          <Card className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              
-              <span className="text-sm font-medium text-ink">Change your password</span>
+          <section>
+            <h2 className={H2}>What the roles mean</h2>
+            <div className="mt-2 flex flex-col gap-1.5 text-[14px]">
+              {ROLES.map(r => <div key={r.value}><span className="font-medium text-ink">{r.label}</span> <span className="text-ink-soft">— {r.desc}</span></div>)}
             </div>
-            {cpError && (
-              <div className="bg-bad/5 border border-bad/20 rounded-md px-3 py-2 text-bad text-sm mb-4">{cpError}</div>
-            )}
-            {cpSuccess && (
-              <div className="bg-ok/5 border border-ok/20 rounded-md px-3 py-2 text-ok text-sm mb-4">{cpSuccess}</div>
-            )}
-            <form onSubmit={handleChangePassword} className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block"><Eyebrow as="span" className="block mb-1.5">Current password</Eyebrow>
-                <input type="password" value={cpCurrentPassword} onChange={e => setCpCurrentPassword(e.target.value)} required placeholder="Current password" className={iCls + ' w-full'}/></label>
-              </div>
-              <div>
-                <label className="block"><Eyebrow as="span" className="block mb-1.5">New password</Eyebrow>
-                <input type="password" value={cpNewPassword} onChange={e => setCpNewPassword(e.target.value)} required placeholder="Min 8 characters" className={iCls + ' w-full'}/></label>
-              </div>
-              <div>
-                <label className="block"><Eyebrow as="span" className="block mb-1.5">Confirm new password</Eyebrow>
-                <input type="password" value={cpConfirm} onChange={e => setCpConfirm(e.target.value)} required placeholder="Confirm password" className={iCls + ' w-full'}/></label>
-              </div>
-              <div className="col-span-3">
-                <button type="submit" disabled={cpLoading || !cpCurrentPassword || !cpNewPassword || !cpConfirm}
-                  className="bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-medium px-5 py-2 rounded-md transition-colors">
-                  {cpLoading ? 'Changing...' : 'Change password'}
-                </button>
-              </div>
-            </form>
-          </Card>
-
+            <p className="mt-3 text-[13px] text-ink-muted">Areas: {ADMIN_AREAS.map(a => `${a.label} (${a.help.replace(/\.$/, '')})`).join(' · ')}.</p>
+          </section>
         </div>
       </div>
     </div>

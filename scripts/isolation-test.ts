@@ -503,8 +503,24 @@ async function main() {
     // like its own page; the page points a viewer at Inquiries and Courses).
     const r = await api('/api/admin/today', { cookie: viewerCookie });
     checkStatus('Viewer can open Today → 200', r.status, 200);
-    const b = r.body as { needs?: unknown; courses?: unknown; health?: unknown };
+    const b = r.body as { needs?: unknown; courses?: unknown; health?: unknown; today?: unknown; overview?: unknown; problems?: unknown; goals?: unknown };
     check('…without Needs you now, Courses or Platform health', b?.needs === null && b?.courses === null && b?.health === null);
+    // ADMIN-C: nor the Home chart, the week's numbers, Problems or Goals.
+    check('…nor today, the overview, Problems or Goals', b?.today === null && b?.overview === null && b?.problems === null && b?.goals === null);
+  }
+  {
+    // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
+    // Money PR2b: the evidence pack is manager+, payouts to courses and the monthly Stripe match owner only.
+    const ev = await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: viewerCookie });
+    checkStatus('Viewer cannot download a dispute evidence pack → 403', ev.status, 403);
+    const cp = await api('/api/admin/course-payouts', { cookie: viewerCookie });
+    checkStatus('Viewer cannot read courses’ payouts → 403', cp.status, 403);
+    const sm = await api('/api/admin/stripe-match', { cookie: viewerCookie });
+    checkStatus('Viewer cannot read the monthly Stripe match → 403', sm.status, 403);
+    const pr = await api('/api/admin/problems', { cookie: viewerCookie });
+    checkStatus('Viewer cannot read Problems → 403', pr.status, 403);
+    const pw = await api('/api/admin/problems', { method: 'PATCH', cookie: viewerCookie, body: { id: 'x', action: 'claim' } });
+    checkStatus('Viewer cannot take a problem → 403', pw.status, 403);
   }
   {
     // AW-4b: Goals — support+ reads, only the owner writes.
@@ -518,6 +534,81 @@ async function main() {
     const mgr = `admin_session=${await signAdminToken({ adminId: data.adminViewer.id, email: data.adminViewer.email, name: data.adminViewer.name, role: 'manager', mfa: true })}`;
     const m = await api('/api/admin/goals', { method: 'POST', cookie: mgr, body: { metric: 'courses_live', target: 1, dueDate: '2099-01-01' } });
     checkStatus('A token claiming manager (a viewer in the database) cannot add a goal → 403', m.status, 403);
+  }
+  {
+    // BRAIN-2a: on Problems, support may take and note; assigning, snoozing and
+    // waking need manager — the route checks, not the page.
+    const sup = await prisma.adminUser.create({ data: { name: 'Isol Support', email: `${TS}-support@test.local`, passwordHash: 'x', role: 'support', active: true } });
+    const alert = await prisma.adminAlert.create({ data: { key: `isol-problem-${TS}`, kind: 'urgent', title: 'Isolation problem' } });
+    try {
+      const { signAdminToken } = await import('../src/lib/admin-session');
+      const supCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'support', mfa: true })}`;
+      const patch = (body: Record<string, unknown>) => api('/api/admin/problems', { method: 'PATCH', cookie: supCookie, body: { id: alert.id, ...body } });
+      checkStatus('Support cannot assign a problem → 403', (await patch({ action: 'assign', adminId: null })).status, 403);
+      checkStatus('Support cannot snooze a problem → 403', (await patch({ action: 'snooze', days: 1, reason: 'later please' })).status, 403);
+      checkStatus('Support cannot wake a problem → 403', (await patch({ action: 'unsnooze' })).status, 403);
+      checkStatus('Support can take an unowned problem → 200', (await patch({ action: 'claim' })).status, 200);
+      await prisma.adminAlert.update({ where: { id: alert.id }, data: { ownerId: data.adminOwner.id, ownerName: 'Isol Owner' } });
+      checkStatus('Support cannot take one someone else has → 403', (await patch({ action: 'claim' })).status, 403);
+      await prisma.adminAlert.update({ where: { id: alert.id }, data: { resolvedAt: new Date() } });
+      checkStatus('Nobody notes a cleared problem → 409', (await patch({ action: 'note', text: 'done' })).status, 409);
+      // A support login (not manager) still can't take the evidence pack or owner money.
+      checkStatus('Support cannot download a dispute evidence pack → 403', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: supCookie })).status, 403);
+      checkStatus('Support cannot read courses’ payouts → 403', (await api('/api/admin/course-payouts', { cookie: supCookie })).status, 403);
+      await prisma.adminUser.update({ where: { id: sup.id }, data: { role: 'manager' } });
+      const mgrCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'manager', mfa: true })}`;
+      checkStatus('No pack for a booking without a dispute → 404', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: mgrCookie })).status, 404);
+      const dispute = await prisma.paymentEvent.create({ data: { bookingId: data.bookingA.id, kind: 'dispute_opened', amountCents: 100, stripeId: `isol-dp-${TS}:open`, actor: 'stripe', detail: 'Dispute opened: test' } });
+      try {
+        const pack = await fetch(`${BASE_URL}/api/admin/disputes/${data.bookingA.id}/evidence`, { headers: { cookie: mgrCookie } });
+        const packText = await pack.text();
+        check('A manager downloads a disputed booking\'s evidence pack as a text file naming it', pack.status === 200 && (pack.headers.get('content-type') ?? '').startsWith('text/plain') && packText.includes(data.bookingA.id));
+      } finally {
+        await prisma.paymentEvent.delete({ where: { id: dispute.id } });
+      }
+    } finally {
+      await prisma.adminAlert.delete({ where: { id: alert.id } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: sup.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: sup.id } });
+    }
+  }
+
+  console.log('\n── Admin areas (AW-11: per-person access) ────────────────────────');
+  {
+    // A support login limited to Messages: every other area answers 403
+    // (code 'area'), Home and the menu show nothing from them, search hides
+    // them — and only the owner can change what someone can open.
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['messages'], areasSetAt: new Date() } });
+    try {
+      const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'manager', mfa: true })}`;
+      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals']] as const) {
+        const r = await api(path, { cookie: c });
+        check(`Messages-only manager → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
+      }
+      checkStatus('Messages-only manager → Messages → 200', (await api('/api/admin/messages', { cookie: c })).status, 200);
+      const nb = (await api('/api/admin/nav-badges', { cookie: c })).body as { moneyProblems?: number; openProblems?: number; pendingInquiries?: number };
+      check('…the menu counts nothing outside Messages, and no Systems line', nb?.moneyProblems === 0 && nb?.openProblems === 0 && nb?.pendingInquiries === 0 && (nb as { systemsOk?: unknown }).systemsOk === null, JSON.stringify(nb));
+      const t = (await api('/api/admin/today', { cookie: c })).body as Record<string, unknown>;
+      check('…Home shows no section from another area, health included', t?.health === null && t?.today === null && t?.overview === null && t?.courses === null && t?.problems === null && t?.needs === null && t?.goals === null, JSON.stringify(t));
+      const sr = (await api(`/api/admin/search?q=${encodeURIComponent('Isol')}`, { cookie: c })).body as { results?: { type: string; href: string }[] };
+      check('…search finds no course, inquiry, golfer, teammate or Money page', !!sr?.results && !sr.results.some(x => ['course', 'inquiry', 'golfer', 'guest', 'booking', 'group', 'employee'].includes(x.type) || x.href === '/admin/revenue'), JSON.stringify(sr).slice(0, 300));
+
+      // Only the owner changes someone's areas — with a fresh confirmation and a reason.
+      const self = await api('/api/admin/employees', { method: 'PATCH', cookie: c, body: { id: limited.id, action: 'areas', areas: ['money'], reason: 'give me money' } });
+      checkStatus('An employee cannot change areas → 403', self.status, 403);
+      const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+      const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+      const noReason = await api('/api/admin/employees', { method: 'PATCH', cookie: oc, body: { id: limited.id, action: 'areas', areas: ['messages', 'money'] } });
+      check('The owner must say why → 400 reason_required', noReason.status === 400 && (noReason.body as { code?: string })?.code === 'reason_required', JSON.stringify(noReason.body));
+      const okay = await api('/api/admin/employees', { method: 'PATCH', cookie: oc, body: { id: limited.id, action: 'areas', areas: ['messages', 'money'], reason: 'covering the books this week' } });
+      checkStatus('The owner adds Money → 200', okay.status, 200);
+      checkStatus('…and it applies at once: Money → 200', (await api('/api/admin/revenue', { cookie: c })).status, 200);
+      await prisma.ownerSession.delete({ where: { id: live.id } });
+    } finally {
+      await prisma.adminUser.delete({ where: { id: limited.id } });
+    }
   }
 
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');

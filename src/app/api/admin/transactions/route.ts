@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 
 const PAGE_SIZE = 50;
@@ -23,6 +23,8 @@ function tokenFilter<T>(search: string, fieldsFor: (token: string) => T[]): { AN
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'money');
+  if (noArea) return noArea;
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { searchParams } = req.nextUrl;

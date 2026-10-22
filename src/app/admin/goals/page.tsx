@@ -88,7 +88,7 @@ export default function AdminGoalsPage() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="goals" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-[800px]">
+        <div className="px-10 py-8">
           <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Goals</h1>
           <p className="text-[13.5px] text-ink-soft mt-2">What GreenReserve is aiming for, and whether it’s on pace.</p>
 

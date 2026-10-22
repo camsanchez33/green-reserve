@@ -9,8 +9,6 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatDateTime as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
 import { Modal } from '@/components/ui/Modal';
-import { Card } from '@/components/ui/Card';
-import { Eyebrow } from '@/components/ui/Eyebrow';
 import AgreementVersionsCard from '@/components/admin/AgreementVersionsCard';
 
 interface SystemData {
@@ -44,31 +42,25 @@ interface PlatformStripe {
 interface OrphanSweepItem { kind: 'course' | 'inquiry'; id: string; name: string; action: string; reason: string }
 interface AcknowledgedOrphan { id: string; name: string; archivedAt: string }
 
-// U-A (UI_REVISE_SPEC §3): one legible signal per card. Green = this page reads
-// the real state. Grey = link-only; we can only point you at where it lives.
-// Turning a grey card green is a schema item, not a reskin.
-function SystemCard({ title, tracked = false, right, children }: { title: string; tracked?: boolean; right?: React.ReactNode; children: React.ReactNode }) {
+// ADMIN-C: one section per check, with an anchor the "At a glance" list links to.
+const H2 = 'text-[20px] font-bold text-ink';
+function Section({ id, title, right, children }: { id: string; title: string; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <Card className="p-5">
+    <section id={id} className="scroll-mt-20 border-t border-line pt-4">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <Eyebrow>{title}</Eyebrow>
-          <span title={tracked ? 'Tracked here — this page reads the real state.' : 'Link-only — this page cannot see the real state; follow the link.'}>
-            <StatusDot status={tracked ? 'ok' : 'neutral'}/>
-          </span>
-        </div>
+        <h3 className="text-[16px] font-semibold text-ink">{title}</h3>
         {right}
       </div>
       {children}
-    </Card>
+    </section>
   );
 }
 
 function OutLink({ href, children, deep = true }: { href: string; children: React.ReactNode; deep?: boolean }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-pine hover:text-pine-hover">
-      {children} <ExternalLink className="w-3 h-3"/>
-      {!deep && <span className="text-ink-faint font-normal">(generic — not project-deep)</span>}
+    <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-pine hover:text-pine-hover">
+      {children} <ExternalLink aria-hidden="true" className="w-3 h-3"/>
+      {!deep && <span className="text-ink-muted font-normal">(generic — not project-deep)</span>}
     </a>
   );
 }
@@ -228,80 +220,59 @@ export default function AdminSystemPage() {
     ['Sentry', p.integrations.sentry], ['Blob storage', p.integrations.blob], ['Private storage (contracts)', p.integrations.privateBlob],
   ] : [];
 
+  // ADMIN-C (AW-14, Cam: "so much on this tab is important and it is so disorganized"):
+  // one line per check up top, each linking to its section below. Same checks,
+  // same reads, same actions as before — only the order and the words changed.
+  type Dot = 'ok' | 'bad' | 'warn' | 'neutral';
+  const badJobs = data ? data.crons.filter(c => c.health?.status === 'bad') : [];
+  const notRun = data ? data.crons.filter(c => !c.health || c.health.status === 'warn') : [];
+  const glance: { id: string; label: string; dot: Dot; text: string }[] = data && p ? [
+    { id: 'jobs', label: 'Scheduled jobs', dot: badJobs.length ? 'bad' : notRun.length ? 'warn' : 'ok',
+      text: badJobs.length ? `${badJobs.length} failing: ${badJobs.map(c => c.path.replace('/api/cron/', '')).join(', ')}`
+        : notRun.length ? `${notRun.length} of ${data.crons.length} haven’t run yet` : `All ${data.crons.length} ran on schedule` },
+    { id: 'stripe', label: 'Stripe events', dot: !p.integrations.stripeWebhook ? 'bad' : data.stripeWebhook ? (data.stripeWebhook.outcome === 'error' ? 'bad' : 'ok') : 'neutral',
+      text: !p.integrations.stripeWebhook ? 'Webhook secret missing — every event is rejected' : data.stripeWebhook ? (data.stripeWebhook.outcome === 'error' ? 'The last event failed' : `Last event ${fmtDate(data.stripeWebhook.at)}`) : 'No event received yet' },
+    { id: 'sentry', label: 'Error tracking', dot: p.integrations.sentry ? 'ok' : 'warn', text: p.integrations.sentry ? 'Sentry is set up' : 'No Sentry key — errors are not reported' },
+    { id: 'keys', label: 'Services connected', dot: integrations.every(([, ok]) => ok) ? 'ok' : 'bad', text: `${integrations.filter(([, ok]) => ok).length} of ${integrations.length} have their keys` },
+    { id: 'calcom', label: 'Call booking', dot: data.calcom?.state === 'on' ? (data.calcom.webhookSecretSet ? 'ok' : 'bad') : data.calcom?.state === 'invalid' ? 'bad' : 'warn',
+      text: data.calcom?.state === 'on' ? (data.calcom.webhookSecretSet ? 'Cal.com is on' : 'Cal.com is on but bookings won’t arrive') : data.calcom?.state === 'invalid' ? 'Cal.com link can’t be used' : 'Off — courses reply with times' },
+    { id: 'birdie', label: 'Birdie', dot: data.birdie?.enabled ? 'ok' : 'neutral', text: data.birdie?.enabled ? `On · ${data.birdie.todayReplies} of ${data.birdie.dailyCap} replies today` : 'Off' },
+    { id: 'deployed', label: 'What’s live', dot: p.env === 'production' ? 'ok' : 'warn', text: `${p.env}${p.commitSha ? ` · ${p.commitSha}` : ''}` },
+    { id: 'data', label: 'Data check', dot: !orphanChecked ? 'neutral' : orphanItems.length ? 'warn' : orphanNote ? 'neutral' : 'ok',
+      text: !orphanChecked ? 'Not run this visit' : orphanItems.length ? `${orphanItems.length} record${orphanItems.length === 1 ? '' : 's'} to clean up` : orphanNote ? 'Couldn’t check — see below' : 'Clean' },
+    { id: 'records', label: 'Backups and CI', dot: 'neutral', text: 'Checked on GitHub — links below' },
+  ] : [];
+
   return (
-    <div className="min-h-screen bg-paper flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar active="system" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-3xl">
-          {loadError && (
-            <div className="mb-5">
-              <LoadFailure message={loadError.msg} kind={loadError.kind} onRetry={() => location.reload()} compact />
-            </div>
-          )}
-          <div className="mb-7">
-            <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">System</h1>
-            <p className="text-[13.5px] text-ink-soft mt-2">30-second health check — what is deployed, what runs on a schedule, where to look when something breaks.</p>
-            <div className="flex items-center gap-4 mt-2.5">
-              <StatusDot status="ok" label="Tracked here" />
-              <StatusDot status="neutral" label="Link only — go look elsewhere" />
-            </div>
+        <div className="px-10 pt-6 pb-10 flex flex-col gap-8">
+          <div>
+            <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">Systems</h1>
+            <p className="mt-2 text-[14px] text-ink-soft">Whether everything that runs the site is working, and where to look when it isn&rsquo;t. A grey dot means this page can&rsquo;t see it — follow the link.</p>
           </div>
+          {loadError && <LoadFailure message={loadError.msg} kind={loadError.kind} onRetry={() => location.reload()} compact />}
+          {!data && !loadError && <p className="text-sm text-ink-soft">Loading…</p>}
 
-          <div className="space-y-4">
-            {/* MP-8a: the read-only Platform card. "What's live right now?" was
-                the one real argument for a Settings page; this answers it
-                without adding a write surface. */}
-            <SystemCard title="Platform" tracked
-              right={p && <StatusDot status={p.env === 'production' ? 'ok' : 'warn'} label={p.env} />}>
-              {p ? (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                    <div><span className="text-ink-muted">Service fee</span><div className="text-ink font-medium">{fmtMoney(p.accessFeeCents / 100)} per player</div></div>
-                    <div><span className="text-ink-muted">Deployed</span>
-                      <div className="text-ink font-medium">
-                        {p.commitSha ? <code className="font-mono text-xs bg-paper border border-line rounded px-1.5 py-0.5">{p.commitSha}</code> : <span className="text-ink-faint">local build</span>}
-                        {p.branch && <span className="text-xs text-ink-muted ml-2">{p.branch}</span>}
-                      </div>
-                      {p.commitMessage && <div className="text-xs text-ink-soft mt-0.5 truncate" title={p.commitMessage}>{p.commitMessage}</div>}
-                    </div>
-                    {p.publicUrl && <div><span className="text-ink-muted">Public URL</span><div className="text-ink font-medium truncate">{p.publicUrl}</div></div>}
-                  </div>
-                  <div>
-                    <div className="text-[13px] font-semibold text-ink mb-1.5">Integrations with keys set</div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                      {integrations.map(([name, ok]) => <StatusDot key={name} status={ok ? 'ok' : 'bad'} label={name} />)}
-                    </div>
-                  </div>
-                  {isOwner && (
-                    <div className="pt-3 border-t border-line-soft">
-                      <div className="text-[13px] font-semibold text-ink mb-1.5">Platform Stripe balance</div>
-                      {stripe ? (
-                        <div className="flex items-center gap-6 text-sm">
-                          <div><span className="text-ink-muted">Available</span> <span className="text-ink font-medium tabular-nums">{fmtMoney(stripe.balance.available)}</span></div>
-                          <div><span className="text-ink-muted">Pending</span> <span className="text-ink font-medium tabular-nums">{fmtMoney(stripe.balance.pending)}</span></div>
-                          <div><span className="text-ink-muted">Next payout</span> <span className="text-ink font-medium tabular-nums">{stripe.nextPayout ? `${fmtMoney(stripe.nextPayout.amount)} · ${stripe.nextPayout.arrivalDate}` : 'none scheduled'}</span></div>
-                        </div>
-                      ) : stripeNote ? (
-                        <p className="text-xs text-warn">{stripeNote}</p>
-                      ) : (
-                        <p className="text-xs text-ink-soft">Loading…</p>
-                      )}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-4">
-                    <OutLink href={data!.links.commits}>Commit history</OutLink>
-                    <OutLink href={data!.links.vercel} deep={data!.links.vercelIsDeep}>Vercel project</OutLink>
-                  </div>
-                  {!data!.links.vercelIsDeep && (
-                    <p className="text-[11px] text-ink-faint">Set <code className="font-mono">ADMIN_VERCEL_PROJECT_URL</code> in Vercel env to make that link land on this project — Vercel does not expose the team slug to the app.</p>
-                  )}
-                </div>
-              ) : !loadError && <p className="text-sm text-ink-soft">Loading…</p>}
-            </SystemCard>
+          {glance.length > 0 && (
+            <section aria-label="At a glance" className="border border-line rounded-lg divide-y divide-line-soft">
+              {glance.map(g => (
+                <a key={g.id} href={`#${g.id}`} className="flex items-center gap-3 px-4 py-2.5 text-[14px] hover:bg-paper">
+                  <StatusDot status={g.dot} />
+                  <span className="w-44 shrink-0 font-medium text-ink">{g.label}</span>
+                  <span className={g.dot === 'bad' ? 'text-bad' : g.dot === 'warn' ? 'text-warn' : 'text-ink-soft'}>{g.text}</span>
+                </a>
+              ))}
+            </section>
+          )}
+
+          {/* ── Is it running? ── */}
+          <div className="flex flex-col gap-6">
+            <h2 className={H2}>Is it running?</h2>
 
             {/* MP-8b: each job's last recorded run. Red = failed, never finished, or overdue. */}
-            <SystemCard title="Crons" tracked={!!data}
-              right={<span className="text-[11px] text-ink-faint">{data ? `${data.crons.length} scheduled` : ''}</span>}>
+            <Section id="jobs" title="Scheduled jobs" right={data ? <span className="text-[12.5px] text-ink-muted">{data.crons.length} scheduled</span> : undefined}>
               {data && data.crons.length > 0 && (
                 <div className="divide-y divide-line-soft mb-3">
                   {data.crons.map(c => {
@@ -325,14 +296,57 @@ export default function AdminSystemPage() {
                   })}
                 </div>
               )}
-              {/* Review 2026-10-04: loading and failure are not "all fine". */}
-              {!data && <p className="text-sm text-ink-soft mb-2">{loadError ? 'Couldn’t load cron runs — see the error at the top of the page.' : 'Loading…'}</p>}
+              {!data && <p className="text-sm text-ink-soft mb-2">{loadError ? 'Couldn’t load the job runs — see the error at the top of the page.' : 'Loading…'}</p>}
               {data && <OutLink href={data.links.vercel} deep={data.links.vercelIsDeep}>Open Vercel logs</OutLink>}
-            </SystemCard>
+            </Section>
 
-            {/* CAL-2: what the public booking page believes, without reading code.
-                Cal.com is the only scheduler; availability lives in Cal.com. */}
-            <SystemCard title="Call booking (Cal.com)" tracked>
+            {/* MP-8b: the last verified event this endpoint received (CronRunLog, job webhook:stripe). */}
+            <Section id="stripe" title="Stripe events">
+              <div className="flex items-start gap-2 mb-2">
+                <span className="mt-1"><StatusDot status={p && !p.integrations.stripeWebhook ? 'bad' : data?.stripeWebhook ? (data.stripeWebhook.outcome === 'error' ? 'bad' : 'ok') : 'neutral'}/></span>
+                <span className="text-sm text-ink-soft">
+                  {!data
+                    ? (loadError ? 'Couldn’t load webhook receipts — see the error at the top of the page.' : 'Loading…')
+                    : p && !p.integrations.stripeWebhook
+                    ? <strong className="text-bad">STRIPE_WEBHOOK_SECRET is not set — the webhook cannot be verified and every event is being rejected.</strong>
+                    : data?.stripeWebhook
+                      ? <>Last event received {fmtDate(data.stripeWebhook.at)}: <code className="font-mono text-xs text-ink">{data.stripeWebhook.detail}</code>{data.stripeWebhook.outcome === 'error' && <span className="block text-bad">The handler failed on it: {data.stripeWebhook.error} — replay it from Stripe once fixed.</span>}</>
+                      : <>No event received since receipts started being logged{data?.lastStripeTouch ? <> (most recent Stripe-linked course update: {data.lastStripeTouch.courseName}, {fmtDate(data.lastStripeTouch.updatedAt)})</> : null}. Stripe only sends events when something happens on a connected account.</>}
+                </span>
+              </div>
+              {data && <OutLink href={data.links.stripeWebhooks}>Open Stripe webhooks</OutLink>}
+            </Section>
+
+            <Section id="sentry" title="Error tracking (Sentry)">
+              <div className="flex items-center gap-2 mb-2">
+                <StatusDot status={p ? (p.integrations.sentry ? 'neutral' : 'warn') : 'neutral'}/>
+                <span className="text-sm text-ink-soft">
+                  {p && !p.integrations.sentry
+                    ? 'No Sentry DSN in this environment — errors here are not being reported.'
+                    : 'Error tracking is wired in (client + server) — check Sentry for recent issues.'}
+                </span>
+              </div>
+              {data && <OutLink href={data.links.sentry} deep={data.links.sentryIsDeep}>Open Sentry issues</OutLink>}
+              {data && !data.links.sentryIsDeep && (
+                <p className="text-[12px] text-ink-muted mt-1">Set <code className="font-mono">SENTRY_ORG</code> (and <code className="font-mono">SENTRY_PROJECT</code>) to deep-link.</p>
+              )}
+              <SentryTestButton />
+            </Section>
+          </div>
+
+          {/* ── Connections ── */}
+          <div className="flex flex-col gap-6">
+            <h2 className={H2}>Connections</h2>
+            <Section id="keys" title="Services with their keys set">
+              {p ? (
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                  {integrations.map(([name, ok]) => <StatusDot key={name} status={ok ? 'ok' : 'bad'} label={name} />)}
+                </div>
+              ) : !loadError && <p className="text-sm text-ink-soft">Loading…</p>}
+            </Section>
+
+            {/* CAL-2: what the public booking page believes, without reading code. Cal.com is the only scheduler. */}
+            <Section id="calcom" title="Call booking (Cal.com)">
               {data?.calcom ? (
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
@@ -357,22 +371,21 @@ export default function AdminSystemPage() {
                   )}
                 </div>
               ) : loadError ? (
-                <p className="text-sm text-ink-soft">Could not read the booking setup — the system status above says why.</p>
+                <p className="text-sm text-ink-soft">Could not read the booking setup — the error at the top says why.</p>
               ) : (
                 <p className="text-sm text-ink-soft">Loading…</p>
               )}
-            </SystemCard>
+            </Section>
 
             {/* BIRDIE_AI_SPEC B1: the assistant's switch and today's spend, in replies. */}
-            <SystemCard title="Birdie" tracked
-              right={data?.birdie ? <span className="text-[11px] text-ink-faint">{data.birdie.model}</span> : undefined}>
+            <Section id="birdie" title="Birdie" right={data?.birdie ? <span className="text-[12.5px] text-ink-muted">{data.birdie.model}</span> : undefined}>
               {data?.birdie ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <StatusDot status={data.birdie.enabled ? 'ok' : 'neutral'}/>
                     <span className="text-sm text-ink-soft">
                       {data.birdie.enabled
-                        ? <>On for operators — the Ask launcher in the dashboard's bottom corner.</>
+                        ? <>On for operators — the Ask launcher in the dashboard&rsquo;s bottom corner.</>
                         : !data.birdie.keySet
                           ? <>Off — <code className="font-mono text-xs">ANTHROPIC_API_KEY</code> is not set in Vercel (PASSWORD_CHECKLIST Phase 7c).</>
                           : !data.birdie.flag
@@ -386,21 +399,72 @@ export default function AdminSystemPage() {
                   </div>
                 </div>
               ) : loadError ? (
-                <p className="text-sm text-ink-soft">Could not read Birdie's state — the system status above says why.</p>
+                <p className="text-sm text-ink-soft">Could not read Birdie&rsquo;s state — the error at the top says why.</p>
               ) : (
                 <p className="text-sm text-ink-soft">Loading…</p>
               )}
-            </SystemCard>
+            </Section>
+          </div>
+
+          {/* ── What's live ── MP-8a: "What's live right now?" without a write surface. */}
+          <div className="flex flex-col gap-6">
+            <h2 className={H2}>What&rsquo;s live</h2>
+            <Section id="deployed" title="This deployment" right={p && <StatusDot status={p.env === 'production' ? 'ok' : 'warn'} label={p.env} />}>
+              {p ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-2 text-sm">
+                    <div><span className="text-ink-muted">Service fee</span><div className="text-ink font-medium">{fmtMoney(p.accessFeeCents / 100)} per player</div></div>
+                    <div><span className="text-ink-muted">Deployed</span>
+                      <div className="text-ink font-medium">
+                        {p.commitSha ? <code className="font-mono text-xs bg-paper border border-line rounded px-1.5 py-0.5">{p.commitSha}</code> : <span className="text-ink-muted">local build</span>}
+                        {p.branch && <span className="text-xs text-ink-muted ml-2">{p.branch}</span>}
+                      </div>
+                      {p.commitMessage && <div className="text-xs text-ink-soft mt-0.5 truncate" title={p.commitMessage}>{p.commitMessage}</div>}
+                    </div>
+                    {p.publicUrl && <div><span className="text-ink-muted">Public URL</span><div className="text-ink font-medium truncate">{p.publicUrl}</div></div>}
+                  </div>
+                  {isOwner && (
+                    <div className="pt-3 border-t border-line-soft">
+                      <div className="text-[13px] font-semibold text-ink mb-1.5">Platform Stripe balance</div>
+                      {stripe ? (
+                        <div className="flex flex-wrap items-center gap-6 text-sm">
+                          <div><span className="text-ink-muted">Available</span> <span className="text-ink font-medium tabular-nums">{fmtMoney(stripe.balance.available)}</span></div>
+                          <div><span className="text-ink-muted">Pending</span> <span className="text-ink font-medium tabular-nums">{fmtMoney(stripe.balance.pending)}</span></div>
+                          <div><span className="text-ink-muted">Next payout</span> <span className="text-ink font-medium tabular-nums">{stripe.nextPayout ? `${fmtMoney(stripe.nextPayout.amount)} · ${stripe.nextPayout.arrivalDate}` : 'none scheduled'}</span></div>
+                        </div>
+                      ) : stripeNote ? (
+                        <p className="text-xs text-warn">{stripeNote}</p>
+                      ) : (
+                        <p className="text-xs text-ink-soft">Loading…</p>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-4">
+                    <OutLink href={data!.links.commits}>Commit history</OutLink>
+                    <OutLink href={data!.links.vercel} deep={data!.links.vercelIsDeep}>Vercel project</OutLink>
+                  </div>
+                  {!data!.links.vercelIsDeep && (
+                    <p className="text-[12px] text-ink-muted">Set <code className="font-mono">ADMIN_VERCEL_PROJECT_URL</code> in Vercel env to make that link land on this project — Vercel does not expose the team slug to the app.</p>
+                  )}
+                </div>
+              ) : !loadError && <p className="text-sm text-ink-soft">Loading…</p>}
+            </Section>
+          </div>
+
+          {/* ── Data and records ── */}
+          <div className="flex flex-col gap-6">
+            <h2 className={H2}>Data and records</h2>
 
             {/* MP-8a: moved here from the Courses list. GET always dry-runs;
                 the cleanup and the force-delete are explicit owner clicks. */}
-            <SystemCard title="Data integrity" tracked
+            <Section id="data" title="Data check"
               right={
                 <button
+                  type="button"
                   onClick={checkOrphans}
                   disabled={orphanChecking}
-                  className={'px-3 py-1.5 rounded-md text-[11px] font-medium border transition-colors disabled:opacity-50 ' + (
-                    orphanChecked ? 'text-ink border-line-strong bg-paper' : 'text-ink-muted border-line hover:border-line-strong hover:text-ink'
+                  className={'px-3 py-1.5 rounded-md text-[13px] font-medium border transition-colors disabled:opacity-50 ' + (
+                    orphanChecked ? 'text-ink border-line-strong bg-paper' : 'text-ink-soft border-line hover:border-line-strong hover:text-ink'
                   )}
                   title="Check for courses and inquiries that lost their link to each other"
                 >
@@ -423,6 +487,7 @@ export default function AdminSystemPage() {
                       {orphanItems.length} orphaned record{orphanItems.length === 1 ? '' : 's'} — no linked inquiry, or an inquiry pointing at a deleted course.
                     </span>
                     <button
+                      type="button"
                       onClick={runOrphanSweep}
                       disabled={orphanRunning}
                       className="shrink-0 text-xs font-medium px-3 py-1.5 rounded-md bg-warn text-white hover:bg-warn/90 transition-colors disabled:opacity-50"
@@ -433,24 +498,20 @@ export default function AdminSystemPage() {
                   <ul className="space-y-0.5">
                     {orphanItems.map(i => (
                       <li key={i.kind + i.id} className="text-xs text-ink-soft">
-                        <span className="font-medium">{i.name}</span> — {i.reason} <span className="text-ink-faint">(will be {i.action.replace('would_', '')})</span>
+                        <span className="font-medium">{i.name}</span> — {i.reason} <span className="text-ink-muted">(will be {i.action.replace('would_', '')})</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-              {/* MP-2e: success and failure both wrote into orphanResult and this
-                  banner was styled green unconditionally — "Sweep failed: network
-                  error" was rendered as a success. */}
+              {/* MP-2e: success and failure both write orphanResult; the colour follows which. */}
               {orphanResult && (
                 <div className={'px-4 py-3 rounded-md border flex items-center justify-between gap-3 mb-3 ' + (orphanFailed ? 'bg-bad/5 border-bad/20' : 'bg-ok/5 border-ok/20')}>
                   <span className={'text-sm ' + (orphanFailed ? 'text-bad' : 'text-ok')}>{orphanResult}</span>
-                  <button onClick={() => { setOrphanResult(''); setOrphanFailed(false); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
+                  <button type="button" onClick={() => { setOrphanResult(''); setOrphanFailed(false); }} className="text-xs text-ink-muted hover:text-ink transition-colors">Dismiss</button>
                 </div>
               )}
-              {/* Acknowledged orphans (already archived + flagged by a prior
-                  sweep) — informational only, never nags, but an owner can still
-                  force-delete one individually (Cam's DaisyLinks exception). */}
+              {/* Acknowledged orphans — informational, but an owner can force-delete one (Cam's DaisyLinks exception). */}
               {orphanAcknowledged.length > 0 && (
                 <div className="px-4 py-3 rounded-md bg-paper border border-line">
                   <div className="text-xs font-medium text-ink-muted mb-2">
@@ -459,8 +520,9 @@ export default function AdminSystemPage() {
                   <ul className="space-y-1">
                     {orphanAcknowledged.map(a => (
                       <li key={a.id} className="text-xs text-ink-soft flex items-center justify-between gap-3">
-                        <span>{a.name} <span className="text-ink-faint">— archived {new Date(a.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></span>
+                        <span>{a.name} <span className="text-ink-muted">— archived {new Date(a.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></span>
                         <button
+                          type="button"
                           onClick={() => { setForceDeleteTarget(a); setForceDeleteConfirm(''); setForceDeleteError(''); }}
                           className="text-bad hover:underline shrink-0"
                         >
@@ -471,59 +533,23 @@ export default function AdminSystemPage() {
                   </ul>
                 </div>
               )}
-            </SystemCard>
+            </Section>
 
             {/* AG-3: publish agreement versions (owner with 2FA; the route enforces it). */}
             {isOwner && <AgreementVersionsCard />}
 
-            <SystemCard title="Backups">
+            <Section id="records" title="Backups and CI">
               <div className="flex items-center gap-2 mb-2">
                 <StatusDot status="neutral"/>
-                <span className="text-sm text-ink-soft">Not tracked in-app — verify the nightly workflow ran in GitHub Actions.</span>
+                <span className="text-sm text-ink-soft">Not tracked in the app — check the nightly backup run and the latest test run on GitHub.</span>
               </div>
-              {data && <OutLink href={data.links.backups}>View backup runs</OutLink>}
-            </SystemCard>
-
-            {/* MP-8b: the last verified event this endpoint received (CronRunLog, job webhook:stripe). */}
-            <SystemCard title="Stripe Webhook" tracked={!!data}>
-              <div className="flex items-start gap-2 mb-2">
-                <span className="mt-1"><StatusDot status={p && !p.integrations.stripeWebhook ? 'bad' : data?.stripeWebhook ? (data.stripeWebhook.outcome === 'error' ? 'bad' : 'ok') : 'neutral'}/></span>
-                <span className="text-sm text-ink-soft">
-                  {!data
-                    ? (loadError ? 'Couldn’t load webhook receipts — see the error at the top of the page.' : 'Loading…')
-                    : p && !p.integrations.stripeWebhook
-                    ? <strong className="text-bad">STRIPE_WEBHOOK_SECRET is not set — the webhook cannot be verified and every event is being rejected.</strong>
-                    : data?.stripeWebhook
-                      ? <>Last event received {fmtDate(data.stripeWebhook.at)}: <code className="font-mono text-xs text-ink">{data.stripeWebhook.detail}</code>{data.stripeWebhook.outcome === 'error' && <span className="block text-bad">The handler failed on it: {data.stripeWebhook.error} — replay it from Stripe once fixed.</span>}</>
-                      : <>No event received since receipts started being logged{data?.lastStripeTouch ? <> (most recent Stripe-linked course update: {data.lastStripeTouch.courseName}, {fmtDate(data.lastStripeTouch.updatedAt)})</> : null}. Stripe only sends events when something happens on a connected account.</>}
-                </span>
-              </div>
-              {data && <OutLink href={data.links.stripeWebhooks}>Open Stripe webhooks</OutLink>}
-            </SystemCard>
-
-            <SystemCard title="CI">
-              <div className="flex items-center gap-2 mb-2">
-                <StatusDot status="neutral"/>
-                <span className="text-sm text-ink-soft">Not polled in-app — check the latest GitHub Actions run.</span>
-              </div>
-              {data && <OutLink href={data.links.ci}>View CI runs</OutLink>}
-            </SystemCard>
-
-            <SystemCard title="Sentry">
-              <div className="flex items-center gap-2 mb-2">
-                <StatusDot status={p ? (p.integrations.sentry ? 'neutral' : 'warn') : 'neutral'}/>
-                <span className="text-sm text-ink-soft">
-                  {p && !p.integrations.sentry
-                    ? 'No Sentry DSN in this environment — errors here are not being reported.'
-                    : 'Error tracking is wired in (client + server) — check Sentry for recent issues.'}
-                </span>
-              </div>
-              {data && <OutLink href={data.links.sentry} deep={data.links.sentryIsDeep}>Open Sentry issues</OutLink>}
-              {data && !data.links.sentryIsDeep && (
-                <p className="text-[11px] text-ink-faint mt-1">Set <code className="font-mono">SENTRY_ORG</code> (and <code className="font-mono">SENTRY_PROJECT</code>) to deep-link.</p>
+              {data && (
+                <div className="flex items-center gap-4">
+                  <OutLink href={data.links.backups}>View backup runs</OutLink>
+                  <OutLink href={data.links.ci}>View CI runs</OutLink>
+                </div>
               )}
-              <SentryTestButton />
-            </SystemCard>
+            </Section>
           </div>
         </div>
       </div>
