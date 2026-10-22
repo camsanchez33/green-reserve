@@ -234,6 +234,14 @@ Built (2026-10-22): the Schedule page is three sections — When you're open (us
 
 Still open for Cam: 27/36-hole crossover courses at launch — fully self-serve, or set up with GreenReserve's help (W2-6 says launch courses include 27 holes / 3 nines).
 
+### W2-8 Analytics — research and decisions (Cam 2026-10-22)
+
+Research (sources in the proposal sent to Cam 2026-10-22): the metrics that move a public course are revenue per available spot (not fill alone), rate actually paid vs posted, spend beyond the green fee, booking pace ahead, demand turned away, no-shows/short-shows by whether a fee applies, weather-adjusted cancellations, and keeping regulars. Not built on purpose: industry benchmark lines (different denominators), "lost revenue" as a dollar figure, forecasts, vanity counts, weather-API charts, any tile outside Analytics (AN-1).
+
+Decisions (asked in session): build all nine, small ones first; pro-shop money is its OWN line, never in the headline revenue; the resident report is the course's (a CSV it forwards to its city/county); the gone-quiet list shows name, email and phone. Weather/closure cancels are marked explicitly: `performCancellation(..., { courseCalledOff })`, written on the cancel event by lib/weather-cancel.ts ('weather') and lib/course-closure.ts ('closure').
+
+Built, slice a (2026-10-22): Busy times — the heatmap switches between "How full" and "Earned per spot" (collected course share ÷ spots offered, past tee times); "Golfers you turned away" (times sold out, by day × hour; TeeTimeAlert sign-ups, CSV). No-shows & cancellations — short-shows (groups that came with fewer players), no-show and missing-player rates split by whether the booking carried a fee; rounds the course called off (weather / closure) counted apart and left out of the cancellation rate, with the closed days listed. Golfers — "Residents and everyone else" (paid rounds since RES-1, Oct 19 2026, players and green fees, CSV). Next: slice b = spend beyond the green fee + gone-quiet regulars; slice c = rate paid vs posted + 14-day booking pace.
+
 ### W2-9 Tournaments & Outings tab (Cam 2026-10-21, asked in session)
 
 Cam: "should help walk through a course working how to input a outing or tournament, help with organization and preparation." A dashboard tab of its own (the hidden "Soon" Tournaments / Outings placeholders become one "Events" tab — name to confirm with Cam).
