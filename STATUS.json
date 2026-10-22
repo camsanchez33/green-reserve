@@ -1,15 +1,37 @@
 {
-  "generatedAt": "2026-10-22T21:29:57.273Z",
+  "generatedAt": "2026-10-22T21:37:34.754Z",
   "repo": {
-    "head": "4f553f1",
+    "head": "9935d2e",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 14,
+    "dirty": [
+      "M  OPERATOR_REWORK_SPEC.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "A  prisma/migrations/20261022030847_w2_9c_player_payments/migration.sql",
+      "M  prisma/schema.prisma",
+      "M  scripts/event-payments-db-test.ts",
+      "M  src/app/api/operator/events/[id]/payments/route.ts",
+      "M  src/app/api/operator/events/[id]/route.ts",
+      "M  src/components/dashboard/events/EventDetail.tsx",
+      "M  src/components/dashboard/events/EventMoney.tsx",
+      "M  src/lib/event-payments.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-19T10:10:52-04:00",
     "unrecorded": [
+      {
+        "h": "9935d2e",
+        "date": "2026-10-22T21:29:58+00:00",
+        "subject": "Regenerate status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ad8c721",
         "date": "2026-10-22T21:25:56+00:00",
@@ -1259,6 +1281,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "9935d2e",
+      "date": "2026-10-22",
+      "subject": "Regenerate status board"
+    },
+    {
       "h": "ad8c721",
       "date": "2026-10-22",
       "subject": "Regenerate status board"
@@ -1312,11 +1339,6 @@
       "h": "e449074",
       "date": "2026-10-22",
       "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close"
-    },
-    {
-      "h": "4438d60",
-      "date": "2026-10-22",
-      "subject": "Status board"
     }
   ]
 }

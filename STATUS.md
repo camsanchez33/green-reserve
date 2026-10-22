@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 21:29 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `4f553f1` · working tree clean
+Generated 2026-10-22 21:37 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `9935d2e` · working tree **14 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-19**. 123 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-19**. 124 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `9935d2e` | 2026-10-22 | Regenerate status board |
 | `ad8c721` | 2026-10-22 | Regenerate status board |
 | `da32563` | 2026-10-22 | Event pay-link email: say a reply reaches the course |
 | `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
@@ -138,6 +139,26 @@ Generated 2026-10-22 21:29 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
+### Uncommitted working tree (14 file(s))
+
+- `M  OPERATOR_REWORK_SPEC.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `A  prisma/migrations/20261022030847_w2_9c_player_payments/migration.sql`
+- `M  prisma/schema.prisma`
+- `M  scripts/event-payments-db-test.ts`
+- `M  src/app/api/operator/events/[id]/payments/route.ts`
+- `M  src/app/api/operator/events/[id]/route.ts`
+- `M  src/components/dashboard/events/EventDetail.tsx`
+- `M  src/components/dashboard/events/EventMoney.tsx`
+- `M  src/lib/event-payments.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -257,6 +278,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `9935d2e` 2026-10-22 — Regenerate status board
 - `ad8c721` 2026-10-22 — Regenerate status board
 - `da32563` 2026-10-22 — Event pay-link email: say a reply reaches the course
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
@@ -268,7 +290,6 @@ Nothing awaiting review.
 - `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
 - `40be0a7` 2026-10-22 — Status board
 - `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
-- `4438d60` 2026-10-22 — Status board
 
 ---
 
