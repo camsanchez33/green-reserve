@@ -246,7 +246,7 @@ export default function SchedulesPage() {
   }
 
   if (pageAccess.loaded && !pageAccess.can('schedule.view')) return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active="schedule" />
       <main className="flex-1 md:overflow-y-auto"><StaffNotice what="the schedule" view="schedule.view" /></main>
     </div>
@@ -368,7 +368,7 @@ export default function SchedulesPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-paper md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active="schedule" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the schedule" view="schedule.view" edit="schedule.edit" />
@@ -557,7 +557,7 @@ export default function SchedulesPage() {
 
       {/* Unsaved changes: one save for the whole page, with a preview first. */}
       {dirty && canEdit && (
-        <div className="fixed bottom-16 md:bottom-0 inset-x-0 z-40 bg-white border-t border-line">
+        <div className="fixed bottom-16 md:bottom-0 inset-x-0 md:left-[var(--op-rail-w)] z-40 bg-white border-t border-line">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
             <span className="text-[13.5px] text-ink">You have changes that aren&apos;t saved yet.</span>
             <div className="flex items-center gap-2">
