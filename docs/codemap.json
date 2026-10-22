@@ -12122,7 +12122,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 449,
+      "lines": 451,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [

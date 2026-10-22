@@ -187,7 +187,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
           <div>
             <span className={LABEL}>How much of the course does it use?</span>
             <div className="grid sm:grid-cols-2 gap-2">
-              {([[false, 'The whole course', 'Nothing in the event\u2019s hours can be booked. Most events.'],
+              {([[false, f.format === 'tee_times' && f.productId ? 'All of that round' : 'The whole course', f.format === 'tee_times' && f.productId ? 'None of that round\u2019s times in the event\u2019s hours can be booked.' : 'Nothing in the event\u2019s hours can be booked. Most events.'],
                  [true, 'Part of it', 'Choose the holes it uses and which times golfers can still book.']] as const).map(([v, l, h]) => (
                 <button key={l} onClick={() => { set('shareCourse', v); if (!v) { set('holdNineIds', []); set('keepOpen', []); } }} aria-pressed={f.shareCourse === v}
                   className={'text-left rounded-md border px-3.5 py-3 transition-colors ' + (f.shareCourse === v ? 'border-pine bg-pine/[0.05]' : 'border-line bg-white hover:bg-paper')}>
@@ -311,7 +311,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
                         const open = f.keepOpen.includes(t);
                         return (
                           <button key={t} type="button" aria-pressed={open} onClick={() => set('keepOpen', open ? f.keepOpen.filter(x => x !== t) : [...f.keepOpen, t].sort())}
-                            className={'px-2.5 py-1.5 rounded-md border text-[12.5px] tabular-nums ' + (open ? 'border-ok bg-ok/[0.08] text-ink' : 'border-line bg-white text-ink-soft')}>
+                            className={'px-2.5 py-1.5 rounded-md border text-[12.5px] tabular-nums ' + (open ? 'border-pine bg-pine/[0.06] text-ink font-medium' : 'border-line bg-white text-ink-soft')}>
                             {formatTeeTime(t)}{open ? ' · open' : ''}
                           </button>
                         );

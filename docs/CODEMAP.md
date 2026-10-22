@@ -434,7 +434,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/agreement-pdf.tsx` | 1 | 129 | AGREEMENT_SPEC AG-2 §2 — the signed-agreement PDF. | `AgreementPdf`, `markdownBlocks`, `renderAgreementPdf`, `SignatureBlock` |
 | `src/lib/birdie/course-context.ts` | 1 | 72 | BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course. | `describeCourseContext`, `operatorCourseContext`, `OperatorCourseContext` |
 | `src/lib/birdie/knowledge-operator.ts` | 1 | 64 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |
-| `src/lib/birdie/proposals.ts` | 1 | 449 | BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES. | `isProposeTool`, `ProposalCard`, `ProposalOutcome`, `PROPOSE_TOOLS`, `runProposeTool` |
+| `src/lib/birdie/proposals.ts` | 1 | 451 | BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES. | `isProposeTool`, `ProposalCard`, `ProposalOutcome`, `PROPOSE_TOOLS`, `runProposeTool` |
 | `src/lib/booking-residents.ts` | 1 | 60 | RES-1 (Cam 2026-10-19): | `setBookingResidents`, `SetResidentsResult` |
 | `src/lib/booking-status.ts` | 1 | 77 | Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair. | `BookingStatusInfo`, `getBookingStatus`, `statusDot`, `StatusTone` |
 | `src/lib/cancel-confirm.ts` | 1 | 38 | The words staff read before cancelling a booking — the tee sheet's panel and Money → Cancellations ask the same question the same way, so the fee outcome they promise matches what lib/cancel-bookin... | `cancelConfirmText`, `CancelResult`, `cancelResultText` |
