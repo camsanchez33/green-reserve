@@ -26,6 +26,12 @@ async function main() {
   await cleanup();
   const op = await prisma.courseOperator.create({ data: { name: 'A', email: `${TAG}@test.local`, password: 'x' } });
   const course = await prisma.course.create({ data: { name: 'W28', slug: `${TAG}-1`, operatorId: op.id, address: '1', city: 'T', state: 'NJ', zipCode: '07000', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
+  // A paid round before resident rates were recorded (RES-1) — never in the residents table.
+  const old = await prisma.teeTime.create({ data: { courseId: course.id, date: '2026-10-10', time: '08:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 4, status: 'available' } });
+  await prisma.booking.create({ data: { teeTimeId: old.id, courseId: course.id, golferName: 'Old', golferEmail: `${TAG}+old@test.local`, players: 4, greenFeeTotal: 20000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 20000, status: 'completed', paymentStatus: 'paid', checkedInAt: new Date('2026-10-10T08:00:00Z'), checkedInPlayers: 4 } });
+  const before = await computeAnalytics(course.id, { from: '2026-10-01', to: '2026-10-18' }, new Date('2026-10-20T12:00:00Z'));
+  check('rounds before Oct 19 2026 are not in the residents table', before.customers.residents.rows.length === 0, JSON.stringify(before.customers.residents.rows));
+
   // Wednesday Nov 6 2030 (UTC course), now = Nov 10.
   const date = '2030-11-06';
   const now = new Date('2030-11-10T12:00:00Z');
@@ -65,7 +71,7 @@ async function main() {
   check('closed day listed with its reason', a.utilization.closedDays.length === 1 && a.utilization.closedDays[0].reason === 'Aeration');
   check('short-show: one group, one player missing', a.noShows.shortShows.groups === 1 && a.noShows.shortShows.missingPlayers === 1, JSON.stringify(a.noShows.shortShows));
   check('no-shows split by fee policy: 50% with a fee, 50% without', a.noShows.byFeePolicy.withFee.noShowPct === 50 && a.noShows.byFeePolicy.withoutFee.noShowPct === 50, JSON.stringify(a.noShows.byFeePolicy));
-  check('players missing with a fee: 1 of 8', a.noShows.byFeePolicy.withFee.shortPlayersPct === 12.5, JSON.stringify(a.noShows.byFeePolicy.withFee));
+  check('booked players who didn’t play, with a fee: 5 of 8 (a no-show group of 4 + 1 short)', a.noShows.byFeePolicy.withFee.didntPlayPct === 62.5, JSON.stringify(a.noShows.byFeePolicy.withFee));
   check('the weather call-off is not a cancellation', a.cancellations.count === 1 && a.cancellations.calledOff.bookings === 1 && a.cancellations.calledOff.weather === 1, JSON.stringify(a.cancellations.calledOff));
   check('cancellation rate leaves it out: 1 of 5', a.cancellations.ratePct === 20, String(a.cancellations.ratePct));
   const res = a.customers.residents.rows;

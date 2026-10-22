@@ -236,8 +236,9 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     const set = pastLive.filter(b => b.cancellationFeeApplies === fee);
     const ns = noShows.filter(b => b.cancellationFeeApplies === fee).length;
     const players = set.reduce((n, b) => n + b.players, 0);
-    const missing = set.filter(b => b.checkedInAt && b.checkedInPlayers != null && b.checkedInPlayers < b.players).reduce((n, b) => n + (b.players - (b.checkedInPlayers ?? b.players)), 0);
-    return { bookings: set.length, noShowPct: pct(ns, set.length), shortPlayersPct: pct(missing, players) };
+    // Booked players who didn't play: the whole group for a no-show, the gap for a short-show.
+    const missing = set.reduce((n, b) => n + (!b.checkedInAt ? b.players : Math.max(0, b.players - (b.checkedInPlayers ?? b.players))), 0);
+    return { bookings: set.length, noShowPct: pct(ns, set.length), didntPlayPct: pct(missing, players) };
   };
 
   // ── W2-8 (6): demand turned away — full times, and golfers who asked to hear of an opening ──
@@ -257,6 +258,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   // ── W2-8 (3): residents vs everyone else (RES-1, recorded from Oct 19 2026) ──
   const resRows = new Map<string, { resPlayers: number; otherPlayers: number; resCents: number; otherCents: number }>();
   for (const b of collectedB) {
+    if (b.date < RES_START) continue; // residency wasn't recorded before RES-1 — unknown, not "everyone else"
     const players = b.checkedInPlayers ?? b.players;
     const res = Math.min(b.residentPlayers, players);
     const resCents = res > 0 && b.residentRateCents != null ? Math.min(b.greenFeeTotal, res * b.residentRateCents) : 0;

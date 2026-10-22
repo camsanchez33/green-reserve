@@ -415,8 +415,8 @@ function MissesTab({ d }: { d: Data }) {
           {/* W2-8 (7): the evidence a course needs before turning on a no-show fee. */}
           {(d.noShows.byFeePolicy.withFee.bookings > 0 && d.noShows.byFeePolicy.withoutFee.bookings > 0) && (
             <div className="divide-y divide-line-soft mb-5">
-              <Line label="With a card and a fee" value={`${pctS(d.noShows.byFeePolicy.withFee.noShowPct)} no-shows`} sub={`${pctS(d.noShows.byFeePolicy.withFee.shortPlayersPct)} of players missing · ${plural(d.noShows.byFeePolicy.withFee.bookings, 'booking')}`} />
-              <Line label="With no fee" value={`${pctS(d.noShows.byFeePolicy.withoutFee.noShowPct)} no-shows`} sub={`${pctS(d.noShows.byFeePolicy.withoutFee.shortPlayersPct)} of players missing · ${plural(d.noShows.byFeePolicy.withoutFee.bookings, 'booking')}`} />
+              <Line label="With a card and a fee" value={`${pctS(d.noShows.byFeePolicy.withFee.noShowPct)} no-shows`} sub={`${pctS(d.noShows.byFeePolicy.withFee.didntPlayPct)} of booked players didn’t play · ${plural(d.noShows.byFeePolicy.withFee.bookings, 'booking')}`} />
+              <Line label="With no fee" value={`${pctS(d.noShows.byFeePolicy.withoutFee.noShowPct)} no-shows`} sub={`${pctS(d.noShows.byFeePolicy.withoutFee.didntPlayPct)} of booked players didn’t play · ${plural(d.noShows.byFeePolicy.withoutFee.bookings, 'booking')}`} />
             </div>
           )}
           <h4 className="text-[13px] font-semibold text-ink mb-1">Missed more than once</h4>
