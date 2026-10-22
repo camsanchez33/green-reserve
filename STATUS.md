@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 21:33 UTC · branch `claude/dash-mock` · HEAD `6ea9b46` · working tree **16 dirty file(s)**
+Generated 2026-10-22 21:38 UTC · branch `claude/dash-mock` · HEAD `4d97fc1` · working tree **14 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 129 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 131 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `4d97fc1` | 2026-10-22 | Tee sheet: time panel sits at the top now the colour bar is gone |
+| `6c7deeb` | 2026-10-22 | Course dashboard: white left menu, white pages, Inter (DASH-C step 1) |
 | `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
 | `3c63c5d` | 2026-10-22 | AW-11 Team: per-person access — each employee's role and areas (#186) |
 | `75ac7d5` | 2026-10-22 | AW-10 Golfers: lookup only, in the new admin look (#185) |
@@ -144,24 +146,22 @@ Generated 2026-10-22 21:33 UTC · branch `claude/dash-mock` · HEAD `6ea9b46` ·
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (16 file(s))
+### Uncommitted working tree (14 file(s))
 
-- `M CLAUDE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/operator-nav-test.ts`
-- `M src/app/dashboard/analytics/page.tsx`
-- `M src/app/dashboard/events/page.tsx`
-- `M src/app/dashboard/layout.tsx`
-- `M src/app/dashboard/members/page.tsx`
-- `M src/app/dashboard/messages/page.tsx`
-- `M src/app/dashboard/money/page.tsx`
-- `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/schedules/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/app/globals.css`
-- `M src/components/OperatorSidebar.tsx`
+- `M  OPERATOR_REWORK_SPEC.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `A  prisma/migrations/20261022030847_w2_9c_player_payments/migration.sql`
+- `M  prisma/schema.prisma`
+- `M  scripts/event-payments-db-test.ts`
+- `M  src/app/api/operator/events/[id]/payments/route.ts`
+- `M  src/app/api/operator/events/[id]/route.ts`
+- `M  src/components/dashboard/events/EventDetail.tsx`
+- `M  src/components/dashboard/events/EventMoney.tsx`
+- `M  src/lib/event-payments.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -286,6 +286,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4d97fc1` 2026-10-22 — Tee sheet: time panel sits at the top now the colour bar is gone
+- `6c7deeb` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1)
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
 - `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
 - `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
@@ -296,8 +298,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `40be0a7` 2026-10-22 — Status board
 - `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
 - `4438d60` 2026-10-22 — Status board
-- `b001c14` 2026-10-22 — W2-9b: narrow the recorded payment in the test (typecheck)
-- `4086e37` 2026-10-22 — W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds
 
 ---
 

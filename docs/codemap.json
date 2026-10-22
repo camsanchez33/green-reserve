@@ -5274,10 +5274,14 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/payments/route.ts",
-      "lines": 114,
+      "lines": 151,
       "purpose": "",
       "brain": [],
       "exports": [
+        {
+          "name": "maxDuration",
+          "kind": "const"
+        },
         {
           "name": "POST",
           "kind": "route"
@@ -5306,7 +5310,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 239,
+      "lines": 246,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9870,7 +9874,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 266,
+      "lines": 355,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -9916,7 +9920,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventMoney.tsx",
-      "lines": 253,
+      "lines": 266,
       "purpose": "W2-9b:",
       "brain": [],
       "exports": [
@@ -15459,7 +15463,7 @@
     },
     {
       "path": "src/lib/event-payments.ts",
-      "lines": 357,
+      "lines": 409,
       "purpose": "W2-9b (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -15497,6 +15501,10 @@
         },
         {
           "name": "paymentForPayPage",
+          "kind": "fn"
+        },
+        {
+          "name": "playerPayState",
           "kind": "fn"
         },
         {
@@ -22019,6 +22027,14 @@
           "type": "Int?"
         },
         {
+          "name": "playerId",
+          "type": "String?"
+        },
+        {
+          "name": "player",
+          "type": "CourseEventPlayer?"
+        },
+        {
           "name": "note",
           "type": "String"
         },
@@ -22044,6 +22060,7 @@
       ],
       "readers": [
         "src/app/api/operator/events/[id]/payments/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/lib/event-payments.ts"
       ]
     },
@@ -22083,6 +22100,10 @@
           "type": "Int?"
         },
         {
+          "name": "payments",
+          "type": "CourseEventPayment[]"
+        },
+        {
           "name": "sortOrder",
           "type": "Int"
         },
@@ -22095,7 +22116,9 @@
         "src/app/api/operator/events/[id]/route.ts"
       ],
       "readers": [
-        "src/app/api/operator/events/[id]/route.ts"
+        "src/app/api/operator/events/[id]/payments/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/lib/event-payments.ts"
       ]
     },
     {

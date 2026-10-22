@@ -1,32 +1,44 @@
 {
-  "generatedAt": "2026-10-22T21:33:46.791Z",
+  "generatedAt": "2026-10-22T21:38:34.300Z",
   "repo": {
-    "head": "6ea9b46",
+    "head": "4d97fc1",
     "branch": "claude/dash-mock",
-    "dirtyCount": 16,
+    "dirtyCount": 14,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/operator-nav-test.ts",
-      " M src/app/dashboard/analytics/page.tsx",
-      " M src/app/dashboard/events/page.tsx",
-      " M src/app/dashboard/layout.tsx",
-      " M src/app/dashboard/members/page.tsx",
-      " M src/app/dashboard/messages/page.tsx",
-      " M src/app/dashboard/money/page.tsx",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/dashboard/schedules/page.tsx",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/app/globals.css",
-      " M src/components/OperatorSidebar.tsx"
+      "M  OPERATOR_REWORK_SPEC.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "A  prisma/migrations/20261022030847_w2_9c_player_payments/migration.sql",
+      "M  prisma/schema.prisma",
+      "M  scripts/event-payments-db-test.ts",
+      "M  src/app/api/operator/events/[id]/payments/route.ts",
+      "M  src/app/api/operator/events/[id]/route.ts",
+      "M  src/components/dashboard/events/EventDetail.tsx",
+      "M  src/components/dashboard/events/EventMoney.tsx",
+      "M  src/lib/event-payments.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "4d97fc1",
+        "date": "2026-10-22T21:38:20+00:00",
+        "subject": "Tee sheet: time panel sits at the top now the colour bar is gone",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6c7deeb",
+        "date": "2026-10-22T21:35:18+00:00",
+        "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "6ea9b46",
         "date": "2026-10-22T17:11:35-04:00",
@@ -1321,6 +1333,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4d97fc1",
+      "date": "2026-10-22",
+      "subject": "Tee sheet: time panel sits at the top now the colour bar is gone"
+    },
+    {
+      "h": "6c7deeb",
+      "date": "2026-10-22",
+      "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1)"
+    },
+    {
       "h": "6ea9b46",
       "date": "2026-10-22",
       "subject": "Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)"
@@ -1369,16 +1391,6 @@
       "h": "4438d60",
       "date": "2026-10-22",
       "subject": "Status board"
-    },
-    {
-      "h": "b001c14",
-      "date": "2026-10-22",
-      "subject": "W2-9b: narrow the recorded payment in the test (typecheck)"
-    },
-    {
-      "h": "4086e37",
-      "date": "2026-10-22",
-      "subject": "W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds"
     }
   ]
 }

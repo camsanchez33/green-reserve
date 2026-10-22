@@ -18,6 +18,8 @@ export type EventPayment = {
   refundedCents: number; createdBy: string; payUrl: string | null; refunds: EventRefund[];
   /** 'paying' for longer than a charge can take: Stripe couldn't be asked yet. */
   stuck: boolean;
+  /** W2-9c: a player's own payment; null = the organizer's. */
+  playerId: string | null;
 };
 export type Money = { headcount: number; headcountConfirmed: boolean; totalCents: number; paidCents: number; refundedCents: number; keptCents: number; openCents: number; owedCents: number };
 
@@ -56,6 +58,12 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
   const [rec, setRec] = useState({ kind: 'deposit' as 'deposit' | 'balance' | 'other', amount: '', method: 'cash' as string, payerName: organizer.name, label: '', note: '' });
   const [paidOther, setPaidOther] = useState<{ id: string; method: string } | null>(null);
   const [refund, setRefund] = useState<{ id: string; amount: string; reason: string; confirm: boolean } | null>(null);
+  // W2-9c: players' own payments are folded under one line (a big outing has one per player).
+  const [showPlayers, setShowPlayers] = useState(false);
+  const playerPays = payments.filter(p => p.playerId || p.kind === 'player');
+  const playersPaid = playerPays.filter(p => p.status === 'paid').length;
+  const playersWaiting = playerPays.filter(p => p.status === 'open' || p.status === 'paying').length;
+  const shown = payments.filter(p => showPlayers || !(p.playerId || p.kind === 'player'));
 
   // The balance: price × the confirmed headcount, less what's already been kept.
   const balanceFor = (h: string) => {
@@ -173,9 +181,14 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
         </form>
       )}
 
-      {payments.length > 0 && (
+      {playerPays.length > 0 && (
+        <button type="button" onClick={() => setShowPlayers(v => !v)} aria-expanded={showPlayers} className="mt-4 text-[13px] text-ink-soft hover:text-ink underline underline-offset-2">
+          {showPlayers ? 'Hide' : 'Show'} players&apos; own payments ({playersPaid} paid{playersWaiting ? `, ${playersWaiting} waiting` : ''})
+        </button>
+      )}
+      {shown.length > 0 && (
         <ul className="divide-y divide-line-soft mt-4">
-          {payments.map(p => {
+          {shown.map(p => {
             const left = p.amountCents - p.refundedCents;
             return (
               <li key={p.id} className="py-3">
