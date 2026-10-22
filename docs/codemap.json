@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 518,
-    "routes": 250,
-    "libs": 169,
+    "files": 523,
+    "routes": 253,
+    "libs": 171,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -822,7 +822,7 @@
     },
     {
       "path": "src/app/admin/golfers/page.tsx",
-      "lines": 463,
+      "lines": 457,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -839,8 +839,6 @@
       "imports": [
         "@/components/EmptyState",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/components/ui/Modal",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -1139,7 +1137,7 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 940,
+      "lines": 1074,
       "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
       "brain": [],
       "exports": [
@@ -1157,6 +1155,8 @@
         "@/components/admin/AdminSidebar",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/admin-roles",
+        "@/lib/admin-session-context",
         "@/lib/expenses",
         "@/lib/format",
         "@/lib/money-tabs",
@@ -1858,6 +1858,32 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/course-payouts/route.ts",
+      "lines": 49,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/course-payouts",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "@/lib/stripe",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/course-reminders/route.ts",
       "lines": 22,
       "purpose": "",
@@ -1980,6 +2006,32 @@
         "@/lib/prisma",
         "bcryptjs",
         "crypto",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
+      "lines": 29,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/disputes/[bookingId]/evidence",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/dispute-evidence",
         "next/server"
       ],
       "usedBy": []
@@ -2662,7 +2714,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 347,
+      "lines": 359,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2863,6 +2915,33 @@
         "@/lib/password",
         "@/lib/prisma",
         "bcryptjs",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/stripe-match/route.ts",
+      "lines": 29,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/stripe-match",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/platform-stripe",
+        "@/lib/prisma",
+        "@/lib/stripe-match",
         "next/server"
       ],
       "usedBy": []
@@ -10292,7 +10371,6 @@
         "src/app/admin/create/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/goals/page.tsx",
-        "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
@@ -10407,7 +10485,6 @@
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
-        "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
@@ -10926,7 +11003,7 @@
     },
     {
       "path": "src/lib/admin-audit.ts",
-      "lines": 190,
+      "lines": 191,
       "purpose": "BRAIN-1a (Cam 2026-10-22):",
       "brain": [],
       "exports": [
@@ -11010,6 +11087,7 @@
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
@@ -11449,6 +11527,7 @@
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/page.tsx",
+        "src/app/admin/revenue/page.tsx",
         "src/components/admin/AdminSidebar.tsx",
         "src/lib/admin-ask.ts",
         "src/lib/admin-session.ts"
@@ -11497,6 +11576,7 @@
         "src/app/admin/layout.tsx",
         "src/app/admin/page.tsx",
         "src/app/admin/profile/page.tsx",
+        "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/components/admin/AdminSidebar.tsx"
       ]
@@ -11604,10 +11684,12 @@
         "src/app/api/admin/course-feed/route.ts",
         "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-members/route.ts",
+        "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/expenses/[id]/route.ts",
         "src/app/api/admin/expenses/route.ts",
@@ -11635,6 +11717,7 @@
         "src/app/api/admin/sentry-test/route.ts",
         "src/app/api/admin/session/route.ts",
         "src/app/api/admin/set-password/route.ts",
+        "src/app/api/admin/stripe-match/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/today/route.ts",
@@ -13386,6 +13469,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/lib/cancel-booking.ts",
+        "src/lib/dispute-evidence.ts",
         "src/lib/email.ts",
         "src/lib/move-booking.ts",
         "src/lib/normalize-course.ts",
@@ -14961,6 +15045,38 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/app/courses/[slug]/page.tsx",
         "src/app/sitemap.ts"
+      ]
+    },
+    {
+      "path": "src/lib/dispute-evidence.ts",
+      "lines": 117,
+      "purpose": "ADMIN-C Money → Disputes (PR2b):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "EvidenceInput",
+          "kind": "type"
+        },
+        {
+          "name": "evidenceText",
+          "kind": "fn"
+        },
+        {
+          "name": "loadEvidence",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./cancel-policy",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/disputes/[bookingId]/evidence/route.ts"
       ]
     },
     {
@@ -17323,6 +17439,7 @@
       "usedBy": [
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/stripe-match/route.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -17392,6 +17509,7 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-members/route.ts",
+        "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
@@ -17415,6 +17533,7 @@
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/set-password/route.ts",
+        "src/app/api/admin/stripe-match/route.ts",
         "src/app/api/admin/system/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
@@ -17559,6 +17678,7 @@
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cron-log.ts",
+        "src/lib/dispute-evidence.ts",
         "src/lib/event-payments.ts",
         "src/lib/frost-delay.ts",
         "src/lib/go-live-preflight.ts",
@@ -19154,6 +19274,35 @@
       ]
     },
     {
+      "path": "src/lib/stripe-match.ts",
+      "lines": 25,
+      "purpose": "ADMIN-C Money → Disputes:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "lastFullMonths",
+          "kind": "fn"
+        },
+        {
+          "name": "matchResult",
+          "kind": "fn"
+        },
+        {
+          "name": "MonthWindow",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/stripe-match/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/stripe.ts",
       "lines": 96,
       "purpose": "Every charge, refund and SetupIntent GreenReserve makes goes through here.",
@@ -19196,6 +19345,7 @@
       ],
       "usedBy": [
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
@@ -20726,6 +20876,7 @@
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/search/route.ts",
+        "src/app/api/admin/stripe-match/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/bookings/cancel/route.ts",
@@ -20760,6 +20911,7 @@
         "src/lib/course-closure.ts",
         "src/lib/course-metrics.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/dispute-evidence.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/no-show-fee.ts",
@@ -20826,6 +20978,7 @@
       "readers": [
         "src/lib/analytics.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/dispute-evidence.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"
       ]
@@ -21555,6 +21708,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-groups/route.ts",
+        "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/create-course/route.ts",
@@ -23802,7 +23956,8 @@
         "src/lib/sent-messages.ts"
       ],
       "readers": [
-        "src/lib/course-timeline.ts"
+        "src/lib/course-timeline.ts",
+        "src/lib/dispute-evidence.ts"
       ]
     },
     {

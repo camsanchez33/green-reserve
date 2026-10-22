@@ -510,6 +510,13 @@ async function main() {
   }
   {
     // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
+    // Money PR2b: the evidence pack is manager+, payouts to courses and the monthly Stripe match owner only.
+    const ev = await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: viewerCookie });
+    checkStatus('Viewer cannot download a dispute evidence pack → 403', ev.status, 403);
+    const cp = await api('/api/admin/course-payouts', { cookie: viewerCookie });
+    checkStatus('Viewer cannot read courses’ payouts → 403', cp.status, 403);
+    const sm = await api('/api/admin/stripe-match', { cookie: viewerCookie });
+    checkStatus('Viewer cannot read the monthly Stripe match → 403', sm.status, 403);
     const pr = await api('/api/admin/problems', { cookie: viewerCookie });
     checkStatus('Viewer cannot read Problems → 403', pr.status, 403);
     const pw = await api('/api/admin/problems', { method: 'PATCH', cookie: viewerCookie, body: { id: 'x', action: 'claim' } });
@@ -545,6 +552,20 @@ async function main() {
       checkStatus('Support cannot take one someone else has → 403', (await patch({ action: 'claim' })).status, 403);
       await prisma.adminAlert.update({ where: { id: alert.id }, data: { resolvedAt: new Date() } });
       checkStatus('Nobody notes a cleared problem → 409', (await patch({ action: 'note', text: 'done' })).status, 409);
+      // A support login (not manager) still can't take the evidence pack or owner money.
+      checkStatus('Support cannot download a dispute evidence pack → 403', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: supCookie })).status, 403);
+      checkStatus('Support cannot read courses’ payouts → 403', (await api('/api/admin/course-payouts', { cookie: supCookie })).status, 403);
+      await prisma.adminUser.update({ where: { id: sup.id }, data: { role: 'manager' } });
+      const mgrCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'manager', mfa: true })}`;
+      checkStatus('No pack for a booking without a dispute → 404', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: mgrCookie })).status, 404);
+      const dispute = await prisma.paymentEvent.create({ data: { bookingId: data.bookingA.id, kind: 'dispute_opened', amountCents: 100, stripeId: `isol-dp-${TS}:open`, actor: 'stripe', detail: 'Dispute opened: test' } });
+      try {
+        const pack = await fetch(`${BASE_URL}/api/admin/disputes/${data.bookingA.id}/evidence`, { headers: { cookie: mgrCookie } });
+        const packText = await pack.text();
+        check('A manager downloads a disputed booking\'s evidence pack as a text file naming it', pack.status === 200 && (pack.headers.get('content-type') ?? '').startsWith('text/plain') && packText.includes(data.bookingA.id));
+      } finally {
+        await prisma.paymentEvent.delete({ where: { id: dispute.id } });
+      }
     } finally {
       await prisma.adminAlert.delete({ where: { id: alert.id } });
       await prisma.adminAuditLog.deleteMany({ where: { adminId: sup.id } }).catch(() => {});

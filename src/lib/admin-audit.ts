@@ -54,6 +54,7 @@ export const ACTION_LABELS: Record<string, string> = {
   golive_reminder: 'Send a go-live reminder', send_preview: 'Send a course its preview', agreement_version_published: 'Publish an agreement version', sentry_test: 'Send a Sentry test error',
   problem_claim: 'Take a problem', problem_assign: 'Assign a problem', problem_note: 'Note on a problem',
   problem_snooze: 'Snooze a problem', problem_unsnooze: 'Unsnooze a problem',
+  dispute_evidence: 'Download a dispute evidence pack',
 };
 
 export const REASON_MIN = 4;
