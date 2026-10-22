@@ -110,7 +110,7 @@ function AnnouncementsPane({ isOwner }: { isOwner: boolean }) {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="px-8 py-7 max-w-3xl">
+      <div className="px-10 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-[30px] leading-none font-serif text-ink">Announcements</h1>

@@ -183,7 +183,7 @@ function GolfersInner() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="golfers"/>
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-5xl">
+        <div className="px-10 py-8">
           <div className="mb-6">
             <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
           </div>

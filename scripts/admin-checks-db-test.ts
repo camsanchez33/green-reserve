@@ -41,10 +41,16 @@ async function main() {
   await runUrgentChecks(new Date(), send);
   check('when it clears, it is marked resolved', !!(await prisma.adminAlert.findUnique({ where: { key } }))?.resolvedAt);
 
+  // BRAIN-2a: someone took it and snoozed it before it cleared; when it comes back it starts fresh.
+  await prisma.adminAlert.update({ where: { key }, data: { ownerId: 'someone', ownerName: 'Someone', snoozedUntil: new Date(Date.now() + 86_400_000), snoozeReason: 'waiting' } });
   await prisma.course.update({ where: { id: course.id }, data: { stripeAccountActive: false } });
   sent = [];
   await runUrgentChecks(new Date(), send);
   check('if it comes back, it is emailed again', mine().length === 1);
+  const back = await prisma.adminAlert.findUnique({ where: { key }, include: { events: { orderBy: { createdAt: 'asc' } } } });
+  check('BRAIN-2a: its history reads opened, cleared, reopened', JSON.stringify(back?.events.map(e => e.kind)) === JSON.stringify(['opened', 'cleared', 'reopened']), JSON.stringify(back?.events.map(e => e.kind)));
+  check('…and a reopened problem has no owner and no snooze', !back?.ownerId && !back?.ownerName && !back?.snoozedUntil && !back?.snoozeReason && !back?.resolvedAt);
+  check('…and it carries its course', back?.courseId === course.id);
 
   await prisma.adminAlert.delete({ where: { key } });
   await runUrgentChecks(new Date(), async () => { throw new Error('resend down'); });

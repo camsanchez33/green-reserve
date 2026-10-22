@@ -676,12 +676,12 @@ function InquiriesListInner() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="inquiries" />
       <div className="admin-content flex-1 flex flex-col min-h-screen">
-        <div className="px-8 py-7">
+        <div className="px-10 py-8">
 
           {/* Title + pipeline summary, search + refresh */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
             <div>
-              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Inquiries</h1>
+              <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">Pipeline</h1>
               <p className="text-[13.5px] text-ink-soft mt-2">
                 {leadCount} lead{leadCount === 1 ? '' : 's'} · {activeCount} active · {needsYouCount} needs you · {callsThisWeek} call{callsThisWeek === 1 ? '' : 's'} this week · {liveAllTimeCount} live all-time · {closedCount} closed
               </p>
@@ -694,6 +694,10 @@ function InquiriesListInner() {
               )}
             </div>
             <div className="flex items-center gap-2">
+              {/* ADMIN-C: Manual build left the menu; it lives here, where a course starts. */}
+              {MANAGER_PLUS.includes(role) && (
+                <Link href="/admin/create" className="text-[13px] font-medium px-3 py-2 rounded-md border border-line text-ink hover:border-pine/40">Build by hand</Link>
+              )}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
                 <input

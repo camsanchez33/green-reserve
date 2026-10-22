@@ -330,7 +330,7 @@ export default function RevenuePage() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="revenue"/>
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-6xl">
+        <div className="px-10 py-8">
           {/* Header + one period picker that rules the whole page */}
           <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
             <div>

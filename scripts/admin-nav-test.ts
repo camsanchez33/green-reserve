@@ -17,7 +17,7 @@ check('the rail lists its items', items.length >= 10);
 const GATE: Record<string, string[] | null> = {
   overview: null, inquiries: VIEWER_PLUS, courses: VIEWER_PLUS, groups: SUPPORT_PLUS, messages: SUPPORT_PLUS, announcements: SUPPORT_PLUS,
   revenue: SUPPORT_PLUS, goals: SUPPORT_PLUS, employees: MANAGER_PLUS, golfers: SUPPORT_PLUS, system: MANAGER_PLUS,
-  activity: SUPPORT_PLUS, create: MANAGER_PLUS, company: OWNER_ONLY, audit: OWNER_ONLY,
+  company: OWNER_ONLY, audit: OWNER_ONLY, problems: SUPPORT_PLUS,
 };
 for (const it of items) {
   const gate = GATE[it.key];
@@ -28,7 +28,8 @@ for (const it of items) {
   check(`${it.key} (${it.href}) is shown only to roles its API lets in${extra.length ? ` — not ${extra.join(', ')}` : ''}`, extra.length === 0);
 }
 check('every gated page is in the rail', Object.keys(GATE).every(k => items.some(i => i.key === k)));
-check('no icons beside the rail labels (TYPE-3)', !/from 'lucide-react'/.test(rail) || /import \{ Search \} from 'lucide-react'/.test(rail));
+// ADMIN-C (Cam 2026-10-22): one outline icon per section, inline and decorative — never a lucide import here.
+check('rail icons are inline and hidden from screen readers (ADMIN-C)', !/from 'lucide-react'/.test(rail) && /aria-hidden="true"/.test(rail));
 
 const route = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
 const palette = readFileSync('src/components/admin/CommandPalette.tsx', 'utf8');
