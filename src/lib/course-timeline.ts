@@ -1,5 +1,6 @@
 // @brain course-events
 import { prisma } from '@/lib/prisma';
+import { FEED_GROUPS, type FeedGroup, type FeedItem } from './course-timeline-groups';
 
 // A-05 items 4/5: a per-course event log with NO schema change — rides on
 // the EXISTING InquiryStatusEvent table via a linked CourseInquiry
@@ -162,3 +163,183 @@ export function latestAgreementAcceptance(events: TimelineEvent[]): AgreementAcc
 // AGREEMENT = GO-LIVE GATE — hasAcceptedAgreement moved to lib/agreement-gate.ts
 // (AG-1): it reads the AgreementAcceptance table and the documents on disk,
 // and this module is imported by client pages, which must not bundle fs.
+
+// ─── BRAIN-1b: the whole story of a course, one feed ──────────────────────────
+// Cam 2026-10-22: every event for a course in one place, newest first — what
+// happened with bookings and money, what was sent and said, what admins and
+// staff changed, and problems and onboarding. Each source is read with the same
+// cursor and limit, then merged; nothing is copied into a new table.
+
+export { FEED_GROUPS, type FeedGroup, type FeedItem };
+
+const money = (c: number | null | undefined) => c == null ? '' : `$${(c / 100).toFixed(2)}`;
+const words = (k: string) => k.replace(/_/g, ' ').replace(/\b(email|text)$/, '').trim();
+const BOOKING_TITLES: Record<string, string> = {
+  booking_created: 'Booked', booking_cancelled: 'Cancelled', checked_in: 'Checked in',
+  no_show_marked: 'Marked no-show', no_show_cleared: 'No-show cleared', booking_moved: 'Moved to another time',
+  price_changed: 'Price changed at the counter',
+};
+const PAYMENT_TITLES: Record<string, [string, FeedItem['tone']]> = {
+  round_charge: ['Round charged', 'ok'], charge: ['Charged', 'ok'], fee_charged: ['GreenReserve fee charged', 'ok'],
+  access_fee: ['GreenReserve fee charged', 'ok'], no_show_fee: ['No-show fee charged', 'warn'],
+  charge_failed: ['Charge declined', 'bad'], refund: ['Refunded', undefined], fee_refunded: ['GreenReserve fee refunded', undefined],
+  no_show_fee_refunded: ['No-show fee refunded', undefined], refund_failed: ['Refund failed', 'bad'],
+};
+const STAGE: Record<string, string> = {
+  lead: 'Lead', pending: 'New inquiry', in_review: 'Talking', details_requested: 'Details sheet sent',
+  details_submitted: 'Details received', building: 'Building', live: 'Live', rejected: 'Closed',
+};
+
+export const FEED_PAGE = 60;
+
+/**
+ * One page of a course's feed: everything before `before` (newest first),
+ * limited to the groups asked for. `next` is the cursor for the page after.
+ */
+export async function buildCourseFeed(courseId: string, opts: { before?: Date; groups?: FeedGroup[]; limit?: number } = {}): Promise<{ items: FeedItem[]; next: string | null } | null> {
+  const limit = Math.min(opts.limit ?? FEED_PAGE, 200);
+  const want = new Set(opts.groups?.length ? opts.groups : FEED_GROUPS.map(g => g.key));
+  const lt = opts.before ? { lt: opts.before } : undefined;
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: { id: true, operator: { select: { email: true } }, staff: { select: { email: true } } },
+  });
+  if (!course) return null;
+  const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true, email: true } });
+  // Emails with no course id attached reach the course's own people: owner, staff, the inquiry contact.
+  const contacts = [course.operator?.email, inquiry?.email, ...course.staff.map(s => s.email)]
+    .filter((e): e is string => !!e).map(e => e.toLowerCase());
+
+  const items: FeedItem[] = [];
+  const tasks: Promise<void>[] = [];
+
+  if (want.has('bookings')) tasks.push((async () => {
+    const [events, payments] = await Promise.all([
+      prisma.bookingEvent.findMany({
+        where: { courseId, occurredAt: lt, type: { notIn: ['fee_charged', 'fee_refunded'] } },
+        orderBy: { occurredAt: 'desc' }, take: limit,
+      }),
+      prisma.paymentEvent.findMany({
+        where: { booking: { courseId }, createdAt: lt },
+        orderBy: { createdAt: 'desc' }, take: limit,
+        select: { id: true, kind: true, amountCents: true, actorName: true, actor: true, detail: true, createdAt: true, booking: { select: { golferName: true } } },
+      }),
+    ]);
+    const names = new Map((await prisma.booking.findMany({ where: { id: { in: [...new Set(events.map(e => e.bookingId))] } }, select: { id: true, golferName: true } })).map(b => [b.id, b.golferName]));
+    for (const e of events) {
+      const players = e.playerCount ? ` · ${e.playerCount} player${e.playerCount === 1 ? '' : 's'}` : '';
+      items.push({
+        id: `be-${e.id}`, at: e.occurredAt.toISOString(), group: 'bookings',
+        title: `${BOOKING_TITLES[e.type] ?? words(e.type)} — ${names.get(e.bookingId) ?? 'a golfer'}${players}`,
+        detail: e.teeTimeAt ? `Tee time ${e.teeTimeAt.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'UTC' })}` : undefined,
+        who: e.actorType === 'golfer' ? undefined : e.actorType,
+        tone: e.type === 'no_show_marked' || e.type === 'booking_cancelled' ? 'warn' : undefined,
+      });
+    }
+    for (const p of payments) {
+      const [label, tone] = PAYMENT_TITLES[p.kind] ?? [words(p.kind), undefined];
+      items.push({
+        id: `pe-${p.id}`, at: p.createdAt.toISOString(), group: 'bookings',
+        title: `${label} ${money(p.amountCents)} — ${p.booking.golferName}`.replace('  ', ' '),
+        detail: p.detail || undefined, who: p.actorName || (p.actor === 'system' || p.actor === 'cron' ? 'automatic' : p.actor), tone,
+      });
+    }
+  })());
+
+  if (want.has('messages')) tasks.push((async () => {
+    const [sent, thread] = await Promise.all([
+      prisma.sentMessage.findMany({
+        where: { createdAt: lt, OR: [{ courseId }, ...(contacts.length ? [{ courseId: null, to: { in: contacts } }] : []), ...(inquiry ? [{ inquiryId: inquiry.id }] : [])] },
+        orderBy: { createdAt: 'desc' }, take: limit,
+      }),
+      prisma.message.findMany({
+        where: { thread: { courseId }, createdAt: lt, isBroadcast: false },
+        orderBy: { createdAt: 'desc' }, take: limit,
+        select: { id: true, senderType: true, senderName: true, body: true, createdAt: true },
+      }),
+    ]);
+    for (const m of sent) {
+      const what = m.kind.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+      items.push({
+        id: `sm-${m.id}`, at: m.createdAt.toISOString(), group: 'messages',
+        title: `${m.channel === 'sms' ? 'Text' : 'Email'}: ${what}${m.status === 'failed' ? ' — not delivered' : ''}`,
+        detail: m.status === 'failed' ? `To ${m.to}. ${m.error}` : `To ${m.to}`, tone: m.status === 'failed' ? 'bad' : undefined,
+      });
+    }
+    for (const m of thread) {
+      items.push({
+        id: `msg-${m.id}`, at: m.createdAt.toISOString(), group: 'messages',
+        title: m.senderType === 'admin' ? `GreenReserve wrote to the course` : `${m.senderName} wrote to GreenReserve`,
+        detail: m.body.length > 240 ? m.body.slice(0, 240) + '…' : m.body, who: m.senderName,
+      });
+    }
+  })());
+
+  if (want.has('changes')) tasks.push((async () => {
+    const [audit, staffChanges, legacy] = await Promise.all([
+      prisma.adminAuditLog.findMany({ where: { courseId, createdAt: lt }, orderBy: { createdAt: 'desc' }, take: limit, include: { admin: { select: { name: true } } } }),
+      prisma.staffPermissionChange.findMany({ where: { courseId, createdAt: lt }, orderBy: { createdAt: 'desc' }, take: limit }),
+      inquiry ? prisma.inquiryStatusEvent.findMany({ where: { inquiryId: inquiry.id, createdAt: lt, actorName: { startsWith: SETTINGS_CHANGED_PREFIX } }, orderBy: { createdAt: 'desc' }, take: limit }) : Promise.resolve([]),
+    ]);
+    const { ACTION_LABELS } = await import('./admin-audit');
+    for (const a of audit) {
+      const after = (a.after as Record<string, unknown> | null) ?? {};
+      const changed = Object.keys(after).slice(0, 4).map(k => {
+        const v = after[k];
+        const name = k.replace(/Cents$/, '').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+        const shown = /Cents$/.test(k) && typeof v === 'number' ? money(v) : typeof v === 'object' || v === null ? '' : String(v).slice(0, 40);
+        return shown ? `${name} ${shown}` : name;
+      });
+      items.push({
+        id: `au-${a.id}`, at: a.createdAt.toISOString(), group: 'changes',
+        title: ACTION_LABELS[a.action] ?? a.action.replace(/_/g, ' '),
+        detail: [a.reason ? `“${a.reason}”` : '', changed.join(', ')].filter(Boolean).join(' · ') || undefined,
+        who: a.actorName || a.admin.name,
+      });
+    }
+    for (const c of staffChanges) {
+      items.push({ id: `sp-${c.id}`, at: c.createdAt.toISOString(), group: 'changes', title: 'Staff permissions changed', detail: `${c.before.length} → ${c.after.length} permissions`, who: c.changedBy });
+    }
+    for (const r of legacy) {
+      const ev = decodeOne(r.actorName, r.createdAt);
+      if (ev?.type !== 'settings_changed') continue;
+      // The admin's own edits are already in the audit record; this keeps the operator's.
+      items.push({ id: `sc-${r.id}`, at: ev.at, group: 'changes', title: 'Course settings changed', detail: ev.data.changes.map(ch => ch.field).slice(0, 6).join(', '), who: ev.data.by });
+    }
+  })());
+
+  if (want.has('problems')) tasks.push((async () => {
+    const [stages, calls, alerts] = await Promise.all([
+      inquiry ? prisma.inquiryStatusEvent.findMany({ where: { inquiryId: inquiry.id, createdAt: lt }, orderBy: { createdAt: 'desc' }, take: limit * 2 }) : Promise.resolve([]),
+      prisma.call.findMany({ where: { createdAt: lt, OR: [{ courseId }, ...(inquiry ? [{ inquiryId: inquiry.id }] : [])] }, orderBy: { createdAt: 'desc' }, take: limit }),
+      prisma.adminAlert.findMany({ where: { OR: [{ key: { contains: courseId } }, ...(inquiry ? [{ key: { contains: inquiry.id } }] : [])] }, orderBy: { firstSeenAt: 'desc' }, take: limit }),
+    ]);
+    for (const s of stages) {
+      if (s.fromStatus !== s.toStatus) {
+        items.push({ id: `st-${s.id}`, at: s.createdAt.toISOString(), group: 'problems', title: `Onboarding: ${STAGE[s.fromStatus] ?? s.fromStatus} → ${STAGE[s.toStatus] ?? s.toStatus}`, who: s.actorName ?? (s.trigger === 'system' ? 'automatic' : undefined) });
+        continue;
+      }
+      const ev = decodeOne(s.actorName, s.createdAt);
+      if (!ev || ev.type === 'settings_changed') continue;
+      const title = ev.type === 'note_added' ? 'Note' : ev.type === 'checkin_call' ? 'Check-in call notes' : ev.type === 'agreement_accepted' ? `Signed the Operator Agreement (${ev.data.version})`
+        : ev.type === 'document_uploaded' ? `Document added: ${ev.data.name}` : ev.type === 'reminder_sent' ? 'Onboarding reminder sent'
+        : ev.type === 'reminders_paused' ? 'Onboarding reminders paused' : 'Onboarding reminders resumed';
+      const detail = ev.type === 'note_added' || ev.type === 'checkin_call' ? ev.data.text : undefined;
+      const who = 'by' in ev.data ? (ev.data as { by: string }).by : ev.type === 'agreement_accepted' ? ev.data.acceptedBy : undefined;
+      items.push({ id: `mk-${s.id}`, at: ev.at, group: 'problems', title, detail, who });
+    }
+    for (const c of calls) {
+      const when = c.scheduledAt.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
+      items.push({ id: `call-${c.id}`, at: c.createdAt.toISOString(), group: 'problems', title: `${c.kind === 'checkin' ? 'Check-in' : 'Discovery'} call ${c.outcome === 'scheduled' ? 'booked for' : `on ${when}:`} ${c.outcome === 'scheduled' ? when : c.outcome.replace(/_/g, ' ')}`, detail: c.notes ? c.notes.slice(0, 240) : undefined, who: c.createdBy || undefined });
+    }
+    for (const a of alerts) {
+      if (!lt || a.firstSeenAt < opts.before!) items.push({ id: `al-${a.id}`, at: a.firstSeenAt.toISOString(), group: 'problems', title: `Problem: ${a.title}`, detail: a.detail, tone: 'bad' });
+      if (a.resolvedAt && (!lt || a.resolvedAt < opts.before!)) items.push({ id: `alr-${a.id}`, at: a.resolvedAt.toISOString(), group: 'problems', title: `Cleared: ${a.title}`, tone: 'ok' });
+    }
+  })());
+
+  await Promise.all(tasks);
+  items.sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id));
+  const page = items.slice(0, limit);
+  return { items: page, next: items.length > limit ? page[page.length - 1].at : null };
+}

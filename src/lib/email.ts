@@ -2,9 +2,14 @@ import { Resend } from 'resend';
 import { serviceFeeLabel, hoursLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { afterCutoffLine, policyMoney } from '@/lib/cancel-policy';
 import { membershipFeeCents } from '@/lib/stripe';
+import { logSent, type SendMeta } from '@/lib/sent-messages';
 
 let _resend: Resend | null = null;
-function getResend() {
+/** Resend's options plus our own `meta` (BRAIN-1b), which never reaches Resend. */
+type SendOptions = Parameters<Resend['emails']['send']>[0] & { meta?: SendMeta };
+type Sender = { emails: { send: (opts: SendOptions) => ReturnType<Resend['emails']['send']> } };
+
+function getResend(): Sender {
   if (!_resend) {
     _resend = new Resend(process.env.RESEND_API_KEY);
     // The Resend SDK (6.x) RETURNS { data: null, error } on a rejected send —
@@ -29,16 +34,28 @@ function getResend() {
       const started = Date.now();
       const to = (opts as { to?: string | string[] } | undefined)?.to;
       const domain = String(Array.isArray(to) ? to[0] : to ?? '').split('@')[1] ?? '?';
-      const r = await send(opts, ...rest);
+      // BRAIN-1b: `meta` (what this email is, which course/booking it is about)
+      // is ours, not Resend's — taken off before sending, written to the send log.
+      const meta: SendMeta = (opts as { meta?: SendMeta }).meta ?? { kind: 'email' };
+      delete (opts as { meta?: SendMeta }).meta;
+      let r: Awaited<ReturnType<typeof send>>;
+      try {
+        r = await send(opts, ...rest);
+      } catch (err) {
+        await logSent({ ...meta, channel: 'email', to, status: 'failed', error: err instanceof Error ? err.message : String(err) });
+        throw err;
+      }
       if (r.error) {
         console.error(`[email] rejected after ${Date.now() - started}ms to @${domain}: ${r.error.message || r.error.name}`);
+        await logSent({ ...meta, channel: 'email', to, status: 'failed', error: r.error.message || r.error.name });
         throw new Error(`Resend rejected the email: ${r.error.message || r.error.name || 'unknown error'}`);
       }
       console.log(`[email] accepted by Resend in ${Date.now() - started}ms, id ${r.data?.id ?? '?'}, to @${domain}`);
+      await logSent({ ...meta, channel: 'email', to, status: 'sent', providerId: r.data?.id });
       return r;
     }) as typeof send;
   }
-  return _resend;
+  return _resend as unknown as Sender;
 }
 const FROM = 'GreenReserve <hello@greenreserve.app>';
 /** The inbox that is actually read. hello@ is send-only. */
@@ -192,7 +209,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     ${data.checkInToken ? `<p style="margin:0 0 8px;text-align:center;"><a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="color:#6B706A;font-size:12px;text-decoration:underline;">View booking confirmation</a></p>` : ''}
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Confirmed: ${data.courseName} — ${data.date} at ${data.time}`, html });
+  await getResend().emails.send({ meta: { kind: 'booking_confirmation', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM, to: data.golferEmail, subject: `Confirmed: ${data.courseName} — ${data.date} at ${data.time}`, html });
 }
 
 export async function sendOperatorBookingNotification(data: BookingEmailData & { operatorEmail: string }) {
@@ -219,7 +236,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
     <a href="https://greenreserve.app/dashboard" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-top:20px;">View Tee Sheet &rarr;</a>
     <a href="https://greenreserve.app/dashboard/money?tab=payments" style="display:block;color:#173B2A;text-decoration:none;text-align:center;padding:8px;font-weight:600;font-size:13px;">See it in Payments &rarr;</a>
   `);
-  await getResend().emails.send({ from: FROM, to: data.operatorEmail, subject: `New booking: ${data.players} player${data.players > 1 ? 's' : ''} — ${data.date} at ${data.time}`, html });
+  await getResend().emails.send({ meta: { kind: 'operator_booking_notification' }, from: FROM, to: data.operatorEmail, subject: `New booking: ${data.players} player${data.players > 1 ? 's' : ''} — ${data.date} at ${data.time}`, html });
 }
 
 export async function sendCancellationEmail(data: {
@@ -245,7 +262,7 @@ export async function sendCancellationEmail(data: {
     }
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Cancelled: ${data.courseName} — ${data.date} at ${data.time}`, html });
+  await getResend().emails.send({ meta: { kind: 'cancellation_email', bookingId: data.bookingId }, from: FROM, to: data.golferEmail, subject: `Cancelled: ${data.courseName} — ${data.date} at ${data.time}`, html });
 }
 
 // Fired by the cancellation-fee cron the moment it successfully auto-charges
@@ -278,7 +295,7 @@ export async function sendCourseClosedNotice(data: {
       Questions? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'course_closed_notice' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `${data.courseName} is no longer taking bookings on GreenReserve`,
@@ -303,7 +320,7 @@ export async function sendCancellationFeeChargedEmail(data: {
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Check In &amp; Pay &rarr;</a>` : ''}
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Charged $${(data.feeAmount / 100).toFixed(2)} — ${data.courseName} cancellation window closed`, html });
+  await getResend().emails.send({ meta: { kind: 'cancellation_fee_charged_email', bookingId: data.bookingId }, from: FROM, to: data.golferEmail, subject: `Charged $${(data.feeAmount / 100).toFixed(2)} — ${data.courseName} cancellation window closed`, html });
 }
 
 // Sent ~1 hour before the free-cancellation window closes for bookings that
@@ -335,7 +352,7 @@ export async function sendCancellationWarningEmail(data: {
     <a href="${manageUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Cancel for Free &rarr;</a>
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">If you're keeping your tee time, no action needed — we'll see you on the course.</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Heads up — your free cancellation window closes soon (${data.courseName})`, html });
+  await getResend().emails.send({ meta: { kind: 'cancellation_warning_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM, to: data.golferEmail, subject: `Heads up — your free cancellation window closes soon (${data.courseName})`, html });
 }
 
 // Fired by the cutoff cron for courses with NO cancellation fee policy — no
@@ -356,7 +373,7 @@ export async function sendCheckInAvailableEmail(data: {
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Check In Online Now &rarr;</a>` : ''}
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Ready to check in — ${data.courseName} ${data.date} at ${data.time}`, html });
+  await getResend().emails.send({ meta: { kind: 'check_in_available_email', bookingId: data.bookingId }, from: FROM, to: data.golferEmail, subject: `Ready to check in — ${data.courseName} ${data.date} at ${data.time}`, html });
 }
 
 export async function sendBookingModifiedEmail(data: {
@@ -402,7 +419,7 @@ export async function sendBookingModifiedEmail(data: {
     <a href="${manageUrl}" style="display:block;color:#173B2A;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Updated: ${data.courseName} — ${data.date} at ${data.time}`, html });
+  await getResend().emails.send({ meta: { kind: 'booking_modified_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM, to: data.golferEmail, subject: `Updated: ${data.courseName} — ${data.date} at ${data.time}`, html });
 }
 
 // B-9 frost delay: the course pushed the start back and this group moved to a
@@ -423,7 +440,7 @@ export async function sendFrostDelayEmail(data: {
     <p style="margin:0 0 18px;color:#3F453E;font-size:14px;">Your price hasn't changed. If the new time doesn't work for your group, call the course and they'll sort it out with you.</p>
     <a href="${manageUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">Manage my booking</a>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Frost delay: ${data.courseName} — now ${data.newTime}`, html });
+  await getResend().emails.send({ meta: { kind: 'frost_delay_email', bookingId: data.bookingId }, from: FROM, to: data.golferEmail, subject: `Frost delay: ${data.courseName} — now ${data.newTime}`, html });
 }
 
 // Fired the moment performCheckIn() successfully charges a golfer for their
@@ -468,7 +485,7 @@ export async function sendCheckInReceiptEmail(data: {
     ${data.courseSlug ? `<a href="${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}/account?email=${encodeURIComponent(data.golferEmail)}" style="display:block;color:#6B706A;text-decoration:none;text-align:center;padding:4px;font-weight:600;font-size:12px;margin-bottom:16px;">View your tee times at ${data.courseName} &rarr;</a>` : ''}
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Receipt: ${data.courseName} — $${(data.totalAmount / 100).toFixed(2)}`, html });
+  await getResend().emails.send({ meta: { kind: 'check_in_receipt_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM, to: data.golferEmail, subject: `Receipt: ${data.courseName} — $${(data.totalAmount / 100).toFixed(2)}`, html });
 }
 
 export async function sendTeeTimeAlertEmail(data: {
@@ -488,7 +505,7 @@ export async function sendTeeTimeAlertEmail(data: {
     <a href="${bookUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:24px;">Book Now &rarr;</a>
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;"><a href="${unsubUrl}" style="color:#6B706A;">Unsubscribe from tee time alerts</a></p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.email, subject: `Alert: spot available at ${data.courseName}`, html });
+  await getResend().emails.send({ meta: { kind: 'tee_time_alert_email', courseSlug: data.courseSlug }, from: FROM, to: data.email, subject: `Alert: spot available at ${data.courseName}`, html });
 }
 
 export async function sendReminderEmail(data: {
@@ -515,7 +532,7 @@ export async function sendReminderEmail(data: {
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
     <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#173B2A;' : 'background:#173B2A;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};font-weight:600;font-size:${checkInUrl ? '13px' : '15px'};">View or Cancel Booking &rarr;</a>
   `);
-  await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Tomorrow: ${data.time} at ${data.courseName}`, html });
+  await getResend().emails.send({ meta: { kind: 'reminder_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM, to: data.golferEmail, subject: `Tomorrow: ${data.time} at ${data.courseName}`, html });
 }
 
 export async function sendOperatorWelcomeEmail(data: {
@@ -560,7 +577,7 @@ export async function sendOperatorWelcomeEmail(data: {
     </p>
   `);
 
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'operator_welcome_email' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `You're approved — set up ${data.courseName} on GreenReserve`,
@@ -586,7 +603,7 @@ export async function sendOperatorPasswordResetEmail(data: {
       This link expires in 1 hour. Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'operator_password_reset_email' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `Reset your GreenReserve password`,
@@ -612,7 +629,7 @@ export async function sendAdminPasswordResetEmail(data: {
       This link expires in 24 hours. Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'admin_password_reset_email' }, 
     from: FROM,
     to: data.adminEmail,
     subject: `Reset your GreenReserve admin password`,
@@ -633,7 +650,7 @@ export async function sendAdminPasswordChangedNotification(data: {
       <p style="margin:0;color:#7A4A10;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:thegreenreserve@outlook.com" style="color:#7A4A10;text-decoration:underline;">thegreenreserve@outlook.com</a> right away.</p>
     </div>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'admin_password_changed_notification' }, 
     from: FROM,
     to: data.adminEmail,
     subject: `Your GreenReserve admin password was changed`,
@@ -660,7 +677,7 @@ export async function sendOperatorVerifyEmail(data: {
       Didn't request this? You can ignore this email. Questions? Reply here or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'operator_verify_email' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `Confirm your GreenReserve account`,
@@ -686,7 +703,7 @@ export async function sendGolferPasswordResetEmail(data: {
       This link expires in 1 hour. Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'golfer_password_reset_email' }, 
     from: FROM,
     to: data.golferEmail,
     subject: `Reset your GreenReserve password`,
@@ -720,7 +737,7 @@ export async function sendPreviewEmail(data: {
       Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'preview_email' }, 
     from: FROM,
     to: data.contactEmail,
     replyTo: 'thegreenreserve@outlook.com',
@@ -769,7 +786,7 @@ export async function sendPreviewWithDashboardAccessEmail(data: {
       Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'preview_with_dashboard_access_email' }, 
     from: FROM,
     to: data.contactEmail,
     replyTo: 'thegreenreserve@outlook.com',
@@ -808,7 +825,7 @@ export async function sendDashboardAccessEmail(data: {
       Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'dashboard_access_email' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `Early dashboard access — ${data.courseName} on GreenReserve`,
@@ -841,7 +858,7 @@ export async function sendGoLiveSimpleEmail(data: {
       Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'go_live_simple_email', courseSlug: data.courseSlug }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `You're live! ${data.courseName} is now bookable on GreenReserve`,
@@ -866,7 +883,7 @@ export async function sendTwoFactorCodeEmail(data: {
       This code expires in 10 minutes. Didn't try to sign in? Reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'two_factor_code_email' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `Your GreenReserve verification code: ${data.code}`,
@@ -890,7 +907,7 @@ export async function sendGolferOtpEmail(data: { email: string; code: string; co
       This code expires in 10 minutes. Didn't request this? You can safely ignore this email.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'golfer_otp_email' }, 
     from: FROM,
     to: data.email,
     subject: `Your sign-in code: ${data.code}`,
@@ -911,7 +928,7 @@ export async function sendAdminTwoFactorCode(data: { email: string; name: string
       Expires in 10 minutes. Not you? Reply to this email immediately — <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'admin_two_factor_code' }, 
     from: FROM,
     to: data.email,
     subject: `GreenReserve admin code: ${data.code}`,
@@ -935,7 +952,7 @@ export async function sendPasswordChangedNotification(data: {
       <p style="margin:0;color:#7A4A10;font-size:13px;"><strong>Wasn't you?</strong> Reply to this email or reach <a href="mailto:thegreenreserve@outlook.com" style="color:#7A4A10;text-decoration:underline;">thegreenreserve@outlook.com</a> right away.</p>
     </div>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'password_changed_notification' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `Your GreenReserve password was changed`,
@@ -960,7 +977,7 @@ export async function sendMemberInviteEmail(data: {
       This link expires in 14 days. Questions? Reach out to ${data.courseName} directly.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'member_invite_email' }, 
     from: FROM,
     to: data.email,
     subject: `You're a member at ${data.courseName} — set up your account`,
@@ -985,7 +1002,7 @@ export async function sendMemberLinkedNotification(data: {
       View My Account &rarr;
     </a>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'member_linked_notification', courseSlug: data.courseSlug }, 
     from: FROM,
     to: data.email,
     subject: `You're a member at ${data.courseName}`,
@@ -1033,7 +1050,7 @@ export async function sendInquiryNotification(data: {
     </a>
   `);
 
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'inquiry_notification' }, 
     from: FROM,
     to: 'thegreenreserve@outlook.com',
     subject: `Question from ${data.courseName} — ${data.city}, ${data.state}`,
@@ -1065,7 +1082,7 @@ export async function sendInquiryConfirmation(data: {
       Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'inquiry_confirmation' }, 
     from: FROM,
     to: data.email,
     subject: `We got your question — ${data.courseName}`,
@@ -1097,7 +1114,7 @@ export async function sendInquiryAlreadyBuilt(data: {
       Can&apos;t get in, or think this isn&apos;t your course? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'inquiry_already_built' }, 
     from: FROM,
     to: data.email,
     subject: `${data.courseName} already has a GreenReserve page`,
@@ -1130,7 +1147,7 @@ export async function sendInquirySigninCode(data: {
       Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'inquiry_signin_code' }, 
     from: FROM,
     to: data.email,
     subject: `${data.code} is your GreenReserve code`,
@@ -1157,7 +1174,7 @@ export async function sendLockedOutOperatorAlert(data: {
     <p style="margin:0 0 16px;color:#6B706A;font-size:13px;">They were told someone would email them. That is this email&apos;s job.</p>
     <a href="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/admin/inquiries/${data.inquiryId}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">Open the inquiry &rarr;</a>
   `);
-  const r = await getResend().emails.send({
+  const r = await getResend().emails.send({ meta: { kind: 'locked_out_operator_alert', inquiryId: data.inquiryId }, 
     from: FROM,
     to: 'thegreenreserve@outlook.com',
     replyTo: data.operatorEmail,
@@ -1258,7 +1275,7 @@ export async function sendDetailsSheetConfirmationEmail(data: {
       Questions? Reply to this email or reach us at <a href="mailto:thegreenreserve@outlook.com" style="color:#3F453E;">thegreenreserve@outlook.com</a>.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'details_sheet_confirmation_email' }, 
     from: FROM,
     to: data.email,
     subject: `We got your setup sheet — ${data.courseName}`,
@@ -1298,7 +1315,7 @@ export async function sendCallFollowupEmail(data: {
     <p style="margin:0 0 20px;color:#6B706A;font-size:13px;line-height:1.6;">Golfers pay GreenReserve&apos;s $1.50 per player on top of your price, in the same card payment as your green fee; Stripe&apos;s normal processing fee applies to the payment, and GreenReserve charges you nothing on top of it.</p>
     <p style="margin:0;color:#6B706A;font-size:12px;">Questions? Reply to this email — thegreenreserve@outlook.com.</p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'call_followup_email' }, 
     from: FROM,
     to: data.email,
     subject: `${data.courseName} — recap of our call + your setup sheet`,
@@ -1328,7 +1345,7 @@ export async function sendDetailsRequestEmail(data: {
       Questions? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'details_request_email' }, 
     from: FROM,
     to: data.email,
     subject: `Quick setup sheet for ${data.courseName}`,
@@ -1361,7 +1378,7 @@ export async function sendCallInviteEmail(data: {
     <p style="margin:0 0 16px;color:#3F453E;font-size:14px;line-height:1.6;">If none of the times work, just reply to this email.</p>
     <p style="margin:0;color:#141814;font-size:14px;">Cam<br /><span style="color:#6B706A;font-size:12px;">GreenReserve · thegreenreserve@outlook.com</span></p>
   `);
-  const r = await getResend().emails.send({ from: FROM, to: data.email, subject: 'Set up your call with GreenReserve', html });
+  const r = await getResend().emails.send({ meta: { kind: 'call_invite_email' }, from: FROM, to: data.email, subject: 'Set up your call with GreenReserve', html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1381,7 +1398,7 @@ export async function sendCallReminderEmail(data: {
     ${data.manageUrl ? `<p style="margin:0 0 16px;color:#3F453E;font-size:14px;line-height:1.6;">Need to move it? <a href="${data.manageUrl}" style="color:#173B2A;">Reschedule or cancel</a>.</p>` : `<p style="margin:0 0 16px;color:#3F453E;font-size:14px;line-height:1.6;">Need to move it? Just reply to this email.</p>`}
     <p style="margin:0;color:#6B706A;font-size:12px;">Questions? Reply to this email — thegreenreserve@outlook.com.</p>
   `);
-  const r = await getResend().emails.send({ from: FROM, to: data.email, subject: `Talking tomorrow at ${clock} — GreenReserve`, html });
+  const r = await getResend().emails.send({ meta: { kind: 'call_reminder_email' }, from: FROM, to: data.email, subject: `Talking tomorrow at ${clock} — GreenReserve`, html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1408,7 +1425,7 @@ export async function sendCallRecapEmail(data: {
       Questions? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
-  const r = await getResend().emails.send({
+  const r = await getResend().emails.send({ meta: { kind: 'call_recap_email' }, 
     from: FROM,
     to: data.email,
     subject: `What we captured on our call — ${subj(data.courseName)}`,
@@ -1439,7 +1456,7 @@ export async function sendCallScheduledEmail(data: {
     ${agenda}
     <p style="margin:0;color:#3F453E;font-size:14px;line-height:1.6;">Reply to this email if the time doesn't work and we'll find another.</p>
   `);
-  const r = await getResend().emails.send({ from: FROM, to: data.email, subject: `Your call with GreenReserve — ${when} ET`, html });
+  const r = await getResend().emails.send({ meta: { kind: 'call_scheduled_email' }, from: FROM, to: data.email, subject: `Your call with GreenReserve — ${when} ET`, html });
   if (r.error) throw new Error(r.error.message);
 }
 
@@ -1464,7 +1481,7 @@ export async function sendInquiryDeclinedEmail(data: {
       Questions? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'inquiry_declined_email' }, 
     from: FROM,
     to: data.email,
     subject: `Your GreenReserve inquiry — ${data.courseName}`,
@@ -1483,7 +1500,7 @@ export async function sendDetailsSubmittedNotification(data: { courseName: strin
       Review in Admin &rarr;
     </a>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'details_submitted_notification' }, 
     from: FROM,
     to: 'thegreenreserve@outlook.com',
     subject: `Setup sheet ready: ${data.courseName}`,
@@ -1501,7 +1518,7 @@ export async function sendCourseApprovedNotification(data: { courseName: string;
       Review in Admin &rarr;
     </a>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'course_approved_notification' }, 
     from: FROM,
     to: 'thegreenreserve@outlook.com',
     subject: `Approved: ${data.courseName}`,
@@ -1564,7 +1581,7 @@ export async function sendCourseLiveOrientationEmail(data: {
     </p>
   `);
 
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'course_live_orientation_email', courseSlug: data.courseSlug }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `You're live! Here's how to run ${data.courseName} on GreenReserve`,
@@ -1593,7 +1610,7 @@ export async function sendOnboardingChaseEmail(data: {
       Stuck on something? Reply to this email — thegreenreserve@outlook.com.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'onboarding_chase_email' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `${data.courseName} is still waiting to go live`,
@@ -1630,7 +1647,7 @@ export async function sendMembershipPaymentLinkEmail(data: {
       Your dues go directly to ${data.courseName}. Paying at the pro shop instead? Just let the course know.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'membership_payment_link_email' }, 
     from: FROM,
     to: data.email,
     subject: data.isRenewal
@@ -1655,7 +1672,7 @@ export async function sendAdminSetPasswordEmail(data: {
       If you weren't expecting this, you can safely ignore it.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'admin_set_password_email' }, 
     from: FROM,
     to: data.email,
     subject: 'Set your GreenReserve admin password',
@@ -1678,7 +1695,7 @@ export async function sendMemberMagicLink(data: {
       If you didn't request this, you can safely ignore this email.
     </p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'member_magic_link' }, 
     from: FROM,
     to: data.email,
     subject: `Sign in to ${data.courseName} member portal`,
@@ -1702,7 +1719,7 @@ export async function sendMembershipReceiptEmail(data: {
     </p>
     <p style="margin:0;color:#6B706A;font-size:12px;">Keep this email as your receipt. Member rates apply automatically when you book while signed in.</p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'membership_receipt_email' }, 
     from: FROM,
     to: data.email,
     subject: `Receipt — ${data.tierName} membership at ${data.courseName}`,
@@ -1741,7 +1758,7 @@ export async function sendMessageNotificationEmail(data: {
     <a href="${data.replyUrl}" style="display:inline-block;background:#173B2A;color:#ffffff;font-size:14px;font-weight:600;padding:10px 22px;border-radius:6px;text-decoration:none;">View &amp; Reply</a>
     <p style="color:#6B706A;font-size:12px;margin:20px 0 0;">Reply directly at greenreserve.app — no need to respond to this email.</p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'message_notification_email' }, 
     from: FROM,
     to: data.recipientEmail,
     subject: `Message from ${data.senderName} — ${data.courseName}`,
@@ -1768,7 +1785,7 @@ export async function sendAnnouncementEmail(data: {
   // MP-7a: the Resend SDK returns { error } rather than throwing, and this
   // function discarded it — a rejected email counted as sent. Throw, so the
   // broadcast route's per-recipient tally is real.
-  const r = await getResend().emails.send({
+  const r = await getResend().emails.send({ meta: { kind: 'announcement_email' }, 
     from: FROM,
     to: data.operatorEmail,
     subject: `[GreenReserve] ${data.title}`,
@@ -1792,7 +1809,7 @@ export async function sendRefundEmail(data: {
     <p style="margin:0 0 24px;color:#3F453E;font-size:14px;line-height:1.6;">Refunds usually appear on your statement within 5&ndash;10 business days, depending on your bank. It goes back to the card you paid with.</p>
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
   `);
-  const r = await getResend().emails.send({ from: FROM, to: data.golferEmail, subject: `Refund: ${amount} from ${data.courseName}`, html });
+  const r = await getResend().emails.send({ meta: { kind: 'refund_email', bookingId: data.bookingId }, from: FROM, to: data.golferEmail, subject: `Refund: ${amount} from ${data.courseName}`, html });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1818,7 +1835,7 @@ export async function sendSignedAgreementsEmail(data: {
     ${data.pending.length ? `<p style="margin:0 0 16px;color:#7A4A10;font-size:13px;">The PDF for ${data.pending.join(' and ')} is still being prepared and will follow.</p>` : ''}
     <p style="margin:0;color:#6B706A;font-size:12px;">Signed electronically from ${data.signerEmail}. Keep this email for your records. Questions? Reply to this email &mdash; thegreenreserve@outlook.com.</p>
   `);
-  const r = await getResend().emails.send({
+  const r = await getResend().emails.send({ meta: { kind: 'signed_agreements_email' }, 
     from: FROM,
     to: data.operatorEmail,
     cc: 'thegreenreserve@outlook.com',
@@ -1848,7 +1865,7 @@ export async function sendAgreementBumpNoticeEmail(data: {
     <p style="margin:0 0 12px;color:#6B706A;font-size:13px;line-height:1.6;">After ${d(data.reacceptBy)}, course settings in your dashboard become read-only until the new version is signed. Bookings and check-ins are never affected.</p>
     <p style="margin:0;color:#6B706A;font-size:12px;">Questions? Reply to this email &mdash; thegreenreserve@outlook.com.</p>
   `);
-  const r = await getResend().emails.send({
+  const r = await getResend().emails.send({ meta: { kind: 'agreement_bump_notice_email' }, 
     from: FROM, to: data.operatorEmail, replyTo: 'thegreenreserve@outlook.com',
     subject: `Action needed: the GreenReserve ${data.title} changed — sign by ${d(data.reacceptBy)}`,
     html,
@@ -1862,7 +1879,7 @@ export async function sendAgreementBumpAdminSummaryEmail(data: { title: string; 
     <p style="margin:0 0 12px;color:#3F453E;font-size:14px;line-height:1.6;">${data.notified} operator${data.notified === 1 ? '' : 's'} notified. Re-acceptance deadline ${data.reacceptBy.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' })}.</p>
     ${data.failures.length ? `<p style="margin:0;color:#7A4A10;font-size:13px;">Failed to send to: ${data.failures.join(', ')} — contact them another way.</p>` : ''}
   `);
-  const r = await getResend().emails.send({ from: FROM, to: 'thegreenreserve@outlook.com', subject: `[GreenReserve] ${data.title} v${data.version} notice sent to ${data.notified}`, html });
+  const r = await getResend().emails.send({ meta: { kind: 'agreement_bump_admin_summary_email' }, from: FROM, to: 'thegreenreserve@outlook.com', subject: `[GreenReserve] ${data.title} v${data.version} notice sent to ${data.notified}`, html });
   if (r.error) throw new Error(r.error.message);
 }
 
@@ -1886,7 +1903,7 @@ export async function sendMonthlyReviewEmail(data: {
     ${list('What to try next', data.review.recommendations)}
     <a href="${url}" style="display:block;margin-top:24px;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:13px;border-radius:6px;font-weight:600;font-size:15px;">See the numbers &rarr;</a>
   `);
-  await getResend().emails.send({ from: FROM, to: data.to, subject: `${data.courseName}: your ${data.monthLabel} review`, html });
+  await getResend().emails.send({ meta: { kind: 'monthly_review_email' }, from: FROM, to: data.to, subject: `${data.courseName}: your ${data.monthLabel} review`, html });
 }
 
 /** MSG-1: a course's notice to the golfers booked on a day ("frost delay,
@@ -1894,7 +1911,7 @@ export async function sendMonthlyReviewEmail(data: {
  *  Replies go to the course, not GreenReserve. */
 export async function sendCourseNoticeEmail(data: {
   to: string; golferName: string; courseName: string; replyTo?: string | null;
-  dateLabel: string; teeTime: string; body: string;
+  dateLabel: string; teeTime: string; body: string; courseId?: string;
 }) {
   const html = baseTemplate(`
     <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">A note from ${escHtml(data.courseName)}</h1>
@@ -1902,7 +1919,7 @@ export async function sendCourseNoticeEmail(data: {
     <div style="color:#141814;font-size:15px;line-height:1.6;white-space:pre-wrap;">${escHtml(data.body)}</div>
     <p style="margin:22px 0 0;color:#6B706A;font-size:13px;">Questions? Reply to this email to reach ${escHtml(data.courseName)}.</p>
   `);
-  await getResend().emails.send({
+  await getResend().emails.send({ meta: { kind: 'course_notice_email', courseId: data.courseId }, 
     from: FROM, to: data.to, subject: subj(`${data.courseName}: about your ${data.teeTime} tee time`), html,
     ...(data.replyTo ? { replyTo: data.replyTo } : {}),
   });
@@ -1910,7 +1927,7 @@ export async function sendCourseNoticeEmail(data: {
 
 /** POS-2: a walk-up pro-shop sale's pay link (Apple Pay, Google Pay or card on the customer's phone). */
 export async function sendShopSalePayLinkEmail(data: {
-  email: string; name: string; courseName: string; totalCents: number; taxCents?: number;
+  email: string; name: string; courseName: string; totalCents: number; taxCents?: number; courseId?: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[]; payUrl: string;
 }) {
   // W2-7 part B: sales tax, when the course collects it, as its own line.
@@ -1925,7 +1942,7 @@ export async function sendShopSalePayLinkEmail(data: {
     <a href="${data.payUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin:16px 0;">Pay $${(data.totalCents / 100).toFixed(2)} &rarr;</a>
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Apple Pay, Google Pay or card. The charge comes from ${escapeHtml(data.courseName)}.</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.email, subject: `Pay for your pro shop items — ${data.courseName}`, html });
+  await getResend().emails.send({ meta: { kind: 'shop_sale_pay_link_email', courseId: data.courseId }, from: FROM, to: data.email, subject: `Pay for your pro shop items — ${data.courseName}`, html });
 }
 
 
@@ -1944,7 +1961,7 @@ export async function sendOwnerDeviceApproval(data: { email: string; name: strin
     <a href="${data.approvalUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Review this device</a>
     <p style="margin:0;color:#6B706A;font-size:13px;">The link works for 15 minutes. If this wasn't you, don't approve it — change your password now, because whoever it was knows it.</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.email, subject: 'Approve a new device for GreenReserve', html });
+  await getResend().emails.send({ meta: { kind: 'owner_device_approval' }, from: FROM, to: data.email, subject: 'Approve a new device for GreenReserve', html });
 }
 
 // AW-1: every owner sign-in, so a break-in is seen at once.
@@ -1960,7 +1977,7 @@ export async function sendOwnerSignInAlert(data: { email: string; name: string; 
     </table>
     <p style="margin:0;color:#6B706A;font-size:13px;">Not you? Sign in, go to My profile and choose “Sign out everywhere”, then change your password.</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.email, subject: 'GreenReserve owner sign-in', html });
+  await getResend().emails.send({ meta: { kind: 'owner_sign_in_alert' }, from: FROM, to: data.email, subject: 'GreenReserve owner sign-in', html });
 }
 
 // AW-1c: a passkey was added to or removed from the owner account — the one
@@ -1976,7 +1993,7 @@ export async function sendOwnerPasskeyChanged(data: { email: string; name: strin
     </table>
     <p style="margin:0;color:#6B706A;font-size:13px;">Not you? Sign in, go to My profile and choose “Sign out everywhere”, remove the passkey, then change your password.</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.email, subject: `GreenReserve passkey ${data.change}`, html });
+  await getResend().emails.send({ meta: { kind: 'owner_passkey_changed' }, from: FROM, to: data.email, subject: `GreenReserve passkey ${data.change}`, html });
 }
 
 // AW-5: the admin's own alerts, to the admin inbox. Urgent: the problems that
@@ -1998,7 +2015,7 @@ export async function sendAdminUrgentAlert(data: { findings: { title: string; de
     <a href="${adminUrl('/admin')}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">Open Today</a>
   `);
   const subject = n === 1 ? `[GreenReserve] ${data.findings[0].title}` : `[GreenReserve] ${n} things need you`;
-  await getResend().emails.send({ from: FROM, to: ADMIN_INBOX, subject: subject.replace(/[\r\n]+/g, ' ').slice(0, 150), html });
+  await getResend().emails.send({ meta: { kind: 'admin_urgent_alert' }, from: FROM, to: ADMIN_INBOX, subject: subject.replace(/[\r\n]+/g, ' ').slice(0, 150), html });
 }
 
 export async function sendAdminDigest(data: {
@@ -2039,5 +2056,5 @@ export async function sendAdminDigest(data: {
     </table>
     <a href="${adminUrl('/admin')}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-top:24px;">Open Today</a>
   `);
-  await getResend().emails.send({ from: FROM, to: ADMIN_INBOX, subject: `[GreenReserve] Morning digest — ${f.date}`, html });
+  await getResend().emails.send({ meta: { kind: 'admin_digest' }, from: FROM, to: ADMIN_INBOX, subject: `[GreenReserve] Morning digest — ${f.date}`, html });
 }

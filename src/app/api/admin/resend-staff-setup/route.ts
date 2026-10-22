@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { Resend } from 'resend';
 import { withAudit } from '@/lib/admin-audit';
+import { logSent } from '@/lib/sent-messages';
 
 async function resendStaffSetup(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -31,6 +32,8 @@ async function resendStaffSetup(req: NextRequest) {
     subject: `Your GreenReserve staff login — ${staff.course?.name ?? ''}`,
     html: `<p>Hi ${staff.name},</p><p>Here is your dashboard login link:</p><p><a href="${loginUrl}">${loginUrl}</a></p><p>Your login email: <strong>${staff.email}</strong></p><p>If you&apos;ve forgotten your password, use the reset link on the login page.</p>`,
   }).catch(err => ({ data: null, error: { message: err instanceof Error ? err.message : String(err) } }));
+  // BRAIN-1b: this one sends outside lib/email.ts, so it logs itself.
+  await logSent({ kind: 'staff_setup_email', courseId: staff.courseId, channel: 'email', to: staff.email, status: r.error ? 'failed' : 'sent', providerId: r.data?.id, error: r.error?.message });
   if (r.error) {
     console.error('Staff setup email failed:', r.error);
     return NextResponse.json({ error: `The login email did not send (${r.error.message}). Check the address and try again.` }, { status: 502 });

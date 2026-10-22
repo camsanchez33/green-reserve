@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 492,
-    "routes": 239,
-    "libs": 158,
-    "models": 48,
+    "files": 497,
+    "routes": 241,
+    "libs": 160,
+    "models": 49,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -406,6 +406,34 @@
       ]
     },
     {
+      "path": "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
+      "lines": 98,
+      "purpose": "BRAIN-1b (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "TimelineTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/admin-fetch",
+        "@/lib/course-timeline-groups",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
       "path": "src/app/admin/courses/[id]/_parts/context.ts",
       "lines": 19,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
@@ -443,6 +471,7 @@
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+        "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
         "src/app/admin/courses/[id]/page.tsx"
       ]
     },
@@ -582,7 +611,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/page.tsx",
-      "lines": 318,
+      "lines": 320,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -602,6 +631,7 @@
         "./_parts/CourseDialogs",
         "./_parts/MoneyTab",
         "./_parts/SetupTab",
+        "./_parts/TimelineTab",
         "./_parts/context",
         "./_parts/useCourseDetail",
         "@/components/admin/AdminSidebar",
@@ -1118,7 +1148,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 540,
+      "lines": 569,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1681,6 +1711,31 @@
         "@/lib/admin-session",
         "@/lib/private-blob",
         "@vercel/blob/client",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/course-feed/route.ts",
+      "lines": 22,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/course-feed",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-session",
+        "@/lib/course-timeline",
         "next/server"
       ],
       "usedBy": []
@@ -2468,7 +2523,7 @@
     },
     {
       "path": "src/app/api/admin/resend-staff-setup/route.ts",
-      "lines": 44,
+      "lines": 47,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2488,6 +2543,7 @@
         "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/prisma",
+        "@/lib/sent-messages",
         "next/server",
         "resend"
       ],
@@ -2642,6 +2698,32 @@
         "@/lib/course-timeline",
         "@/lib/email",
         "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/sentry-test/route.ts",
+      "lines": 21,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/sentry-test",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@sentry/nextjs",
         "next/server"
       ],
       "usedBy": []
@@ -9778,6 +9860,7 @@
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+        "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
@@ -10060,6 +10143,7 @@
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
+        "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
@@ -10455,10 +10539,12 @@
         "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
+        "src/app/api/admin/sentry-test/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/admin/two-factor/route.ts",
         "src/app/api/admin/verify-operator/route.ts",
-        "src/app/api/preview/send/route.ts"
+        "src/app/api/preview/send/route.ts",
+        "src/lib/course-timeline.ts"
       ]
     },
     {
@@ -10571,7 +10657,7 @@
     },
     {
       "path": "src/lib/admin-course-tabs.ts",
-      "lines": 95,
+      "lines": 98,
       "purpose": "AW-7 (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -10740,6 +10826,7 @@
         "src/app/admin/activity/page.tsx",
         "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
+        "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
@@ -10977,6 +11064,7 @@
         "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-documents/upload/route.ts",
+        "src/app/api/admin/course-feed/route.ts",
         "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
@@ -11006,6 +11094,7 @@
         "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
+        "src/app/api/admin/sentry-test/route.ts",
         "src/app/api/admin/session/route.ts",
         "src/app/api/admin/set-password/route.ts",
         "src/app/api/admin/system/route.ts",
@@ -13570,8 +13659,38 @@
       ]
     },
     {
+      "path": "src/lib/course-timeline-groups.ts",
+      "lines": 16,
+      "purpose": "BRAIN-1b:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "FEED_GROUPS",
+          "kind": "const"
+        },
+        {
+          "name": "FeedGroup",
+          "kind": "type"
+        },
+        {
+          "name": "FeedItem",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
+        "src/lib/course-timeline.ts"
+      ]
+    },
+    {
       "path": "src/lib/course-timeline.ts",
-      "lines": 165,
+      "lines": 346,
       "purpose": "",
       "brain": [
         "course-events"
@@ -13584,6 +13703,10 @@
         {
           "name": "AgreementAcceptedPayload",
           "kind": "type"
+        },
+        {
+          "name": "buildCourseFeed",
+          "kind": "fn"
         },
         {
           "name": "CHECKIN_CALL_PREFIX",
@@ -13604,6 +13727,22 @@
         {
           "name": "DocumentUploadedPayload",
           "kind": "type"
+        },
+        {
+          "name": "FEED_GROUPS",
+          "kind": "reexport"
+        },
+        {
+          "name": "FEED_PAGE",
+          "kind": "const"
+        },
+        {
+          "name": "FeedGroup",
+          "kind": "reexport"
+        },
+        {
+          "name": "FeedItem",
+          "kind": "reexport"
         },
         {
           "name": "getCourseTimeline",
@@ -13696,6 +13835,8 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./admin-audit",
+        "./course-timeline-groups",
         "@/lib/prisma"
       ],
       "usedBy": [
@@ -13703,6 +13844,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/record/route.ts",
         "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/course-feed/route.ts",
         "src/app/api/admin/course-groups/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
         "src/app/api/admin/course-settings/route.ts",
@@ -14040,7 +14182,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2044,
+      "lines": 2061,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14325,6 +14467,7 @@
       "imports": [
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
+        "@/lib/sent-messages",
         "@/lib/stripe",
         "resend"
       ],
@@ -16438,6 +16581,7 @@
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
+        "src/lib/sent-messages.ts",
         "src/lib/session.ts",
         "src/lib/sheet-token.ts",
         "src/lib/shop-catalog.ts",
@@ -17150,6 +17294,35 @@
       "guard": null,
       "imports": [],
       "usedBy": []
+    },
+    {
+      "path": "src/lib/sent-messages.ts",
+      "lines": 47,
+      "purpose": "BRAIN-1b (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "logSent",
+          "kind": "fn"
+        },
+        {
+          "name": "SendMeta",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/lib/email.ts",
+        "src/lib/twilio.ts"
+      ]
     },
     {
       "path": "src/lib/seo.ts",
@@ -18305,7 +18478,7 @@
     },
     {
       "path": "src/lib/twilio.ts",
-      "lines": 45,
+      "lines": 57,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -18328,6 +18501,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./sent-messages",
         "twilio"
       ],
       "usedBy": [
@@ -18676,7 +18850,8 @@
         "src/lib/admin-checks.ts"
       ],
       "readers": [
-        "src/lib/admin-checks.ts"
+        "src/lib/admin-checks.ts",
+        "src/lib/course-timeline.ts"
       ]
     },
     {
@@ -18739,7 +18914,8 @@
         "src/lib/admin-audit.ts"
       ],
       "readers": [
-        "src/app/api/admin/audit/route.ts"
+        "src/app/api/admin/audit/route.ts",
+        "src/lib/course-timeline.ts"
       ]
     },
     {
@@ -19443,12 +19619,14 @@
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-metrics.ts",
+        "src/lib/course-timeline.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
         "src/lib/round-shop-tax.ts",
+        "src/lib/sent-messages.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -19507,6 +19685,7 @@
       "writers": [],
       "readers": [
         "src/lib/analytics.ts",
+        "src/lib/course-timeline.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"
       ]
@@ -19668,7 +19847,8 @@
         "src/app/api/calcom/webhook/route.ts",
         "src/app/api/call/[token]/route.ts",
         "src/app/api/inquiries/details/route.ts",
-        "src/lib/call-invite.ts"
+        "src/lib/call-invite.ts",
+        "src/lib/course-timeline.ts"
       ]
     },
     {
@@ -20297,6 +20477,7 @@
         "src/lib/course-closure.ts",
         "src/lib/course-group.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/course-timeline.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
@@ -20305,6 +20486,7 @@
         "src/lib/public-tee-times.ts",
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
+        "src/lib/sent-messages.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -21572,7 +21754,8 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
-        "src/app/api/operator/messages/route.ts"
+        "src/app/api/operator/messages/route.ts",
+        "src/lib/course-timeline.ts"
       ]
     },
     {
@@ -21977,6 +22160,7 @@
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/admin-today.ts",
+        "src/lib/course-timeline.ts",
         "src/lib/money-problems.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"
@@ -22000,6 +22184,61 @@
       ],
       "writers": [],
       "readers": []
+    },
+    {
+      "name": "SentMessage",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "channel",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "to",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String?"
+        },
+        {
+          "name": "bookingId",
+          "type": "String?"
+        },
+        {
+          "name": "inquiryId",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "providerId",
+          "type": "String"
+        },
+        {
+          "name": "error",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/sent-messages.ts"
+      ],
+      "readers": [
+        "src/lib/course-timeline.ts"
+      ]
     },
     {
       "name": "ShopItem",
@@ -22256,7 +22495,8 @@
         "src/app/api/operator/staff/route.ts"
       ],
       "readers": [
-        "src/app/api/operator/staff/route.ts"
+        "src/app/api/operator/staff/route.ts",
+        "src/lib/course-timeline.ts"
       ]
     },
     {
