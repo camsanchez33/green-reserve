@@ -79,6 +79,7 @@ async function main() {
   // Taken at the course.
   const cash = await recordCoursePayment(course.id, ev.id, { kind: 'deposit', amount: '500', method: 'check', note: '#1042' }, 'staff@x');
   check('a check deposit is recorded as paid, nothing charged', cash.ok && (await pay(cash.value.id)).status === 'paid' && created === 0, cash);
+  if (!cash.ok) throw new Error(cash.error);
   check('a payment needs a way it was paid', !(await recordCoursePayment(course.id, ev.id, { amount: '5', method: 'crypto' }, 'x')).ok);
   check('another course can’t record against this event', !(await recordCoursePayment(other.id, ev.id, { amount: '5', method: 'cash' }, 'x')).ok);
 
