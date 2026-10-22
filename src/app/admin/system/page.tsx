@@ -73,6 +73,34 @@ function OutLink({ href, children, deep = true }: { href: string; children: Reac
   );
 }
 
+/** BRAIN-1b: prove the server half of Sentry reports, instead of trusting it. */
+function SentryTestButton() {
+  const [state, setState] = useState<{ kind: 'idle' | 'pending' | 'ok' | 'error'; text?: string }>({ kind: 'idle' });
+  async function send() {
+    setState({ kind: 'pending' });
+    try {
+      const r = await fetch('/api/admin/sentry-test', { method: 'POST' });
+      const d = await r.json().catch(() => ({})) as { error?: string };
+      // The route says exactly what is wrong (no DSN, not redeployed, no answer) — show its words.
+      setState(r.ok
+        ? { kind: 'ok', text: 'Sent — it should appear in Sentry → Issues within a minute as “Test error from Admin → Health”.' }
+        : { kind: 'error', text: d.error || `The test didn’t go through (${r.status}) — try again.` });
+    } catch {
+      setState({ kind: 'error', text: 'Network error — the test was not sent. Check your connection and try again.' });
+    }
+  }
+  return (
+    <div className="mt-3">
+      <button type="button" onClick={send} disabled={state.kind === 'pending'}
+        className="text-xs font-medium text-pine px-2.5 py-1.5 rounded-md border border-line hover:border-pine/40 transition-colors disabled:opacity-50">
+        {state.kind === 'pending' ? 'Sending…' : 'Send a test error'}
+      </button>
+      {state.kind === 'ok' && <p className="mt-1.5 text-xs text-ok">{state.text}</p>}
+      {state.kind === 'error' && <p role="alert" className="mt-1.5 text-xs text-bad">{state.text}</p>}
+    </div>
+  );
+}
+
 export default function AdminSystemPage() {
   const router = useRouter();
   // MP-11a: the layout resolved the session; a page never re-checks it.
@@ -494,6 +522,7 @@ export default function AdminSystemPage() {
               {data && !data.links.sentryIsDeep && (
                 <p className="text-[11px] text-ink-faint mt-1">Set <code className="font-mono">SENTRY_ORG</code> (and <code className="font-mono">SENTRY_PROJECT</code>) to deep-link.</p>
               )}
+              <SentryTestButton />
             </SystemCard>
           </div>
         </div>
