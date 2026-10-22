@@ -1,36 +1,34 @@
 {
-  "generatedAt": "2026-10-22T02:39:52.897Z",
+  "generatedAt": "2026-10-22T03:18:19.745Z",
   "repo": {
-    "head": "40be0a7",
+    "head": "47c769e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 24,
+    "dirtyCount": 11,
     "dirty": [
-      "M  ADMIN_V5_SPEC.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/admin-course-page-test.ts",
-      "A  scripts/course-feed-db-test.ts",
-      "A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
-      "M  src/app/admin/courses/[id]/page.tsx",
-      "M  src/app/admin/system/page.tsx",
-      "A  src/app/api/admin/course-feed/route.ts",
-      "M  src/app/api/admin/resend-staff-setup/route.ts",
-      "A  src/app/api/admin/sentry-test/route.ts",
-      "M  src/app/api/operator/bookings/route.ts",
-      "M  src/app/api/operator/events/[id]/route.ts",
-      "M  src/app/api/operator/shop-sales/route.ts",
-      "M  src/lib/admin-audit.ts",
-      "M  src/lib/admin-course-tabs.ts",
-      "A  src/lib/course-timeline-groups.ts",
-      "M  src/lib/course-timeline.ts"
+      "M OPERATOR_REWORK_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M scripts/event-payments-db-test.ts",
+      " M src/app/api/operator/events/[id]/payments/route.ts",
+      " M src/app/api/operator/events/[id]/route.ts",
+      " M src/components/dashboard/events/EventDetail.tsx",
+      " M src/components/dashboard/events/EventMoney.tsx",
+      " M src/lib/event-payments.ts",
+      "?? prisma/migrations/20261022030847_w2_9c_player_payments/"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "b9fe29f",
+        "date": "2026-10-22T02:50:47+00:00",
+        "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "40be0a7",
         "date": "2026-10-22T02:38:33+00:00",
@@ -77,6 +75,13 @@
         "h": "478ec76",
         "date": "2026-10-22T02:09:53+00:00",
         "subject": "W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4bd2042",
+        "date": "2026-10-21T22:06:00-04:00",
+        "subject": "BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)",
         "ids": [],
         "matches": []
       },
@@ -1058,7 +1063,7 @@
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-22",
+      "lastTouched": "2026-10-21",
       "ageDays": 0
     },
     {
@@ -1269,6 +1274,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b9fe29f",
+      "date": "2026-10-22",
+      "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
+    },
+    {
       "h": "40be0a7",
       "date": "2026-10-22",
       "subject": "Status board"
@@ -1304,6 +1314,11 @@
       "subject": "W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet"
     },
     {
+      "h": "4bd2042",
+      "date": "2026-10-21",
+      "subject": "BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)"
+    },
+    {
       "h": "512e214",
       "date": "2026-10-22",
       "subject": "queue/spec update"
@@ -1317,16 +1332,6 @@
       "h": "e85978d",
       "date": "2026-10-22",
       "subject": "W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit"
-    },
-    {
-      "h": "ce88bd1",
-      "date": "2026-10-22",
-      "subject": "Codemap and status board"
-    },
-    {
-      "h": "087c1a2",
-      "date": "2026-10-22",
-      "subject": "W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks"
     }
   ]
 }

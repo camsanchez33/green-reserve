@@ -42,6 +42,31 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const [size, setSize] = useState(4);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const live = e.status === 'planned';
+  // W2-9c: players' own payments.
+  const price = e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '';
+  const [askAmount, setAskAmount] = useState(price);
+  const [askVia, setAskVia] = useState<'email' | 'sms'>('email');
+  const [paidHere, setPaidHere] = useState<{ id: string; amount: string; method: string } | null>(null);
+  const [copied, setCopied] = useState('');
+  const theirs = (id: string) => e.payments.filter(x => x.playerId === id);
+  const stateOf = (id: string): 'paid' | 'sent' | 'none' => {
+    const ps = theirs(id);
+    if (ps.some(x => x.status === 'paid' && x.amountCents > x.refundedCents)) return 'paid';
+    if (ps.some(x => x.status === 'open' || x.status === 'paying')) return 'sent';
+    return 'none';
+  };
+  const unpaid = e.entrants.filter(p => stateOf(p.id) === 'none').length;
+
+  /** A payment action (the payments route), then refresh the event in place. */
+  async function payAct(key: string, body: Record<string, unknown>, done?: (r: Record<string, unknown>) => string) {
+    setBusy(key); setError(''); setNote('');
+    const r = await dfetch<Record<string, unknown>>(`/api/operator/events/${e.id}/payments`, { method: 'POST', body: JSON.stringify(body) });
+    if (!r.ok) { setBusy(''); setError(r.error); return false; }
+    await reload();
+    setBusy('');
+    if (done) setNote(done(r.data ?? {}));
+    return true;
+  }
 
   async function act(key: string, body: Record<string, unknown>, done?: (r: EventData & Record<string, unknown>) => string) {
     setBusy(key); setError(''); setNote('');
@@ -213,6 +238,29 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
           </div>
         )}
 
+        {e.entrants.length > 0 && live && unpaid > 0 && (
+          <form className="flex flex-wrap items-end gap-2 mb-4 print:hidden bg-paper/70 rounded-md px-3 py-3" onSubmit={async ev => {
+            ev.preventDefault();
+            await payAct('ask', { action: 'player_links', amount: askAmount, via: askVia }, r => {
+              const asked = Number(r.asked ?? 0), already = Number(r.already ?? 0);
+              const none = (r.noContact as string[] | undefined) ?? [], failed = (r.failed as string[] | undefined) ?? [], late = (r.notSent as string[] | undefined) ?? [];
+              return [`Sent ${asked} pay link${asked === 1 ? '' : 's'}.`, already ? `${already} had already paid or had a link.` : '',
+                none.length ? `No email or phone for ${none.join(', ')} — take theirs at the course.` : '',
+                failed.length ? `Didn\u2019t send: ${failed.join('; ')} — their links are made; copy them below.` : '',
+                late.length ? `Ran out of time before ${late.join(', ')} — press it again for them.` : ''].filter(Boolean).join(' ');
+            });
+          }}>
+            <label className="block"><span className="block text-[13px] font-medium text-ink mb-1">Ask the {unpaid} player{unpaid === 1 ? '' : 's'} who haven’t paid for</span>
+              <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                <input inputMode="decimal" required aria-label="Amount each" className={INPUT + ' w-32 pl-7'} value={askAmount} onChange={ev => setAskAmount(ev.target.value)} placeholder="each" /></div></label>
+            <label className="block"><span className="block text-[13px] font-medium text-ink mb-1">Send by</span>
+              <select className={INPUT} value={askVia} onChange={ev => setAskVia(ev.target.value as 'email' | 'sms')}>
+                <option value="email">Email (text if no email)</option><option value="sms">Text (email if no mobile)</option>
+              </select></label>
+            <button type="submit" disabled={!!busy || !askAmount} className={PRIMARY}>{busy === 'ask' ? 'Sending…' : 'Send pay links'}</button>
+          </form>
+        )}
+
         {/* What prints: the pairings sheet alone. */}
         <div className="hidden print:block mb-4">
           <h1 className="font-serif text-[26px] font-semibold text-ink">{e.name}</h1>
@@ -234,7 +282,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             <table className="w-full text-[13.5px]">
               <thead><tr className="text-left text-ink-muted border-b border-line">
                 <th className="py-2 pr-3 font-medium">Player</th><th className="py-2 pr-3 font-medium">Contact</th>
-                <th className="py-2 pr-3 font-medium">Group</th>{e.format === 'shotgun' && <th className="py-2 pr-3 font-medium">Hole</th>}<th />
+                <th className="py-2 pr-3 font-medium">Group</th>{e.format === 'shotgun' && <th className="py-2 pr-3 font-medium">Hole</th>}<th className="py-2 pr-3 font-medium">Paid</th><th />
               </tr></thead>
               <tbody className="divide-y divide-line-soft">
                 {[...sortedGroups.flatMap(([, ps]) => ps), ...ungrouped].map(p => (
@@ -251,6 +299,40 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                           className={INPUT + ' w-20'} onBlur={ev => { const v = ev.target.value === '' ? null : Number(ev.target.value); if (v !== p.startHole) act('set:' + p.id, { action: 'player_set', playerId: p.id, groupNo: p.groupNo, startHole: v }); }} />
                       </td>
                     )}
+                    <td className="py-2 pr-3">
+                      {(() => {
+                        const st = stateOf(p.id);
+                        const link = theirs(p.id).find(x => x.status === 'open')?.payUrl ?? null;
+                        if (st === 'paid') return <StatusDot status="ok" label="Paid" />;
+                        if (paidHere?.id === p.id) return (
+                          <span className="flex flex-wrap items-center gap-1.5">
+                            <input inputMode="decimal" aria-label={`Amount ${p.name} paid`} className={INPUT + ' w-24'} value={paidHere.amount} onChange={ev => setPaidHere({ ...paidHere, amount: ev.target.value })} />
+                            <select aria-label="How they paid" className={INPUT} value={paidHere.method} onChange={ev => setPaidHere({ ...paidHere, method: ev.target.value })}>
+                              <option value="cash">Cash</option><option value="check">Check</option><option value="card_counter">Card at the course</option><option value="other">Other</option>
+                            </select>
+                            <button disabled={!!busy || !paidHere.amount} onClick={async () => {
+                              // A link they were sent is closed first, so they can't pay twice.
+                              const openLink = theirs(p.id).find(x => x.status === 'open');
+                              const ok = openLink
+                                ? await payAct('here' + p.id, { action: 'paid_other', paymentId: openLink.id, method: paidHere.method }, () => `${p.name} marked paid; their link was closed.`)
+                                : await payAct('here' + p.id, { action: 'record', playerId: p.id, amount: paidHere.amount, method: paidHere.method }, () => `${p.name} marked paid.`);
+                              if (ok) setPaidHere(null);
+                            }} className={SECONDARY}>{busy === 'here' + p.id ? 'Saving…' : 'Save'}</button>
+                            <button onClick={() => setPaidHere(null)} className="text-[12.5px] text-ink-soft hover:text-ink">Close</button>
+                          </span>
+                        );
+                        return (
+                          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            {st === 'sent' ? <StatusDot status="warn" label="Link sent" /> : <span className="text-ink-muted">—</span>}
+                            {live && st === 'sent' && link && <button onClick={async () => { try { await navigator.clipboard.writeText(link); setCopied(p.id); setTimeout(() => setCopied(''), 2000); } catch { setError('Couldn\u2019t copy — open Money to see the link.'); } }} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">{copied === p.id ? 'Copied' : 'Copy link'}</button>}
+                            {live && st === 'none' && (p.email || p.phone) && <button disabled={!!busy || !price} title={price ? undefined : 'Set a price per player first'}
+                              onClick={() => payAct('link' + p.id, { action: 'link', playerId: p.id, amount: price, via: p.email ? 'email' : 'sms' }, r => r.sent ? `Pay link sent to ${p.name}.` : `Link made for ${p.name}, but it didn\u2019t send${r.sendError ? `: ${String(r.sendError)}` : ''} — copy it here.`)}
+                              className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2 disabled:opacity-50">{busy === 'link' + p.id ? 'Sending…' : 'Send link'}</button>}
+                            {<button disabled={!!busy} onClick={() => setPaidHere({ id: p.id, amount: price, method: 'cash' })} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Paid at the course</button>}
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td className="py-2 text-right">{live && <button disabled={!!busy} onClick={() => act('del:' + p.id, { action: 'player_remove', playerId: p.id })} className="text-[12.5px] text-ink-soft hover:text-bad">Remove</button>}</td>
                   </tr>
                 ))}

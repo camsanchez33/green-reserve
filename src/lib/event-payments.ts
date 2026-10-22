@@ -28,7 +28,7 @@ import { ACCESS_FEE_CENTS, EVENT_FEE_ON } from './booking-fees';
 
 export const MAX_EVENT_PAYMENT_CENTS = 10_000_000; // $100,000 — a typo guard
 export const STALE_CHARGE_MS = 10 * 60 * 1000;
-export const PAY_KINDS = ['deposit', 'balance', 'other'] as const;
+export const PAY_KINDS = ['deposit', 'balance', 'other', 'player'] as const;
 export const COURSE_METHODS = ['cash', 'check', 'card_counter', 'other'] as const;
 export const METHOD_LABEL: Record<string, string> = { link: 'Pay link', cash: 'Cash', check: 'Check', card_counter: 'Card at the course', other: 'Other' };
 
@@ -44,9 +44,11 @@ export function toCents(v: unknown): number | null {
   return c > 0 && c <= MAX_EVENT_PAYMENT_CENTS ? c : null;
 }
 
-/** GreenReserve's fee on an online payment: $1.50 × players on a balance, while EVENT_FEE_ON. */
+/** GreenReserve's fee on an online payment, while EVENT_FEE_ON: $1.50 × players on a balance, $1.50 on a player's own payment. */
 export function eventFeeFor(kind: string, headcount: number | null, on: boolean = EVENT_FEE_ON): number {
-  return on && kind === 'balance' && headcount && headcount > 0 ? headcount * ACCESS_FEE_CENTS : 0;
+  if (!on) return 0;
+  if (kind === 'player') return ACCESS_FEE_CENTS;
+  return kind === 'balance' && headcount && headcount > 0 ? headcount * ACCESS_FEE_CENTS : 0;
 }
 
 /** Pure: where an event's money stands. Only paid payments count; refunds come off. */
@@ -64,6 +66,23 @@ async function eventOf(courseId: string, eventId: string) {
   return prisma.courseEvent.findFirst({ where: { id: eventId, courseId }, include: { _count: { select: { entrants: true } } } });
 }
 
+/**
+ * W2-9c: a payment for one player on the event's list. The player must be on
+ * THIS event; their name and contact fill in what staff left blank.
+ */
+async function playerOf(eventId: string, playerId: unknown) {
+  if (playerId == null || playerId === '') return { player: null };
+  const player = await prisma.courseEventPlayer.findFirst({ where: { id: String(playerId), eventId } });
+  return player ? { player } : { error: fail(404, 'That player isn\u2019t on this event any more — refresh the page.') };
+}
+
+/** Pure: where one player's own payments stand. */
+export function playerPayState(payments: { status: string; amountCents: number; refundedCents: number }[]): 'paid' | 'sent' | 'none' {
+  if (payments.some(p => p.status === 'paid' && p.amountCents > p.refundedCents)) return 'paid';
+  if (payments.some(p => p.status === 'open' || p.status === 'paying')) return 'sent';
+  return 'none';
+}
+
 /** A payment taken at the course: recorded as paid, nothing charged here. */
 export async function recordCoursePayment(courseId: string, eventId: string, input: Record<string, unknown>, actor: string): Promise<Result<{ id: string }>> {
   const event = await eventOf(courseId, eventId);
@@ -72,12 +91,16 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
   if (!amountCents) return fail(400, 'Enter the amount taken (up to $100,000).');
   const method = (COURSE_METHODS as readonly string[]).includes(String(input.method)) ? String(input.method) : null;
   if (!method) return fail(400, 'Say how it was paid.');
-  const kind = (PAY_KINDS as readonly string[]).includes(String(input.kind)) ? String(input.kind) : 'other';
+  const who = await playerOf(eventId, input.playerId);
+  if (who.error) return who.error;
+  const player = who.player;
+  const kind = player ? 'player' : (PAY_KINDS as readonly string[]).includes(String(input.kind)) && input.kind !== 'player' ? String(input.kind) : 'other';
   const p = await prisma.courseEventPayment.create({
     data: {
-      eventId, courseId, kind, label: str(input.label, 80) || (kind === 'deposit' ? 'Deposit' : kind === 'balance' ? 'Balance' : 'Payment'),
+      eventId, courseId, kind, playerId: player?.id ?? null,
+      label: str(input.label, 80) || (player ? `${player.name} — entry` : kind === 'deposit' ? 'Deposit' : kind === 'balance' ? 'Balance' : 'Payment'),
       amountCents, method, status: 'paid', paidAt: new Date(),
-      payerName: str(input.payerName, 120), note: str(input.note, 300), createdBy: actor,
+      payerName: str(input.payerName, 120) || player?.name || '', note: str(input.note, 300), createdBy: actor,
     },
   });
   return { ok: true, value: { id: p.id } };
@@ -88,7 +111,10 @@ export async function createPayLink(courseId: string, eventId: string, input: Re
   const event = await eventOf(courseId, eventId);
   if (!event) return fail(404, 'Event not found.');
   if (event.status !== 'planned') return fail(409, 'This event was cancelled.');
-  const kind = (PAY_KINDS as readonly string[]).includes(String(input.kind)) ? String(input.kind) : 'other';
+  const who = await playerOf(eventId, input.playerId);
+  if (who.error) return who.error;
+  const player = who.player;
+  const kind = player ? 'player' : (PAY_KINDS as readonly string[]).includes(String(input.kind)) && input.kind !== 'player' ? String(input.kind) : 'other';
   let headcount: number | null = null;
   if (kind === 'balance') {
     const h = Number(input.headcount);
@@ -97,20 +123,30 @@ export async function createPayLink(courseId: string, eventId: string, input: Re
   }
   const amountCents = toCents(input.amount);
   if (!amountCents) return fail(400, 'Enter the amount (up to $100,000).');
-  const payerEmail = str(input.payerEmail, 200).toLowerCase();
+  const payerEmail = (str(input.payerEmail, 200) || player?.email || '').toLowerCase();
   if (payerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payerEmail)) return fail(400, 'That email doesn’t look right.');
   const feeCents = eventFeeFor(kind, headcount);
-  const label = str(input.label, 80) || (kind === 'deposit' ? 'Deposit' : kind === 'balance' ? `Balance for ${headcount} player${headcount === 1 ? '' : 's'}` : 'Payment');
+  const label = str(input.label, 80) || (player ? `${player.name} — entry` : kind === 'deposit' ? 'Deposit' : kind === 'balance' ? `Balance for ${headcount} player${headcount === 1 ? '' : 's'}` : 'Payment');
   const payToken = randomUUID();
   const p = await prisma.$transaction(async tx => {
+    if (player) {
+      // One live link per player. The player's row is locked while we check and
+      // create, so two sends at once can't both make a link.
+      await tx.$queryRaw`SELECT id FROM "CourseEventPlayer" WHERE id = ${player.id} FOR UPDATE`;
+      const theirs = await tx.courseEventPayment.findMany({ where: { eventId, playerId: player.id }, select: { status: true, amountCents: true, refundedCents: true } });
+      const state = playerPayState(theirs);
+      if (state !== 'none') return state;
+    }
     if (headcount != null) await tx.courseEvent.update({ where: { id: eventId }, data: { finalHeadcount: headcount } });
     return tx.courseEventPayment.create({
       data: {
-        eventId, courseId, kind, label, amountCents, feeCents, method: 'link', status: 'open', payToken, headcount,
-        payerName: str(input.payerName, 120), payerEmail, payerPhone: str(input.payerPhone, 40), note: str(input.note, 300), createdBy: actor,
+        eventId, courseId, kind, label, amountCents, feeCents, method: 'link', status: 'open', payToken, headcount, playerId: player?.id ?? null,
+        payerName: str(input.payerName, 120) || player?.name || '', payerEmail, payerPhone: str(input.payerPhone, 40) || player?.phone || '', note: str(input.note, 300), createdBy: actor,
       },
     });
   });
+  if (p === 'paid') return fail(409, `${player!.name} has already paid.`);
+  if (p === 'sent') return fail(409, `${player!.name} already has a pay link — send it again instead.`);
   return { ok: true, value: { id: p.id, payToken, amountCents, feeCents, label } };
 }
 

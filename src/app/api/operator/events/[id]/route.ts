@@ -14,7 +14,7 @@ import { sendEventPairingsEmail, isPlaceholderEmail } from '@/lib/email';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { todayIn } from '@/lib/course-time';
 import { heldBy, ninesByProduct } from '@/lib/event-hold';
-import { eventMoney, reconcileStuckPayments, voidOpenLinks, METHOD_LABEL, STALE_CHARGE_MS } from '@/lib/event-payments';
+import { eventMoney, reconcileStuckPayments, voidOpenLinks, settleOpenPayment, METHOD_LABEL, STALE_CHARGE_MS } from '@/lib/event-payments';
 import { EVENT_FEE_ON } from '@/lib/booking-fees';
 
 // W2-9 Events: one event — its details, the tee times it holds, its checklist
@@ -50,7 +50,7 @@ async function load(courseId: string, id: string) {
         orderBy: { createdAt: 'asc' },
         // The pay token stays on the server; staff get the link only when they ask for it.
         select: { id: true, kind: true, label: true, amountCents: true, feeCents: true, method: true, status: true, paidAt: true, voidedAt: true, createdAt: true, chargeStartedAt: true,
-          payerName: true, payerEmail: true, payerPhone: true, headcount: true, note: true, refundedCents: true, createdBy: true, payToken: true,
+          payerName: true, payerEmail: true, payerPhone: true, headcount: true, note: true, refundedCents: true, createdBy: true, payToken: true, playerId: true,
           refunds: { orderBy: { createdAt: 'asc' }, select: { id: true, amountCents: true, status: true, reason: true, error: true, createdBy: true, createdAt: true } } },
       },
     },
@@ -170,6 +170,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         break;
       }
       case 'player_remove': {
+        // W2-9c: an unpaid link of theirs is cancelled first, so it can't be paid after they're gone.
+        // Money they already paid stays on the event (refund it there if the course decides to).
+        const open = await prisma.courseEventPayment.findMany({ where: { eventId: id, courseId, playerId: String(body.playerId ?? ''), status: { in: ['open', 'paying'] } }, select: { id: true } });
+        for (const o of open) {
+          const v = await settleOpenPayment(courseId, o.id, 'void');
+          if (!v.ok) return bad(`Their pay link couldn\u2019t be cancelled, so they weren\u2019t removed: ${v.error}`, v.status);
+        }
         const r = await prisma.courseEventPlayer.deleteMany({ where: { id: String(body.playerId ?? ''), eventId: id } });
         if (!r.count) return bad('That player is gone — refresh the page.', 404);
         break;

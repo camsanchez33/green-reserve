@@ -9,7 +9,7 @@ import { prisma } from '../src/lib/prisma';
 import { stripe } from '../src/lib/stripe';
 import {
   recordCoursePayment, createPayLink, settleOpenPayment, chargeEventPayment, refundPayment, sendRefund, voidOpenLinks,
-  reconcileStuckPayments, eventMoney, eventFeeFor, toCents, STALE_CHARGE_MS,
+  reconcileStuckPayments, eventMoney, eventFeeFor, toCents, playerPayState, STALE_CHARGE_MS,
 } from '../src/lib/event-payments';
 import { EVENT_FEE_ON } from '../src/lib/booking-fees';
 
@@ -173,6 +173,33 @@ async function main() {
   check('another course can’t refund this course’s payment', !(await refundPayment(other.id, bal.value.id, { amount: '1' }, 'x')).ok && !(await sendRefund(other.id, pending.id)).ok);
   m = await load();
   check('money: refunds come off what the course kept', m.refundedCents === 67500 && m.keptCents === 817500 && m.owedCents === 57500, m);
+
+  // W2-9c: players' own payments.
+  const jane = await prisma.courseEventPlayer.create({ data: { eventId: ev.id, name: 'Jane Smith', email: 'jane@x.test' } });
+  const tom = await prisma.courseEventPlayer.create({ data: { eventId: ev.id, name: 'Tom Lee', phone: '201-555-0100' } });
+  const otherEv = await prisma.courseEvent.create({ data: { courseId: course.id, name: 'Other', date: '2031-06-01', startTime: '08:00', holdFrom: '07:00', holdTo: '12:30' } });
+  const stranger = await prisma.courseEventPlayer.create({ data: { eventId: otherEv.id, name: 'Elsewhere' } });
+  check('the fee on a player\u2019s own payment is $1.50 when on, nothing while off', eventFeeFor('player', null, true) === 150 && eventFeeFor('player', null) === 0);
+  check('a player from another event is refused', !(await createPayLink(course.id, ev.id, { playerId: stranger.id, amount: '125' }, 'x')).ok
+    && !(await recordCoursePayment(course.id, ev.id, { playerId: stranger.id, amount: '125', method: 'cash' }, 'x')).ok);
+  // Two sends at the same instant: exactly one link.
+  const many = await Promise.all(Array.from({ length: 8 }, () => createPayLink(course.id, ev.id, { playerId: jane.id, amount: '125' }, 'x')));
+  const janes = await prisma.courseEventPayment.findMany({ where: { playerId: jane.id } });
+  check('eight sends at once make one link for a player', many.filter(r => r.ok).length === 1 && janes.length === 1, { ok: many.filter(r => r.ok).length, n: janes.length });
+  const jl = many.find(r => r.ok)!;
+  if (!jl.ok) throw new Error('no link');
+  check('a player\u2019s link is labelled and addressed from the list', janes[0].kind === 'player' && janes[0].label === 'Jane Smith — entry' && janes[0].payerEmail === 'jane@x.test' && janes[0].feeCents === 0, janes[0]);
+  check('…and a second link for them is refused ("send it again")', /already has a pay link/.test(((await createPayLink(course.id, ev.id, { playerId: jane.id, amount: '125' }, 'x')) as { error?: string }).error ?? ''));
+  check('their state reads "sent"', playerPayState(janes) === 'sent');
+  await chargeEventPayment(jl.value.id, jl.value.payToken, 'pm_j', 12500);
+  const janesPaid = await prisma.courseEventPayment.findMany({ where: { playerId: jane.id } });
+  check('once they pay, they read "paid" and can\u2019t be sent another', playerPayState(janesPaid) === 'paid' && /already paid/.test(((await createPayLink(course.id, ev.id, { playerId: jane.id, amount: '125' }, 'x')) as { error?: string }).error ?? ''));
+  const tr2 = await recordCoursePayment(course.id, ev.id, { playerId: tom.id, amount: '125', method: 'cash' }, 'x');
+  const toms = await prisma.courseEventPayment.findMany({ where: { playerId: tom.id } });
+  check('a player paid at the course is recorded against them, no fee', tr2.ok && toms.length === 1 && toms[0].kind === 'player' && toms[0].method === 'cash' && toms[0].payerName === 'Tom Lee' && playerPayState(toms) === 'paid');
+  await prisma.courseEventPlayer.delete({ where: { id: tom.id } });
+  check('removing a player keeps the money they paid on the event', (await prisma.courseEventPayment.findUniqueOrThrow({ where: { id: toms[0].id } })).playerId === null);
+  await prisma.courseEventPayment.deleteMany({ where: { eventId: ev.id, kind: 'player' } }); // keep the money totals below as they were
 
   // Cancelling the event closes its open links; a link can't be paid on a cancelled event.
   const late = await createPayLink(course.id, ev.id, { kind: 'other', amount: '10' }, 'x');

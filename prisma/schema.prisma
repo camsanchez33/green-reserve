@@ -1466,6 +1466,7 @@ model CourseEventPlayer {
   groupNo   Int?
   /// Shotgun: the hole this group starts on. Tee times: null.
   startHole Int?
+  payments  CourseEventPayment[]
   sortOrder Int         @default(0)
   createdAt DateTime    @default(now())
 
@@ -1505,6 +1506,9 @@ model CourseEventPayment {
   payerPhone      String              @default("")
   /// Balance: the headcount it was worked out from.
   headcount       Int?
+  /// W2-9c: a player's own payment (their pay link, or paid at the course); null = the organizer's.
+  playerId        String?
+  player          CourseEventPlayer?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
   note            String              @default("")
   /// Sum of refunds that went through or are in flight (reserved before Stripe is called).
   refundedCents   Int                 @default(0)
@@ -1514,6 +1518,7 @@ model CourseEventPayment {
 
   @@index([eventId])
   @@index([courseId, status])
+  @@index([playerId])
 }
 
 /// W2-9b: a refund of an event payment, made when the course decides to (its own terms).
