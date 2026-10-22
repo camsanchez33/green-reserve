@@ -17,7 +17,7 @@ export type BoardGroup = {
   id: string; golferName: string; golferEmail: string; players: number; status: string;
   paymentStatus: string; noShowAt?: string | null; checkInFailReason?: string;
 };
-export type BoardSlot = { id: string; time: string; status: string; playersAvailable: number; playersBooked: number; bookings?: BoardGroup[] };
+export type BoardSlot = { id: string; time: string; status: string; playersAvailable: number; playersBooked: number; bookings?: BoardGroup[]; event?: { id: string; name: string } | null };
 type Tone = 'ok' | 'warn' | 'bad';
 
 const HATCH: React.CSSProperties = { backgroundImage: 'repeating-linear-gradient(135deg, #E3E4DE 0 1px, transparent 1px 7px)' };
@@ -45,7 +45,8 @@ const movable = (g: BoardGroup) => (g.status === 'confirmed' && !g.noShowAt) || 
 function hourLabel(h: number) { return `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`; }
 
 function seats(s: BoardSlot) {
-  if (s.status === 'blocked') return <span className="italic text-ink-muted">Blocked</span>;
+  // W2-9: a time held for an event says which one.
+  if (s.status === 'blocked') return <span className="italic text-ink-muted truncate">{s.event ? s.event.name : 'Blocked'}</span>;
   const left = s.playersAvailable - s.playersBooked;
   if (left <= 0) return <span className="font-medium text-bad">Full</span>;
   return <span className="text-ink-muted">{left} open</span>;

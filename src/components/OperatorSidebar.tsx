@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
-  Trophy, PartyPopper, DollarSign, MessageSquare, ShoppingBag,
+  Flag, DollarSign, MessageSquare, ShoppingBag,
 } from 'lucide-react';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
@@ -15,7 +15,7 @@ import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
 
 export type OperatorNavKey =
-  | 'teesheet' | 'analytics' | 'money' | 'tournaments' | 'outings'
+  | 'teesheet' | 'analytics' | 'money' | 'events'
   | 'schedule' | 'members' | 'settings' | 'messages' | 'shop';
 
 interface CourseIdentity {
@@ -119,8 +119,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const navItems: { key: OperatorNavKey; label: string; href: string; icon: React.ReactNode; soon?: boolean }[] = [
     { key: 'teesheet',      label: 'Tee sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
     { key: 'analytics',     label: 'Analytics',    href: '/dashboard/analytics', icon: <BarChart2 className="w-4 h-4"/> },
-    { key: 'tournaments',   label: 'Tournaments',  href: '/dashboard/tournaments',   icon: <Trophy className="w-4 h-4"/>,    soon: true },
-    { key: 'outings',       label: 'Outings',      href: '/dashboard/outings',       icon: <PartyPopper className="w-4 h-4"/>, soon: true },
+    // W2-9 (Cam 2026-10-22): the Tournaments and Outings placeholders became one Events tab.
+    { key: 'events',        label: 'Events',       href: '/dashboard/events',        icon: <Flag className="w-4 h-4"/> },
     { key: 'schedule',      label: 'Schedule',     href: '/dashboard/schedules',     icon: <Clock className="w-4 h-4"/> },
     { key: 'members',       label: 'Members',      href: '/dashboard/members',       icon: <Users className="w-4 h-4"/> },
     // SD-8: Payments + Cancellations + Payouts are one page. A login that can
@@ -139,8 +139,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const visible = (k: OperatorNavKey) => !isStaff || ({
     teesheet: true,
     analytics: access.can('analytics.view'),
-    tournaments: true,
-    outings: true,
+    events: access.can('events.manage'),
     schedule: access.can('schedule.view'),
     members: access.can('members.view'),
     money: access.can('money.cancellations') || access.can('money.payments') || access.can('money.payouts'),
@@ -223,8 +222,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         gone — the course's name and the tabs run across the top in the course's
         own colour, the active tab underlined in fairway (decoration only; the
         white weight and aria-current carry the state). Below md the strip and
-        bottom bar above are unchanged. Tournaments and Outings are "Soon"
-        placeholders and stay off the bar until they exist. */}
+        bottom bar above are unchanged. */}
     <header className="hidden md:block shrink-0" style={{ backgroundColor: brandColor }}>
       {/* Cam 2026-10-19: with Pro shop added the bar ran past 1280px and cut
           Settings off. Never a sideways scroll: the tabs take their own row

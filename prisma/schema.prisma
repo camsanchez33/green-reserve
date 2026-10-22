@@ -169,6 +169,7 @@ model Course {
   thread                     MessageThread?
   photos                     CoursePhoto[]
   teeTimeAlerts              TeeTimeAlert[]
+  events                     CourseEvent[]
   nines                      Nine[]
   /// IC-1 / CS-1: when we next call the course; null = never scheduled.
   nextCheckInAt              DateTime?
@@ -238,15 +239,15 @@ model Nine {
 // (TeeTimeSchedule/TeeTime) get product scoping in COURSE_LAYOUT_SPEC L2 —
 // this phase is the model + dashboard tab only.
 model CourseProduct {
-  id            String                @id @default(cuid())
-  courseId      String
-  course        Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  label         String
-  holes         Int                   @default(18)
-  nineIds       String[]
-  active        Boolean               @default(true)
-  sortOrder     Int                   @default(0)
-  createdAt     DateTime              @default(now())
+  id                String                @id @default(cuid())
+  courseId          String
+  course            Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  label             String
+  holes             Int                   @default(18)
+  nineIds           String[]
+  active            Boolean               @default(true)
+  sortOrder         Int                   @default(0)
+  createdAt         DateTime              @default(now())
   /// W2-6 slice 3: this round's own booking rules. Null = the course's rule
   /// (Course.walkingAllowed + cartRequired, minPlayers, maxPlayers,
   /// publicAdvanceDays). lib/booking-rules.ts merges them.
@@ -254,10 +255,10 @@ model CourseProduct {
   minPlayers        Int?
   maxPlayers        Int?
   publicAdvanceDays Int?
-  teeSetRatings CourseProductTeeSet[]
+  teeSetRatings     CourseProductTeeSet[]
   /// L2: schedules and generated slots scoped to this product.
-  schedules     TeeTimeSchedule[]
-  teeTimes      TeeTime[]
+  schedules         TeeTimeSchedule[]
+  teeTimes          TeeTime[]
 
   @@index([courseId])
 }
@@ -475,6 +476,10 @@ model TeeTime {
   createdAt         DateTime       @default(now())
   bookings          Booking[]
   teeTimeAlerts     TeeTimeAlert[]
+  /// W2-9: the event holding this tee time (blocked for it); null = not an event's.
+  /// Cancelling or moving the event releases only the times it holds.
+  eventId           String?
+  event             CourseEvent?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
   /// L2: the product this slot sells (null on simple courses). One row per
   /// product per time — two products may share a start time when their nines
   /// do not overlap.
@@ -483,6 +488,7 @@ model TeeTime {
 
   @@index([productId])
   @@index([courseId, date])
+  @@index([eventId])
   // MP-3: the tee-sheet and generation paths filter on date alone across courses.
   @@index([date])
 }
@@ -1350,4 +1356,84 @@ model AdminAlert {
   resolvedAt  DateTime?
 
   @@index([kind, resolvedAt])
+}
+
+/// W2-9 Events (Cam 2026-10-21/22): an outing, tournament, league night or
+/// other group event. Saving it holds its tee times (blocked, TeeTime.eventId)
+/// and builds its prep checklist. Payments come in a later slice.
+model CourseEvent {
+  id                  String              @id @default(cuid())
+  courseId            String
+  course              Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name                String
+  /// outing | tournament | league | other
+  kind                String              @default("outing")
+  date                String // YYYY-MM-DD, the course's calendar day
+  /// shotgun | tee_times
+  format              String              @default("shotgun")
+  /// Shotgun: when it starts. Tee times: the first tee time.
+  startTime           String
+  /// The window held on the tee sheet: every tee time from holdFrom to holdTo (inclusive).
+  holdFrom            String
+  holdTo              String
+  /// The course set holdTo by hand (kept when the event is edited).
+  holdToCustom        Boolean             @default(false)
+  /// Tee times only: which round's times are held (null = every round).
+  productId           String?
+  holes               Int                 @default(18)
+  groups              Int                 @default(0)
+  players             Int                 @default(0)
+  organizerName       String              @default("")
+  organizerEmail      String              @default("")
+  organizerPhone      String              @default("")
+  /// What each player pays the course (cents); 0 = not set yet.
+  pricePerPlayerCents Int                 @default(0)
+  /// What's included: cart, range, food, prizes … (the course's own words).
+  includes            String[]
+  /// The course's own deposit and refund terms for this event.
+  terms               String              @default("")
+  notes               String              @default("")
+  /// planned | cancelled
+  status              String              @default("planned")
+  createdBy           String              @default("")
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  tasks               CourseEventTask[]
+  entrants            CourseEventPlayer[]
+  teeTimes            TeeTime[]
+
+  @@index([courseId, date])
+}
+
+/// W2-9: one item on an event's prep checklist.
+model CourseEventTask {
+  id        String      @id @default(cuid())
+  eventId   String
+  event     CourseEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  label     String
+  /// YYYY-MM-DD; null = no due date.
+  dueDate   String?
+  doneAt    DateTime?
+  doneBy    String      @default("")
+  sortOrder Int         @default(0)
+
+  @@index([eventId])
+}
+
+/// W2-9: a player in an event, with their group and starting hole (pairings).
+model CourseEventPlayer {
+  id        String      @id @default(cuid())
+  eventId   String
+  event     CourseEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  email     String      @default("")
+  phone     String      @default("")
+  /// 1-based group number; null = not in a group yet.
+  groupNo   Int?
+  /// Shotgun: the hole this group starts on. Tee times: null.
+  startHole Int?
+  sortOrder Int         @default(0)
+  createdAt DateTime    @default(now())
+
+  @@index([eventId])
 }

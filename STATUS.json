@@ -1,19 +1,30 @@
 {
-  "generatedAt": "2026-10-22T01:44:09.221Z",
+  "generatedAt": "2026-10-22T01:48:25.749Z",
   "repo": {
-    "head": "d7d45ed",
-    "branch": "pr-w28",
-    "dirtyCount": 9,
+    "head": "b5e43a0",
+    "branch": "pr-w29",
+    "dirtyCount": 27,
     "dirty": [
       "M  OPERATOR_REWORK_SPEC.md",
       "UU docs/CODEMAP.md",
       "UU docs/codemap.json",
-      "A  scripts/analytics-w28-db-test.ts",
-      "M  src/app/dashboard/analytics/page.tsx",
-      "M  src/lib/analytics.ts",
-      "M  src/lib/cancel-booking.ts",
-      "M  src/lib/course-closure.ts",
-      "M  src/lib/weather-cancel.ts"
+      "A  prisma/migrations/20261022010603_w2_9_events/migration.sql",
+      "M  prisma/schema.prisma",
+      "M  scripts/design-guard.baseline.json",
+      "A  scripts/events-db-test.ts",
+      "A  scripts/events-test.ts",
+      "M  src/app/api/operator/blackouts/route.ts",
+      "A  src/app/api/operator/events/[id]/route.ts",
+      "A  src/app/api/operator/events/route.ts",
+      "M  src/app/api/operator/tee-times/route.ts",
+      "A  src/app/dashboard/events/page.tsx",
+      "M  src/app/dashboard/outings/page.tsx",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/app/dashboard/tournaments/page.tsx",
+      "M  src/components/OperatorSidebar.tsx",
+      "M  src/components/dashboard/StaffPermissions.tsx",
+      "M  src/components/dashboard/TeeSheetBoard.tsx",
+      "A  src/components/dashboard/events/EventDetail.tsx"
     ],
     "looksLikeRunInProgress": true
   },
@@ -28,9 +39,44 @@
         "matches": []
       },
       {
+        "h": "087c1a2",
+        "date": "2026-10-22T01:36:48+00:00",
+        "subject": "W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "164896a",
         "date": "2026-10-21T21:10:24-04:00",
         "subject": "BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0cb3627",
+        "date": "2026-10-22T01:08:38+00:00",
+        "subject": "W2-8b: a regular who has booked again is not 'gone quiet'",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ffcefc6",
+        "date": "2026-10-22T01:03:12+00:00",
+        "subject": "W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "aad9ee0",
+        "date": "2026-10-22T01:01:01+00:00",
+        "subject": "W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f367f8d",
+        "date": "2026-10-22T00:59:54+00:00",
+        "subject": "W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents",
         "ids": [],
         "matches": []
       },
@@ -1158,9 +1204,34 @@
       "subject": "Codemap and status board"
     },
     {
+      "h": "087c1a2",
+      "date": "2026-10-22",
+      "subject": "W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks"
+    },
+    {
       "h": "164896a",
       "date": "2026-10-21",
       "subject": "BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)"
+    },
+    {
+      "h": "0cb3627",
+      "date": "2026-10-22",
+      "subject": "W2-8b: a regular who has booked again is not 'gone quiet'"
+    },
+    {
+      "h": "ffcefc6",
+      "date": "2026-10-22",
+      "subject": "W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet"
+    },
+    {
+      "h": "aad9ee0",
+      "date": "2026-10-22",
+      "subject": "W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players"
+    },
+    {
+      "h": "f367f8d",
+      "date": "2026-10-22",
+      "subject": "W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents"
     },
     {
       "h": "e8c4fe4",
@@ -1186,31 +1257,6 @@
       "h": "f8d9737",
       "date": "2026-10-22",
       "subject": "Messages: keep Open the course in the header below lg"
-    },
-    {
-      "h": "3020c49",
-      "date": "2026-10-22",
-      "subject": "AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)"
-    },
-    {
-      "h": "f31213a",
-      "date": "2026-10-21",
-      "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)"
-    },
-    {
-      "h": "42adddb",
-      "date": "2026-10-21",
-      "subject": "Codemap and status board"
-    },
-    {
-      "h": "6b0ebeb",
-      "date": "2026-10-21",
-      "subject": "AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links"
-    },
-    {
-      "h": "821ddf9",
-      "date": "2026-10-21",
-      "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)"
     }
   ]
 }

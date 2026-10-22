@@ -4,16 +4,21 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 01:44 UTC · branch `pr-w28` · HEAD `d7d45ed` · working tree **9 dirty file(s)**
+Generated 2026-10-22 01:48 UTC · branch `pr-w29` · HEAD `b5e43a0` · working tree **27 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 106 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 111 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
 | `ce88bd1` | 2026-10-22 | Codemap and status board |
+| `087c1a2` | 2026-10-22 | W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks |
 | `164896a` | 2026-10-21 | BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175) |
+| `0cb3627` | 2026-10-22 | W2-8b: a regular who has booked again is not 'gone quiet' |
+| `ffcefc6` | 2026-10-22 | W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet |
+| `aad9ee0` | 2026-10-22 | W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players |
+| `f367f8d` | 2026-10-22 | W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents |
 | `e8c4fe4` | 2026-10-22 | W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan |
 | `1d2a5db` | 2026-10-21 | BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174) |
 | `4cd3e1a` | 2026-10-22 | W2-6 Schedule simplification: open hours, what golfers can book, one price table |
@@ -121,17 +126,28 @@ Generated 2026-10-22 01:44 UTC · branch `pr-w28` · HEAD `d7d45ed` · working t
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (27 file(s))
 
 - `M  OPERATOR_REWORK_SPEC.md`
 - `UU docs/CODEMAP.md`
 - `UU docs/codemap.json`
-- `A  scripts/analytics-w28-db-test.ts`
-- `M  src/app/dashboard/analytics/page.tsx`
-- `M  src/lib/analytics.ts`
-- `M  src/lib/cancel-booking.ts`
-- `M  src/lib/course-closure.ts`
-- `M  src/lib/weather-cancel.ts`
+- `A  prisma/migrations/20261022010603_w2_9_events/migration.sql`
+- `M  prisma/schema.prisma`
+- `M  scripts/design-guard.baseline.json`
+- `A  scripts/events-db-test.ts`
+- `A  scripts/events-test.ts`
+- `M  src/app/api/operator/blackouts/route.ts`
+- `A  src/app/api/operator/events/[id]/route.ts`
+- `A  src/app/api/operator/events/route.ts`
+- `M  src/app/api/operator/tee-times/route.ts`
+- `A  src/app/dashboard/events/page.tsx`
+- `M  src/app/dashboard/outings/page.tsx`
+- `M  src/app/dashboard/page.tsx`
+- `M  src/app/dashboard/tournaments/page.tsx`
+- `M  src/components/OperatorSidebar.tsx`
+- `M  src/components/dashboard/StaffPermissions.tsx`
+- `M  src/components/dashboard/TeeSheetBoard.tsx`
+- `A  src/components/dashboard/events/EventDetail.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -257,17 +273,17 @@ This is the distinction a raw checkbox count gets wrong.
 ## Recent commits
 
 - `ce88bd1` 2026-10-22 — Codemap and status board
+- `087c1a2` 2026-10-22 — W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks
 - `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
+- `0cb3627` 2026-10-22 — W2-8b: a regular who has booked again is not 'gone quiet'
+- `ffcefc6` 2026-10-22 — W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet
+- `aad9ee0` 2026-10-22 — W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players
+- `f367f8d` 2026-10-22 — W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents
 - `e8c4fe4` 2026-10-22 — W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan
 - `1d2a5db` 2026-10-21 — BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)
 - `4cd3e1a` 2026-10-22 — W2-6 Schedule simplification: open hours, what golfers can book, one price table
 - `e59ed92` 2026-10-22 — Codemap and status board
 - `f8d9737` 2026-10-22 — Messages: keep Open the course in the header below lg
-- `3020c49` 2026-10-22 — AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)
-- `f31213a` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)
-- `42adddb` 2026-10-21 — Codemap and status board
-- `6b0ebeb` 2026-10-21 — AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links
-- `821ddf9` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)
 
 ---
 

@@ -1,5 +1,6 @@
 'use client';
 import { CARD } from '@/components/ui/Card';
+import Link from 'next/link';
 import { MonthPicker } from '@/components/ui/MonthPicker';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
@@ -40,6 +41,8 @@ type TeeTime = {
   /** RES-1: the tee time's resident price (cents); null = none. */
   residentRateCents?: number | null;
   status: string; bookings?: Booking[];
+  /** W2-9: the event holding this (blocked) time. */
+  event?: { id: string; name: string } | null;
 };
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number; createdAt: string;
@@ -140,6 +143,16 @@ function DashboardPageInner() {
   type WxPlan = { from: string; to: string; wholeDay: boolean; startedBefore: string | null; groups: WxGroup[]; teeTimeIds: string[] };
   // SP-A: what this login may do on the sheet (owners: everything).
   const access = useDashboardAccess();
+  // W2-9: events with checklist items past due show on the sheet's "needs doing" bar.
+  const [eventsDue, setEventsDue] = useState<{ id: string; name: string; tasksOverdue: number }[]>([]);
+  const canEvents = access.loaded && access.can('events.manage');
+  useEffect(() => {
+    if (!canEvents) return;
+    dfetch<{ events: { id: string; name: string; status: string; tasksOverdue: number }[] }>('/api/operator/events').then(r => {
+      // Not worth a page error: the Events tab shows the same list and says why if it fails.
+      if (r.ok) setEventsDue(r.data.events.filter(e => e.status === 'planned' && e.tasksOverdue > 0));
+    });
+  }, [canEvents]);
   const wxTabs = ([['cancel', 'Cancel for weather'], ['delay', 'Delay the start']] as const).filter(([k]) => access.can(k === 'cancel' ? 'sheet.weather_cancel' : 'sheet.delay_start'));
   const [wxMode, setWxMode] = useState<'cancel' | 'delay'>('cancel');
   const [wxWhole, setWxWhole] = useState(true);
@@ -896,8 +909,13 @@ function DashboardPageInner() {
                       {lateGroups.length > 4 && <span className="text-ink-muted">+{lateGroups.length - 4} more</span>}
                     </div>
                   ) : (
-                    <span className="text-ink-soft">{selectedDate === today() ? 'Nothing needs attention right now.' : 'Tap a time to see its groups.'}</span>
+                    <span className="text-ink-soft">{selectedDate === today() ? (eventsDue.length ? 'No groups running late.' : 'Nothing needs attention right now.') : 'Tap a time to see its groups.'}</span>
                   )}
+                  {eventsDue.map(ev => (
+                    <Link key={ev.id} href={`/dashboard/events?id=${ev.id}`} className="inline-flex items-center gap-1.5 text-ink hover:underline">
+                      <StatusDot status="bad" label={`${ev.name}: ${ev.tasksOverdue} checklist item${ev.tasksOverdue === 1 ? '' : 's'} overdue`} />
+                    </Link>
+                  ))}
                   <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-soft">
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/[0.08] border-l-[3px] border-ok" />Paid</span>
                     <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-warn/[0.09] border-l-[3px] border-warn" />Booked, not paid yet</span>
@@ -970,7 +988,7 @@ function DashboardPageInner() {
                   <button onClick={() => setPanelId(null)} className="shrink-0 -mr-1 p-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-paper" aria-label="Close"><X className="w-5 h-5" /></button>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-ink">
-                  <span>{panelSlot.status === 'blocked' ? <span className="italic text-ink-muted">Blocked</span> : <>{panelSlot.playersBooked} of {panelSlot.playersAvailable} players · {open <= 0 ? <span className="text-bad font-medium">Full</span> : `${open} open`}</>}</span>
+                  <span>{panelSlot.status === 'blocked' ? <span className="italic text-ink-muted">{panelSlot.event ? `Held for ${panelSlot.event.name}` : 'Blocked'}</span> : <>{panelSlot.playersBooked} of {panelSlot.playersAvailable} players · {open <= 0 ? <span className="text-bad font-medium">Full</span> : `${open} open`}</>}</span>
                   <span className="text-ink-soft">{panelSlot.product?.label ? `${panelSlot.product.label} · ` : ''}{panelSlot.holes} holes · ${panelSlot.greenFee.toFixed(2)} a player{panelSlot.cartFee > 0 ? ` + $${panelSlot.cartFee.toFixed(2)} cart` : ''}</span>
                   {panelSlot.residentRateCents != null && <span className="text-ink-soft">Residents ${(panelSlot.residentRateCents / 100).toFixed(2)}</span>}
                 </div>
@@ -979,7 +997,11 @@ function DashboardPageInner() {
               <div className="flex-1 overflow-y-auto px-5">
                 {groups.length > 0
                   ? <ul className="divide-y divide-line-soft">{groups.map(b => groupRow(b, panelSlot))}</ul>
-                  : <p className="py-6 text-[13.5px] text-ink-soft">{panelSlot.status === 'blocked' ? 'This time is blocked — golfers can’t book it.' : 'Nobody is booked yet.'}</p>}
+                  : <p className="py-6 text-[13.5px] text-ink-soft">{panelSlot.status === 'blocked'
+                      ? (panelSlot.event
+                        ? <>Held for {access.can('events.manage') ? <Link href={`/dashboard/events?id=${panelSlot.event.id}`} className="text-ink underline">{panelSlot.event.name}</Link> : panelSlot.event.name} — golfers can’t book it. Unblocking takes it out of the event.</>
+                        : 'This time is blocked — golfers can’t book it.')
+                      : 'Nobody is booked yet.'}</p>}
               </div>
 
               <div className="px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-line-soft flex flex-wrap items-center gap-2">
