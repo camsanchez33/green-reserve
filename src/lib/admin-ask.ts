@@ -8,6 +8,7 @@
 //     admin page that shows the same data, so Ask is never a way around a page;
 //   - every model-supplied input is validated by hand before a query, and
 //     outputs are compact summaries (no card details, no tokens, no secrets).
+import { hasArea, type AdminArea } from './admin-areas';
 import type Anthropic from '@anthropic-ai/sdk';
 import { prisma } from './prisma';
 import { VIEWER_PLUS, SUPPORT_PLUS } from './admin-roles';
@@ -64,12 +65,14 @@ export const ASK_TOOL_NAMES = new Set(ASK_TOOLS.map(t => t.name));
 function err(content: string): AskOutcome { return { content, isError: true }; }
 function ok(data: unknown): AskOutcome { return { content: JSON.stringify(data), isError: false }; }
 
-export async function runAskTool(name: string, input: unknown, role: string): Promise<AskOutcome> {
+export async function runAskTool(name: string, input: unknown, role: string, areas: string[] | null = null): Promise<AskOutcome> {
   const args = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
   const allowed = (roles: string[]) => roles.includes(role);
+  // AW-11: the same area its page needs (null = every area, as for the owner).
+  const inArea = (a: AdminArea) => hasArea({ role, areas }, a);
 
   if (name === 'list_courses') {
-    if (!allowed(VIEWER_PLUS)) return err('This login cannot see courses.');
+    if (!allowed(VIEWER_PLUS) || !inArea('courses')) return err('This login cannot see courses.');
     const courses = await prisma.course.findMany({
       where: { archivedAt: null },
       orderBy: { name: 'asc' },
@@ -87,7 +90,7 @@ export async function runAskTool(name: string, input: unknown, role: string): Pr
   }
 
   if (name === 'bookings_by_course') {
-    if (!allowed(SUPPORT_PLUS)) return err('This login cannot see bookings or revenue.');
+    if (!allowed(SUPPORT_PLUS) || !inArea('courses')) return err('This login cannot see bookings or revenue.');
     const today = dayKey(new Date());
     const back7 = dayKey(new Date(Date.now() - 6 * 86_400_000));
     const from = typeof args.from === 'string' ? args.from : back7;
@@ -116,7 +119,7 @@ export async function runAskTool(name: string, input: unknown, role: string): Pr
   }
 
   if (name === 'list_inquiries') {
-    if (!allowed(VIEWER_PLUS)) return err('This login cannot see inquiries.');
+    if (!inArea('pipeline') || !allowed(VIEWER_PLUS)) return err('This login cannot see inquiries.');
     const status = typeof args.status === 'string' ? args.status.slice(0, 40) : undefined;
     const days = Number.isInteger(args.unchangedForDays) && (args.unchangedForDays as number) >= 0 ? Math.min(args.unchangedForDays as number, 3650) : undefined;
     const rows = await prisma.courseInquiry.findMany({
@@ -135,7 +138,7 @@ export async function runAskTool(name: string, input: unknown, role: string): Pr
   }
 
   if (name === 'money_problems') {
-    if (!allowed(SUPPORT_PLUS)) return err('This login cannot see money problems.');
+    if (!inArea('money') || !allowed(SUPPORT_PLUS)) return err('This login cannot see money problems.');
     const [failed, disputes] = await Promise.all([
       prisma.booking.findMany({
         where: FAILED_CHARGE_WHERE, take: 40, orderBy: { createdAt: 'desc' },

@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY, MANAGER_PLUS, ownerGateError, stepUpRequired } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, MANAGER_PLUS, ownerGateError, stepUpRequired, areaGate } from '@/lib/admin-session';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { needReason, reasonOf, auditAdmin, changedFields } from '@/lib/admin-audit';
+import { isAdminArea, ALL_AREAS } from '@/lib/admin-areas';
 
 const VALID_ROLES = ['owner', 'manager', 'support', 'viewer'];
 
 function safeRole(r: unknown): string {
   return VALID_ROLES.includes(String(r)) ? String(r) : 'manager';
+}
+
+/** AW-11: an area list from the request — known areas only, each once, in catalog order. null when not sent. */
+function areasOf(v: unknown): string[] | null {
+  if (!Array.isArray(v)) return null;
+  const set = new Set(v.filter(isAdminArea));
+  return ALL_AREAS.filter(a => set.has(a));
 }
 
 function genTempPassword(): string {
@@ -21,16 +29,20 @@ export async function GET() {
   // MP-2: the employee roster is org structure — who exists, their roles, who
   // is deactivated. Manager-plus, not any session.
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const noArea = areaGate(session, 'company');
+  if (noArea) return noArea;
 
   const admins = await prisma.adminUser.findMany({
     orderBy: { createdAt: 'asc' },
     select: {
       id: true, email: true, name: true, role: true,
       active: true, mustChangePassword: true, lastLoginAt: true, createdAt: true,
+      areas: true, areasSetAt: true,
     },
   });
 
-  return NextResponse.json(admins);
+  // AW-11: areas null = never set (every area the role reaches).
+  return NextResponse.json(admins.map(({ areasSetAt, areas, ...a }) => ({ ...a, areas: areasSetAt ? areas : null })));
 }
 
 export async function POST(req: NextRequest) {
@@ -42,6 +54,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { email: rawEmail, name, role } = body;
+  const areas = areasOf(body.areas);
   if (!rawEmail || !name) return NextResponse.json({ error: 'email and name required' }, { status: 400 });
   const nr = needReason('employee_create', body); if (nr) return nr;
   const email = String(rawEmail).trim().toLowerCase();
@@ -60,10 +73,12 @@ export async function POST(req: NextRequest) {
       role: safeRole(role),
       active: true,
       mustChangePassword: true,
+      // AW-11: a new employee gets exactly the areas the owner ticked (none sent = every area).
+      ...(areas ? { areas, areasSetAt: new Date() } : {}),
     },
   });
 
-  await auditAdmin(session, { action: 'employee_create', targetType: 'admin', targetId: created.id, after: { email: created.email, name: created.name, role: created.role }, reason: reasonOf(body) });
+  await auditAdmin(session, { action: 'employee_create', targetType: 'admin', targetId: created.id, after: { email: created.email, name: created.name, role: created.role, areas: areas ?? 'all' }, reason: reasonOf(body) });
   return NextResponse.json({ success: true, tempPassword });
 }
 
@@ -80,6 +95,7 @@ export async function PATCH(req: NextRequest) {
   if (id === session.adminId) return NextResponse.json({ error: 'Cannot modify your own account here' }, { status: 400 });
   // BRAIN-1a: every change to someone's access is said with a reason.
   const auditAction = action === 'reset_password' ? 'employee_reset_password'
+    : action === 'areas' ? 'employee_areas'
     : role !== undefined ? 'employee_role'
     : active === false ? 'employee_deactivate' : 'employee_reactivate';
   const nr = needReason(auditAction, body); if (nr) return nr;
@@ -101,6 +117,19 @@ export async function PATCH(req: NextRequest) {
     });
     await auditAdmin(session, { action: auditAction, targetType: 'admin', targetId: id, reason: reasonOf(body) });
     return NextResponse.json({ success: true, tempPassword });
+  }
+
+  // AW-11: what this employee can open. Stored as a list even with every box
+  // ticked, so an area added later reaches them only when the owner ticks it.
+  if (action === 'areas') {
+    const areas = areasOf(body.areas);
+    if (!areas) return NextResponse.json({ error: 'Send the areas as a list.' }, { status: 400 });
+    const target = await prisma.adminUser.findUnique({ where: { id }, select: { role: true, areas: true, areasSetAt: true } });
+    if (!target) return NextResponse.json({ error: 'That employee no longer exists — refresh the page.' }, { status: 404 });
+    if (target.role === 'owner') return NextResponse.json({ error: 'The owner always has everything.' }, { status: 400 });
+    await prisma.adminUser.update({ where: { id }, data: { areas, areasSetAt: new Date() } });
+    await auditAdmin(session, { action: auditAction, targetType: 'admin', targetId: id, before: { areas: target.areasSetAt ? target.areas : 'all' }, after: { areas }, reason: reasonOf(body) });
+    return NextResponse.json({ success: true, id, areas });
   }
 
   const data: Record<string, unknown> = {};

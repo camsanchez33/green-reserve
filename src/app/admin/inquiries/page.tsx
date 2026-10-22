@@ -143,7 +143,9 @@ function InquiriesListInner() {
       if (r.ok) { setInquiries(await r.json()); setLoadError(''); }
       else {
         setInquiries([]);
-        setLoadError(r.status === 403 ? 'Inquiries require support access.'
+        // AW-11: a 403 can also be "not in your areas" — the server says which.
+        const body = r.status === 403 ? await r.json().catch(() => ({})) as { error?: string } : {};
+        setLoadError(r.status === 403 ? (body.error || 'Inquiries require support access.')
           : r.status === 401 ? 'Your session ended — sign in again.'
           : 'Could not load inquiries. Try again.');
       }

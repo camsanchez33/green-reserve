@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { logSettingsChanged } from '@/lib/course-timeline';
 import { needReason, reasonOf, auditAdmin, changedFields, bodyWithReason } from '@/lib/admin-audit';
 
@@ -16,6 +16,8 @@ const COURSES = { select: { id: true, name: true, slug: true, city: true, state:
 async function gate(write: boolean) {
   const session = await resolveAdminSession();
   if (!session) return { res: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return { res: noArea };
   if (!requireRole(session, write ? MANAGER_PLUS : SUPPORT_PLUS)) return { res: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) };
   return { session };
 }

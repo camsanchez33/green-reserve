@@ -573,6 +573,44 @@ async function main() {
     }
   }
 
+  console.log('\n── Admin areas (AW-11: per-person access) ────────────────────────');
+  {
+    // A support login limited to Messages: every other area answers 403
+    // (code 'area'), Home and the menu show nothing from them, search hides
+    // them — and only the owner can change what someone can open.
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { signOwnerToken } = await import('../src/lib/owner-session');
+    const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['messages'], areasSetAt: new Date() } });
+    try {
+      const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'manager', mfa: true })}`;
+      for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals']] as const) {
+        const r = await api(path, { cookie: c });
+        check(`Messages-only manager → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
+      }
+      checkStatus('Messages-only manager → Messages → 200', (await api('/api/admin/messages', { cookie: c })).status, 200);
+      const nb = (await api('/api/admin/nav-badges', { cookie: c })).body as { moneyProblems?: number; openProblems?: number; pendingInquiries?: number };
+      check('…the menu counts nothing outside Messages, and no Systems line', nb?.moneyProblems === 0 && nb?.openProblems === 0 && nb?.pendingInquiries === 0 && (nb as { systemsOk?: unknown }).systemsOk === null, JSON.stringify(nb));
+      const t = (await api('/api/admin/today', { cookie: c })).body as Record<string, unknown>;
+      check('…Home shows no section from another area, health included', t?.health === null && t?.today === null && t?.overview === null && t?.courses === null && t?.problems === null && t?.needs === null && t?.goals === null, JSON.stringify(t));
+      const sr = (await api(`/api/admin/search?q=${encodeURIComponent('Isol')}`, { cookie: c })).body as { results?: { type: string; href: string }[] };
+      check('…search finds no course, inquiry, golfer, teammate or Money page', !!sr?.results && !sr.results.some(x => ['course', 'inquiry', 'golfer', 'guest', 'booking', 'group', 'employee'].includes(x.type) || x.href === '/admin/revenue'), JSON.stringify(sr).slice(0, 300));
+
+      // Only the owner changes someone's areas — with a fresh confirmation and a reason.
+      const self = await api('/api/admin/employees', { method: 'PATCH', cookie: c, body: { id: limited.id, action: 'areas', areas: ['money'], reason: 'give me money' } });
+      checkStatus('An employee cannot change areas → 403', self.status, 403);
+      const live = await prisma.ownerSession.create({ data: { adminId: data.adminOwner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+      const oc = `gr_owner=${await signOwnerToken(live.id, data.adminOwner.id, live.expiresAt)}`;
+      const noReason = await api('/api/admin/employees', { method: 'PATCH', cookie: oc, body: { id: limited.id, action: 'areas', areas: ['messages', 'money'] } });
+      check('The owner must say why → 400 reason_required', noReason.status === 400 && (noReason.body as { code?: string })?.code === 'reason_required', JSON.stringify(noReason.body));
+      const okay = await api('/api/admin/employees', { method: 'PATCH', cookie: oc, body: { id: limited.id, action: 'areas', areas: ['messages', 'money'], reason: 'covering the books this week' } });
+      checkStatus('The owner adds Money → 200', okay.status, 200);
+      checkStatus('…and it applies at once: Money → 200', (await api('/api/admin/revenue', { cookie: c })).status, 200);
+      await prisma.ownerSession.delete({ where: { id: live.id } });
+    } finally {
+      await prisma.adminUser.delete({ where: { id: limited.id } });
+    }
+  }
+
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
   {
     // (a) The employees' door never mentions an owner: the owner's correct

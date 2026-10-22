@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, OWNER_ONLY, SUPPORT_PLUS, ownerGateError } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, OWNER_ONLY, SUPPORT_PLUS, ownerGateError, areaGate } from '@/lib/admin-session';
 import { sendAnnouncementEmail } from '@/lib/email';
 import { withAudit } from '@/lib/admin-audit';
 
@@ -26,6 +26,8 @@ async function recipients() {
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'messages');
+  if (noArea) return noArea;
   // MP-2b: POST was tightened by MP-2 and GET was not — announcement bodies
   // and senders were readable by any session.
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -63,6 +65,8 @@ export async function GET(req: NextRequest) {
 async function postBroadcast(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'messages');
+  if (noArea) return noArea;
   // MP-2 fix-now #8: a raw role check skips requireOwner()'s mfa assertion,
   // so a password-only owner session could send mass email. Mass email and
   // admin-account creation were the only two owner powers still bypassing the

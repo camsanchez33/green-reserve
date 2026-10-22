@@ -222,7 +222,7 @@ export default function MoneyPage() {
       if (p === 'custom' && cFrom && cTo) { params.set('period', 'custom'); params.set('from', cFrom); params.set('to', cTo); }
       else params.set('period', p);
       const res = await fetch(`/api/admin/revenue?${params}`);
-      if (res.status === 403) { setError('Money is for support and above.'); setLoading(false); return; }
+      if (res.status === 403) { const e = await res.json().catch(() => ({})); setError(e.error || 'Money is for support and above.'); setLoading(false); return; }
       if (!res.ok) { const e = await res.json().catch(() => ({})); setError(e.error || `Couldn’t load Money (${res.status}). Try again.`); setLoading(false); return; }
       setData(await res.json());
     } catch { setError('Network error — check your connection and try again.'); }

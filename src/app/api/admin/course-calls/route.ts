@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { CHECKIN_AGENDA, nextCheckInAfterTalk } from '@/lib/course-checkin';
 import { fmtCallTime } from '@/lib/inquiry-call';
 import { logCheckInCall } from '@/lib/course-timeline';
@@ -24,6 +24,8 @@ const parseDate = (v: unknown): Date | null => {
 async function postCall(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const adminName = session.name || 'Admin';
 

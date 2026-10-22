@@ -13,6 +13,7 @@
 import { createContext, useContext, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { LOGIN_SESSION_ENDED } from '@/lib/admin-fetch';
+import type { AdminArea } from '@/lib/admin-areas';
 
 export interface AdminSessionView {
   adminId: string;
@@ -21,6 +22,8 @@ export interface AdminSessionView {
   role: string;
   /** This session presented a second factor (owner sign-in). */
   mfa: boolean;
+  /** AW-11: the areas this person can open (lib/admin-areas.ts). The menu hides the rest; the routes refuse them. */
+  areas: AdminArea[];
 }
 
 /** Pages that must render with NO session — they are how you get one. */

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, requireOwner, SUPPORT_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, requireOwner, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { computeNetPnL, periodDelta } from '@/lib/course-metrics';
 import { sumExpensesForPeriodCents } from '@/lib/expenses';
 import { fetchStripeFeeWindow } from '@/lib/platform-stripe';
@@ -71,6 +71,8 @@ export async function GET(req: NextRequest) {
   if (!session || !requireRole(session, SUPPORT_PLUS)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+  const noArea = areaGate(session, 'money');
+  if (noArea) return noArea;
 
   const sp = req.nextUrl.searchParams;
   const todayStr = dayStr(new Date());

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { performCancellation } from '@/lib/cancel-booking';
 import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
@@ -11,6 +11,8 @@ import { needReason, reasonOf, auditAdmin, courseOfBooking } from '@/lib/admin-a
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   // MP-2c: returns golferName/Email/Phone + totalAmount for any course; PATCH/POST here are already MANAGER_PLUS.
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const courseId = req.nextUrl.searchParams.get('courseId');
@@ -41,6 +43,8 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const body = await req.json();
 
@@ -75,6 +79,8 @@ export async function PATCH(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { teeTimeId, golferName, golferEmail, golferPhone, players } = await req.json();
   if (!teeTimeId || !golferName || !golferEmail || !players) {

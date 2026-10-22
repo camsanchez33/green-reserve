@@ -74,6 +74,7 @@ Earlier admin specs: ADMIN_REBUILD_SPEC, ADMIN_V2..V4_SPEC.
 - **AW-10 Golfers.** Question whether the admin needs a list of every golfer at all.
   - AW-10 decided (Cam 2026-10-22: "Lookup only"): no list of every golfer. The page already worked that way (search, then one record); it is restyled to ADMIN-C as **Golfers** with nothing removed — resend confirmation/receipt, cancel for them, refund, the trust numbers and each booking's money timeline stay.
 - **AW-11 Employees.** Make it a good tab; change-password does not belong only here. Employee logins with per-person access to only some areas (owner sees everything) — needs building out.
+  - AW-11 built (Cam 2026-10-22 chose "per-person access"): Employees is **Team**. Each person has a role (how much) and areas (where): Pipeline, Courses, Golfers, Money, Messages, Problems, Company (`lib/admin-areas.ts`, `AdminUser.areas` + `areasSetAt`, additive migration). Every area route gates with `areaGate`; Home, menu counts, search and Ask leave out other areas; a page opened without its area says which area is missing. The owner adds people with their areas, changes role and areas (step-up + reason), resets passwords, turns access off; "What they did" per person. Change your own password lives on My profile only.
 - **AW-12 Activity.** Rework; decide what belongs there (not "every single thing"). Questions to Cam.
 - **AW-13 Manual build.** Question whether it should exist at all (from V1).
 - **AW-14 System.** Important but disorganised — reorganise.

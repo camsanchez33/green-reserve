@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { auditAdmin } from '@/lib/admin-audit';
 import { listProblems, SNOOZE_DAYS } from '@/lib/problems';
 
@@ -17,6 +17,8 @@ import { listProblems, SNOOZE_DAYS } from '@/lib/problems';
 export async function GET() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
+  const noArea = areaGate(session, 'problems');
+  if (noArea) return noArea;
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Problems are for support and above.' }, { status: 403 });
   const [problems, admins] = await Promise.all([
     listProblems(),
@@ -28,6 +30,8 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
+  const noArea = areaGate(session, 'problems');
+  if (noArea) return noArea;
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Problems are for support and above.' }, { status: 403 });
   const body = await req.json().catch(() => ({})) as { id?: unknown; action?: unknown; adminId?: unknown; text?: unknown; days?: unknown; reason?: unknown };
   const id = typeof body.id === 'string' ? body.id : '';

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { buildCourseFeed, FEED_GROUPS, type FeedGroup } from '@/lib/course-timeline';
 
 // BRAIN-1b: a course's whole story, newest first, a page at a time.
@@ -8,6 +8,8 @@ import { buildCourseFeed, FEED_GROUPS, type FeedGroup } from '@/lib/course-timel
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'The course timeline is for support and above.' }, { status: 403 });
   const sp = req.nextUrl.searchParams;
   const courseId = sp.get('courseId');
