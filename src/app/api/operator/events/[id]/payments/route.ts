@@ -101,7 +101,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           const r = await createPayLink(courseId, id, { playerId: pl.id, amount: body.amount, label: body.label }, session.email);
           if (!r.ok) {
             if (r.status === 409) { already++; continue; } // someone sent one meanwhile
-            return bad(r.error, r.status); // a bad amount: the same for everyone, so stop here
+            if (r.status === 404) { failed.push(`${pl.name}: removed from the list meanwhile`); continue; }
+            // A bad amount is the same for everyone: stop, and say who was already asked.
+            return NextResponse.json({ error: asked.length ? `${r.error} (${asked.length} link${asked.length === 1 ? ' was' : 's were'} already sent: ${asked.join(', ')}.)` : r.error }, { status: r.status });
           }
           const pay = await prisma.courseEventPayment.findUniqueOrThrow({ where: { id: r.value.id } });
           const err = await sendLink(courseId, pay, event, event.course.name, via, session.email, { bulk: true });

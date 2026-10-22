@@ -95,15 +95,31 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
   if (who.error) return who.error;
   const player = who.player;
   const kind = player ? 'player' : (PAY_KINDS as readonly string[]).includes(String(input.kind)) && input.kind !== 'player' ? String(input.kind) : 'other';
-  const p = await prisma.courseEventPayment.create({
-    data: {
-      eventId, courseId, kind, playerId: player?.id ?? null,
-      label: str(input.label, 80) || (player ? `${player.name} — entry` : kind === 'deposit' ? 'Deposit' : kind === 'balance' ? 'Balance' : 'Payment'),
-      amountCents, method, status: 'paid', paidAt: new Date(),
-      payerName: str(input.payerName, 120) || player?.name || '', note: str(input.note, 300), createdBy: actor,
-    },
+  const data = {
+    eventId, courseId, kind, playerId: player?.id ?? null,
+    label: str(input.label, 80) || (player ? `${player.name} — entry` : kind === 'deposit' ? 'Deposit' : kind === 'balance' ? 'Balance' : 'Payment'),
+    amountCents, method, status: 'paid', paidAt: new Date(),
+    payerName: str(input.payerName, 120) || player?.name || '', note: str(input.note, 300), createdBy: actor,
+  };
+  if (!player) {
+    const p = await prisma.courseEventPayment.create({ data });
+    return { ok: true, value: { id: p.id } };
+  }
+  // A player's own payment: under the same lock as sending them a link, and
+  // never alongside one that is paid, being paid, or still open — so cash at
+  // the counter and their card can't both land.
+  const r = await prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM "CourseEventPlayer" WHERE id = ${player.id} FOR UPDATE`;
+    const theirs = await tx.courseEventPayment.findMany({ where: { eventId, playerId: player.id }, select: { status: true, amountCents: true, refundedCents: true } });
+    if (theirs.some(x => x.status === 'paying')) return 'paying' as const;
+    const state = playerPayState(theirs);
+    if (state !== 'none') return state;
+    return tx.courseEventPayment.create({ data });
   });
-  return { ok: true, value: { id: p.id } };
+  if (r === 'paying') return fail(409, `${player.name} is paying their link right now — wait a moment and refresh.`);
+  if (r === 'paid') return fail(409, `${player.name} has already paid.`);
+  if (r === 'sent') return fail(409, `${player.name} has a pay link — mark that link paid instead, so they can\u2019t pay twice.`);
+  return { ok: true, value: { id: r.id } };
 }
 
 /** A pay link for the organizer: any amount the course chooses; a balance confirms the headcount. */

@@ -49,9 +49,10 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const [paidHere, setPaidHere] = useState<{ id: string; amount: string; method: string } | null>(null);
   const [copied, setCopied] = useState('');
   const theirs = (id: string) => e.payments.filter(x => x.playerId === id);
-  const stateOf = (id: string): 'paid' | 'sent' | 'none' => {
+  const stateOf = (id: string): 'paid' | 'paying' | 'sent' | 'none' => {
     const ps = theirs(id);
     if (ps.some(x => x.status === 'paid' && x.amountCents > x.refundedCents)) return 'paid';
+    if (ps.some(x => x.status === 'paying')) return 'paying';
     if (ps.some(x => x.status === 'open' || x.status === 'paying')) return 'sent';
     return 'none';
   };
@@ -304,15 +305,20 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                         const st = stateOf(p.id);
                         const link = theirs(p.id).find(x => x.status === 'open')?.payUrl ?? null;
                         if (st === 'paid') return <StatusDot status="ok" label="Paid" />;
+                        // Their card is going through: nothing to do until it lands.
+                        if (st === 'paying') return <StatusDot status="warn" label="Paying now" />;
+                        const openLink = theirs(p.id).find(x => x.status === 'open');
                         if (paidHere?.id === p.id) return (
                           <span className="flex flex-wrap items-center gap-1.5">
-                            <input inputMode="decimal" aria-label={`Amount ${p.name} paid`} className={INPUT + ' w-24'} value={paidHere.amount} onChange={ev => setPaidHere({ ...paidHere, amount: ev.target.value })} />
+                            {/* With a link out, it's that link that gets paid — its amount, not a new one. */}
+                            {openLink
+                              ? <span className="text-[12.5px] text-ink-soft">Closes their {`$${(openLink.amountCents / 100).toFixed(2)}`} link</span>
+                              : <input inputMode="decimal" aria-label={`Amount ${p.name} paid`} className={INPUT + ' w-24'} value={paidHere.amount} onChange={ev => setPaidHere({ ...paidHere, amount: ev.target.value })} />}
                             <select aria-label="How they paid" className={INPUT} value={paidHere.method} onChange={ev => setPaidHere({ ...paidHere, method: ev.target.value })}>
                               <option value="cash">Cash</option><option value="check">Check</option><option value="card_counter">Card at the course</option><option value="other">Other</option>
                             </select>
-                            <button disabled={!!busy || !paidHere.amount} onClick={async () => {
+                            <button disabled={!!busy || (!openLink && !paidHere.amount)} onClick={async () => {
                               // A link they were sent is closed first, so they can't pay twice.
-                              const openLink = theirs(p.id).find(x => x.status === 'open');
                               const ok = openLink
                                 ? await payAct('here' + p.id, { action: 'paid_other', paymentId: openLink.id, method: paidHere.method }, () => `${p.name} marked paid; their link was closed.`)
                                 : await payAct('here' + p.id, { action: 'record', playerId: p.id, amount: paidHere.amount, method: paidHere.method }, () => `${p.name} marked paid.`);
@@ -325,8 +331,8 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             {st === 'sent' ? <StatusDot status="warn" label="Link sent" /> : <span className="text-ink-muted">—</span>}
                             {live && st === 'sent' && link && <button onClick={async () => { try { await navigator.clipboard.writeText(link); setCopied(p.id); setTimeout(() => setCopied(''), 2000); } catch { setError('Couldn\u2019t copy — open Money to see the link.'); } }} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">{copied === p.id ? 'Copied' : 'Copy link'}</button>}
-                            {live && st === 'none' && (p.email || p.phone) && <button disabled={!!busy || !price} title={price ? undefined : 'Set a price per player first'}
-                              onClick={() => payAct('link' + p.id, { action: 'link', playerId: p.id, amount: price, via: p.email ? 'email' : 'sms' }, r => r.sent ? `Pay link sent to ${p.name}.` : `Link made for ${p.name}, but it didn\u2019t send${r.sendError ? `: ${String(r.sendError)}` : ''} — copy it here.`)}
+                            {live && st === 'none' && ((p.email && !p.email.endsWith('@noemail.greenreserve.app')) || p.phone.replace(/\D/g, '').length >= 10) && <button disabled={!!busy || !price} title={price ? undefined : 'Set a price per player first'}
+                              onClick={() => payAct('link' + p.id, { action: 'link', playerId: p.id, amount: price, via: p.email && !p.email.endsWith('@noemail.greenreserve.app') ? 'email' : 'sms' }, r => r.sent ? `Pay link sent to ${p.name}.` : `Link made for ${p.name}, but it didn\u2019t send${r.sendError ? `: ${String(r.sendError)}` : ''} — copy it here.`)}
                               className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2 disabled:opacity-50">{busy === 'link' + p.id ? 'Sending…' : 'Send link'}</button>}
                             {<button disabled={!!busy} onClick={() => setPaidHere({ id: p.id, amount: price, method: 'cash' })} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Paid at the course</button>}
                           </span>

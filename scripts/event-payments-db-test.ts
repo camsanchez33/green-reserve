@@ -194,6 +194,15 @@ async function main() {
   await chargeEventPayment(jl.value.id, jl.value.payToken, 'pm_j', 12500);
   const janesPaid = await prisma.courseEventPayment.findMany({ where: { playerId: jane.id } });
   check('once they pay, they read "paid" and can\u2019t be sent another', playerPayState(janesPaid) === 'paid' && /already paid/.test(((await createPayLink(course.id, ev.id, { playerId: jane.id, amount: '125' }, 'x')) as { error?: string }).error ?? ''));
+  check('a player who already paid can\u2019t also be recorded as paying at the course', /already paid/.test(((await recordCoursePayment(course.id, ev.id, { playerId: jane.id, amount: '125', method: 'cash' }, 'x')) as { error?: string }).error ?? ''));
+  const ann = await prisma.courseEventPlayer.create({ data: { eventId: ev.id, name: 'Ann Diaz', email: 'ann@x.test' } });
+  const al = await createPayLink(course.id, ev.id, { playerId: ann.id, amount: '125' }, 'x');
+  if (!al.ok) throw new Error(al.error);
+  check('a player with an open link can\u2019t be recorded separately (mark the link paid)', /has a pay link/.test(((await recordCoursePayment(course.id, ev.id, { playerId: ann.id, amount: '125', method: 'cash' }, 'x')) as { error?: string }).error ?? ''));
+  await prisma.courseEventPayment.update({ where: { id: al.value.id }, data: { status: 'paying', chargeStartedAt: new Date() } });
+  check('…nor while their card is going through', /paying their link right now/.test(((await recordCoursePayment(course.id, ev.id, { playerId: ann.id, amount: '125', method: 'cash' }, 'x')) as { error?: string }).error ?? ''));
+  check('…and they can\u2019t be sent a second link meanwhile either', !(await createPayLink(course.id, ev.id, { playerId: ann.id, amount: '125' }, 'x')).ok);
+  check('only one payment exists for each of them', (await prisma.courseEventPayment.count({ where: { playerId: { in: [jane.id, ann.id] } } })) === 2);
   const tr2 = await recordCoursePayment(course.id, ev.id, { playerId: tom.id, amount: '125', method: 'cash' }, 'x');
   const toms = await prisma.courseEventPayment.findMany({ where: { playerId: tom.id } });
   check('a player paid at the course is recorded against them, no fee', tr2.ok && toms.length === 1 && toms[0].kind === 'player' && toms[0].method === 'cash' && toms[0].payerName === 'Tom Lee' && playerPayState(toms) === 'paid');
