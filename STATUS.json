@@ -1,36 +1,57 @@
 {
-  "generatedAt": "2026-10-22T01:48:25.749Z",
+  "generatedAt": "2026-10-22T02:31:31.281Z",
   "repo": {
-    "head": "b5e43a0",
-    "branch": "pr-w29",
-    "dirtyCount": 27,
-    "dirty": [
-      "M  OPERATOR_REWORK_SPEC.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "A  prisma/migrations/20261022010603_w2_9_events/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/design-guard.baseline.json",
-      "A  scripts/events-db-test.ts",
-      "A  scripts/events-test.ts",
-      "M  src/app/api/operator/blackouts/route.ts",
-      "A  src/app/api/operator/events/[id]/route.ts",
-      "A  src/app/api/operator/events/route.ts",
-      "M  src/app/api/operator/tee-times/route.ts",
-      "A  src/app/dashboard/events/page.tsx",
-      "M  src/app/dashboard/outings/page.tsx",
-      "M  src/app/dashboard/page.tsx",
-      "M  src/app/dashboard/tournaments/page.tsx",
-      "M  src/components/OperatorSidebar.tsx",
-      "M  src/components/dashboard/StaffPermissions.tsx",
-      "M  src/components/dashboard/TeeSheetBoard.tsx",
-      "A  src/components/dashboard/events/EventDetail.tsx"
-    ],
-    "looksLikeRunInProgress": true
+    "head": "b001c14",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "b001c14",
+        "date": "2026-10-22T02:30:57+00:00",
+        "subject": "W2-9b: narrow the recorded payment in the test (typecheck)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4086e37",
+        "date": "2026-10-22T02:30:40+00:00",
+        "subject": "W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7feae5c",
+        "date": "2026-10-22T02:17:50+00:00",
+        "subject": "W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "478ec76",
+        "date": "2026-10-22T02:09:53+00:00",
+        "subject": "W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "8c73613",
+        "date": "2026-10-22T01:49:58+00:00",
+        "subject": "W2-9a: releasing an event's hold checks the day being released, not the day it moved to",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e85978d",
+        "date": "2026-10-22T01:43:26+00:00",
+        "subject": "W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ce88bd1",
         "date": "2026-10-22T01:40:22+00:00",
@@ -42,6 +63,13 @@
         "h": "087c1a2",
         "date": "2026-10-22T01:36:48+00:00",
         "subject": "W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "28a5f3a",
+        "date": "2026-10-22T01:33:45+00:00",
+        "subject": "W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings",
         "ids": [],
         "matches": []
       },
@@ -1007,197 +1035,232 @@
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-11",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "ageDays": 14
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "b001c14",
+      "date": "2026-10-22",
+      "subject": "W2-9b: narrow the recorded payment in the test (typecheck)"
+    },
+    {
+      "h": "4086e37",
+      "date": "2026-10-22",
+      "subject": "W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds"
+    },
+    {
+      "h": "7feae5c",
+      "date": "2026-10-22",
+      "subject": "W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup"
+    },
+    {
+      "h": "478ec76",
+      "date": "2026-10-22",
+      "subject": "W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet"
+    },
+    {
+      "h": "512e214",
+      "date": "2026-10-22",
+      "subject": "queue/spec update"
+    },
+    {
+      "h": "8c73613",
+      "date": "2026-10-22",
+      "subject": "W2-9a: releasing an event's hold checks the day being released, not the day it moved to"
+    },
+    {
+      "h": "e85978d",
+      "date": "2026-10-22",
+      "subject": "W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit"
+    },
     {
       "h": "ce88bd1",
       "date": "2026-10-22",
@@ -1209,6 +1272,11 @@
       "subject": "W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks"
     },
     {
+      "h": "28a5f3a",
+      "date": "2026-10-22",
+      "subject": "W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings"
+    },
+    {
       "h": "164896a",
       "date": "2026-10-21",
       "subject": "BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)"
@@ -1217,46 +1285,6 @@
       "h": "0cb3627",
       "date": "2026-10-22",
       "subject": "W2-8b: a regular who has booked again is not 'gone quiet'"
-    },
-    {
-      "h": "ffcefc6",
-      "date": "2026-10-22",
-      "subject": "W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet"
-    },
-    {
-      "h": "aad9ee0",
-      "date": "2026-10-22",
-      "subject": "W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players"
-    },
-    {
-      "h": "f367f8d",
-      "date": "2026-10-22",
-      "subject": "W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents"
-    },
-    {
-      "h": "e8c4fe4",
-      "date": "2026-10-22",
-      "subject": "W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan"
-    },
-    {
-      "h": "1d2a5db",
-      "date": "2026-10-21",
-      "subject": "BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)"
-    },
-    {
-      "h": "4cd3e1a",
-      "date": "2026-10-22",
-      "subject": "W2-6 Schedule simplification: open hours, what golfers can book, one price table"
-    },
-    {
-      "h": "e59ed92",
-      "date": "2026-10-22",
-      "subject": "Codemap and status board"
-    },
-    {
-      "h": "f8d9737",
-      "date": "2026-10-22",
-      "subject": "Messages: keep Open the course in the header below lg"
     }
   ]
 }
