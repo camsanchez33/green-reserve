@@ -125,7 +125,7 @@ When a course is activated (every code path that sets active=true + liveStatus='
     green fees, payouts via your Stripe account.
   - First-week checklist: log in, check your tee sheet, do a test booking, how
     check-in works, where Messages lives (admin ↔ you).
-  - Support: reply-to hello@greenreserve.app or the dashboard Messages thread.
+  - Support: reply-to admin@greenreserve.app or the dashboard Messages thread.
 - Send exactly once per course (guard: welcomeEmailSentAt DateTime? on Course →
   small migration, run attended).
 - The existing sendOperatorWelcomeEmail (credentials email) is a DIFFERENT moment

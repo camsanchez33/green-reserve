@@ -47,7 +47,7 @@ suggestion save this information". Decisions go here as they are made.
     better and say different things; rethink it. Today: "Sign in / Your tee
     sheet, your bookings and your settings.", email, password, Forgot password,
     "Ask a question →".
-13. **The email link in the nav (thegreenreserve@outlook.com)** just opens an
+13. **The email link in the nav (support@greenreserve.app)** just opens an
     email — same as /contact; Cam agrees with the /contact proposal (11).
 14. **How Cam wants to work these notes:** not through the punch-list sheet —
     Claude asks questions in the session, and the answers decide what changes,
@@ -82,8 +82,8 @@ suggestion save this information". Decisions go here as they are made.
   support@greenreserve.app address forwarding to the Outlook inbox. (No
   separate contact form picked — the "send us a note" form covers it.)
   BUILT 2026-10-19: the three paths, phone (845) 499-3515 (call or text), and
-  thegreenreserve@outlook.com (Cam picked the Outlook inbox over a new support@
-  address). The golfer path points to Manage my booking, which now shows the
+  support@greenreserve.app (MAIL-1, Cam 2026-10-22: Google Workspace aliases replaced the
+  Outlook inbox; courses are pointed at admin@greenreserve.app). The golfer path points to Manage my booking, which now shows the
   course's phone.
 
 **Legal decisions (Cam 2026-10-19):**

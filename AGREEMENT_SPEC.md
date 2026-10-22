@@ -174,7 +174,7 @@ exists; otherwise `@react-pdf/renderer` (server-side, no browser). Store to Verc
 Blob under `agreements/<courseId>/<document>-<version>-<acceptanceId>.pdf`; write
 `pdfUrl`. Email the operator (Resend, existing template family): "Your signed
 GreenReserve agreements" with the three PDFs attached and a one-line summary. Email
-`hello@greenreserve.app` a copy. If the PDF render fails, the acceptance row still
+`admin@greenreserve.app` a copy. If the PDF render fails, the acceptance row still
 stands (the row IS the record; the PDF is a courtesy copy) — log to Sentry and
 retry via the existing cron heartbeat pattern.
 
