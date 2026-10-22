@@ -4,16 +4,26 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 01:48 UTC · branch `pr-w29` · HEAD `b5e43a0` · working tree **27 dirty file(s)**
+Generated 2026-10-22 02:39 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `40be0a7` · working tree **24 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 111 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 121 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `40be0a7` | 2026-10-22 | Status board |
+| `e449074` | 2026-10-22 | W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close |
+| `4438d60` | 2026-10-22 | Status board |
+| `b001c14` | 2026-10-22 | W2-9b: narrow the recorded payment in the test (typecheck) |
+| `4086e37` | 2026-10-22 | W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds |
+| `7feae5c` | 2026-10-22 | W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup |
+| `478ec76` | 2026-10-22 | W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet |
+| `8c73613` | 2026-10-22 | W2-9a: releasing an event's hold checks the day being released, not the day it moved to |
+| `e85978d` | 2026-10-22 | W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit |
 | `ce88bd1` | 2026-10-22 | Codemap and status board |
 | `087c1a2` | 2026-10-22 | W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks |
+| `28a5f3a` | 2026-10-22 | W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings |
 | `164896a` | 2026-10-21 | BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175) |
 | `0cb3627` | 2026-10-22 | W2-8b: a regular who has booked again is not 'gone quiet' |
 | `ffcefc6` | 2026-10-22 | W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet |
@@ -126,28 +136,28 @@ Generated 2026-10-22 01:48 UTC · branch `pr-w29` · HEAD `b5e43a0` · working t
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (27 file(s))
+### Uncommitted working tree (24 file(s))
 
-- `M  OPERATOR_REWORK_SPEC.md`
+- `M  ADMIN_V5_SPEC.md`
 - `UU docs/CODEMAP.md`
 - `UU docs/codemap.json`
-- `A  prisma/migrations/20261022010603_w2_9_events/migration.sql`
+- `A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql`
 - `M  prisma/schema.prisma`
-- `M  scripts/design-guard.baseline.json`
-- `A  scripts/events-db-test.ts`
-- `A  scripts/events-test.ts`
-- `M  src/app/api/operator/blackouts/route.ts`
-- `A  src/app/api/operator/events/[id]/route.ts`
-- `A  src/app/api/operator/events/route.ts`
-- `M  src/app/api/operator/tee-times/route.ts`
-- `A  src/app/dashboard/events/page.tsx`
-- `M  src/app/dashboard/outings/page.tsx`
-- `M  src/app/dashboard/page.tsx`
-- `M  src/app/dashboard/tournaments/page.tsx`
-- `M  src/components/OperatorSidebar.tsx`
-- `M  src/components/dashboard/StaffPermissions.tsx`
-- `M  src/components/dashboard/TeeSheetBoard.tsx`
-- `A  src/components/dashboard/events/EventDetail.tsx`
+- `M  scripts/admin-course-page-test.ts`
+- `A  scripts/course-feed-db-test.ts`
+- `A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx`
+- `M  src/app/admin/courses/[id]/page.tsx`
+- `M  src/app/admin/system/page.tsx`
+- `A  src/app/api/admin/course-feed/route.ts`
+- `M  src/app/api/admin/resend-staff-setup/route.ts`
+- `A  src/app/api/admin/sentry-test/route.ts`
+- `M  src/app/api/operator/bookings/route.ts`
+- `M  src/app/api/operator/events/[id]/route.ts`
+- `M  src/app/api/operator/shop-sales/route.ts`
+- `M  src/lib/admin-audit.ts`
+- `M  src/lib/admin-course-tabs.ts`
+- `A  src/lib/course-timeline-groups.ts`
+- `M  src/lib/course-timeline.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -237,53 +247,53 @@ This is the distinction a raw checkbox count gets wrong.
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 9d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 13d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 13d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 10d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 14d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 14d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 14d |
 
 ## Recent commits
 
+- `40be0a7` 2026-10-22 — Status board
+- `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
+- `4438d60` 2026-10-22 — Status board
+- `b001c14` 2026-10-22 — W2-9b: narrow the recorded payment in the test (typecheck)
+- `4086e37` 2026-10-22 — W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds
+- `7feae5c` 2026-10-22 — W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup
+- `478ec76` 2026-10-22 — W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet
+- `512e214` 2026-10-22 — queue/spec update
+- `8c73613` 2026-10-22 — W2-9a: releasing an event's hold checks the day being released, not the day it moved to
+- `e85978d` 2026-10-22 — W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit
 - `ce88bd1` 2026-10-22 — Codemap and status board
 - `087c1a2` 2026-10-22 — W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks
-- `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
-- `0cb3627` 2026-10-22 — W2-8b: a regular who has booked again is not 'gone quiet'
-- `ffcefc6` 2026-10-22 — W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet
-- `aad9ee0` 2026-10-22 — W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players
-- `f367f8d` 2026-10-22 — W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents
-- `e8c4fe4` 2026-10-22 — W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan
-- `1d2a5db` 2026-10-21 — BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)
-- `4cd3e1a` 2026-10-22 — W2-6 Schedule simplification: open hours, what golfers can book, one price table
-- `e59ed92` 2026-10-22 — Codemap and status board
-- `f8d9737` 2026-10-22 — Messages: keep Open the course in the header below lg
 
 ---
 

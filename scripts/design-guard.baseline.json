@@ -185,6 +185,9 @@
   "src/app/operator-agreement/page.tsx": {
     "card": 1
   },
+  "src/app/pay/event/[id]/page.tsx": {
+    "lucide": 1
+  },
   "src/app/pay/shop/[id]/page.tsx": {
     "lucide": 1
   },
