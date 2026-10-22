@@ -1,36 +1,47 @@
 {
-  "generatedAt": "2026-10-22T22:25:18.707Z",
+  "generatedAt": "2026-10-22T22:34:26.384Z",
   "repo": {
-    "head": "187022a",
+    "head": "c45008d",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 31,
+    "dirtyCount": 16,
     "dirty": [
-      "M  .github/workflows/schema-check.yml",
-      " M CLAUDE.md",
-      "M  OPERATOR_REWORK_SPEC.md",
-      "M  PASSWORD_CHECKLIST.md",
+      "M  CLAUDE.md",
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
       "UU docs/CODEMAP.md",
-      "M  docs/RUNBOOK.md",
-      "M  docs/SHIPPING.md",
       "UU docs/codemap.json",
-      "A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql",
+      "A  prisma/migrations/20261022214444_test1_course_is_test/migration.sql",
       "M  prisma/schema.prisma",
-      " M scripts/contact-email-test.ts",
-      "M  scripts/design-guard.baseline.json",
-      "A  scripts/event-signup-db-test.ts",
-      "M  src/app/api/event-payment/[id]/route.ts",
-      "A  src/app/api/event-signup/[id]/route.ts",
-      "M  src/app/api/operator/events/[id]/payments/route.ts",
-      "M  src/app/api/operator/events/[id]/route.ts"
+      "A  scripts/data-reset-db-test.ts",
+      "M  src/app/admin/courses/[id]/page.tsx",
+      "M  src/app/admin/system/page.tsx",
+      "A  src/app/api/admin/data-reset/route.ts",
+      "A  src/app/api/admin/test-course/route.ts",
+      "A  src/components/admin/TestDataTools.tsx",
+      "M  src/lib/admin-audit.ts",
+      "A  src/lib/data-reset.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
-    "unrecorded": []
+    "unrecorded": [
+      {
+        "h": "04301ce",
+        "date": "2026-10-22T22:10:32+00:00",
+        "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2734cbd",
+        "date": "2026-10-22T22:04:58+00:00",
+        "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 298,
@@ -418,6 +429,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d0a4769",
+      "date": "2026-10-22",
+      "subject": "CI: the schema check replays migrations on its own Postgres (#192)"
+    },
+    {
+      "h": "04301ce",
+      "date": "2026-10-22",
+      "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses"
+    },
+    {
+      "h": "2734cbd",
+      "date": "2026-10-22",
+      "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later"
+    },
+    {
       "h": "6f40852",
       "date": "2026-10-22",
       "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)"
@@ -461,21 +487,6 @@
       "h": "3c63c5d",
       "date": "2026-10-22",
       "subject": "AW-11 Team: per-person access — each employee's role and areas (#186)"
-    },
-    {
-      "h": "75ac7d5",
-      "date": "2026-10-22",
-      "subject": "AW-10 Golfers: lookup only, in the new admin look (#185)"
-    },
-    {
-      "h": "95e1b37",
-      "date": "2026-10-22",
-      "subject": "Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)"
-    },
-    {
-      "h": "a5c912b",
-      "date": "2026-10-22",
-      "subject": "Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)"
     }
   ]
 }

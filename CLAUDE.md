@@ -44,6 +44,12 @@ completed → (staff moves a checked-in group, Cam 2026-10-08) → still complet
 - The inquiry confirmation email links to `/call/[token]` (token-gated, 21 days)
 - **Cal.com is the only scheduler** (Cam 2026-09-29 — the Google Calendar path was never connected and is deleted; do not reintroduce it). The page REDIRECTS to the prefilled public Cal.com booking page (reads Cam's Outlook; an in-page embed rendered blank live — don't retry it without testing against real cal.com); a signed webhook at `/api/calcom/webhook` creates/moves/cancels the inquiry's discovery `Call`. Admins book for a course with "Book on Cal.com" on the inquiry page. Unset `CALCOM_BOOKING_URL` = the page asks the course to reply with times. Admin → System → Call booking shows what the site sees. See `src/lib/calcom.ts`
 
+### Test data (TEST-1, Cam 2026-10-22)
+"Every course and everything right now [is test] — we need a way to make everything like new again." Two owner-only tools in `src/lib/data-reset.ts`, the one deliberate exception to the archive-never-delete doctrine:
+- **Launch wipe** (Admin → Systems → "Before launch: clear test data"): one `TRUNCATE … RESTRICT` over every table in `WIPED_TABLES` — courses, logins, golfers, bookings, the pipeline, messages, announcements, problems. `KEPT_TABLES` is the company side (admin logins and owner sessions, goals, expenses, agreement versions, audit log, cron log; company documents live in blob storage). Preview counts first, step-up, a reason, the words typed. Closes for good at `WIPE_ALL_UNTIL` (midnight Nov 1 2026 Eastern). Stripe is never touched.
+- **Test course** (`Course.isTest`, marked on the admin course page): its activity can be reset — bookings and payment records, members, residents, shop sales, events, conversations, problems — keeping its setup. Only a course marked as a test. Cam's "The GreenReserve Test Course" (for screenshots and trying things) is made after the wipe and marked as a test; keeping it out of platform numbers and Problems is TEST-2.
+- A new model must be added to `WIPED_TABLES` or `KEPT_TABLES` — `scripts/data-reset-db-test.ts` fails otherwise.
+
 ### Operator onboarding pipeline
 Inquiry → `pending` → `in_review` → `details_requested` → `details_submitted` → `building` → `live`
 Admin page manages all stages. Operators get dashboard access when approved.

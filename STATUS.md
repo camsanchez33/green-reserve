@@ -4,34 +4,37 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 22:25 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `187022a` · working tree **31 dirty file(s)**
+Generated 2026-10-22 22:34 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `c45008d` · working tree **16 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-10-22**. 2 commit(s) since then are not mentioned anywhere in it:
 
-### Uncommitted working tree (31 file(s))
+| commit | date | subject |
+|---|---|---|
+| `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
+| `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
-- `M  .github/workflows/schema-check.yml`
-- `M CLAUDE.md`
-- `M  OPERATOR_REWORK_SPEC.md`
-- `M  PASSWORD_CHECKLIST.md`
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (16 file(s))
+
+- `M  CLAUDE.md`
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
 - `UU docs/CODEMAP.md`
-- `M  docs/RUNBOOK.md`
-- `M  docs/SHIPPING.md`
 - `UU docs/codemap.json`
-- `A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql`
+- `A  prisma/migrations/20261022214444_test1_course_is_test/migration.sql`
 - `M  prisma/schema.prisma`
-- `M scripts/contact-email-test.ts`
-- `M  scripts/design-guard.baseline.json`
-- `A  scripts/event-signup-db-test.ts`
-- `M  src/app/api/event-payment/[id]/route.ts`
-- `A  src/app/api/event-signup/[id]/route.ts`
-- `M  src/app/api/operator/events/[id]/payments/route.ts`
-- `M  src/app/api/operator/events/[id]/route.ts`
+- `A  scripts/data-reset-db-test.ts`
+- `M  src/app/admin/courses/[id]/page.tsx`
+- `M  src/app/admin/system/page.tsx`
+- `A  src/app/api/admin/data-reset/route.ts`
+- `A  src/app/api/admin/test-course/route.ts`
+- `A  src/components/admin/TestDataTools.tsx`
+- `M  src/lib/admin-audit.ts`
+- `A  src/lib/data-reset.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -155,6 +158,9 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `d0a4769` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
+- `04301ce` 2026-10-22 — W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses
+- `2734cbd` 2026-10-22 — W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later
 - `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
 - `67e5ac4` 2026-10-22 — queue/spec update: old addresses replaced in specs, legal queue and design prototypes
 - `9935d2e` 2026-10-22 — Regenerate status board
@@ -164,9 +170,6 @@ Nothing awaiting review.
 - `da32563` 2026-10-22 — Event pay-link email: say a reply reaches the course
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
 - `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
-- `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
-- `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
-- `a5c912b` 2026-10-22 — Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)
 
 ---
 
