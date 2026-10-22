@@ -21,6 +21,8 @@ import { EXPENSE_CATEGORIES, EXPENSE_CADENCES, EXPENSE_CATEGORY_LABEL, EXPENSE_C
 import { formatMoney as fmtMoney } from '@/lib/format';
 import { INPUT_COMPACT } from '@/components/ui/field';
 import { isMoneyTab, visibleMoneyTab, type MoneyTab } from '@/lib/money-tabs';
+import { useAdminSession } from '@/lib/admin-session-context';
+import { MANAGER_PLUS } from '@/lib/admin-roles';
 
 const fmtCount = (n: number) => n.toLocaleString('en-US');
 
@@ -52,6 +54,15 @@ interface MissedCheckIn {
 interface Dispute {
   eventId: string; bookingId: string; courseId: string; courseName: string; golferName: string; golferEmail: string;
   teeDate: string; teeTime: string; amount: number; detail: string; openedAt: string;
+}
+interface ClosedDispute {
+  eventId: string; bookingId: string; courseId: string; courseName: string; golferName: string;
+  amount: number; closedAt: string; outcome: string;
+}
+interface MonthMatch { month: string; ours: number; stripe: number | null; result: 'match' | 'off' | 'unknown' }
+interface CoursePayout {
+  courseId: string; name: string; error: string | null; payoutsEnabled: boolean; needsInfo: boolean;
+  lastPaid: { date: string; amount: number } | null; next: { date: string; amount: number; status: string } | null; paidOut30: number;
 }
 interface LateFee {
   bookingId: string; courseId: string; courseName: string; golferName: string;
@@ -92,7 +103,7 @@ interface RevenueData {
   daily?: { current: number[]; prior: number[] };
   byCourse: CourseRow[];
   moneyInMotion: { upcomingCheckIns: UpcomingCheckIn[]; lateCancelFees: LateFee[]; todayStr: string; tomorrowStr: string };
-  problems: { failedCheckIn: FailedCharge[]; missedCheckIn: MissedCheckIn[]; missedTotal: number; missedFees: number; disputes: Dispute[] };
+  problems: { failedCheckIn: FailedCharge[]; missedCheckIn: MissedCheckIn[]; missedTotal: number; missedFees: number; disputes: Dispute[]; closedDisputes?: ClosedDispute[] };
   // reconciles: null = Stripe could not be reached, so nobody knows.
   reconciliation?: { expected: number; actual: number; gap: number; reconciles: boolean | null; unavailable: boolean };
 }
@@ -145,7 +156,27 @@ function FeesChart({ current, prior, from }: { current: number[]; prior: number[
   );
 }
 
+/** One lazily loaded, owner-only list: loading, error with a retry, or the rows. */
+function useOwnerList<T>(url: string, pick: (j: unknown) => T, enabled: boolean) {
+  const [rows, setRows] = useState<T | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const load = useCallback(async () => {
+    setBusy(true); setErr('');
+    try {
+      const r = await fetch(url);
+      const j = await r.json().catch(() => ({}));
+      if (r.ok) setRows(pick(j)); else setErr((j as { error?: string }).error || `Couldn’t load this (${r.status}).`);
+    } catch { setErr('Network error — try again.'); }
+    setBusy(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
+  useEffect(() => { if (enabled && rows === null && !busy && !err) load(); }, [enabled, rows, busy, err, load]);
+  return { rows, busy, err, load };
+}
+
 export default function MoneyPage() {
+  const { role } = useAdminSession();
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -383,6 +414,10 @@ export default function MoneyPage() {
   // A link to Payouts or Expenses opened by someone who can't see them (or the
   // owner on a session without a second factor) lands on Overview, never a blank page.
   const shown: Tab = data ? visibleMoneyTab(tab, isOwner) : tab;
+  const months = useOwnerList<MonthMatch[]>('/api/admin/stripe-match', j => (j as { months: MonthMatch[] }).months, isOwner && shown === 'disputes');
+  const coursePayouts = useOwnerList<{ courses: CoursePayout[]; withoutStripe: number }>('/api/admin/course-payouts', j => j as { courses: CoursePayout[]; withoutStripe: number }, isOwner && shown === 'payouts');
+  const canEvidence = MANAGER_PLUS.includes(role);
+  const closedDisputes = data?.problems.closedDisputes ?? [];
   const activeExpenses = (expenses ?? []).filter(e => !e.endedAt);
   const monthly = activeExpenses.reduce((s, e) => s + monthlyEquivalentCents(e), 0);
   const byCategory = EXPENSE_CATEGORIES
@@ -754,16 +789,75 @@ export default function MoneyPage() {
                           <p className="mt-1 text-[14px] text-ink-soft">{d.golferName} ({d.golferEmail}) · round {d.teeDate} {d.teeTime}</p>
                           {d.detail && <p className="mt-1 text-[13px] text-bad">{d.detail}</p>}
                         </div>
-                        <div className="self-start">
-                          <a href="https://dashboard.stripe.com/disputes" target="_blank" rel="noopener noreferrer" className={PRIMARY + ' inline-flex items-center gap-1.5'}>
-                            Respond in Stripe<ExternalLink aria-hidden="true" className="w-3.5 h-3.5"/>
-                          </a>
+                        <div className="self-start flex flex-col items-end gap-2">
+                          <div className="flex gap-2 flex-wrap justify-end">
+                            {canEvidence && <a href={`/api/admin/disputes/${d.bookingId}/evidence`} download className={PRIMARY}>Download evidence pack</a>}
+                            <a href="https://dashboard.stripe.com/disputes" target="_blank" rel="noopener noreferrer" className={BTN + ' inline-flex items-center gap-1.5'}>
+                              Respond in Stripe<ExternalLink aria-hidden="true" className="w-3.5 h-3.5"/>
+                            </a>
+                          </div>
+                          {canEvidence && <p className="text-[12px] text-ink-muted max-w-[300px] text-right">The pack: when and how they booked, the terms they ticked, the card they saved, the fee terms on the booking, what we sent them, check-in or no-show, and every payment. Upload it on Stripe&rsquo;s dispute page.</p>}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
               </section>
+
+              {closedDisputes.length > 0 && (
+                <section>
+                  <h2 className={H2}>Closed disputes</h2>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-[14px] border-collapse mt-3">
+                      <thead><tr className="text-[12.5px] text-ink-muted border-b border-line"><th className={TH}>Closed</th><th className={TH}>Course</th><th className={TH}>Golfer</th><th className={TH}>Amount</th><th className={TH}>How it ended</th></tr></thead>
+                      <tbody>
+                        {closedDisputes.map(d => (
+                          <tr key={d.eventId} className="border-b border-line-soft last:border-0">
+                            <td className="py-3 pr-4 tabular-nums">{new Date(d.closedAt).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                            <td className="py-3 pr-4"><Link href={`/admin/courses/${d.courseId}`} className="hover:underline">{d.courseName}</Link></td>
+                            <td className="py-3 pr-4">{d.golferName}</td>
+                            <td className="py-3 pr-4 tabular-nums">{fmtMoney(d.amount)}</td>
+                            <td className="py-3"><StatusDot status={d.outcome === 'won' ? 'ok' : d.outcome === 'lost' ? 'bad' : 'neutral'} label={d.outcome.replace(/_/g, ' ')} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
+
+              {isOwner && (
+                <section className="border-t border-line pt-6">
+                  <h2 className={H2}>Month by month against Stripe</h2>
+                  <p className="mt-1 text-[13px] text-ink-soft">The fees we recorded each month against the fees Stripe paid us for the same days.</p>
+                  {months.err && (
+                    <div role="alert" className="mt-3 rounded-md border border-bad/20 bg-bad/5 px-4 py-2.5 flex justify-between gap-3">
+                      <p className="text-[13px] text-bad">{months.err}</p>
+                      <button type="button" onClick={months.load} className="text-[13px] font-medium text-ink-soft hover:text-ink">Try again</button>
+                    </div>
+                  )}
+                  {months.busy && !months.rows && <p className="mt-3 text-[13px] text-ink-muted">Asking Stripe…</p>}
+                  {months.rows && (
+                    <table className="w-full max-w-[720px] text-[14px] border-collapse mt-3">
+                      <thead><tr className="text-[12.5px] text-ink-muted border-b border-line"><th className={TH}>Month</th><th className={TH}>We recorded</th><th className={TH}>Stripe</th><th className={TH}>Result</th></tr></thead>
+                      <tbody>
+                        {months.rows.map(m => (
+                          <tr key={m.month} className="border-b border-line-soft last:border-0">
+                            <td className="py-3 pr-4">{m.month}</td>
+                            <td className="py-3 pr-4 tabular-nums">{fmtMoney(m.ours)}</td>
+                            <td className="py-3 pr-4 tabular-nums">{m.stripe === null ? '—' : fmtMoney(m.stripe)}</td>
+                            <td className="py-3">
+                              {m.result === 'match' && <StatusDot status="ok" label="Matches" />}
+                              {m.result === 'off' && <StatusDot status="bad" label={`${fmtMoney(Math.abs(m.ours - (m.stripe ?? 0)))} ${m.ours > (m.stripe ?? 0) ? 'short' : 'over'}`} />}
+                              {m.result === 'unknown' && <StatusDot status="warn" label="Stripe didn’t answer" />}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </section>
+              )}
 
               {isOwner && recon && (
                 <section className="border-t border-line pt-6">
@@ -833,6 +927,46 @@ export default function MoneyPage() {
                       </table>
                     )}
                   </>
+                )}
+              </section>
+
+              <section className="border-t border-line pt-6">
+                <h2 className={H2}>To each course</h2>
+                <p className="mt-1 text-[13px] text-ink-soft">Read from each course&rsquo;s own Stripe account. When a course asks where its money is, the answer is here.</p>
+                {coursePayouts.err && (
+                  <div role="alert" className="mt-3 rounded-md border border-bad/20 bg-bad/5 px-4 py-2.5 flex justify-between gap-3">
+                    <p className="text-[13px] text-bad">{coursePayouts.err}</p>
+                    <button type="button" onClick={coursePayouts.load} className="text-[13px] font-medium text-ink-soft hover:text-ink">Try again</button>
+                  </div>
+                )}
+                {coursePayouts.busy && !coursePayouts.rows && <p className="mt-3 text-[13px] text-ink-muted">Asking Stripe…</p>}
+                {coursePayouts.rows && (coursePayouts.rows.courses.length === 0 ? (
+                  <p className="mt-3 text-[14px] text-ink-soft">No course has connected Stripe yet.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-[14px] border-collapse mt-3">
+                      <thead><tr className="text-[12.5px] text-ink-muted border-b border-line"><th className={TH}>Course</th><th className={TH}>Last payout</th><th className={TH}>Next payout</th><th className={TH}>Paid out, 30 days</th><th className={TH}>Status</th></tr></thead>
+                      <tbody>
+                        {coursePayouts.rows.courses.map(c => (
+                          <tr key={c.courseId} className="border-b border-line-soft last:border-0">
+                            <td className="py-3 pr-4"><Link href={`/admin/courses/${c.courseId}`} className="hover:underline">{c.name}</Link></td>
+                            <td className="py-3 pr-4 tabular-nums">{c.lastPaid ? `${c.lastPaid.date} · ${fmtMoney(c.lastPaid.amount)}` : '—'}</td>
+                            <td className="py-3 pr-4 tabular-nums">{c.next ? `${c.next.date} · ${fmtMoney(c.next.amount)}` : '—'}</td>
+                            <td className="py-3 pr-4 tabular-nums">{c.error ? '—' : fmtMoney(c.paidOut30)}</td>
+                            <td className="py-3">
+                              {c.error ? <StatusDot status="warn" label={c.error} />
+                                : !c.payoutsEnabled ? <StatusDot status="bad" label={c.needsInfo ? 'Paused — Stripe needs information from the course' : 'Payouts paused'} />
+                                : c.needsInfo ? <StatusDot status="warn" label="Paying out — Stripe wants more information soon" />
+                                : <StatusDot status="ok" label="Paying out" />}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+                {coursePayouts.rows && coursePayouts.rows.withoutStripe > 0 && (
+                  <p className="mt-2 text-[12.5px] text-ink-muted">{coursePayouts.rows.withoutStripe} course{coursePayouts.rows.withoutStripe === 1 ? ' hasn’t' : 's haven’t'} connected Stripe yet.</p>
                 )}
               </section>
 

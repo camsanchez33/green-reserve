@@ -195,13 +195,20 @@ export async function GET(req: NextRequest) {
   // GR fee unless a saved card let us charge it separately. Not a problem to
   // chase — a cost to watch, per course. Counter/phone bookings never carry a
   // fee (accessFeeTotal 0), so they are not counted.
-  const [counter, counterAll, paidRows] = await Promise.all([
+  const [counter, counterAll, paidRows, closedDisputesRaw] = await Promise.all([
     counterFeesUncollected(inCurrent),
     // ADMIN-C Money → Not collected: the all-time figure beside the period's.
     counterFeesUncollected({ gte: new Date(0), lt: new Date() }),
     // ADMIN-C Money → Overview chart: the headline's own rows (round fees on
     // paid rounds, by paidAt), this period and the prior one to the same point.
     prisma.booking.findMany({ where: { ...PAID, paidAt: { gte: prior.start, lt: current.end } }, select: { paidAt: true, accessFeeTotal: true } }),
+    // Money → Disputes: the last 20 that closed, with how they ended (the webhook writes "Dispute won" / "Dispute lost").
+    prisma.paymentEvent.findMany({
+      where: { kind: 'dispute_closed' },
+      select: { id: true, bookingId: true, amountCents: true, detail: true, createdAt: true,
+        booking: { select: { golferName: true, course: { select: { id: true, name: true } } } } },
+      orderBy: { createdAt: 'desc' }, take: 20,
+    }),
   ]);
   const counterUncollectedByCourse = counter.byCourse;
   const counterUncollectedCents = counter.cents;
@@ -284,6 +291,11 @@ export async function GET(req: NextRequest) {
         golferName: d.booking.golferName, golferEmail: d.booking.golferEmail,
         teeDate: d.booking.teeTime.date, teeTime: d.booking.teeTime.time,
         amount: d.amountCents / 100, detail: d.detail, openedAt: d.createdAt,
+      })),
+      closedDisputes: closedDisputesRaw.map(d => ({
+        eventId: d.id, bookingId: d.bookingId, courseId: d.booking.course.id, courseName: d.booking.course.name,
+        golferName: d.booking.golferName, amount: d.amountCents / 100, closedAt: d.createdAt,
+        outcome: d.detail.replace(/^Dispute\s+/i, ''),
       })),
     },
   };
