@@ -1227,7 +1227,7 @@
     },
     {
       "path": "src/app/api/admin/activity/route.ts",
-      "lines": 147,
+      "lines": 149,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1247,6 +1247,7 @@
         "@/lib/admin-session",
         "@/lib/money",
         "@/lib/prisma",
+        "@/lib/real-courses",
         "next/server"
       ],
       "usedBy": []
@@ -2418,7 +2419,7 @@
     },
     {
       "path": "src/app/api/admin/nav-badges/route.ts",
-      "lines": 52,
+      "lines": 53,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11066,7 +11067,7 @@
     },
     {
       "path": "src/lib/admin-ask.ts",
-      "lines": 159,
+      "lines": 161,
       "purpose": "AW-3b (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -11098,6 +11099,7 @@
         "./admin-roles",
         "./money-problems",
         "./prisma",
+        "./real-courses",
         "@anthropic-ai/sdk"
       ],
       "usedBy": [
@@ -12047,7 +12049,7 @@
     },
     {
       "path": "src/lib/agreement-required.ts",
-      "lines": 122,
+      "lines": 124,
       "purpose": "AGREEMENT_SPEC AG-3 — version bumps and re-acceptance.",
       "brain": [],
       "exports": [
@@ -12096,6 +12098,7 @@
       "imports": [
         "./agreements",
         "./email",
+        "./real-courses",
         "@/lib/prisma",
         "next/server"
       ],
@@ -18144,14 +18147,17 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/admin-action-queue.ts",
+        "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-goals.ts",
         "src/lib/admin-home.ts",
-        "src/lib/admin-today.ts"
+        "src/lib/admin-today.ts",
+        "src/lib/agreement-required.ts"
       ]
     },
     {

@@ -30,7 +30,8 @@ export async function GET() {
   const now = new Date();
   const [pendingInquiries, unreadMessages, failed, disputes, problems, health] = await Promise.all([
     prisma.courseInquiry.count({ where: { status: 'pending' } }),
-    prisma.message.count({ where: { senderType: 'operator', readAt: null, isBroadcast: false, thread: ON_REAL_COURSE } }),
+    // A message is a conversation to answer, not a platform number: the test course's count too (same as Messages).
+    prisma.message.count({ where: { senderType: 'operator', readAt: null, isBroadcast: false } }),
     prisma.booking.count({ where: { ...FAILED_CHARGE_WHERE, ...ON_REAL_COURSE } }),
     openDisputes(),
     // ADMIN-C: the Problems count and the top bar's one line (same rules as Home's health line).

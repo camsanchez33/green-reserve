@@ -9,7 +9,7 @@
 // Kept platform-wide on purpose, because they answer to Stripe and Stripe has
 // every charge: disputes, the month-by-month Stripe match, the transactions
 // export and each course's payouts.
-// scripts/real-courses-test.ts checks every platform query below uses them.
+// scripts/real-courses-db-test.ts checks every platform query below uses them.
 
 /** For a Course query. */
 export const REAL_COURSE = { isTest: false } as const;

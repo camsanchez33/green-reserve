@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ON_REAL_COURSE } from '@/lib/real-courses';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
@@ -28,7 +29,8 @@ export async function GET(req: NextRequest) {
   const fromDate = fromStr ? new Date(fromStr + 'T00:00:00.000Z') : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const toDate = toStr ? new Date(toStr + 'T23:59:59.999Z') : now;
 
-  const cFilter = courseId ? { courseId } : {};
+  // TEST-2: the platform feed leaves a test course out; pick it from the list to see it.
+  const cFilter = courseId ? { courseId } : ON_REAL_COURSE;
   const take = page * PAGE_SIZE;
 
   const bookingWhere = { status: { in: ['confirmed', 'completed'] }, createdAt: { gte: fromDate, lte: toDate }, ...cFilter };

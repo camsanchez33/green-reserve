@@ -59,8 +59,15 @@ async function main() {
     ['src/app/sitemap.ts', /isTest: false/],
     ['src/app/api/courses/route.ts', /isTest: false/],
     ['src/app/courses/[slug]/page.tsx', /course\.isTest \? \{ index: false/],
+    ['src/lib/agreement-required.ts', /archivedAt: null, \.\.\.REAL_COURSE, agreements/],
+    ['src/lib/admin-ask.ts', /\.\.\.FAILED_CHARGE_WHERE, \.\.\.ON_REAL_COURSE/],
+    ['src/app/api/admin/activity/route.ts', /courseId \? \{ courseId \} : ON_REAL_COURSE/],
   ];
   for (const [f, re] of mustUse) check(`${f} leaves test courses out`, re.test(readFileSync(f, 'utf8')));
+  // The menu's unread count and the Messages page's count are the same rule (both include a test course's messages).
+  const unread = /senderType: 'operator', readAt: null, isBroadcast: false \}/;
+  check('the menu badge and Messages count unread messages the same way',
+    unread.test(readFileSync('src/app/api/admin/nav-badges/route.ts', 'utf8')) && unread.test(readFileSync('src/app/api/admin/messages/route.ts', 'utf8')));
 
   const before = { paid: await paidWindow(FROM, TO), counter: await counterFeesUncollected({ gte: FROM, lt: TO }) };
   const real = await seed('real', false);
