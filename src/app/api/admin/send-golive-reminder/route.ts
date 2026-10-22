@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { sendOnboardingChaseEmail } from '@/lib/email';
 import { logReminderSent } from '@/lib/course-timeline';
+import { withAudit } from '@/lib/admin-audit';
 
 const MISSING_STEP_LABEL: Record<string, string> = {
   agreement: 'Sign the agreements',
@@ -14,7 +15,7 @@ const MISSING_STEP_LABEL: Record<string, string> = {
 // chase-email template and timeline logging the onboarding auto-chase cron
 // already uses, so a manual nudge and an automatic one look identical in
 // the course's history.
-export async function POST(req: NextRequest) {
+async function sendGoLiveReminder(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -41,3 +42,6 @@ export async function POST(req: NextRequest) {
   await logReminderSent(courseId, missing);
   return NextResponse.json({ success: true });
 }
+
+// BRAIN-1a: recorded on the course.
+export const POST = withAudit(sendGoLiveReminder, body => ({ action: 'golive_reminder', targetType: 'course', targetId: String(body.courseId ?? ''), courseId: String(body.courseId ?? '') || null }));

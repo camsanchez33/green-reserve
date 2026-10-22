@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { sendOperatorWelcomeEmail } from '@/lib/email';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { withAudit } from '@/lib/admin-audit';
 
 const MONTHS = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ available: !exists });
 }
 
-export async function POST(req: NextRequest) {
+async function createCourse(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -181,3 +182,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
+
+// BRAIN-1a: a course built by hand is recorded.
+export const POST = withAudit(createCourse, body => ({ action: 'course_create', targetType: 'course', targetId: String(body.slug ?? body.name ?? '') }));

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
+import { needReason, reasonOf, auditAdmin, changedFields, bodyWithReason } from '@/lib/admin-audit';
 
 // EXPENSE TRACKER (RUN_QUEUE) — edit/end/delete a single fixed cost. Owner-only.
 // Ending an expense (setting endedAt) is the non-destructive way to stop a cost
@@ -54,10 +55,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const expense = await prisma.expense.update({ where: { id }, data });
+  const pick = (e: Record<string, unknown>) => Object.fromEntries(Object.keys(data).map(k => [k, e[k]]));
+  await auditAdmin(session, { action: 'expense_edit', targetType: 'expense', targetId: id, ...changedFields(pick(existing), pick(expense)) });
   return NextResponse.json({ expense });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireOwner(session)) {
@@ -66,6 +69,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const existing = await prisma.expense.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+  const body = await bodyWithReason(req);
+  const nr = needReason('expense_delete', body); if (nr) return nr;
   await prisma.expense.delete({ where: { id } });
+  await auditAdmin(session, { action: 'expense_delete', targetType: 'expense', targetId: id, before: { name: existing.name, amountCents: existing.amountCents, cadence: existing.cadence }, reason: reasonOf(body) });
   return NextResponse.json({ success: true });
 }

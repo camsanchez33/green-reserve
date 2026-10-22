@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, OWNER_ONLY, MANAGER_PLUS, ownerGateError, stepUpRequired } from '@/lib/admin-session';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
+import { needReason, reasonOf, auditAdmin, changedFields } from '@/lib/admin-audit';
 
 const VALID_ROLES = ['owner', 'manager', 'support', 'viewer'];
 
@@ -39,8 +40,10 @@ export async function POST(req: NextRequest) {
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   const su = stepUpRequired(session); if (su) return su;
 
-  const { email: rawEmail, name, role } = await req.json();
+  const body = await req.json();
+  const { email: rawEmail, name, role } = body;
   if (!rawEmail || !name) return NextResponse.json({ error: 'email and name required' }, { status: 400 });
+  const nr = needReason('employee_create', body); if (nr) return nr;
   const email = String(rawEmail).trim().toLowerCase();
 
   const existing = await prisma.adminUser.findUnique({ where: { email } });
@@ -49,7 +52,7 @@ export async function POST(req: NextRequest) {
   const tempPassword = genTempPassword();
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-  await prisma.adminUser.create({
+  const created = await prisma.adminUser.create({
     data: {
       email,
       name: String(name).trim(),
@@ -60,6 +63,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  await auditAdmin(session, { action: 'employee_create', targetType: 'admin', targetId: created.id, after: { email: created.email, name: created.name, role: created.role }, reason: reasonOf(body) });
   return NextResponse.json({ success: true, tempPassword });
 }
 
@@ -70,9 +74,15 @@ export async function PATCH(req: NextRequest) {
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   const su = stepUpRequired(session); if (su) return su;
 
-  const { id, action, role, active } = await req.json();
+  const body = await req.json();
+  const { id, action, role, active } = body;
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   if (id === session.adminId) return NextResponse.json({ error: 'Cannot modify your own account here' }, { status: 400 });
+  // BRAIN-1a: every change to someone's access is said with a reason.
+  const auditAction = action === 'reset_password' ? 'employee_reset_password'
+    : role !== undefined ? 'employee_role'
+    : active === false ? 'employee_deactivate' : 'employee_reactivate';
+  const nr = needReason(auditAction, body); if (nr) return nr;
 
   // Owner resets someone else's password — cannot reset another owner's password
   if (action === 'reset_password') {
@@ -89,6 +99,7 @@ export async function PATCH(req: NextRequest) {
       // password that answered "Too many attempts". Same bug, other door.
       data: { passwordHash, mustChangePassword: true, failedLoginAttempts: 0, lockoutUntil: null },
     });
+    await auditAdmin(session, { action: auditAction, targetType: 'admin', targetId: id, reason: reasonOf(body) });
     return NextResponse.json({ success: true, tempPassword });
   }
 
@@ -96,6 +107,10 @@ export async function PATCH(req: NextRequest) {
   if (role !== undefined) data.role = safeRole(role);
   if (active !== undefined) data.active = Boolean(active);
 
+  const prior = await prisma.adminUser.findUnique({ where: { id }, select: { role: true, active: true } });
+  if (!prior) return NextResponse.json({ error: 'That employee no longer exists — refresh the page.' }, { status: 404 });
   const updated = await prisma.adminUser.update({ where: { id }, data });
+  const diff = changedFields(prior, { role: updated.role, active: updated.active });
+  await auditAdmin(session, { action: auditAction, targetType: 'admin', targetId: id, ...diff, reason: reasonOf(body) });
   return NextResponse.json({ success: true, id: updated.id, role: updated.role, active: updated.active });
 }

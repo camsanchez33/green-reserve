@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-sess
 import { CHECKIN_AGENDA, nextCheckInAfterTalk } from '@/lib/course-checkin';
 import { fmtCallTime } from '@/lib/inquiry-call';
 import { logCheckInCall } from '@/lib/course-timeline';
+import { withAudit } from '@/lib/admin-audit';
 
 // COURSES_SHEET_SPEC CS-1 §3 — check-in calls with a live course. Courses
 // have no action-style route today (course-detail PATCH takes fields), so the
@@ -20,7 +21,7 @@ const parseDate = (v: unknown): Date | null => {
   return d && !Number.isNaN(d.getTime()) ? d : null;
 };
 
-export async function POST(req: NextRequest) {
+async function postCall(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -112,3 +113,8 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ error: `Unknown action "${action}"` }, { status: 400 });
 }
+
+// BRAIN-1a: each check-in call action is recorded on the course once it succeeds.
+export const POST = withAudit(postCall, body => body.action
+  ? { action: `checkin_${String(body.action)}`, targetType: 'course', targetId: String(body.courseId || ''), courseId: String(body.courseId || '') || null }
+  : null);

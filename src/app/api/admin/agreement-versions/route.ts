@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError, stepUpRequired } from '@/lib/admin-session';
 import { agreementVersionsOverview, publishAgreementVersion } from '@/lib/agreement-publish';
+import { auditAdmin } from '@/lib/admin-audit';
 
 // AG-3 — Admin → System → Agreement versions (Cam 2026-10-12: "build the admin
 // button"). GET lists every version on disk and whether it is published; POST
@@ -42,12 +43,10 @@ export async function POST(req: NextRequest) {
 
   // Awaited (never fire-and-forget in a route). The row is already written, so a
   // failed audit write is logged rather than turned into a false failure.
-  await prisma.adminAuditLog.create({
-    data: {
-      adminId: g.session.adminId, action: 'agreement_version_published', targetType: 'agreement', targetId: `${document}@${version}`,
-      detail: r.reacceptBy ? `re-accept by ${r.reacceptBy.toISOString()}${r.waived ? '; counsel review waived' : ''}` : 'no re-acceptance',
-    },
-  }).catch(err => console.error('agreement publish audit failed:', err));
+  await auditAdmin(g.session, {
+    action: 'agreement_version_published', targetType: 'agreement', targetId: `${document}@${version}`,
+    detail: r.reacceptBy ? `re-accept by ${r.reacceptBy.toISOString()}${r.waived ? '; counsel review waived' : ''}` : 'no re-acceptance',
+  });
 
   return NextResponse.json({
     success: true,

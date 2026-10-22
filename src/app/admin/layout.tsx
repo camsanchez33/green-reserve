@@ -3,6 +3,7 @@ import { resolveAdminSession, AdminSessionUnavailable } from '@/lib/admin-sessio
 import { AdminSessionProvider, type AdminSessionView } from '@/lib/admin-session-context';
 import { STAFF_LOOK_CLASS } from '@/lib/staff-fonts';
 import StepUpDialog from '@/components/admin/StepUpDialog';
+import ReasonDialog from '@/components/admin/ReasonDialog';
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 // Reads the session cookie on every request — never cache this shell.
@@ -34,6 +35,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className={STAFF_LOOK_CLASS}>{children}</div>
       {/* AW-1c: only the owner is ever asked to confirm a risky action. */}
       {session?.role === 'owner' && <StepUpDialog />}
+      {/* BRAIN-1a: anyone signed in may be asked why (money, access, deletes). */}
+      {session && <ReasonDialog />}
     </AdminSessionProvider>
   );
 }

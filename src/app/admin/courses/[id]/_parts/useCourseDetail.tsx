@@ -4,7 +4,7 @@
 // grown to 2,700 lines and 52 useState in one component. Moved verbatim; state
 // and handlers come from useCourseDetail() via useCourse(). Every piece of state and every handler the page had.
 
-import { stepUpFetch } from '@/lib/step-up-client';
+import { stepUpFetch, askReason } from '@/lib/step-up-client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { openingTab, setupChecks, tabProblems } from '@/lib/admin-course-tabs';
 import { checkInSignal } from '@/lib/course-checkin';
@@ -346,7 +346,7 @@ export function useCourseDetail() {
     if (!detail?.course.operator?.email) return;
     setVerifyBusy(true); setVerifyMsg('');
     try {
-      const r = await fetch('/api/admin/verify-operator', { method: 'POST', headers: H(), body: JSON.stringify({ email: detail.course.operator.email }) });
+      const r = await stepUpFetch('/api/admin/verify-operator', { method: 'POST', headers: H(), body: JSON.stringify({ email: detail.course.operator.email }) });
       if (r.ok) { setVerifyMsg('Marked verified.'); loadDetail(); }
       else { const d = await r.json().catch(() => ({})); setVerifyMsg('Error: ' + (d.error || 'could not mark verified')); }
     } catch { setVerifyMsg('Error: network — nothing was changed.'); }
@@ -359,14 +359,31 @@ export function useCourseDetail() {
   // ever (STRIPE RULE FINAL / AGREEMENT = GO-LIVE GATE). A blocked "Set
   // live" surfaces the exact reason and a one-click reminder instead of
   // silently no-op'ing or offering a way around it.
+  // BRAIN-1a: taking a course offline or archiving it is said with a reason —
+  // asked once, and kept for the second request that confirms cancelling its
+  // bookings (so the admin is not asked twice).
+  const closureReason = useRef('');
+  async function closureWhy(label: string, confirming: boolean): Promise<string | null> {
+    if (confirming && closureReason.current) return closureReason.current;
+    const r = await askReason(label);
+    if (r) closureReason.current = r;
+    return r;
+  }
+
   async function toggleActive(active: boolean, cancelBookings = false) {
+    let reason = '';
+    if (active === false) {
+      const r = await closureWhy('Take a course offline', cancelBookings);
+      if (!r) { setLiveBlockReason('Nothing changed — taking a course offline needs a reason.'); return; }
+      reason = r;
+    }
     setLiveToggleBusy(true); setLiveBlockReason(''); setLiveBlockMissing(null); setClosureError('');
     // Review (no-silent-failures): a dropped connection threw past the busy
     // reset and left the button on "Working…" forever. try/finally, like
     // sendGoLiveReminder two functions down.
     try {
-      const r = await fetch('/api/admin/course-detail', {
-        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, cancelBookings }),
+      const r = await stepUpFetch('/api/admin/course-detail', {
+        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, cancelBookings, reason }),
       });
       if (r.ok) {
         setClosurePrompt(null);
@@ -423,10 +440,12 @@ export function useCourseDetail() {
   // taking a course offline.
   async function archiveCourse(cancelBookings = false) {
     if (!detail) return;
+    const reason = await closureWhy('Archive a course', cancelBookings);
+    if (!reason) { setLiveBlockReason('Nothing changed — archiving needs a reason.'); return; }
     setArchiveBusy(true); setClosureError('');
     try {
-      const r = await fetch('/api/admin/archive-course', {
-        method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive', cancelBookings }),
+      const r = await stepUpFetch('/api/admin/archive-course', {
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive', cancelBookings, reason }),
       });
       if (r.ok) { router.push('/admin/courses'); return; }
       const d = await r.json().catch(() => ({}));
@@ -448,7 +467,7 @@ export function useCourseDetail() {
   async function restoreCourse() {
     setArchiveBusy(true);
     try {
-      const r = await fetch('/api/admin/archive-course', {
+      const r = await stepUpFetch('/api/admin/archive-course', {
         method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'restore' }),
       });
       if (r.ok) loadDetail();
@@ -665,7 +684,7 @@ export function useCourseDetail() {
   async function deleteSchedule(id: string) {
     setSchedDeleteBusy(true); setSchedDeleteError('');
     try {
-      const r = await fetch('/api/admin/schedule', { method: 'DELETE', headers: H(), body: JSON.stringify({ id }) });
+      const r = await stepUpFetch('/api/admin/schedule', { method: 'DELETE', headers: H(), body: JSON.stringify({ id }) });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
         setSchedDeleteError(e.error || 'Could not delete that schedule. Nothing was changed.');
@@ -684,7 +703,7 @@ export function useCourseDetail() {
   async function blockSlot(teeTimeId: string, block: boolean) {
     setSlotBusy(teeTimeId); setOpNote(null);
     try {
-      const r = await fetch('/api/admin/tee-sheet', {
+      const r = await stepUpFetch('/api/admin/tee-sheet', {
         method: 'PATCH', headers: H(),
         body: JSON.stringify({ action: block ? 'block' : 'unblock', teeTimeId }),
       });
@@ -703,7 +722,7 @@ export function useCourseDetail() {
     if (!confirm('Cancel this booking? The golfer will be emailed.')) return;
     setSlotBusy(teeTimeId); setOpNote(null);
     try {
-      const r = await fetch('/api/admin/tee-sheet', {
+      const r = await stepUpFetch('/api/admin/tee-sheet', {
         method: 'PATCH', headers: H(), body: JSON.stringify({ action: 'cancel_booking', bookingId }),
       });
       const d = await r.json().catch(() => ({}));
@@ -727,7 +746,7 @@ export function useCourseDetail() {
     if (!manualSlot) return;
     setManualSaving(true); setManualError('');
     try {
-      const r = await fetch('/api/admin/tee-sheet', {
+      const r = await stepUpFetch('/api/admin/tee-sheet', {
         method: 'POST', headers: H(), body: JSON.stringify({ teeTimeId: manualSlot, ...manualForm }),
       });
       if (r.ok) {

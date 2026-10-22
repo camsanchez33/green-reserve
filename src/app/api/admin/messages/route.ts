@@ -5,6 +5,7 @@ import { sendMessageNotificationEmail } from '@/lib/email';
 import { threadSignal } from '@/lib/thread-signal';
 import { computeOpenChanges } from '@/lib/change-requests';
 import { FAILED_CHARGE_WHERE } from '@/lib/money-problems';
+import { withAudit } from '@/lib/admin-audit';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -185,7 +186,7 @@ export async function POST(req: NextRequest) {
 // PATCH { courseId, action: 'close' | 'reopen' } — MP-7b: a finished
 // conversation is closed so it stops competing for attention; any new message
 // from either side reopens it.
-export async function PATCH(req: NextRequest) {
+async function patchThread(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -208,3 +209,6 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+// BRAIN-1a: closing or reopening a course's conversation is recorded.
+export const PATCH = withAudit(patchThread, body => body.action ? { action: `thread_${String(body.action)}`, targetType: 'course', targetId: String(body.courseId || ''), courseId: String(body.courseId || '') || null } : null);

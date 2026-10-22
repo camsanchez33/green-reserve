@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
+import { reasonOf, auditAdmin, REASON_MIN } from '@/lib/admin-audit';
 import { sendBookingConfirmation, sendCheckInReceiptEmail } from '@/lib/email';
 import { performCancellation } from '@/lib/cancel-booking';
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
@@ -214,7 +215,7 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       return NextResponse.json({ error: `The email did not send: ${err instanceof Error ? err.message : 'unknown error'}` }, { status: 502 });
     }
-    console.log(`[support] ${session.name} (${session.email}) resent confirmation for booking ${bookingId}`);
+    await auditAdmin(session, { action: 'resend_confirmation', targetType: 'booking', targetId: bookingId, courseId: booking.courseId, after: { sentTo: booking.golferEmail } });
     return NextResponse.json({ ok: true, sentTo: booking.golferEmail });
   }
 
@@ -234,16 +235,16 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       return NextResponse.json({ error: `The receipt did not send: ${err instanceof Error ? err.message : 'unknown error'}` }, { status: 502 });
     }
-    console.log(`[support] ${session.name} (${session.email}) resent receipt for booking ${bookingId}`);
+    await auditAdmin(session, { action: 'resend_receipt', targetType: 'booking', targetId: bookingId, courseId: booking.courseId, after: { sentTo: booking.golferEmail } });
     return NextResponse.json({ ok: true, sentTo: booking.golferEmail });
   }
 
   // cancel — moves money (a paid round is refunded by the service), manager+
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Cancelling on a golfer\'s behalf needs manager access.' }, { status: 403 });
-  const reason = String(body.reason || '').trim();
-  if (!reason) return NextResponse.json({ error: 'A reason is required — the golfer reads it.' }, { status: 400 });
+  const reason = reasonOf(body);
+  if (reason.length < REASON_MIN) return NextResponse.json({ error: 'A reason is required — the golfer reads it.', code: 'reason_required' }, { status: 400 });
   const result = await performCancellation(bookingId, { type: 'admin', id: session.adminId }, { reason: `${reason} (cancelled by GreenReserve support on your behalf)` });
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status });
-  console.log(`[support] ${session.name} (${session.email}) cancelled booking ${bookingId}: ${reason}`);
+  await auditAdmin(session, { action: 'cancel_booking', targetType: 'booking', targetId: bookingId, courseId: booking.courseId, before: { status: booking.status }, after: { status: 'cancelled', feeCharged: result.feeCharged }, reason });
   return NextResponse.json({ ok: true, feeCharged: result.feeCharged });
 }

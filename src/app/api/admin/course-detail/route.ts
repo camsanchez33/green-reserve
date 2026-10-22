@@ -14,6 +14,7 @@ import { hasAcceptedAgreement, agreementStatus } from '@/lib/agreement-gate';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { buildRelationshipFeed } from '@/lib/course-feed';
 import { courseWeeks, courseMoney } from '@/lib/admin-course-page';
+import { needReason, reasonOf, auditAdmin, changedFields } from '@/lib/admin-audit';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -204,8 +205,11 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  const { courseId, active, featured, cancelBookings } = await req.json();
+  const body = await req.json();
+  const { courseId, active, featured, cancelBookings } = body;
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
+  // BRAIN-1a: taking a course offline cancels and refunds its bookings — say why.
+  if (active === false) { const nr = needReason('course_offline', body); if (nr) return nr; }
 
   // STRIPE RULE FINAL + AGREEMENT = GO-LIVE GATE (RUN_QUEUE) — "Set live" is
   // preflight-aware: the SAME two checks (go-live-preflight.ts /
@@ -271,6 +275,7 @@ export async function PATCH(req: NextRequest) {
   // that building the directory later re-enables featuring in one line;
   // nothing in the UI calls it today.
   if (featured !== undefined) data.featured = featured;
+  const prior = await prisma.course.findUnique({ where: { id: courseId }, select: { active: true, liveStatus: true, featured: true } });
   const updated = await prisma.course.update({ where: { id: courseId }, data, include: { operator: { select: { name: true, email: true } } } });
 
   // Auto-advance linked inquiry from building → live when course is activated
@@ -318,6 +323,13 @@ export async function PATCH(req: NextRequest) {
   if (active === false) {
     operatorNotified = await notifyOperatorOfClosure(courseId, 'offline', closureCancelled);
   }
+  await auditAdmin(session, {
+    action: active === true ? 'course_go_live' : active === false ? 'course_offline' : 'course_featured',
+    targetType: 'course', targetId: courseId, courseId,
+    ...changedFields(prior ?? {}, { active: updated.active, liveStatus: updated.liveStatus, featured: updated.featured }),
+    ...(active === false ? { detail: `${closureCancelled} booking(s) cancelled` } : {}),
+    reason: reasonOf(body),
+  });
 
   return NextResponse.json({
     ...updated,
