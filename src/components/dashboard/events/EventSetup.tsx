@@ -257,7 +257,7 @@ export default function EventSetup({ initial, eventId, products, courseHoles, on
                 )}
                 {preview.booked.length > 0 && (
                   <div className="border-l-[3px] border-warn pl-3">
-                    <p>{preview.booked.length} time{preview.booked.length === 1 ? ' is' : 's are'} already booked and won&apos;t be held. Move these groups from the tee sheet, then press &ldquo;Hold freed times&rdquo; on the event:</p>
+                    <p>{preview.booked.length} time{preview.booked.length === 1 ? ' is' : 's are'} already booked and won&apos;t be held. Move these groups from the tee sheet, then press &ldquo;Hold the open times&rdquo; on the event:</p>
                     <ul className="mt-1 text-ink-soft">{preview.booked.map(b => <li key={b.time}>{formatTeeTime(b.time)} — {b.golfers}</li>)}</ul>
                   </div>
                 )}

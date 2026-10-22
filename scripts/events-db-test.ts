@@ -4,7 +4,7 @@
 // a time staff reopen leaves the event, and reopening a closed day keeps an
 // event's hold. Needs a database. Run: npx tsx scripts/events-db-test.ts
 import { PrismaClient } from '@prisma/client';
-import { createEvent, updateEvent, cancelEvent, applyHold, previewEvent, EventError } from '../src/lib/course-events';
+import { createEvent, updateEvent, cancelEvent, applyHold, previewEvent, unheldTimes, releaseHold, EventError } from '../src/lib/course-events';
 import { generateTeeTimes } from '../src/lib/tee-sheet-engine';
 import { setTeeTimeBlocked } from '../src/lib/schedule-service';
 
@@ -64,7 +64,10 @@ async function main() {
   // The group at 9:00 moves out; the course holds the freed time.
   await prisma.booking.updateMany({ where: { teeTimeId: nine.id }, data: { status: 'cancelled' } });
   await prisma.teeTime.update({ where: { id: nine.id }, data: { playersBooked: 0 } });
+  // The last group in the way is gone: the event page must still offer to hold its time.
+  check('a time freed in the window is listed as open and not held', JSON.stringify(await unheldTimes(event)) === '["09:00"]', JSON.stringify(await unheldTimes(event)));
   const re = await applyHold(event);
+  check('…and is no longer listed once held', (await unheldTimes(event)).length === 0);
   // A time with only cancelled bookings is free to hold.
   check('"Hold freed times" picks up the time once its group is gone', re.held === 1 && re.booked.length === 0, JSON.stringify(re));
 
@@ -130,6 +133,18 @@ async function main() {
   const shortTasks = await prisma.courseEventTask.findMany({ where: { eventId: short.event.id }, orderBy: { sortOrder: 'asc' } });
   check('an event two days out has no checklist item due before today', shortTasks.every(t => (t.dueDate ?? '') >= today) && shortTasks[0].dueDate === today, JSON.stringify(shortTasks.map(t => t.dueDate)));
   await cancelEvent(courseId, short.event.id);
+
+  // A held time on a day the course closed afterwards stays blocked when the event lets it go.
+  const closedDay = '2031-07-01';
+  const ce = await createEvent(courseId, { ...input, date: closedDay }, 'x');
+  await generateTeeTimes(courseId, closedDay);
+  const keep = await prisma.teeTime.findFirstOrThrow({ where: { courseId, date: closedDay, eventId: ce.event.id } });
+  await prisma.booking.create({ data: { teeTimeId: keep.id, courseId, golferName: 'Gone', golferEmail: `${TAG}+g@test.local`, players: 1, greenFeeTotal: 0, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 0, status: 'cancelled' } });
+  await prisma.teeTime.deleteMany({ where: { courseId, date: closedDay, bookings: { none: {} } } }); // what closing a day does
+  await prisma.blackout.create({ data: { courseId, date: closedDay, reason: 'test' } });
+  await releaseHold(ce.event.id);
+  const kept = await prisma.teeTime.findUniqueOrThrow({ where: { id: keep.id } });
+  check('releasing an event on a closed day never reopens its time', kept.status === 'blocked' && kept.eventId === null, JSON.stringify(kept));
 
   // Validation.
   const bad = async (i: Record<string, unknown>) => { try { await createEvent(courseId, i, 'x'); return ''; } catch (e) { return e instanceof EventError ? e.message : 'other'; } };

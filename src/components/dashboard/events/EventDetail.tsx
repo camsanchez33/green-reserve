@@ -21,7 +21,7 @@ export type EventFull = {
 export type EventData = {
   event: EventFull; today: string; courseHoles: number;
   held: { id: string; time: string; round: string | null }[];
-  toMove: { time: string; golfers: string }[]; blockedOther: number;
+  toMove: { time: string; golfers: string }[]; blockedOther: number; unheld: string[];
 };
 
 const BTN = 'px-3 py-2 rounded-md text-[13px] font-medium transition-colors disabled:opacity-50';
@@ -101,14 +101,19 @@ export default function EventDetail({ data, onChange, onEdit, onBack }: {
           {held.length === 0 && live
             ? <p className="text-[13.5px] text-ink">No tee times held yet{toMove.length ? '' : ' — the day’s tee times will be held as they are made'}.</p>
             : <p className="text-[13.5px] text-ink">{live ? 'Holding' : 'Held'} {formatTeeTime(e.holdFrom)} to {formatTeeTime(e.holdTo)}{held.length ? ` — ${held.length} tee time${held.length === 1 ? '' : 's'}` : ''}.</p>}
-          {toMove.length > 0 && (
+          {(toMove.length > 0 || data.unheld.length > 0) && (
             <div className="border-l-[3px] border-warn pl-3 mt-3 text-[13.5px] text-ink">
-              <p>{toMove.length} booked time{toMove.length === 1 ? '' : 's'} in the window {toMove.length === 1 ? 'isn’t' : 'aren’t'} held. Move these groups from the tee sheet, then hold the freed times:</p>
-              <ul className="mt-1 text-ink-soft">{toMove.map(b => <li key={b.time}>{formatTeeTime(b.time)} — {b.golfers}</li>)}</ul>
+              {toMove.length > 0 && <>
+                <p>{toMove.length} booked time{toMove.length === 1 ? '' : 's'} in the window {toMove.length === 1 ? 'isn’t' : 'aren’t'} held. Move these groups from the tee sheet, then hold the open times:</p>
+                <ul className="mt-1 text-ink-soft">{toMove.map(b => <li key={b.time}>{formatTeeTime(b.time)} — {b.golfers}</li>)}</ul>
+              </>}
+              {data.unheld.length > 0 && (
+                <p className={toMove.length ? 'mt-2' : ''}>{data.unheld.length === 1 ? `${formatTeeTime(data.unheld[0])} is` : `${data.unheld.length} times are`} open in the window and golfers can book {data.unheld.length === 1 ? 'it' : 'them'}. Hold {data.unheld.length === 1 ? 'it' : 'them'} for the event:</p>
+              )}
               <button disabled={!!busy} onClick={() => act('rehold', { action: 'rehold' }, r => {
                 const h = (r.hold as { held: number } | undefined)?.held ?? 0;
                 return h ? `Held ${h} more tee time${h === 1 ? '' : 's'}.` : 'Nothing new to hold — those times are still booked.';
-              })} className={SECONDARY + ' mt-2'}>{busy === 'rehold' ? 'Holding…' : 'Hold freed times'}</button>
+              })} className={SECONDARY + ' mt-2'}>{busy === 'rehold' ? 'Holding…' : 'Hold the open times'}</button>
             </div>
           )}
           {data.blockedOther > 0 && <p className="text-[13px] text-ink-soft mt-2">{data.blockedOther} time{data.blockedOther === 1 ? ' is' : 's are'} held by another event.</p>}
@@ -188,8 +193,8 @@ export default function EventDetail({ data, onChange, onEdit, onBack }: {
               <button disabled={!!busy} onClick={() => act('clear', { action: 'pairings_clear' })} className={SECONDARY}>Clear groups</button>
               <button onClick={() => window.print()} className={SECONDARY}>Print pairings</button>
               <button disabled={!!busy} onClick={() => act('send', { action: 'pairings_send' }, r => {
-                const sent = Number(r.sent ?? 0); const failed = (r.failed as string[] | undefined) ?? []; const none = Number(r.noEmail ?? 0);
-                return [`Emailed ${sent} player${sent === 1 ? '' : 's'} their group.`, failed.length ? `Couldn’t reach ${failed.join(', ')} — try again or print theirs.` : '', none ? `${none} without an email — give them a printed copy.` : ''].filter(Boolean).join(' ');
+                const sent = Number(r.sent ?? 0); const failed = (r.failed as string[] | undefined) ?? []; const none = Number(r.noEmail ?? 0); const notSent = (r.notSent as string[] | undefined) ?? [];
+                return [`Emailed ${sent} player${sent === 1 ? '' : 's'} their group.`, notSent.length ? `Ran out of time before emailing ${notSent.join(', ')} — press it again for them, or print theirs.` : '', failed.length ? `Couldn’t reach ${failed.join(', ')} — try again or print theirs.` : '', none ? `${none} without an email — give them a printed copy.` : ''].filter(Boolean).join(' ');
               })} className={PRIMARY}>{busy === 'send' ? 'Emailing…' : 'Email pairings to players'}</button>
             </>}
           </div>

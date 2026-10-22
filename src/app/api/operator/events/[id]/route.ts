@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Emailing the pairings sends one email per player (up to 1,000).
+export const maxDuration = 300;
+/** Stop sending with time to spare and report who wasn't emailed (as lib/golfer-messages does). */
+const SEND_BUDGET_MS = 240_000;
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import {
-  updateEvent, cancelEvent, applyHold, previewEvent, autoPairings, parsePlayers, isDate, EventError, type EventInput,
+  updateEvent, cancelEvent, applyHold, unheldTimes, previewEvent, autoPairings, parsePlayers, isDate, EventError, type EventInput,
 } from '@/lib/course-events';
 import { sendEventPairingsEmail, isPlaceholderEmail } from '@/lib/email';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
@@ -59,6 +64,7 @@ async function load(courseId: string, id: string) {
       ? inScope.filter(s => s.playersBooked > 0 || s.bookings.length > 0).map(s => ({ time: s.time, golfers: s.bookings.map(b => b.golferName).join(', ') || 'booked' }))
       : [],
     blockedOther: inScope.filter(s => s.eventId && s.eventId !== id).length,
+    unheld: await unheldTimes({ ...event, courseId }),
   };
 }
 
@@ -179,8 +185,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         if (!grouped.length) return bad('Put the players into groups first.');
         const to = grouped.filter(p => p.email && !isPlaceholderEmail(p.email));
         if (!to.length) return bad('None of the grouped players has an email. Print the pairings instead.');
-        let sent = 0; const failed: string[] = [];
+        let sent = 0; const failed: string[] = []; const notSent: string[] = [];
+        const started = Date.now();
         for (const p of to) {
+          if (Date.now() - started > SEND_BUDGET_MS) { notSent.push(p.name); continue; }
           const g2 = p.groupNo!;
           const start = event.format === 'shotgun' ? event.startTime : (times[g2 - 1] ?? event.startTime);
           try {
@@ -195,7 +203,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         }
         return NextResponse.json({
           ...(await load(courseId, id)),
-          sent, failed, noEmail: grouped.length - to.length,
+          sent, failed, notSent, noEmail: grouped.length - to.length,
         });
       }
       default:

@@ -4904,13 +4904,17 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 210,
+      "lines": 218,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "GET",
           "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
         },
         {
           "name": "PATCH",
@@ -9400,7 +9404,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 248,
+      "lines": 253,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -13118,7 +13122,7 @@
     },
     {
       "path": "src/lib/course-events.ts",
-      "lines": 265,
+      "lines": 285,
       "purpose": "W2-9 Events (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -13204,6 +13208,10 @@
         },
         {
           "name": "teeTimesWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "unheldTimes",
           "kind": "fn"
         },
         {
@@ -19320,6 +19328,7 @@
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/course-events.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"

@@ -82,18 +82,38 @@ export async function applyHold(event: HoldEvent & { courseId: string; date: str
   });
   const inScope = slots.filter(s => heldBy([event], s.productId ?? null, s.time));
   const open = inScope.filter(s => s.playersBooked === 0 && s.bookings.length === 0 && s.status !== 'blocked');
+  let held = 0;
   if (open.length) {
     // Conditional on still being open, so a booking that lands meanwhile is never blocked over.
-    await prisma.teeTime.updateMany({ where: { id: { in: open.map(s => s.id) }, playersBooked: 0, status: { not: 'blocked' } }, data: { status: 'blocked', eventId: event.id } });
+    const r = await prisma.teeTime.updateMany({ where: { id: { in: open.map(s => s.id) }, playersBooked: 0, status: { not: 'blocked' } }, data: { status: 'blocked', eventId: event.id } });
+    held = r.count;
   }
   const booked = inScope.filter(s => s.playersBooked > 0 || s.bookings.length > 0)
     .map(s => ({ time: s.time, golfers: s.bookings.map(b => b.golferName).join(', ') || 'booked' }));
-  return { held: open.length, booked };
+  return { held, booked };
+}
+
+/**
+ * Open times inside a planned event's window that it doesn't hold — a group
+ * moved or cancelled out of the window leaves its time on sale (and a time
+ * staff reopened by hand) until the course holds it again.
+ */
+export async function unheldTimes(event: HoldEvent & { courseId: string; date: string }): Promise<string[]> {
+  if (event.status !== 'planned') return [];
+  const slots = await prisma.teeTime.findMany({
+    where: { courseId: event.courseId, date: event.date, time: { gte: event.holdFrom, lte: event.holdTo }, status: { not: 'blocked' }, playersBooked: 0 },
+    select: { time: true, productId: true, bookings: { where: { status: { not: 'cancelled' } }, select: { id: true } } },
+    orderBy: { time: 'asc' },
+  });
+  return slots.filter(s => s.bookings.length === 0 && heldBy([event], s.productId ?? null, s.time)).map(s => s.time);
 }
 
 /** Release every tee time the event holds (never one a person blocked by hand). */
 export async function releaseHold(eventId: string): Promise<number> {
-  const r = await prisma.teeTime.updateMany({ where: { eventId, status: 'blocked', playersBooked: 0 }, data: { status: 'available', eventId: null } });
+  // A held time on a day the course has since closed stays blocked — it only leaves the event.
+  const ev = await prisma.courseEvent.findUnique({ where: { id: eventId }, select: { courseId: true, date: true } });
+  const closed = ev ? !!(await prisma.blackout.findFirst({ where: { courseId: ev.courseId, date: ev.date }, select: { id: true } })) : false;
+  const r = closed ? { count: 0 } : await prisma.teeTime.updateMany({ where: { eventId, status: 'blocked', playersBooked: 0 }, data: { status: 'available', eventId: null } });
   // A held time that somehow carries players keeps its block but loses the link.
   await prisma.teeTime.updateMany({ where: { eventId }, data: { eventId: null } });
   return r.count;
