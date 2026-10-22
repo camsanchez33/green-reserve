@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 491,
+    "files": 492,
     "routes": 239,
     "libs": 158,
     "models": 48,
@@ -532,7 +532,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 1071,
+      "lines": 1090,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -10168,6 +10168,32 @@
       ]
     },
     {
+      "path": "src/instrumentation.ts",
+      "lines": 16,
+      "purpose": "BRAIN-0 (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "onRequestError",
+          "kind": "const"
+        },
+        {
+          "name": "register",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "../sentry.server.config",
+        "@sentry/nextjs"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/lib/access-fee.ts",
       "lines": 183,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
@@ -10328,7 +10354,7 @@
     },
     {
       "path": "src/lib/admin-audit.ts",
-      "lines": 185,
+      "lines": 188,
       "purpose": "BRAIN-1a (Cam 2026-10-22):",
       "brain": [],
       "exports": [
@@ -17829,7 +17855,7 @@
     },
     {
       "path": "src/lib/step-up-client.ts",
-      "lines": 67,
+      "lines": 70,
       "purpose": "AW-1c:",
       "brain": [],
       "exports": [
