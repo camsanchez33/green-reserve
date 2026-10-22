@@ -13,7 +13,7 @@ import { KINDS } from './EventSetup';
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
 export type EventPlayer = { id: string; name: string; email: string; phone: string; groupNo: number | null; startHole: number | null };
 export type EventFull = {
-  id: string; name: string; kind: string; date: string; format: string; startTime: string; holdFrom: string; holdTo: string; holdToCustom: boolean;
+  id: string; name: string; kind: string; date: string; format: string; startTime: string; holdFrom: string; holdTo: string; holdToCustom: boolean; shareCourse: boolean; holdNineIds: string[]; keepOpen: string[];
   productId: string | null; holes: number; groups: number; players: number;
   organizerName: string; organizerEmail: string; organizerPhone: string; pricePerPlayerCents: number; includes: string[];
   terms: string; notes: string; status: string; tasks: EventTask[]; entrants: EventPlayer[];
@@ -101,6 +101,12 @@ export default function EventDetail({ data, onChange, onEdit, onBack }: {
           {held.length === 0 && live
             ? <p className="text-[13.5px] text-ink">No tee times held yet{toMove.length ? '' : ' — the day’s tee times will be held as they are made'}.</p>
             : <p className="text-[13.5px] text-ink">{live ? 'Holding' : 'Held'} {formatTeeTime(e.holdFrom)} to {formatTeeTime(e.holdTo)}{held.length ? ` — ${held.length} tee time${held.length === 1 ? '' : 's'}` : ''}.</p>}
+          {e.shareCourse && (
+            <p className="text-[13px] text-ink-soft mt-1">
+              Shares the course{e.holdNineIds.length ? ' — only the holes chosen for it are held' : ''}.
+              {e.keepOpen.length > 0 && ` Kept open for golfers: ${e.keepOpen.map(formatTeeTime).join(', ')}.`}
+            </p>
+          )}
           {(toMove.length > 0 || data.unheld.length > 0) && (
             <div className="border-l-[3px] border-warn pl-3 mt-3 text-[13.5px] text-ink">
               {toMove.length > 0 && <>

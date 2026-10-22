@@ -5022,7 +5022,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 218,
+      "lines": 222,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5052,6 +5052,7 @@
         "@/lib/course-events",
         "@/lib/course-time",
         "@/lib/email",
+        "@/lib/event-hold",
         "@/lib/format",
         "@/lib/prisma",
         "@/lib/session",
@@ -5061,7 +5062,7 @@
     },
     {
       "path": "src/app/api/operator/events/route.ts",
-      "lines": 67,
+      "lines": 70,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6198,7 +6199,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 144,
+      "lines": 151,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7122,7 +7123,7 @@
     },
     {
       "path": "src/app/dashboard/events/page.tsx",
-      "lines": 165,
+      "lines": 166,
       "purpose": "W2-9 Events (Cam 2026-10-21/22):",
       "brain": [],
       "exports": [
@@ -9551,7 +9552,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 253,
+      "lines": 259,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -9596,7 +9597,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventSetup.tsx",
-      "lines": 292,
+      "lines": 344,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -9615,6 +9616,10 @@
         {
           "name": "KINDS",
           "kind": "const"
+        },
+        {
+          "name": "NineOpt",
+          "kind": "type"
         },
         {
           "name": "Product",
@@ -13413,7 +13418,7 @@
     },
     {
       "path": "src/lib/course-events.ts",
-      "lines": 285,
+      "lines": 312,
       "purpose": "W2-9 Events (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -14844,7 +14849,7 @@
     },
     {
       "path": "src/lib/event-hold.ts",
-      "lines": 12,
+      "lines": 36,
       "purpose": "W2-9:",
       "brain": [],
       "exports": [
@@ -14855,6 +14860,10 @@
         {
           "name": "HoldEvent",
           "kind": "type"
+        },
+        {
+          "name": "ninesByProduct",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -14864,6 +14873,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/operator/events/[id]/route.ts",
         "src/lib/course-events.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -18591,7 +18601,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 252,
+      "lines": 253,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20883,6 +20893,18 @@
           "type": "String?"
         },
         {
+          "name": "shareCourse",
+          "type": "Boolean"
+        },
+        {
+          "name": "holdNineIds",
+          "type": "String[]"
+        },
+        {
+          "name": "keepOpen",
+          "type": "String[]"
+        },
+        {
           "name": "holes",
           "type": "Int"
         },
@@ -21757,6 +21779,7 @@
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/round-rules/route.ts",
@@ -22485,8 +22508,10 @@
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"

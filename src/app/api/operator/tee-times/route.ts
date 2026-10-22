@@ -112,6 +112,12 @@ export async function PATCH(req: NextRequest) {
   if (status !== 'blocked' && status !== 'available') {
     return NextResponse.json({ error: 'status must be "blocked" or "available"' }, { status: 400 });
   }
+  // W2-9 (Cam 2026-10-22): a time an event holds isn't unblocked here — the event
+  // decides how much of the course it uses, so the time goes back on sale by changing the event.
+  if (status === 'available') {
+    const held = await prisma.teeTime.findFirst({ where: { id, courseId: session.courseId, eventId: { not: null } }, select: { event: { select: { name: true } } } });
+    if (held?.event) return NextResponse.json({ error: `Held for ${held.event.name}. To sell this time, change the event on the Events tab.` }, { status: 409 });
+  }
   const row = await setTeeTimeBlocked(id, status === 'blocked', { scopeCourseId: session.courseId });
   if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(row);
@@ -129,7 +135,8 @@ export async function DELETE(req: NextRequest) {
   // threw P2003 → an unhandled 500 the dashboard swallowed. Say it instead.
   // AN-1: a tee time that has already gone off is history — an unfilled slot
   // is exactly what Analytics counts as lost revenue, so it can't be deleted.
-  const slot = await prisma.teeTime.findFirst({ where: { id, courseId: session.courseId }, select: { date: true, time: true, course: { select: { timezone: true } } } });
+  const slot = await prisma.teeTime.findFirst({ where: { id, courseId: session.courseId }, select: { date: true, time: true, course: { select: { timezone: true } }, event: { select: { name: true } } } });
+  if (slot?.event) return NextResponse.json({ error: `Held for ${slot.event.name}. To free this time, change the event on the Events tab.` }, { status: 409 });
   if (slot && isPastIn(slot.course.timezone, slot.date, slot.time)) {
     return NextResponse.json({ error: 'That tee time has already gone off — past tee times stay on the sheet so your reports stay accurate.' }, { status: 409 });
   }

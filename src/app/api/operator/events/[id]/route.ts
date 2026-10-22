@@ -13,6 +13,7 @@ import {
 import { sendEventPairingsEmail, isPlaceholderEmail } from '@/lib/email';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { todayIn } from '@/lib/course-time';
+import { heldBy, ninesByProduct } from '@/lib/event-hold';
 
 // W2-9 Events: one event — its details, the tee times it holds, its checklist
 // and its players. Needs "Run events"; every write also needs the current
@@ -54,7 +55,10 @@ async function load(courseId: string, id: string) {
     }),
     prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true, holes: true } }),
   ]);
-  const inScope = inWindow.filter(s => event.format === 'shotgun' || !event.productId || s.productId === event.productId);
+  // The same rule as the hold itself: a kept-open time, or one on a nine the event doesn't use, is not in its way.
+  const ninesOf = ninesByProduct(await prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, nineIds: true } }));
+  const asPlanned = { ...event, status: 'planned' };
+  const inScope = inWindow.filter(s => heldBy([asPlanned], s.productId ?? null, s.time, ninesOf(s.productId ?? null)));
   return {
     event,
     today: todayIn(course?.timezone),

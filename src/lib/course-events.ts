@@ -16,7 +16,7 @@
 import { prisma } from './prisma';
 import { todayIn, addDaysStr } from './course-time';
 import { desiredSlots, generateTeeTimes } from './tee-sheet-engine';
-import { heldBy, type HoldEvent } from './event-hold';
+import { heldBy, ninesByProduct, type HoldEvent } from './event-hold';
 export { heldBy };
 
 export const EVENT_KINDS = ['outing', 'tournament', 'league', 'other'] as const;
@@ -66,6 +66,11 @@ export async function teeTimesWindow(courseId: string, date: string, start: stri
   return { from: start, to: taken[taken.length - 1] ?? start, found: taken.length };
 }
 
+/** productId → nines, for this course (heldBy's slotNines). */
+async function courseNines(courseId: string) {
+  return ninesByProduct(await prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, nineIds: true } }));
+}
+
 export type HoldReport = { held: number; booked: { time: string; golfers: string }[] };
 
 /**
@@ -80,7 +85,8 @@ export async function applyHold(event: HoldEvent & { courseId: string; date: str
     select: { id: true, time: true, productId: true, status: true, playersBooked: true, eventId: true,
       bookings: { where: { status: { not: 'cancelled' } }, select: { golferName: true } } },
   });
-  const inScope = slots.filter(s => heldBy([event], s.productId ?? null, s.time));
+  const ninesOf = await courseNines(event.courseId);
+  const inScope = slots.filter(s => heldBy([event], s.productId ?? null, s.time, ninesOf(s.productId ?? null)));
   const open = inScope.filter(s => s.playersBooked === 0 && s.bookings.length === 0 && s.status !== 'blocked');
   let held = 0;
   if (open.length) {
@@ -105,7 +111,8 @@ export async function unheldTimes(event: HoldEvent & { courseId: string; date: s
     select: { time: true, productId: true, bookings: { where: { status: { not: 'cancelled' } }, select: { id: true } } },
     orderBy: { time: 'asc' },
   });
-  return slots.filter(s => s.bookings.length === 0 && heldBy([event], s.productId ?? null, s.time)).map(s => s.time);
+  const ninesOf = await courseNines(event.courseId);
+  return slots.filter(s => s.bookings.length === 0 && heldBy([event], s.productId ?? null, s.time, ninesOf(s.productId ?? null))).map(s => s.time);
 }
 
 /** Release every tee time the event holds (never one a person blocked by hand). */
@@ -122,6 +129,7 @@ export async function releaseHold(eventId: string, day: { courseId: string; date
 export type EventInput = {
   name?: unknown; kind?: unknown; date?: unknown; format?: unknown; startTime?: unknown; holes?: unknown;
   groups?: unknown; players?: unknown; productId?: unknown; holdTo?: unknown;
+  shareCourse?: unknown; holdNineIds?: unknown; keepOpen?: unknown;
   organizerName?: unknown; organizerEmail?: unknown; organizerPhone?: unknown;
   pricePerPlayer?: unknown; includes?: unknown; terms?: unknown; notes?: unknown;
 };
@@ -170,11 +178,22 @@ export async function eventFields(courseId: string, input: EventInput, opts: { a
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new EventError('The organizer’s email doesn’t look right.');
   const price = input.pricePerPlayer == null || input.pricePerPlayer === '' ? 0 : Number(input.pricePerPlayer);
   if (!(price >= 0 && price <= 100000)) throw new EventError('The price per player can’t be negative.');
+  // Sharing the course (Cam 2026-10-22): which nines the event uses, and which times stay bookable.
+  const shareCourse = input.shareCourse === true;
+  let holdNineIds: string[] = [];
+  if (shareCourse && format === 'shotgun' && Array.isArray(input.holdNineIds) && input.holdNineIds.length) {
+    const ids = [...new Set(input.holdNineIds.map(String))];
+    const found = await prisma.nine.findMany({ where: { id: { in: ids }, courseId }, select: { id: true } });
+    if (found.length !== ids.length) throw new EventError('One of those nines isn\u2019t on this course.');
+    holdNineIds = ids;
+  }
+  const keepOpen = shareCourse && Array.isArray(input.keepOpen)
+    ? [...new Set(input.keepOpen.filter(isTime))].filter(t => t >= window.from && t <= window.to).sort().slice(0, 300) : [];
   const includes = Array.isArray(input.includes) ? input.includes.map(x => str(x, 60)).filter(Boolean).slice(0, 20) : [];
   return {
     data: {
       name, kind, date: input.date, format, startTime: input.startTime, holdFrom: window.from, holdTo: window.to, holdToCustom,
-      productId, holes, groups, players,
+      productId, holes, groups, players, shareCourse, holdNineIds, keepOpen,
       organizerName: str(input.organizerName, 120), organizerEmail: email, organizerPhone: str(input.organizerPhone, 40),
       pricePerPlayerCents: Math.round(price * 100), includes,
       terms: String(input.terms ?? '').trim().slice(0, 4000), notes: String(input.notes ?? '').trim().slice(0, 4000),
@@ -198,13 +217,20 @@ export async function previewEvent(courseId: string, input: EventInput, excludeE
         bookings: { where: { status: { not: 'cancelled' } }, select: { golferName: true } } },
     }),
   ]);
-  const probe = { id: '', format: data.format, holdFrom: data.holdFrom, holdTo: data.holdTo, productId: data.productId, status: 'planned' };
-  const planned = [...desiredSlots(data.date, schedules, products).values()].filter(s => heldBy([probe], s.productId ?? null, s.time)).length;
-  const inScope = slots.filter(s => heldBy([probe], s.productId ?? null, s.time));
+  const probe = { id: '', format: data.format, holdFrom: data.holdFrom, holdTo: data.holdTo, productId: data.productId, status: 'planned',
+    shareCourse: data.shareCourse, holdNineIds: data.holdNineIds, keepOpen: data.keepOpen };
+  const ninesOf = ninesByProduct(products);
+  const desired = [...desiredSlots(data.date, schedules, products).values()];
+  const planned = desired.filter(s => heldBy([probe], s.productId ?? null, s.time, ninesOf(s.productId ?? null))).length;
+  const inScope = slots.filter(s => heldBy([probe], s.productId ?? null, s.time, ninesOf(s.productId ?? null)));
+  // Every time the event could take (before any kept open), for the "keep these open" choice.
+  const all = { ...probe, keepOpen: [] };
+  const windowTimes = [...new Set([...desired.map(s => ({ time: s.time, productId: s.productId ?? null })), ...slots.map(s => ({ time: s.time, productId: s.productId ?? null }))]
+    .filter(s => heldBy([all], s.productId, s.time, ninesOf(s.productId))).map(s => s.time))].sort();
   const booked = inScope.filter(s => s.playersBooked > 0 || s.bookings.length > 0)
     .map(s => ({ time: s.time, golfers: s.bookings.map(b => b.golferName).join(', ') || 'booked' }));
   const otherEvent = inScope.some(s => s.eventId && s.eventId !== excludeEventId);
-  return { holdFrom: data.holdFrom, holdTo: data.holdTo, teeTimes: Math.max(planned, inScope.length), teeTimesFound, booked, otherEvent };
+  return { holdFrom: data.holdFrom, holdTo: data.holdTo, teeTimes: Math.max(planned, inScope.length), teeTimesFound, booked, otherEvent, windowTimes };
 }
 
 /** Create the event, its default checklist, and hold its tee times. */
@@ -230,7 +256,8 @@ export async function updateEvent(courseId: string, id: string, input: EventInpu
   if (existing.status !== 'planned') throw new EventError('This event was cancelled.');
   const { data, teeTimesFound } = await eventFields(courseId, input, { allowPast: input.date === existing.date });
   const moved = data.date !== existing.date || data.holdFrom !== existing.holdFrom || data.holdTo !== existing.holdTo
-    || data.format !== existing.format || data.productId !== existing.productId;
+    || data.format !== existing.format || data.productId !== existing.productId
+    || data.shareCourse !== existing.shareCourse || data.holdNineIds.join() !== existing.holdNineIds.join() || data.keepOpen.join() !== existing.keepOpen.join();
   const event = await prisma.courseEvent.update({ where: { id }, data });
   if (data.date !== existing.date) {
     // The checklist moves with the event: every due date shifts by the same number of days.

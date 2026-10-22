@@ -1380,6 +1380,12 @@ model CourseEvent {
   holdToCustom        Boolean             @default(false)
   /// Tee times only: which round's times are held (null = every round).
   productId           String?
+  /// W2-9 (Cam 2026-10-22): false = the event closes the whole course in its
+  /// window; true = it shares the course — only the nines in holdNineIds are
+  /// held (empty = every nine) and the times in keepOpen stay bookable.
+  shareCourse         Boolean             @default(false)
+  holdNineIds         String[]            @default([])
+  keepOpen            String[]            @default([])
   holes               Int                 @default(18)
   groups              Int                 @default(0)
   players             Int                 @default(0)
