@@ -78,8 +78,11 @@ Earlier admin specs: ADMIN_REBUILD_SPEC, ADMIN_V2..V4_SPEC.
 - **AW-12 Activity.** Rework; decide what belongs there (not "every single thing"). Questions to Cam.
 - **AW-13 Manual build.** Question whether it should exist at all (from V1).
 - **AW-14 System.** Important but disorganised — reorganise.
+  - AW-14 built (2026-10-22, ADMIN-C): renamed **Systems**. An "At a glance" list first — one line per thing with a dot and plain words, each linking to its section — then four groups: Is it running? (scheduled jobs, Stripe events, error tracking), Connections (service keys, call booking, Birdie), What's live (this deployment, the platform Stripe balance) and Data and records (data check, agreement versions, backups and CI). Every button and handler is unchanged.
 - **AW-15 Company docs.** Organise.
+  - AW-15 built (2026-10-22): ADMIN-C look; adding a document sits on top; every category shows, with "Nothing filed yet." when empty, so a missing filing is visible.
 - **AW-16 My profile.** Rework, more organised.
+  - AW-16 built (2026-10-22): Your account, Password, then (owner only) Owner security — passkeys, devices, the authenticator app and sign out everywhere together. No behaviour change.
 - **AW-17 New areas?** Cam asks whether to add Expenses, Marketing, Leads, Advertising.
 
 ## Decisions (Cam 2026-10-21)

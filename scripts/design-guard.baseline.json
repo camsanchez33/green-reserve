@@ -6,7 +6,6 @@
     "lucide": 1
   },
   "src/app/admin/company-documents/page.tsx": {
-    "uppercase": 2,
     "lucide": 3
   },
   "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx": {
@@ -68,9 +67,6 @@
   "src/app/admin/page.tsx": {
     "lucide": 1
   },
-  "src/app/admin/profile/page.tsx": {
-    "uppercase": 6
-  },
   "src/app/admin/revenue/page.tsx": {
     "lucide": 5
   },
@@ -78,7 +74,6 @@
     "uppercase": 2
   },
   "src/app/admin/system/page.tsx": {
-    "uppercase": 1,
     "lucide": 1
   },
   "src/app/book/BookClient.tsx": {

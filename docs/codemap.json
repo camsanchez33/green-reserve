@@ -161,7 +161,7 @@
     },
     {
       "path": "src/app/admin/company-documents/page.tsx",
-      "lines": 163,
+      "lines": 165,
       "purpose": "CO-DOCS (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -178,9 +178,8 @@
       "imports": [
         "@/components/admin/AdminSidebar",
         "@/components/ui/Btn",
-        "@/components/ui/Card",
         "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
+        "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/admin-fetch",
         "@/lib/company-documents",
@@ -1107,7 +1106,7 @@
     },
     {
       "path": "src/app/admin/profile/page.tsx",
-      "lines": 129,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1127,8 +1126,6 @@
         "@/components/admin/OwnerPasskeysCard",
         "@/components/admin/OwnerSignOutEverywhere",
         "@/components/admin/OwnerTwoFactorCard",
-        "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/components/ui/field",
         "@/lib/admin-session-context",
         "react"
@@ -1196,7 +1193,7 @@
     },
     {
       "path": "src/app/admin/system/page.tsx",
-      "lines": 569,
+      "lines": 595,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1213,9 +1210,7 @@
       "imports": [
         "@/components/admin/AdminSidebar",
         "@/components/admin/AgreementVersionsCard",
-        "@/components/ui/Card",
         "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
         "@/components/ui/Modal",
         "@/components/ui/StatusDot",
         "@/lib/admin-fetch",
@@ -10357,7 +10352,6 @@
         "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
-        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/MessagesTab.tsx",
@@ -10375,9 +10369,7 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
-        "src/app/admin/profile/page.tsx",
         "src/app/admin/set-password/page.tsx",
-        "src/app/admin/system/page.tsx",
         "src/app/cam/approve/page.tsx",
         "src/app/cam/page.tsx",
         "src/app/contact/page.tsx",
@@ -10478,7 +10470,6 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
-        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
@@ -10488,9 +10479,7 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
-        "src/app/admin/profile/page.tsx",
         "src/app/admin/set-password/page.tsx",
-        "src/app/admin/system/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/StaffPermissions.tsx"
@@ -10640,6 +10629,7 @@
       "usedBy": [
         "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
+        "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
