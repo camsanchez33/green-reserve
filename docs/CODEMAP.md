@@ -65,7 +65,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 410 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
 | `/admin/goals` | admin | client-side | page | `src/app/admin/goals/page.tsx` | 164 |
-| `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 463 |
+| `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 457 |
 | `/admin/groups` | admin | client-side | page | `src/app/admin/groups/page.tsx` | 208 |
 | `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 961 |
 | `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2254 |
@@ -489,11 +489,11 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/Card.tsx` | 60 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/Card.tsx` | 59 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/StatusDot.tsx` | 58 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 40 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 19 | 234 |  | `AdminNavKey`, `default (AdminSidebar)` |
-| `src/components/ui/Eyebrow.tsx` | 19 | 19 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/ui/Eyebrow.tsx` | 18 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/dashboard/LoadError.tsx` | 10 | 16 | SD-10. | `LoadError` |
 | `src/components/OperatorSidebar.tsx` | 10 | 286 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
