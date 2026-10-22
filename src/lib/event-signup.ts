@@ -65,7 +65,8 @@ export async function signupPage(eventId: string) {
       entrants: { select: { status: true, holdUntil: true } },
     },
   });
-  if (!e || e.status !== 'planned' || !e.signupOpen) return null;
+  // Only a live course has public pages (as booking does).
+  if (!e || e.status !== 'planned' || !e.signupOpen || e.course.liveStatus !== 'live') return null;
   const today = todayIn(e.course.timezone);
   const cap = e.players > 0 ? e.players : null;
   const taken = spotsTaken(e.entrants);
@@ -158,9 +159,11 @@ export async function submitSignup(eventId: string, input: SignupInput, now: Dat
  * finds it and they go on the list instead). Called when the event page loads.
  */
 export async function lapseHolds(courseId: string, eventId: string, now: Date = new Date()): Promise<number> {
-  const gone = await prisma.courseEventPlayer.findMany({ where: { eventId, status: 'held', holdUntil: { lt: now } }, select: { groupKey: true } });
+  // Always through the course: a guessed event id from another course changes nothing.
+  const where = { eventId, event: { courseId }, status: 'held', holdUntil: { lt: now } };
+  const gone = await prisma.courseEventPlayer.findMany({ where, select: { groupKey: true } });
   if (!gone.length) return 0;
-  const r = await prisma.courseEventPlayer.updateMany({ where: { eventId, status: 'held', holdUntil: { lt: now } }, data: { status: 'lapsed' } });
+  const r = await prisma.courseEventPlayer.updateMany({ where, data: { status: 'lapsed' } });
   const keys = [...new Set(gone.map(g => g.groupKey).filter(Boolean))];
   const open = await prisma.courseEventPayment.findMany({ where: { eventId, courseId, groupKey: { in: keys }, status: 'open' }, select: { id: true } });
   for (const p of open) {

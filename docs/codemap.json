@@ -4096,7 +4096,7 @@
     },
     {
       "path": "src/app/api/event-payment/[id]/route.ts",
-      "lines": 44,
+      "lines": 45,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5337,7 +5337,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 286,
+      "lines": 288,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15714,7 +15714,7 @@
     },
     {
       "path": "src/lib/event-signup.ts",
-      "lines": 226,
+      "lines": 229,
       "purpose": "W2-9d (Cam 2026-10-22):",
       "brain": [],
       "exports": [

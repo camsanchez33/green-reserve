@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-22 22:04 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 8fd8e0f</span>
-    <span>24 uncommitted</span>
+    <span>2026-10-22 22:10 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 2734cbd</span>
+    <span>6 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">132 runs have shipped that the queue doesn't know about</div>
+<div class="lede">133 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">2734cbd</span><span>W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later</span></li>
 <li><span class="h">91df6b9</span><span>W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send</span></li>
 <li><span class="h">fc5c6aa</span><span>W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)</span></li>
 <li><span class="h">6ea9b46</span><span>Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)</span></li>
@@ -269,7 +270,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M OPERATOR_REWORK_SPEC.md</code></li><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/design-guard.baseline.json</code></li><li><code>M src/app/api/event-payment/[id]/route.ts</code></li><li><code>M src/app/api/operator/events/[id]/payments/route.ts</code></li><li><code>M src/app/api/operator/events/[id]/route.ts</code></li><li><code>M src/app/api/operator/events/route.ts</code></li><li><code>M src/app/pay/event/[id]/page.tsx</code></li><li><code>M src/components/dashboard/events/EventDetail.tsx</code></li><li><code>M src/components/dashboard/events/EventMoney.tsx</code></li><li><code>M src/lib/course-events.ts</code></li><li><code>M src/lib/email.ts</code></li><li><code>M src/lib/event-payments.ts</code></li><li><code>?? prisma/migrations/20261022214400_w2_9d_signup/</code></li><li><code>?? scripts/event-signup-db-test.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/event-signup-db-test.ts</code></li><li><code>M src/app/api/event-payment/[id]/route.ts</code></li><li><code>M src/app/api/operator/events/[id]/route.ts</code></li><li><code>M src/lib/event-signup.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -350,6 +351,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">2734cbd</td><td class="num">2026-10-22</td><td>W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later</td></tr>
 <tr><td class="num">91df6b9</td><td class="num">2026-10-22</td><td>W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send</td></tr>
 <tr><td class="num">fc5c6aa</td><td class="num">2026-10-22</td><td>W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)</td></tr>
 <tr><td class="num">6ea9b46</td><td class="num">2026-10-22</td><td>Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)</td></tr>
@@ -361,7 +363,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">694230a</td><td class="num">2026-10-22</td><td>W2-9c Events: each player's own pay link; paid at the course per player</td></tr>
 <tr><td class="num">b9fe29f</td><td class="num">2026-10-22</td><td>W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)</td></tr>
 <tr><td class="num">40be0a7</td><td class="num">2026-10-22</td><td>Status board</td></tr>
-<tr><td class="num">e449074</td><td class="num">2026-10-22</td><td>W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -1,36 +1,29 @@
 {
-  "generatedAt": "2026-10-22T22:04:45.869Z",
+  "generatedAt": "2026-10-22T22:10:32.040Z",
   "repo": {
-    "head": "8fd8e0f",
+    "head": "2734cbd",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 24,
+    "dirtyCount": 6,
     "dirty": [
-      "M OPERATOR_REWORK_SPEC.md",
-      " M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/design-guard.baseline.json",
+      " M scripts/event-signup-db-test.ts",
       " M src/app/api/event-payment/[id]/route.ts",
-      " M src/app/api/operator/events/[id]/payments/route.ts",
       " M src/app/api/operator/events/[id]/route.ts",
-      " M src/app/api/operator/events/route.ts",
-      " M src/app/pay/event/[id]/page.tsx",
-      " M src/components/dashboard/events/EventDetail.tsx",
-      " M src/components/dashboard/events/EventMoney.tsx",
-      " M src/lib/course-events.ts",
-      " M src/lib/email.ts",
-      " M src/lib/event-payments.ts",
-      "?? prisma/migrations/20261022214400_w2_9d_signup/",
-      "?? scripts/event-signup-db-test.ts"
+      " M src/lib/event-signup.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "2734cbd",
+        "date": "2026-10-22T22:04:58+00:00",
+        "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "91df6b9",
         "date": "2026-10-22T21:27:19+00:00",
@@ -1346,6 +1339,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "2734cbd",
+      "date": "2026-10-22",
+      "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later"
+    },
+    {
       "h": "91df6b9",
       "date": "2026-10-22",
       "subject": "W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send"
@@ -1399,11 +1397,6 @@
       "h": "40be0a7",
       "date": "2026-10-22",
       "subject": "Status board"
-    },
-    {
-      "h": "e449074",
-      "date": "2026-10-22",
-      "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close"
     }
   ]
 }

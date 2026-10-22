@@ -143,12 +143,17 @@ async function main() {
   check('a hold that ran out can’t be paid, even before it is swept', !lateBeforeSweep.ok && lateBeforeSweep.status === 409 && /hold ran out/.test(lateBeforeSweep.error), lateBeforeSweep);
   check('…and nothing was charged', charges === 1);
   check('a lapsed hold frees its spot', lp.ok && (await signupPage(paid.id))?.spotsLeft === 4);
+  check('another course\u2019s page load lapses nothing here', (await lapseHolds(other.id, paid.id)) === 0 && (await prisma.courseEventPlayer.count({ where: { groupKey: lpPay.groupKey, status: 'held' } })) === 1);
   const swept = await lapseHolds(course.id, paid.id);
   const lpAfter = await prisma.courseEventPayment.findUniqueOrThrow({ where: { id: lpPay.id } });
   const kit = await prisma.courseEventPlayer.findFirstOrThrow({ where: { groupKey: lpPay.groupKey } });
   check('the sweep marks it lapsed and cancels its link', swept === 1 && kit.status === 'lapsed' && lpAfter.status === 'void', { swept, kit: kit.status, pay: lpAfter.status });
   const lateAfter = await chargeEventPayment(lpPay.id, lpPay.payToken, 'pm_card', 5000);
   check('the pay page still says why (not just "cancelled")', !lateAfter.ok && /hold ran out/.test(lateAfter.error), lateAfter);
+  check('the pay page\u2019s reason for a swept link is the hold, not a staff cancel', /hold ran out/.test((await holdProblem(lpAfter.groupKey)) ?? ''));
+  const notLive = await prisma.course.update({ where: { id: course.id }, data: { liveStatus: 'draft' } });
+  check('a course that isn\u2019t live has no sign-up page', notLive && (await signupPage(paid.id)) === null);
+  await prisma.course.update({ where: { id: course.id }, data: { liveStatus: 'live' } });
 
   // Paid at the course instead: the group's link is closed and they go on the list.
   const pc = await submitSignup(paid.id, { players: [one('Lu', 'lu@example.com')] });

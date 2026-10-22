@@ -15,7 +15,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const c = p.event.course;
   // W2-9d: a sign-up's payment — how long the spots are held, or why it can't be paid any more.
   const open = p.status === 'open' || p.status === 'paying';
-  const holdNote = open && p.groupKey ? await holdProblem(p.groupKey) : null;
+  // A void sign-up link says why too (its hold ran out), unless the group is on the list.
+  const holdNote = (open || p.status === 'void') && p.groupKey ? await holdProblem(p.groupKey) : null;
   const held = open && p.groupKey && !holdNote
     ? await prisma.courseEventPlayer.findFirst({ where: { groupKey: p.groupKey, status: 'held' }, orderBy: { holdUntil: 'asc' }, select: { holdUntil: true } })
     : null;

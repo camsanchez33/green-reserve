@@ -40,6 +40,8 @@ async function heldTimes(eventId: string) {
 }
 
 async function load(courseId: string, id: string) {
+  // The event must be this course's before anything below touches it.
+  if (!(await prisma.courseEvent.count({ where: { id, courseId } }))) return null;
   // W2-9b: a card payment left half-done by a request that never finished is settled from Stripe first.
   await reconcileStuckPayments(courseId, id).catch(err => console.error(JSON.stringify({ ev: 'event_payment.reconcile.fail', eventId: id, error: err instanceof Error ? err.message : String(err) })));
   // W2-9d: sign-ups whose 30-minute hold ran out unpaid give their spots back.

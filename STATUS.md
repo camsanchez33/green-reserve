@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 22:04 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `8fd8e0f` · working tree **24 dirty file(s)**
+Generated 2026-10-22 22:10 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2734cbd` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 132 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 133 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 | `91df6b9` | 2026-10-22 | W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send |
 | `fc5c6aa` | 2026-10-22 | W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through) |
 | `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
@@ -147,28 +148,14 @@ Generated 2026-10-22 22:04 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (24 file(s))
+### Uncommitted working tree (6 file(s))
 
-- `M OPERATOR_REWORK_SPEC.md`
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/design-guard.baseline.json`
+- `M scripts/event-signup-db-test.ts`
 - `M src/app/api/event-payment/[id]/route.ts`
-- `M src/app/api/operator/events/[id]/payments/route.ts`
 - `M src/app/api/operator/events/[id]/route.ts`
-- `M src/app/api/operator/events/route.ts`
-- `M src/app/pay/event/[id]/page.tsx`
-- `M src/components/dashboard/events/EventDetail.tsx`
-- `M src/components/dashboard/events/EventMoney.tsx`
-- `M src/lib/course-events.ts`
-- `M src/lib/email.ts`
-- `M src/lib/event-payments.ts`
-- `?? prisma/migrations/20261022214400_w2_9d_signup/`
-- `?? scripts/event-signup-db-test.ts`
+- `M src/lib/event-signup.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -293,6 +280,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `2734cbd` 2026-10-22 — W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later
 - `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
 - `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
@@ -304,7 +292,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `694230a` 2026-10-22 — W2-9c Events: each player's own pay link; paid at the course per player
 - `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
 - `40be0a7` 2026-10-22 — Status board
-- `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
 
 ---
 
