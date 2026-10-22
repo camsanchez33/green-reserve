@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 02:28 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `922474d` · working tree clean
+Generated 2026-10-22 21:21 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `f4bc1a4` · working tree **32 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-19**. 106 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-19**. 107 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `f4bc1a4` | 2026-10-22 | Regenerate status board |
 | `58642d3` | 2026-10-22 | Regenerate status board and code map |
 | `d8306c5` | 2026-10-22 | MAIL-1: a cancellation that refunded money also comes from billing@ |
 | `c39a10c` | 2026-10-22 | MAIL-1: a cancellation that kept a fee comes from billing@ |
@@ -121,6 +122,32 @@ Generated 2026-10-22 02:28 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
+### Uncommitted working tree (32 file(s))
+
+- `M  OPERATOR_REWORK_SPEC.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  prisma/migrations/20261022020616_w2_9_share_course/migration.sql`
+- `A  prisma/migrations/20261022021832_w2_9b_event_payments/migration.sql`
+- `M  prisma/schema.prisma`
+- `M scripts/contact-email-test.ts`
+- `M  scripts/design-guard.baseline.json`
+- `A  scripts/event-payments-db-test.ts`
+- `M  scripts/events-db-test.ts`
+- `M  scripts/events-test.ts`
+- `A  src/app/api/event-payment/[id]/route.ts`
+- `A  src/app/api/operator/events/[id]/payments/route.ts`
+- `M  src/app/api/operator/events/[id]/route.ts`
+- `M  src/app/api/operator/events/route.ts`
+- `M  src/app/api/operator/tee-times/route.ts`
+- `M  src/app/dashboard/events/page.tsx`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -201,45 +228,46 @@ Nothing awaiting review.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-22 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 2d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 3d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 2d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `ARCHITECTURE.md` | 0 | 2026-10-19 | 2d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ARCHITECTURE.md` | 0 | 2026-10-19 | 3d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-19 | 3d |
 
 ## Recent commits
 
+- `f4bc1a4` 2026-10-22 — Regenerate status board
 - `58642d3` 2026-10-22 — Regenerate status board and code map
 - `d8306c5` 2026-10-22 — MAIL-1: a cancellation that refunded money also comes from billing@
 - `c39a10c` 2026-10-22 — MAIL-1: a cancellation that kept a fee comes from billing@
@@ -251,7 +279,6 @@ Nothing awaiting review.
 - `087c1a2` 2026-10-22 — W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks
 - `28a5f3a` 2026-10-22 — W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings
 - `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
-- `0cb3627` 2026-10-22 — W2-8b: a regular who has booked again is not 'gone quiet'
 
 ---
 

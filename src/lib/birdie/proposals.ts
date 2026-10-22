@@ -339,11 +339,13 @@ async function blockTimes(input: Record<string, unknown>, ctx: ToolContext): Pro
   const slots = await prisma.teeTime.findMany({
     where: { courseId: ctx.courseId, date, time: { gte: input.from, lte: to } },
     orderBy: { time: 'asc' },
-    select: { id: true, time: true, status: true, playersBooked: true },
+    select: { id: true, time: true, status: true, playersBooked: true, eventId: true },
   });
-  const change = slots.filter(t => block ? t.status !== 'blocked' : t.status === 'blocked');
+  // W2-9: a time an event holds is changed on the event, never reopened here.
+  const eventHeld = block ? 0 : slots.filter(t => t.status === 'blocked' && t.eventId).length;
+  const change = slots.filter(t => block ? t.status !== 'blocked' : t.status === 'blocked' && !t.eventId);
   if (slots.length === 0) return err(`There are no tee times from ${fmtTime(input.from)} to ${fmtTime(to)} on ${fmtDate(date)}.`);
-  if (change.length === 0) return err(`Those times are already ${block ? 'blocked' : 'open'}.`);
+  if (change.length === 0) return err(eventHeld ? 'Those times are held for an event — change the event on the Events tab to free them.' : `Those times are already ${block ? 'blocked' : 'open'}.`);
   if (change.length > 60) return err('That’s more than 60 tee times — block the whole day instead.');
   const booked = change.filter(t => t.playersBooked > 0).length;
   const span = change.length === 1 ? fmtTime(change[0].time) : `${fmtTime(change[0].time)} – ${fmtTime(change[change.length - 1].time)}`;
@@ -354,7 +356,7 @@ async function blockTimes(input: Record<string, unknown>, ctx: ToolContext): Pro
     changes: [{ label: span, from: block ? 'Open' : 'Blocked', to: block ? 'Blocked' : 'Open' }],
     note: block
       ? (booked ? `${booked} of these already ${booked === 1 ? 'has a booked group' : 'have booked groups'} — they stay booked; nobody is cancelled. New bookings stop.` : 'Nobody is booked on these times. New bookings stop.')
-      : 'Golfers can book these times again.',
+      : `Golfers can book these times again.${eventHeld ? ` ${eventHeld} time${eventHeld === 1 ? ' is' : 's are'} held for an event and stay${eventHeld === 1 ? 's' : ''} blocked — change the event to free ${eventHeld === 1 ? 'it' : 'them'}.` : ''}`,
     call: calls[0],
     calls,
   });

@@ -1405,6 +1405,12 @@ model CourseEvent {
   holdToCustom        Boolean             @default(false)
   /// Tee times only: which round's times are held (null = every round).
   productId           String?
+  /// W2-9 (Cam 2026-10-22): false = the event closes the whole course in its
+  /// window; true = it shares the course — only the nines in holdNineIds are
+  /// held (empty = every nine) and the times in keepOpen stay bookable.
+  shareCourse         Boolean             @default(false)
+  holdNineIds         String[]            @default([])
+  keepOpen            String[]            @default([])
   holes               Int                 @default(18)
   groups              Int                 @default(0)
   players             Int                 @default(0)
@@ -1426,6 +1432,9 @@ model CourseEvent {
   tasks               CourseEventTask[]
   entrants            CourseEventPlayer[]
   teeTimes            TeeTime[]
+  payments            CourseEventPayment[]
+  /// W2-9b: the headcount staff confirmed for the balance; null = not confirmed yet.
+  finalHeadcount      Int?
 
   @@index([courseId, date])
 }
@@ -1461,4 +1470,65 @@ model CourseEventPlayer {
   createdAt DateTime    @default(now())
 
   @@index([eventId])
+}
+
+/// W2-9b (Cam 2026-10-22: "completely up to the courses on how to handle/charge
+/// money"): one payment toward an event — taken at the course (recorded, no
+/// charge) or by a pay link the organizer opens (a direct charge on the course's
+/// Stripe account). Any amount, any number of them. lib/event-payments.ts.
+///   link:   open ──▶ paying ──▶ paid        (declined → open)   open ──▶ void
+///   course: paid on creation (cash, check, the course's own card machine)
+model CourseEventPayment {
+  id              String              @id @default(cuid())
+  eventId         String
+  event           CourseEvent         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  courseId        String
+  /// deposit | balance | other
+  kind            String              @default("other")
+  /// What it is for, in the course's words ("Deposit", "Balance for 72 players").
+  label           String
+  /// What the course receives.
+  amountCents     Int
+  /// GreenReserve's fee on top (paid by the payer). 0 while EVENT_FEE_ON is false.
+  feeCents        Int                 @default(0)
+  /// link | cash | check | card_counter | other
+  method          String
+  /// open | paying | paid | void
+  status          String
+  payToken        String              @default("")
+  paymentIntentId String              @default("")
+  chargeStartedAt DateTime?
+  paidAt          DateTime?
+  voidedAt        DateTime?
+  payerName       String              @default("")
+  payerEmail      String              @default("")
+  payerPhone      String              @default("")
+  /// Balance: the headcount it was worked out from.
+  headcount       Int?
+  note            String              @default("")
+  /// Sum of refunds that went through or are in flight (reserved before Stripe is called).
+  refundedCents   Int                 @default(0)
+  createdBy       String              @default("")
+  createdAt       DateTime            @default(now())
+  refunds         CourseEventRefund[]
+
+  @@index([eventId])
+  @@index([courseId, status])
+}
+
+/// W2-9b: a refund of an event payment, made when the course decides to (its own terms).
+/// pending → done | failed. A card refund's Stripe idempotency key is this row's id.
+model CourseEventRefund {
+  id             String             @id @default(cuid())
+  paymentId      String
+  payment        CourseEventPayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  amountCents    Int
+  status         String             @default("pending")
+  stripeRefundId String             @default("")
+  reason         String             @default("")
+  error          String             @default("")
+  createdBy      String             @default("")
+  createdAt      DateTime           @default(now())
+
+  @@index([paymentId])
 }

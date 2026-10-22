@@ -1,15 +1,43 @@
 {
-  "generatedAt": "2026-10-22T02:28:02.961Z",
+  "generatedAt": "2026-10-22T21:21:29.632Z",
   "repo": {
-    "head": "922474d",
+    "head": "f4bc1a4",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 32,
+    "dirty": [
+      "M  OPERATOR_REWORK_SPEC.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  prisma/migrations/20261022020616_w2_9_share_course/migration.sql",
+      "A  prisma/migrations/20261022021832_w2_9b_event_payments/migration.sql",
+      "M  prisma/schema.prisma",
+      " M scripts/contact-email-test.ts",
+      "M  scripts/design-guard.baseline.json",
+      "A  scripts/event-payments-db-test.ts",
+      "M  scripts/events-db-test.ts",
+      "M  scripts/events-test.ts",
+      "A  src/app/api/event-payment/[id]/route.ts",
+      "A  src/app/api/operator/events/[id]/payments/route.ts",
+      "M  src/app/api/operator/events/[id]/route.ts",
+      "M  src/app/api/operator/events/route.ts",
+      "M  src/app/api/operator/tee-times/route.ts",
+      "M  src/app/dashboard/events/page.tsx"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-19T10:10:52-04:00",
     "unrecorded": [
+      {
+        "h": "f4bc1a4",
+        "date": "2026-10-22T02:28:03+00:00",
+        "subject": "Regenerate status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "58642d3",
         "date": "2026-10-22T02:22:34+00:00",
@@ -924,7 +952,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "ADMIN_V5_SPEC.md",
@@ -939,206 +967,211 @@
       "ageDays": 0
     },
     {
-      "file": "ADMIN_MASTER_PLAN.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "ADMIN_REBUILD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "ADMIN_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "ADMIN_V3_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "ARCHITECTURE.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "CODEMAP_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "COURSES_SHEET_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "COURSE_LAYOUT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "DESIGN_SYSTEM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "FB2_COPY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "FB3_FEE_PLAN_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "GOLFER_EDGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "GOLFER_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
-      "file": "HARDENING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 2
-    },
-    {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
       "ageDays": 2
     },
     {
+      "file": "ADMIN_MASTER_PLAN.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "ADMIN_REBUILD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "ADMIN_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "ARCHITECTURE.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "BACKUP_OPS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "CODEMAP_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "COURSES_SHEET_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "COURSE_LAYOUT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "DESIGN_SYSTEM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "FB2_COPY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "FB3_FEE_PLAN_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "GOLFER_EDGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "GOLFER_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
+      "file": "HARDENING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 3
+    },
+    {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "f4bc1a4",
+      "date": "2026-10-22",
+      "subject": "Regenerate status board"
+    },
     {
       "h": "58642d3",
       "date": "2026-10-22",
@@ -1193,11 +1226,6 @@
       "h": "164896a",
       "date": "2026-10-21",
       "subject": "BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)"
-    },
-    {
-      "h": "0cb3627",
-      "date": "2026-10-22",
-      "subject": "W2-8b: a regular who has booked again is not 'gone quiet'"
     }
   ]
 }

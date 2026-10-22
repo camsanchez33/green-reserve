@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 507,
-    "routes": 245,
-    "libs": 164,
-    "models": 52,
+    "files": 512,
+    "routes": 248,
+    "libs": 165,
+    "models": 54,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -3957,6 +3957,37 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/event-payment/[id]/route.ts",
+      "lines": 33,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/event-payment/[id]",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "token",
+      "imports": [
+        "@/lib/event-payments",
+        "@/lib/format",
+        "@/lib/rate-limit",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/golfer/auth/accept-invite/route.ts",
       "lines": 78,
       "purpose": "",
@@ -5106,8 +5137,40 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/events/[id]/payments/route.ts",
+      "lines": 114,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/events/[id]/payments",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/email",
+        "@/lib/event-payments",
+        "@/lib/format",
+        "@/lib/golfer-otp",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "@/lib/session",
+        "@/lib/twilio",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 218,
+      "lines": 239,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5134,9 +5197,12 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/booking-fees",
         "@/lib/course-events",
         "@/lib/course-time",
         "@/lib/email",
+        "@/lib/event-hold",
+        "@/lib/event-payments",
         "@/lib/format",
         "@/lib/prisma",
         "@/lib/session",
@@ -5146,7 +5212,7 @@
     },
     {
       "path": "src/app/api/operator/events/route.ts",
-      "lines": 67,
+      "lines": 70,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6285,7 +6351,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 144,
+      "lines": 151,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7214,7 +7280,7 @@
     },
     {
       "path": "src/app/dashboard/events/page.tsx",
-      "lines": 165,
+      "lines": 174,
       "purpose": "W2-9 Events (Cam 2026-10-21/22):",
       "brain": [],
       "exports": [
@@ -8091,6 +8157,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/pay/event/[id]/page.tsx",
+      "lines": 144,
+      "purpose": "W2-9b:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (PayEventPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/pay/event/[id]",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "token",
+      "imports": [
+        "@/components/CourseHeaderBar",
+        "@/components/ui/Card",
+        "@stripe/react-stripe-js",
+        "@stripe/stripe-js",
+        "lucide-react",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/pay/shop/[id]/page.tsx",
       "lines": 142,
       "purpose": "POS-2 (Cam 2026-10-19):",
@@ -8410,6 +8503,7 @@
         "src/app/checkin/[bookingId]/page.tsx",
         "src/app/courses/[slug]/account/accept-invite/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
+        "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx"
       ]
@@ -9652,7 +9746,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 253,
+      "lines": 266,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -9683,6 +9777,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./EventMoney",
         "./EventSetup",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -9696,8 +9791,47 @@
       ]
     },
     {
+      "path": "src/components/dashboard/events/EventMoney.tsx",
+      "lines": 253,
+      "purpose": "W2-9b:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (EventMoney)",
+          "kind": "component"
+        },
+        {
+          "name": "EventPayment",
+          "kind": "type"
+        },
+        {
+          "name": "EventRefund",
+          "kind": "type"
+        },
+        {
+          "name": "Money",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/components/dashboard/events/EventDetail.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/events/EventSetup.tsx",
-      "lines": 292,
+      "lines": 344,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -9716,6 +9850,10 @@
         {
           "name": "KINDS",
           "kind": "const"
+        },
+        {
+          "name": "NineOpt",
+          "kind": "type"
         },
         {
           "name": "Product",
@@ -10129,6 +10267,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
         "src/app/g/[slug]/page.tsx",
+        "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
@@ -10142,6 +10281,7 @@
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
@@ -10427,6 +10567,7 @@
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -10492,6 +10633,7 @@
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
@@ -11617,6 +11759,7 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/members/import/route.ts",
@@ -12226,7 +12369,7 @@
     },
     {
       "path": "src/lib/birdie/proposals.ts",
-      "lines": 449,
+      "lines": 451,
       "purpose": "BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES.",
       "brain": [],
       "exports": [
@@ -12367,7 +12510,7 @@
     },
     {
       "path": "src/lib/booking-fees.ts",
-      "lines": 24,
+      "lines": 36,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12377,6 +12520,14 @@
         },
         {
           "name": "ACCESS_FEE_PER_PLAYER",
+          "kind": "const"
+        },
+        {
+          "name": "EVENT_FEE_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "EVENT_FEE_ON",
           "kind": "const"
         },
         {
@@ -12408,6 +12559,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/system/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/book/BookClient.tsx",
         "src/app/checkin/[bookingId]/page.tsx",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
@@ -12417,6 +12569,7 @@
         "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/components/home/TeeSheetDemo.tsx",
         "src/lib/email.ts",
+        "src/lib/event-payments.ts",
         "src/lib/shop.ts"
       ]
     },
@@ -13576,7 +13729,7 @@
     },
     {
       "path": "src/lib/course-events.ts",
-      "lines": 285,
+      "lines": 312,
       "purpose": "W2-9 Events (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -14608,6 +14761,7 @@
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
@@ -14714,7 +14868,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2087,
+      "lines": 2111,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14856,6 +15010,10 @@
         },
         {
           "name": "sendEventPairingsEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendEventPayLinkEmail",
           "kind": "fn"
         },
         {
@@ -15039,6 +15197,7 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/change-password/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
@@ -15066,7 +15225,7 @@
     },
     {
       "path": "src/lib/event-hold.ts",
-      "lines": 12,
+      "lines": 36,
       "purpose": "W2-9:",
       "brain": [],
       "exports": [
@@ -15077,6 +15236,10 @@
         {
           "name": "HoldEvent",
           "kind": "type"
+        },
+        {
+          "name": "ninesByProduct",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -15086,8 +15249,106 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/operator/events/[id]/route.ts",
         "src/lib/course-events.ts",
         "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "path": "src/lib/event-payments.ts",
+      "lines": 357,
+      "purpose": "W2-9b (Cam 2026-10-22:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "chargeEventPayment",
+          "kind": "fn"
+        },
+        {
+          "name": "COURSE_METHODS",
+          "kind": "const"
+        },
+        {
+          "name": "createPayLink",
+          "kind": "fn"
+        },
+        {
+          "name": "eventFeeFor",
+          "kind": "fn"
+        },
+        {
+          "name": "eventMoney",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_EVENT_PAYMENT_CENTS",
+          "kind": "const"
+        },
+        {
+          "name": "METHOD_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "PAY_KINDS",
+          "kind": "const"
+        },
+        {
+          "name": "paymentForPayPage",
+          "kind": "fn"
+        },
+        {
+          "name": "reconcileStuckPayments",
+          "kind": "fn"
+        },
+        {
+          "name": "recordCoursePayment",
+          "kind": "fn"
+        },
+        {
+          "name": "refundPayment",
+          "kind": "fn"
+        },
+        {
+          "name": "sendRefund",
+          "kind": "fn"
+        },
+        {
+          "name": "settleOpenPayment",
+          "kind": "fn"
+        },
+        {
+          "name": "STALE_CHARGE_MS",
+          "kind": "const"
+        },
+        {
+          "name": "toCents",
+          "kind": "fn"
+        },
+        {
+          "name": "voidOpenLinks",
+          "kind": "fn"
+        },
+        {
+          "name": "whyNotOpen",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-fees",
+        "./prisma",
+        "./stripe",
+        "crypto",
+        "stripe"
+      ],
+      "usedBy": [
+        "src/app/api/event-payment/[id]/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
+        "src/app/api/operator/events/[id]/route.ts"
       ]
     },
     {
@@ -15296,7 +15557,9 @@
         "src/app/admin/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
+        "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/dashboard/events/page.tsx",
@@ -15506,6 +15769,7 @@
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/lib/golfer-messages.ts"
       ]
@@ -17057,6 +17321,7 @@
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
@@ -17132,6 +17397,7 @@
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cron-log.ts",
+        "src/lib/event-payments.ts",
         "src/lib/frost-delay.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
@@ -17319,6 +17585,7 @@
         "src/app/api/cam/login/route.ts",
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
+        "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/inquiries/route.ts",
@@ -17331,6 +17598,7 @@
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/agreement/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/request-changes/route.ts",
@@ -18005,6 +18273,7 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
@@ -18743,6 +19012,7 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/email.ts",
+        "src/lib/event-payments.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
         "src/lib/refund-booking.ts",
@@ -18844,7 +19114,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 252,
+      "lines": 253,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -19098,6 +19368,7 @@
       "usedBy": [
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/lib/golfer-messages.ts",
@@ -21079,6 +21350,7 @@
         "src/lib/course-group.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/event-payments.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
@@ -21143,6 +21415,18 @@
         {
           "name": "productId",
           "type": "String?"
+        },
+        {
+          "name": "shareCourse",
+          "type": "Boolean"
+        },
+        {
+          "name": "holdNineIds",
+          "type": "String[]"
+        },
+        {
+          "name": "keepOpen",
+          "type": "String[]"
         },
         {
           "name": "holes",
@@ -21211,16 +21495,134 @@
         {
           "name": "teeTimes",
           "type": "TeeTime[]"
+        },
+        {
+          "name": "payments",
+          "type": "CourseEventPayment[]"
+        },
+        {
+          "name": "finalHeadcount",
+          "type": "Int?"
         }
       ],
       "writers": [
         "src/lib/course-events.ts"
       ],
       "readers": [
+        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/lib/course-events.ts",
+        "src/lib/event-payments.ts",
         "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "name": "CourseEventPayment",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "eventId",
+          "type": "String"
+        },
+        {
+          "name": "event",
+          "type": "CourseEvent"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "name": "amountCents",
+          "type": "Int"
+        },
+        {
+          "name": "feeCents",
+          "type": "Int"
+        },
+        {
+          "name": "method",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "payToken",
+          "type": "String"
+        },
+        {
+          "name": "paymentIntentId",
+          "type": "String"
+        },
+        {
+          "name": "chargeStartedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "paidAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "voidedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "payerName",
+          "type": "String"
+        },
+        {
+          "name": "payerEmail",
+          "type": "String"
+        },
+        {
+          "name": "payerPhone",
+          "type": "String"
+        },
+        {
+          "name": "headcount",
+          "type": "Int?"
+        },
+        {
+          "name": "note",
+          "type": "String"
+        },
+        {
+          "name": "refundedCents",
+          "type": "Int"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "refunds",
+          "type": "CourseEventRefund[]"
+        }
+      ],
+      "writers": [
+        "src/lib/event-payments.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/events/[id]/payments/route.ts",
+        "src/lib/event-payments.ts"
       ]
     },
     {
@@ -21272,6 +21674,58 @@
       ],
       "readers": [
         "src/app/api/operator/events/[id]/route.ts"
+      ]
+    },
+    {
+      "name": "CourseEventRefund",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "paymentId",
+          "type": "String"
+        },
+        {
+          "name": "payment",
+          "type": "CourseEventPayment"
+        },
+        {
+          "name": "amountCents",
+          "type": "Int"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "stripeRefundId",
+          "type": "String"
+        },
+        {
+          "name": "reason",
+          "type": "String"
+        },
+        {
+          "name": "error",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/event-payments.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/events/[id]/payments/route.ts",
+        "src/lib/event-payments.ts"
       ]
     },
     {
@@ -22019,6 +22473,7 @@
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/round-rules/route.ts",
@@ -22748,8 +23203,10 @@
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
