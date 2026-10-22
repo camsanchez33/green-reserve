@@ -410,7 +410,7 @@ function CoursesContent() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="courses" />
       <div className="admin-content flex-1 flex flex-col min-h-screen">
-        <div className="px-8 py-7">
+        <div className="px-10 py-8">
           {/* MP-2d: was a sibling of this container — full-bleed, above the title. */}
           {loadError && (
             <ErrorBanner message={loadError.msg} kind={loadError.kind} onRetry={() => loadCourses(view)} />

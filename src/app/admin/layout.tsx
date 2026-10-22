@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import { resolveAdminSession, AdminSessionUnavailable } from '@/lib/admin-session';
 import { AdminSessionProvider, type AdminSessionView } from '@/lib/admin-session-context';
 import { STAFF_LOOK_CLASS } from '@/lib/staff-fonts';
 import StepUpDialog from '@/components/admin/StepUpDialog';
 import ReasonDialog from '@/components/admin/ReasonDialog';
+
+// ADMIN-C: the admin's one face (see globals.css .admin-look).
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 // Reads the session cookie on every request — never cache this shell.
@@ -32,11 +36,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // look of its own — admin renders in the site's one look.
   return (
     <AdminSessionProvider session={session} unavailable={unavailable}>
-      <div className={STAFF_LOOK_CLASS}>{children}</div>
-      {/* AW-1c: only the owner is ever asked to confirm a risky action. */}
-      {session?.role === 'owner' && <StepUpDialog />}
-      {/* BRAIN-1a: anyone signed in may be asked why (money, access, deletes). */}
-      {session && <ReasonDialog />}
+      <div className={`${STAFF_LOOK_CLASS} admin-look ${inter.variable}`}>
+        {children}
+        {/* AW-1c: only the owner is ever asked to confirm a risky action. */}
+        {session?.role === 'owner' && <StepUpDialog />}
+        {/* BRAIN-1a: anyone signed in may be asked why (money, access, deletes). */}
+        {session && <ReasonDialog />}
+      </div>
     </AdminSessionProvider>
   );
 }

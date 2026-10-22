@@ -300,7 +300,7 @@ export default function CourseDetailPage() {
         )}
 
         {/* Tab content */}
-        <div className="px-8 py-7 flex-1">
+        <div className="px-10 py-8 flex-1">
 
           {tab === 'timeline' && <TimelineTab/>}
           {tab === 'bookings' && <BookingsTab/>}

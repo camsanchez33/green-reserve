@@ -503,8 +503,17 @@ async function main() {
     // like its own page; the page points a viewer at Inquiries and Courses).
     const r = await api('/api/admin/today', { cookie: viewerCookie });
     checkStatus('Viewer can open Today → 200', r.status, 200);
-    const b = r.body as { needs?: unknown; courses?: unknown; health?: unknown };
+    const b = r.body as { needs?: unknown; courses?: unknown; health?: unknown; today?: unknown; overview?: unknown; problems?: unknown; goals?: unknown };
     check('…without Needs you now, Courses or Platform health', b?.needs === null && b?.courses === null && b?.health === null);
+    // ADMIN-C: nor the Home chart, the week's numbers, Problems or Goals.
+    check('…nor today, the overview, Problems or Goals', b?.today === null && b?.overview === null && b?.problems === null && b?.goals === null);
+  }
+  {
+    // BRAIN-2a: Problems name golfers and money — support+ only, reads and writes.
+    const pr = await api('/api/admin/problems', { cookie: viewerCookie });
+    checkStatus('Viewer cannot read Problems → 403', pr.status, 403);
+    const pw = await api('/api/admin/problems', { method: 'PATCH', cookie: viewerCookie, body: { id: 'x', action: 'claim' } });
+    checkStatus('Viewer cannot take a problem → 403', pw.status, 403);
   }
   {
     // AW-4b: Goals — support+ reads, only the owner writes.

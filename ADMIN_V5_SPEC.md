@@ -137,3 +137,13 @@ Buy, don't build: Sentry, an uptime/status page, accounting with a bookkeeper; a
 
 BRAIN-1a built (#175): every admin write records who/what/before→after (lib/admin-audit.ts; AdminAuditLog gained reason, before/after, courseId, actorName); money, access and deletes refuse without a reason, asked by ReasonDialog through stepUpFetch; owner-only /admin/audit, Employees → "What they did"; failed scheduled jobs reported to Sentry.
 BRAIN-1b built: every email and text is logged in `SentMessage` (kind, recipient, course/booking/inquiry, sent or failed — never the subject or body) from the one email choke point (lib/email.ts getResend, each sender passes `meta`) and lib/twilio.ts. The course page leads with a **Timeline** tab (lib/course-timeline.ts `buildCourseFeed`, /api/admin/course-feed, support+): bookings & payments (BookingEvent, PaymentEvent), messages & emails (SentMessage — by course, booking, or the course's own people — and the message thread), admin & staff changes (audit record, staff permission changes, the operator's settings edits), problems & onboarding (alerts started/cleared, stage moves, calls, notes, agreement, reminders); filter by any of the four, page back with "Show older". It opens on Timeline unless a tab has a problem. Admin → Health has "Send a test error" to prove Sentry reports from the server. Not yet: staff sign-in history (only the latest is kept); inquiry-stage emails (inquiry confirmation, details sheet, call invites, preview) carry no inquiryId, so they reach a course's timeline through the contact's address only.
+
+## ADMIN-C — the admin rebuilt (Cam 2026-10-22)
+
+Cam: "this ADMIN SUCKS … doesnt even extend the whole page this is the BRAIN OF OUR OPERATION tear it down and rebuild it well." Three mockups; he picked C ("yes C"): clean, white, full width, like Stripe's dashboard, with every function accounted for.
+
+- [x] **PR1 shell + Home + Problems.** New left menu and top bar (search, systems line); Inter; full width on every admin page; Home rebuilt to C (today chart vs last week, 7-day overview, courses table worst first, Needs you panel); `/admin/problems` on the BRAIN-2a API; Pipeline gets "Build by hand"; Inquiries is titled Pipeline.
+- [ ] **PR2 Money.** Revenue split into Overview / Payouts / Disputes / Expenses (+ CSV); payouts per course from Stripe; dispute evidence pack; monthly Stripe match (BRAIN-2b).
+- [ ] **PR3 Golfers, Messages, Company.** Each page restyled to C; Weekly review page (BRAIN-4) in Company; Activity folded into the audit record.
+- [ ] **PR4 BRAIN-3.** Season open/close dates per course (Home says "Closed for the season · reopens Apr 4" instead of "No open tee times"), weekly health snapshots, view-as-course.
+

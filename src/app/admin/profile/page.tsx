@@ -52,7 +52,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="profile" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-xl">
+        <div className="px-10 py-8 max-w-xl">
 
           <div className="mb-6">
             <h1 className="text-[30px] leading-none font-serif text-ink">My profile</h1>

@@ -372,7 +372,7 @@ function WizardContent() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="create" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-2xl">
+        <div className="px-10 py-8 max-w-2xl">
           <div className="mb-7">
             <h1 className="text-[30px] leading-none font-serif text-ink">Add a new course</h1>
             <p className="text-sm text-ink-soft mt-0.5">

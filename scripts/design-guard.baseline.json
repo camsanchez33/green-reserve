@@ -68,7 +68,7 @@
     "lucide": 1
   },
   "src/app/admin/page.tsx": {
-    "lucide": 2
+    "lucide": 1
   },
   "src/app/admin/profile/page.tsx": {
     "uppercase": 6
@@ -208,9 +208,6 @@
   },
   "src/components/OperatorSidebar.tsx": {
     "lucide": 11
-  },
-  "src/components/admin/AdminSidebar.tsx": {
-    "lucide": 1
   },
   "src/components/admin/CommandPalette.tsx": {
     "lucide": 1

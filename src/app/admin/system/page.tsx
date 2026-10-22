@@ -232,7 +232,7 @@ export default function AdminSystemPage() {
     <div className="min-h-screen bg-paper flex">
       <AdminSidebar active="system" />
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-8 py-7 max-w-3xl">
+        <div className="px-10 py-8">
           {loadError && (
             <div className="mb-5">
               <LoadFailure message={loadError.msg} kind={loadError.kind} onRetry={() => location.reload()} compact />
