@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 02:22 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `d8306c5` · working tree **2 dirty file(s)**
+Generated 2026-10-22 02:24 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `58642d3` · working tree **24 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-19**. 104 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-19**. 105 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `58642d3` | 2026-10-22 | Regenerate status board and code map |
 | `d8306c5` | 2026-10-22 | MAIL-1: a cancellation that refunded money also comes from billing@ |
 | `c39a10c` | 2026-10-22 | MAIL-1: a cancellation that kept a fee comes from billing@ |
 | `8c73613` | 2026-10-22 | W2-9a: releasing an event's hold checks the day being released, not the day it moved to |
@@ -119,13 +120,31 @@ Generated 2026-10-22 02:22 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (24 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `M  ADMIN_V5_SPEC.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql`
+- `M  prisma/schema.prisma`
+- `M  scripts/admin-course-page-test.ts`
+- `A  scripts/course-feed-db-test.ts`
+- `A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx`
+- `M  src/app/admin/courses/[id]/page.tsx`
+- `M  src/app/admin/system/page.tsx`
+- `A  src/app/api/admin/course-feed/route.ts`
+- `M  src/app/api/admin/resend-staff-setup/route.ts`
+- `A  src/app/api/admin/sentry-test/route.ts`
+- `M  src/app/api/operator/bookings/route.ts`
+- `M  src/app/api/operator/events/[id]/route.ts`
+- `M  src/app/api/operator/shop-sales/route.ts`
+- `M  src/lib/admin-audit.ts`
+- `M  src/lib/admin-course-tabs.ts`
+- `A  src/lib/course-timeline-groups.ts`
+- `M  src/lib/course-timeline.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -246,6 +265,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `58642d3` 2026-10-22 — Regenerate status board and code map
 - `d8306c5` 2026-10-22 — MAIL-1: a cancellation that refunded money also comes from billing@
 - `c39a10c` 2026-10-22 — MAIL-1: a cancellation that kept a fee comes from billing@
 - `512e214` 2026-10-22 — queue/spec update
@@ -257,7 +277,6 @@ Nothing awaiting review.
 - `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
 - `0cb3627` 2026-10-22 — W2-8b: a regular who has booked again is not 'gone quiet'
 - `21a19af` 2026-10-22 — test-email.js: send from support@ (hello@ no longer exists)
-- `1301b0a` 2026-10-22 — Regenerate status board
 
 ---
 

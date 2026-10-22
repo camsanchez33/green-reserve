@@ -1,18 +1,43 @@
 {
-  "generatedAt": "2026-10-22T02:22:33.627Z",
+  "generatedAt": "2026-10-22T02:24:39.565Z",
   "repo": {
-    "head": "d8306c5",
+    "head": "58642d3",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 2,
+    "dirtyCount": 24,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M  ADMIN_V5_SPEC.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql",
+      "M  prisma/schema.prisma",
+      "M  scripts/admin-course-page-test.ts",
+      "A  scripts/course-feed-db-test.ts",
+      "A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
+      "M  src/app/admin/courses/[id]/page.tsx",
+      "M  src/app/admin/system/page.tsx",
+      "A  src/app/api/admin/course-feed/route.ts",
+      "M  src/app/api/admin/resend-staff-setup/route.ts",
+      "A  src/app/api/admin/sentry-test/route.ts",
+      "M  src/app/api/operator/bookings/route.ts",
+      "M  src/app/api/operator/events/[id]/route.ts",
+      "M  src/app/api/operator/shop-sales/route.ts",
+      "M  src/lib/admin-audit.ts",
+      "M  src/lib/admin-course-tabs.ts",
+      "A  src/lib/course-timeline-groups.ts",
+      "M  src/lib/course-timeline.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-19T10:10:52-04:00",
     "unrecorded": [
+      {
+        "h": "58642d3",
+        "date": "2026-10-22T02:22:34+00:00",
+        "subject": "Regenerate status board and code map",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d8306c5",
         "date": "2026-10-22T02:21:38+00:00",
@@ -1129,6 +1154,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "58642d3",
+      "date": "2026-10-22",
+      "subject": "Regenerate status board and code map"
+    },
+    {
       "h": "d8306c5",
       "date": "2026-10-22",
       "subject": "MAIL-1: a cancellation that refunded money also comes from billing@"
@@ -1182,11 +1212,6 @@
       "h": "21a19af",
       "date": "2026-10-22",
       "subject": "test-email.js: send from support@ (hello@ no longer exists)"
-    },
-    {
-      "h": "1301b0a",
-      "date": "2026-10-22",
-      "subject": "Regenerate status board"
     }
   ]
 }
