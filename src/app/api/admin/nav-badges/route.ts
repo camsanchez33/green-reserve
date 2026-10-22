@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-sess
 import { FAILED_CHARGE_WHERE, openDisputes } from '@/lib/money-problems';
 import { openProblemCount } from '@/lib/problems';
 import { todayHealth } from '@/lib/admin-today';
+import { hasArea, type AdminArea } from '@/lib/admin-areas';
 
 // MP-8a: the sidebar's three badges in ONE fetch per page shell. Before this
 // the rail fetched unread messages and money problems separately and never
@@ -38,5 +39,10 @@ export async function GET() {
   const systemsOk = health ? health.jobs.bad.length === 0 && !health.stripeWebhook.lastError && (health.stripeWebhook.lastAt === null || health.stripeWebhook.ok) && health.payments.blocked === 0 : null;
 
   // MP-6b: an open chargeback is the reddest money problem there is.
-  return NextResponse.json({ pendingInquiries, unreadMessages, moneyProblems: failed + disputes.length, openProblems: problems.open, systemsOk });
+  // AW-11: a count for an area this person can't open is 0, as for a role below support.
+  const area = (a: AdminArea, n: number) => hasArea(session, a) ? n : 0;
+  return NextResponse.json({
+    pendingInquiries: area('pipeline', pendingInquiries), unreadMessages: area('messages', unreadMessages),
+    moneyProblems: area('money', failed + disputes.length), openProblems: area('problems', problems.open), systemsOk,
+  });
 }

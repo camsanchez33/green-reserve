@@ -5,6 +5,7 @@ import { todayHealth, todayCourses } from '@/lib/admin-today';
 import { homeToday, homeOverview, homeCourseStats } from '@/lib/admin-home';
 import { listProblems } from '@/lib/problems';
 import { listGoals } from '@/lib/admin-goals';
+import { hasArea, type AdminArea } from '@/lib/admin-areas';
 
 // ADMIN-C (Cam 2026-10-22, mockup C): the admin Home.
 //   health    one line in the top bar's words (manager+, the System page's
@@ -15,29 +16,33 @@ import { listGoals } from '@/lib/admin-goals';
 //   problems  open problems (the Problems page's queue)
 //   needs     pipeline to-dos that aren't about one course (the inquiry rows)
 //   goals     every goal and where it stands
-// Everything but health is support+: it names golfers, courses and money. A
-// section a role can't see comes back null and the page leaves it out.
+// Everything but health is support+: it names golfers, courses and money. AW-11:
+// each section also needs its area — needs: Pipeline; courses: Courses;
+// today and overview: Money; problems: Problems; goals: Company. A section the
+// person can't see comes back null and the page leaves it out.
 
 export async function GET() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
   const now = new Date();
   const support = requireRole(session, SUPPORT_PLUS);
+  // AW-11: each section also needs the area it comes from.
+  const can = (a: AdminArea) => support && hasArea(session, a);
   const [queue, healthOut, today, overview, problems, goals] = await Promise.all([
-    support ? buildActionQueue(now) : null,
+    can('pipeline') || can('courses') ? buildActionQueue(now) : null,
     requireRole(session, MANAGER_PLUS) ? todayHealth(now) : null,
-    support ? homeToday(now) : null,
-    support ? homeOverview(now) : null,
-    support ? listProblems(now) : null,
-    support ? listGoals(now) : null,
+    can('money') ? homeToday(now) : null,
+    can('money') ? homeOverview(now) : null,
+    can('problems') ? listProblems(now) : null,
+    can('company') ? listGoals(now) : null,
   ]);
   let courses = null;
-  if (queue) {
+  if (queue && can('courses')) {
     const list = await todayCourses(now, queue.rows);
     const stats = await homeCourseStats(now, list.map(c => c.id));
     courses = list.map(c => ({ ...c, ...stats.get(c.id)! }));
   }
-  const needs = queue ? queue.rows.filter(r => !r.courseId) : null;
+  const needs = queue && can('pipeline') ? queue.rows.filter(r => !r.courseId) : null;
   return NextResponse.json({
     needs, health: healthOut, courses, today, overview, goals,
     problems: problems ? problems.open : null,

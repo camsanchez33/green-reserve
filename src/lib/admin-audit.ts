@@ -22,7 +22,7 @@ export const REASON_ACTIONS = new Set([
   // money
   'refund', 'retry_charge', 'cancel_booking', 'waive_fee',
   // access
-  'employee_create', 'employee_role', 'employee_deactivate', 'employee_reactivate', 'employee_reset_password',
+  'employee_create', 'employee_role', 'employee_areas', 'employee_deactivate', 'employee_reactivate', 'employee_reset_password',
   'verify_operator',
   // deletes and archives
   'course_archive', 'course_unarchive', 'course_offline', 'inquiry_delete', 'expense_delete',
@@ -32,7 +32,7 @@ export const REASON_ACTIONS = new Set([
 /** Plain words for each action, for the reason box and the Audit page. */
 export const ACTION_LABELS: Record<string, string> = {
   refund: 'Refund', retry_charge: 'Retry a charge', cancel_booking: 'Cancel a booking', waive_fee: 'Waive a fee',
-  employee_create: 'Add an employee', employee_role: 'Change an employee’s role', employee_deactivate: 'Turn off an employee’s access',
+  employee_create: 'Add an employee', employee_role: 'Change an employee’s role', employee_areas: 'Change what an employee can open', employee_deactivate: 'Turn off an employee’s access',
   employee_reactivate: 'Turn an employee’s access back on', employee_reset_password: 'Reset an employee’s password',
   verify_operator: 'Verify an operator’s email', course_archive: 'Archive a course', course_unarchive: 'Restore a course',
   course_offline: 'Take a course offline', inquiry_delete: 'Delete an inquiry', expense_delete: 'Delete an expense',

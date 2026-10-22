@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, MANAGER_PLUS } from '@/lib/admin-session';
+import { hasArea, type AdminArea } from '@/lib/admin-areas';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -116,20 +117,21 @@ export async function GET(req: NextRequest) {
 
   // Static nav items filtered by role
   const staticNav = [
-    { id: 'nav:overview',    label: 'Today',         href: '/admin',            always: true },
+    { id: 'nav:overview',    label: 'Home',          href: '/admin',            always: true },
+    { id: 'nav:problems',    label: 'Problems',      href: '/admin/problems',   support: true },
     { id: 'nav:goals',       label: 'Goals',         href: '/admin/goals',      support: true },
-    { id: 'nav:inquiries',   label: 'Inquiries',     href: '/admin/inquiries',  always: true },
+    { id: 'nav:inquiries',   label: 'Pipeline',      href: '/admin/inquiries',  always: true },
     { id: 'nav:courses',     label: 'Courses',       href: '/admin/courses',    always: true },
     { id: 'nav:groups',      label: 'Course groups', href: '/admin/groups',     always: true },
     { id: 'nav:messages',    label: 'Messages',      href: '/admin/messages',   always: true },
     { id: 'nav:revenue',     label: 'Money',         href: '/admin/revenue',    support: true },
     { id: 'nav:golfers',     label: 'Golfer lookup', href: '/admin/golfers',    support: true },
-    { id: 'nav:employees',   label: 'Employees',     href: '/admin/employees',  manager: true },
+    { id: 'nav:employees',   label: 'Team',          href: '/admin/employees',  manager: true },
     { id: 'nav:broadcasts',  label: 'Announcements', href: '/admin/announcements', support: true },
-    { id: 'nav:system',      label: 'Health',        href: '/admin/system',     manager: true },
+    { id: 'nav:system',      label: 'Systems',       href: '/admin/system',     manager: true },
     { id: 'nav:activity',    label: 'Activity',      href: '/admin/activity',   always: true },
     { id: 'nav:profile',     label: 'My profile',    href: '/admin/profile',    always: true },
-    { id: 'nav:create',      label: 'Manual build',  href: '/admin/create',     manager: true },
+    { id: 'nav:create',      label: 'Build by hand', href: '/admin/create',     manager: true },
   ].filter(n => {
     if (n.always) return true;
     if (n.support && isSupportPlus) return true;
@@ -215,5 +217,18 @@ export async function GET(req: NextRequest) {
     })),
   ];
 
-  return NextResponse.json({ results });
+  // AW-11: nothing from an area this person can't open — not even its page name.
+  const NAV_AREA: Record<string, AdminArea> = {
+    '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/courses': 'courses',
+    '/admin/groups': 'courses', '/admin/messages': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
+    '/admin/announcements': 'messages', '/admin/system': 'company', '/admin/employees': 'company', '/admin/activity': 'company', '/admin/create': 'pipeline',
+  };
+  const TYPE_AREA: Partial<Record<ResultItem['type'], AdminArea>> = {
+    course: 'courses', group: 'courses', inquiry: 'pipeline', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',
+  };
+  const allowed = results.filter(r => {
+    const area = r.type === 'nav' ? NAV_AREA[r.href] : TYPE_AREA[r.type];
+    return !area || hasArea(session, area);
+  });
+  return NextResponse.json({ results: allowed });
 }

@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
           const results: Anthropic.Beta.BetaToolResultBlockParam[] = await Promise.all(uses.map(async tu => {
             let out;
             try {
-              out = ASK_TOOL_NAMES.has(tu.name) ? await runAskTool(tu.name, tu.input, session.role) : { content: 'Unknown tool.', isError: true };
+              out = ASK_TOOL_NAMES.has(tu.name) ? await runAskTool(tu.name, tu.input, session.role, session.areas ?? null) : { content: 'Unknown tool.', isError: true };
             } catch (e) {
               console.error('[admin-ask] tool failed', tu.name, e);
               out = { content: 'That lookup failed on our side — try again in a moment.', isError: true };

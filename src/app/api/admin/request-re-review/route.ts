@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { encodeRequestReReview } from '@/lib/change-requests';
 import { withAudit } from '@/lib/admin-audit';
 
@@ -13,6 +13,8 @@ import { withAudit } from '@/lib/admin-audit';
 async function requestReReview(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'pipeline');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { courseId } = await req.json();

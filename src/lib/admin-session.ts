@@ -1,3 +1,4 @@
+import { ADMIN_AREAS, hasArea, type AdminArea } from './admin-areas';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
@@ -28,6 +29,12 @@ export interface AdminSession {
   ownerSessionId?: string;
   ownerDeviceId?: string | null;
   stepUpAt?: Date | null;
+  /**
+   * AW-11: the areas this employee can open (lib/admin-areas.ts). null = every
+   * area (the owner, or an employee whose areas were never set). Read from the
+   * row on every request, like role, so a change takes effect at once.
+   */
+  areas?: string[] | null;
 }
 
 /**
@@ -66,6 +73,17 @@ export function requireRole(session: AdminSession, roles: string[]): boolean {
  * that predates (or skipped) the second factor — tell them exactly how to fix
  * it rather than showing a bare "Forbidden" they can't act on.
  */
+/**
+ * AW-11: the second check every area route makes after its role check. Returns
+ * null to go ahead, or the 403 that tells the employee which area they lack
+ * (code: 'area', so a page can say "ask the owner for Money").
+ */
+export function areaGate(session: AdminSession, area: AdminArea): NextResponse | null {
+  if (hasArea(session, area)) return null;
+  const label = ADMIN_AREAS.find(a => a.key === area)?.label ?? area;
+  return NextResponse.json({ error: `Your login doesn’t include ${label}. Ask the owner to add it on Team.`, code: 'area', area }, { status: 403 });
+}
+
 export function ownerGateError(session: AdminSession): string {
   return session.role === 'owner'
     ? 'Owner sign-in required — sign in again.'
@@ -145,11 +163,11 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   // real owner back and mint a fresh owner account. The row was already on the
   // wire; this costs nothing. (mfa stays a claim: it records how this session
   // was authenticated, which no later row change can retroactively alter.)
-  let admin: { active: boolean; role: string } | null;
+  let admin: { active: boolean; role: string; areas: string[]; areasSetAt: Date | null } | null;
   try {
     admin = await prisma.adminUser.findUnique({
       where: { id: claims.adminId },
-      select: { active: true, role: true },
+      select: { active: true, role: true, areas: true, areasSetAt: true },
     });
   } catch (err) {
     console.error(JSON.stringify({ ev: 'admin_session.db_unavailable', adminId: claims.adminId, error: err instanceof Error ? err.message : String(err) }));
@@ -162,7 +180,7 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   // employee promoted to owner, signs in again at /cam).
   if (admin.role === 'owner') return null;
 
-  return { adminId: claims.adminId, email: claims.email, name: claims.name, role: admin.role, mfa: claims.mfa === true };
+  return { adminId: claims.adminId, email: claims.email, name: claims.name, role: admin.role, mfa: claims.mfa === true, areas: admin.areasSetAt ? admin.areas : null };
 }
 
 export async function signAdminSetPasswordToken(payload: { adminId: string; email: string }) {

@@ -6,6 +6,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { useEffect, useState, useCallback } from 'react';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
+import type { AdminArea } from '@/lib/admin-areas';
 
 export type AdminNavKey = 'overview' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit';
 
@@ -29,7 +30,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   // MP-11a: role comes from the layout's one session read. The rail used to
   // fetch it again, with a 'could not confirm your access level' state for when
   // that second fetch failed. There is no second fetch to fail now.
-  const { role, name } = useAdminSession();
+  const { role, name, areas } = useAdminSession();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState(false);
   useEffect(() => { setUnread(unreadMessages); }, [unreadMessages]);
@@ -90,31 +91,32 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
   // after. Course groups sit under Courses and Announcements under Messages.
   // Activity is retired from the menu (the course timelines replaced it) and
   // Manual build lives inside Pipeline.
-  type NavItem = { key: AdminNavKey; label: string; href: string; minRole?: string[]; sub?: boolean };
+  type NavItem = { key: AdminNavKey; label: string; href: string; minRole?: string[]; sub?: boolean; area?: AdminArea };
   type NavGroup = { label: string | null; items: NavItem[] };
 
   const allGroups: NavGroup[] = [
     { label: null, items: [
       { key: 'overview', label: 'Home', href: '/admin' },
-      { key: 'problems', label: 'Problems', href: '/admin/problems', minRole: SUPPORT_PLUS },
-      { key: 'inquiries', label: 'Pipeline', href: '/admin/inquiries', minRole: VIEWER_PLUS },
-      { key: 'courses', label: 'Courses', href: '/admin/courses', minRole: VIEWER_PLUS },
-      { key: 'groups', label: 'Course groups', href: '/admin/groups', minRole: SUPPORT_PLUS, sub: true },
-      { key: 'golfers', label: 'Golfers', href: '/admin/golfers', minRole: SUPPORT_PLUS },
-      { key: 'revenue', label: 'Money', href: '/admin/revenue', minRole: SUPPORT_PLUS },
-      { key: 'messages', label: 'Messages', href: '/admin/messages', minRole: SUPPORT_PLUS },
-      { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS, sub: true },
+      { key: 'problems', label: 'Problems', href: '/admin/problems', minRole: SUPPORT_PLUS, area: 'problems' },
+      { key: 'inquiries', label: 'Pipeline', href: '/admin/inquiries', minRole: VIEWER_PLUS, area: 'pipeline' },
+      { key: 'courses', label: 'Courses', href: '/admin/courses', minRole: VIEWER_PLUS, area: 'courses' },
+      { key: 'groups', label: 'Course groups', href: '/admin/groups', minRole: SUPPORT_PLUS, sub: true, area: 'courses' },
+      { key: 'golfers', label: 'Golfers', href: '/admin/golfers', minRole: SUPPORT_PLUS, area: 'golfers' },
+      { key: 'revenue', label: 'Money', href: '/admin/revenue', minRole: SUPPORT_PLUS, area: 'money' },
+      { key: 'messages', label: 'Messages', href: '/admin/messages', minRole: SUPPORT_PLUS, area: 'messages' },
+      { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS, sub: true, area: 'messages' },
     ] },
     { label: 'Company', items: [
-      { key: 'goals', label: 'Goals', href: '/admin/goals', minRole: SUPPORT_PLUS },
-      { key: 'employees', label: 'Team', href: '/admin/employees', minRole: MANAGER_PLUS },
+      { key: 'goals', label: 'Goals', href: '/admin/goals', minRole: SUPPORT_PLUS, area: 'company' },
+      { key: 'employees', label: 'Team', href: '/admin/employees', minRole: MANAGER_PLUS, area: 'company' },
       { key: 'audit', label: 'Audit', href: '/admin/audit', minRole: OWNER_ONLY },
-      { key: 'system', label: 'Systems', href: '/admin/system', minRole: MANAGER_PLUS },
+      { key: 'system', label: 'Systems', href: '/admin/system', minRole: MANAGER_PLUS, area: 'company' },
       { key: 'company', label: 'Company docs', href: '/admin/company-documents', minRole: OWNER_ONLY },
     ] },
   ];
 
-  const canSee = (item: NavItem) => !item.minRole || item.minRole.includes(role);
+  // AW-11: the role says how much; the person's areas say where. Both must allow it (the routes check both too).
+  const canSee = (item: NavItem) => (!item.minRole || item.minRole.includes(role)) && (!item.area || areas.includes(item.area));
   const groups = allGroups.map(g => ({ ...g, items: g.items.filter(canSee) })).filter(g => g.items.length > 0);
 
   const count = (n: number, tone: string, title?: string) => n > 0 ? (

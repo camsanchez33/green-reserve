@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { withAudit } from '@/lib/admin-audit';
 
 // GET deliberately removed (MP-2, ADMIN_V4 V4-2 leak). It returned EVERY
@@ -19,6 +19,8 @@ import { withAudit } from '@/lib/admin-audit';
 async function verifyOperator(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'courses');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const { email: rawEmail } = await req.json();
   const email = String(rawEmail).trim().toLowerCase();
