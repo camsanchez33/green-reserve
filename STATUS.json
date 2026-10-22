@@ -1,36 +1,41 @@
 {
-  "generatedAt": "2026-10-22T22:02:12.215Z",
+  "generatedAt": "2026-10-22T22:10:18.013Z",
   "repo": {
-    "head": "2a4d5ec",
-    "branch": "claude/test-data-reset",
-    "dirtyCount": 20,
+    "head": "c8ed1ea",
+    "branch": "claude/test-course-isolation",
+    "dirtyCount": 18,
     "dirty": [
-      "M  CLAUDE.md",
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "M  docs/CODEMAP.md",
-      "M  docs/codemap.json",
-      "M  scripts/operator-nav-test.ts",
-      "M  scripts/tt-card-test.ts",
-      "M  src/app/dashboard/analytics/page.tsx",
-      "M  src/app/dashboard/events/page.tsx",
-      "M  src/app/dashboard/layout.tsx",
-      "M  src/app/dashboard/members/page.tsx",
-      "M  src/app/dashboard/messages/page.tsx",
-      "M  src/app/dashboard/money/page.tsx",
-      "M  src/app/dashboard/page.tsx",
-      "M  src/app/dashboard/schedules/page.tsx",
-      "M  src/app/dashboard/settings/page.tsx",
-      "M  src/app/dashboard/shop/page.tsx",
-      "M  src/app/globals.css",
-      "M  src/components/OperatorSidebar.tsx"
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M src/app/admin/courses/page.tsx",
+      " M src/app/api/admin/nav-badges/route.ts",
+      " M src/app/api/admin/revenue/route.ts",
+      " M src/app/api/courses/route.ts",
+      " M src/app/courses/[slug]/page.tsx",
+      " M src/app/sitemap.ts",
+      " M src/lib/access-fee.ts",
+      " M src/lib/admin-action-queue.ts",
+      " M src/lib/admin-checks.ts",
+      " M src/lib/admin-goals.ts",
+      " M src/lib/admin-home.ts",
+      " M src/lib/admin-today.ts",
+      "?? scripts/real-courses-db-test.ts",
+      "?? src/lib/real-courses.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "6f40852",
+        "date": "2026-10-22T18:01:54-04:00",
+        "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "2a4d5ec",
         "date": "2026-10-22T22:00:32+00:00",
@@ -1360,6 +1365,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "6f40852",
+      "date": "2026-10-22",
+      "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)"
+    },
+    {
       "h": "2a4d5ec",
       "date": "2026-10-22",
       "subject": "TEST-1 review: a reset releases event-held tee times; wording fixes"
@@ -1413,11 +1423,6 @@
       "h": "694230a",
       "date": "2026-10-22",
       "subject": "W2-9c Events: each player's own pay link; paid at the course per player"
-    },
-    {
-      "h": "b9fe29f",
-      "date": "2026-10-22",
-      "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
     }
   ]
 }

@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 527,
+    "files": 528,
     "routes": 255,
-    "libs": 172,
+    "libs": 173,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -675,7 +675,7 @@
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 524,
+      "lines": 527,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2418,7 +2418,7 @@
     },
     {
       "path": "src/app/api/admin/nav-badges/route.ts",
-      "lines": 51,
+      "lines": 52,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2441,6 +2441,7 @@
         "@/lib/money-problems",
         "@/lib/prisma",
         "@/lib/problems",
+        "@/lib/real-courses",
         "next/server"
       ],
       "usedBy": []
@@ -2743,7 +2744,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 359,
+      "lines": 365,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2768,6 +2769,7 @@
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
+        "@/lib/real-courses",
         "@/lib/shop",
         "@/lib/stripe-errors",
         "next/server"
@@ -3952,7 +3954,7 @@
     },
     {
       "path": "src/app/api/courses/route.ts",
-      "lines": 44,
+      "lines": 45,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7378,7 +7380,7 @@
     },
     {
       "path": "src/app/courses/[slug]/page.tsx",
-      "lines": 50,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10889,7 +10891,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 183,
+      "lines": 184,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -10928,6 +10930,7 @@
       "imports": [
         "./booking-events",
         "./prisma",
+        "./real-courses",
         "./refund-booking",
         "./stripe",
         "stripe"
@@ -10946,7 +10949,7 @@
     },
     {
       "path": "src/lib/admin-action-queue.ts",
-      "lines": 115,
+      "lines": 116,
       "purpose": "AW-4 (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -10975,6 +10978,7 @@
         "./inquiry-status",
         "./money-problems",
         "./prisma",
+        "./real-courses",
         "./thread-signal"
       ],
       "usedBy": [
@@ -11217,7 +11221,7 @@
     },
     {
       "path": "src/lib/admin-checks.ts",
-      "lines": 222,
+      "lines": 223,
       "purpose": "AW-5 (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -11277,6 +11281,7 @@
         "./money-problems",
         "./monthly-review",
         "./prisma",
+        "./real-courses",
         "@anthropic-ai/sdk"
       ],
       "usedBy": [
@@ -11513,7 +11518,7 @@
     },
     {
       "path": "src/lib/admin-goals.ts",
-      "lines": 48,
+      "lines": 49,
       "purpose": "AW-4b (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -11549,7 +11554,8 @@
       "guard": null,
       "imports": [
         "./admin-today",
-        "./prisma"
+        "./prisma",
+        "./real-courses"
       ],
       "usedBy": [
         "src/app/api/admin/goals/route.ts",
@@ -11558,7 +11564,7 @@
     },
     {
       "path": "src/lib/admin-home.ts",
-      "lines": 128,
+      "lines": 130,
       "purpose": "ADMIN-C (Cam 2026-10-22, mockup C \"Clean hub\"):",
       "brain": [],
       "exports": [
@@ -11589,7 +11595,8 @@
         "./admin-day",
         "./admin-today",
         "./course-time",
-        "./prisma"
+        "./prisma",
+        "./real-courses"
       ],
       "usedBy": [
         "src/app/api/admin/today/route.ts"
@@ -11839,7 +11846,7 @@
     },
     {
       "path": "src/lib/admin-today.ts",
-      "lines": 192,
+      "lines": 194,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11894,7 +11901,8 @@
         "./expenses",
         "./inquiry-status",
         "./platform-stripe",
-        "./prisma"
+        "./prisma",
+        "./real-courses"
       ],
       "usedBy": [
         "src/app/api/admin/nav-badges/route.ts",
@@ -18111,6 +18119,42 @@
       ]
     },
     {
+      "path": "src/lib/real-courses.ts",
+      "lines": 22,
+      "purpose": "TEST-2 (Cam 2026-10-22:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ON_REAL_BOOKING",
+          "kind": "const"
+        },
+        {
+          "name": "ON_REAL_COURSE",
+          "kind": "const"
+        },
+        {
+          "name": "REAL_COURSE",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/revenue/route.ts",
+        "src/lib/access-fee.ts",
+        "src/lib/admin-action-queue.ts",
+        "src/lib/admin-checks.ts",
+        "src/lib/admin-goals.ts",
+        "src/lib/admin-home.ts",
+        "src/lib/admin-today.ts"
+      ]
+    },
+    {
       "path": "src/lib/receipt-charges.ts",
       "lines": 94,
       "purpose": "R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt.",
@@ -21096,6 +21140,7 @@
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/no-show-fee.ts",
+        "src/lib/real-courses.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
         "src/lib/round-shop-tax.ts",
@@ -21979,6 +22024,7 @@
         "src/lib/problems.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
+        "src/lib/real-courses.ts",
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
