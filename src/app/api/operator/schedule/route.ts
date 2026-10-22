@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { listSchedules, createSchedule, updateSchedule, deleteSchedule, saveSchedulePlan, ScheduleConflictError, ScheduleProductError, SchedulePlanError, type SchedulePlan } from '@/lib/schedule-service';
+import { listSchedules, createSchedule, updateSchedule, deleteSchedule, saveSchedulePlan, saveCoursePlan, ScheduleConflictError, ScheduleProductError, SchedulePlanError, type SchedulePlan } from '@/lib/schedule-service';
+import type { CoursePlan } from '@/lib/course-plan';
 
 // L2: the service refuses a save that would double-book a nine (409) or names a
 // product this course does not own (400); everything else is unchanged.
@@ -78,7 +79,13 @@ export async function PUT(req: NextRequest) {
   { const denied = requirePermission(session, 'schedule.edit'); if (denied) return denied; } // SP-A
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
-  const body = await req.json().catch(() => null) as SchedulePlan | null;
+  const raw = await req.json().catch(() => null) as (SchedulePlan & { coursePlan?: CoursePlan }) | null;
+  // W2-6 Schedule simplification: the Schedule page saves the whole course plan at once.
+  if (raw?.coursePlan) {
+    try { return NextResponse.json(await saveCoursePlan(session.courseId, raw.coursePlan)); }
+    catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
+  }
+  const body = raw;
   if (!body || !Array.isArray(body.periods) || !Array.isArray(body.replaces)) return NextResponse.json({ error: 'Tell us what you are changing.' }, { status: 400 });
   try {
     const rows = await saveSchedulePlan(session.courseId, body);
