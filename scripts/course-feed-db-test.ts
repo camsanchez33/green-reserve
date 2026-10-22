@@ -79,10 +79,28 @@ async function main() {
 
   const only = await buildCourseFeed(course.id, { groups: ['messages'] });
   check('a filter shows only its group', !!only && only.items.length > 0 && only.items.every(i => i.group === 'messages'));
-  const p1 = await buildCourseFeed(course.id, { limit: 3 });
-  const p2 = p1?.next ? await buildCourseFeed(course.id, { limit: 3, before: new Date(p1.next) }) : null;
-  check('paging: a next cursor when there is more', !!p1?.next);
-  check('paging: the next page continues, older, no repeats', !!p2 && p2.items.length > 0 && p2.items.every(i => i.at < p1!.next! || i.at === p1!.next!) && !p2.items.some(i => p1!.items.some(j => j.id === i.id)));
+  // Paging across every source: walk all pages, every row exactly once, in order.
+  const all = (await buildCourseFeed(course.id, { limit: 200 }))!.items;
+  const seen: string[] = [];
+  let cursor: string | null = null;
+  for (let i = 0; i < 50; i++) {
+    const pg = await buildCourseFeed(course.id, { limit: 3, cursor });
+    seen.push(...pg!.items.map(x => x.id));
+    cursor = pg!.next;
+    if (!cursor) break;
+  }
+  check('paging: walking every page shows every row exactly once, in order', JSON.stringify(seen) === JSON.stringify(all.map(x => x.id)), `${seen.length} vs ${all.length}`);
+  // One source alone filling the page still offers "Show older" — and rows sharing a timestamp survive the page break.
+  const same = new Date();
+  await prisma.sentMessage.createMany({ data: Array.from({ length: 7 }, (_, i) => ({ channel: 'email', kind: 'reminder_email', to: `${TAG}-many${i}@test.local`, courseId: course.id, status: 'sent', createdAt: same })) });
+  let mailIds: string[] = []; cursor = null;
+  for (let i = 0; i < 20; i++) {
+    const pg = await buildCourseFeed(course.id, { limit: 3, cursor, groups: ['messages'] });
+    mailIds.push(...pg!.items.filter(x => x.title.includes('Reminder')).map(x => x.id));
+    cursor = pg!.next;
+    if (!cursor) break;
+  }
+  check('one source over a page: "Show older" reaches all 7, tied timestamps included', new Set(mailIds).size === 7 && mailIds.length === 7, String(mailIds.length));
   check('an unknown course → null', (await buildCourseFeed('no-such-course')) === null);
   void inquiry;
 

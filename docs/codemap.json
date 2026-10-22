@@ -1717,7 +1717,7 @@
     },
     {
       "path": "src/app/api/admin/course-feed/route.ts",
-      "lines": 22,
+      "lines": 20,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13690,7 +13690,7 @@
     },
     {
       "path": "src/lib/course-timeline.ts",
-      "lines": 346,
+      "lines": 363,
       "purpose": "",
       "brain": [
         "course-events"
@@ -13735,6 +13735,10 @@
         {
           "name": "FEED_PAGE",
           "kind": "const"
+        },
+        {
+          "name": "feedCursor",
+          "kind": "fn"
         },
         {
           "name": "FeedGroup",

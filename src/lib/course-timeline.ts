@@ -184,6 +184,8 @@ const PAYMENT_TITLES: Record<string, [string, FeedItem['tone']]> = {
   access_fee: ['GreenReserve fee charged', 'ok'], no_show_fee: ['No-show fee charged', 'warn'],
   charge_failed: ['Charge declined', 'bad'], refund: ['Refunded', undefined], fee_refunded: ['GreenReserve fee refunded', undefined],
   no_show_fee_refunded: ['No-show fee refunded', undefined], refund_failed: ['Refund failed', 'bad'],
+  // Chargebacks are payment events, so they land here (their alert key names the dispute, not the course).
+  dispute_opened: ['Chargeback opened', 'bad'], dispute_closed: ['Chargeback closed', undefined],
 };
 const STAGE: Record<string, string> = {
   lead: 'Lead', pending: 'New inquiry', in_review: 'Talking', details_requested: 'Details sheet sent',
@@ -196,10 +198,23 @@ export const FEED_PAGE = 60;
  * One page of a course's feed: everything before `before` (newest first),
  * limited to the groups asked for. `next` is the cursor for the page after.
  */
-export async function buildCourseFeed(courseId: string, opts: { before?: Date; groups?: FeedGroup[]; limit?: number } = {}): Promise<{ items: FeedItem[]; next: string | null } | null> {
+/** The page cursor: the last row's time and id, so rows sharing a timestamp are never skipped. */
+export function feedCursor(it: Pick<FeedItem, 'at' | 'id'>): string { return `${it.at}|${it.id}`; }
+function parseCursor(c?: string | null): { at: Date; atIso: string; id: string } | null {
+  if (!c) return null;
+  const [atIso, id = ''] = c.split('|');
+  const at = new Date(atIso);
+  return Number.isNaN(at.getTime()) ? null : { at, atIso: at.toISOString(), id };
+}
+
+export async function buildCourseFeed(courseId: string, opts: { cursor?: string | null; groups?: FeedGroup[]; limit?: number } = {}): Promise<{ items: FeedItem[]; next: string | null } | null> {
   const limit = Math.min(opts.limit ?? FEED_PAGE, 200);
   const want = new Set(opts.groups?.length ? opts.groups : FEED_GROUPS.map(g => g.key));
-  const lt = opts.before ? { lt: opts.before } : undefined;
+  const cur = parseCursor(opts.cursor);
+  // Each source reads one past the page (+ room for rows tied with the cursor),
+  // so "more" is known even when a single source fills the page alone.
+  const take = limit + 1 + (cur ? 20 : 0);
+  const lt = cur ? { lte: cur.at } : undefined;
   const course = await prisma.course.findUnique({
     where: { id: courseId },
     select: { id: true, operator: { select: { email: true } }, staff: { select: { email: true } } },
@@ -217,11 +232,11 @@ export async function buildCourseFeed(courseId: string, opts: { before?: Date; g
     const [events, payments] = await Promise.all([
       prisma.bookingEvent.findMany({
         where: { courseId, occurredAt: lt, type: { notIn: ['fee_charged', 'fee_refunded'] } },
-        orderBy: { occurredAt: 'desc' }, take: limit,
+        orderBy: { occurredAt: 'desc' }, take,
       }),
       prisma.paymentEvent.findMany({
         where: { booking: { courseId }, createdAt: lt },
-        orderBy: { createdAt: 'desc' }, take: limit,
+        orderBy: { createdAt: 'desc' }, take,
         select: { id: true, kind: true, amountCents: true, actorName: true, actor: true, detail: true, createdAt: true, booking: { select: { golferName: true } } },
       }),
     ]);
@@ -250,11 +265,11 @@ export async function buildCourseFeed(courseId: string, opts: { before?: Date; g
     const [sent, thread] = await Promise.all([
       prisma.sentMessage.findMany({
         where: { createdAt: lt, OR: [{ courseId }, ...(contacts.length ? [{ courseId: null, to: { in: contacts } }] : []), ...(inquiry ? [{ inquiryId: inquiry.id }] : [])] },
-        orderBy: { createdAt: 'desc' }, take: limit,
+        orderBy: { createdAt: 'desc' }, take,
       }),
       prisma.message.findMany({
         where: { thread: { courseId }, createdAt: lt, isBroadcast: false },
-        orderBy: { createdAt: 'desc' }, take: limit,
+        orderBy: { createdAt: 'desc' }, take,
         select: { id: true, senderType: true, senderName: true, body: true, createdAt: true },
       }),
     ]);
@@ -277,9 +292,9 @@ export async function buildCourseFeed(courseId: string, opts: { before?: Date; g
 
   if (want.has('changes')) tasks.push((async () => {
     const [audit, staffChanges, legacy] = await Promise.all([
-      prisma.adminAuditLog.findMany({ where: { courseId, createdAt: lt }, orderBy: { createdAt: 'desc' }, take: limit, include: { admin: { select: { name: true } } } }),
-      prisma.staffPermissionChange.findMany({ where: { courseId, createdAt: lt }, orderBy: { createdAt: 'desc' }, take: limit }),
-      inquiry ? prisma.inquiryStatusEvent.findMany({ where: { inquiryId: inquiry.id, createdAt: lt, actorName: { startsWith: SETTINGS_CHANGED_PREFIX } }, orderBy: { createdAt: 'desc' }, take: limit }) : Promise.resolve([]),
+      prisma.adminAuditLog.findMany({ where: { courseId, createdAt: lt }, orderBy: { createdAt: 'desc' }, take, include: { admin: { select: { name: true } } } }),
+      prisma.staffPermissionChange.findMany({ where: { courseId, createdAt: lt }, orderBy: { createdAt: 'desc' }, take }),
+      inquiry ? prisma.inquiryStatusEvent.findMany({ where: { inquiryId: inquiry.id, createdAt: lt, actorName: { startsWith: SETTINGS_CHANGED_PREFIX } }, orderBy: { createdAt: 'desc' }, take }) : Promise.resolve([]),
     ]);
     const { ACTION_LABELS } = await import('./admin-audit');
     for (const a of audit) {
@@ -310,9 +325,9 @@ export async function buildCourseFeed(courseId: string, opts: { before?: Date; g
 
   if (want.has('problems')) tasks.push((async () => {
     const [stages, calls, alerts] = await Promise.all([
-      inquiry ? prisma.inquiryStatusEvent.findMany({ where: { inquiryId: inquiry.id, createdAt: lt }, orderBy: { createdAt: 'desc' }, take: limit * 2 }) : Promise.resolve([]),
-      prisma.call.findMany({ where: { createdAt: lt, OR: [{ courseId }, ...(inquiry ? [{ inquiryId: inquiry.id }] : [])] }, orderBy: { createdAt: 'desc' }, take: limit }),
-      prisma.adminAlert.findMany({ where: { OR: [{ key: { contains: courseId } }, ...(inquiry ? [{ key: { contains: inquiry.id } }] : [])] }, orderBy: { firstSeenAt: 'desc' }, take: limit }),
+      inquiry ? prisma.inquiryStatusEvent.findMany({ where: { inquiryId: inquiry.id, createdAt: lt }, orderBy: { createdAt: 'desc' }, take: take * 2 }) : Promise.resolve([]),
+      prisma.call.findMany({ where: { createdAt: lt, OR: [{ courseId }, ...(inquiry ? [{ inquiryId: inquiry.id }] : [])] }, orderBy: { createdAt: 'desc' }, take }),
+      prisma.adminAlert.findMany({ where: { OR: [{ key: { contains: courseId } }, ...(inquiry ? [{ key: { contains: inquiry.id } }] : [])] }, orderBy: { firstSeenAt: 'desc' }, take }),
     ]);
     for (const s of stages) {
       if (s.fromStatus !== s.toStatus) {
@@ -333,13 +348,15 @@ export async function buildCourseFeed(courseId: string, opts: { before?: Date; g
       items.push({ id: `call-${c.id}`, at: c.createdAt.toISOString(), group: 'problems', title: `${c.kind === 'checkin' ? 'Check-in' : 'Discovery'} call ${c.outcome === 'scheduled' ? 'booked for' : `on ${when}:`} ${c.outcome === 'scheduled' ? when : c.outcome.replace(/_/g, ' ')}`, detail: c.notes ? c.notes.slice(0, 240) : undefined, who: c.createdBy || undefined });
     }
     for (const a of alerts) {
-      if (!lt || a.firstSeenAt < opts.before!) items.push({ id: `al-${a.id}`, at: a.firstSeenAt.toISOString(), group: 'problems', title: `Problem: ${a.title}`, detail: a.detail, tone: 'bad' });
-      if (a.resolvedAt && (!lt || a.resolvedAt < opts.before!)) items.push({ id: `alr-${a.id}`, at: a.resolvedAt.toISOString(), group: 'problems', title: `Cleared: ${a.title}`, tone: 'ok' });
+      if (!cur || a.firstSeenAt <= cur.at) items.push({ id: `al-${a.id}`, at: a.firstSeenAt.toISOString(), group: 'problems', title: `Problem: ${a.title}`, detail: a.detail, tone: 'bad' });
+      if (a.resolvedAt && (!cur || a.resolvedAt <= cur.at)) items.push({ id: `alr-${a.id}`, at: a.resolvedAt.toISOString(), group: 'problems', title: `Cleared: ${a.title}`, tone: 'ok' });
     }
   })());
 
   await Promise.all(tasks);
+  // Newest first; ties by id. A page continues strictly after its cursor.
   items.sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id));
-  const page = items.slice(0, limit);
-  return { items: page, next: items.length > limit ? page[page.length - 1].at : null };
+  const after = cur ? items.filter(it => it.at < cur.atIso || (it.at === cur.atIso && it.id > cur.id)) : items;
+  const page = after.slice(0, limit);
+  return { items: page, next: after.length > limit ? feedCursor(page[page.length - 1]) : null };
 }
