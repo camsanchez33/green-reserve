@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { REAL_COURSE, ON_REAL_COURSE, ON_REAL_BOOKING } from './real-courses';
 import { startOfPlatformMonth, startOfPlatformMonthsAgo, dayKey } from './admin-day';
 import { cronHealth, lastStripeWebhook } from './cron-log';
 import { sumExpensesForPeriodCents } from './expenses';
@@ -28,8 +29,9 @@ const WEBHOOK_QUIET_DAYS = 7;
 export async function paidWindow(from: Date, to: Date, courseId?: string) {
   const range = { gte: from, lt: to };
   // AW-7: one course's share, by the same rule (its course page's Money tab).
-  const course = courseId ? { courseId } : {};
-  const eventCourse = courseId ? { booking: { courseId } } : {};
+  // TEST-2: platform-wide (no course), a test course is left out.
+  const course = courseId ? { courseId } : ON_REAL_COURSE;
+  const eventCourse = courseId ? { booking: { courseId } } : ON_REAL_BOOKING;
   const [rounds, sepCharged, sepRefunded] = await Promise.all([
     prisma.booking.aggregate({ where: { ...PAID, ...course, paidAt: range }, _sum: { greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true }, _count: { id: true } }),
     // FB-3: booking fees charged on their own count toward what we earned (as on Revenue).
@@ -71,8 +73,8 @@ export async function todayHealth(now: Date) {
   const [jobs, webhook, liveCourses, blocked] = await Promise.all([
     cronHealth(CRONS, now),
     lastStripeWebhook(),
-    prisma.course.count({ where: { active: true, archivedAt: null } }),
-    prisma.course.count({ where: { active: true, stripeAccountActive: false, archivedAt: null } }),
+    prisma.course.count({ where: { active: true, archivedAt: null, ...REAL_COURSE } }),
+    prisma.course.count({ where: { active: true, stripeAccountActive: false, archivedAt: null, ...REAL_COURSE } }),
   ]);
   const bad = jobs.filter(j => j.status === 'bad');
   const webhookAgeDays = webhook ? daysSince(new Date(webhook.at), now) : null;
@@ -141,7 +143,7 @@ export type TodayCourse = {
  */
 export async function todayCourses(now: Date, rows: ActionRow[]): Promise<TodayCourse[]> {
   const courses = await prisma.course.findMany({
-    where: { archivedAt: null },
+    where: { archivedAt: null, ...REAL_COURSE },
     select: { id: true, name: true, active: true, timezone: true, staffLastSeenAt: true, operator: { select: { lastLoginAt: true } } },
     orderBy: { name: 'asc' },
   });

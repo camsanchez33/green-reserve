@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 22:24 UTC · branch `claude/test-data-reset` · HEAD `edf2260` · working tree **25 dirty file(s)**
+Generated 2026-10-22 22:32 UTC · branch `claude/test-course-isolation` · HEAD `a96c112` · working tree **30 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,8 +12,8 @@ Generated 2026-10-22 22:24 UTC · branch `claude/test-data-reset` · HEAD `edf22
 
 | commit | date | subject |
 |---|---|---|
-| `b50c821` | 2026-10-22 | Docs: the schema check needs no SHADOW_DATABASE_URL secret now |
-| `b40fa6f` | 2026-10-22 | Schema check: replay migrations on the run's own Postgres |
+| `a96c112` | 2026-10-22 | TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree |
+| `0a2e03b` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists |
 | `6f40852` | 2026-10-22 | Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189) |
 | `2a4d5ec` | 2026-10-22 | TEST-1 review: a reset releases event-held tee times; wording fixes |
 | `0d72aad` | 2026-10-22 | TEST-1: launch wipe of test data and resettable test courses |
@@ -152,16 +152,21 @@ Generated 2026-10-22 22:24 UTC · branch `claude/test-data-reset` · HEAD `edf22
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (25 file(s))
+### Uncommitted working tree (30 file(s))
 
+- `M  .github/workflows/schema-check.yml`
+- `UU CLAUDE.md`
 - `M  OPERATOR_REWORK_SPEC.md`
+- `M  PASSWORD_CHECKLIST.md`
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
 - `UU docs/CODEMAP.md`
+- `M  docs/RUNBOOK.md`
+- `M  docs/SHIPPING.md`
 - `UU docs/codemap.json`
 - `A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql`
-- `M  prisma/schema.prisma`
+- `UU prisma/schema.prisma`
 - `M  scripts/design-guard.baseline.json`
 - `A  scripts/event-signup-db-test.ts`
 - `M  src/app/api/event-payment/[id]/route.ts`
@@ -169,11 +174,6 @@ Generated 2026-10-22 22:24 UTC · branch `claude/test-data-reset` · HEAD `edf22
 - `M  src/app/api/operator/events/[id]/payments/route.ts`
 - `M  src/app/api/operator/events/[id]/route.ts`
 - `M  src/app/api/operator/events/route.ts`
-- `A  src/app/events/[id]/SignupForm.tsx`
-- `A  src/app/events/[id]/page.tsx`
-- `M  src/app/pay/event/[id]/page.tsx`
-- `M  src/components/dashboard/events/EventDetail.tsx`
-- `M  src/components/dashboard/events/EventMoney.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -259,6 +259,8 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
@@ -298,8 +300,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `b50c821` 2026-10-22 — Docs: the schema check needs no SHADOW_DATABASE_URL secret now
-- `b40fa6f` 2026-10-22 — Schema check: replay migrations on the run's own Postgres
+- `a96c112` 2026-10-22 — TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree
+- `0a2e03b` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists
 - `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
 - `2a4d5ec` 2026-10-22 — TEST-1 review: a reset releases event-held tee times; wording fixes
 - `0d72aad` 2026-10-22 — TEST-1: launch wipe of test data and resettable test courses

@@ -13,6 +13,8 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { prisma } from './prisma';
 import { VIEWER_PLUS, SUPPORT_PLUS } from './admin-roles';
 import { FAILED_CHARGE_WHERE, openDisputes } from './money-problems';
+// TEST-2: Ask answers about real courses, as the pages it reads from do.
+import { REAL_COURSE, ON_REAL_COURSE } from './real-courses';
 import { dayKey } from './admin-day';
 
 export type AskOutcome = { content: string; isError: boolean };
@@ -74,7 +76,7 @@ export async function runAskTool(name: string, input: unknown, role: string, are
   if (name === 'list_courses') {
     if (!allowed(VIEWER_PLUS) || !inArea('courses')) return err('This login cannot see courses.');
     const courses = await prisma.course.findMany({
-      where: { archivedAt: null },
+      where: { archivedAt: null, ...REAL_COURSE },
       orderBy: { name: 'asc' },
       select: { id: true, name: true, city: true, state: true, active: true, liveStatus: true, stripeAccountActive: true, createdAt: true, firstWentLiveAt: true },
     });
@@ -99,9 +101,9 @@ export async function runAskTool(name: string, input: unknown, role: string, are
     if ((Date.parse(to) - Date.parse(from)) / 86_400_000 > MAX_DAYS) return err(`Ask for ${MAX_DAYS} days or fewer.`);
     const inRange = { teeTime: { date: { gte: from, lte: to } } };
     const [courses, rows] = await Promise.all([
-      prisma.course.findMany({ where: { archivedAt: null }, select: { id: true, name: true } }),
+      prisma.course.findMany({ where: { archivedAt: null, ...REAL_COURSE }, select: { id: true, name: true } }),
       prisma.booking.findMany({
-        where: inRange,
+        where: { ...inRange, ...ON_REAL_COURSE },
         select: { courseId: true, players: true, status: true, noShowAt: true, checkedInAt: true, paymentStatus: true, roundPaymentIntentId: true, accessFeeTotal: true },
       }),
     ]);
@@ -141,7 +143,7 @@ export async function runAskTool(name: string, input: unknown, role: string, are
     if (!inArea('money') || !allowed(SUPPORT_PLUS)) return err('This login cannot see money problems.');
     const [failed, disputes] = await Promise.all([
       prisma.booking.findMany({
-        where: FAILED_CHARGE_WHERE, take: 40, orderBy: { createdAt: 'desc' },
+        where: { ...FAILED_CHARGE_WHERE, ...ON_REAL_COURSE }, take: 40, orderBy: { createdAt: 'desc' },
         select: { golferName: true, totalAmount: true, checkInFailReason: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true } } },
       }),
       openDisputes(),

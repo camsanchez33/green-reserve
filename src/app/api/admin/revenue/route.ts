@@ -5,7 +5,13 @@ import { computeNetPnL, periodDelta } from '@/lib/course-metrics';
 import { sumExpensesForPeriodCents } from '@/lib/expenses';
 import { fetchStripeFeeWindow } from '@/lib/platform-stripe';
 import { friendlyStripeError } from '@/lib/stripe-errors';
-import { FAILED_CHARGE_WHERE, missedCheckInWhere, openDisputes } from '@/lib/money-problems';
+import { FAILED_CHARGE_WHERE as FAILED_ANY, missedCheckInWhere as missedAny, openDisputes } from '@/lib/money-problems';
+import { REAL_COURSE, ON_REAL_COURSE, ON_REAL_BOOKING } from '@/lib/real-courses';
+
+// TEST-2: GreenReserve's money is real courses only; a test course is left out
+// of every figure here. Disputes stay whole — they answer to Stripe.
+const FAILED_CHARGE_WHERE = { ...FAILED_ANY, ...ON_REAL_COURSE };
+const missedCheckInWhere = (today: string) => ({ ...missedAny(today), ...ON_REAL_COURSE });
 import { counterFeesUncollected } from '@/lib/access-fee';
 import { roundChargeCents, roundApplicationFeeCents } from '@/lib/shop';
 import { feesByDay } from '@/lib/fees-by-day';
@@ -64,7 +70,7 @@ function resolveWindows(kind: PeriodKind, now: Date, from: string | null, to: st
 }
 
 /** A round whose charge went through — the only moment GR's fee exists. */
-const PAID = { paymentStatus: 'paid', roundPaymentIntentId: { not: '' } } as const;
+const PAID = { paymentStatus: 'paid', roundPaymentIntentId: { not: '' }, ...ON_REAL_COURSE } as const;
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -118,12 +124,12 @@ export async function GET(req: NextRequest) {
     prisma.booking.aggregate({ where: { ...PAID, paidAt: inPrior }, _sum: { accessFeeTotal: true } }),
     // Booked in the period and still ahead of us — pipeline, not revenue.
     prisma.booking.aggregate({
-      where: { status: 'confirmed', paymentStatus: { not: 'paid' }, createdAt: inCurrent, teeTime: { date: { gte: todayStr } } },
+      where: { status: 'confirmed', paymentStatus: { not: 'paid' }, createdAt: inCurrent, teeTime: { date: { gte: todayStr } }, ...ON_REAL_COURSE },
       _sum: { accessFeeTotal: true }, _count: { id: true },
     }),
     prisma.booking.groupBy({ by: ['courseId'], where: { ...PAID, paidAt: inCurrent }, _count: { id: true }, _sum: { accessFeeTotal: true, greenFeeTotal: true, cartFeeTotal: true } }),
-    prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: ['confirmed', 'completed'] }, createdAt: inCurrent }, _count: { id: true } }),
-    prisma.course.findMany({ select: { id: true, name: true, active: true, archivedAt: true, stripeAccountActive: true }, orderBy: { name: 'asc' } }),
+    prisma.booking.groupBy({ by: ['courseId'], where: { status: { in: ['confirmed', 'completed'] }, createdAt: inCurrent, ...ON_REAL_COURSE }, _count: { id: true } }),
+    prisma.course.findMany({ where: REAL_COURSE, select: { id: true, name: true, active: true, archivedAt: true, stripeAccountActive: true }, orderBy: { name: 'asc' } }),
     // ALL-TIME, to agree with the problems list. It was period-filtered while
     // the list below it was not, so the two disagreed on the same screen.
     prisma.booking.groupBy({ by: ['courseId'], where: FAILED_CHARGE_WHERE, _count: { id: true } }),
@@ -139,7 +145,7 @@ export async function GET(req: NextRequest) {
     }),
     prisma.booking.aggregate({ where: missedCheckInWhere(todayStr), _sum: { accessFeeTotal: true }, _count: { id: true } }),
     prisma.booking.findMany({
-      where: { status: 'confirmed', checkedInAt: null, teeTime: { date: { in: [todayStr, tomorrowStr] } } },
+      where: { status: 'confirmed', checkedInAt: null, teeTime: { date: { in: [todayStr, tomorrowStr] } }, ...ON_REAL_COURSE },
       select: { id: true, golferName: true, players: true, accessFeeTotal: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { teeTime: { time: 'asc' } }, take: 200,
     }),
@@ -150,7 +156,7 @@ export async function GET(req: NextRequest) {
     // A fee the cron has not reached yet is a matter of minutes, not a state
     // worth a row.
     prisma.booking.findMany({
-      where: { cancellationFeeChargedAt: { not: null } },
+      where: { cancellationFeeChargedAt: { not: null }, ...ON_REAL_COURSE },
       select: { id: true, golferName: true, cancellationFeeTotal: true, cancellationFeeChargedAt: true, paymentStatus: true, checkedInAt: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true, time: true } } },
       orderBy: { cancellationFeeChargedAt: 'desc' }, take: 100,
     }),
@@ -186,8 +192,8 @@ export async function GET(req: NextRequest) {
   // counter) on the PLATFORM account. Not application fees, so they stay out
   // of the Stripe reconciliation below; they do count toward net.
   const [sepCharged, sepRefunded] = await Promise.all([
-    prisma.paymentEvent.aggregate({ where: { kind: 'fee_charged', createdAt: inCurrent }, _sum: { amountCents: true }, _count: { id: true } }),
-    prisma.paymentEvent.aggregate({ where: { kind: 'fee_refunded', createdAt: inCurrent }, _sum: { amountCents: true } }),
+    prisma.paymentEvent.aggregate({ where: { kind: 'fee_charged', createdAt: inCurrent, ...ON_REAL_BOOKING }, _sum: { amountCents: true }, _count: { id: true } }),
+    prisma.paymentEvent.aggregate({ where: { kind: 'fee_refunded', createdAt: inCurrent, ...ON_REAL_BOOKING }, _sum: { amountCents: true } }),
   ]);
   const separateFeesCents = (sepCharged._sum.amountCents ?? 0) - (sepRefunded._sum.amountCents ?? 0);
 

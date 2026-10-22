@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
   // the inquiry/build pipeline (draft/building) aren't bookable yet, so they
   // shouldn't appear in search — a course card that dead-ends at checkout is
   // worse than not listing it at all.
-  const where: Record<string, unknown> = { active: true, liveStatus: 'live', city: { not: '' }, archivedAt: null };
+  // TEST-2: a test course never lists.
+  const where: Record<string, unknown> = { active: true, liveStatus: 'live', city: { not: '' }, archivedAt: null, isTest: false };
   if (type) where.type = type;
   if (state) where.state = state;
   if (featured) where.featured = true;

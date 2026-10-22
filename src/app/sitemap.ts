@@ -26,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     courses = await prisma.course.findMany({
       where: {
-        active: true, liveStatus: 'live', archivedAt: null,
+        active: true, liveStatus: 'live', archivedAt: null, isTest: false,
         type: { not: 'private' },
         ...(DEMO_COURSE_SLUGS.length ? { slug: { notIn: DEMO_COURSE_SLUGS } } : {}),
       },

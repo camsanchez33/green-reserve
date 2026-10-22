@@ -23,6 +23,7 @@
 
 import Stripe from 'stripe';
 import { prisma } from './prisma';
+import { ON_REAL_COURSE } from './real-courses';
 import { stripe } from './stripe';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEventSafe, teeTimeInstant } from './booking-events';
@@ -163,7 +164,7 @@ export async function counterFeesUncollected(paidAt: { gte: Date; lt: Date }, co
 }> {
   const rows = await prisma.booking.findMany({
     // AW-7: courseId narrows it to one course (its admin Money tab).
-    where: { paymentStatus: 'paid_offline', accessFeeTotal: { gt: 0 }, paidAt, ...(courseId ? { courseId } : {}) },
+    where: { paymentStatus: 'paid_offline', accessFeeTotal: { gt: 0 }, paidAt, ...(courseId ? { courseId } : ON_REAL_COURSE) },
     select: { courseId: true, accessFeeTotal: true, paymentEvents: { where: { kind: { in: ['fee_charged', 'fee_refunded'] } }, select: { kind: true, amountCents: true } } },
   });
   const byCourse = new Map<string, { rounds: number; cents: number }>();

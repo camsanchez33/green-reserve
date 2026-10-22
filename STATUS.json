@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-10-22T22:24:30.038Z",
+  "generatedAt": "2026-10-22T22:32:34.043Z",
   "repo": {
-    "head": "edf2260",
-    "branch": "claude/test-data-reset",
-    "dirtyCount": 25,
+    "head": "a96c112",
+    "branch": "claude/test-course-isolation",
+    "dirtyCount": 30,
     "dirty": [
+      "M  .github/workflows/schema-check.yml",
+      "UU CLAUDE.md",
       "M  OPERATOR_REWORK_SPEC.md",
+      "M  PASSWORD_CHECKLIST.md",
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
       "UU docs/CODEMAP.md",
+      "M  docs/RUNBOOK.md",
+      "M  docs/SHIPPING.md",
       "UU docs/codemap.json",
       "A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql",
-      "M  prisma/schema.prisma",
+      "UU prisma/schema.prisma",
       "M  scripts/design-guard.baseline.json",
       "A  scripts/event-signup-db-test.ts",
       "M  src/app/api/event-payment/[id]/route.ts",
       "A  src/app/api/event-signup/[id]/route.ts",
       "M  src/app/api/operator/events/[id]/payments/route.ts",
       "M  src/app/api/operator/events/[id]/route.ts",
-      "M  src/app/api/operator/events/route.ts",
-      "A  src/app/events/[id]/SignupForm.tsx",
-      "A  src/app/events/[id]/page.tsx",
-      "M  src/app/pay/event/[id]/page.tsx",
-      "M  src/components/dashboard/events/EventDetail.tsx",
-      "M  src/components/dashboard/events/EventMoney.tsx"
+      "M  src/app/api/operator/events/route.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -32,16 +32,16 @@
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
       {
-        "h": "b50c821",
-        "date": "2026-10-22T22:17:33+00:00",
-        "subject": "Docs: the schema check needs no SHADOW_DATABASE_URL secret now",
+        "h": "a96c112",
+        "date": "2026-10-22T22:17:20+00:00",
+        "subject": "TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree",
         "ids": [],
         "matches": []
       },
       {
-        "h": "b40fa6f",
-        "date": "2026-10-22T22:12:43+00:00",
-        "subject": "Schema check: replay migrations on the run's own Postgres",
+        "h": "0a2e03b",
+        "date": "2026-10-22T22:10:19+00:00",
+        "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists",
         "ids": [],
         "matches": []
       },
@@ -1162,6 +1162,18 @@
       "ageDays": 0
     },
     {
+      "file": "CLAUDE.md",
+      "openRefs": 1,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
+      "file": "CLAUDE.md",
+      "openRefs": 1,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
@@ -1381,14 +1393,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "b50c821",
+      "h": "a96c112",
       "date": "2026-10-22",
-      "subject": "Docs: the schema check needs no SHADOW_DATABASE_URL secret now"
+      "subject": "TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree"
     },
     {
-      "h": "b40fa6f",
+      "h": "0a2e03b",
       "date": "2026-10-22",
-      "subject": "Schema check: replay migrations on the run's own Postgres"
+      "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists"
     },
     {
       "h": "6f40852",

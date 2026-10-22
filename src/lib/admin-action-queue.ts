@@ -3,6 +3,7 @@
 // / CS-1 / AG-3), moved here unchanged so Today and anything after it read ONE
 // derivation. Money first (red), then everything stalled (amber), oldest first.
 import { prisma } from './prisma';
+import { REAL_COURSE, ON_REAL_COURSE } from './real-courses';
 import { ACTIVE_STATUSES } from './inquiry-status';
 import { threadSignal } from './thread-signal';
 import { buildInquiryQueueRows } from './inquiry-action-queue';
@@ -27,15 +28,15 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
   const twoDaysAgo = new Date(now.getTime() - 2 * 86_400_000);
   const [failedCharges, noStripe, draftsAmber, draftsAmberCount, threads, activePipeline, activeCourses, overdueAgreements] = await Promise.all([
     prisma.booking.findMany({
-      where: FAILED_CHARGE_WHERE,
+      where: { ...FAILED_CHARGE_WHERE, ...ON_REAL_COURSE },
       select: { id: true, courseId: true, golferName: true, totalAmount: true, createdAt: true, course: { select: { name: true } } },
       orderBy: { createdAt: 'desc' }, take: 100,
     }),
-    prisma.course.findMany({ where: { active: true, stripeAccountActive: false, archivedAt: null }, select: { id: true, name: true }, take: 20 }),
-    prisma.course.findMany({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } }, select: { id: true, name: true, createdAt: true }, orderBy: { createdAt: 'asc' }, take: 20 }),
-    prisma.course.count({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo } } }),
+    prisma.course.findMany({ where: { active: true, stripeAccountActive: false, archivedAt: null, ...REAL_COURSE }, select: { id: true, name: true }, take: 20 }),
+    prisma.course.findMany({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo }, ...REAL_COURSE }, select: { id: true, name: true, createdAt: true }, orderBy: { createdAt: 'asc' }, take: 20 }),
+    prisma.course.count({ where: { active: false, archivedAt: null, createdAt: { lt: twoDaysAgo }, ...REAL_COURSE } }),
     prisma.messageThread.findMany({
-      where: { closedAt: null }, // MP-7b: a closed conversation is not unanswered
+      where: { closedAt: null, ...ON_REAL_COURSE }, // MP-7b: a closed conversation is not unanswered
       select: { id: true, courseId: true, course: { select: { name: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 6, select: { senderType: true, senderName: true, createdAt: true, isBroadcast: true } } },
       take: 200, orderBy: { updatedAt: 'desc' },
     }),
@@ -48,7 +49,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
         events: { select: { fromStatus: true, toStatus: true, actorName: true, createdAt: true }, orderBy: { createdAt: 'asc' } },
       },
     }),
-    prisma.course.findMany({ where: { active: true, archivedAt: null }, select: { id: true, name: true, createdAt: true, stripeAccountActive: true, liveStatus: true, welcomeEmailSentAt: true, firstWentLiveAt: true, archivedAt: true, nextCheckInAt: true, operator: { select: { name: true } }, calls: { where: { kind: 'checkin', outcome: 'scheduled' }, select: { kind: true, scheduledAt: true, outcome: true } } } }),
+    prisma.course.findMany({ where: { active: true, archivedAt: null, ...REAL_COURSE }, select: { id: true, name: true, createdAt: true, stripeAccountActive: true, liveStatus: true, welcomeEmailSentAt: true, firstWentLiveAt: true, archivedAt: true, nextCheckInAt: true, operator: { select: { name: true } }, calls: { where: { kind: 'checkin', outcome: 'scheduled' }, select: { kind: true, scheduledAt: true, outcome: true } } } }),
     agreementOverdueCourses(now),
   ]);
 

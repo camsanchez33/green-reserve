@@ -3,6 +3,7 @@
 // the goal's start to its date (or to now, while it runs). The route gates who
 // sees and changes them; nothing here checks who is asking.
 import { prisma } from './prisma';
+import { REAL_COURSE, ON_REAL_COURSE } from './real-courses';
 import { paidWindow } from './admin-today';
 
 export const GOAL_METRICS = {
@@ -24,11 +25,11 @@ export function goalPace(current: number, target: number, startsAt: Date, dueAt:
 }
 
 export async function goalCurrent(metric: GoalMetric, startsAt: Date, dueAt: Date, now: Date): Promise<number> {
-  if (metric === 'courses_live') return prisma.course.count({ where: { active: true, archivedAt: null } });
+  if (metric === 'courses_live') return prisma.course.count({ where: { active: true, archivedAt: null, ...REAL_COURSE } });
   const end = now < dueAt ? now : dueAt;
   if (end <= startsAt) return 0;
   if (metric === 'online_rounds') {
-    return prisma.booking.count({ where: { source: 'online', status: { not: 'cancelled' }, createdAt: { gte: startsAt, lt: end } } });
+    return prisma.booking.count({ where: { source: 'online', status: { not: 'cancelled' }, createdAt: { gte: startsAt, lt: end }, ...ON_REAL_COURSE } });
   }
   return (await paidWindow(startsAt, end)).feesCents;
 }
