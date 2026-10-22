@@ -15,7 +15,8 @@ for (const n of ['sendTwoFactorCodeEmail', 'sendGolferOtpEmail', 'sendAdminTwoFa
   check(`${n} is sent from noreply@ and never asks for a reply`, fn(n).includes('from: FROM_NOREPLY') && !/[Rr]eply (to this email|here)/.test(fn(n)));
 for (const n of ['sendCheckInReceiptEmail', 'sendRefundEmail', 'sendCancellationFeeChargedEmail', 'sendMembershipReceiptEmail'])
   check(`${n} is sent from billing@`, fn(n).includes('from: FROM_BILLING') && fn(n).includes(', BILLING_EMAIL);'));
-check('a cancellation that kept a fee comes from billing@, a free one from support@', fn('sendCancellationEmail').includes('from: data.feeCharged ? FROM_BILLING : FROM_SUPPORT'));
+check('a cancellation that kept a fee or refunded money comes from billing@, a free one from support@', fn('sendCancellationEmail').includes('from: data.feeCharged || data.refunded ? FROM_BILLING : FROM_SUPPORT') && fn('sendCancellationEmail').includes(', data.feeCharged || data.refunded ? BILLING_EMAIL : SUPPORT_EMAIL);'));
+check('…and the cancel path tells it when a refund went through', readFileSync('src/lib/cancel-booking.ts', 'utf8').includes('refunded: roundRefunded || feeWaivedRefunded'));
 for (const n of ['sendBookingConfirmation', 'sendReminderEmail', 'sendCheckInAvailableEmail'])
   check(`${n} is sent from support@`, fn(n).includes('from: FROM_SUPPORT'));
 for (const n of ['sendInquiryConfirmation', 'sendSignedAgreementsEmail', 'sendCourseLiveOrientationEmail'])

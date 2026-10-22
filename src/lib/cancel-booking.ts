@@ -79,10 +79,13 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
 
   let feeAlreadyCharged = booking.paymentStatus === 'cancellation_fee_charged';
   let feeRefundFailed = '';
+  // MAIL-1: a waived fee given back is money moving — the email comes from billing@.
+  let feeWaivedRefunded = false;
   if (feeAlreadyCharged && waiveFee && booking.cancellationFeeChargeId && booking.course.stripeAccountId) {
     try {
       const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId });
       feeAlreadyCharged = false;
+      feeWaivedRefunded = true;
       await recordBookingEventSafe({
         bookingId, courseId: booking.courseId, type: 'fee_refunded', actor,
         amountCents: refund.amount, playerCount: booking.players,
@@ -110,7 +113,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   let noShowCharge = booking.noShowAt ? await liveNoShowCharge(bookingId) : null;
   if (noShowCharge && waiveFee) {
     const r = await refundNoShowFee(bookingId, 'cancellation (fee waived)');
-    if (r.refunded) noShowCharge = null;
+    if (r.refunded) { noShowCharge = null; feeWaivedRefunded = true; }
     else if (r.error) feeRefundFailed = feeRefundFailed || `no-show fee: ${r.error}`;
   }
 
@@ -247,6 +250,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     // A kept no-show charge is a fee kept — never "you weren't charged anything".
     feeCharged: feeAlreadyCharged || !!noShowCharge,
     feeAmount: feeAlreadyCharged ? booking.cancellationFeeTotal : (noShowCharge?.amountCents ?? 0),
+    refunded: roundRefunded || feeWaivedRefunded,
     bookingId: booking.id,
     reason,
   }).catch(console.error);

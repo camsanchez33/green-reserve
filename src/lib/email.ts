@@ -229,6 +229,7 @@ export async function sendCancellationEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
   date: string; time: string; players: number; bookingId: string;
   feeCharged: boolean; feeAmount: number; // feeCharged = cancelled after the window closed, fee already taken & non-refundable
+  refunded?: boolean; // the round or a waived fee was refunded on this cancel
   // MP-5b: set when the golfer did not ask for this — the course closed. A
   // cancellation with no explanation reads as a mistake or a bait-and-switch.
   reason?: string;
@@ -247,9 +248,9 @@ export async function sendCancellationEmail(data: {
       : `<div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#7A4A10;font-size:14px;font-weight:600;">The $${(data.feeAmount / 100).toFixed(2)} cancellation fee you were charged is non-refundable &mdash; this cancellation came after the course&rsquo;s free-cancellation window closed.</p></div>`
     }
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>
-  `, data.feeCharged ? BILLING_EMAIL : SUPPORT_EMAIL);
-  // Cam 2026-10-22: money moved → billing@; only about the round → support@.
-  await getResend().emails.send({ from: data.feeCharged ? FROM_BILLING : FROM_SUPPORT, to: data.golferEmail, subject: `Cancelled: ${data.courseName} — ${data.date} at ${data.time}`, html });
+  `, data.feeCharged || data.refunded ? BILLING_EMAIL : SUPPORT_EMAIL);
+  // Cam 2026-10-22: money moved (a fee kept, or a refund) → billing@; only about the round → support@.
+  await getResend().emails.send({ from: data.feeCharged || data.refunded ? FROM_BILLING : FROM_SUPPORT, to: data.golferEmail, subject: `Cancelled: ${data.courseName} — ${data.date} at ${data.time}`, html });
 }
 
 // Fired by the cancellation-fee cron the moment it successfully auto-charges
