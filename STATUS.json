@@ -1,32 +1,11 @@
 {
-  "generatedAt": "2026-10-22T22:43:01.351Z",
+  "generatedAt": "2026-10-22T22:44:22.796Z",
   "repo": {
-    "head": "cc9ee5b",
+    "head": "56546e9",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 24,
-    "dirty": [
-      "M  CLAUDE.md",
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "MM docs/CODEMAP.md",
-      "MM docs/codemap.json",
-      "M  prisma/schema.prisma",
-      "A  scripts/real-courses-db-test.ts",
-      "M  src/app/admin/courses/page.tsx",
-      "M  src/app/api/admin/activity/route.ts",
-      "M  src/app/api/admin/nav-badges/route.ts",
-      "M  src/app/api/admin/revenue/route.ts",
-      "M  src/app/api/courses/route.ts",
-      "M  src/app/courses/[slug]/page.tsx",
-      "M  src/app/sitemap.ts",
-      "M  src/lib/access-fee.ts",
-      "M  src/lib/admin-action-queue.ts",
-      "M  src/lib/admin-ask.ts",
-      "M  src/lib/admin-checks.ts",
-      "M  src/lib/admin-goals.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
@@ -433,6 +412,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b4ba083",
+      "date": "2026-10-22",
+      "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)"
+    },
+    {
       "h": "3754fcb",
       "date": "2026-10-22",
       "subject": "TEST-1: launch wipe of test data, and resettable test courses (#190)"
@@ -486,11 +470,6 @@
       "h": "da32563",
       "date": "2026-10-22",
       "subject": "Event pay-link email: say a reply reaches the course"
-    },
-    {
-      "h": "6ea9b46",
-      "date": "2026-10-22",
-      "subject": "Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)"
     }
   ]
 }
