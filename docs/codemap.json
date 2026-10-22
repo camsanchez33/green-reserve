@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 487,
-    "routes": 237,
-    "libs": 157,
-    "models": 48,
+    "files": 495,
+    "routes": 240,
+    "libs": 160,
+    "models": 51,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -4903,6 +4903,74 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/events/[id]/route.ts",
+      "lines": 210,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/events/[id]",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/course-events",
+        "@/lib/course-time",
+        "@/lib/email",
+        "@/lib/format",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/events/route.ts",
+      "lines": 67,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/events",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/course-events",
+        "@/lib/course-time",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/frost-delay/route.ts",
       "lines": 33,
       "purpose": "",
@@ -5528,7 +5596,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/preview/route.ts",
-      "lines": 27,
+      "lines": 32,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5545,6 +5613,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/course-plan",
         "@/lib/schedule-preview",
         "@/lib/schedule-service",
         "@/lib/session",
@@ -5554,7 +5623,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/route.ts",
-      "lines": 89,
+      "lines": 96,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5592,6 +5661,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/course-plan",
         "@/lib/schedule-service",
         "@/lib/session",
         "next/server"
@@ -6006,7 +6076,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 142,
+      "lines": 144,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6876,7 +6946,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 610,
+      "lines": 680,
       "purpose": "AN-3 (Cam 2026-10-19, after AN-2):",
       "brain": [],
       "exports": [
@@ -6924,6 +6994,38 @@
       "guard": "middleware",
       "imports": [
         "next/navigation"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/dashboard/events/page.tsx",
+      "lines": 165,
+      "purpose": "W2-9 Events (Cam 2026-10-21/22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (EventsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/events",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/OperatorSidebar",
+        "@/components/dashboard/StaffNotice",
+        "@/components/dashboard/events/EventDetail",
+        "@/components/dashboard/events/EventSetup",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "@/lib/use-dashboard-access",
+        "next/image",
+        "next/navigation",
+        "react"
       ],
       "usedBy": []
     },
@@ -7123,12 +7225,12 @@
     },
     {
       "path": "src/app/dashboard/outings/page.tsx",
-      "lines": 27,
+      "lines": 5,
       "purpose": "",
       "brain": [],
       "exports": [
         {
-          "name": "default (OutingsPage)",
+          "name": "default (Page)",
           "kind": "component"
         }
       ],
@@ -7138,15 +7240,13 @@
       "auth": "operator",
       "guard": "middleware",
       "imports": [
-        "@/components/OperatorSidebar",
-        "next/image",
-        "next/link"
+        "next/navigation"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1466,
+      "lines": 1488,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7184,6 +7284,7 @@
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
         "lucide-react",
+        "next/link",
         "next/navigation",
         "react"
       ],
@@ -7237,8 +7338,8 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 597,
-      "purpose": "Schedule rework (Cam 2026-10-19:",
+      "lines": 604,
+      "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
         {
@@ -7258,9 +7359,9 @@
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
+        "@/lib/course-plan",
         "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/schedule-plans",
         "@/lib/use-dashboard-access",
         "next/link",
         "react"
@@ -7368,12 +7469,12 @@
     },
     {
       "path": "src/app/dashboard/tournaments/page.tsx",
-      "lines": 27,
+      "lines": 5,
       "purpose": "",
       "brain": [],
       "exports": [
         {
-          "name": "default (TournamentsPage)",
+          "name": "default (Page)",
           "kind": "component"
         }
       ],
@@ -7383,9 +7484,7 @@
       "auth": "operator",
       "guard": "middleware",
       "imports": [
-        "@/components/OperatorSidebar",
-        "next/image",
-        "next/link"
+        "next/navigation"
       ],
       "usedBy": []
     },
@@ -8223,7 +8322,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 288,
+      "lines": 286,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8256,15 +8355,14 @@
       ],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
-        "src/app/dashboard/outings/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
-        "src/app/dashboard/tournaments/page.tsx",
         "src/lib/dashboard-visits.ts"
       ]
     },
@@ -9156,6 +9254,7 @@
         "@/lib/use-dashboard-access"
       ],
       "usedBy": [
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
@@ -9220,7 +9319,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetBoard.tsx",
-      "lines": 164,
+      "lines": 165,
       "purpose": "SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -9297,6 +9396,95 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/events/EventDetail.tsx",
+      "lines": 248,
+      "purpose": "W2-9 Events:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (EventDetail)",
+          "kind": "component"
+        },
+        {
+          "name": "EventData",
+          "kind": "type"
+        },
+        {
+          "name": "EventFull",
+          "kind": "type"
+        },
+        {
+          "name": "EventPlayer",
+          "kind": "type"
+        },
+        {
+          "name": "EventTask",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./EventSetup",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/events/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/events/EventSetup.tsx",
+      "lines": 292,
+      "purpose": "W2-9 Events:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "blankForm",
+          "kind": "fn"
+        },
+        {
+          "name": "default (EventSetup)",
+          "kind": "component"
+        },
+        {
+          "name": "EventForm",
+          "kind": "type"
+        },
+        {
+          "name": "KINDS",
+          "kind": "const"
+        },
+        {
+          "name": "Product",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/events/page.tsx",
+        "src/components/dashboard/events/EventDetail.tsx"
       ]
     },
     {
@@ -9678,6 +9866,7 @@
         "src/app/cam/page.tsx",
         "src/app/contact/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -9698,6 +9887,8 @@
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -9955,6 +10146,7 @@
         "src/app/courses/[slug]/account/AccountPortalClient.tsx",
         "src/app/courses/[slug]/member/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/login/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/onboarding/page.tsx",
@@ -9977,6 +10169,7 @@
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/Toast.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -10039,6 +10232,8 @@
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
       ]
@@ -11019,6 +11214,8 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
@@ -11162,7 +11359,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 335,
+      "lines": 472,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -11193,6 +11390,10 @@
         {
           "name": "Range",
           "kind": "type"
+        },
+        {
+          "name": "RES_START",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -12300,7 +12501,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 273,
+      "lines": 276,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12875,7 +13076,7 @@
     },
     {
       "path": "src/lib/course-closure.ts",
-      "lines": 128,
+      "lines": 129,
       "purpose": "MP-5b.",
       "brain": [],
       "exports": [
@@ -12913,6 +13114,117 @@
       "usedBy": [
         "src/app/api/admin/archive-course/route.ts",
         "src/app/api/admin/course-detail/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/course-events.ts",
+      "lines": 265,
+      "purpose": "W2-9 Events (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "applyHold",
+          "kind": "fn"
+        },
+        {
+          "name": "autoPairings",
+          "kind": "fn"
+        },
+        {
+          "name": "cancelEvent",
+          "kind": "fn"
+        },
+        {
+          "name": "createEvent",
+          "kind": "fn"
+        },
+        {
+          "name": "DEFAULT_TASKS",
+          "kind": "const"
+        },
+        {
+          "name": "dueFor",
+          "kind": "fn"
+        },
+        {
+          "name": "EVENT_KINDS",
+          "kind": "const"
+        },
+        {
+          "name": "EventError",
+          "kind": "class"
+        },
+        {
+          "name": "eventFields",
+          "kind": "fn"
+        },
+        {
+          "name": "EventInput",
+          "kind": "type"
+        },
+        {
+          "name": "EventKind",
+          "kind": "type"
+        },
+        {
+          "name": "heldBy",
+          "kind": "reexport"
+        },
+        {
+          "name": "HoldReport",
+          "kind": "type"
+        },
+        {
+          "name": "isDate",
+          "kind": "fn"
+        },
+        {
+          "name": "isTime",
+          "kind": "fn"
+        },
+        {
+          "name": "KIND_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "parsePlayers",
+          "kind": "fn"
+        },
+        {
+          "name": "previewEvent",
+          "kind": "fn"
+        },
+        {
+          "name": "releaseHold",
+          "kind": "fn"
+        },
+        {
+          "name": "shotgunWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "teeTimesWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "updateEvent",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./event-hold",
+        "./prisma",
+        "./tee-sheet-engine"
+      ],
+      "usedBy": [
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts"
       ]
     },
     {
@@ -13063,6 +13375,105 @@
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/lib/admin-course-page.ts"
+      ]
+    },
+    {
+      "path": "src/lib/course-plan.ts",
+      "lines": 279,
+      "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ALL_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "autoName",
+          "kind": "fn"
+        },
+        {
+          "name": "blankPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "checkPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "checkRows",
+          "kind": "fn"
+        },
+        {
+          "name": "columnNames",
+          "kind": "fn"
+        },
+        {
+          "name": "CompiledRow",
+          "kind": "type"
+        },
+        {
+          "name": "compilePlan",
+          "kind": "fn"
+        },
+        {
+          "name": "CoursePlan",
+          "kind": "type"
+        },
+        {
+          "name": "DayPlan",
+          "kind": "type"
+        },
+        {
+          "name": "daysOf",
+          "kind": "fn"
+        },
+        {
+          "name": "emptyCell",
+          "kind": "fn"
+        },
+        {
+          "name": "isTime",
+          "kind": "fn"
+        },
+        {
+          "name": "PlanRound",
+          "kind": "type"
+        },
+        {
+          "name": "PriceCell",
+          "kind": "type"
+        },
+        {
+          "name": "readPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "RoundSale",
+          "kind": "type"
+        },
+        {
+          "name": "setRoundSale",
+          "kind": "fn"
+        },
+        {
+          "name": "snap",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./schedule-conflict"
+      ],
+      "usedBy": [
+        "src/app/api/operator/schedule/preview/route.ts",
+        "src/app/api/operator/schedule/route.ts",
+        "src/app/dashboard/schedules/page.tsx",
+        "src/lib/schedule-preview.ts",
+        "src/lib/schedule-service.ts"
       ]
     },
     {
@@ -13282,6 +13693,8 @@
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
@@ -13297,6 +13710,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
@@ -13659,6 +14073,7 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -13672,6 +14087,8 @@
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
@@ -13777,7 +14194,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2044,
+      "lines": 2066,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13915,6 +14332,10 @@
         },
         {
           "name": "sendDetailsSubmittedNotification",
+          "kind": "fn"
+        },
+        {
+          "name": "sendEventPairingsEmail",
           "kind": "fn"
         },
         {
@@ -14096,6 +14517,7 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/change-password/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -14118,6 +14540,32 @@
         "src/lib/submit-change-request.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
+      ]
+    },
+    {
+      "path": "src/lib/event-hold.ts",
+      "lines": 12,
+      "purpose": "W2-9:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "heldBy",
+          "kind": "fn"
+        },
+        {
+          "name": "HoldEvent",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/lib/course-events.ts",
+        "src/lib/tee-sheet-engine.ts"
       ]
     },
     {
@@ -14326,7 +14774,9 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
@@ -14337,6 +14787,8 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -16081,6 +16533,8 @@
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
@@ -16148,6 +16602,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
         "src/lib/course-closure.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-group.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
@@ -16669,6 +17124,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/operator/course-products/route.ts",
+        "src/lib/course-plan.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
@@ -16711,13 +17167,12 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/schedules/page.tsx",
         "src/lib/schedule-service.ts"
       ]
     },
     {
       "path": "src/lib/schedule-preview.ts",
-      "lines": 149,
+      "lines": 154,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -16748,6 +17203,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./course-plan",
         "./course-time",
         "./prisma",
         "./schedule-conflict",
@@ -16761,10 +17217,14 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 310,
+      "lines": 358,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [
+        {
+          "name": "compileCoursePlan",
+          "kind": "fn"
+        },
         {
           "name": "createSchedule",
           "kind": "fn"
@@ -16775,6 +17235,14 @@
         },
         {
           "name": "listSchedules",
+          "kind": "fn"
+        },
+        {
+          "name": "planRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "saveCoursePlan",
           "kind": "fn"
         },
         {
@@ -16816,6 +17284,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./course-plan",
         "./course-timeline",
         "./money",
         "./prisma",
@@ -16981,6 +17450,8 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/import/route.ts",
@@ -17512,7 +17983,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 135,
+      "lines": 138,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -17801,7 +18272,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 247,
+      "lines": 252,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17842,6 +18313,7 @@
       "imports": [
         "./booking-window",
         "./course-time",
+        "./event-hold",
         "./prisma"
       ],
       "usedBy": [
@@ -17850,6 +18322,7 @@
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
@@ -18145,6 +18618,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
@@ -18843,6 +19317,7 @@
       ],
       "readers": [
         "src/app/api/operator/blackouts/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/schedule-preview.ts",
@@ -19858,6 +20333,10 @@
           "type": "TeeTimeAlert[]"
         },
         {
+          "name": "events",
+          "type": "CourseEvent[]"
+        },
+        {
           "name": "nines",
           "type": "Nine[]"
         },
@@ -19951,6 +20430,8 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
@@ -19990,6 +20471,7 @@
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/course-closure.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-group.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/go-live-preflight.ts",
@@ -20000,8 +20482,235 @@
         "src/lib/public-tee-times.ts",
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
+        "src/lib/schedule-service.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "name": "CourseEvent",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "date",
+          "type": "String"
+        },
+        {
+          "name": "format",
+          "type": "String"
+        },
+        {
+          "name": "startTime",
+          "type": "String"
+        },
+        {
+          "name": "holdFrom",
+          "type": "String"
+        },
+        {
+          "name": "holdTo",
+          "type": "String"
+        },
+        {
+          "name": "holdToCustom",
+          "type": "Boolean"
+        },
+        {
+          "name": "productId",
+          "type": "String?"
+        },
+        {
+          "name": "holes",
+          "type": "Int"
+        },
+        {
+          "name": "groups",
+          "type": "Int"
+        },
+        {
+          "name": "players",
+          "type": "Int"
+        },
+        {
+          "name": "organizerName",
+          "type": "String"
+        },
+        {
+          "name": "organizerEmail",
+          "type": "String"
+        },
+        {
+          "name": "organizerPhone",
+          "type": "String"
+        },
+        {
+          "name": "pricePerPlayerCents",
+          "type": "Int"
+        },
+        {
+          "name": "includes",
+          "type": "String[]"
+        },
+        {
+          "name": "terms",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "tasks",
+          "type": "CourseEventTask[]"
+        },
+        {
+          "name": "entrants",
+          "type": "CourseEventPlayer[]"
+        },
+        {
+          "name": "teeTimes",
+          "type": "TeeTime[]"
+        }
+      ],
+      "writers": [
+        "src/lib/course-events.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
+        "src/lib/course-events.ts",
+        "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "name": "CourseEventPlayer",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "eventId",
+          "type": "String"
+        },
+        {
+          "name": "event",
+          "type": "CourseEvent"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "email",
+          "type": "String"
+        },
+        {
+          "name": "phone",
+          "type": "String"
+        },
+        {
+          "name": "groupNo",
+          "type": "Int?"
+        },
+        {
+          "name": "startHole",
+          "type": "Int?"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/events/[id]/route.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/events/[id]/route.ts"
+      ]
+    },
+    {
+      "name": "CourseEventTask",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "eventId",
+          "type": "String"
+        },
+        {
+          "name": "event",
+          "type": "CourseEvent"
+        },
+        {
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "name": "dueDate",
+          "type": "String?"
+        },
+        {
+          "name": "doneAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "doneBy",
+          "type": "String"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/lib/course-events.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/lib/course-events.ts"
       ]
     },
     {
@@ -20704,10 +21413,12 @@
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
@@ -21872,6 +22583,7 @@
       ],
       "readers": [
         "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ]
@@ -22122,6 +22834,14 @@
           "type": "TeeTimeAlert[]"
         },
         {
+          "name": "eventId",
+          "type": "String?"
+        },
+        {
+          "name": "event",
+          "type": "CourseEvent?"
+        },
+        {
           "name": "productId",
           "type": "String?"
         },
@@ -22133,6 +22853,7 @@
       "writers": [
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
+        "src/lib/course-events.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/schedule-service.ts",
@@ -22147,6 +22868,7 @@
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
@@ -22154,6 +22876,7 @@
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
@@ -22233,6 +22956,7 @@
       "readers": [
         "src/app/api/alerts/route.ts",
         "src/app/api/alerts/unsubscribe/[token]/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/cancel-booking.ts"
       ]
     },
@@ -22335,6 +23059,7 @@
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",

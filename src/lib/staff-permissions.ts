@@ -16,11 +16,12 @@ export type PermissionKey =
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
   | 'analytics.view' | 'messages.use' | 'settings.edit'
-  | 'shop.sell' | 'shop.catalog';
+  | 'shop.sell' | 'shop.catalog'
+  | 'events.manage';
 
 export interface PermissionDef {
   key: PermissionKey;
-  group: 'Tee sheet' | 'Money' | 'Members' | 'Schedule' | 'Pro shop' | 'Course';
+  group: 'Tee sheet' | 'Money' | 'Members' | 'Schedule' | 'Pro shop' | 'Events' | 'Course';
   label: string;
   /** One plain line under the toggle. */
   help: string;
@@ -59,6 +60,8 @@ export const PERMISSIONS: PermissionDef[] = [
   // POS-1a (Cam 2026-10-08): pro-shop items charged with the round.
   { key: 'shop.sell', group: 'Pro shop', label: 'Sell from the pro shop', help: 'Add shop items to a group’s round, and ring up walk-up sales paid in cash or by a pay link.' },
   { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop.', requires: ['settings.edit'] },
+  // W2-9 (Cam 2026-10-22): owner + staff given it; Manager has it, Front desk doesn't.
+  { key: 'events.manage', group: 'Events', label: 'Run events', help: 'Set up outings and tournaments, hold their tee times, keep the checklist and the player list.' },
   { key: 'analytics.view', group: 'Course', label: 'See analytics', help: 'Revenue, utilization, no-shows and customers.' },
   { key: 'messages.use', group: 'Course', label: 'Message GreenReserve', help: 'Send and read messages with the GreenReserve team.' },
   { key: 'settings.edit', group: 'Course', label: 'Edit course settings', help: 'Course details, booking rules and facilities. Never staff, Stripe, the agreement or the cancellation policy.' },

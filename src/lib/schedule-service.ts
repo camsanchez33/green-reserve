@@ -350,7 +350,8 @@ export async function setTeeTimeBlocked(teeTimeId: string, blocked: boolean, opt
   if (!existing) return null;
   const row = await prisma.teeTime.update({
     where: { id: existing.id },
-    data: { status: blocked ? 'blocked' : 'available' },
+    // W2-9: reopening a time an event held takes it out of the event (staff chose to sell it).
+    data: blocked ? { status: 'blocked' } : { status: 'available', eventId: null },
   });
   return teeTimeToWire(row);
 }
