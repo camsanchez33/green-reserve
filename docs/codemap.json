@@ -12816,7 +12816,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 276,
+      "lines": 280,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14568,7 +14568,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2068,
+      "lines": 2070,
       "purpose": "",
       "brain": [],
       "exports": [

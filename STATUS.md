@@ -4,21 +4,47 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 02:04 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `21a19af` · working tree **103 dirty file(s)**
+Generated 2026-10-22 02:22 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `d8306c5` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-19**. 78 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-19**. 104 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `d8306c5` | 2026-10-22 | MAIL-1: a cancellation that refunded money also comes from billing@ |
+| `c39a10c` | 2026-10-22 | MAIL-1: a cancellation that kept a fee comes from billing@ |
+| `8c73613` | 2026-10-22 | W2-9a: releasing an event's hold checks the day being released, not the day it moved to |
+| `e85978d` | 2026-10-22 | W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit |
+| `ce88bd1` | 2026-10-22 | Codemap and status board |
+| `087c1a2` | 2026-10-22 | W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks |
+| `28a5f3a` | 2026-10-22 | W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings |
+| `164896a` | 2026-10-21 | BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175) |
+| `0cb3627` | 2026-10-22 | W2-8b: a regular who has booked again is not 'gone quiet' |
 | `21a19af` | 2026-10-22 | test-email.js: send from support@ (hello@ no longer exists) |
 | `1301b0a` | 2026-10-22 | Regenerate status board |
 | `8860edb` | 2026-10-22 | MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@ |
+| `ffcefc6` | 2026-10-22 | W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet |
+| `aad9ee0` | 2026-10-22 | W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players |
+| `f367f8d` | 2026-10-22 | W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents |
+| `e8c4fe4` | 2026-10-22 | W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan |
+| `1d2a5db` | 2026-10-21 | BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174) |
+| `4cd3e1a` | 2026-10-22 | W2-6 Schedule simplification: open hours, what golfers can book, one price table |
+| `e59ed92` | 2026-10-22 | Codemap and status board |
+| `f8d9737` | 2026-10-22 | Messages: keep Open the course in the header below lg |
+| `3020c49` | 2026-10-22 | AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review) |
 | `f31213a` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (#172) |
+| `42adddb` | 2026-10-21 | Codemap and status board |
+| `6b0ebeb` | 2026-10-21 | AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links |
+| `821ddf9` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (in review) |
 | `4abfebb` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (#171) |
+| `a526731` | 2026-10-21 | Codemap and status board |
+| `fe16f64` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review) |
 | `d58220f` | 2026-10-21 | AW-6b: inquiry page — the one next step first (#169) |
 | `a85a078` | 2026-10-21 | AW-4b: Today shows each course with its own to-dos; Goals tab (#170) |
+| `27af530` | 2026-10-21 | Status board |
+| `cbcfb8c` | 2026-10-21 | AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen |
+| `ec245d5` | 2026-10-21 | AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card |
 | `adf590b` | 2026-10-21 | Status board |
 | `914a1c5` | 2026-10-21 | AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today |
 | `b84a2db` | 2026-10-21 | AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card |
@@ -93,31 +119,13 @@ Generated 2026-10-22 02:04 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (103 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M  ADMIN_V5_SPEC.md`
-- `M  OPERATOR_REWORK_SPEC.md`
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `UU docs/CODEMAP.md`
-- `UU docs/codemap.json`
-- `A  prisma/migrations/20261022003636_brain1a_admin_audit/migration.sql`
-- `A  prisma/migrations/20261022010603_w2_9_events/migration.sql`
-- `M  prisma/schema.prisma`
-- `A  scripts/admin-audit-test.ts`
-- `M  scripts/admin-nav-test.ts`
-- `A  scripts/analytics-w28-db-test.ts`
-- `A  scripts/course-plan-test.ts`
-- `M  scripts/design-guard.baseline.json`
-- `A  scripts/events-db-test.ts`
-- `A  scripts/events-test.ts`
-- `M  scripts/isolation-test.ts`
-- `M  scripts/schedule-periods-test.ts`
-- `M  scripts/schedule-rework-test.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -200,8 +208,8 @@ Nothing awaiting review.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-22 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 2d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 2d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 2d |
@@ -238,18 +246,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `d8306c5` 2026-10-22 — MAIL-1: a cancellation that refunded money also comes from billing@
+- `c39a10c` 2026-10-22 — MAIL-1: a cancellation that kept a fee comes from billing@
+- `512e214` 2026-10-22 — queue/spec update
+- `8c73613` 2026-10-22 — W2-9a: releasing an event's hold checks the day being released, not the day it moved to
+- `e85978d` 2026-10-22 — W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit
+- `ce88bd1` 2026-10-22 — Codemap and status board
+- `087c1a2` 2026-10-22 — W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks
+- `28a5f3a` 2026-10-22 — W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings
+- `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
+- `0cb3627` 2026-10-22 — W2-8b: a regular who has booked again is not 'gone quiet'
 - `21a19af` 2026-10-22 — test-email.js: send from support@ (hello@ no longer exists)
 - `1301b0a` 2026-10-22 — Regenerate status board
-- `8860edb` 2026-10-22 — MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@
-- `f31213a` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)
-- `4abfebb` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (#171)
-- `d58220f` 2026-10-21 — AW-6b: inquiry page — the one next step first (#169)
-- `a85a078` 2026-10-21 — AW-4b: Today shows each course with its own to-dos; Goals tab (#170)
-- `adf590b` 2026-10-21 — Status board
-- `914a1c5` 2026-10-21 — AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today
-- `b84a2db` 2026-10-21 — AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card
-- `e941200` 2026-10-21 — Code map and status board
-- `39d69df` 2026-10-21 — AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts
 
 ---
 
