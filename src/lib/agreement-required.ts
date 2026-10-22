@@ -8,6 +8,7 @@
 // NOT overdue — they are in onboarding, gated at go-live as before.
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { REAL_COURSE } from './real-courses';
 import { currentVersion, loadDocument, listVersions } from './agreements';
 import { sendAgreementBumpNoticeEmail, sendAgreementBumpAdminSummaryEmail } from './email';
 
@@ -75,7 +76,8 @@ export async function agreementOverdueCourses(now: Date = new Date()): Promise<{
   const win = await currentReacceptWindow(now);
   if (!win || win.reacceptBy.getTime() >= now.getTime()) return [];
   const courses = await prisma.course.findMany({
-    where: { archivedAt: null, agreements: { some: { document: 'operator_agreement' }, none: { document: 'operator_agreement', version: win.version } } },
+    // TEST-2: a test course's overdue re-acceptance is not a platform to-do.
+    where: { archivedAt: null, ...REAL_COURSE, agreements: { some: { document: 'operator_agreement' }, none: { document: 'operator_agreement', version: win.version } } },
     select: { id: true, name: true, operator: { select: { name: true } } },
   });
   return courses.map(c => ({ id: c.id, name: c.name, operatorName: c.operator?.name ?? '', by: win.reacceptBy }));

@@ -9,6 +9,7 @@
 // validateNumbers) — the digest itself is built from the same numbers as Today.
 import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from './prisma';
+import { REAL_COURSE, ON_REAL_COURSE } from './real-courses';
 import { dayKey, platformHour } from './admin-day';
 import { FAILED_CHARGE_WHERE, openDisputes } from './money-problems';
 import { cronHealth, lastStripeWebhook } from './cron-log';
@@ -31,11 +32,11 @@ export type Finding = { key: string; title: string; detail: string; href: string
 /** Everything urgent right now. Site errors go to Sentry (BRAIN-0), not here. */
 export async function urgentFindings(now = new Date()): Promise<Finding[]> {
   const [failed, disputes, jobs, webhook, noStripe, onboarding] = await Promise.all([
-    prisma.booking.findMany({ where: FAILED_CHARGE_WHERE, select: { courseId: true, totalAmount: true, course: { select: { name: true } } } }),
+    prisma.booking.findMany({ where: { ...FAILED_CHARGE_WHERE, ...ON_REAL_COURSE }, select: { courseId: true, totalAmount: true, course: { select: { name: true } } } }),
     openDisputes(),
     cronHealth(CRONS, now),
     lastStripeWebhook(),
-    prisma.course.findMany({ where: { active: true, stripeAccountActive: false, archivedAt: null }, select: { id: true, name: true } }),
+    prisma.course.findMany({ where: { active: true, stripeAccountActive: false, archivedAt: null, ...REAL_COURSE }, select: { id: true, name: true } }),
     todayOnboarding(now),
   ]);
   const out: Finding[] = [];

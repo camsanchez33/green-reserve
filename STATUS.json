@@ -1,26 +1,30 @@
 {
-  "generatedAt": "2026-10-22T22:34:26.384Z",
+  "generatedAt": "2026-10-22T22:43:01.351Z",
   "repo": {
-    "head": "c45008d",
+    "head": "cc9ee5b",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 16,
+    "dirtyCount": 24,
     "dirty": [
       "M  CLAUDE.md",
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "A  prisma/migrations/20261022214444_test1_course_is_test/migration.sql",
+      "MM docs/CODEMAP.md",
+      "MM docs/codemap.json",
       "M  prisma/schema.prisma",
-      "A  scripts/data-reset-db-test.ts",
-      "M  src/app/admin/courses/[id]/page.tsx",
-      "M  src/app/admin/system/page.tsx",
-      "A  src/app/api/admin/data-reset/route.ts",
-      "A  src/app/api/admin/test-course/route.ts",
-      "A  src/components/admin/TestDataTools.tsx",
-      "M  src/lib/admin-audit.ts",
-      "A  src/lib/data-reset.ts"
+      "A  scripts/real-courses-db-test.ts",
+      "M  src/app/admin/courses/page.tsx",
+      "M  src/app/api/admin/activity/route.ts",
+      "M  src/app/api/admin/nav-badges/route.ts",
+      "M  src/app/api/admin/revenue/route.ts",
+      "M  src/app/api/courses/route.ts",
+      "M  src/app/courses/[slug]/page.tsx",
+      "M  src/app/sitemap.ts",
+      "M  src/lib/access-fee.ts",
+      "M  src/lib/admin-action-queue.ts",
+      "M  src/lib/admin-ask.ts",
+      "M  src/lib/admin-checks.ts",
+      "M  src/lib/admin-goals.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -429,6 +433,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "3754fcb",
+      "date": "2026-10-22",
+      "subject": "TEST-1: launch wipe of test data, and resettable test courses (#190)"
+    },
+    {
       "h": "d0a4769",
       "date": "2026-10-22",
       "subject": "CI: the schema check replays migrations on its own Postgres (#192)"
@@ -482,11 +491,6 @@
       "h": "6ea9b46",
       "date": "2026-10-22",
       "subject": "Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)"
-    },
-    {
-      "h": "3c63c5d",
-      "date": "2026-10-22",
-      "subject": "AW-11 Team: per-person access — each employee's role and areas (#186)"
     }
   ]
 }

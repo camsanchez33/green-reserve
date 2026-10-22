@@ -12,11 +12,12 @@ export async function generateMetadata(
   const { slug } = await params;
   const course = await prisma.course.findUnique({
     where: { slug },
-    select: { name: true, city: true, state: true, type: true, heroPhotoUrl: true, logoUrl: true, photos: { orderBy: { sortOrder: 'asc' }, take: 1, select: { url: true } } },
+    select: { name: true, city: true, state: true, type: true, isTest: true, heroPhotoUrl: true, logoUrl: true, photos: { orderBy: { sortOrder: 'asc' }, take: 1, select: { url: true } } },
   });
   const isDemo = DEMO_COURSE_SLUGS.includes(slug);
-  const robots = isDemo ? { index: false, follow: false } : undefined;
   if (!course) return { title: 'Book Tee Times' };
+  // TEST-2: a test course's page works by link (screenshots, trying things) but is never indexed.
+  const robots = isDemo || course.isTest ? { index: false, follow: false } : undefined;
   if (course.type === 'private') {
     return {
       title: `${course.name} — Member Portal`,

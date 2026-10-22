@@ -34,6 +34,8 @@ interface CourseCall extends CheckinCallLike {
 interface Course {
   id: string; name: string; city: string; state: string; active: boolean; featured: boolean;
   stripeAccountActive: boolean; slug: string; type?: string;
+  /** TEST-1: a test course — left out of the platform's numbers and Problems (TEST-2). */
+  isTest?: boolean;
   operator: { email: string; name: string; onboardingStep: number; emailVerified: boolean } | null;
   createdAt: string; archivedAt?: string | null; archivedBy?: string | null;
   welcomeEmailSentAt?: string | null;
@@ -326,6 +328,7 @@ function CoursesContent() {
         <td className={tdCls}>
           <div className="text-sm font-medium text-ink truncate">{c.name}</div>
           <div className="text-[12px] text-ink-muted truncate">{c.city}, {c.state} · <span className="capitalize">{c.type || 'public'}</span></div>
+          {c.isTest && <span className="block mt-0.5"><StatusDot status="neutral" label="Test course — not in the platform numbers"/></span>}
         </td>
         {/* 2 · Operator */}
         <td className={tdCls}>

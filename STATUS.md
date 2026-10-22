@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 22:34 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `c45008d` · working tree **16 dirty file(s)**
+Generated 2026-10-22 22:43 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `cc9ee5b` · working tree **24 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -17,24 +17,28 @@ Generated 2026-10-22 22:34 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (16 file(s))
+### Uncommitted working tree (24 file(s))
 
 - `M  CLAUDE.md`
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
-- `UU docs/CODEMAP.md`
-- `UU docs/codemap.json`
-- `A  prisma/migrations/20261022214444_test1_course_is_test/migration.sql`
+- `MM docs/CODEMAP.md`
+- `MM docs/codemap.json`
 - `M  prisma/schema.prisma`
-- `A  scripts/data-reset-db-test.ts`
-- `M  src/app/admin/courses/[id]/page.tsx`
-- `M  src/app/admin/system/page.tsx`
-- `A  src/app/api/admin/data-reset/route.ts`
-- `A  src/app/api/admin/test-course/route.ts`
-- `A  src/components/admin/TestDataTools.tsx`
-- `M  src/lib/admin-audit.ts`
-- `A  src/lib/data-reset.ts`
+- `A  scripts/real-courses-db-test.ts`
+- `M  src/app/admin/courses/page.tsx`
+- `M  src/app/api/admin/activity/route.ts`
+- `M  src/app/api/admin/nav-badges/route.ts`
+- `M  src/app/api/admin/revenue/route.ts`
+- `M  src/app/api/courses/route.ts`
+- `M  src/app/courses/[slug]/page.tsx`
+- `M  src/app/sitemap.ts`
+- `M  src/lib/access-fee.ts`
+- `M  src/lib/admin-action-queue.ts`
+- `M  src/lib/admin-ask.ts`
+- `M  src/lib/admin-checks.ts`
+- `M  src/lib/admin-goals.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -158,6 +162,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `3754fcb` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
 - `d0a4769` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
 - `04301ce` 2026-10-22 — W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses
 - `2734cbd` 2026-10-22 — W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later
@@ -169,7 +174,6 @@ Nothing awaiting review.
 - `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 - `da32563` 2026-10-22 — Event pay-link email: say a reply reaches the course
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
-- `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
 
 ---
 

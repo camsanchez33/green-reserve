@@ -4,13 +4,15 @@
 // figure is counted here from the database; nothing is estimated and no
 // industry benchmark is printed. The route gates who sees it.
 import { prisma } from './prisma';
+import { REAL_COURSE, ON_REAL_COURSE } from './real-courses';
 import { startOfPlatformDay, startOfPlatformDaysAgo, platformHour, dayKey } from './admin-day';
 import { paidWindow } from './admin-today';
 import { counterFeesUncollected } from './access-fee';
 import { addDaysStr } from './course-time';
 
 const DAY = 86_400_000;
-const LIVE = { status: { not: 'cancelled' } } as const;
+// TEST-2: a test course's bookings never count toward the platform's numbers.
+const LIVE = { status: { not: 'cancelled' }, ...ON_REAL_COURSE } as const;
 
 /** Online bookings made between two instants: per platform hour (0–23), and when each was made. */
 async function onlineByHour(from: Date, to: Date): Promise<{ hours: number[]; at: Date[] }> {
@@ -73,7 +75,7 @@ export async function homeOverview(now: Date) {
   const [cur, prev, live, goal] = await Promise.all([
     week(mid, now, addDaysStr(today, -7), addDaysStr(today, -1)),
     week(new Date(now.getTime() - 14 * DAY), mid, addDaysStr(today, -14), addDaysStr(today, -8)),
-    prisma.course.count({ where: { active: true, archivedAt: null } }),
+    prisma.course.count({ where: { active: true, archivedAt: null, ...REAL_COURSE } }),
     // The live-courses goal due soonest that hasn't passed: the one Home measures against.
     prisma.adminGoal.findFirst({ where: { metric: 'courses_live', dueAt: { gt: now } }, orderBy: { dueAt: 'asc' }, select: { target: true, dueAt: true } }),
   ]);

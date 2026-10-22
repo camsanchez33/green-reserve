@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
 import { FAILED_CHARGE_WHERE, openDisputes } from '@/lib/money-problems';
+import { ON_REAL_COURSE } from '@/lib/real-courses';
 import { openProblemCount } from '@/lib/problems';
 import { todayHealth } from '@/lib/admin-today';
 import { hasArea, type AdminArea } from '@/lib/admin-areas';
@@ -29,8 +30,9 @@ export async function GET() {
   const now = new Date();
   const [pendingInquiries, unreadMessages, failed, disputes, problems, health] = await Promise.all([
     prisma.courseInquiry.count({ where: { status: 'pending' } }),
+    // A message is a conversation to answer, not a platform number: the test course's count too (same as Messages).
     prisma.message.count({ where: { senderType: 'operator', readAt: null, isBroadcast: false } }),
-    prisma.booking.count({ where: FAILED_CHARGE_WHERE }),
+    prisma.booking.count({ where: { ...FAILED_CHARGE_WHERE, ...ON_REAL_COURSE } }),
     openDisputes(),
     // ADMIN-C: the Problems count and the top bar's one line (same rules as Home's health line).
     openProblemCount(now),
