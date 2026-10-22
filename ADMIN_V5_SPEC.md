@@ -72,6 +72,7 @@ Earlier admin specs: ADMIN_REBUILD_SPEC, ADMIN_V2..V4_SPEC.
   - AW-8a built: Announcements is its own page (`/admin/announcements`, on the rail under Messages; `/admin/broadcasts` and `/admin/messages?view=announcements` redirect there), unchanged in behaviour. Messages is conversations only, in the three groups (`lib/thread-signal` decides who's waiting), with a right-hand panel: Open the course; the owner (phone to call, email, last in their dashboard); live since / bookings in 30 days; open change requests and failed charges, each linking to where it's fixed. AW-8b (audience, drafts, who saw it, scheduling) needs a schema change and touches what each course's dashboard shows.
 - **AW-9 Revenue.** Complete rework.
 - **AW-10 Golfers.** Question whether the admin needs a list of every golfer at all.
+  - AW-10 decided (Cam 2026-10-22: "Lookup only"): no list of every golfer. The page already worked that way (search, then one record); it is restyled to ADMIN-C as **Golfers** with nothing removed — resend confirmation/receipt, cancel for them, refund, the trust numbers and each booking's money timeline stay.
 - **AW-11 Employees.** Make it a good tab; change-password does not belong only here. Employee logins with per-person access to only some areas (owner sees everything) — needs building out.
 - **AW-12 Activity.** Rework; decide what belongs there (not "every single thing"). Questions to Cam.
 - **AW-13 Manual build.** Question whether it should exist at all (from V1).

@@ -47,8 +47,7 @@
     "uppercase": 1
   },
   "src/app/admin/golfers/page.tsx": {
-    "uppercase": 7,
-    "lucide": 5
+    "lucide": 3
   },
   "src/app/admin/inquiries/[id]/page.tsx": {
     "card": 2,

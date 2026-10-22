@@ -823,7 +823,7 @@
     },
     {
       "path": "src/app/admin/golfers/page.tsx",
-      "lines": 463,
+      "lines": 457,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -840,8 +840,6 @@
       "imports": [
         "@/components/EmptyState",
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/components/ui/Modal",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -10367,7 +10365,6 @@
         "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/goals/page.tsx",
-        "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
@@ -10483,7 +10480,6 @@
         "src/app/admin/create/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
-        "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, User, ArrowLeft, ExternalLink, X } from 'lucide-react';
+import { Search, ExternalLink, X } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { MANAGER_PLUS } from '@/lib/admin-roles';
@@ -10,8 +10,6 @@ import { EmptyState } from '@/components/EmptyState';
 import { adminFetch } from '@/lib/admin-fetch';
 import { formatMoney as fmtMoney, formatDate as fmtDate, formatStamp as fmtStamp } from '@/lib/format';
 import { Modal } from '@/components/ui/Modal';
-import { Eyebrow } from '@/components/ui/Eyebrow';
-import { Card } from '@/components/ui/Card';
 import { INPUT } from '@/components/ui/field';
 
 // MP-6d: the Golfers RECORD page. Before this it could look but barely touch:
@@ -180,18 +178,20 @@ function GolfersInner() {
   const remaining = refundTarget ? Math.max(0, refundTarget.totalAmount - refundTarget.refundedTotal) : 0;
 
   return (
-    <div className="min-h-screen bg-paper flex">
+    <div className="min-h-screen bg-white flex">
       <AdminSidebar active="golfers"/>
       <div className="admin-content flex-1 min-h-screen">
-        <div className="px-10 py-8">
+        <div className="px-10 pt-6 pb-10">
+          {/* ADMIN-C / AW-10 (Cam 2026-10-22, "lookup only"): no list of every golfer — search, then one record. */}
           <div className="mb-6">
-            <h1 className="text-[30px] leading-none font-serif font-semibold text-ink">{inRecord ? 'Golfer record' : 'Golfer lookup'}</h1>
+            <h1 className="m-0 text-[32px] font-bold tracking-[-0.02em] text-ink leading-none">{inRecord ? 'Golfer' : 'Golfers'}</h1>
+            {!inRecord && <p className="mt-2 text-[14px] text-ink-soft">Look one golfer up by name, email or phone to see their bookings and fix one — resend, cancel or refund.</p>}
           </div>
 
           {inRecord ? (
             <div>
-              <button onClick={() => go({ id: null, guest: null })} className="flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink transition-colors mb-5">
-                <ArrowLeft className="w-4 h-4"/>Back to search
+              <button type="button" onClick={() => go({ id: null, guest: null })} className="text-[14px] text-pine hover:underline mb-5">
+                Back to search
               </button>
 
               {detailLoading && <div className="py-16 text-center text-ink-muted text-sm">Loading…</div>}
@@ -205,11 +205,10 @@ function GolfersInner() {
               {detail && t && (
                 <div className="space-y-5">
                   {/* Identity */}
-                  <Card className="p-5">
+                  <div className="border-b border-line pb-5">
                     <div className="flex items-start gap-3">
-                      
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-ink text-base">{detail.firstName} {detail.lastName} {detail.isGuest && <span className="text-xs font-normal text-ink-muted">· guest, no account</span>}</div>
+                        <div className="text-[20px] font-bold text-ink">{detail.firstName} {detail.lastName} {detail.isGuest && <span className="text-xs font-normal text-ink-muted">· guest, no account</span>}</div>
                         <a href={'mailto:' + detail.email} className="text-sm text-ink-soft hover:text-pine">{detail.email}</a>
                         {detail.phone && <div className="text-sm text-ink-muted mt-0.5">{detail.phone}</div>}
                       </div>
@@ -218,10 +217,10 @@ function GolfersInner() {
                         <div className="font-medium text-ink-soft mt-0.5">{detail.createdAt ? fmtDate(detail.createdAt) : detail.bookings.length ? fmtDate(detail.bookings[detail.bookings.length - 1].createdAt) : '—'}</div>
                       </div>
                     </div>
-                  </Card>
+                  </div>
 
                   {/* Trust strip — whether to waive a fee gladly or spot a pattern */}
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-line border border-line rounded-lg overflow-hidden">
                     {[
                       { label: 'Rounds played', value: String(t.rounds), tone: 'text-ink' },
                       { label: 'Upcoming', value: String(t.upcoming), tone: 'text-ink' },
@@ -230,11 +229,11 @@ function GolfersInner() {
                       { label: 'Failed charges', value: String(t.failedCharges), tone: t.failedCharges > 0 ? 'text-bad' : 'text-ink' },
                       { label: 'Lifetime paid', value: fmtMoney(t.lifetimeCollected), tone: 'text-ok', sub: t.refunded > 0 ? `${fmtMoney(t.refunded)} refunded` : undefined },
                     ].map(c => (
-                      <Card key={c.label} className="p-4">
-                        <Eyebrow className="mb-1">{c.label}</Eyebrow>
-                        <div className={'text-[22px] font-serif font-semibold leading-none tabular-nums ' + c.tone}>{c.value}</div>
-                        {c.sub && <div className="text-[11px] text-ink-faint mt-1">{c.sub}</div>}
-                      </Card>
+                      <div key={c.label} className="bg-white p-4">
+                        <div className="text-[13px] text-ink-soft mb-1">{c.label}</div>
+                        <div className={'text-[22px] font-medium leading-none tabular-nums ' + c.tone}>{c.value}</div>
+                        {c.sub && <div className="text-[12px] text-ink-muted mt-1">{c.sub}</div>}
+                      </div>
                     ))}
                   </div>
 
@@ -246,9 +245,9 @@ function GolfersInner() {
                   )}
 
                   {/* Bookings + money, one timeline per booking */}
-                  <Eyebrow>Bookings ({detail.bookings.length})</Eyebrow>
+                  <h2 className="text-[20px] font-bold text-ink">Bookings <span className="font-normal text-ink-muted">{detail.bookings.length}</span></h2>
                   {detail.bookings.length === 0 ? (
-                    <Card className="py-12 text-center text-ink-muted text-sm">No bookings</Card>
+                    <p className="py-6 text-ink-soft text-[14px]">No bookings.</p>
                   ) : (
                     <div className="space-y-2">
                       {detail.bookings.map(b => {
@@ -258,7 +257,7 @@ function GolfersInner() {
                         const canRefund = (b.paymentStatus === 'paid' || b.paymentStatus === 'refunded') && b.totalAmount - b.refundedTotal > 0.005;
                         const canReceipt = b.paymentStatus === 'paid' || b.paymentStatus === 'refunded';
                         return (
-                          <Card key={b.id} className="px-5 py-4">
+                          <div key={b.id} className="border border-line rounded-lg px-5 py-4">
                             <div className="flex items-start gap-3">
                               <div className="pt-0.5"><StatusDot status={st.dot} label={st.label}/></div>
                               <div className="flex-1 min-w-0">
@@ -320,7 +319,7 @@ function GolfersInner() {
                                 </button>
                               )}
                             </div>
-                          </Card>
+                          </div>
                         );
                       })}
                     </div>
@@ -345,16 +344,15 @@ function GolfersInner() {
 
               {searched && !searching && (
                 golfers.length === 0 && guestPeople.length === 0 ? (
-                  <Card><EmptyState message={`No golfers found for "${query}"`} /></Card>
+                  <EmptyState message={`No golfers found for "${query}"`} />
                 ) : (
                   <div className="space-y-5">
                     {golfers.length > 0 && (
                       <div>
-                        <Eyebrow className="mb-2">Golfer accounts ({golfers.length})</Eyebrow>
-                        <Card className="divide-y divide-line-soft overflow-hidden">
+                        <h2 className="text-[16px] font-semibold text-ink mb-2">Golfer accounts <span className="font-normal text-ink-muted">{golfers.length}</span></h2>
+                        <div className="border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
                           {golfers.map(g => (
                             <button key={g.id} onClick={() => go({ id: g.id, guest: null, q: query })} className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-paper/60 transition-colors text-left">
-                              <div className="w-8 h-8 rounded-full bg-pine/10 flex items-center justify-center shrink-0"><User className="w-4 h-4 text-pine"/></div>
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium text-sm text-ink">{g.name}</div>
                                 <div className="text-xs text-ink-muted mt-0.5">{g.email}{g.phone ? ` · ${g.phone}` : ''}</div>
@@ -366,16 +364,15 @@ function GolfersInner() {
                               
                             </button>
                           ))}
-                        </Card>
+                        </div>
                       </div>
                     )}
                     {guestPeople.length > 0 && (
                       <div>
-                        <Eyebrow className="mb-2">Guests — no account ({guestPeople.length})</Eyebrow>
-                        <Card className="divide-y divide-line-soft overflow-hidden">
+                        <h2 className="text-[16px] font-semibold text-ink mb-2">Guests, no account <span className="font-normal text-ink-muted">{guestPeople.length}</span></h2>
+                        <div className="border border-line rounded-lg divide-y divide-line-soft overflow-hidden">
                           {guestPeople.map(p => (
                             <button key={p.email} onClick={() => go({ guest: p.email, id: null, q: query })} className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-paper/60 transition-colors text-left">
-                              <div className="w-8 h-8 rounded-full bg-paper border border-line flex items-center justify-center shrink-0"><User className="w-4 h-4 text-ink-muted"/></div>
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium text-sm text-ink">{p.name}</div>
                                 <div className="text-xs text-ink-muted mt-0.5">{p.email}{p.phone ? ` · ${p.phone}` : ''}</div>
@@ -387,7 +384,7 @@ function GolfersInner() {
                               
                             </button>
                           ))}
-                        </Card>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -395,10 +392,7 @@ function GolfersInner() {
               )}
 
               {!searched && !searching && (
-                <div className="py-20 text-center">
-                  <Search className="w-8 h-8 text-ink-faint mx-auto mb-3"/>
-                  <div className="text-ink-muted text-sm">Search by email, name, or phone to look up a golfer</div>
-                </div>
+                <p className="py-10 text-[14px] text-ink-soft">Type at least two letters of a name, an email or a phone number.</p>
               )}
             </div>
           )}
@@ -409,7 +403,7 @@ function GolfersInner() {
       {cancelTarget && (
         <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setCancelTarget(null)}
           title={`Cancel ${cancelTarget.courseName} for ${detail?.firstName ?? 'this golfer'}?`}
-          titleNode={<h3 className="font-serif font-semibold text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>}>
+          titleNode={<h3 className="text-[18px] font-bold text-ink mb-1">Cancel {cancelTarget.courseName} for {detail?.firstName}?</h3>}>
             <p className="text-sm text-ink-soft mb-3">
               {cancelTarget.teeDate} at {cancelTarget.teeTime}. {cancelTarget.paymentStatus === 'paid'
                 ? 'The round was already paid — it is refunded as part of the cancellation.'
@@ -417,7 +411,7 @@ function GolfersInner() {
                   ? 'Their late-cancellation fee was already charged and stays charged.'
                   : 'Nothing has been charged; their card is simply never billed.'} They are emailed with your reason.
             </p>
-            <label className="block"><Eyebrow as="span" className="block mb-1.5">Reason — the golfer reads this</Eyebrow>
+            <label className="block"><span className="block mb-1.5 text-[13px] text-ink-soft">Reason — the golfer reads this</span>
             <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder="You called to say you can't make it and asked us to cancel." className={iCls + ' w-full resize-none mb-3'} /></label>
             {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
             <div className="flex gap-3">
@@ -431,16 +425,16 @@ function GolfersInner() {
       {refundTarget && (
         <Modal size="sm" pad="p-6" dismissable={!busy} onClose={() => setRefundTarget(null)}
           title={`Refund ${detail?.firstName ?? 'this golfer'}`}
-          titleNode={<h3 className="font-serif font-semibold text-ink mb-1">Refund {detail?.firstName}</h3>}>
+          titleNode={<h3 className="text-[18px] font-bold text-ink mb-1">Refund {detail?.firstName}</h3>}>
             <p className="text-sm text-ink-soft mb-4">
               {fmtMoney(refundTarget.totalAmount)} was charged for {refundTarget.courseName}, {refundTarget.teeDate}{refundTarget.refundedTotal > 0 ? ` · ${fmtMoney(refundTarget.refundedTotal)} already refunded` : ''}. It goes back to the card they paid with; the course&apos;s payout and GreenReserve&apos;s fee are both reduced.
             </p>
-            <label className="block"><Eyebrow as="span" className="block mb-1.5">Amount (blank = {fmtMoney(remaining)}, the rest)</Eyebrow>
+            <label className="block"><span className="block mb-1.5 text-[13px] text-ink-soft">Amount (blank = {fmtMoney(remaining)}, the rest)</span>
             <div className="relative mb-3">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
               <input type="number" step="0.01" min="0.01" max={remaining} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={remaining.toFixed(2)} className={iCls + ' w-full pl-7'} />
             </div></label>
-            <label className="block"><Eyebrow as="span" className="block mb-1.5">Reason — the golfer reads this</Eyebrow>
+            <label className="block"><span className="block mb-1.5 text-[13px] text-ink-soft">Reason — the golfer reads this</span>
             <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} rows={3} placeholder="Charged twice by mistake — refunding the duplicate." className={iCls + ' w-full resize-none mb-3'} /></label>
             {modalError && <p className="text-xs text-bad mb-3">{modalError}</p>}
             <div className="flex gap-3">
