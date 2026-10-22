@@ -1,32 +1,11 @@
 {
-  "generatedAt": "2026-10-22T02:24:39.565Z",
+  "generatedAt": "2026-10-22T02:28:02.961Z",
   "repo": {
-    "head": "58642d3",
+    "head": "922474d",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 24,
-    "dirty": [
-      "M  ADMIN_V5_SPEC.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/admin-course-page-test.ts",
-      "A  scripts/course-feed-db-test.ts",
-      "A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
-      "M  src/app/admin/courses/[id]/page.tsx",
-      "M  src/app/admin/system/page.tsx",
-      "A  src/app/api/admin/course-feed/route.ts",
-      "M  src/app/api/admin/resend-staff-setup/route.ts",
-      "A  src/app/api/admin/sentry-test/route.ts",
-      "M  src/app/api/operator/bookings/route.ts",
-      "M  src/app/api/operator/events/[id]/route.ts",
-      "M  src/app/api/operator/shop-sales/route.ts",
-      "M  src/lib/admin-audit.ts",
-      "M  src/lib/admin-course-tabs.ts",
-      "A  src/lib/course-timeline-groups.ts",
-      "M  src/lib/course-timeline.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-19T10:10:52-04:00",
@@ -49,6 +28,13 @@
         "h": "c39a10c",
         "date": "2026-10-22T02:19:10+00:00",
         "subject": "MAIL-1: a cancellation that kept a fee comes from billing@",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4bd2042",
+        "date": "2026-10-21T22:06:00-04:00",
+        "subject": "BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)",
         "ids": [],
         "matches": []
       },
@@ -943,7 +929,7 @@
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-22",
+      "lastTouched": "2026-10-21",
       "ageDays": 0
     },
     {
@@ -1169,6 +1155,11 @@
       "subject": "MAIL-1: a cancellation that kept a fee comes from billing@"
     },
     {
+      "h": "4bd2042",
+      "date": "2026-10-21",
+      "subject": "BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)"
+    },
+    {
       "h": "512e214",
       "date": "2026-10-22",
       "subject": "queue/spec update"
@@ -1207,11 +1198,6 @@
       "h": "0cb3627",
       "date": "2026-10-22",
       "subject": "W2-8b: a regular who has booked again is not 'gone quiet'"
-    },
-    {
-      "h": "21a19af",
-      "date": "2026-10-22",
-      "subject": "test-email.js: send from support@ (hello@ no longer exists)"
     }
   ]
 }
