@@ -276,7 +276,7 @@ export default function AdminHomePage() {
                         <Stat href="/admin/goals" cls="sm:border-r border-b sm:border-b-0" label="Live courses" value={String(ov.liveCourses)}
                             note={ov.liveGoal ? `goal ${ov.liveGoal.target} by ${dateText(ov.liveGoal.dueAt)}` : 'set a goal'} />
                         <Stat cls="sm:border-r border-b sm:border-b-0" label="No-show rate" value={c.noShowPct === null ? '—' : `${c.noShowPct}%`}
-                          note={c.rounds ? `${c.noShows} of ${c.rounds} rounds` : 'no rounds played'} />
+                          note={c.rounds ? `${c.noShows} of ${c.rounds} rounds, to yesterday` : 'no rounds played'} />
                         <Stat href="/admin/revenue" cls="" label="Fees not collected" value={fmtMoney(c.uncollectedCents / 100)}
                             note={c.uncollectedRounds ? `${c.uncollectedRounds} paid at the counter` : 'none'} tone={c.uncollectedRounds ? 'text-warn' : 'text-ink-muted'} />
                       </div>
@@ -432,8 +432,8 @@ export default function AdminHomePage() {
                         return (
                           <div key={g.id} className="mt-2.5">
                             <div className="text-[14px] text-ink">{g.label}: {show(g.target)} by {dateText(g.dueAt)}</div>
-                            <div className="h-1.5 bg-line rounded-full mt-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${g.label} goal`}>
-                              <div className={`h-1.5 rounded-full ${g.status === 'behind' ? 'bg-warn' : 'bg-fairway'}`} style={{ width: `${pct}%` }} />
+                            <div className="h-1.5 bg-line rounded-sm mt-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${g.label} goal`}>
+                              <div className={`h-1.5 rounded-sm ${g.status === 'behind' ? 'bg-warn' : 'bg-fairway'}`} style={{ width: `${pct}%` }} />
                             </div>
                             <div className={`mt-1.5 text-[12.5px] ${g.status === 'behind' ? 'text-warn' : 'text-ink-muted'}`}>{show(g.current)} of {show(g.target)} · {PACE[g.status]}</div>
                           </div>

@@ -528,6 +528,29 @@ async function main() {
     const m = await api('/api/admin/goals', { method: 'POST', cookie: mgr, body: { metric: 'courses_live', target: 1, dueDate: '2099-01-01' } });
     checkStatus('A token claiming manager (a viewer in the database) cannot add a goal → 403', m.status, 403);
   }
+  {
+    // BRAIN-2a: on Problems, support may take and note; assigning, snoozing and
+    // waking need manager — the route checks, not the page.
+    const sup = await prisma.adminUser.create({ data: { name: 'Isol Support', email: `${TS}-support@test.local`, passwordHash: 'x', role: 'support', active: true } });
+    const alert = await prisma.adminAlert.create({ data: { key: `isol-problem-${TS}`, kind: 'urgent', title: 'Isolation problem' } });
+    try {
+      const { signAdminToken } = await import('../src/lib/admin-session');
+      const supCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'support', mfa: true })}`;
+      const patch = (body: Record<string, unknown>) => api('/api/admin/problems', { method: 'PATCH', cookie: supCookie, body: { id: alert.id, ...body } });
+      checkStatus('Support cannot assign a problem → 403', (await patch({ action: 'assign', adminId: null })).status, 403);
+      checkStatus('Support cannot snooze a problem → 403', (await patch({ action: 'snooze', days: 1, reason: 'later please' })).status, 403);
+      checkStatus('Support cannot wake a problem → 403', (await patch({ action: 'unsnooze' })).status, 403);
+      checkStatus('Support can take an unowned problem → 200', (await patch({ action: 'claim' })).status, 200);
+      await prisma.adminAlert.update({ where: { id: alert.id }, data: { ownerId: data.adminOwner.id, ownerName: 'Isol Owner' } });
+      checkStatus('Support cannot take one someone else has → 403', (await patch({ action: 'claim' })).status, 403);
+      await prisma.adminAlert.update({ where: { id: alert.id }, data: { resolvedAt: new Date() } });
+      checkStatus('Nobody notes a cleared problem → 409', (await patch({ action: 'note', text: 'done' })).status, 409);
+    } finally {
+      await prisma.adminAlert.delete({ where: { id: alert.id } });
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: sup.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: sup.id } });
+    }
+  }
 
   console.log('\n── Admin owner auth boundary (AW-1: the owner signs in only at /cam) ──');
   {

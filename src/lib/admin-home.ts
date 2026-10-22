@@ -12,12 +12,12 @@ import { addDaysStr } from './course-time';
 const DAY = 86_400_000;
 const LIVE = { status: { not: 'cancelled' } } as const;
 
-/** Online bookings made per platform hour (0–23) between two instants. */
-async function onlineByHour(from: Date, to: Date): Promise<number[]> {
+/** Online bookings made between two instants: per platform hour (0–23), and when each was made. */
+async function onlineByHour(from: Date, to: Date): Promise<{ hours: number[]; at: Date[] }> {
   const rows = await prisma.booking.findMany({ where: { ...LIVE, source: 'online', createdAt: { gte: from, lt: to } }, select: { createdAt: true } });
   const hours = Array(24).fill(0) as number[];
   for (const r of rows) hours[platformHour(r.createdAt)] += 1;
-  return hours;
+  return { hours, at: rows.map(r => r.createdAt) };
 }
 
 /**
@@ -35,18 +35,20 @@ export async function homeToday(now: Date) {
   ]);
   const hourNow = platformHour(now);
   return {
-    hours: today, lastWeekHours: lastWeek, hourNow,
-    bookings: today.reduce((a, b) => a + b, 0),
-    lastWeekSoFar: lastWeek.slice(0, hourNow + 1).reduce((a, b) => a + b, 0),
+    hours: today.hours, lastWeekHours: lastWeek.hours, hourNow,
+    bookings: today.at.length,
+    // To the minute, like today's count and the fees — not the whole current hour.
+    lastWeekSoFar: lastWeek.at.filter(d => d < lwNow).length,
     feesCents: fees.feesCents, lastWeekFeesCents: lwFees.feesCents,
   };
 }
 
-/** One rolling 7-day window's numbers: bookings, online share, fees, no-shows, cash fees. */
-async function week(from: Date, to: Date) {
-  // No-shows go by the round's date, not when it was booked: rounds played in the window.
-  const firstDay = dayKey(from);
-  const lastDay = dayKey(new Date(to.getTime() - 1));
+/**
+ * One rolling 7-day window's numbers: bookings, online share, fees, cash fees.
+ * No-shows go by the round's date over 7 whole platform days (firstDay..lastDay),
+ * ending yesterday — today's rounds haven't all been played.
+ */
+async function week(from: Date, to: Date, firstDay: string, lastDay: string) {
   const [online, all, money, played, noShows, counter] = await Promise.all([
     prisma.booking.count({ where: { ...LIVE, source: 'online', createdAt: { gte: from, lt: to } } }),
     prisma.booking.count({ where: { ...LIVE, createdAt: { gte: from, lt: to } } }),
@@ -67,9 +69,10 @@ async function week(from: Date, to: Date) {
 
 export async function homeOverview(now: Date) {
   const mid = new Date(now.getTime() - 7 * DAY);
+  const today = dayKey(now);
   const [cur, prev, live, goal] = await Promise.all([
-    week(mid, now),
-    week(new Date(now.getTime() - 14 * DAY), mid),
+    week(mid, now, addDaysStr(today, -7), addDaysStr(today, -1)),
+    week(new Date(now.getTime() - 14 * DAY), mid, addDaysStr(today, -14), addDaysStr(today, -8)),
     prisma.course.count({ where: { active: true, archivedAt: null } }),
     // The live-courses goal due soonest that hasn't passed: the one Home measures against.
     prisma.adminGoal.findFirst({ where: { metric: 'courses_live', dueAt: { gt: now } }, orderBy: { dueAt: 'asc' }, select: { target: true, dueAt: true } }),

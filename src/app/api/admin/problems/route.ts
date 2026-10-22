@@ -40,6 +40,9 @@ export async function PATCH(req: NextRequest) {
 
   switch (body.action) {
     case 'claim': {
+      if (alert.resolvedAt) return NextResponse.json({ error: 'This problem already cleared.' }, { status: 409 });
+      // Taking one someone else has is a reassignment: manager+.
+      if (alert.ownerId && alert.ownerId !== session.adminId && !manager) return NextResponse.json({ error: `${alert.ownerName || 'Someone'} has this one. A manager can reassign it.` }, { status: 403 });
       await prisma.adminAlert.update({ where: { id }, data: { ownerId: session.adminId, ownerName: session.name } });
       await event('claimed');
       await audit('problem_claim', {});
@@ -47,6 +50,7 @@ export async function PATCH(req: NextRequest) {
     }
     case 'assign': {
       if (!manager) return NextResponse.json({ error: 'Assigning a problem to someone else needs manager access.' }, { status: 403 });
+      if (alert.resolvedAt) return NextResponse.json({ error: 'This problem already cleared.' }, { status: 409 });
       const to = typeof body.adminId === 'string' && body.adminId ? await prisma.adminUser.findFirst({ where: { id: body.adminId, active: true }, select: { id: true, name: true } }) : null;
       if (body.adminId && !to) return NextResponse.json({ error: 'That person isn’t an active employee.' }, { status: 400 });
       await prisma.adminAlert.update({ where: { id }, data: { ownerId: to?.id ?? null, ownerName: to?.name ?? '' } });
@@ -57,6 +61,7 @@ export async function PATCH(req: NextRequest) {
     case 'note': {
       const text = typeof body.text === 'string' ? body.text.trim() : '';
       if (!text) return NextResponse.json({ error: 'Write what was done first.' }, { status: 400 });
+      if (alert.resolvedAt) return NextResponse.json({ error: 'This problem already cleared.' }, { status: 409 });
       await event('note', text);
       await audit('problem_note', { text: text.slice(0, 500) });
       break;

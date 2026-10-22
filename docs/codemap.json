@@ -2497,7 +2497,7 @@
     },
     {
       "path": "src/app/api/admin/problems/route.ts",
-      "lines": 89,
+      "lines": 94,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8685,7 +8685,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 232,
+      "lines": 234,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8705,8 +8705,10 @@
       "guard": null,
       "imports": [
         "@/components/admin/CommandPalette",
+        "@/components/ui/StatusDot",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
+        "next/image",
         "next/link",
         "react"
       ],
@@ -10454,6 +10456,7 @@
         "src/app/dashboard/shop/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/receipt/[bookingId]/page.tsx",
+        "src/components/admin/AdminSidebar.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/InquiryBoard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
@@ -11180,7 +11183,7 @@
     },
     {
       "path": "src/lib/admin-home.ts",
-      "lines": 125,
+      "lines": 128,
       "purpose": "ADMIN-C (Cam 2026-10-22, mockup C \"Clean hub\"):",
       "brain": [],
       "exports": [

@@ -1,6 +1,8 @@
 'use client';
 import { SUPPORT_PLUS, MANAGER_PLUS, VIEWER_PLUS, OWNER_ONLY } from '@/lib/admin-roles';
 import Link from 'next/link';
+import Image from 'next/image';
+import { StatusDot } from '@/components/ui/StatusDot';
 import { useEffect, useState, useCallback } from 'react';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
@@ -151,9 +153,9 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     <>
     <CommandPalette/>
     <div className="fixed left-0 top-0 h-full w-60 bg-white border-r border-line flex flex-col z-20">
-      <Link href="/admin" className="flex items-center gap-2.5 px-5 h-14 shrink-0">
-        <span className="w-7 h-7 rounded-md bg-pine text-white flex items-center justify-center text-[12px] font-bold">GR</span>
-        <span className="text-[15px] font-semibold text-ink">GreenReserve</span>
+      <Link href="/admin" className="flex items-center px-5 h-14 shrink-0" aria-label="GreenReserve admin home">
+        {/* LOGO-1: the vector lockup, top-left, as on every page. */}
+        <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={150} height={28} className="w-[150px] h-auto" />
       </Link>
 
       <nav aria-label="Admin" className="flex-1 px-3 pb-3 pt-2 space-y-5 overflow-y-auto">
@@ -198,7 +200,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       </button>
       {systemsOk !== null && (
         <Link href="/admin/system" className={`ml-auto flex items-center gap-2 text-[13px] ${systemsOk ? 'text-ok' : 'text-bad font-medium'}`}>
-          <span className={`w-2 h-2 rounded-full ${systemsOk ? 'bg-ok' : 'bg-bad'}`} />
+          <StatusDot status={systemsOk ? 'ok' : 'bad'} />
           {systemsOk ? 'All systems running' : 'A system needs attention'}
         </Link>
       )}

@@ -75,9 +75,9 @@ function ProblemRow({ p, data, onDone, startOpen }: { p: Problem; data: Data; on
           </div>
         </div>
         <div className="shrink-0 flex items-center gap-2">
-          {live && p.ownerId !== data.me && (
+          {live && (!p.ownerId || (p.ownerId !== data.me && data.canManage)) && (
             <button type="button" onClick={() => act('claim')} disabled={!!busy} className="text-[13px] font-medium px-3 py-1.5 rounded-md bg-pine hover:bg-pine-hover text-white disabled:opacity-50">
-              {busy === 'claim' ? 'Taking…' : 'Take it'}
+              {busy === 'claim' ? 'Taking…' : p.ownerId ? 'Take it over' : 'Take it'}
             </button>
           )}
           <Link href={p.href} className={BTN}>Go to it</Link>
