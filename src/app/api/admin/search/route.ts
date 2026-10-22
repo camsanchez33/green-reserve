@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
     { id: 'nav:revenue',     label: 'Revenue',       href: '/admin/revenue',    support: true },
     { id: 'nav:golfers',     label: 'Golfer lookup', href: '/admin/golfers',    support: true },
     { id: 'nav:employees',   label: 'Employees',     href: '/admin/employees',  manager: true },
-    { id: 'nav:broadcasts',  label: 'Announcements', href: '/admin/messages?view=announcements', support: true },
+    { id: 'nav:broadcasts',  label: 'Announcements', href: '/admin/announcements', support: true },
     { id: 'nav:system',      label: 'Health',        href: '/admin/system',     manager: true },
     { id: 'nav:activity',    label: 'Activity',      href: '/admin/activity',   always: true },
     { id: 'nav:profile',     label: 'My profile',    href: '/admin/profile',    always: true },

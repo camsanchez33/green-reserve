@@ -68,6 +68,8 @@ Earlier admin specs: ADMIN_REBUILD_SPEC, ADMIN_V2..V4_SPEC.
 - **AW-6 Inquiries.** Complete rework.
 - **AW-7 Courses.** Complete rework.
 - **AW-8 Messages.** Organise; announcements become their own area.
+  - AW-8 decisions (Cam 2026-10-22): the inbox in three groups — Waiting on you (oldest wait first) · Waiting on them · Closed (folded); the course's details in a side panel beside the thread; announcements pick their audience (all live · live + setting up · one course group · hand-picked); the Announcements page also gets drafts, who saw it, and schedule for later.
+  - AW-8a built: Announcements is its own page (`/admin/announcements`, on the rail under Messages; `/admin/broadcasts` and `/admin/messages?view=announcements` redirect there), unchanged in behaviour. Messages is conversations only, in the three groups (`lib/thread-signal` decides who's waiting), with a right-hand panel: Open the course; the owner (phone to call, email, last in their dashboard); live since / bookings in 30 days; open change requests and failed charges, each linking to where it's fixed. AW-8b (audience, drafts, who saw it, scheduling) needs a schema change and touches what each course's dashboard shows.
 - **AW-9 Revenue.** Complete rework.
 - **AW-10 Golfers.** Question whether the admin needs a list of every golfer at all.
 - **AW-11 Employees.** Make it a good tab; change-password does not belong only here. Employee logins with per-person access to only some areas (owner sees everything) — needs building out.
