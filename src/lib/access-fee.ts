@@ -158,11 +158,12 @@ export async function refundSeparateAccessFee(bookingId: string, reason: string,
  * card (and not refunded) counts as collected. Counter/phone bookings carry no
  * fee (accessFeeTotal 0) and are never counted.
  */
-export async function counterFeesUncollected(paidAt: { gte: Date; lt: Date }): Promise<{
+export async function counterFeesUncollected(paidAt: { gte: Date; lt: Date }, courseId?: string): Promise<{
   cents: number; rounds: number; byCourse: Map<string, { rounds: number; cents: number }>;
 }> {
   const rows = await prisma.booking.findMany({
-    where: { paymentStatus: 'paid_offline', accessFeeTotal: { gt: 0 }, paidAt },
+    // AW-7: courseId narrows it to one course (its admin Money tab).
+    where: { paymentStatus: 'paid_offline', accessFeeTotal: { gt: 0 }, paidAt, ...(courseId ? { courseId } : {}) },
     select: { courseId: true, accessFeeTotal: true, paymentEvents: { where: { kind: { in: ['fee_charged', 'fee_refunded'] } }, select: { kind: true, amountCents: true } } },
   });
   const byCourse = new Map<string, { rounds: number; cents: number }>();

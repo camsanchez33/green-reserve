@@ -25,13 +25,16 @@ const WEBHOOK_QUIET_DAYS = 7;
  * those refunded), all in cents. ONE definition — Today, Goals and the tests
  * read it.
  */
-export async function paidWindow(from: Date, to: Date) {
+export async function paidWindow(from: Date, to: Date, courseId?: string) {
   const range = { gte: from, lt: to };
+  // AW-7: one course's share, by the same rule (its course page's Money tab).
+  const course = courseId ? { courseId } : {};
+  const eventCourse = courseId ? { booking: { courseId } } : {};
   const [rounds, sepCharged, sepRefunded] = await Promise.all([
-    prisma.booking.aggregate({ where: { ...PAID, paidAt: range }, _sum: { greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true }, _count: { id: true } }),
+    prisma.booking.aggregate({ where: { ...PAID, ...course, paidAt: range }, _sum: { greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true }, _count: { id: true } }),
     // FB-3: booking fees charged on their own count toward what we earned (as on Revenue).
-    prisma.paymentEvent.aggregate({ where: { kind: 'fee_charged', createdAt: range }, _sum: { amountCents: true } }),
-    prisma.paymentEvent.aggregate({ where: { kind: 'fee_refunded', createdAt: range }, _sum: { amountCents: true } }),
+    prisma.paymentEvent.aggregate({ where: { kind: 'fee_charged', ...eventCourse, createdAt: range }, _sum: { amountCents: true } }),
+    prisma.paymentEvent.aggregate({ where: { kind: 'fee_refunded', ...eventCourse, createdAt: range }, _sum: { amountCents: true } }),
   ]);
   return {
     rounds: rounds._count.id,

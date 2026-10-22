@@ -21,20 +21,12 @@
     "uppercase": 4,
     "lucide": 2
   },
-  "src/app/admin/courses/[id]/_parts/OverviewTab.tsx": {
-    "uppercase": 11,
-    "lucide": 2
-  },
-  "src/app/admin/courses/[id]/_parts/RecordsTab.tsx": {
-    "uppercase": 4,
-    "lucide": 2
-  },
   "src/app/admin/courses/[id]/_parts/SetupTab.tsx": {
-    "uppercase": 14,
+    "uppercase": 13,
     "lucide": 1
   },
   "src/app/admin/courses/[id]/page.tsx": {
-    "lucide": 3
+    "lucide": 4
   },
   "src/app/admin/courses/page.tsx": {
     "uppercase": 1,

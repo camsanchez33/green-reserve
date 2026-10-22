@@ -3,18 +3,62 @@
 // MP-12 (ADMIN_V4 V4-9): split out of admin/courses/[id]/page.tsx, which had
 // grown to 2,700 lines and 52 useState in one component. Moved verbatim; state
 // and handlers come from useCourseDetail() via useCourse().
+// AW-7 (Cam 2026-10-21): leads with what GreenReserve earned from the course
+// this month, the cash rounds whose fee was never collected, and failed
+// charges with a retry; the transactions follow.
 
 import { X, Search } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { formatDate as fmtDate, formatMoney as fmtMoney } from '@/lib/format';
+import { formatDate as fmtDate, formatMoney as fmtMoney, formatTeeTime as fmtTime } from '@/lib/format';
 import { Card } from '@/components/ui/Card';
 import { TX_STATUS, iCls } from './shared';
 import { useCourse } from './context';
 
 export function MoneyTab() {
-  const { txItems, setRefundTarget, setRefundAmount, setRefundReason, setRefundError, refundNote, setRefundNote, txLoading, txError, txPage, setTxPage, txPages, txTotal, txFrom, setTxFrom, txTo, setTxTo, txSearch, setTxSearch, loadTransactions, openOperate } = useCourse();
+  const { detail, retryingId, retryMsg, retryCharge, txItems, setRefundTarget, setRefundAmount, setRefundReason, setRefundError, refundNote, setRefundNote, txLoading, txError, txPage, setTxPage, txPages, txTotal, txFrom, setTxFrom, txTo, setTxTo, txSearch, setTxSearch, loadTransactions, openOperate } = useCourse();
+  const m = detail.money;
+  const vs = m.feesSamePointLastMonth;
   return (
             <div className="max-w-5xl">
+              <p className="text-[14px] text-ink mb-5">
+                {fmtMoney(m.feesThisMonth)} in GreenReserve fees this month from {m.roundsThisMonth} paid round{m.roundsThisMonth === 1 ? '' : 's'}
+                <span className="text-ink-muted"> · {fmtMoney(vs)} at the same point last month{detail.relationship ? ` · ${fmtMoney(detail.relationship.earnedCents / 100)} from ${detail.relationship.paidRounds} paid round${detail.relationship.paidRounds === 1 ? '' : 's'} all time` : ''}</span>.
+                {' '}{m.counterThisMonth.rounds === 0
+                  ? 'No online booking was paid in cash this month.'
+                  : <>{m.counterThisMonth.rounds} online booking{m.counterThisMonth.rounds === 1 ? ' was' : 's were'} paid in cash this month, so {fmtMoney(m.counterThisMonth.fees)} in fees wasn’t collected <span className="text-ink-muted">({m.counterAllTime.rounds} round{m.counterAllTime.rounds === 1 ? '' : 's'}, {fmtMoney(m.counterAllTime.fees)} all time)</span>.</>}
+              </p>
+
+              {m.failedCharges.length > 0 && (
+                <Card className="mb-5 border-l-[3px] border-bad">
+                  <div className="px-5 pt-4 pb-2">
+                    <h2 className="text-[15px] font-semibold text-ink">Failed charges</h2>
+                    <p className="text-[13px] text-ink-soft mt-0.5">The saved card was declined at check-in. Ask the golfer to update it, then retry — retrying charges the card only; it doesn’t check them in.</p>
+                  </div>
+                  <div className="divide-y divide-line-soft">
+                    {m.failedCharges.map(f => (
+                      <div key={f.bookingId} className="px-5 py-3">
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-ink truncate">{f.golferName} <span className="text-ink-muted font-normal">· {f.golferEmail}</span></div>
+                            <div className="text-xs text-ink-muted">{fmtDate(f.teeDate)} at {fmtTime(f.teeTime)}{f.reason ? ` · ${f.reason}` : ''}</div>
+                          </div>
+                          <span className="text-sm text-ink tabular-nums">{fmtMoney(f.amount)}</span>
+                          <button onClick={() => retryCharge(f)} disabled={retryingId !== null}
+                            className="text-[12.5px] font-medium text-white bg-pine hover:bg-pine-hover rounded-md px-2.5 py-1.5 disabled:opacity-50">
+                            {retryingId === f.bookingId ? 'Charging…' : 'Retry charge'}
+                          </button>
+                        </div>
+                        {retryMsg?.id === f.bookingId && <p role="alert" className={'text-xs mt-1.5 ' + (retryMsg.ok ? 'text-ok' : 'text-bad')}>{retryMsg.text}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+              {retryMsg?.ok && !m.failedCharges.some(f => f.bookingId === retryMsg.id) && (
+                <p className="mb-5 text-sm text-ok">{retryMsg.text}</p>
+              )}
+
+              <h2 className="text-[15px] font-semibold text-ink mb-2">Transactions</h2>
               <Card className="p-4 mb-5">
                 <div className="flex flex-wrap gap-3">
                   <div className="relative flex-1 min-w-52">

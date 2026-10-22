@@ -74,7 +74,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
       id: `ns-${c.id}`, courseId: c.id, who: c.name, severity: 'bad',
       why: 'Live but can’t take payments — Stripe incomplete',
       doThis: 'Operator hasn’t finished connecting their bank account — check their Setup tab and follow up if they’re stuck.',
-      ageDays: 0, actionLabel: 'Fix Stripe', href: `/admin/courses?courseId=${c.id}&tab=overview`,
+      ageDays: 0, actionLabel: 'Fix Stripe', href: `/admin/courses?courseId=${c.id}&tab=setup`,
     })),
   ];
   const redCount = failedByCourse.size + noStripe.length;
@@ -84,7 +84,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
   const draftRows: ActionRow[] = draftsAmber.map(c => ({
     id: `dr-${c.id}`, courseId: c.id, who: c.name, severity: 'warn', why: 'Draft not yet live',
     doThis: 'Course was built but setup was never finished — complete it and go live from its Overview tab.',
-    ageDays: days(now, c.createdAt), actionLabel: 'Review', href: `/admin/courses?courseId=${c.id}&tab=overview`,
+    ageDays: days(now, c.createdAt), actionLabel: 'Review', href: `/admin/courses?courseId=${c.id}&tab=setup`,
   }));
   // MP-7a: lib/thread-signal is THE derivation — Messages sorts from the same function.
   const threadRows: ActionRow[] = threads

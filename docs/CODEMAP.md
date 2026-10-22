@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-484 source files · 237 routes · 155 libraries · 48 models
+487 source files · 237 routes · 157 libraries · 48 models
 
 ## Single sources of truth
 
@@ -57,8 +57,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/activity` | admin | client-side | page | `src/app/admin/activity/page.tsx` | 211 |
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 13 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 163 |
-| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 522 |
-| `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 334 |
+| `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 524 |
+| `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 318 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 761 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 407 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
@@ -85,7 +85,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/company-documents/download` | admin | file | GET | `src/app/api/admin/company-documents/download/route.ts` | 35 |
 | `/api/admin/company-documents/upload` | admin | file | POST | `src/app/api/admin/company-documents/upload/route.ts` | 46 |
 | `/api/admin/course-calls` | admin | file | POST | `src/app/api/admin/course-calls/route.ts` | 115 |
-| `/api/admin/course-detail` | admin | file | GET PATCH | `src/app/api/admin/course-detail/route.ts` | 319 |
+| `/api/admin/course-detail` | admin | file | GET PATCH | `src/app/api/admin/course-detail/route.ts` | 329 |
 | `/api/admin/course-documents` | admin | file | GET POST | `src/app/api/admin/course-documents/route.ts` | 83 |
 | `/api/admin/course-documents/download` | admin | file | GET | `src/app/api/admin/course-documents/download/route.ts` | 59 |
 | `/api/admin/course-documents/record` | admin | file | POST | `src/app/api/admin/course-documents/record/route.ts` | 37 |
@@ -296,14 +296,14 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 201 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 202 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 59 | 183 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +6 more |
 | `src/lib/email.ts` | 52 | 2044 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +60 more |
 | `src/lib/session.ts` | 51 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/rate-limit.ts` | 44 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
-| `src/lib/format.ts` | 35 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
+| `src/lib/format.ts` | 36 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
+| `src/lib/course-time.ts` | 29 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
-| `src/lib/course-time.ts` | 27 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
 | `src/lib/agreement-required.ts` | 26 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/stripe.ts` | 23 | 96 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
@@ -314,8 +314,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/cancel-policy.ts` | 14 | 240 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardRequired`, `chargesNoShow`, `chargesOnLateCancel` +14 more |
 | `src/lib/course-timeline.ts` | 14 | 165 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload`, `getCourseTimeline` +20 more |
 | `src/lib/admin-fetch.ts` | 13 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
+| `src/lib/shop.ts` | 13 | 156 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
 | `src/lib/booking-events.ts` | 12 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
-| `src/lib/shop.ts` | 12 | 156 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
 | `src/lib/booking-fees.ts` | 11 | 24 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `hoursLabel`, `serviceFeeLabel`, `SHOP_FEE_LABEL`, `SHOP_FEE_ON`, `SHOP_SALE_FEE_CENTS` |
 | `src/lib/admin-session-context.tsx` | 10 | 77 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/cron-log.ts` | 10 | 136 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
@@ -323,31 +323,31 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/agreements.ts` | 9 | 134 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +2 more |
 | `src/lib/member-session.ts` | 9 | 109 |  | `getGolferMembership`, `getMemberSession`, `golferResident`, `residentOn`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
 | `src/lib/use-dashboard-access.ts` | 9 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
+| `src/lib/access-fee.ts` | 8 | 183 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/agreement-gate.ts` | 8 | 100 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement` |
+| `src/lib/course-checkin.ts` | 8 | 106 | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. | `CHECKIN_AGENDA`, `CHECKIN_DUE_WINDOW_DAYS`, `CHECKIN_EVERY_DAYS`, `CHECKIN_FIRST_DAYS`, `CheckinAgendaItem`, `CheckinCallLike`, `CheckinCourseLike`, `checkInSignal` +8 more |
+| `src/lib/course-metrics.ts` | 8 | 219 | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ GR-fees/period math defined ONCE. | `COMPLETED_BOOKING_STATUSES`, `computeCourseHealth`, `computeNetPnL`, `CourseHealth`, `CourseHealthInput`, `CourseHealthStatus`, `HEALTH_STATUS_DOT`, `HEALTH_STATUS_LABEL` +9 more |
 | `src/lib/private-blob.ts` | 8 | 33 | Contracts and signed agreements live in their OWN, private Vercel Blob store (Cam 2026-09-29). | `isBlobStoreUrl`, `PRIVATE_STORAGE_MISSING`, `privateBlobToken` |
 | `src/lib/residents.ts` | 8 | 66 | RES-1 (Cam 2026-10-19): | `cardValidOn`, `groupGreenFee`, `MAX_CARD_NUMBER`, `MAX_RESIDENT_NAME`, `otherPerPlayerCents`, `residentInput` |
 | `src/lib/schedule-service.ts` | 8 | 310 | MP-5d. | `createSchedule`, `deleteSchedule`, `listSchedules`, `saveSchedulePlan`, `ScheduleConflictError`, `SchedulePlan`, `SchedulePlanError`, `ScheduleProductError` +3 more |
 | `src/lib/tee-sheet-engine.ts` | 8 | 247 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `ScheduleForSlots`, `slotKey` |
 | `src/lib/tee-time-utils.ts` | 8 | 41 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
-| `src/lib/access-fee.ts` | 7 | 182 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/admin-roles.ts` | 7 | 17 | Role lists, client-safe. | `MANAGER_PLUS`, `OWNER_ONLY`, `SUPPORT_PLUS`, `VIEWER_PLUS` |
-| `src/lib/course-checkin.ts` | 7 | 106 | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. | `CHECKIN_AGENDA`, `CHECKIN_DUE_WINDOW_DAYS`, `CHECKIN_EVERY_DAYS`, `CHECKIN_FIRST_DAYS`, `CheckinAgendaItem`, `CheckinCallLike`, `CheckinCourseLike`, `checkInSignal` +8 more |
-| `src/lib/course-metrics.ts` | 7 | 219 | THE shared metrics brain (REVISE_QUEUE A-04 item 0) — bookings/gross/ GR-fees/period math defined ONCE. | `COMPLETED_BOOKING_STATUSES`, `computeCourseHealth`, `computeNetPnL`, `CourseHealth`, `CourseHealthInput`, `CourseHealthStatus`, `HEALTH_STATUS_DOT`, `HEALTH_STATUS_LABEL` +9 more |
 | `src/lib/cron-auth.ts` | 7 | 39 |  | `cronAuthFailure` |
+| `src/lib/money-problems.ts` | 7 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
 | `src/lib/owner-session.ts` | 7 | 170 | AW-1 (Cam 2026-10-20: | `alertTime`, `approveDevice`, `clearOwnerCookie`, `createOwnerSession`, `DEVICE_COOKIE`, `deviceForApproval`, `deviceLabel`, `deviceTokenFromCookie` +13 more |
 | `src/lib/preview-token.ts` | 7 | 25 |  | `signPreviewToken`, `verifyPreviewToken` |
 | `src/lib/seo.ts` | 7 | 21 | Link previews (Walk 1, 2026-10-19). | `OG_BASE`, `previewFor` |
 | `src/lib/step-up-client.ts` | 7 | 27 | AW-1c: | `registerStepUpHandler`, `stepUpFetch` |
+| `src/lib/admin-day.ts` | 6 | 111 | Platform day boundaries. | `dayKey`, `PLATFORM_TZ`, `platformHour`, `startOfPlatformDay`, `startOfPlatformDaysAgo`, `startOfPlatformMonth`, `startOfPlatformMonthsAgo`, `startOfPlatformWeek` |
 | `src/lib/booking-rules.ts` | 6 | 84 | W2-6 slice 3 (Cam 2026-10-20: | `groupSizeError`, `isWalkingPolicy`, `readRoundRules`, `RuleCourse`, `RuleRound`, `Rules`, `rulesFor`, `WALKING_POLICIES` +2 more |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
 | `src/lib/cancel-booking.ts` | 6 | 273 |  | `CancellationOptions`, `performCancellation` |
 | `src/lib/manage-access.ts` | 6 | 17 | R-AUTH-003 / R-GOLF-003 (G13) — who may manage a booking from the golfer side. | `canManageBooking` |
-| `src/lib/money-problems.ts` | 6 | 43 |  | `FAILED_CHARGE_WHERE`, `missedCheckInWhere`, `openDisputes` |
 | `src/lib/password.ts` | 6 | 14 | Shared password strength rule — used on registration, reset, and in-dashboard change-password, both server-side (enforcement) and client-side (live hint). | `PASSWORD_REQUIREMENTS_HINT`, `validatePasswordStrength` |
 | `src/lib/round-shop-tax.ts` | 6 | 146 | W2-7 part B2 (Cam 2026-10-20: | `EnsureResult`, `ensureShopTax`, `recordPendingRoundShopTax`, `recordRoundShopTax`, `refreshOpenRoundShopTax`, `shopTaxKey`, `TAX_UNAVAILABLE` |
 | `src/lib/twilio.ts` | 6 | 45 |  | `sendSms`, `sendSmsOtp`, `smsConfigured` |
-| `src/lib/admin-day.ts` | 5 | 111 | Platform day boundaries. | `dayKey`, `PLATFORM_TZ`, `platformHour`, `startOfPlatformDay`, `startOfPlatformDaysAgo`, `startOfPlatformMonth`, `startOfPlatformMonthsAgo`, `startOfPlatformWeek` |
 | `src/lib/analytics.ts` | 5 | 335 | AN-1 (Cam 2026-10-01): | `Analytics`, `computeAnalytics`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `previousRange`, `Range` |
 | `src/lib/approval-state.ts` | 5 | 41 |  | `ApprovalState`, `getApprovalState` |
 | `src/lib/expenses.ts` | 5 | 77 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +3 more |
@@ -355,6 +355,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/no-show-fee.ts` | 5 | 194 | SP-B (STAFF_POLICY_SPEC Part B4). | `chargeNoShow`, `dueAutoNoShows`, `dueNoShowCharges`, `liveNoShowCharge`, `markNoShow`, `NoShowResult`, `refundNoShowFee` |
 | `src/lib/refund-booking.ts` | 5 | 136 | MP-6b. | `findBookingByStripeId`, `PaymentEventKind`, `recordPaymentEvent`, `refundBooking`, `RefundResult` |
 | `src/lib/tax-categories.ts` | 5 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
+| `src/lib/admin-course-tabs.ts` | 4 | 95 | AW-7 (Cam 2026-10-21): | `bucketWeeks`, `COURSE_TABS`, `COURSE_WEEKS`, `CourseTab`, `openingTab`, `ProblemInput`, `SetupCheck`, `SetupCheckKey` +5 more |
+| `src/lib/admin-today.ts` | 4 | 192 |  | `paidWindow`, `STAFF_QUIET_DAYS`, `staffSeenSignal`, `STUCK_DAYS`, `TodayCourse`, `todayCourses`, `todayHealth`, `todayMoney` +1 more |
 | `src/lib/birdie/ask.ts` | 4 | 33 | AN-3 (Cam 2026-10-19: | `APPLIED_EVENT`, `ASK_EVENT`, `askBirdie`, `markBirdieReady`, `useBirdieReady` |
 | `src/lib/birdie/proposal-types.ts` | 4 | 65 | BIRDIE_AI_SPEC B4b — the confirm-card shape, shared by the server (which builds cards in proposals.ts) and the widget (which shows them and makes the call). | `cardCalls`, `isProposalCard`, `PROPOSAL_ROUTES`, `ProposalCall`, `ProposalCard` |
 | `src/lib/booking-window.ts` | 4 | 76 | BOOKING WINDOWS (RUN_QUEUE) — how far ahead each audience can see and book the tee sheet. | `dayOffset`, `DEFAULT_MEMBER_WINDOW_DAYS`, `DEFAULT_PUBLIC_WINDOW_DAYS`, `generationHorizonDays`, `lastBookableDate`, `MIN_GENERATION_DAYS`, `outsideWindowBody`, `utcToday` +4 more |
@@ -368,7 +370,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/terms.ts` | 4 | 8 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
 | `src/lib/tier-rates.ts` | 4 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
 | `src/lib/admin-action-queue.ts` | 3 | 115 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
-| `src/lib/admin-today.ts` | 3 | 189 |  | `paidWindow`, `STAFF_QUIET_DAYS`, `staffSeenSignal`, `STUCK_DAYS`, `TodayCourse`, `todayCourses`, `todayHealth`, `todayMoney` +1 more |
 | `src/lib/booking-mode.ts` | 3 | 20 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
 | `src/lib/checkin-booking.ts` | 3 | 464 |  | `cartAddOnCentsFor`, `collectPayment`, `performCheckIn` |
 | `src/lib/claim-tee-time.ts` | 3 | 93 |  | `claimTeeTime`, `TeeTimeClaimError` |
@@ -388,6 +389,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/schedule-wire.ts` | 3 | 92 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
 | `src/lib/shop-import.ts` | 3 | 133 | W2-7 (Cam 2026-10-20: | `ImportItem`, `ImportOption`, `ImportRow`, `MAX_IMPORT_ITEMS`, `MAX_OPTIONS`, `parseImport`, `parsePriceCents` |
 | `src/lib/shop-sales.ts` | 3 | 317 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `MAX_SALE_CENTS`, `MAX_SALE_LINES`, `quoteSale`, `reconcileStuckSale`, `saleForPayPage` +6 more |
+| `src/lib/stripe-errors.ts` | 3 | 26 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
 | `src/lib/thread-signal.ts` | 3 | 52 | MP-7a. | `compareThreads`, `SignalMessage`, `threadSignal`, `ThreadSignal`, `UNANSWERED_AFTER_DAYS` |
 | `src/lib/unsaved-guard.ts` | 3 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/walking.ts` | 3 | 11 | Settings rework (Cam 2026-10-19): | `walkingWords` |
@@ -412,13 +414,13 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/sheet-token.ts` | 2 | 52 |  | `CLOSED_TO_SHEET`, `DETAILS_TOKEN_TTL_DAYS`, `gateSheetAccess`, `SheetGate` |
 | `src/lib/shop-tree.ts` | 2 | 29 | W2-7: | `FlatItem`, `matches`, `shopTree`, `stockOf`, `TreeItem` |
 | `src/lib/staff-fonts.ts` | 2 | 10 | U-0 (UI_REVISE_SPEC §1b) used to give /dashboard and /admin their own STAFF look here: | `STAFF_LOOK_CLASS` |
-| `src/lib/stripe-errors.ts` | 2 | 26 | Friendly-message map for Stripe decline/error strings (REVISE_QUEUE A-06 item 4: | `friendlyStripeError` |
 | `src/lib/submit-change-request.ts` | 2 | 88 |  | `cleanChangeItems`, `submitChangeRequest` |
 | `src/lib/tee-colour.ts` | 2 | 22 | Settings rework (Cam 2026-10-19: | `teeColour` |
 | `src/lib/two-factor.ts` | 2 | 41 |  | `issueTwoFactorCode` |
 | `src/lib/admin-ask-links.ts` | 1 | 15 | AW-3b: | `ADMIN_LINK`, `safeAdminPath` |
 | `src/lib/admin-ask.ts` | 1 | 156 | AW-3b (Cam 2026-10-21: | `ASK_TOOL_NAMES`, `ASK_TOOLS`, `AskOutcome`, `runAskTool` |
 | `src/lib/admin-checks.ts` | 1 | 214 | AW-5 (Cam 2026-10-21: | `DIGEST_HOUR_ET`, `digestFacts`, `DigestFacts`, `digestSummary`, `Finding`, `runAdminChecks`, `runMorningDigest`, `runUrgentChecks` +2 more |
+| `src/lib/admin-course-page.ts` | 1 | 59 | AW-7 (Cam 2026-10-21): | `courseMoney`, `courseWeeks`, `FailedChargeRow` |
 | `src/lib/admin-goals.ts` | 1 | 48 | AW-4b (Cam 2026-10-21): | `GOAL_METRICS`, `goalCurrent`, `GoalMetric`, `goalPace`, `isGoalMetric`, `listGoals` |
 | `src/lib/agreement-pdf.tsx` | 1 | 129 | AGREEMENT_SPEC AG-2 §2 — the signed-agreement PDF. | `AgreementPdf`, `markdownBlocks`, `renderAgreementPdf`, `SignatureBlock` |
 | `src/lib/birdie/course-context.ts` | 1 | 72 | BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course. | `describeCourseContext`, `operatorCourseContext`, `OperatorCourseContext` |
@@ -458,10 +460,10 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/Card.tsx` | 54 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/Card.tsx` | 55 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/StatusDot.tsx` | 51 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 34 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
-| `src/components/ui/Eyebrow.tsx` | 23 | 19 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/ui/Eyebrow.tsx` | 21 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/admin/AdminSidebar.tsx` | 16 | 202 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/OperatorSidebar.tsx` | 11 | 288 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
@@ -472,11 +474,11 @@ Sorted the same way.
 | `src/components/AuthPhotoShell.tsx` | 4 | 23 |  | `AUTH_PHOTO_LINK`, `AUTH_PHOTO_LINKS`, `AuthPhotoShell` |
 | `src/components/dashboard/money/types.ts` | 4 | 18 | SD-8 — one booking shape for all three Money tabs. | `MoneyBooking`, `MoneyCourse` |
 | `src/components/dashboard/StaffNotice.tsx` | 4 | 30 | SD-11 / SP-A. | `StaffNotice` |
-| `src/components/admin/CourseCheckInCard.tsx` | 3 | 364 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
 | `src/components/dashboard/SignAgreements.tsx` | 3 | 221 | AGREEMENT_SPEC AG-2 §1 — the "Sign" step. | `default (SignAgreements)` |
 | `src/components/EmptyState.tsx` | 3 | 22 |  | `EmptyState` |
 | `src/components/GolferExitLinks.tsx` | 3 | 24 |  | `GolferExitLinks` |
 | `src/components/PlainHeader.tsx` | 3 | 17 |  | `default (PlainHeader)` |
+| `src/components/admin/CourseCheckInCard.tsx` | 2 | 364 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
 | `src/components/admin/LeadDialogs.tsx` | 2 | 129 | AW-6c (Cam 2026-10-21: | `AddLeadDialog`, `MoveToTalkingDialog` |
 | `src/components/dashboard/money/PayoutsTable.tsx` | 2 | 73 | Money rework (Cam 2026-10-19): | `fmtDay`, `Payout`, `PayoutsData`, `PayoutsTable`, `usd` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
@@ -604,11 +606,11 @@ without opening anything.
 
 ### Booking
 
-58 fields · 10 writer(s) · 46 reader(s)
+58 fields · 10 writer(s) · 47 reader(s)
 
 - fields: `id`, `teeTimeId`, `teeTime`, `courseId`, `course`, `golferAccountId`, `golferAccount`, `golferName`, `golferEmail`, `golferPhone`, `players`, `appliedRate`, `greenFeeTotal`, `cartFeeTotal`, `cartSelected`, `rangeBallsSize`, `rangeBallsTotal`, `accessFeeTotal`, `totalAmount`, `stripeCustomerId`, `stripePaymentMethodId`, `stripePaymentIntentId`, `cancellationFeeTotal`, `cancellationFeeChargeId`, `cancellationFeeChargedAt`, `cancelledAt`, `checkInToken`, `checkedInAt`, `roundPaymentIntentId`, `checkInFailReason`, `paymentStatus`, `status`, `termsAcceptedAt`, `termsVersion`, `cancellationFeeApplies`, `lateFeeTimingAtBooking`, `noShowFeeTotal`, `autoNoShowMinutesAtBooking`, `source`, `checkedInPlayers`, `noShowAt`, `paidOffline`, `cancellationHoursAtBooking`, `paidAt`, `shopTotalCents`, `shopFeeCents`, `shopLockedAt`, `shopTaxCents`, `shopTaxCalculationId`, `shopTaxKey`, `shopTaxExpiresAt`, `shopTaxTransactionId`, `roundChargedCents`, `residentPlayers`, `residentRateCents`, `createdAt`, `paymentEvents`, `shopItems`
 - writers: `src/app/api/cron/cancellation-cutoff/route.ts`, `src/app/api/cron/hourly/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/access-fee.ts`, `src/lib/checkin-booking.ts`, `src/lib/lifecycle.ts`, `src/lib/refund-booking.ts`, `src/lib/round-shop-tax.ts`
-- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/golfers/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/platform-stripe/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/transactions/export/route.ts`, `src/app/api/admin/transactions/route.ts`, `src/app/api/bookings/cancel/route.ts` +34 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/golfers/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/platform-stripe/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/transactions/export/route.ts`, `src/app/api/admin/transactions/route.ts`, `src/app/api/bookings/cancel/route.ts` +35 more (see `docs/codemap.json`)
 
 ### BookingEvent
 

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-21T19:48:06.791Z",
+  "generatedAt": "2026-10-21T20:50:20.214Z",
   "repo": {
-    "head": "fe16f64",
+    "head": "6b0ebeb",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 2,
     "dirty": [
@@ -13,6 +13,34 @@
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "6b0ebeb",
+        "date": "2026-10-21T20:49:35+00:00",
+        "subject": "AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "821ddf9",
+        "date": "2026-10-21T20:46:15+00:00",
+        "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4abfebb",
+        "date": "2026-10-21T16:30:41-04:00",
+        "subject": "AW-6c: Leads column, Add a lead, Move to Talking (#171)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a526731",
+        "date": "2026-10-21T19:48:07+00:00",
+        "subject": "Codemap and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "fe16f64",
         "date": "2026-10-21T19:46:07+00:00",
@@ -1045,6 +1073,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "6b0ebeb",
+      "date": "2026-10-21",
+      "subject": "AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links"
+    },
+    {
+      "h": "821ddf9",
+      "date": "2026-10-21",
+      "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)"
+    },
+    {
+      "h": "4abfebb",
+      "date": "2026-10-21",
+      "subject": "AW-6c: Leads column, Add a lead, Move to Talking (#171)"
+    },
+    {
+      "h": "a526731",
+      "date": "2026-10-21",
+      "subject": "Codemap and status board"
+    },
+    {
       "h": "fe16f64",
       "date": "2026-10-21",
       "subject": "AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)"
@@ -1083,26 +1131,6 @@
       "h": "914a1c5",
       "date": "2026-10-21",
       "subject": "AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today"
-    },
-    {
-      "h": "b84a2db",
-      "date": "2026-10-21",
-      "subject": "AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card"
-    },
-    {
-      "h": "e941200",
-      "date": "2026-10-21",
-      "subject": "Code map and status board"
-    },
-    {
-      "h": "39d69df",
-      "date": "2026-10-21",
-      "subject": "AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts"
-    },
-    {
-      "h": "3bccfa0",
-      "date": "2026-10-21",
-      "subject": "AW-5: hourly admin checks — urgent alerts once each, and a morning digest"
     }
   ]
 }

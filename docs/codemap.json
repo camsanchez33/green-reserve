@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 484,
+    "files": 487,
     "routes": 237,
-    "libs": 155,
+    "libs": 157,
     "models": 48,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -135,6 +135,64 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
+      "lines": 89,
+      "purpose": "AW-7 (Cam 2026-10-21):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "BookingsTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./context",
+        "@/components/ui/Card",
+        "@/lib/course-metrics",
+        "@/lib/format"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
+      "lines": 188,
+      "purpose": "AW-7 (Cam 2026-10-21):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ContactTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./MessagesTab",
+        "./context",
+        "./shared",
+        "./useCourseDetail",
+        "@/components/admin/CourseCheckInCard",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/format",
+        "@/lib/staff-permissions",
+        "next/link"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/page.tsx"
+      ]
+    },
+    {
       "path": "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
       "lines": 208,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
@@ -184,12 +242,12 @@
         "lucide-react"
       ],
       "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx"
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx"
       ]
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
-      "lines": 128,
+      "lines": 172,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -241,17 +299,33 @@
         "lucide-react"
       ],
       "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx"
+        "src/app/admin/courses/[id]/_parts/SetupSections.tsx"
       ]
     },
     {
-      "path": "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-      "lines": 393,
-      "purpose": "MP-12 (ADMIN_V4 V4-9):",
+      "path": "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
+      "lines": 231,
+      "purpose": "AW-7 (Cam 2026-10-21):",
       "brain": [],
       "exports": [
         {
-          "name": "OverviewTab",
+          "name": "BuildFindings",
+          "kind": "component"
+        },
+        {
+          "name": "Documents",
+          "kind": "component"
+        },
+        {
+          "name": "GoingLive",
+          "kind": "component"
+        },
+        {
+          "name": "SetupChecks",
+          "kind": "component"
+        },
+        {
+          "name": "TeeSheetAndSchedule",
           "kind": "component"
         }
       ],
@@ -261,57 +335,22 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./OperateTab",
         "./context",
-        "./shared",
-        "@/components/admin/CourseCheckInCard",
+        "./useCourseDetail",
         "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
-        "@/lib/course-metrics",
         "@/lib/course-setup",
         "@/lib/format",
-        "@/lib/inquiry-call",
-        "@/lib/staff-permissions",
-        "lucide-react",
-        "next/link"
+        "@/lib/inquiry-call"
       ],
       "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx"
-      ]
-    },
-    {
-      "path": "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
-      "lines": 167,
-      "purpose": "MP-12 (ADMIN_V4 V4-9):",
-      "brain": [],
-      "exports": [
-        {
-          "name": "RecordsTab",
-          "kind": "component"
-        }
-      ],
-      "route": null,
-      "kind": null,
-      "methods": [],
-      "auth": null,
-      "guard": null,
-      "imports": [
-        "./context",
-        "./shared",
-        "@/components/admin/CourseCheckInCard",
-        "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
-        "@/components/ui/StatusDot",
-        "@/lib/format",
-        "lucide-react"
-      ],
-      "usedBy": [
-        "src/app/admin/courses/[id]/page.tsx"
+        "src/app/admin/courses/[id]/_parts/SetupTab.tsx"
       ]
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
-      "lines": 289,
+      "lines": 276,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -326,6 +365,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./SetupSections",
         "./context",
         "./shared",
         "@/components/ui/Card",
@@ -368,19 +408,20 @@
         "react"
       ],
       "usedBy": [
+        "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/MessagesTab.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/page.tsx"
       ]
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/shared.tsx",
-      "lines": 276,
+      "lines": 250,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -405,14 +446,6 @@
           "kind": "type"
         },
         {
-          "name": "OnboardingStep",
-          "kind": "type"
-        },
-        {
-          "name": "onboardingSteps",
-          "kind": "fn"
-        },
-        {
           "name": "ScheduleFields",
           "kind": "component"
         },
@@ -426,11 +459,7 @@
         },
         {
           "name": "TabName",
-          "kind": "type"
-        },
-        {
-          "name": "TABS",
-          "kind": "const"
+          "kind": "reexport"
         },
         {
           "name": "TeeSlot",
@@ -461,29 +490,40 @@
       "imports": [
         "@/components/admin/CourseCheckInCard",
         "@/components/ui/field",
+        "@/lib/admin-course-tabs",
         "@/lib/course-metrics"
       ],
       "usedBy": [
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/context.ts",
-        "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-        "src/app/admin/courses/[id]/page.tsx"
+        "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx"
       ]
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 988,
+      "lines": 1071,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
         {
           "name": "CourseDetailState",
           "kind": "type"
+        },
+        {
+          "name": "courseProblemsInput",
+          "kind": "fn"
+        },
+        {
+          "name": "courseSetupChecks",
+          "kind": "fn"
+        },
+        {
+          "name": "courseTabProblems",
+          "kind": "fn"
         },
         {
           "name": "useCourseDetail",
@@ -497,6 +537,8 @@
       "guard": null,
       "imports": [
         "./shared",
+        "@/lib/admin-course-tabs",
+        "@/lib/course-checkin",
         "@/lib/format",
         "@/lib/step-up-client",
         "@/lib/use-resource",
@@ -505,13 +547,15 @@
         "react"
       ],
       "usedBy": [
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/context.ts",
         "src/app/admin/courses/[id]/page.tsx"
       ]
     },
     {
       "path": "src/app/admin/courses/[id]/page.tsx",
-      "lines": 334,
+      "lines": 318,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -526,26 +570,24 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
+        "./_parts/BookingsTab",
+        "./_parts/ContactTab",
         "./_parts/CourseDialogs",
-        "./_parts/MessagesTab",
         "./_parts/MoneyTab",
-        "./_parts/OperateTab",
-        "./_parts/OverviewTab",
-        "./_parts/RecordsTab",
         "./_parts/SetupTab",
         "./_parts/context",
-        "./_parts/shared",
         "./_parts/useCourseDetail",
         "@/components/admin/AdminSidebar",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
+        "@/lib/admin-course-tabs",
         "lucide-react"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/admin/courses/page.tsx",
-      "lines": 522,
+      "lines": 524,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1419,7 +1461,7 @@
     },
     {
       "path": "src/app/api/admin/course-detail/route.ts",
-      "lines": 319,
+      "lines": 329,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1441,6 +1483,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-course-page",
         "@/lib/admin-session",
         "@/lib/agreement-gate",
         "@/lib/approval-state",
@@ -8413,8 +8456,7 @@
         "react"
       ],
       "usedBy": [
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/shared.tsx"
       ]
     },
@@ -9608,11 +9650,12 @@
       "usedBy": [
         "src/app/admin/activity/page.tsx",
         "src/app/admin/company-documents/page.tsx",
+        "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/MessagesTab.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
@@ -9728,8 +9771,6 @@
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
@@ -9892,10 +9933,10 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
@@ -10004,7 +10045,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 182,
+      "lines": 183,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -10051,6 +10092,7 @@
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
+        "src/lib/admin-course-page.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/no-show-fee.ts",
@@ -10229,6 +10271,120 @@
       ]
     },
     {
+      "path": "src/lib/admin-course-page.ts",
+      "lines": 59,
+      "purpose": "AW-7 (Cam 2026-10-21):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "courseMoney",
+          "kind": "fn"
+        },
+        {
+          "name": "courseWeeks",
+          "kind": "fn"
+        },
+        {
+          "name": "FailedChargeRow",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./access-fee",
+        "./admin-course-tabs",
+        "./admin-day",
+        "./admin-today",
+        "./course-metrics",
+        "./course-time",
+        "./money-problems",
+        "./prisma",
+        "./shop",
+        "./stripe-errors"
+      ],
+      "usedBy": [
+        "src/app/api/admin/course-detail/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/admin-course-tabs.ts",
+      "lines": 95,
+      "purpose": "AW-7 (Cam 2026-10-21):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "bucketWeeks",
+          "kind": "fn"
+        },
+        {
+          "name": "COURSE_TABS",
+          "kind": "const"
+        },
+        {
+          "name": "COURSE_WEEKS",
+          "kind": "const"
+        },
+        {
+          "name": "CourseTab",
+          "kind": "type"
+        },
+        {
+          "name": "openingTab",
+          "kind": "fn"
+        },
+        {
+          "name": "ProblemInput",
+          "kind": "type"
+        },
+        {
+          "name": "SetupCheck",
+          "kind": "type"
+        },
+        {
+          "name": "SetupCheckKey",
+          "kind": "type"
+        },
+        {
+          "name": "setupChecks",
+          "kind": "fn"
+        },
+        {
+          "name": "SetupInput",
+          "kind": "type"
+        },
+        {
+          "name": "tabProblems",
+          "kind": "fn"
+        },
+        {
+          "name": "WeekRow",
+          "kind": "type"
+        },
+        {
+          "name": "weekStart",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time"
+      ],
+      "usedBy": [
+        "src/app/admin/courses/[id]/_parts/shared.tsx",
+        "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
+        "src/app/admin/courses/[id]/page.tsx",
+        "src/lib/admin-course-page.ts"
+      ]
+    },
+    {
       "path": "src/lib/admin-day.ts",
       "lines": 111,
       "purpose": "Platform day boundaries.",
@@ -10278,6 +10434,7 @@
         "src/app/api/admin/goals/route.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
+        "src/lib/admin-course-page.ts",
         "src/lib/admin-today.ts"
       ]
     },
@@ -10605,7 +10762,7 @@
     },
     {
       "path": "src/lib/admin-today.ts",
-      "lines": 189,
+      "lines": 192,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10665,6 +10822,7 @@
       "usedBy": [
         "src/app/api/admin/today/route.ts",
         "src/lib/admin-checks.ts",
+        "src/lib/admin-course-page.ts",
         "src/lib/admin-goals.ts"
       ]
     },
@@ -12705,6 +12863,7 @@
         "./inquiry-status"
       ],
       "usedBy": [
+        "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
@@ -12896,13 +13055,14 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
         "src/app/admin/courses/[id]/_parts/shared.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/revenue/route.ts",
-        "src/app/api/admin/tee-sheet/route.ts"
+        "src/app/api/admin/tee-sheet/route.ts",
+        "src/lib/admin-course-page.ts"
       ]
     },
     {
@@ -12972,7 +13132,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/api/admin/courses/route.ts"
       ]
@@ -13130,6 +13290,8 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/g/[slug]/page.tsx",
+        "src/lib/admin-course-page.ts",
+        "src/lib/admin-course-tabs.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
@@ -14146,11 +14308,12 @@
       "usedBy": [
         "src/app/admin/activity/page.tsx",
         "src/app/admin/company-documents/page.tsx",
+        "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
-        "src/app/admin/courses/[id]/_parts/RecordsTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/courses/page.tsx",
@@ -14588,7 +14751,7 @@
         "./call-answers"
       ],
       "usedBy": [
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/SetupSections.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
@@ -15152,7 +15315,8 @@
         "src/app/api/admin/revenue/route.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
-        "src/lib/admin-checks.ts"
+        "src/lib/admin-checks.ts",
+        "src/lib/admin-course-page.ts"
       ]
     },
     {
@@ -15962,6 +16126,7 @@
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
+        "src/lib/admin-course-page.ts",
         "src/lib/admin-goals.ts",
         "src/lib/admin-session.ts",
         "src/lib/admin-today.ts",
@@ -17315,6 +17480,7 @@
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
+        "src/lib/admin-course-page.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
@@ -17410,7 +17576,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/courses/[id]/_parts/OverviewTab.tsx",
+        "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/my-courses/route.ts",
@@ -17472,7 +17638,8 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/retry-charge/[bookingId]/route.ts",
-        "src/app/api/admin/revenue/route.ts"
+        "src/app/api/admin/revenue/route.ts",
+        "src/lib/admin-course-page.ts"
       ]
     },
     {
@@ -18963,6 +19130,7 @@
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
         "src/lib/admin-checks.ts",
+        "src/lib/admin-course-page.ts",
         "src/lib/admin-goals.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",

@@ -8,22 +8,11 @@ import { type CourseCallRow } from '@/components/admin/CourseCheckInCard';
 import { type CourseHealthStatus } from '@/lib/course-metrics';
 import { INPUT } from '@/components/ui/field';
 
-export type TabName = 'overview' | 'money' | 'records' | 'messages' | 'operate' | 'setup';
-
-// MP-5d: nine tabs became six. Transactions and Documents are named for what
-// they hold (Money, Records) rather than the table they read. Tee Sheet and
-// Schedule merged into Operate — one is the output of the other, and every
-// mutation there now goes through the shared schedule service the operator's
-// own dashboard calls. Staff died as a tab: its only action (resend login)
-// sits on the Overview contact rail. Members is a read-only card on Operate.
-export const TABS: { key: TabName; label: string }[] = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'money', label: 'Money' },
-  { key: 'records', label: 'Records' },
-  { key: 'messages', label: 'Messages' },
-  { key: 'operate', label: 'Operate' },
-  { key: 'setup', label: 'Setup' },
-];
+// AW-7 (Cam 2026-10-21): four tabs — Bookings · Money · Setup · Contact & notes
+// (lib/admin-course-tabs.ts). Overview's pieces moved to the tab they belong
+// to; Records split into Setup (documents) and Contact & notes (notes, calls);
+// Operate (tee sheet, schedules, members) is a section of Setup.
+export type { CourseTab as TabName } from '@/lib/admin-course-tabs';
 
 export const TX_STATUS: Record<string, { dot: string; label: string }> = {
   card_saved: { dot: 'neutral', label: 'Card saved' },
@@ -96,6 +85,16 @@ export interface CourseDetail {
   agreementAccepted: boolean;
   // AG-2: signed / total signable documents
   agreements?: { signed: number; total: number; missing: string[] };
+  /** AW-7: players per week, online vs at the counter, oldest first. */
+  weeks: { weekStart: string; online: number; counter: number }[];
+  /** AW-7: lib/admin-course-page.ts courseMoney(). */
+  money: {
+    feesThisMonth: number; roundsThisMonth: number; feesSamePointLastMonth: number;
+    counterThisMonth: { rounds: number; fees: number }; counterAllTime: { rounds: number; fees: number };
+    failedCharges: { bookingId: string; golferName: string; golferEmail: string; amount: number; teeDate: string; teeTime: string; reason: string }[];
+  };
+  /** AW-7: last time staff (or, failing that, the owner) used the dashboard. */
+  staffSeenAt: string | null;
 }
 
 export interface TeeSlot {
@@ -247,29 +246,4 @@ export function ScheduleFields({ value, onChange, showMemberRates, products = []
       </label>
     </>
   );
-}
-
-// A-05 item 4a — the onboarding checklist as named steps with date/state,
-// replacing "Verified 3/3" everywhere. Dates are shown only where a real
-// timestamp exists (no fabricated dates) — several steps don't have a
-// dedicated timestamp field today (kept out of scope for a no-migration
-// pass), so those render state-only.
-export interface OnboardingStep { key: string; label: string; done: boolean; at: string | null }
-
-export function onboardingSteps(d: CourseDetail): OnboardingStep[] {
-  const c = d.course;
-  return [
-    { key: 'email_verified', label: 'Email verified', done: !!c.operator?.emailVerified, at: null },
-    { key: 'password_set', label: 'Password set', done: !!c.operator, at: c.createdAt ?? null },
-    { key: 'page_approved', label: 'Page approved', done: d.approval.status === 'approved', at: d.approval.approvedAt },
-    { key: 'stripe_connected', label: 'Stripe connected', done: c.stripeAccountActive, at: null },
-    { key: 'schedule_confirmed', label: 'Schedule confirmed', done: d.openItems.hasSchedule, at: (c.schedules && c.schedules[0]) ? c.schedules[0].createdAt : null },
-    {
-      key: 'agreement_accepted',
-      label: d.agreements && d.agreements.total > 0 ? `Sign the agreements (${d.agreements.signed}/${d.agreements.total})` : 'Operator Agreement accepted',
-      done: d.agreements && d.agreements.total > 0 ? d.agreements.signed >= d.agreements.total : d.agreementAccepted,
-      at: d.timeline?.find(e => e.type === 'agreement_accepted')?.at ?? null,
-    },
-    { key: 'live', label: 'Live', done: c.active, at: c.welcomeEmailSentAt ?? null },
-  ];
 }
