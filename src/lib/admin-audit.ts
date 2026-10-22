@@ -52,6 +52,8 @@ export const ACTION_LABELS: Record<string, string> = {
   two_factor_regenerate: 'New recovery codes', passkey_add: 'Add a passkey', passkey_remove: 'Remove a passkey',
   device_remove: 'Remove a device', resend_staff_setup: 'Resend a staff setup email', request_re_review: 'Ask a course to re-review',
   golive_reminder: 'Send a go-live reminder', send_preview: 'Send a course its preview', agreement_version_published: 'Publish an agreement version', sentry_test: 'Send a Sentry test error',
+  problem_claim: 'Take a problem', problem_assign: 'Assign a problem', problem_note: 'Note on a problem',
+  problem_snooze: 'Snooze a problem', problem_unsnooze: 'Unsnooze a problem',
 };
 
 export const REASON_MIN = 4;

@@ -996,6 +996,20 @@ model SentMessage {
   @@index([createdAt])
 }
 
+/// BRAIN-2a: a problem's history — opened, cleared, reopened (the hourly check),
+/// claimed, assigned, noted, snoozed (people). Append-only.
+model AdminAlertEvent {
+  id        String     @id @default(cuid())
+  alertId   String
+  alert     AdminAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  kind      String
+  actorName String     @default("")
+  text      String     @default("")
+  createdAt DateTime   @default(now())
+
+  @@index([alertId, createdAt])
+}
+
 model Expense {
   id          String    @id @default(cuid())
   name        String
@@ -1379,8 +1393,18 @@ model AdminAlert {
   lastSeenAt  DateTime  @default(now())
   alertedAt   DateTime?
   resolvedAt  DateTime?
+  /// BRAIN-2a (Cam 2026-10-22): the Problems page. Who is on it, the course it is
+  /// about (when it is about one), and a snooze — never a manual "resolved": a
+  /// problem clears only when the hourly check stops seeing it.
+  ownerId      String?
+  ownerName    String    @default("")
+  courseId     String?
+  snoozedUntil DateTime?
+  snoozeReason String    @default("")
+  events       AdminAlertEvent[]
 
   @@index([kind, resolvedAt])
+  @@index([courseId])
 }
 
 /// W2-9 Events (Cam 2026-10-21/22): an outing, tournament, league night or
