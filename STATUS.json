@@ -1,36 +1,64 @@
 {
-  "generatedAt": "2026-10-22T21:21:29.632Z",
+  "generatedAt": "2026-10-22T21:25:55.641Z",
   "repo": {
-    "head": "f4bc1a4",
+    "head": "da32563",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 32,
-    "dirty": [
-      "M  OPERATOR_REWORK_SPEC.md",
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "A  prisma/migrations/20261022020616_w2_9_share_course/migration.sql",
-      "A  prisma/migrations/20261022021832_w2_9b_event_payments/migration.sql",
-      "M  prisma/schema.prisma",
-      " M scripts/contact-email-test.ts",
-      "M  scripts/design-guard.baseline.json",
-      "A  scripts/event-payments-db-test.ts",
-      "M  scripts/events-db-test.ts",
-      "M  scripts/events-test.ts",
-      "A  src/app/api/event-payment/[id]/route.ts",
-      "A  src/app/api/operator/events/[id]/payments/route.ts",
-      "M  src/app/api/operator/events/[id]/route.ts",
-      "M  src/app/api/operator/events/route.ts",
-      "M  src/app/api/operator/tee-times/route.ts",
-      "M  src/app/dashboard/events/page.tsx"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-19T10:10:52-04:00",
     "unrecorded": [
+      {
+        "h": "da32563",
+        "date": "2026-10-22T21:25:22+00:00",
+        "subject": "Event pay-link email: say a reply reaches the course",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b9fe29f",
+        "date": "2026-10-22T02:50:47+00:00",
+        "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "40be0a7",
+        "date": "2026-10-22T02:38:33+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e449074",
+        "date": "2026-10-22T02:37:10+00:00",
+        "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4438d60",
+        "date": "2026-10-22T02:31:31+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b001c14",
+        "date": "2026-10-22T02:30:57+00:00",
+        "subject": "W2-9b: narrow the recorded payment in the test (typecheck)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4086e37",
+        "date": "2026-10-22T02:30:40+00:00",
+        "subject": "W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f4bc1a4",
         "date": "2026-10-22T02:28:03+00:00",
@@ -56,6 +84,20 @@
         "h": "c39a10c",
         "date": "2026-10-22T02:19:10+00:00",
         "subject": "MAIL-1: a cancellation that kept a fee comes from billing@",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7feae5c",
+        "date": "2026-10-22T02:17:50+00:00",
+        "subject": "W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "478ec76",
+        "date": "2026-10-22T02:09:53+00:00",
+        "subject": "W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet",
         "ids": [],
         "matches": []
       },
@@ -1168,6 +1210,41 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "da32563",
+      "date": "2026-10-22",
+      "subject": "Event pay-link email: say a reply reaches the course"
+    },
+    {
+      "h": "b9fe29f",
+      "date": "2026-10-22",
+      "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
+    },
+    {
+      "h": "40be0a7",
+      "date": "2026-10-22",
+      "subject": "Status board"
+    },
+    {
+      "h": "e449074",
+      "date": "2026-10-22",
+      "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close"
+    },
+    {
+      "h": "4438d60",
+      "date": "2026-10-22",
+      "subject": "Status board"
+    },
+    {
+      "h": "b001c14",
+      "date": "2026-10-22",
+      "subject": "W2-9b: narrow the recorded payment in the test (typecheck)"
+    },
+    {
+      "h": "4086e37",
+      "date": "2026-10-22",
+      "subject": "W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds"
+    },
+    {
       "h": "f4bc1a4",
       "date": "2026-10-22",
       "subject": "Regenerate status board"
@@ -1188,44 +1265,9 @@
       "subject": "MAIL-1: a cancellation that kept a fee comes from billing@"
     },
     {
-      "h": "4bd2042",
-      "date": "2026-10-21",
-      "subject": "BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)"
-    },
-    {
-      "h": "512e214",
+      "h": "7feae5c",
       "date": "2026-10-22",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "8c73613",
-      "date": "2026-10-22",
-      "subject": "W2-9a: releasing an event's hold checks the day being released, not the day it moved to"
-    },
-    {
-      "h": "e85978d",
-      "date": "2026-10-22",
-      "subject": "W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit"
-    },
-    {
-      "h": "ce88bd1",
-      "date": "2026-10-22",
-      "subject": "Codemap and status board"
-    },
-    {
-      "h": "087c1a2",
-      "date": "2026-10-22",
-      "subject": "W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks"
-    },
-    {
-      "h": "28a5f3a",
-      "date": "2026-10-22",
-      "subject": "W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings"
-    },
-    {
-      "h": "164896a",
-      "date": "2026-10-21",
-      "subject": "BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)"
+      "subject": "W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup"
     }
   ]
 }

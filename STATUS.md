@@ -4,18 +4,27 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 21:21 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `f4bc1a4` · working tree **32 dirty file(s)**
+Generated 2026-10-22 21:25 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `da32563` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-19**. 107 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-19**. 116 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `da32563` | 2026-10-22 | Event pay-link email: say a reply reaches the course |
+| `b9fe29f` | 2026-10-22 | W2-9b: event pay-link email and text say what they are (BRAIN-1b message log) |
+| `40be0a7` | 2026-10-22 | Status board |
+| `e449074` | 2026-10-22 | W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close |
+| `4438d60` | 2026-10-22 | Status board |
+| `b001c14` | 2026-10-22 | W2-9b: narrow the recorded payment in the test (typecheck) |
+| `4086e37` | 2026-10-22 | W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds |
 | `f4bc1a4` | 2026-10-22 | Regenerate status board |
 | `58642d3` | 2026-10-22 | Regenerate status board and code map |
 | `d8306c5` | 2026-10-22 | MAIL-1: a cancellation that refunded money also comes from billing@ |
 | `c39a10c` | 2026-10-22 | MAIL-1: a cancellation that kept a fee comes from billing@ |
+| `7feae5c` | 2026-10-22 | W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup |
+| `478ec76` | 2026-10-22 | W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet |
 | `4bd2042` | 2026-10-21 | BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179) |
 | `8c73613` | 2026-10-22 | W2-9a: releasing an event's hold checks the day being released, not the day it moved to |
 | `e85978d` | 2026-10-22 | W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit |
@@ -121,32 +130,6 @@ Generated 2026-10-22 21:21 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD
 | `92cdf08` | 2026-10-19 | Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (32 file(s))
-
-- `M  OPERATOR_REWORK_SPEC.md`
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `UU docs/CODEMAP.md`
-- `UU docs/codemap.json`
-- `A  prisma/migrations/20261022020616_w2_9_share_course/migration.sql`
-- `A  prisma/migrations/20261022021832_w2_9b_event_payments/migration.sql`
-- `M  prisma/schema.prisma`
-- `M scripts/contact-email-test.ts`
-- `M  scripts/design-guard.baseline.json`
-- `A  scripts/event-payments-db-test.ts`
-- `M  scripts/events-db-test.ts`
-- `M  scripts/events-test.ts`
-- `A  src/app/api/event-payment/[id]/route.ts`
-- `A  src/app/api/operator/events/[id]/payments/route.ts`
-- `M  src/app/api/operator/events/[id]/route.ts`
-- `M  src/app/api/operator/events/route.ts`
-- `M  src/app/api/operator/tee-times/route.ts`
-- `M  src/app/dashboard/events/page.tsx`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -267,18 +250,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `da32563` 2026-10-22 — Event pay-link email: say a reply reaches the course
+- `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
+- `40be0a7` 2026-10-22 — Status board
+- `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
+- `4438d60` 2026-10-22 — Status board
+- `b001c14` 2026-10-22 — W2-9b: narrow the recorded payment in the test (typecheck)
+- `4086e37` 2026-10-22 — W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds
 - `f4bc1a4` 2026-10-22 — Regenerate status board
 - `58642d3` 2026-10-22 — Regenerate status board and code map
 - `d8306c5` 2026-10-22 — MAIL-1: a cancellation that refunded money also comes from billing@
 - `c39a10c` 2026-10-22 — MAIL-1: a cancellation that kept a fee comes from billing@
-- `4bd2042` 2026-10-21 — BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)
-- `512e214` 2026-10-22 — queue/spec update
-- `8c73613` 2026-10-22 — W2-9a: releasing an event's hold checks the day being released, not the day it moved to
-- `e85978d` 2026-10-22 — W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit
-- `ce88bd1` 2026-10-22 — Codemap and status board
-- `087c1a2` 2026-10-22 — W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks
-- `28a5f3a` 2026-10-22 — W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings
-- `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
+- `7feae5c` 2026-10-22 — W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup
 
 ---
 
