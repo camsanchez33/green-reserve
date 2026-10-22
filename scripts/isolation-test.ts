@@ -510,6 +510,8 @@ async function main() {
     // AW-4b: Goals — support+ reads, only the owner writes.
     const r = await api('/api/admin/goals', { cookie: viewerCookie });
     checkStatus('Viewer cannot read Goals → 403', r.status, 403);
+    const ar = await api('/api/admin/audit', { cookie: viewerCookie });
+    checkStatus('Viewer cannot read the audit record → 403', ar.status, 403);
     const w = await api('/api/admin/goals', { method: 'POST', cookie: viewerCookie, body: { metric: 'courses_live', target: 1, dueDate: '2099-01-01' } });
     checkStatus('Viewer cannot add a goal → 403', w.status, 403);
     const { signAdminToken } = await import('../src/lib/admin-session');
@@ -570,8 +572,20 @@ async function main() {
     check('…a fees target is kept in cents', stored?.target === 1250);
     const list = await api('/api/admin/goals', { cookie: gc });
     check('Owner reads Goals with canEdit', list.status === 200 && (list.body as { canEdit?: boolean })?.canEdit === true);
-    const del = await api(`/api/admin/goals?id=${encodeURIComponent(gid)}`, { method: 'DELETE', cookie: gc });
-    checkStatus('Owner removes the goal → 200', del.status, 200);
+    // BRAIN-1a: a delete needs a reason; the record keeps who, what and why.
+    const bare = await api(`/api/admin/goals?id=${encodeURIComponent(gid)}`, { method: 'DELETE', cookie: gc });
+    check('Removing a goal without a reason → 400 reason_required', bare.status === 400 && (bare.body as { code?: string })?.code === 'reason_required');
+    check('…and the goal is still there', !!(await prisma.adminGoal.findUnique({ where: { id: gid } })));
+    const del = await api(`/api/admin/goals?id=${encodeURIComponent(gid)}&reason=${encodeURIComponent('Set by mistake')}`, { method: 'DELETE', cookie: gc });
+    checkStatus('Owner removes the goal with a reason → 200', del.status, 200);
+    const rec = await prisma.adminAuditLog.findFirst({ where: { action: 'goal_delete', targetId: gid } });
+    check('…recorded with the reason and the goal as it was', rec?.reason === 'Set by mistake' && (rec?.before as { target?: number } | null)?.target === 1250 && rec?.adminId === data.adminOwner.id);
+    const added = await prisma.adminAuditLog.findFirst({ where: { action: 'goal_add', targetId: gid } });
+    check('…and its creation was recorded too', !!added);
+    // The Audit page: owner only.
+    const au = await api('/api/admin/audit', { cookie: gc });
+    check('Owner reads the audit record', au.status === 200 && Array.isArray((au.body as { entries?: unknown[] })?.entries) && ((au.body as { entries: { action: string }[] }).entries).some(e => e.action === 'goal_delete'));
+    await prisma.adminAuditLog.deleteMany({ where: { targetId: gid } });
   }
   {
     // AW-1b: an employee can't list, add or remove the owner's passkeys.

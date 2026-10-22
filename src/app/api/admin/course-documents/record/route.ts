@@ -3,6 +3,7 @@ import { head } from '@vercel/blob';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { logDocumentUploaded } from '@/lib/course-timeline';
 import { privateBlobToken, PRIVATE_STORAGE_MISSING, isBlobStoreUrl } from '@/lib/private-blob';
+import { auditAdmin } from '@/lib/admin-audit';
 
 // BLOB-3: step two of a contract upload. The browser has put the PDF into the
 // private store (via ../upload's permit); this records it on the course. The
@@ -32,5 +33,6 @@ export async function POST(req: NextRequest) {
 
   const ok = await logDocumentUploaded(courseId, name, meta.url, session.name);
   if (!ok) return NextResponse.json({ error: 'The file was stored, but this course has no linked inquiry to list documents on.' }, { status: 400 });
+  await auditAdmin(session, { action: 'document_add', targetType: 'course', targetId: courseId, courseId, after: { name } });
   return NextResponse.json({ success: true, url: meta.url });
 }

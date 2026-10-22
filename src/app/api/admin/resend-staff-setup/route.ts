@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { Resend } from 'resend';
+import { withAudit } from '@/lib/admin-audit';
 
-export async function POST(req: NextRequest) {
+async function resendStaffSetup(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -37,3 +38,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+// BRAIN-1a: recorded.
+export const POST = withAudit(resendStaffSetup, body => ({ action: 'resend_staff_setup', targetType: 'staff', targetId: String(body.staffId ?? '') }));

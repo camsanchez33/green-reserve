@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, stepUpRequired } from '@/lib/admin-session';
 import { deviceLabel } from '@/lib/owner-session';
+import { withAudit } from '@/lib/admin-audit';
 
 // AW-1c: the devices approved for the owner sign-in, on My profile. Removing
 // one ends every session it holds at once (ownerSessionFromCookie refuses a
@@ -36,7 +37,7 @@ export async function GET() {
   return NextResponse.json({ devices: await list(g.session.adminId, g.session.ownerDeviceId) });
 }
 
-export async function DELETE(req: NextRequest) {
+async function removeDevice(req: NextRequest) {
   const g = await gate();
   if ('error' in g) return g.error;
   const su = stepUpRequired(g.session); if (su) return su;
@@ -48,3 +49,6 @@ export async function DELETE(req: NextRequest) {
   await prisma.ownerSession.updateMany({ where: { deviceId: id, revokedAt: null }, data: { revokedAt: now } });
   return NextResponse.json({ devices: await list(g.session.adminId, g.session.ownerDeviceId), signedOut: id === g.session.ownerDeviceId });
 }
+
+// BRAIN-1a: removing a device is recorded.
+export const DELETE = withAudit(removeDevice, body => ({ action: 'device_remove', targetType: 'owner_device', targetId: String(body.id ?? ''), after: {} }));

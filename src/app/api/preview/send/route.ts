@@ -6,6 +6,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-sess
 import { signPreviewToken } from '@/lib/preview-token';
 import { sendPreviewWithDashboardAccessEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
+import { withAudit } from '@/lib/admin-audit';
 
 // RUN_QUEUE "Send Preview = one combined send": pressing Send Preview sends
 // ONE email with both the page preview AND dashboard login access.
@@ -13,7 +14,7 @@ import { getApprovalState } from '@/lib/approval-state';
 // sending another preview is blocked here — not just hidden client-side —
 // until a change request or an explicit "Request re-review" reopens it
 // (src/lib/change-requests.ts scopeToCurrentRound is the single anchor).
-export async function POST(req: NextRequest) {
+async function sendPreview(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // MP-2b: this route ROTATES AN OPERATOR'S PASSWORD. It was gated on "any admin
@@ -145,3 +146,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ error: 'inquiryId or courseId required' }, { status: 400 });
 }
+
+// BRAIN-1a: sending a course its preview is recorded.
+export const POST = withAudit(sendPreview, body => ({ action: 'send_preview', targetType: body.courseId ? 'course' : 'inquiry', targetId: String(body.courseId ?? body.inquiryId ?? ''), courseId: String(body.courseId ?? '') || null }));

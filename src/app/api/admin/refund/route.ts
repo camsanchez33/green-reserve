@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, stepUpRequired } from '@/lib/admin-session';
 import { refundBooking } from '@/lib/refund-booking';
+import { needReason, reasonOf, auditAdmin, courseOfBooking } from '@/lib/admin-audit';
 
 // MP-6b: POST /api/admin/refund { bookingId, amountCents?, reason }
 // Money leaves a course's account — manager+, and every refund names who did
@@ -12,12 +13,15 @@ export async function POST(req: NextRequest) {
   const su = stepUpRequired(session); if (su) return su;
 
   const body = await req.json().catch(() => ({}));
+  const nr = needReason('refund', body); if (nr) return nr;
   const bookingId = String(body.bookingId || '');
   if (!bookingId) return NextResponse.json({ error: 'Missing bookingId' }, { status: 400 });
   const amountCents = body.amountCents === undefined || body.amountCents === null || body.amountCents === '' ? undefined : Number(body.amountCents);
   if (amountCents !== undefined && !Number.isFinite(amountCents)) return NextResponse.json({ error: 'amountCents must be a number' }, { status: 400 });
 
-  const result = await refundBooking(bookingId, { amountCents, reason: String(body.reason || ''), actor: 'admin', actorName: session.name });
+  const reason = reasonOf(body);
+  const result = await refundBooking(bookingId, { amountCents, reason, actor: 'admin', actorName: session.name });
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
+  await auditAdmin(session, { action: 'refund', targetType: 'booking', targetId: bookingId, courseId: await courseOfBooking(bookingId), after: { amountCents: amountCents ?? 'full' }, reason });
   return NextResponse.json(result);
 }

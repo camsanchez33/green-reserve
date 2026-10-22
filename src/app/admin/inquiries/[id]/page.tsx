@@ -26,6 +26,7 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Card } from '@/components/ui/Card';
 import { INPUT } from '@/components/ui/field';
 import { MoveToTalkingDialog } from '@/components/admin/LeadDialogs';
+import { stepUpFetch } from '@/lib/step-up-client';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -588,7 +589,7 @@ function InquiryDetailInner() {
     // `processing` gates the whole action rail, so a dropped connection here
     // froze the page until reload.
     try {
-      const r = await fetch('/api/admin/archive-course', {
+      const r = await stepUpFetch('/api/admin/archive-course', {
         method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'archive' }),
       });
       if (r.ok) await loadInquiry();
@@ -607,7 +608,7 @@ function InquiryDetailInner() {
     setProcessing(true); setActionError('');
     if (inq?.builtCourseId) {
       try {
-        const r = await fetch('/api/admin/archive-course', {
+        const r = await stepUpFetch('/api/admin/archive-course', {
           method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),
         });
         if (r.ok) { await loadInquiry(); return; }
@@ -648,7 +649,7 @@ function InquiryDetailInner() {
     if (!inq) return;
     setActionError(''); setProcessing(true);
     try {
-      const r = await fetch('/api/admin/inquiries?id=' + inq.id + '&confirmName=' + encodeURIComponent(deleteCourseConfirm), { method: 'DELETE', headers: H() });
+      const r = await stepUpFetch('/api/admin/inquiries?id=' + inq.id + '&confirmName=' + encodeURIComponent(deleteCourseConfirm), { method: 'DELETE', headers: H() });
       if (r.ok) { router.push(backUrl); return; }
       // No-silent-failures: a failed delete (name mismatch, or this inquiry
       // turned out to have a built course after all) must show why, not just

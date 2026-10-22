@@ -346,7 +346,7 @@ export function useCourseDetail() {
     if (!detail?.course.operator?.email) return;
     setVerifyBusy(true); setVerifyMsg('');
     try {
-      const r = await fetch('/api/admin/verify-operator', { method: 'POST', headers: H(), body: JSON.stringify({ email: detail.course.operator.email }) });
+      const r = await stepUpFetch('/api/admin/verify-operator', { method: 'POST', headers: H(), body: JSON.stringify({ email: detail.course.operator.email }) });
       if (r.ok) { setVerifyMsg('Marked verified.'); loadDetail(); }
       else { const d = await r.json().catch(() => ({})); setVerifyMsg('Error: ' + (d.error || 'could not mark verified')); }
     } catch { setVerifyMsg('Error: network — nothing was changed.'); }
@@ -365,7 +365,7 @@ export function useCourseDetail() {
     // reset and left the button on "Working…" forever. try/finally, like
     // sendGoLiveReminder two functions down.
     try {
-      const r = await fetch('/api/admin/course-detail', {
+      const r = await stepUpFetch('/api/admin/course-detail', {
         method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, cancelBookings }),
       });
       if (r.ok) {
@@ -425,7 +425,7 @@ export function useCourseDetail() {
     if (!detail) return;
     setArchiveBusy(true); setClosureError('');
     try {
-      const r = await fetch('/api/admin/archive-course', {
+      const r = await stepUpFetch('/api/admin/archive-course', {
         method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive', cancelBookings }),
       });
       if (r.ok) { router.push('/admin/courses'); return; }
@@ -448,7 +448,7 @@ export function useCourseDetail() {
   async function restoreCourse() {
     setArchiveBusy(true);
     try {
-      const r = await fetch('/api/admin/archive-course', {
+      const r = await stepUpFetch('/api/admin/archive-course', {
         method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'restore' }),
       });
       if (r.ok) loadDetail();
@@ -665,7 +665,7 @@ export function useCourseDetail() {
   async function deleteSchedule(id: string) {
     setSchedDeleteBusy(true); setSchedDeleteError('');
     try {
-      const r = await fetch('/api/admin/schedule', { method: 'DELETE', headers: H(), body: JSON.stringify({ id }) });
+      const r = await stepUpFetch('/api/admin/schedule', { method: 'DELETE', headers: H(), body: JSON.stringify({ id }) });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
         setSchedDeleteError(e.error || 'Could not delete that schedule. Nothing was changed.');
@@ -684,7 +684,7 @@ export function useCourseDetail() {
   async function blockSlot(teeTimeId: string, block: boolean) {
     setSlotBusy(teeTimeId); setOpNote(null);
     try {
-      const r = await fetch('/api/admin/tee-sheet', {
+      const r = await stepUpFetch('/api/admin/tee-sheet', {
         method: 'PATCH', headers: H(),
         body: JSON.stringify({ action: block ? 'block' : 'unblock', teeTimeId }),
       });
@@ -703,7 +703,7 @@ export function useCourseDetail() {
     if (!confirm('Cancel this booking? The golfer will be emailed.')) return;
     setSlotBusy(teeTimeId); setOpNote(null);
     try {
-      const r = await fetch('/api/admin/tee-sheet', {
+      const r = await stepUpFetch('/api/admin/tee-sheet', {
         method: 'PATCH', headers: H(), body: JSON.stringify({ action: 'cancel_booking', bookingId }),
       });
       const d = await r.json().catch(() => ({}));
@@ -727,7 +727,7 @@ export function useCourseDetail() {
     if (!manualSlot) return;
     setManualSaving(true); setManualError('');
     try {
-      const r = await fetch('/api/admin/tee-sheet', {
+      const r = await stepUpFetch('/api/admin/tee-sheet', {
         method: 'POST', headers: H(), body: JSON.stringify({ teeTimeId: manualSlot, ...manualForm }),
       });
       if (r.ok) {

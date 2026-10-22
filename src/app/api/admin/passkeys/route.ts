@@ -5,6 +5,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { registrationOptions, addPasskey } from '@/lib/owner-passkey';
 import { sendOwnerPasskeyChanged } from '@/lib/email';
 import { requestContext, deviceLabel, alertTime } from '@/lib/owner-session';
+import { withAudit } from '@/lib/admin-audit';
 
 /** The alert never blocks the change it reports; a failure is logged. */
 async function announce(admin: { id: string; email: string; name: string }, change: 'added' | 'removed', passkey: string) {
@@ -36,7 +37,7 @@ export async function GET() {
   return NextResponse.json({ passkeys: await list(g.session.adminId), appSetUp: !!admin?.twoFactorSecret });
 }
 
-export async function POST(req: NextRequest) {
+async function postPasskey(req: NextRequest) {
   const g = await gate();
   if ('error' in g) return g.error;
   if (!(await rateLimit(`passkey:add:${clientIp(req)}`, 20, 600))) return NextResponse.json({ error: 'Too many tries — wait a few minutes.' }, { status: 429 });
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ error: 'Unknown action.' }, { status: 400 });
 }
 
-export async function DELETE(req: NextRequest) {
+async function removePasskey(req: NextRequest) {
   const g = await gate();
   if ('error' in g) return g.error;
   const su = stepUpRequired(g.session); if (su) return su;
@@ -73,3 +74,8 @@ export async function DELETE(req: NextRequest) {
   await announce({ id: g.session.adminId, email: g.session.email, name: g.session.name }, 'removed', pk.name);
   return NextResponse.json({ passkeys: await list(g.session.adminId) });
 }
+
+// BRAIN-1a: adding a passkey is recorded (the credential never is).
+export const POST = withAudit(postPasskey, body => body.action === 'add' ? { action: 'passkey_add', targetType: 'admin', targetId: 'self', after: { name: String(body.name ?? '') } } : null);
+
+export const DELETE = withAudit(removePasskey, body => ({ action: 'passkey_remove', targetType: 'passkey', targetId: String(body.id ?? ''), after: {} }));

@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { stepUpFetch } from '@/lib/step-up-client';
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
@@ -319,6 +320,8 @@ export default function EmployeesPage() {
                       </td>
                       {isOwner && (
                         <td className="px-5 py-3.5">
+                          {/* BRAIN-1a: what this person has done in the admin. */}
+                          <div className="flex justify-end mb-1"><Link href={`/admin/audit?admin=${admin.id}`} className="text-xs text-pine font-medium hover:underline">What they did</Link></div>
                           {admin.id !== session?.adminId && (
                             <div className="flex items-center gap-1.5 justify-end">
                               <button

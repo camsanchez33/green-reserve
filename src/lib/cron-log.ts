@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './prisma';
 import { cronAuthFailure } from './cron-auth';
+import * as Sentry from '@sentry/nextjs';
 
 export const STRIPE_WEBHOOK_JOB = 'webhook:stripe';
 const KEEP_DAYS = 90;
@@ -81,6 +82,10 @@ export function cronRoute(job: string, handler: (req: NextRequest) => Promise<Ne
     const body = await res.clone().json().catch(() => null);
     const { outcome, error } = judge(res.status, body);
     await finish({ outcome, detail: summarise(body), error });
+    // BRAIN-1a: a job that caught its own failure never throws, so Next's error
+    // hook never sees it — tell Sentry here (a thrown error reaches Sentry
+    // through src/instrumentation.ts). No DSN = no-op.
+    if (outcome === 'error') Sentry.captureMessage(`Scheduled job ${job} failed: ${error || res.status}`, { level: 'error', tags: { area: 'cron', job } });
     // The hourly job prunes the log so it stays a few thousand rows.
     if (job === 'hourly') {
       await safe('prune', job, () => prisma.cronRunLog.deleteMany({ where: { startedAt: { lt: new Date(Date.now() - KEEP_DAYS * 86_400_000) } } }));

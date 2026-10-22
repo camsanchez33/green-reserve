@@ -21,6 +21,7 @@ import { Card } from '@/components/ui/Card';
 import InquiryBoard from '@/components/admin/InquiryBoard';
 import { useAdminSession } from '@/lib/admin-session-context';
 import { MANAGER_PLUS } from '@/lib/admin-roles';
+import { stepUpFetch, askReason } from '@/lib/step-up-client';
 
 interface InquiryStatusEvent {
   id: string; fromStatus: string; toStatus: string;
@@ -195,7 +196,7 @@ function InquiriesListInner() {
     setDeleteError('');
     setDeleteBusy(true);
     try {
-      const r = await fetch('/api/admin/inquiries?id=' + id + '&confirmName=' + encodeURIComponent(confirmText), { method: 'DELETE', headers: H() });
+      const r = await stepUpFetch('/api/admin/inquiries?id=' + id + '&confirmName=' + encodeURIComponent(confirmText), { method: 'DELETE', headers: H() });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
         setDeleteError(`Delete failed for "${name}": ${d.error || 'unknown error'}`);
@@ -228,7 +229,7 @@ function InquiriesListInner() {
 
   async function doRestore(inq: Inquiry) {
     if (inq.builtCourseId) {
-      const r = await fetch('/api/admin/archive-course', {
+      const r = await stepUpFetch('/api/admin/archive-course', {
         method: 'POST', headers: H(), body: JSON.stringify({ courseId: inq.builtCourseId, action: 'restore' }),
       });
       if (r.ok) { await loadInquiries(); return; }
@@ -347,6 +348,13 @@ function InquiriesListInner() {
 
   async function runBulkAction() {
     if (!bulkPreview) return;
+    // BRAIN-1a: archiving courses needs a reason — asked once for the whole batch.
+    let reason = '';
+    if (bulkPreview.kind !== 'send_sheet' && bulkPreview.ids.some(id => inquiries.find(i => i.id === id)?.builtCourseId)) {
+      const r = await askReason('Archive courses');
+      if (!r) { setBulkResult('Nothing changed — archiving needs a reason.'); return; }
+      reason = r;
+    }
     setBulkRunning(true);
     setBulkResult('');
     let ok = 0, failed = 0;
@@ -362,7 +370,7 @@ function InquiriesListInner() {
         const r = bulkPreview.kind === 'send_sheet'
           ? await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'request_details' }) })
           : target?.builtCourseId
-            ? await fetch('/api/admin/archive-course', { method: 'POST', headers: H(), body: JSON.stringify({ courseId: target.builtCourseId, action: 'archive' }) })
+            ? await fetch('/api/admin/archive-course', { method: 'POST', headers: H(), body: JSON.stringify({ courseId: target.builtCourseId, action: 'archive', reason }) })
             : await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'reject' }) });
         if (r.ok) { ok++; continue; }
         failed++;
