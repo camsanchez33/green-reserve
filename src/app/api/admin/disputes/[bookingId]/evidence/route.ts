@@ -13,6 +13,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ boo
   const { bookingId } = await params;
   const input = await loadEvidence(bookingId);
   if (!input) return NextResponse.json({ error: 'That booking no longer exists.' }, { status: 404 });
+  // Only for a booking a bank has disputed — not a way to pull any golfer's history.
+  if (!input.dispute) return NextResponse.json({ error: 'That booking has no dispute.' }, { status: 404 });
   await auditAdmin(session, { action: 'dispute_evidence', targetType: 'booking', targetId: bookingId, after: { golfer: input.golferName, course: input.courseName } });
   return new NextResponse(evidenceText(input), {
     headers: {

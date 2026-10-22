@@ -66,5 +66,13 @@ check('it lists the confirmation, the no-show and the charge', t.includes('Booki
 const bare = evidenceText({ ...base, termsAcceptedAt: null, cardSaved: false, policy: { cancellationHours: null, lateFeeTiming: null, lateFeeCents: 0, noShowFeeCents: 0, autoNoShowMinutes: null }, sent: [], events: [], payments: [], dispute: null });
 check('nothing recorded is said plainly, never guessed', bare.includes('no recorded agreement') && bare.includes('No fee terms were recorded') && bare.includes('No card was saved') === false && bare.includes('no card was saved') && (bare.match(/Nothing recorded\./g) ?? []).length === 3);
 
+// Review fixes: the pack never states a term the golfer wasn't shown.
+const noLate = evidenceText({ ...base, policy: { cancellationHours: 24, lateFeeTiming: null, lateFeeCents: 0, noShowFeeCents: 2500, autoNoShowMinutes: null } });
+check('no late fee → no "free cancellation until" line (they were told any time)', !noLate.includes('Free cancellation until') && noLate.includes('No-show fee: $25.00.'));
+const legacy = evidenceText({ ...base, policy: { cancellationHours: 24, lateFeeTiming: null, lateFeeCents: 2000, noShowFeeCents: 0, autoNoShowMinutes: null } });
+check('a booking with no recorded timing reads as the hold at the cutoff', legacy.includes('Late-cancellation fee: $20.00 — hold at the cutoff, refunded at check-in.'));
+const oneFee = evidenceText({ ...base, policy: { cancellationHours: 24, lateFeeTiming: 'late_cancel_or_no_show', lateFeeCents: 2000, noShowFeeCents: 2000, autoNoShowMinutes: null } });
+check('"cancel late or don\'t show" with one amount is one fee, not two', oneFee.includes('Late-cancellation fee: $20.00') && !oneFee.includes('No-show fee'));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

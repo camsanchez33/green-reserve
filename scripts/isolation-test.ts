@@ -557,9 +557,15 @@ async function main() {
       checkStatus('Support cannot read courses’ payouts → 403', (await api('/api/admin/course-payouts', { cookie: supCookie })).status, 403);
       await prisma.adminUser.update({ where: { id: sup.id }, data: { role: 'manager' } });
       const mgrCookie = `admin_session=${await signAdminToken({ adminId: sup.id, email: sup.email, name: sup.name, role: 'manager', mfa: true })}`;
-      const pack = await fetch(`${BASE_URL}/api/admin/disputes/${data.bookingA.id}/evidence`, { headers: { cookie: mgrCookie } });
-      const packText = await pack.text();
-      check('A manager downloads the evidence pack as a text file naming the booking', pack.status === 200 && (pack.headers.get('content-type') ?? '').startsWith('text/plain') && packText.includes(data.bookingA.id));
+      checkStatus('No pack for a booking without a dispute → 404', (await api(`/api/admin/disputes/${data.bookingA.id}/evidence`, { cookie: mgrCookie })).status, 404);
+      const dispute = await prisma.paymentEvent.create({ data: { bookingId: data.bookingA.id, kind: 'dispute_opened', amountCents: 100, stripeId: `isol-dp-${TS}:open`, actor: 'stripe', detail: 'Dispute opened: test' } });
+      try {
+        const pack = await fetch(`${BASE_URL}/api/admin/disputes/${data.bookingA.id}/evidence`, { headers: { cookie: mgrCookie } });
+        const packText = await pack.text();
+        check('A manager downloads a disputed booking\'s evidence pack as a text file naming it', pack.status === 200 && (pack.headers.get('content-type') ?? '').startsWith('text/plain') && packText.includes(data.bookingA.id));
+      } finally {
+        await prisma.paymentEvent.delete({ where: { id: dispute.id } });
+      }
     } finally {
       await prisma.adminAlert.delete({ where: { id: alert.id } });
       await prisma.adminAuditLog.deleteMany({ where: { adminId: sup.id } }).catch(() => {});

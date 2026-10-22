@@ -49,12 +49,19 @@ export function evidenceText(e: EvidenceInput): string {
   h('Fee terms recorded on the booking');
   const p = e.policy;
   let any = false;
-  if (p.cancellationHours !== null) { out.push(`Free cancellation until ${p.cancellationHours} hours before the tee time.`); any = true; }
+  // Mirrors describePolicy(): a cancellation window only exists when there is a
+  // late fee — with none, the golfer was told they could cancel any time.
   if (p.lateFeeCents > 0) {
-    const timing = LATE_FEE_TIMINGS.find(t => t.key === p.lateFeeTiming)?.label;
+    if (p.cancellationHours !== null) out.push(`Free cancellation until ${p.cancellationHours} hours before the tee time.`);
+    // A booking from before timings were recorded holds at the cutoff (holdsAtCutoff()).
+    const timingKey = p.lateFeeTiming ?? 'hold_at_cutoff';
+    const timing = LATE_FEE_TIMINGS.find(t => t.key === timingKey)?.label;
     out.push(`Late-cancellation fee: ${money(p.lateFeeCents)}${timing ? ` — ${timing.toLowerCase()}` : ''}.`); any = true;
   }
-  if (p.noShowFeeCents > 0) { out.push(`No-show fee: ${money(p.noShowFeeCents)}.`); any = true; }
+  // Under "cancel late or don't show" with no separate no-show fee, the no-show
+  // amount IS the late fee (noShowTotalCents) — one fee, already named above.
+  const sameFee = p.lateFeeTiming === 'late_cancel_or_no_show' && p.noShowFeeCents === p.lateFeeCents;
+  if (p.noShowFeeCents > 0 && !sameFee) { out.push(`No-show fee: ${money(p.noShowFeeCents)}.`); any = true; }
   if (p.autoNoShowMinutes !== null) { out.push(`A group not checked in ${p.autoNoShowMinutes} minutes after its tee time is marked a no-show.`); any = true; }
   if (!any) out.push('No fee terms were recorded on this booking.');
 
