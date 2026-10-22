@@ -90,6 +90,11 @@ async function main() {
   check('shop money is not in revenue', a.revenue.collectedCents === 16000 + 4000 + 15000, String(a.revenue.collectedCents));
   const quiet = a.customers.goneQuiet;
   check('a weekly regular who stopped is on the gone-quiet list, with email and phone', quiet.length === 1 && quiet[0].name === 'Quiet Pat' && quiet[0].email === `${TAG}+pat@test.local` && quiet[0].phone === '201-555-0199' && quiet[0].usualGapDays === 7, JSON.stringify(quiet));
+  // Once Pat books again (Nov 20), Pat isn't quiet any more.
+  const nt = await prisma.teeTime.create({ data: { courseId: course.id, date: '2030-11-20', time: '07:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 1, status: 'available' } });
+  await prisma.booking.create({ data: { teeTimeId: nt.id, courseId: course.id, golferName: 'Quiet Pat', golferEmail: `${TAG}+pat@test.local`, players: 1, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 5000, status: 'confirmed' } });
+  const again = await computeAnalytics(course.id, { from: '2030-11-04', to: '2030-11-10' }, now);
+  check('…but not once they have booked their next round', again.customers.goneQuiet.length === 0, JSON.stringify(again.customers.goneQuiet));
   const res = a.customers.residents.rows;
   check('residents: 2 resident players paying $60, 5 others paying $250', res.reduce((n, r) => n + r.resPlayers, 0) === 2 && res.reduce((n, r) => n + r.resCents, 0) === 6000 && res.reduce((n, r) => n + r.otherPlayers, 0) === 5 && res.reduce((n, r) => n + r.otherCents, 0) === 25000, JSON.stringify(res));
 

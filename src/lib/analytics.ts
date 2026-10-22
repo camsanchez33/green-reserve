@@ -37,7 +37,8 @@
 //                    to paid rounds (before tax); walk-up shop sales paid in the
 //                    range (before tax). Never part of revenue.
 //   gone quiet       (W2-8) a golfer with 3+ rounds on different days whose last
-//                    round is 14+ days and more than twice their usual gap ago.
+//                    round is 14+ days and more than twice their usual gap ago,
+//                    and who has no booking after that day.
 import type { BookingEventType } from '@prisma/client';
 import { prisma } from './prisma';
 import { DEFAULT_TZ, isValidTimezone, todayIn, addDaysStr } from './course-time';
@@ -328,8 +329,15 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     const email = h.golferEmail.trim().toLowerCase();
     contactOf.set(k, { email: email && !email.endsWith(PLACEHOLDER_EMAIL_DOMAIN) ? email : '', phone: h.golferPhone.trim() });
   }
+  // A golfer who has already booked their next round isn't quiet — leave them off.
+  const booked = await prisma.booking.findMany({
+    where: { courseId, status: { not: 'cancelled' }, teeTime: { date: { gt: asOf } } },
+    select: { golferEmail: true, golferPhone: true, golferAccountId: true },
+  });
+  const bookedAhead = new Set(booked.map(customerKey).filter((k): k is string => !!k));
   const goneQuiet: { name: string; email: string; phone: string; rounds: number; lastPlayed: string; usualGapDays: number; daysSince: number }[] = [];
   for (const [k, v] of visits) {
+    if (bookedAhead.has(k)) continue;
     const ds = [...new Set(v.dates.filter(x => x <= asOf))].sort();
     if (ds.length < 3) continue;
     const usual = daysBetween(ds[0], ds[ds.length - 1]) / (ds.length - 1);
