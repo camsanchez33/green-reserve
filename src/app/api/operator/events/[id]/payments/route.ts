@@ -85,15 +85,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         // W2-9c: ask every player on the list who hasn't paid (and has no link yet) to pay their own share.
         if (!event.course.stripeAccountId || !event.course.stripeAccountActive) return bad('Connect Stripe in Settings before sending pay links.', 409);
         const prefer = body.via === 'sms' ? 'sms' : 'email';
-        const players = await prisma.courseEventPlayer.findMany({
-          where: { eventId: id }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-          include: { payments: { select: { status: true, amountCents: true, refundedCents: true } } },
-        });
+        // Only players on the list (not the waiting list, or a sign-up still paying); a sign-up group's one payment covers everyone in it.
+        const [players, groupPays] = await Promise.all([
+          prisma.courseEventPlayer.findMany({
+            where: { eventId: id, status: 'in' }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+            include: { payments: { select: { status: true, amountCents: true, refundedCents: true } } },
+          }),
+          prisma.courseEventPayment.findMany({ where: { eventId: id, groupKey: { not: '' } }, select: { groupKey: true, status: true, amountCents: true, refundedCents: true } }),
+        ]);
         const asked: string[] = [], noContact: string[] = [], failed: string[] = [], notSent: string[] = [], removed: string[] = [];
         let already = 0;
         const started = Date.now();
         for (const pl of players) {
-          if (playerPayState(pl.payments) !== 'none') { already++; continue; }
+          if (playerPayState([...pl.payments, ...(pl.groupKey ? groupPays.filter(x => x.groupKey === pl.groupKey) : [])]) !== 'none') { already++; continue; }
           const hasEmail = !!pl.email && !isPlaceholderEmail(pl.email), hasPhone = pl.phone.replace(/\D/g, '').length >= 10;
           if (!hasEmail && !hasPhone) { noContact.push(pl.name); continue; }
           if (Date.now() - started > SEND_BUDGET_MS) { notSent.push(pl.name); continue; }

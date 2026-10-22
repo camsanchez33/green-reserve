@@ -1,24 +1,30 @@
 {
-  "generatedAt": "2026-10-22T21:38:34.300Z",
+  "generatedAt": "2026-10-22T22:15:44.190Z",
   "repo": {
-    "head": "4d97fc1",
-    "branch": "claude/dash-mock",
-    "dirtyCount": 14,
+    "head": "04301ce",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 20,
     "dirty": [
-      "M  OPERATOR_REWORK_SPEC.md",
+      "M  CLAUDE.md",
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
       "M  docs/CODEMAP.md",
       "M  docs/codemap.json",
-      "A  prisma/migrations/20261022030847_w2_9c_player_payments/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/event-payments-db-test.ts",
-      "M  src/app/api/operator/events/[id]/payments/route.ts",
-      "M  src/app/api/operator/events/[id]/route.ts",
-      "M  src/components/dashboard/events/EventDetail.tsx",
-      "M  src/components/dashboard/events/EventMoney.tsx",
-      "M  src/lib/event-payments.ts"
+      "M  scripts/operator-nav-test.ts",
+      "M  scripts/tt-card-test.ts",
+      "M  src/app/dashboard/analytics/page.tsx",
+      "M  src/app/dashboard/events/page.tsx",
+      "M  src/app/dashboard/layout.tsx",
+      "M  src/app/dashboard/members/page.tsx",
+      "M  src/app/dashboard/messages/page.tsx",
+      "M  src/app/dashboard/money/page.tsx",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/app/dashboard/schedules/page.tsx",
+      "M  src/app/dashboard/settings/page.tsx",
+      "M  src/app/dashboard/shop/page.tsx",
+      "M  src/app/globals.css",
+      "M  src/components/OperatorSidebar.tsx"
     ],
     "looksLikeRunInProgress": true
   },
@@ -26,16 +32,30 @@
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
       {
-        "h": "4d97fc1",
-        "date": "2026-10-22T21:38:20+00:00",
-        "subject": "Tee sheet: time panel sits at the top now the colour bar is gone",
+        "h": "04301ce",
+        "date": "2026-10-22T22:10:32+00:00",
+        "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses",
         "ids": [],
         "matches": []
       },
       {
-        "h": "6c7deeb",
-        "date": "2026-10-22T21:35:18+00:00",
-        "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1)",
+        "h": "2734cbd",
+        "date": "2026-10-22T22:04:58+00:00",
+        "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "91df6b9",
+        "date": "2026-10-22T21:27:19+00:00",
+        "subject": "W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fc5c6aa",
+        "date": "2026-10-22T21:25:22+00:00",
+        "subject": "W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)",
         "ids": [],
         "matches": []
       },
@@ -78,6 +98,13 @@
         "h": "5e73b48",
         "date": "2026-10-22T15:18:57-04:00",
         "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "694230a",
+        "date": "2026-10-22T03:18:20+00:00",
+        "subject": "W2-9c Events: each player's own pay link; paid at the course per player",
         "ids": [],
         "matches": []
       },
@@ -1144,203 +1171,213 @@
       "ageDays": 10
     },
     {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 17
-    },
-    {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 17
-    },
-    {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-04",
-      "ageDays": 17
-    },
-    {
-      "file": "UI_REVISE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-01",
-      "ageDays": 21
-    },
-    {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
+    },
+    {
+      "file": "REVIEW_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
+    },
+    {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
+    },
+    {
+      "file": "UI_REVISE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 14
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "4d97fc1",
+      "h": "04301ce",
       "date": "2026-10-22",
-      "subject": "Tee sheet: time panel sits at the top now the colour bar is gone"
+      "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses"
     },
     {
-      "h": "6c7deeb",
+      "h": "2734cbd",
       "date": "2026-10-22",
-      "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1)"
+      "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later"
+    },
+    {
+      "h": "91df6b9",
+      "date": "2026-10-22",
+      "subject": "W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send"
+    },
+    {
+      "h": "fc5c6aa",
+      "date": "2026-10-22",
+      "subject": "W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)"
     },
     {
       "h": "6ea9b46",
@@ -1373,24 +1410,14 @@
       "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)"
     },
     {
+      "h": "694230a",
+      "date": "2026-10-22",
+      "subject": "W2-9c Events: each player's own pay link; paid at the course per player"
+    },
+    {
       "h": "b9fe29f",
       "date": "2026-10-22",
       "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
-    },
-    {
-      "h": "40be0a7",
-      "date": "2026-10-22",
-      "subject": "Status board"
-    },
-    {
-      "h": "e449074",
-      "date": "2026-10-22",
-      "subject": "W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close"
-    },
-    {
-      "h": "4438d60",
-      "date": "2026-10-22",
-      "subject": "Status board"
     }
   ]
 }

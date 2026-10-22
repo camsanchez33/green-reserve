@@ -30,7 +30,7 @@ export async function GET() {
       take: 500,
       include: {
         tasks: { select: { dueDate: true, doneAt: true } },
-        _count: { select: { entrants: true, teeTimes: true } },
+        _count: { select: { entrants: { where: { status: 'in' } }, teeTimes: true } },
       },
     }),
     prisma.courseProduct.findMany({ where: { courseId, active: true }, select: { id: true, label: true, holes: true }, orderBy: { sortOrder: 'asc' } }),

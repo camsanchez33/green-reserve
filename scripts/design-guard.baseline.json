@@ -159,6 +159,9 @@
     "card": 1,
     "lucide": 1
   },
+  "src/app/events/[id]/SignupForm.tsx": {
+    "lucide": 1
+  },
   "src/app/for-courses/ForCoursesContent.tsx": {
     "card": 1,
     "input": 3,
