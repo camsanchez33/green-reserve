@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 515,
+    "files": 516,
     "routes": 250,
-    "libs": 166,
+    "libs": 167,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -1139,12 +1139,12 @@
     },
     {
       "path": "src/app/admin/revenue/page.tsx",
-      "lines": 918,
-      "purpose": "",
+      "lines": 930,
+      "purpose": "ADMIN-C Money (Cam 2026-10-22, from the Money mockup he approved:",
       "brain": [],
       "exports": [
         {
-          "name": "default (RevenuePage)",
+          "name": "default (MoneyPage)",
           "kind": "component"
         }
       ],
@@ -1155,9 +1155,6 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
-        "@/components/ui/Eyebrow",
-        "@/components/ui/Modal",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/expenses",
@@ -1165,7 +1162,6 @@
         "@/lib/step-up-client",
         "lucide-react",
         "next/link",
-        "next/navigation",
         "react"
       ],
       "usedBy": []
@@ -2663,7 +2659,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 331,
+      "lines": 345,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2684,6 +2680,7 @@
         "@/lib/admin-session",
         "@/lib/course-metrics",
         "@/lib/expenses",
+        "@/lib/fees-by-day",
         "@/lib/money-problems",
         "@/lib/platform-stripe",
         "@/lib/prisma",
@@ -10294,7 +10291,6 @@
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
         "src/app/admin/profile/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/cam/approve/page.tsx",
@@ -10410,7 +10406,6 @@
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
         "src/app/admin/profile/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
@@ -10446,7 +10441,6 @@
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
-        "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/LeadDialogs.tsx",
@@ -15390,7 +15384,7 @@
     },
     {
       "path": "src/lib/expenses.ts",
-      "lines": 77,
+      "lines": 88,
       "purpose": "EXPENSE TRACKER (RUN_QUEUE \"EXPENSE TRACKER / real P&L\") — the manual half of the P&L:",
       "brain": [],
       "exports": [
@@ -15424,6 +15418,10 @@
         },
         {
           "name": "isExpenseCategory",
+          "kind": "fn"
+        },
+        {
+          "name": "monthlyEquivalentCents",
           "kind": "fn"
         },
         {
@@ -15514,6 +15512,31 @@
       "imports": [],
       "usedBy": [
         "src/app/teesheet/page.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/fees-by-day.ts",
+      "lines": 28,
+      "purpose": "ADMIN-C Money → Overview chart:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "feesByDay",
+          "kind": "fn"
+        },
+        {
+          "name": "Window",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/revenue/route.ts"
       ]
     },
     {

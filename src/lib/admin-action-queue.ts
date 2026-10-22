@@ -66,7 +66,7 @@ export async function buildActionQueue(now = new Date()): Promise<{ rows: Action
         id: `fc-${courseId}`, courseId, who: g.courseName, severity: 'bad',
         why: `${g.items.length} failed charge${g.items.length === 1 ? '' : 's'} · $${total.toFixed(2)}`,
         doThis: 'Card on file is failing at check-in — contact the golfer(s) to update payment, then retry from Revenue.',
-        ageDays: oldest, actionLabel: 'Review', href: '/admin/revenue', count: g.items.length,
+        ageDays: oldest, actionLabel: 'Review', href: '/admin/revenue?tab=uncollected', count: g.items.length,
         items: g.items.length > 1 ? g.items.map(i => ({ id: i.id, label: `${i.golferName} — $${i.amount.toFixed(2)}`, ageDays: i.ageDays })) : undefined,
       };
     }),

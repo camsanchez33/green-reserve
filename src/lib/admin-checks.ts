@@ -46,10 +46,10 @@ export async function urgentFindings(now = new Date()): Promise<Finding[]> {
     g.n++; g.cents += b.totalAmount; byCourse.set(b.courseId, g);
   }
   for (const [courseId, g] of byCourse) {
-    out.push({ key: `failed:${courseId}`, title: `Card declined at check-in — ${g.name}`, detail: `${g.n} round${g.n === 1 ? '' : 's'}, $${(g.cents / 100).toFixed(2)} not collected.`, href: '/admin/revenue', courseId });
+    out.push({ key: `failed:${courseId}`, title: `Card declined at check-in — ${g.name}`, detail: `${g.n} round${g.n === 1 ? '' : 's'}, $${(g.cents / 100).toFixed(2)} not collected.`, href: '/admin/revenue?tab=uncollected', courseId });
   }
   for (const d of disputes) {
-    out.push({ key: `dispute:${d.id}`, title: `Chargeback opened — ${d.booking?.course.name ?? 'a course'}`, detail: `$${(d.amountCents / 100).toFixed(2)} from ${d.booking?.golferName ?? 'a golfer'}. Answer it in Stripe before the deadline.`, href: '/admin/revenue', courseId: d.booking?.course.id ?? null });
+    out.push({ key: `dispute:${d.id}`, title: `Chargeback opened — ${d.booking?.course.name ?? 'a course'}`, detail: `$${(d.amountCents / 100).toFixed(2)} from ${d.booking?.golferName ?? 'a golfer'}. Answer it in Stripe before the deadline.`, href: '/admin/revenue?tab=disputes', courseId: d.booking?.course.id ?? null });
   }
   for (const j of jobs.filter(j => j.status === 'bad')) {
     out.push({ key: `cron:${j.job}`, title: `Scheduled job failing — ${j.job}`, detail: j.note, href: '/admin/system' });
