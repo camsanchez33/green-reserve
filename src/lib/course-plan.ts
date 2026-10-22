@@ -26,8 +26,9 @@ export type PriceCell = {
   residentWeekday: number | null; residentWeekend: number | null;
 };
 
-/** A round golfers can book. key = its CourseProduct id, '' for a course with no named rounds. */
-export type RoundSale = { key: string; on: boolean; from: string | null; to: string | null };
+/** A round golfers can book. key = its CourseProduct id, '' for a course with no named rounds.
+ *  walk: golfers may walk it; false = a cart is required (and charged) on every tee time. */
+export type RoundSale = { key: string; on: boolean; from: string | null; to: string | null; walk: boolean };
 
 export type DayPlan = {
   /** Empty on the usual week: it covers every day no other plan claims. */
@@ -49,7 +50,7 @@ export type PlanRound = { key: string; label: string; holes: number };
 /** A row as compilePlan makes it — the shape PUT /api/operator/schedule writes (dollars). */
 export type CompiledRow = {
   productId: string | null; daysOfWeek: number[]; startTime: string; endTime: string;
-  intervalMinutes: number; holes: number; tierName: string; walkingAllowed: true; active: true;
+  intervalMinutes: number; holes: number; tierName: string; walkingAllowed: boolean; active: true;
   greenFeeWeekday: number; greenFeeWeekend: number; cartFee: number;
   memberRateWeekday: number | null; memberRateWeekend: number | null;
   residentRateWeekday: number | null; residentRateWeekend: number | null;
@@ -93,6 +94,7 @@ export function checkPlan(plan: CoursePlan, rounds: PlanRound[]): string | null 
   const seen = new Set<number>();
   for (const d of plan.different) {
     if (!d.days.length) return 'Pick the days that are different, or remove that set of days.';
+    if (!d.days.every(x => Number.isInteger(x) && x >= 0 && x <= 6)) return 'Those days aren’t days of the week.';
     for (const x of d.days) {
       if (seen.has(x)) return 'A day can only be in one set of different days.';
       seen.add(x);
@@ -108,7 +110,7 @@ export function checkPlan(plan: CoursePlan, rounds: PlanRound[]): string | null 
     if (d.closed) continue;
     if (!isTime(d.first) || !isTime(d.last)) return 'Every set of hours needs a first and last tee time.';
     if (d.first >= d.last) return 'The last tee time has to be after the first.';
-    if (!(d.interval >= 1 && d.interval <= 60)) return 'Tee times have to be between 1 and 60 minutes apart.';
+    if (!(Number.isInteger(d.interval) && d.interval >= 1 && d.interval <= 60)) return 'Tee times have to be a whole number of minutes apart, between 1 and 60.';
     let prev = d.first;
     for (const c of d.changes) {
       if (!isTime(c.at)) return 'Every price change needs a time.';
@@ -119,7 +121,9 @@ export function checkPlan(plan: CoursePlan, rounds: PlanRound[]): string | null 
     for (const r of sold) {
       const cells = d.prices[r.key];
       if (!cells || cells.length !== d.changes.length + 1) return 'Fill in a price for every round and price change.';
-      if (cells.some(c => !(c.weekday >= 0) || !(c.weekend >= 0) || !(c.cart >= 0))) return 'Prices can’t be negative.';
+      const okOpt = (v: number | null) => v == null || (typeof v === 'number' && v >= 0);
+      if (cells.some(c => !(c.weekday >= 0) || !(c.weekend >= 0) || !(c.cart >= 0)
+        || !okOpt(c.memberWeekday) || !okOpt(c.memberWeekend) || !okOpt(c.residentWeekday) || !okOpt(c.residentWeekend))) return 'Prices can’t be negative.';
     }
   }
   if (plan.usual.closed && daysOf(plan, plan.usual).length > 0 && plan.different.every(d => d.closed)) return 'Open at least one day.';
@@ -146,7 +150,7 @@ export function compilePlan(plan: CoursePlan, rounds: PlanRound[]): CompiledRow[
         const cell = d.prices[r.key]?.[i] ?? emptyCell();
         rows.push({
           productId: r.key || null, daysOfWeek: days, startTime: s, endTime: e, intervalMinutes: d.interval,
-          holes: round.holes, tierName: names[i], walkingAllowed: true, active: true,
+          holes: round.holes, tierName: names[i], walkingAllowed: r.walk !== false, active: true,
           greenFeeWeekday: cell.weekday, greenFeeWeekend: cell.weekend, cartFee: cell.cart,
           memberRateWeekday: cell.memberWeekday, memberRateWeekend: cell.memberWeekend,
           residentRateWeekday: cell.residentWeekday, residentRateWeekend: cell.residentWeekend,
@@ -157,7 +161,7 @@ export function compilePlan(plan: CoursePlan, rounds: PlanRound[]): CompiledRow[
   return rows;
 }
 
-type StoredRow = Omit<CompiledRow, 'walkingAllowed' | 'active'> & { active: boolean };
+type StoredRow = Omit<CompiledRow, 'active'> & { active: boolean };
 
 const cellOf = (r: StoredRow): PriceCell => ({
   weekday: r.greenFeeWeekday, weekend: r.greenFeeWeekend, cart: r.cartFee,
@@ -169,7 +173,7 @@ const cellOf = (r: StoredRow): PriceCell => ({
 export function blankPlan(rounds: PlanRound[]): CoursePlan {
   const usual: DayPlan = { days: [], closed: false, first: '07:00', last: '17:00', interval: 8, changes: [], firstName: null, prices: {} };
   for (const r of rounds) usual.prices[r.key] = [{ ...emptyCell(), weekday: r.holes <= 9 ? 30 : 55, weekend: r.holes <= 9 ? 35 : 65, cart: r.holes <= 9 ? 12 : 20 }];
-  return { rounds: rounds.map(r => ({ key: r.key, on: true, from: null, to: null })), usual, different: [] };
+  return { rounds: rounds.map(r => ({ key: r.key, on: true, from: null, to: null, walk: true })), usual, different: [] };
 }
 
 /**
@@ -229,12 +233,15 @@ export function readPlan(stored: StoredRow[], rounds: PlanRound[]): CoursePlan {
   const open = new Set(plans.flatMap(p => p.days));
   const closedDays = ALL_DAYS.filter(x => !open.has(x));
   const different = [...rest];
-  if (closedDays.length && usualSrc.days.length < 7) different.push({ ...usual, days: closedDays, closed: true, changes: [], prices: {} });
+  // A closed set keeps the usual hours and prices, so reopening a day sells it at them, never at $0.
+  if (closedDays.length && usualSrc.days.length < 7) different.push({ ...JSON.parse(JSON.stringify(usual)), days: closedDays, closed: true });
   // Rounds: on when they have rows; sold window from their first to last row on the usual week.
   const roundSales: RoundSale[] = rounds.map(r => {
     const w = windows.get(r.key);
-    if (!w) return { key: r.key, on: false, from: null, to: null };
-    return { key: r.key, on: true, from: w.from > usual.first ? w.from : null, to: w.to < usual.last ? w.to : null };
+    if (!w) return { key: r.key, on: false, from: null, to: null, walk: true };
+    // Walkable only when every one of its rows is (one cart-only row means the course requires carts on it).
+    const walk = rows.filter(x => keyOf(x) === r.key).every(x => x.walkingAllowed !== false);
+    return { key: r.key, on: true, from: w.from > usual.first ? w.from : null, to: w.to < usual.last ? w.to : null, walk };
   });
   // Every sold round needs a cell in every column of every plan.
   for (const d of [usual, ...different]) {
@@ -261,4 +268,11 @@ export function checkRows(rows: CompiledRow[], products: ConflictProduct[], nine
     for (const w of c.warnings) if (!warnings.includes(w)) warnings.push(w);
   }
   return { refusal: null, warnings };
+}
+
+/** Change a round's sale; a round switched on gets a price in every column of every set of days. */
+export function setRoundSale(plan: CoursePlan, key: string, patch: Partial<RoundSale>, cellFor: (key: string) => PriceCell): CoursePlan {
+  const fill = (d: DayPlan): DayPlan => d.prices[key]?.length === d.changes.length + 1 ? d
+    : { ...d, prices: { ...d.prices, [key]: Array.from({ length: d.changes.length + 1 }, (_, j) => d.prices[key]?.[j] ?? cellFor(key)) } };
+  return { ...plan, rounds: plan.rounds.map(r => r.key === key ? { ...r, ...patch } : r), usual: fill(plan.usual), different: plan.different.map(fill) };
 }

@@ -25,7 +25,7 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { Card } from '@/components/ui/Card';
 import { formatTeeTime as fmtTime } from '@/lib/format';
-import { readPlan, checkPlan, columnNames, daysOf, snap, emptyCell, isTime, type CoursePlan, type DayPlan, type PlanRound, type PriceCell } from '@/lib/course-plan';
+import { readPlan, checkPlan, columnNames, daysOf, snap, emptyCell, isTime, setRoundSale, type CoursePlan, type DayPlan, type PlanRound, type PriceCell } from '@/lib/course-plan';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const WEEK = [1, 2, 3, 4, 5, 6, 0]; // Monday first, the way a course reads its week
@@ -131,7 +131,8 @@ export default function SchedulesPage() {
   useEffect(() => {
     if (loading || !productsLoaded || loadError) return;
     const p = readPlan(rows, rounds);
-    setPlan(p); setSaved(JSON.stringify(p));
+    // Nothing saved yet: the suggested plan counts as unsaved, so the save bar shows.
+    setPlan(p); setSaved(rows.length ? JSON.stringify(p) : '');
   }, [rows, loading, productsLoaded, loadError, roundsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dirty = !!plan && JSON.stringify(plan) !== saved;
@@ -201,14 +202,8 @@ export default function SchedulesPage() {
       return i === 0 ? { ...p, usual: next } : { ...p, different: p.different.map((x, j) => j === i - 1 ? next : x) };
     });
   }
-  function setRound(key: string, patch: Partial<CoursePlan['rounds'][number]>) {
-    edit(p => {
-      const rs = p.rounds.map(r => r.key === key ? { ...r, ...patch } : r);
-      // A round switched on gets prices in every column of every set of days.
-      const fill = (d: DayPlan): DayPlan => d.prices[key]?.length === d.changes.length + 1 ? d : { ...d, prices: { ...d.prices, [key]: Array.from({ length: d.changes.length + 1 }, (_, j) => d.prices[key]?.[j] ?? defaultCell(key)) } };
-      return { ...p, rounds: rs, usual: fill(p.usual), different: p.different.map(fill) };
-    });
-  }
+  const setRound = (key: string, patch: Partial<CoursePlan['rounds'][number]>) => edit(p => setRoundSale(p, key, patch, defaultCell));
+
 
   // ── Saving ─────────────────────────────────────────────────────────────────
   async function review() {
@@ -272,7 +267,7 @@ export default function SchedulesPage() {
 
   /** One set of days' hours: first tee, last tee, minutes apart. */
   const hoursFields = (i: number, d: DayPlan) => (
-    <div className="grid grid-cols-3 gap-3 max-w-md">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md">
       <div><label className={lCls} htmlFor={`first-${i}`}>First tee</label><input id={`first-${i}`} type="time" value={d.first} disabled={!canEdit} onChange={e => setDay(i, { first: e.target.value })} className={iCls} /></div>
       <div><label className={lCls} htmlFor={`last-${i}`}>Last tee</label><input id={`last-${i}`} type="time" value={d.last} disabled={!canEdit} onChange={e => setDay(i, { last: e.target.value })} className={iCls} /></div>
       <div><label className={lCls} htmlFor={`gap-${i}`}>Minutes apart</label><input id={`gap-${i}`} type="number" min={1} max={60} value={d.interval || ''} disabled={!canEdit} onChange={e => setDay(i, { interval: Number(e.target.value) })} className={iCls} /></div>
@@ -386,6 +381,9 @@ export default function SchedulesPage() {
           {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
           {productsError && <LoadError message={`Couldn't load your rounds — ${productsError}`} onRetry={loadProducts} />}
           {!plan && !loadError && <Card className="p-5 text-[14px] text-ink-muted">Loading your schedule…</Card>}
+          {plan && !loading && rows.length === 0 && !loadError && (
+            <p className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink">No tee times are set up yet. Check the hours and prices below, then save to put them on your tee sheet.</p>
+          )}
 
           {plan && (
             <>
@@ -444,6 +442,13 @@ export default function SchedulesPage() {
                         </div>
                       )}
                       {!r.on && <span className="text-[13px] text-ink-muted">Not sold</span>}
+                      {r.on && (
+                        <label className="flex items-center gap-2 text-[13.5px] text-ink">
+                          <input type="checkbox" checked={r.walk !== false} disabled={!canEdit} onChange={e => setRound(r.key, { walk: e.target.checked })} className="w-4 h-4 accent-pine" />
+                          Golfers can walk
+                          {r.walk === false && <span className="text-ink-muted">— a cart is required and charged</span>}
+                        </label>
+                      )}
                     </div>
                   ))}
                 </div>

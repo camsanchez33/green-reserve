@@ -1,6 +1,6 @@
 // W2-6 Schedule simplification: the course plan (open hours · rounds · one
 // price table) and the rows it is stored as. Pure. Run: npx tsx scripts/course-plan-test.ts
-import { checkRows, compilePlan, readPlan, checkPlan, blankPlan, columnNames, autoName, snap, emptyCell, type CoursePlan, type PlanRound } from '../src/lib/course-plan';
+import { setRoundSale, checkRows, compilePlan, readPlan, checkPlan, blankPlan, columnNames, autoName, snap, emptyCell, type CoursePlan, type PlanRound } from '../src/lib/course-plan';
 import { desiredSlots } from '../src/lib/tee-sheet-engine';
 import { scheduleMoneyForCreate } from '../src/lib/schedule-wire';
 
@@ -22,7 +22,7 @@ check('snap to the grid', snap({ first: '07:00', interval: 8 }, '15:02') === '15
 
 // The common course: 18 all day, back 9 mornings until 10:00, front 9 from 3pm; twilight price from 3pm.
 const plan: CoursePlan = {
-  rounds: [{ key: 'p18', on: true, from: null, to: '15:00' }, { key: 'pb9', on: true, from: null, to: '10:00' }, { key: 'pf9', on: true, from: '15:00', to: null }],
+  rounds: [{ key: 'p18', on: true, from: null, to: '15:00', walk: true }, { key: 'pb9', on: true, from: null, to: '10:00', walk: true }, { key: 'pf9', on: true, from: '15:00', to: null, walk: true }],
   usual: { days: [], closed: false, first: '07:00', last: '17:00', interval: 10, firstName: null, changes: [{ at: '15:00', name: null }],
     prices: { p18: [cell(65, 85, 20), cell(40, 50, 15)], pb9: [cell(35, 45, 12), cell(25, 30, 10)], pf9: [cell(35, 45, 12), cell(25, 30, 10)] } },
   different: [{ days: [1], closed: false, first: '10:00', last: '17:00', interval: 10, firstName: null, changes: [], prices: { p18: [cell(50, 50, 18)], pb9: [cell(30, 30, 10)], pf9: [cell(30, 30, 10)] } }],
@@ -77,6 +77,22 @@ check('last before first is refused', checkPlan({ ...plan, usual: { ...plan.usua
 const blank = blankPlan([{ key: '', label: 'The course', holes: 18 }]);
 check('a course with no named rounds: one row, the course as a whole', compilePlan(blank, [{ key: '', label: 'The course', holes: 18 }]).length === 1 && compilePlan(blank, [{ key: '', label: 'The course', holes: 18 }])[0].productId === null);
 check('renamed column keeps its name in the rows', compilePlan({ ...plan, usual: { ...plan.usual, firstName: 'Early bird' } }, rounds).some(r => r.tierName === 'Early bird'));
+
+// Review fixes (2026-10-22).
+const cartOnly = compilePlan({ ...plan, rounds: plan.rounds.map(r => r.key === 'p18' ? { ...r, walk: false } : r) }, rounds);
+check('a cart-required round is stored cart-only', cartOnly.filter(r => r.productId === 'p18').every(r => r.walkingAllowed === false) && cartOnly.filter(r => r.productId === 'pb9').every(r => r.walkingAllowed === true));
+check('…and stays cart-only when read back and saved again', compilePlan(readPlan(cartOnly, rounds), rounds).filter(r => r.productId === 'p18').every(r => r.walkingAllowed === false));
+check('…its tee times are cart-only', get(slots(cartOnly, '2030-06-12'), 'p18', '07:00')?.walkingAllowed === false);
+const closedRead = readPlan(compilePlan(closedMon, rounds), rounds);
+const reopened = { ...closedRead, different: closedRead.different.map(d => ({ ...d, closed: false })) };
+check('a reopened day sells at the usual prices, never $0', get(slots(compilePlan(reopened, rounds), '2030-06-10'), 'p18', '07:00')?.greenFeeCents === 6500, JSON.stringify(get(slots(compilePlan(reopened, rounds), '2030-06-10'), 'p18', '07:00')));
+const neg = { ...plan, usual: { ...plan.usual, prices: { ...plan.usual.prices, p18: [{ ...cell(65, 85, 20), memberWeekday: -5 }, cell(40, 50, 15)] } } };
+check('a negative member price is refused', checkPlan(neg, rounds) !== null);
+check('a fractional interval is refused', checkPlan({ ...plan, usual: { ...plan.usual, interval: 7.5 } }, rounds) !== null);
+check('a day that is not a weekday is refused', checkPlan({ ...plan, different: [{ ...plan.different[0], days: [9] }] }, rounds) !== null);
+const off = { ...plan, rounds: plan.rounds.map(r => r.key === 'pf9' ? { ...r, on: false } : r), usual: { ...plan.usual, prices: { p18: plan.usual.prices.p18, pb9: plan.usual.prices.pb9 } } };
+const on = setRoundSale(off, 'pf9', { on: true }, () => cell(9, 9, 9));
+check('a round switched on is priced in every column of every set of days', on.usual.prices.pf9?.length === 2 && on.different.every(d => d.prices.pf9?.length === d.changes.length + 1) && checkPlan(on, rounds) === null);
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
