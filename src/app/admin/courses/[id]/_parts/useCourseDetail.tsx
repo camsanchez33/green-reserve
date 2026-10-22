@@ -4,7 +4,7 @@
 // grown to 2,700 lines and 52 useState in one component. Moved verbatim; state
 // and handlers come from useCourseDetail() via useCourse(). Every piece of state and every handler the page had.
 
-import { stepUpFetch } from '@/lib/step-up-client';
+import { stepUpFetch, askReason } from '@/lib/step-up-client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { openingTab, setupChecks, tabProblems } from '@/lib/admin-course-tabs';
 import { checkInSignal } from '@/lib/course-checkin';
@@ -359,14 +359,31 @@ export function useCourseDetail() {
   // ever (STRIPE RULE FINAL / AGREEMENT = GO-LIVE GATE). A blocked "Set
   // live" surfaces the exact reason and a one-click reminder instead of
   // silently no-op'ing or offering a way around it.
+  // BRAIN-1a: taking a course offline or archiving it is said with a reason —
+  // asked once, and kept for the second request that confirms cancelling its
+  // bookings (so the admin is not asked twice).
+  const closureReason = useRef('');
+  async function closureWhy(label: string, confirming: boolean): Promise<string | null> {
+    if (confirming && closureReason.current) return closureReason.current;
+    const r = await askReason(label);
+    if (r) closureReason.current = r;
+    return r;
+  }
+
   async function toggleActive(active: boolean, cancelBookings = false) {
+    let reason = '';
+    if (active === false) {
+      const r = await closureWhy('Take a course offline', cancelBookings);
+      if (!r) { setLiveBlockReason('Nothing changed — taking a course offline needs a reason.'); return; }
+      reason = r;
+    }
     setLiveToggleBusy(true); setLiveBlockReason(''); setLiveBlockMissing(null); setClosureError('');
     // Review (no-silent-failures): a dropped connection threw past the busy
     // reset and left the button on "Working…" forever. try/finally, like
     // sendGoLiveReminder two functions down.
     try {
       const r = await stepUpFetch('/api/admin/course-detail', {
-        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, cancelBookings }),
+        method: 'PATCH', headers: H(), body: JSON.stringify({ courseId, active, cancelBookings, reason }),
       });
       if (r.ok) {
         setClosurePrompt(null);
@@ -423,10 +440,12 @@ export function useCourseDetail() {
   // taking a course offline.
   async function archiveCourse(cancelBookings = false) {
     if (!detail) return;
+    const reason = await closureWhy('Archive a course', cancelBookings);
+    if (!reason) { setLiveBlockReason('Nothing changed — archiving needs a reason.'); return; }
     setArchiveBusy(true); setClosureError('');
     try {
       const r = await stepUpFetch('/api/admin/archive-course', {
-        method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive', cancelBookings }),
+        method: 'POST', headers: H(), body: JSON.stringify({ courseId, action: 'archive', cancelBookings, reason }),
       });
       if (r.ok) { router.push('/admin/courses'); return; }
       const d = await r.json().catch(() => ({}));

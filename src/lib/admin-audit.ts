@@ -57,11 +57,14 @@ export const ACTION_LABELS: Record<string, string> = {
 export const REASON_MIN = 4;
 export const REASON_MAX = 500;
 
-const SECRET_KEYS = /pass(word)?|token|secret|hash|otp|code|card|cvc|iban|account_?number|routing/i;
+// `code` alone (a TOTP or recovery code) — not zipCode / postalCode / promoCode.
+const SECRET_KEYS = /pass(word)?|token|secret|hash|otp|^code$|recovery|card|cvc|iban|account_?number|routing/i;
 
 /** Drop anything that must never sit in an audit row. */
 export function redact(v: unknown, depth = 0): unknown {
-  if (v === null || v === undefined || depth > 4) return v ?? null;
+  if (v === null || v === undefined) return null;
+  // Too deep to scrub field by field: never store what was not checked.
+  if (depth > 4) return typeof v === 'object' ? '[deep]' : v;
   if (Array.isArray(v)) return v.slice(0, 50).map(x => redact(x, depth + 1));
   if (v instanceof Date) return v.toISOString();
   if (typeof v === 'object') {

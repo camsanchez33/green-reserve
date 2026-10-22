@@ -50,6 +50,10 @@ for (const a of ['refund', 'retry_charge', 'cancel_booking', 'employee_role', 'e
   check(`${a} is a reason action`, REASON_ACTIONS.has(a));
 const r = redact({ name: 'x', passwordHash: 'h', tempPassword: 'p', nested: { otpCode: '123', ok: 1 }, card: '4242' }) as Record<string, unknown>;
 check('secrets are hidden', r.passwordHash === '[hidden]' && r.tempPassword === '[hidden]' && (r.nested as Record<string, unknown>).otpCode === '[hidden]' && r.card === '[hidden]');
+const deep = redact({ a: { b: { c: { d: { e: { password: 'x' } } } } } });
+check('too-deep values are dropped, never stored raw', !JSON.stringify(deep).includes('"x"'), JSON.stringify(deep));
+const z = redact({ zipCode: '10990', code: '123456' }) as Record<string, unknown>;
+check('a zip code is kept; a bare code is hidden', z.zipCode === '10990' && z.code === '[hidden]');
 check('ordinary fields stay', r.name === 'x' && (r.nested as Record<string, unknown>).ok === 1);
 const d = changedFields({ a: 1, b: 2, c: null }, { a: 1, b: 3, c: null });
 check('only changed fields are kept', JSON.stringify(d) === JSON.stringify({ before: { b: 2 }, after: { b: 3 } }));

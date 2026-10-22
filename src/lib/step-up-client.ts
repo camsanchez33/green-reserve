@@ -15,6 +15,7 @@ type ReasonHandler = (label: string) => Promise<string | null>;
 let handler: Handler | null = null;
 let reasonHandler: ReasonHandler | null = null;
 let pending: Promise<boolean> | null = null;
+let reasonPending: Promise<string | null> | null = null;
 
 export function registerStepUpHandler(h: Handler | null) { handler = h; }
 export function registerReasonHandler(h: ReasonHandler | null) { reasonHandler = h; }
@@ -59,7 +60,9 @@ export async function stepUpFetch(input: string, init?: RequestInit): Promise<Re
   }
   const label = reasonHandler ? await reasonAsk(res) : null;
   if (label === null || !reasonHandler) return res;
-  const reason = await reasonHandler(label);
+  // Two requests asking at once share one box (as with step-up).
+  reasonPending ??= reasonHandler(label).finally(() => { reasonPending = null; });
+  const reason = await reasonPending;
   if (!reason) return res;
   const [i2, init2] = withReason(input, init, reason);
   return fetch(i2, init2);
