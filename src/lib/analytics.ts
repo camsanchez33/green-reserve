@@ -39,6 +39,14 @@
 //   gone quiet       (W2-8) a golfer with 3+ rounds on different days whose last
 //                    round is 14+ days and more than twice their usual gap ago,
 //                    and who has no booking after that day.
+//   rate vs posted   (W2-8) green fees collected on paid rounds, against that
+//                    tee time's posted price × the players who paid. Split by
+//                    rate: standard, residents, each member tier. "Below
+//                    posted" is the difference — an exact figure, not an estimate.
+//   pace             (W2-8) for each of the next 14 days, players booked so far
+//                    vs the same weekday the same number of days out, averaged
+//                    over the last four weeks (bookings made by then and not yet
+//                    cancelled by then; a group counts at its size today).
 import type { BookingEventType } from '@prisma/client';
 import { prisma } from './prisma';
 import { DEFAULT_TZ, isValidTimezone, todayIn, addDaysStr } from './course-time';
@@ -96,7 +104,7 @@ async function load(courseId: string, range: Range) {
           greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true, cancellationFeeTotal: true,
           cancelledAt: true, createdAt: true, source: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true,
           // W2-8: residents (RES-1) and whether the booking carried a fee policy.
-          residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true,
+          residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true, appliedRate: true,
           // W2-8 (4): pro-shop items added to the round (POS-1a), before tax.
           shopTotalCents: true,
         },
@@ -275,6 +283,57 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     resRows.set(b.date, r);
   }
 
+  // ── W2-8 (2): the rate golfers actually paid vs the price posted for that tee time ──
+  const postedOf = new Map(L.teeTimes.map(t => [t.id, t.greenFeeCents]));
+  const rateRows = new Map<string, { players: number; paidCents: number; postedCents: number }>();
+  const addRate = (k: string, players: number, paid: number, posted: number) => {
+    if (players <= 0) return;
+    const r = rateRows.get(k) ?? { players: 0, paidCents: 0, postedCents: 0 };
+    r.players += players; r.paidCents += paid; r.postedCents += posted; rateRows.set(k, r);
+  };
+  for (const b of collectedB) {
+    const posted = postedOf.get(b.teeTimeId) ?? 0;
+    if (posted <= 0) continue; // a free time has no posted price to compare against
+    const players = b.checkedInPlayers ?? b.players;
+    if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') { addRate(`tier:${b.appliedRate}`, players, b.greenFeeTotal, players * posted); continue; }
+    const res = Math.min(b.residentPlayers, players);
+    const resCents = res > 0 && b.residentRateCents != null ? Math.min(b.greenFeeTotal, res * b.residentRateCents) : 0;
+    addRate('resident', res, resCents, res * posted);
+    addRate('standard', players - res, b.greenFeeTotal - resCents, (players - res) * posted);
+  }
+  const rateList = [...rateRows.entries()]
+    .map(([k, r]) => ({ rate: k === 'standard' ? 'Standard' : k === 'resident' ? 'Residents' : k.slice(5), kind: k.startsWith('tier:') ? 'member' as const : k as 'standard' | 'resident', ...r, ofPostedPct: pct(r.paidCents, r.postedCents) }))
+    .sort((a, b) => b.players - a.players);
+  const ratePaid = rateList.reduce((n, r) => n + r.paidCents, 0), ratePosted = rateList.reduce((n, r) => n + r.postedCents, 0);
+
+  // ── W2-8 (5): booking pace — the next 14 days against the same weekday, same days out, over the last four weeks ──
+  const paceTo = addDaysStr(today, 13), paceFrom = addDaysStr(today, -28);
+  const paceSlots = await prisma.teeTime.findMany({
+    where: { courseId, date: { gte: paceFrom, lte: paceTo } },
+    select: { date: true, status: true, playersAvailable: true,
+      bookings: { select: { players: true, status: true, createdAt: true, cancelledAt: true } } },
+  });
+  const paceByDate = new Map<string, typeof paceSlots>();
+  for (const t of paceSlots) paceByDate.set(t.date, [...(paceByDate.get(t.date) ?? []), t]);
+  /** Players booked on `date` as of `at`: made by then, and not cancelled by then. */
+  const bookedAsOf = (date: string, at: number) => (paceByDate.get(date) ?? []).reduce((n, t) => n + t.bookings.reduce((m, b) => {
+    if (b.createdAt.getTime() > at) return m;
+    if (b.status === 'cancelled' && (!b.cancelledAt || b.cancelledAt.getTime() <= at)) return m;
+    return m + b.players;
+  }, 0), 0);
+  const offeredOn = (date: string) => (paceByDate.get(date) ?? []).filter(t => t.status !== 'blocked').reduce((n, t) => n + t.playersAvailable, 0);
+  const pace: { date: string; offered: number; booked: number; usual: number | null; weeks: number }[] = [];
+  for (let i = 0; i < 14; i++) {
+    const date = addDaysStr(today, i);
+    const past: number[] = [];
+    for (let k = 1; k <= 4; k++) {
+      const then = addDaysStr(date, -7 * k);
+      if (!offeredOn(then)) continue; // closed or no tee times that day — no comparison
+      past.push(bookedAsOf(then, nowMs - 7 * k * 86400000));
+    }
+    pace.push({ date, offered: offeredOn(date), booked: bookedAsOf(date, nowMs), usual: past.length ? Math.round(past.reduce((n, x) => n + x, 0) / past.length) : null, weeks: past.length });
+  }
+
   // ── W2-8 (4): spend beyond the green fee — carts, shop items on rounds, walk-up shop sales ──
   // Pro-shop money is its own line (Cam 2026-10-22): never part of "revenue".
   const cartRounds = collectedB.filter(b => b.cartFeeTotal > 0).length;
@@ -384,6 +443,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
         shopOnRoundsCents: shopOnRounds, shopPerRoundCents: roundsPlayed ? Math.round(shopOnRounds / roundsPlayed) : null,
         walkUpSales: walkUps.length, walkUpCents: walkUps.reduce((n, w) => n + w.totalCents - w.taxCents, 0),
       },
+      // W2-8 (2): rate paid vs posted, by rate.
+      rates: { rows: rateList, paidCents: ratePaid, postedCents: ratePosted, belowPostedCents: ratePosted - ratePaid, ofPostedPct: pct(ratePaid, ratePosted) },
       greenCents: greenCollected, cartCents: cartCollected, lateFeesKeptCents: lateFeesKept, holdsHeldCents: holdsHeld, greenReserveFeesCents: grFees,
       pipeline: {
         upcomingBookings: upcomingB.length,
@@ -412,6 +473,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
         rows: alerts.map(a => ({ date: a.date, time: a.teeTime?.time ?? (a.windowStart || null), players: a.players, notified: !!a.notifiedAt })) },
       // W2-8 (8): closures, apart from golfers' cancellations.
       closedDays: closedDays.map(c => ({ date: c.date, reason: c.reason })),
+      // W2-8 (5): the next 14 days, from today — not bound to the range.
+      pace,
     },
     unfilled: {
       slots: unfilled.length, openSpots: unfilled.reduce((s, u) => s + u.open, 0), lostCents: unfilled.reduce((s, u) => s + u.lostCents, 0),

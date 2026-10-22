@@ -98,6 +98,27 @@ async function main() {
   const res = a.customers.residents.rows;
   check('residents: 2 resident players paying $60, 5 others paying $250', res.reduce((n, r) => n + r.resPlayers, 0) === 2 && res.reduce((n, r) => n + r.resCents, 0) === 6000 && res.reduce((n, r) => n + r.otherPlayers, 0) === 5 && res.reduce((n, r) => n + r.otherCents, 0) === 25000, JSON.stringify(res));
 
+  // W2-8 (2): rate paid vs posted. A Gold member pair at 14:00 paying $30 each on a $50 time.
+  const t14 = await tt('14:00', 2);
+  await bk(t14.id, { players: 2, status: 'completed', paymentStatus: 'paid', checkedInAt: new Date('2030-11-06T14:00:00Z'), checkedInPlayers: 2, appliedRate: 'Gold', greenFeeTotal: 6000, totalAmount: 6000 });
+  // W2-8 (5): pace. Tue Nov 12 (two days out) has 2 players booked; the Tuesday before had 6 booked two days out.
+  const nov12 = await prisma.teeTime.create({ data: { courseId: course.id, date: '2030-11-12', time: '08:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 2, status: 'available' } });
+  await bk(nov12.id, { players: 2, createdAt: new Date('2030-11-09T10:00:00Z') });
+  const nov05 = await prisma.teeTime.create({ data: { courseId: course.id, date: '2030-11-05', time: '08:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 8, playersBooked: 6, status: 'available' } });
+  await bk(nov05.id, { players: 4, createdAt: new Date('2030-11-02T10:00:00Z') });                                                          // made by then: counts
+  await bk(nov05.id, { players: 2, createdAt: new Date('2030-11-04T10:00:00Z') });                                                          // made after: doesn't
+  await bk(nov05.id, { players: 2, createdAt: new Date('2030-11-01T10:00:00Z'), status: 'cancelled', cancelledAt: new Date('2030-11-02T10:00:00Z') }); // gone by then
+  await bk(nov05.id, { players: 2, createdAt: new Date('2030-11-01T10:00:00Z'), status: 'cancelled', cancelledAt: new Date('2030-11-04T10:00:00Z') }); // still on then: counts
+  const c = await computeAnalytics(course.id, { from: '2030-11-04', to: '2030-11-10' }, now);
+  const rate = (name: string) => c.revenue.rates.rows.find(r => r.rate === name);
+  check('rate vs posted: standard players paid the posted price', rate('Standard')?.players === 5 && rate('Standard')?.paidCents === 25000 && rate('Standard')?.postedCents === 25000, JSON.stringify(c.revenue.rates.rows));
+  check('…residents paid $60 against $100 posted (60%)', rate('Residents')?.players === 2 && rate('Residents')?.paidCents === 6000 && rate('Residents')?.ofPostedPct === 60);
+  check('…a member tier is its own row', rate('Gold')?.kind === 'member' && rate('Gold')?.paidCents === 6000 && rate('Gold')?.postedCents === 10000);
+  check('…$80 below posted in all', c.revenue.rates.belowPostedCents === 8000, String(c.revenue.rates.belowPostedCents));
+  const tue = c.utilization.pace.find(p => p.date === '2030-11-12');
+  check('pace covers 14 days from today', c.utilization.pace.length === 14 && c.utilization.pace[0].date === '2030-11-10');
+  check('pace: 2 booked for Tue Nov 12, usually 6 by now (from the one Tuesday with times)', tue?.booked === 2 && tue?.usual === 6 && tue?.weeks === 1 && tue?.offered === 4, JSON.stringify(tue));
+
   await cleanup();
   await prisma.$disconnect();
   console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

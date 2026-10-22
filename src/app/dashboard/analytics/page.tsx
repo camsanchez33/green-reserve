@@ -36,6 +36,7 @@ const usd2 = (c: number | null | undefined) => c == null ? '—' : `$${(c / 100)
 const pctS = (p: number | null | undefined) => p == null ? '—' : `${Math.round(p)}%`;
 const fmtDay = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 const fmtTime = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+const fmtWeekday = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 const fmtHour = (h: number) => `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
 const DAY_NAME: Record<string, string> = { Sun: 'Sunday', Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday' };
 const plural = (n: number, one: string, many = one + 's') => `${n.toLocaleString()} ${n === 1 ? one : many}`;
@@ -330,6 +331,16 @@ function RevenueTab({ d }: { d: Data }) {
         </div>
       </Section>
 
+      {/* W2-8 (2): what golfers paid against the price posted for their tee time. */}
+      <Section title="What golfers paid against your posted price"
+        why={d.revenue.rates.postedCents === 0
+          ? 'Green fees on paid rounds, against the price posted for each tee time. Nothing paid in these dates yet.'
+          : `Green fees on paid rounds came to ${pctS(d.revenue.rates.ofPostedPct)} of the price posted for those tee times — ${d.revenue.rates.belowPostedCents >= 0 ? `${usd(d.revenue.rates.belowPostedCents)} below posted` : `${usd(-d.revenue.rates.belowPostedCents)} above posted`}, through member and resident rates and prices staff set by hand. Twilight and other rounds are measured against their own posted price.`}
+        action={d.revenue.rates.rows.length > 0 ? <Download onClick={() => downloadCsv(`rate-vs-posted-${d.range.from}-${d.range.to}`, ['Rate', 'Players', 'Paid', 'Posted', '% of posted'], d.revenue.rates.rows.map(r => [r.rate, r.players, r.paidCents / 100, r.postedCents / 100, r.ofPostedPct]))} /> : undefined}>
+        <Table head={['Rate', 'Players', 'Paid', 'Posted', 'Of posted']} empty="No paid rounds in these dates."
+          rows={d.revenue.rates.rows.map(r => [r.kind === 'member' ? `${r.rate} (member)` : r.rate, r.players, usd(r.paidCents), usd(r.postedCents), pctS(r.ofPostedPct)])} />
+      </Section>
+
       <Section title="Coming up" why="Bookings for tee times that haven’t happened yet, and what they’re worth to you when they play.">
         <div className="divide-y divide-line-soft max-w-xl">
           <Line label="Upcoming bookings" sub={plural(d.revenue.pipeline.upcomingBookings, 'booking')} value={usd(d.revenue.upcomingCents)} />
@@ -350,8 +361,22 @@ function BusyTab({ d }: { d: Data }) {
   const maxEarned = Math.max(1, ...d.utilization.earnedPerSpot.rows.flatMap(r => r.cells.map(c => c ?? 0)));
   const shade = (c: number) => earned ? (c / maxEarned) * 100 : c;
   const u = d.utilization;
+  // W2-8 (5): the next two weeks against where the same days usually stand by now.
+  const pace = u.pace.filter(p => p.offered > 0);
+  const behind = pace.filter(p => p.usual != null && p.usual > 0 && p.booked < p.usual * 0.8);
   return (
     <div className="space-y-10">
+      <Section title="The next two weeks"
+        why={pace.length === 0 ? 'No tee times are out for the next two weeks yet.'
+          : behind.length === 0 ? 'Players booked so far for each coming day, against the same weekday the same number of days out over the last four weeks. Nothing is running well behind.'
+          : `Players booked so far for each coming day, against the same weekday the same number of days out over the last four weeks. ${behind.length === 1 ? `${fmtWeekday(behind[0].date)} is` : `${plural(behind.length, 'day')} are`} running behind — there’s still time to fill ${behind.length === 1 ? 'it' : 'them'}.`}>
+        <Table head={['Day', 'Booked so far', 'Usually by now', 'Spots offered']} empty="No tee times are out for the next two weeks yet."
+          rows={pace.map(p => [
+            <span key="d" className="inline-flex items-center gap-2">{fmtWeekday(p.date)}{behind.includes(p) && <StatusDot status="warn" label="behind" />}</span>,
+            p.booked, p.usual == null ? '—' : p.usual, p.offered,
+          ])} />
+      </Section>
+
       <Section title="When your tee sheet fills"
         why={earned
           ? 'Each square is one hour on one day of the week, and the number is what it earned for every spot you offered — sold or not, tee times already played. A full hour of cheap rounds can earn less than a half-full hour at full price.'
