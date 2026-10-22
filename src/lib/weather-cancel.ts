@@ -63,7 +63,7 @@ export async function applyWeatherCancel(courseId: string, plan: WeatherPlan, ac
   // reopen it for a moment, and a booking could land in that gap).
   await block();
   const cancel = async (g: WeatherGroup) => {
-    const r = await performCancellation(g.bookingId, actor, { notifySlotAlerts: false, reason: why, waiveFee: true, keepSlotBlocked: true })
+    const r = await performCancellation(g.bookingId, actor, { notifySlotAlerts: false, reason: why, waiveFee: true, keepSlotBlocked: true, courseCalledOff: 'weather' })
       .catch(err => ({ error: err instanceof Error ? err.message : String(err), status: 500 } as const));
     if ('error' in r && r.error) result.failed.push({ ...g, error: r.error });
     else { result.cancelled.push(g); if ('feeRefundFailed' in r && r.feeRefundFailed) result.feeRefundsFailed++; }

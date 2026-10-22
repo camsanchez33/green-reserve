@@ -86,6 +86,7 @@ export async function cancelFutureBookingsForClosure(
     const result = await performCancellation(b.id, { type: 'system' }, {
       notifySlotAlerts: false,
       waiveFee: true,
+      courseCalledOff: 'closure',
       reason: `${b.course.name} is no longer taking bookings through GreenReserve, so we have cancelled this round for you. You have not been charged for it.`,
     }).catch(err => ({ error: err instanceof Error ? err.message : String(err), status: 500 } as const));
 

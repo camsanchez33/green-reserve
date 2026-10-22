@@ -6997,7 +6997,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 610,
+      "lines": 705,
       "purpose": "AN-3 (Cam 2026-10-19, after AN-2):",
       "brain": [],
       "exports": [
@@ -11455,7 +11455,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 335,
+      "lines": 535,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -11486,6 +11486,10 @@
         {
           "name": "Range",
           "kind": "type"
+        },
+        {
+          "name": "RES_START",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -12593,7 +12597,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 273,
+      "lines": 276,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13168,7 +13172,7 @@
     },
     {
       "path": "src/lib/course-closure.ts",
-      "lines": 128,
+      "lines": 129,
       "purpose": "MP-5b.",
       "brain": [],
       "exports": [
@@ -19291,6 +19295,7 @@
       ],
       "readers": [
         "src/app/api/operator/blackouts/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/schedule-preview.ts",
@@ -22323,6 +22328,7 @@
       ],
       "readers": [
         "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ]
@@ -22684,6 +22690,7 @@
       "readers": [
         "src/app/api/alerts/route.ts",
         "src/app/api/alerts/unsubscribe/[token]/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/cancel-booking.ts"
       ]
     },

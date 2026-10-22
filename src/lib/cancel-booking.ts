@@ -24,6 +24,9 @@ export type CancellationOptions = {
   /** Review 2026-10-04: the course is closing this time (weather) — leave the
    *  slot BLOCKED instead of reopening it, so nobody books into the gap. */
   keepSlotBlocked?: boolean;
+  /** W2-8: the course called the round off (weather, a closure). Written on the
+   *  cancel event so Analytics counts it apart from golfers' cancellations. */
+  courseCalledOff?: 'weather' | 'closure';
 };
 
 export async function performCancellation(bookingId: string, actor: EventActor, opts: CancellationOptions = {}) {
@@ -188,7 +191,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       bookingId, courseId: booking.courseId, type: 'booking_cancelled', actor,
       amountCents: feeAlreadyCharged ? booking.cancellationFeeTotal : 0, playerCount: booking.players,
       teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
-      metadata: { feeKept: feeAlreadyCharged, roundRefunded, ...(noShowCharge ? { noShowFeeKept: noShowCharge.amountCents } : {}), ...(opts.reason ? { reason: opts.reason } : {}) },
+      metadata: { feeKept: feeAlreadyCharged, roundRefunded, ...(noShowCharge ? { noShowFeeKept: noShowCharge.amountCents } : {}), ...(opts.reason ? { reason: opts.reason } : {}), ...(opts.courseCalledOff ? { courseCalledOff: opts.courseCalledOff } : {}) },
     });
   });
 
