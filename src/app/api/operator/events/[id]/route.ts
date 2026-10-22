@@ -16,6 +16,7 @@ import { todayIn } from '@/lib/course-time';
 import { heldBy, ninesByProduct } from '@/lib/event-hold';
 import { eventMoney, reconcileStuckPayments, voidOpenLinks, settleOpenPayment, METHOD_LABEL, STALE_CHARGE_MS } from '@/lib/event-payments';
 import { EVENT_FEE_ON } from '@/lib/booking-fees';
+import { lapseHolds, signupSettings, moveOntoList, questionsOf } from '@/lib/event-signup';
 
 // W2-9 Events: one event — its details, the tee times it holds, its checklist
 // and its players. Needs "Run events"; every write also needs the current
@@ -41,6 +42,8 @@ async function heldTimes(eventId: string) {
 async function load(courseId: string, id: string) {
   // W2-9b: a card payment left half-done by a request that never finished is settled from Stripe first.
   await reconcileStuckPayments(courseId, id).catch(err => console.error(JSON.stringify({ ev: 'event_payment.reconcile.fail', eventId: id, error: err instanceof Error ? err.message : String(err) })));
+  // W2-9d: sign-ups whose 30-minute hold ran out unpaid give their spots back.
+  await lapseHolds(courseId, id).catch(err => console.error(JSON.stringify({ ev: 'event_signup.lapse.fail', eventId: id, error: err instanceof Error ? err.message : String(err) })));
   const event = await prisma.courseEvent.findFirst({
     where: { id, courseId },
     include: {
@@ -50,7 +53,7 @@ async function load(courseId: string, id: string) {
         orderBy: { createdAt: 'asc' },
         // The pay token stays on the server; staff get the link only when they ask for it.
         select: { id: true, kind: true, label: true, amountCents: true, feeCents: true, method: true, status: true, paidAt: true, voidedAt: true, createdAt: true, chargeStartedAt: true,
-          payerName: true, payerEmail: true, payerPhone: true, headcount: true, note: true, refundedCents: true, createdBy: true, payToken: true, playerId: true,
+          payerName: true, payerEmail: true, payerPhone: true, headcount: true, note: true, refundedCents: true, createdBy: true, payToken: true, playerId: true, groupKey: true,
           refunds: { orderBy: { createdAt: 'asc' }, select: { id: true, amountCents: true, status: true, reason: true, error: true, createdBy: true, createdAt: true } } },
       },
     },
@@ -74,7 +77,9 @@ async function load(courseId: string, id: string) {
     event: { ...event, payments: event.payments.map(({ payToken, chargeStartedAt, ...p }) => ({ ...p, methodLabel: METHOD_LABEL[p.method] ?? p.method,
       stuck: p.status === 'paying' && !!chargeStartedAt && Date.now() - chargeStartedAt.getTime() > STALE_CHARGE_MS,
       payUrl: p.status === 'open' && payToken ? `${process.env.NEXT_PUBLIC_URL}/pay/event/${p.id}?token=${payToken}` : null })) },
-    money: eventMoney({ ...event, entrants: event.entrants.length }, event.payments),
+    // Only players on the list count toward the money (not the waiting list, or a sign-up still paying).
+    money: eventMoney({ ...event, entrants: event.entrants.filter(p => p.status === 'in').length }, event.payments),
+    signup: { url: `${process.env.NEXT_PUBLIC_URL}/events/${id}`, questions: questionsOf(event.signupQuestions) },
     feeOn: EVENT_FEE_ON,
     today: todayIn(course?.timezone),
     courseHoles: course?.holes ?? 18,
@@ -97,6 +102,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 type Body = EventInput & {
+  groupKey?: string;
   action?: string; preview?: boolean;
   taskId?: string; label?: string; dueDate?: string | null; done?: boolean;
   playerId?: string; text?: string; groupNo?: number | null; startHole?: number | null; size?: number;
@@ -161,6 +167,39 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         break;
       }
 
+      case 'signup_settings': {
+        // W2-9d: the public sign-up page — open or closed, pay now or later, group size, the course's questions.
+        const r = signupSettings(body as Record<string, unknown>);
+        if (!r.ok) return bad(r.error, r.status);
+        if (r.value.signupOpen && r.value.signupPay === 'now') {
+          const course = await prisma.course.findUnique({ where: { id: courseId }, select: { stripeAccountId: true, stripeAccountActive: true } });
+          if (!course?.stripeAccountId || !course.stripeAccountActive) return bad('Connect Stripe in Settings before asking players to pay when they sign up — or let them pay later.', 409);
+          if (event.pricePerPlayerCents <= 0) return bad('Set the price per player (Edit the event) before asking players to pay when they sign up.', 409);
+        }
+        await prisma.courseEvent.update({ where: { id }, data: r.value });
+        break;
+      }
+      case 'signup_move': {
+        // W2-9d: off the waiting list (or after a hold ran out) and onto the list. The course decides, even over the expected number.
+        const r = await moveOntoList(courseId, id, String(body.groupKey ?? ''), g.session.email);
+        if (!r.ok) return bad(r.error, r.status);
+        return NextResponse.json({ ...(await load(courseId, id)), moved: r.value.moved, emailed: r.value.emailed });
+      }
+
+      case 'signup_remove': {
+        // W2-9d: a sign-up on the waiting list, or whose hold ran out, taken off. An unpaid link of theirs is cancelled first.
+        const groupKey = String(body.groupKey ?? '');
+        const gone = groupKey ? await prisma.courseEventPlayer.findMany({ where: { eventId: id, groupKey, status: { in: ['waitlist', 'lapsed'] } }, select: { id: true } }) : [];
+        if (!gone.length) return bad('That sign-up is gone or already on the list — refresh the page.', 404);
+        const open = await prisma.courseEventPayment.findMany({ where: { eventId: id, courseId, groupKey, status: { in: ['open', 'paying'] } }, select: { id: true } });
+        for (const o of open) {
+          const v = await settleOpenPayment(courseId, o.id, 'void');
+          if (!v.ok) return bad(`Their pay link couldn\u2019t be cancelled, so they weren\u2019t removed: ${v.error}`, v.status);
+        }
+        await prisma.courseEventPlayer.deleteMany({ where: { eventId: id, groupKey, status: { in: ['waitlist', 'lapsed'] } } });
+        break;
+      }
+
       case 'players_add': {
         const rows = parsePlayers(String(body.text ?? ''));
         if (!rows.length) return bad('Add at least one name — one player per line.');
@@ -191,7 +230,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         break;
       }
       case 'pairings_auto': {
-        const players = await prisma.courseEventPlayer.findMany({ where: { eventId: id }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true } });
+        // Only players on the list are paired; people who signed up together stay together.
+        const players = await prisma.courseEventPlayer.findMany({ where: { eventId: id, status: 'in' }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true, groupKey: true } });
         if (!players.length) return bad('Add the players first.');
         const course = await prisma.course.findUnique({ where: { id: courseId }, select: { holes: true } });
         const holes = Math.min(event.holes, course?.holes ?? event.holes);
@@ -205,7 +245,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
       case 'pairings_send': {
         const [players, course, times] = await Promise.all([
-          prisma.courseEventPlayer.findMany({ where: { eventId: id }, orderBy: [{ groupNo: 'asc' }, { sortOrder: 'asc' }] }),
+          prisma.courseEventPlayer.findMany({ where: { eventId: id, status: 'in' }, orderBy: [{ groupNo: 'asc' }, { sortOrder: 'asc' }] }),
           prisma.course.findUnique({ where: { id: courseId }, select: { name: true, phone: true } }),
           heldTimes(id),
         ]);

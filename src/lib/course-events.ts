@@ -285,12 +285,26 @@ export async function cancelEvent(courseId: string, id: string) {
 }
 
 /** Pure: put players into groups of `size` in list order, numbering groups from 1. Shotgun groups start on holes 1, 2, … */
-export function autoPairings<P extends { id: string }>(players: P[], size: number, shotgun: boolean, holes: number): { id: string; groupNo: number; startHole: number | null }[] {
+export function autoPairings<P extends { id: string; groupKey?: string }>(players: P[], size: number, shotgun: boolean, holes: number): { id: string; groupNo: number; startHole: number | null }[] {
   const n = Math.max(1, Math.min(5, Math.floor(size) || 4));
-  return players.map((p, i) => {
-    const g = Math.floor(i / n) + 1;
-    return { id: p.id, groupNo: g, startHole: shotgun ? ((g - 1) % holes) + 1 : null };
-  });
+  // W2-9d: players who signed up together stay together — a sign-up that won't
+  // fit in what's left of a group starts the next one (one bigger than a group is split).
+  const units: P[][] = [];
+  for (const p of players) {
+    const last = units[units.length - 1];
+    if (p.groupKey && last && last[0].groupKey === p.groupKey) last.push(p); else units.push([p]);
+  }
+  const out: { id: string; groupNo: number; startHole: number | null }[] = [];
+  let g = 1, used = 0;
+  for (const unit of units) {
+    if (used > 0 && used + unit.length > n && unit.length <= n) { g++; used = 0; }
+    for (const p of unit) {
+      if (used === n) { g++; used = 0; }
+      out.push({ id: p.id, groupNo: g, startHole: shotgun ? ((g - 1) % holes) + 1 : null });
+      used++;
+    }
+  }
+  return out;
 }
 
 /** Pure: pasted players — one per line, "Name, email, phone" in any order after the name; tabs from a spreadsheet work too. */
