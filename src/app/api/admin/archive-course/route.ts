@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { archivePair, restorePair } from '@/lib/lifecycle';
 import { closureImpact, cancelFutureBookingsForClosure, notifyOperatorOfClosure } from '@/lib/course-closure';
+import { needReason, reasonOf, auditAdmin } from '@/lib/admin-audit';
 
 // Thin wrapper — all lifecycle mutation logic lives in src/lib/lifecycle.ts
 // (LIFECYCLE PARITY LAW) so /admin/courses* and /admin/inquiries* can never
@@ -18,8 +19,11 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { courseId, action, cancelBookings } = await req.json();
+  const body = await req.json();
+  const { courseId, action, cancelBookings } = body;
   if (!courseId || !action) return NextResponse.json({ error: 'Missing courseId or action' }, { status: 400 });
+  // BRAIN-1a: archiving or restoring a course is said with a reason.
+  const nr = needReason(action === 'restore' ? 'course_unarchive' : 'course_archive', body); if (nr) return nr;
 
   if (action === 'archive') {
   // MP-5b: closing a course is a booking-consequence action, and it used to
@@ -57,12 +61,14 @@ export async function POST(req: NextRequest) {
     // The operator learns their course stopped taking bookings from us, not
     // from a golfer ringing the pro shop.
     const operatorNotified = await notifyOperatorOfClosure(courseId, 'archived', cancelled);
+    await auditAdmin(session, { action: 'course_archive', targetType: 'course', targetId: courseId, courseId, after: { archived: true, cancelledBookings: cancelled }, reason: reasonOf(body) });
     return NextResponse.json({ success: true, changed: result.changed, cancelledBookings: cancelled, operatorNotified });
   }
 
   if (action === 'restore') {
     const result = await restorePair(courseId, session.name);
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === 'Course not found' ? 404 : 400 });
+    await auditAdmin(session, { action: 'course_unarchive', targetType: 'course', targetId: courseId, courseId, after: { archived: false }, reason: reasonOf(body) });
     return NextResponse.json({ success: true, changed: result.changed });
   }
 

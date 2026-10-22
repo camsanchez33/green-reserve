@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession } from '@/lib/admin-session';
 import bcrypt from 'bcryptjs';
+import { withAudit } from '@/lib/admin-audit';
 
-export async function POST(req: NextRequest) {
+async function changePassword(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -24,3 +25,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+// BRAIN-1a: recorded (the password itself never is).
+export const POST = withAudit(changePassword, () => ({ action: 'password_change', targetType: 'admin', targetId: 'self', after: {} }));

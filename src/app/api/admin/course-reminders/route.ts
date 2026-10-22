@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
 import { logRemindersPaused } from '@/lib/course-timeline';
+import { auditAdmin } from '@/lib/admin-audit';
 
 // A-05 item 4b — per-course kill switch for the auto-chase onboarding
 // reminders (see /api/cron/chase-onboarding). Logged to the course timeline
@@ -13,5 +14,6 @@ export async function PATCH(req: NextRequest) {
   if (!courseId || typeof paused !== 'boolean') return NextResponse.json({ error: 'Missing courseId or paused' }, { status: 400 });
   const ok = await logRemindersPaused(courseId, session.name, paused);
   if (!ok) return NextResponse.json({ error: 'No linked inquiry to log against for this course' }, { status: 400 });
+  await auditAdmin(session, { action: paused ? 'reminders_pause' : 'reminders_resume', targetType: 'course', targetId: courseId, courseId });
   return NextResponse.json({ success: true });
 }

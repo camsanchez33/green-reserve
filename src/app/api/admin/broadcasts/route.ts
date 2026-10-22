@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, OWNER_ONLY, SUPPORT_PLUS, ownerGateError } from '@/lib/admin-session';
 import { sendAnnouncementEmail } from '@/lib/email';
+import { withAudit } from '@/lib/admin-audit';
 
 // MP-7a: ONE recipient filter. Thread-insert, email and the preview count
 // each used a different one (active courses; operators with SOME active
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(result);
 }
 
-export async function POST(req: NextRequest) {
+async function postBroadcast(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // MP-2 fix-now #8: a raw role check skips requireOwner()'s mfa assertion,
@@ -129,3 +130,6 @@ export async function POST(req: NextRequest) {
     emailFailures,
   });
 }
+
+// BRAIN-1a: an announcement to every course is recorded.
+export const POST = withAudit(postBroadcast, () => ({ action: 'announcement_send', targetType: 'announcement', targetId: '' }));

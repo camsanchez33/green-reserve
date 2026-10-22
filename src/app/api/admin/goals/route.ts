@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
 import { startOfPlatformDay } from '@/lib/admin-day';
 import { GOAL_METRICS, isGoalMetric, listGoals } from '@/lib/admin-goals';
+import { needReason, reasonOf, auditAdmin, bodyWithReason } from '@/lib/admin-audit';
 
 // AW-4b (Cam 2026-10-21): Admin → Goals. Support+ can see them; only the owner
 // adds or removes one. A fees target arrives in dollars and is kept in cents.
@@ -33,8 +34,7 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   if (dueAt <= now) return NextResponse.json({ error: 'The due date has to be in the future.' }, { status: 400 });
   const goal = await prisma.adminGoal.create({ data: { metric: body.metric, target, dueAt, startsAt: now, createdBy: session.name } });
-  await prisma.adminAuditLog.create({ data: { adminId: session.adminId, action: 'goal_created', targetType: 'admin_goal', targetId: goal.id } })
-    .catch(err => console.error('goal audit failed:', err));
+  await auditAdmin(session, { action: 'goal_add', targetType: 'admin_goal', targetId: goal.id, after: { metric: goal.metric, target: goal.target, dueAt: goal.dueAt } });
   return NextResponse.json({ ok: true, id: goal.id });
 }
 
@@ -44,9 +44,11 @@ export async function DELETE(req: NextRequest) {
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Which goal?' }, { status: 400 });
+  const body = await bodyWithReason(req);
+  const nr = needReason('goal_delete', body); if (nr) return nr;
+  const prior = await prisma.adminGoal.findUnique({ where: { id } });
   const { count } = await prisma.adminGoal.deleteMany({ where: { id } });
   if (count === 0) return NextResponse.json({ error: 'That goal is already gone — refresh the page.' }, { status: 404 });
-  await prisma.adminAuditLog.create({ data: { adminId: session.adminId, action: 'goal_deleted', targetType: 'admin_goal', targetId: id } })
-    .catch(err => console.error('goal audit failed:', err));
+  await auditAdmin(session, { action: 'goal_delete', targetType: 'admin_goal', targetId: id, before: prior ? { metric: prior.metric, target: prior.target, dueAt: prior.dueAt } : undefined, reason: reasonOf(body) });
   return NextResponse.json({ ok: true });
 }

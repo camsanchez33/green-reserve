@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { sweepOrphanCourses, listAcknowledgedOrphans, forceDeleteOrphan } from '@/lib/lifecycle';
+import { withAudit } from '@/lib/admin-audit';
 
 // ORPHAN SWEEP (RUN_QUEUE) — GET always dry-runs (prints the list, no
 // mutations); POST actually executes, owner-only since it can delete rows
@@ -23,7 +24,7 @@ export async function GET() {
   return NextResponse.json({ dryRun: true, items, acknowledged });
 }
 
-export async function POST(req: NextRequest) {
+async function sweep(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireOwner(session)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
@@ -42,3 +43,6 @@ export async function POST(req: NextRequest) {
   const items = await sweepOrphanCourses(session.name, false);
   return NextResponse.json({ dryRun: false, items });
 }
+
+// BRAIN-1a: recorded.
+export const POST = withAudit(sweep, () => ({ action: 'orphan_sweep', targetType: 'system', targetId: '' }));

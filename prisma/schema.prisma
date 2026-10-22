@@ -1112,10 +1112,21 @@ model AdminAuditLog {
   targetType String    @default("")
   targetId   String    @default("")
   detail     String    @default("")
+  /// BRAIN-1a: why — required on money, access and delete actions (REASON_ACTIONS in lib/admin-audit.ts).
+  reason     String    @default("")
+  /// BRAIN-1a: the fields changed, as they were and as they became (only what the action touched).
+  before     Json?
+  after      Json?
+  /// BRAIN-1a: the course this touched, when it touched one — the course timeline reads it.
+  courseId   String?
+  /// BRAIN-1a: the admin's name at the time, so the record reads the same after a rename.
+  actorName  String    @default("")
   createdAt  DateTime  @default(now())
 
   @@index([adminId, createdAt])
   @@index([createdAt])
+  @@index([courseId, createdAt])
+  @@index([action, createdAt])
 }
 
 /// AG-1: one row per acceptance of one document version by one course. Never

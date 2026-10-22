@@ -23,6 +23,7 @@ import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-reque
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 import { deleteInquiryOrPair } from '@/lib/lifecycle';
+import { withAudit, needReason, reasonOf, auditAdmin } from '@/lib/admin-audit';
 
 // MP-2 (ADMIN_V4 V4-2 leak): this returned the whole CourseInquiry row, which
 // includes detailsToken — the sole credential for the public setup-sheet routes.
@@ -1187,7 +1188,7 @@ async function handleAction(
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 }
 
-export async function PATCH(req: NextRequest) {
+async function patchInquiry(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -1243,7 +1244,7 @@ async function createLead(body: Record<string, unknown>, session: AdminSession) 
   return NextResponse.json({ success: true, id: lead.id });
 }
 
-export async function POST(req: NextRequest) {
+async function postInquiry(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -1253,7 +1254,7 @@ export async function POST(req: NextRequest) {
   return handleAction(inquiryId, body.action, body, session);
 }
 
-export async function DELETE(req: NextRequest) {
+async function deleteInquiry(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireOwner(session)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
@@ -1261,11 +1262,25 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get('id');
   const confirmName = searchParams.get('confirmName');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  const why = { reason: searchParams.get('reason') ?? '' };
+  const nr = needReason('inquiry_delete', why); if (nr) return nr;
   // LIFECYCLE PARITY LAW: a linked inquiry routes through the same
   // deletePair the courses tab uses (payment-history guard, operator-
   // stranding check) instead of deleting the inquiry row and leaving its
   // course dangling. Unlinked inquiries still just delete the row.
   const result = await deleteInquiryOrPair(id, confirmName, session.name);
   if (!result.ok) return NextResponse.json({ error: result.error, hasHistory: result.hasHistory }, { status: result.error === 'Inquiry not found' ? 404 : 400 });
+  await auditAdmin(session, { action: 'inquiry_delete', targetType: 'inquiry', targetId: id, after: { changed: result.changed }, reason: reasonOf(why) });
   return NextResponse.json({ success: true, changed: result.changed });
 }
+
+// BRAIN-1a: every inquiry action is recorded once it succeeds; deleting one
+// needs a reason. Autosaved call drafts are not worth a row each.
+const inquiryAudit = (body: Record<string, unknown>) => {
+  const action = String(body.action || '');
+  if (!action || action === 'save_call_draft') return null;
+  return { action: `inquiry_${action}`, targetType: 'inquiry', targetId: String(body.id || body.inquiryId || '') };
+};
+export const PATCH = withAudit(patchInquiry, inquiryAudit);
+export const POST = withAudit(postInquiry, inquiryAudit);
+export const DELETE = deleteInquiry;
