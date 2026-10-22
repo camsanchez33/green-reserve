@@ -23,7 +23,8 @@ const check = (label: string, ok: boolean, detail?: unknown) => {
 // ── Fake Stripe ──────────────────────────────────────────────────────────────
 type PI = { id: string; status: string; amount: number; application_fee_amount?: number };
 const intents = new Map<string, PI>();
-const refunds = new Map<string, { id: string; amount: number }>();
+const refunds = new Map<string, { id: string; amount: number; metadata: Record<string, string> }>();
+let keysForgotten = false;
 let created = 0, confirms = 0, cancels = 0, refundCalls = 0;
 let next: 'succeed' | 'decline' | 'timeout' = 'succeed';
 let refundNext: 'ok' | 'refuse' | 'timeout' = 'ok';
@@ -47,13 +48,17 @@ s.paymentIntents.confirm = async (id: string) => {
   pi.status = 'succeeded';
   return { ...pi };
 };
-s.refunds.create = async (p: { amount: number }, o: { idempotencyKey: string }) => {
+// Refunds carry their row id in metadata; list finds them (as Stripe does).
+s.refunds.list = async () => ({ data: [...refunds.values()].map(r => ({ ...r, status: 'succeeded' })) });
+s.refunds.create = async (p: { amount: number; metadata?: Record<string, string> }, o: { idempotencyKey: string }) => {
   refundCalls++;
   if (refundNext === 'refuse') throw new Stripe.errors.StripeInvalidRequestError({ message: 'Charge has been refunded.', type: 'invalid_request_error' } as never);
+  // After 24 hours Stripe has forgotten the key: the same key makes a NEW refund.
+  const key = keysForgotten ? `${o.idempotencyKey}#${refunds.size}` : o.idempotencyKey;
   // Stripe keeps the refund even when the answer is lost; the same key returns the same refund.
-  if (!refunds.has(o.idempotencyKey)) refunds.set(o.idempotencyKey, { id: `re_${refunds.size + 1}`, amount: p.amount });
+  if (!refunds.has(key)) refunds.set(key, { id: `re_${refunds.size + 1}`, amount: p.amount, metadata: p.metadata ?? {} });
   if (refundNext === 'timeout') throw new Error('Request timed out');
-  return refunds.get(o.idempotencyKey)!;
+  return refunds.get(key)!;
 };
 
 async function cleanup() {
@@ -155,9 +160,19 @@ async function main() {
   const again = await sendRefund(course.id, pending.id);
   check('"Try again" uses the same key — Stripe made one refund, now recorded', again.ok && again.value.status === 'done' && refunds.size === 2
     && (await prisma.courseEventRefund.findUniqueOrThrow({ where: { id: pending.id } })).stripeRefundId === 're_2');
+  // A day later: Stripe has forgotten the key. "Try again" must find the refund it already made, not make another.
+  refundNext = 'timeout';
+  const rt2 = await refundPayment(course.id, bal.value.id, { amount: '25' }, 'owner');
+  const pending2 = await prisma.courseEventRefund.findFirstOrThrow({ where: { paymentId: bal.value.id, status: 'pending' } });
+  refundNext = 'ok'; keysForgotten = true;
+  const before = refunds.size;
+  const again2 = await sendRefund(course.id, pending2.id);
+  check('a retry after 24 hours finds the refund Stripe already made: no second refund', rt2.ok && again2.ok && refunds.size === before
+    && (await prisma.courseEventRefund.findUniqueOrThrow({ where: { id: pending2.id } })).status === 'done', { size: refunds.size, before });
+  keysForgotten = false;
   check('another course can’t refund this course’s payment', !(await refundPayment(other.id, bal.value.id, { amount: '1' }, 'x')).ok && !(await sendRefund(other.id, pending.id)).ok);
   m = await load();
-  check('money: refunds come off what the course kept', m.refundedCents === 65000 && m.keptCents === 820000 && m.owedCents === 55000, m);
+  check('money: refunds come off what the course kept', m.refundedCents === 67500 && m.keptCents === 817500 && m.owedCents === 57500, m);
 
   // Cancelling the event closes its open links; a link can't be paid on a cancelled event.
   const late = await createPayLink(course.id, ev.id, { kind: 'other', amount: '10' }, 'x');

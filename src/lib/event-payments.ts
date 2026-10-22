@@ -16,9 +16,10 @@
 // "paid another way" cancel that intent first.
 //
 // Refunds: reserved on the payment first (refundedCents, conditional on what is
-// left), then Stripe is asked with the refund row's id as the idempotency key.
-// A definite Stripe refusal gives the reservation back; an unsure answer keeps
-// it pending and "Try again" repeats the same request (same key).
+// left), then Stripe is asked with the refund row's id as the idempotency key
+// and in its metadata. A definite Stripe refusal gives the reservation back; an
+// unsure answer keeps it pending, and "Try again" first looks for a refund
+// already carrying that id (the key alone expires after 24 hours).
 import { randomUUID } from 'crypto';
 import Stripe from 'stripe';
 import { prisma } from './prisma';
@@ -319,6 +320,15 @@ export async function sendRefund(courseId: string, refundId: string): Promise<Re
     return fail(409, 'This course has no Stripe account to refund from.');
   }
   try {
+    // Stripe forgets an idempotency key after 24 hours, so a "Try again" the next
+    // day would refund twice. Ask Stripe first whether this refund already exists
+    // (every refund carries its row id in its metadata).
+    const earlier = await stripe.refunds.list({ payment_intent: r.payment.paymentIntentId, limit: 100 }, { stripeAccount: course.stripeAccountId });
+    const found = earlier.data.find(x => x.metadata?.eventRefundId === r.id && x.status !== 'failed' && x.status !== 'canceled');
+    if (found) {
+      await prisma.courseEventRefund.update({ where: { id: r.id }, data: { status: 'done', stripeRefundId: found.id, error: '' } });
+      return { ok: true, value: { status: 'done' } };
+    }
     const sr = await stripe.refunds.create(
       { payment_intent: r.payment.paymentIntentId, amount: r.amountCents, metadata: { eventRefundId: r.id, eventPaymentId: r.paymentId } },
       { stripeAccount: course.stripeAccountId, idempotencyKey: `event-refund-${r.id}` },

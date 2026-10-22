@@ -16,6 +16,8 @@ export type EventPayment = {
   id: string; kind: string; label: string; amountCents: number; feeCents: number; method: string; methodLabel: string; status: string;
   paidAt: string | null; createdAt: string; payerName: string; payerEmail: string; payerPhone: string; headcount: number | null; note: string;
   refundedCents: number; createdBy: string; payUrl: string | null; refunds: EventRefund[];
+  /** 'paying' for longer than a charge can take: Stripe couldn't be asked yet. */
+  stuck: boolean;
 };
 export type Money = { headcount: number; headcountConfirmed: boolean; totalCents: number; paidCents: number; refundedCents: number; keptCents: number; openCents: number; owedCents: number };
 
@@ -186,15 +188,16 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
                     <span className="tabular-nums text-[13.5px] text-ink">{usd(p.amountCents)}</span>
                     {p.status === 'paid' ? <StatusDot status={p.refundedCents >= p.amountCents ? 'neutral' : 'ok'} label={p.refundedCents >= p.amountCents ? 'Refunded' : p.refundedCents ? 'Part refunded' : 'Paid'} />
                       : p.status === 'void' ? <StatusDot status="neutral" label="Cancelled" />
-                      : <StatusDot status="warn" label={p.status === 'paying' ? 'Paying now' : 'Waiting'} />}
+                      : <StatusDot status="warn" label={p.status !== 'paying' ? 'Waiting' : p.stuck ? 'Couldn\u2019t confirm with Stripe yet — reload in a few minutes' : 'Paying now'} />}
                   </div>
                 </div>
 
-                {p.status === 'open' && live && (
+                {p.status === 'open' && (
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
-                    {p.payUrl && <button onClick={() => copy(p.payUrl!, p.id)} className={LINK}>{copied === p.id ? 'Copied' : 'Copy link'}</button>}
-                    {p.payerEmail && <button disabled={!!busy} onClick={() => post('resend' + p.id, { action: 'resend', paymentId: p.id, via: 'email' }, () => 'Emailed again.')} className={LINK}>Email again</button>}
-                    {p.payerPhone && <button disabled={!!busy} onClick={() => post('resend' + p.id, { action: 'resend', paymentId: p.id, via: 'sms' }, () => 'Texted again.')} className={LINK}>Text again</button>}
+                    {/* On a cancelled event an open link can still be closed or marked paid — never sent again. */}
+                    {live && p.payUrl && <button onClick={() => copy(p.payUrl!, p.id)} className={LINK}>{copied === p.id ? 'Copied' : 'Copy link'}</button>}
+                    {live && p.payerEmail && <button disabled={!!busy} onClick={() => post('resend' + p.id, { action: 'resend', paymentId: p.id, via: 'email' }, () => 'Emailed again.')} className={LINK}>Email again</button>}
+                    {live && p.payerPhone && <button disabled={!!busy} onClick={() => post('resend' + p.id, { action: 'resend', paymentId: p.id, via: 'sms' }, () => 'Texted again.')} className={LINK}>Text again</button>}
                     <button onClick={() => setPaidOther(paidOther?.id === p.id ? null : { id: p.id, method: 'cash' })} className={LINK}>Paid another way</button>
                     <button disabled={!!busy} onClick={() => post('void' + p.id, { action: 'void', paymentId: p.id }, () => 'Link cancelled — it can’t be paid now.')} className={LINK}>{busy === 'void' + p.id ? 'Cancelling…' : 'Cancel link'}</button>
                   </div>

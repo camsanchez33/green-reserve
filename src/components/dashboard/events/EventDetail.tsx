@@ -84,7 +84,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
               {!confirmCancel
                 ? <button onClick={() => setConfirmCancel(true)} className={SECONDARY + ' text-bad'}>Cancel event</button>
                 : <span className="flex items-center gap-2">
-                    <button disabled={!!busy} onClick={async () => { if (await act('cancel', { action: 'cancel' }, r => `Cancelled. ${Number(r.released ?? 0)} tee time${r.released === 1 ? '' : 's'} went back on sale.`)) setConfirmCancel(false); }}
+                    <button disabled={!!busy} onClick={async () => { if (await act('cancel', { action: 'cancel' }, r => { const errs = (r.linkErrors as string[] | undefined) ?? []; const v = Number(r.linksVoided ?? 0); return `Cancelled. ${Number(r.released ?? 0)} tee time${r.released === 1 ? '' : 's'} went back on sale.${v ? ` ${v} unpaid pay link${v === 1 ? ' was' : 's were'} cancelled.` : ''}${errs.length ? ` ${errs.length === 1 ? 'A pay link' : `${errs.length} pay links`} couldn\u2019t be cancelled — cancel ${errs.length === 1 ? 'it' : 'them'} under Money: ${errs.join('; ')}` : ''}`; })) setConfirmCancel(false); }}
                       className={BTN + ' bg-bad text-white'}>{busy === 'cancel' ? 'Cancelling…' : 'Yes, cancel it'}</button>
                     <button onClick={() => setConfirmCancel(false)} className={SECONDARY}>Keep it</button>
                   </span>}

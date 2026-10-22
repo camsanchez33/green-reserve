@@ -5085,7 +5085,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 238,
+      "lines": 239,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9691,7 +9691,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventMoney.tsx",
-      "lines": 250,
+      "lines": 253,
       "purpose": "W2-9b:",
       "brain": [],
       "exports": [
@@ -15034,7 +15034,7 @@
     },
     {
       "path": "src/lib/event-payments.ts",
-      "lines": 347,
+      "lines": 357,
       "purpose": "W2-9b (Cam 2026-10-22:",
       "brain": [],
       "exports": [
