@@ -7464,7 +7464,7 @@
     },
     {
       "path": "src/app/dashboard/layout.tsx",
-      "lines": 14,
+      "lines": 18,
       "purpose": "Auth protection for /dashboard/* is handled by src/middleware.ts.",
       "brain": [],
       "exports": [
@@ -7484,7 +7484,8 @@
       "guard": null,
       "imports": [
         "@/lib/staff-fonts",
-        "next"
+        "next",
+        "next/font/google"
       ],
       "usedBy": []
     },
@@ -8761,7 +8762,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 286,
+      "lines": 282,
       "purpose": "",
       "brain": [],
       "exports": [

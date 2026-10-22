@@ -109,6 +109,15 @@ body {
 .admin-look { --font-sans: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans); }
 .admin-look .font-serif { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; }
 
+/* DASH-C (Cam 2026-10-22, the course dashboard mockups): the same clean look as
+   ADMIN-C for courses — a 232px white menu on the left (OperatorSidebar's
+   .op-rail, md and up), white pages, Inter titles included. Scoped to pages that
+   render the rail, so login, reset-password and onboarding keep the site look. */
+:root { --op-rail-w: 14.5rem; }
+@media (min-width: 768px) { .op-look:has(.op-rail) { padding-left: var(--op-rail-w); } }
+.op-look:has(.op-rail) { --font-sans: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans); }
+.op-look:has(.op-rail) .font-serif { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; }
+
 /* FB-2: "See how it works" on the homepage glides to the steps instead of
    jumping. Homepage only, and never for visitors who asked for reduced motion. */
 @media (prefers-reduced-motion: no-preference) {

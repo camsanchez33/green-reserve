@@ -1,36 +1,81 @@
 {
-  "generatedAt": "2026-10-22T02:39:52.897Z",
+  "generatedAt": "2026-10-22T21:33:46.791Z",
   "repo": {
-    "head": "40be0a7",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 24,
+    "head": "6ea9b46",
+    "branch": "claude/dash-mock",
+    "dirtyCount": 16,
     "dirty": [
-      "M  ADMIN_V5_SPEC.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql",
-      "M  prisma/schema.prisma",
-      "M  scripts/admin-course-page-test.ts",
-      "A  scripts/course-feed-db-test.ts",
-      "A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx",
-      "M  src/app/admin/courses/[id]/page.tsx",
-      "M  src/app/admin/system/page.tsx",
-      "A  src/app/api/admin/course-feed/route.ts",
-      "M  src/app/api/admin/resend-staff-setup/route.ts",
-      "A  src/app/api/admin/sentry-test/route.ts",
-      "M  src/app/api/operator/bookings/route.ts",
-      "M  src/app/api/operator/events/[id]/route.ts",
-      "M  src/app/api/operator/shop-sales/route.ts",
-      "M  src/lib/admin-audit.ts",
-      "M  src/lib/admin-course-tabs.ts",
-      "A  src/lib/course-timeline-groups.ts",
-      "M  src/lib/course-timeline.ts"
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/operator-nav-test.ts",
+      " M src/app/dashboard/analytics/page.tsx",
+      " M src/app/dashboard/events/page.tsx",
+      " M src/app/dashboard/layout.tsx",
+      " M src/app/dashboard/members/page.tsx",
+      " M src/app/dashboard/messages/page.tsx",
+      " M src/app/dashboard/money/page.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/app/globals.css",
+      " M src/components/OperatorSidebar.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "6ea9b46",
+        "date": "2026-10-22T17:11:35-04:00",
+        "subject": "Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3c63c5d",
+        "date": "2026-10-22T17:05:00-04:00",
+        "subject": "AW-11 Team: per-person access — each employee's role and areas (#186)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "75ac7d5",
+        "date": "2026-10-22T16:47:47-04:00",
+        "subject": "AW-10 Golfers: lookup only, in the new admin look (#185)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "95e1b37",
+        "date": "2026-10-22T16:38:28-04:00",
+        "subject": "Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a5c912b",
+        "date": "2026-10-22T16:13:13-04:00",
+        "subject": "Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5e73b48",
+        "date": "2026-10-22T15:18:57-04:00",
+        "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b9fe29f",
+        "date": "2026-10-22T02:50:47+00:00",
+        "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "40be0a7",
         "date": "2026-10-22T02:38:33+00:00",
@@ -77,6 +122,13 @@
         "h": "478ec76",
         "date": "2026-10-22T02:09:53+00:00",
         "subject": "W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4bd2042",
+        "date": "2026-10-21T22:06:00-04:00",
+        "subject": "BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)",
         "ids": [],
         "matches": []
       },
@@ -905,7 +957,7 @@
       "line": 2357,
       "hash": "b88c8bf",
       "shipDate": "2026-07-22",
-      "ageDays": 91
+      "ageDays": 92
     }
   ],
   "next": [
@@ -1046,14 +1098,14 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-21",
+      "lastTouched": "2026-10-22",
       "ageDays": 0
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
-      "ageDays": 4
+      "ageDays": 5
     },
     {
       "file": "ADMIN_V5_SPEC.md",
@@ -1080,194 +1132,229 @@
       "ageDays": 10
     },
     {
-      "file": "ADMIN_MASTER_PLAN.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "ADMIN_REBUILD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "ADMIN_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "ADMIN_V3_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "ARCHITECTURE.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "CODEMAP_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "COURSES_SHEET_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "COURSE_LAYOUT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "DESIGN_SYSTEM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "FB2_COPY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "FB3_FEE_PLAN_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "GOLFER_EDGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "GOLFER_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "HARDENING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "INQUIRY_CALL_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "INQUIRY_FORM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "MANAGE_BOOKING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "ONBOARDING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "ONBOARDING_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "PRIVATE_BILLING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "PRODUCTION_READINESS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "PUBLIC_SITE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "RECEIPT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
+      "lastTouched": "2026-10-05",
+      "ageDays": 17
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
-    },
-    {
-      "file": "SITE_DASHBOARD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
+      "lastTouched": "2026-10-05",
+      "ageDays": 17
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
+      "lastTouched": "2026-10-04",
+      "ageDays": 17
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 14
+      "lastTouched": "2026-10-01",
+      "ageDays": 21
+    },
+    {
+      "file": "ADMIN_MASTER_PLAN.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "ADMIN_REBUILD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "ADMIN_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "ARCHITECTURE.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "BACKUP_OPS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "CODEMAP_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "COURSES_SHEET_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "COURSE_LAYOUT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "DESIGN_SYSTEM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "FB2_COPY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "FB3_FEE_PLAN_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "GOLFER_EDGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "GOLFER_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "HARDENING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "INQUIRY_CALL_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "INQUIRY_FORM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "MANAGE_BOOKING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "ONBOARDING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "ONBOARDING_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "PRIVATE_BILLING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "PRODUCTION_READINESS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "PUBLIC_SITE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "RECEIPT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
+    },
+    {
+      "file": "SITE_DASHBOARD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 23
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "6ea9b46",
+      "date": "2026-10-22",
+      "subject": "Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)"
+    },
+    {
+      "h": "3c63c5d",
+      "date": "2026-10-22",
+      "subject": "AW-11 Team: per-person access — each employee's role and areas (#186)"
+    },
+    {
+      "h": "75ac7d5",
+      "date": "2026-10-22",
+      "subject": "AW-10 Golfers: lookup only, in the new admin look (#185)"
+    },
+    {
+      "h": "95e1b37",
+      "date": "2026-10-22",
+      "subject": "Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)"
+    },
+    {
+      "h": "a5c912b",
+      "date": "2026-10-22",
+      "subject": "Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)"
+    },
+    {
+      "h": "5e73b48",
+      "date": "2026-10-22",
+      "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)"
+    },
+    {
+      "h": "b9fe29f",
+      "date": "2026-10-22",
+      "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
+    },
     {
       "h": "40be0a7",
       "date": "2026-10-22",
@@ -1292,41 +1379,6 @@
       "h": "4086e37",
       "date": "2026-10-22",
       "subject": "W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds"
-    },
-    {
-      "h": "7feae5c",
-      "date": "2026-10-22",
-      "subject": "W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup"
-    },
-    {
-      "h": "478ec76",
-      "date": "2026-10-22",
-      "subject": "W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet"
-    },
-    {
-      "h": "512e214",
-      "date": "2026-10-22",
-      "subject": "queue/spec update"
-    },
-    {
-      "h": "8c73613",
-      "date": "2026-10-22",
-      "subject": "W2-9a: releasing an event's hold checks the day being released, not the day it moved to"
-    },
-    {
-      "h": "e85978d",
-      "date": "2026-10-22",
-      "subject": "W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit"
-    },
-    {
-      "h": "ce88bd1",
-      "date": "2026-10-22",
-      "subject": "Codemap and status board"
-    },
-    {
-      "h": "087c1a2",
-      "date": "2026-10-22",
-      "subject": "W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks"
     }
   ]
 }

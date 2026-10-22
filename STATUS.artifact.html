@@ -117,14 +117,21 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-22 02:39 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 40be0a7</span>
-    <span>24 uncommitted</span>
+    <span>2026-10-22 21:33 UTC</span><span>claude/dash-mock @ 6ea9b46</span>
+    <span>16 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">121 runs have shipped that the queue doesn't know about</div>
+<div class="lede">129 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">6ea9b46</span><span>Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)</span></li>
+<li><span class="h">3c63c5d</span><span>AW-11 Team: per-person access — each employee's role and areas (#186)</span></li>
+<li><span class="h">75ac7d5</span><span>AW-10 Golfers: lookup only, in the new admin look (#185)</span></li>
+<li><span class="h">95e1b37</span><span>Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)</span></li>
+<li><span class="h">a5c912b</span><span>Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)</span></li>
+<li><span class="h">5e73b48</span><span>ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)</span></li>
+<li><span class="h">b9fe29f</span><span>W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)</span></li>
 <li><span class="h">40be0a7</span><span>Status board</span></li>
 <li><span class="h">e449074</span><span>W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close</span></li>
 <li><span class="h">4438d60</span><span>Status board</span></li>
@@ -132,6 +139,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <li><span class="h">4086e37</span><span>W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds</span></li>
 <li><span class="h">7feae5c</span><span>W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup</span></li>
 <li><span class="h">478ec76</span><span>W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet</span></li>
+<li><span class="h">4bd2042</span><span>BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)</span></li>
 <li><span class="h">8c73613</span><span>W2-9a: releasing an event's hold checks the day being released, not the day it moved to</span></li>
 <li><span class="h">e85978d</span><span>W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit</span></li>
 <li><span class="h">ce88bd1</span><span>Codemap and status board</span></li>
@@ -258,7 +266,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  ADMIN_V5_SPEC.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>M  scripts/admin-course-page-test.ts</code></li><li><code>A  scripts/course-feed-db-test.ts</code></li><li><code>A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx</code></li><li><code>M  src/app/admin/courses/[id]/page.tsx</code></li><li><code>M  src/app/admin/system/page.tsx</code></li><li><code>A  src/app/api/admin/course-feed/route.ts</code></li><li><code>M  src/app/api/admin/resend-staff-setup/route.ts</code></li><li><code>A  src/app/api/admin/sentry-test/route.ts</code></li><li><code>M  src/app/api/operator/bookings/route.ts</code></li><li><code>M  src/app/api/operator/events/[id]/route.ts</code></li><li><code>M  src/app/api/operator/shop-sales/route.ts</code></li><li><code>M  src/lib/admin-audit.ts</code></li><li><code>M  src/lib/admin-course-tabs.ts</code></li><li><code>A  src/lib/course-timeline-groups.ts</code></li><li><code>M  src/lib/course-timeline.ts</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/operator-nav-test.ts</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li><li><code>M src/app/dashboard/events/page.tsx</code></li><li><code>M src/app/dashboard/layout.tsx</code></li><li><code>M src/app/dashboard/members/page.tsx</code></li><li><code>M src/app/dashboard/messages/page.tsx</code></li><li><code>M src/app/dashboard/money/page.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/app/globals.css</code></li><li><code>M src/components/OperatorSidebar.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -289,7 +297,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">91d</span><span class="where">b88c8bf</span></div>
+<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">92d</span><span class="where">b88c8bf</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:49</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:56</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:235</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:338</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2357</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2993</span></li></ul>
@@ -300,57 +308,57 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-21 &middot; 0d</td></tr>
-<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 4d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 5d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 2d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 10d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 17d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 17d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-04 &middot; 17d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-01 &middot; 21d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 23d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">6ea9b46</td><td class="num">2026-10-22</td><td>Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)</td></tr>
+<tr><td class="num">3c63c5d</td><td class="num">2026-10-22</td><td>AW-11 Team: per-person access — each employee's role and areas (#186)</td></tr>
+<tr><td class="num">75ac7d5</td><td class="num">2026-10-22</td><td>AW-10 Golfers: lookup only, in the new admin look (#185)</td></tr>
+<tr><td class="num">95e1b37</td><td class="num">2026-10-22</td><td>Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)</td></tr>
+<tr><td class="num">a5c912b</td><td class="num">2026-10-22</td><td>Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)</td></tr>
+<tr><td class="num">5e73b48</td><td class="num">2026-10-22</td><td>ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)</td></tr>
+<tr><td class="num">b9fe29f</td><td class="num">2026-10-22</td><td>W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)</td></tr>
 <tr><td class="num">40be0a7</td><td class="num">2026-10-22</td><td>Status board</td></tr>
 <tr><td class="num">e449074</td><td class="num">2026-10-22</td><td>W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close</td></tr>
 <tr><td class="num">4438d60</td><td class="num">2026-10-22</td><td>Status board</td></tr>
 <tr><td class="num">b001c14</td><td class="num">2026-10-22</td><td>W2-9b: narrow the recorded payment in the test (typecheck)</td></tr>
 <tr><td class="num">4086e37</td><td class="num">2026-10-22</td><td>W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds</td></tr>
-<tr><td class="num">7feae5c</td><td class="num">2026-10-22</td><td>W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup</td></tr>
-<tr><td class="num">478ec76</td><td class="num">2026-10-22</td><td>W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet</td></tr>
-<tr><td class="num">512e214</td><td class="num">2026-10-22</td><td>queue/spec update</td></tr>
-<tr><td class="num">8c73613</td><td class="num">2026-10-22</td><td>W2-9a: releasing an event's hold checks the day being released, not the day it moved to</td></tr>
-<tr><td class="num">e85978d</td><td class="num">2026-10-22</td><td>W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit</td></tr>
-<tr><td class="num">ce88bd1</td><td class="num">2026-10-22</td><td>Codemap and status board</td></tr>
-<tr><td class="num">087c1a2</td><td class="num">2026-10-22</td><td>W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

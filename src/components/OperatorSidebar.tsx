@@ -41,6 +41,12 @@ function saveIdentity(i: CourseIdentity | null) {
   try { if (i) sessionStorage.setItem(IDENTITY_KEY, JSON.stringify(i)); else sessionStorage.removeItem(IDENTITY_KEY); } catch { /* storage unavailable */ }
 }
 
+/** Up to two letters for a course with no logo: "Pine Hollow Golf Club" → "PH". */
+function initials(name: string): string {
+  const words = name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w) && !/^(the|golf|club|course|country|cc|gc|of|and|&)$/i.test(w));
+  return (words.slice(0, 2).map(w => w[0]).join('') || name.slice(0, 2) || 'GR').toUpperCase();
+}
+
 export default function OperatorSidebar({ active, onAlertClick }: {
   active: OperatorNavKey;
   onAlertClick?: () => void;
@@ -148,17 +154,6 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     settings: access.can('settings.edit'),
   } as Record<string, boolean>)[k] !== false;
 
-  // The desktop bar's layout (literal class strings, so Tailwind sees them).
-  const bar = myCourses.length > 1 ? {
-    row: 'flex flex-wrap items-end gap-x-5 px-6 lg:px-8 text-white',
-    side: 'self-center flex items-center gap-3 min-w-0 shrink-0 pt-3 pb-1',
-    nav: 'order-last basis-full -mx-2 flex flex-wrap items-end gap-1 min-w-0',
-  } : {
-    row: 'flex flex-wrap 2xl:flex-nowrap items-end gap-x-5 2xl:gap-x-8 px-6 lg:px-8 2xl:h-16 text-white',
-    side: 'self-center flex items-center gap-3 2xl:gap-4 min-w-0 shrink-0 pt-3 pb-1 2xl:p-0',
-    nav: 'order-last 2xl:order-none basis-full 2xl:basis-auto -mx-2 2xl:mx-0 flex flex-wrap 2xl:flex-nowrap items-end gap-1 min-w-0',
-  };
-
   // SD-2: what fits in a thumb row.
   const mobileKeys: OperatorNavKey[] = (['teesheet', 'shop', 'money', 'schedule', 'messages', 'settings'] as OperatorNavKey[]).filter(visible);
   const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
@@ -218,68 +213,69 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       })}
     </nav>
 
-    {/* CLUB-3 (Cam 2026-10-05, after clubup.com): on desktop the 224px rail is
-        gone — the course's name and the tabs run across the top in the course's
-        own colour, the active tab underlined in fairway (decoration only; the
-        white weight and aria-current carry the state). Below md the strip and
-        bottom bar above are unchanged. */}
-    <header className="hidden md:block shrink-0" style={{ backgroundColor: brandColor }}>
-      {/* Cam 2026-10-19: with Pro shop added the bar ran past 1280px and cut
-          Settings off. Never a sideways scroll: the tabs take their own row
-          under the name, and share one row with it only at 2xl (1536px+) on a
-          single-course login — the course switcher doesn't fit beside them. */}
-      <div className={bar.row}>
-        <div className={bar.side}>
-          {/* The course logo box that sat here did nothing (Cam 2026-10-19) — the name carries it. */}
-          {/* LOGO-2 (Cam 2026-10-20): the course's name, then "Powered by" and the GreenReserve lockup under it. */}
-          <div className="flex flex-col gap-1 min-w-0">
-            <span className="font-serif text-[22px] 2xl:text-[24px] leading-none truncate max-w-[70vw] 2xl:max-w-[260px]" title={meta}>{name || 'Your course'}</span>
-            <span className="flex items-center gap-2 text-[12px] opacity-80 whitespace-nowrap">Powered by <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={96} height={18} className="h-[17px] w-auto" /></span>
-          </div>
-        </div>
-        <nav aria-label="Dashboard" className={bar.nav}>
-          {navItems.filter(n => !n.soon && visible(n.key)).map(item => {
-            const isActive = active === item.key;
-            return (
-              <button
-                key={item.key}
-                onClick={() => { if (confirmLeave()) router.push(item.href); }}
-                aria-current={isActive ? 'page' : undefined}
-                className={'shrink-0 px-2 2xl:px-3 pb-[13px] pt-2 text-[14px] font-semibold border-b-[3px] transition-opacity whitespace-nowrap ' + (isActive ? 'border-fairway opacity-100' : 'border-transparent opacity-80 hover:opacity-100')}
-              >
-                {item.label}
-                {item.key === 'messages' && unreadMessages > 0 && (
-                  <span className="ml-1.5 text-[12px] font-medium">({unreadMessages > 99 ? '99+' : unreadMessages})</span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-        <div className={'ml-auto text-[13px] ' + bar.side}>
-          {myCourses.length > 1 && (
-            <select
-              value={identity.id || ''}
-              onChange={e => switchCourse(e.target.value)}
-              disabled={switchingCourse}
-              aria-label="Switch course"
-              className="max-w-[180px] bg-white/10 border border-white/30 rounded-md px-2 py-1.5 text-[12.5px] text-white disabled:opacity-50 [&>option]:text-ink"
-            >
-              {myCourses.map(c => (
-                <option key={c.id} value={c.id}>{c.name}{c.active && c.liveStatus === 'live' ? '' : ' (draft)'}</option>
-              ))}
-            </select>
-          )}
-          {/* SD-8b: Settings passes no onAlertClick, so this navigates (guarded). */}
-          <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
-            className="opacity-85 hover:opacity-100 transition-opacity">Course alert</button>
-          {slug && (
-            <a href={'/courses/' + slug} target="_blank" rel="noopener" className="opacity-85 hover:opacity-100 transition-opacity">Your page ↗</a>
-          )}
-          <button onClick={logout} className="opacity-85 hover:opacity-100 transition-opacity">Sign out</button>
+    {/* DASH-C (Cam 2026-10-22, "very nice" on the course dashboard mockups,
+        replacing CLUB-3's colour bar): on desktop a white 232px menu down the
+        left, like the admin's ADMIN-C rail — the course's logo and name on top,
+        the tabs, then the course switcher, Course alert, the booking page and
+        sign-out at the foot. The course's colour marks the active tab. Pages
+        keep their own wrappers; .op-look in globals.css makes room for the
+        rail. Below md the strip and bottom bar above are unchanged. */}
+    <aside className="op-rail hidden md:flex fixed inset-y-0 left-0 z-30 w-[var(--op-rail-w)] flex-col gap-5 bg-white border-r border-line px-3.5 py-[18px] overflow-y-auto">
+      <div className="flex items-center gap-2.5 px-1.5 min-w-0" title={meta}>
+        {identity.logoUrl ? (
+          <Image src={identity.logoUrl} unoptimized alt="" width={34} height={34} className="w-[34px] h-[34px] rounded-md object-contain shrink-0" />
+        ) : (
+          <span aria-hidden="true" className="w-[34px] h-[34px] rounded-md shrink-0 flex items-center justify-center text-white text-[13px] font-bold" style={{ backgroundColor: brandColor }}>{initials(name)}</span>
+        )}
+        <div className="min-w-0 leading-tight">
+          <div className="text-[14px] font-semibold text-ink truncate">{name || 'Your course'}</div>
+          <div className="text-[12px] text-ink-muted truncate">{meta}</div>
         </div>
       </div>
-      <div className="h-1 bg-fairway" aria-hidden="true" />
-    </header>
+      <nav aria-label="Dashboard" className="flex flex-col gap-px text-[14px]">
+        {navItems.filter(n => !n.soon && visible(n.key)).map(item => {
+          const isActive = active === item.key;
+          return (
+            <button
+              key={item.key}
+              onClick={() => { if (confirmLeave()) router.push(item.href); }}
+              aria-current={isActive ? 'page' : undefined}
+              className={'flex items-center text-left px-2.5 py-2 rounded-md transition-colors ' + (isActive ? 'font-semibold' : 'text-ink-soft hover:bg-paper hover:text-ink')}
+              style={isActive ? { color: brandColor, backgroundColor: brandColor + '14' } : undefined}
+            >
+              <span className="flex-1">{item.label}</span>
+              {item.key === 'messages' && unreadMessages > 0 && (
+                <span className="text-[12px] font-medium text-bad" aria-label={`${unreadMessages} unread`}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+      <div className="mt-auto flex flex-col gap-px border-t border-line pt-3 text-[13.5px]">
+        {myCourses.length > 1 && (
+          <select
+            value={identity.id || ''}
+            onChange={e => switchCourse(e.target.value)}
+            disabled={switchingCourse}
+            aria-label="Switch course"
+            className="mb-2 w-full bg-paper border border-line rounded-md px-2 py-1.5 text-[12.5px] text-ink-soft disabled:opacity-50"
+          >
+            {myCourses.map(c => (
+              <option key={c.id} value={c.id}>{c.name}{c.active && c.liveStatus === 'live' ? '' : ' (draft)'}</option>
+            ))}
+          </select>
+        )}
+        {/* SD-8b: Settings passes no onAlertClick, so this navigates (guarded). */}
+        <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
+          className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-ink transition-colors">Course alert</button>
+        {slug && (
+          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-ink transition-colors">Your booking page ↗</a>
+        )}
+        <button onClick={logout} className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-bad transition-colors">Sign out</button>
+        {/* LOGO-2 (Cam 2026-10-20): "Powered by" and the GreenReserve lockup stay with the course's name. */}
+        <span className="flex items-center gap-1.5 px-2.5 pt-2 text-[11.5px] text-ink-muted whitespace-nowrap">Powered by <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={80} height={15} className="h-[14px] w-auto" /></span>
+      </div>
+    </aside>
     </>
   );
 }
