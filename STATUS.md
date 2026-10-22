@@ -4,24 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 20:50 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6b0ebeb` · working tree **2 dirty file(s)**
+Generated 2026-10-22 01:04 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `8860edb` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 96 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-19**. 76 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `6b0ebeb` | 2026-10-21 | AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links |
-| `821ddf9` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (in review) |
+| `8860edb` | 2026-10-22 | MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@ |
+| `f31213a` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (#172) |
 | `4abfebb` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (#171) |
-| `a526731` | 2026-10-21 | Codemap and status board |
-| `fe16f64` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review) |
 | `d58220f` | 2026-10-21 | AW-6b: inquiry page — the one next step first (#169) |
 | `a85a078` | 2026-10-21 | AW-4b: Today shows each course with its own to-dos; Goals tab (#170) |
-| `27af530` | 2026-10-21 | Status board |
-| `cbcfb8c` | 2026-10-21 | AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen |
-| `ec245d5` | 2026-10-21 | AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card |
 | `adf590b` | 2026-10-21 | Status board |
 | `914a1c5` | 2026-10-21 | AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today |
 | `b84a2db` | 2026-10-21 | AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card |
@@ -93,31 +88,8 @@ Generated 2026-10-21 20:50 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `45ac49a` | 2026-10-19 | Add time: warn and ask once when a new time is within 5 minutes of another (#120) |
 | `33ae355` | 2026-10-19 | Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126) |
 | `92cdf08` | 2026-10-19 | Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124) |
-| `7af1de5` | 2026-10-19 | Golfers tick a box to agree to the Terms and Privacy Policy before booking or changing a booking (#123) |
-| `31b018f` | 2026-10-19 | 2FA page: says where the code went, new code by email or text (#119) |
-| `25f5082` | 2026-10-19 | Hotfix: regenerating a day no longer wipes its open tee times (#125) |
-| `8ef438a` | 2026-10-19 | Analytics rework (AN-3): one date button, golf-standard four, plain explanations, Ask Birdie; no tab-switch colour flash (#122) |
-| `9450ca4` | 2026-10-19 | Legal: Terms, Privacy, Operator Agreement v2026-11 and Brand License match the product (#121) |
-| `636b0ca` | 2026-10-18 | Homepage batch 2: no section lines, four feature tiles, Send us a note, phone frame, /for-courses without terms (#118) |
-| `556cf10` | 2026-10-18 | Tee sheet batch 2: no logo box, Weather and Message renamed and explained, course alert can email today's golfers (#117) |
-| `bb8b1cc` | 2026-10-18 | Operator login: photo panel beside the form, "Need help signing in?" (#116) |
-| `014eadb` | 2026-10-18 | Tee sheet batch 1: awaiting check-in, tidy bar, alerts + key up top, tinted squares (#115) |
-| `458b063` | 2026-10-18 | Homepage about section + 'Your AI assistant' on marketing pages (#114) |
-| `1203da1` | 2026-10-18 | Walk 1 fixes: no fee on cash, dues lock, link previews, plain confirmation email (#113) |
-| `a77263a` | 2026-10-18 | Homepage hero: 'The tee sheet your course deserves.' + Walk 1 decisions (#112) |
-| `8c863b9` | 2026-10-18 | Launch security: late-fee dodge, party-size fees, phone takeover, booking flood (#111) |
-| `8bc5a27` | 2026-10-17 | Homepage hero: links green above the ocean at dusk (#110) |
-| `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (2 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
 
 ## In flight
 
@@ -198,58 +170,58 @@ Nothing awaiting review.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-21 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 4d |
+| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 2d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 1d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 9d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 13d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 13d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 13d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 13d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 2d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `ARCHITECTURE.md` | 0 | 2026-10-19 | 2d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-19 | 2d |
 
 ## Recent commits
 
-- `6b0ebeb` 2026-10-21 — AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links
-- `821ddf9` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)
+- `8860edb` 2026-10-22 — MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@
+- `f31213a` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)
 - `4abfebb` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (#171)
-- `a526731` 2026-10-21 — Codemap and status board
-- `fe16f64` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)
 - `d58220f` 2026-10-21 — AW-6b: inquiry page — the one next step first (#169)
 - `a85a078` 2026-10-21 — AW-4b: Today shows each course with its own to-dos; Goals tab (#170)
-- `27af530` 2026-10-21 — Status board
-- `cbcfb8c` 2026-10-21 — AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen
-- `ec245d5` 2026-10-21 — AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card
 - `adf590b` 2026-10-21 — Status board
 - `914a1c5` 2026-10-21 — AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today
+- `b84a2db` 2026-10-21 — AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card
+- `e941200` 2026-10-21 — Code map and status board
+- `39d69df` 2026-10-21 — AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts
+- `3bccfa0` 2026-10-21 — AW-5: hourly admin checks — urgent alerts once each, and a morning digest
+- `2228db8` 2026-10-21 — AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+
 
 ---
 

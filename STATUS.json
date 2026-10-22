@@ -1,29 +1,26 @@
 {
-  "generatedAt": "2026-10-21T20:50:20.214Z",
+  "generatedAt": "2026-10-22T01:04:47.989Z",
   "repo": {
-    "head": "6b0ebeb",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
-    ],
+    "head": "8860edb",
+    "branch": "claude/youthful-keller-rvz1hm",
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
-    "queueLastCommit": "2026-10-17T12:44:52-04:00",
+    "queueLastCommit": "2026-10-19T10:10:52-04:00",
     "unrecorded": [
       {
-        "h": "6b0ebeb",
-        "date": "2026-10-21T20:49:35+00:00",
-        "subject": "AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links",
+        "h": "8860edb",
+        "date": "2026-10-22T01:03:19+00:00",
+        "subject": "MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@",
         "ids": [],
         "matches": []
       },
       {
-        "h": "821ddf9",
-        "date": "2026-10-21T20:46:15+00:00",
-        "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)",
+        "h": "f31213a",
+        "date": "2026-10-21T20:04:52-04:00",
+        "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)",
         "ids": [],
         "matches": []
       },
@@ -31,20 +28,6 @@
         "h": "4abfebb",
         "date": "2026-10-21T16:30:41-04:00",
         "subject": "AW-6c: Leads column, Add a lead, Move to Talking (#171)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a526731",
-        "date": "2026-10-21T19:48:07+00:00",
-        "subject": "Codemap and status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "fe16f64",
-        "date": "2026-10-21T19:46:07+00:00",
-        "subject": "AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)",
         "ids": [],
         "matches": []
       },
@@ -59,27 +42,6 @@
         "h": "a85a078",
         "date": "2026-10-21T02:37:29-04:00",
         "subject": "AW-4b: Today shows each course with its own to-dos; Goals tab (#170)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "27af530",
-        "date": "2026-10-21T06:18:09+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "cbcfb8c",
-        "date": "2026-10-21T06:17:17+00:00",
-        "subject": "AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ec245d5",
-        "date": "2026-10-21T06:12:43+00:00",
-        "subject": "AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card",
         "ids": [],
         "matches": []
       },
@@ -579,111 +541,6 @@
         "subject": "Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124)",
         "ids": [],
         "matches": []
-      },
-      {
-        "h": "7af1de5",
-        "date": "2026-10-19T10:10:52-04:00",
-        "subject": "Golfers tick a box to agree to the Terms and Privacy Policy before booking or changing a booking (#123)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "31b018f",
-        "date": "2026-10-19T10:08:39-04:00",
-        "subject": "2FA page: says where the code went, new code by email or text (#119)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "25f5082",
-        "date": "2026-10-19T10:08:35-04:00",
-        "subject": "Hotfix: regenerating a day no longer wipes its open tee times (#125)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "8ef438a",
-        "date": "2026-10-19T00:22:16-04:00",
-        "subject": "Analytics rework (AN-3): one date button, golf-standard four, plain explanations, Ask Birdie; no tab-switch colour flash (#122)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "9450ca4",
-        "date": "2026-10-19T00:22:09-04:00",
-        "subject": "Legal: Terms, Privacy, Operator Agreement v2026-11 and Brand License match the product (#121)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "636b0ca",
-        "date": "2026-10-18T22:53:45-04:00",
-        "subject": "Homepage batch 2: no section lines, four feature tiles, Send us a note, phone frame, /for-courses without terms (#118)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "556cf10",
-        "date": "2026-10-18T22:53:43-04:00",
-        "subject": "Tee sheet batch 2: no logo box, Weather and Message renamed and explained, course alert can email today's golfers (#117)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "bb8b1cc",
-        "date": "2026-10-18T22:38:49-04:00",
-        "subject": "Operator login: photo panel beside the form, \"Need help signing in?\" (#116)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "014eadb",
-        "date": "2026-10-18T22:31:33-04:00",
-        "subject": "Tee sheet batch 1: awaiting check-in, tidy bar, alerts + key up top, tinted squares (#115)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "458b063",
-        "date": "2026-10-18T22:29:50-04:00",
-        "subject": "Homepage about section + 'Your AI assistant' on marketing pages (#114)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "1203da1",
-        "date": "2026-10-18T21:45:39-04:00",
-        "subject": "Walk 1 fixes: no fee on cash, dues lock, link previews, plain confirmation email (#113)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "a77263a",
-        "date": "2026-10-18T21:20:26-04:00",
-        "subject": "Homepage hero: 'The tee sheet your course deserves.' + Walk 1 decisions (#112)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "8c863b9",
-        "date": "2026-10-18T19:14:35-04:00",
-        "subject": "Launch security: late-fee dodge, party-size fees, phone takeover, booking flood (#111)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "8bc5a27",
-        "date": "2026-10-17T17:45:47-04:00",
-        "subject": "Homepage hero: links green above the ocean at dusk (#110)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "293f1d7",
-        "date": "2026-10-17T13:02:02-04:00",
-        "subject": "Homepage hero: sun through the pines photo (#109)",
-        "ids": [],
-        "matches": []
       }
     ]
   },
@@ -850,14 +707,14 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-21",
+      "lastTouched": "2026-10-22",
       "ageDays": 0
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-17",
-      "ageDays": 4
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "ADMIN_V5_SPEC.md",
@@ -878,224 +735,214 @@
       "ageDays": 1
     },
     {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-11",
-      "ageDays": 9
-    },
-    {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
+    },
+    {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 13
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "6b0ebeb",
-      "date": "2026-10-21",
-      "subject": "AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links"
+      "h": "8860edb",
+      "date": "2026-10-22",
+      "subject": "MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@"
     },
     {
-      "h": "821ddf9",
+      "h": "f31213a",
       "date": "2026-10-21",
-      "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)"
+      "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)"
     },
     {
       "h": "4abfebb",
       "date": "2026-10-21",
       "subject": "AW-6c: Leads column, Add a lead, Move to Talking (#171)"
-    },
-    {
-      "h": "a526731",
-      "date": "2026-10-21",
-      "subject": "Codemap and status board"
-    },
-    {
-      "h": "fe16f64",
-      "date": "2026-10-21",
-      "subject": "AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)"
     },
     {
       "h": "d58220f",
@@ -1108,21 +955,6 @@
       "subject": "AW-4b: Today shows each course with its own to-dos; Goals tab (#170)"
     },
     {
-      "h": "27af530",
-      "date": "2026-10-21",
-      "subject": "Status board"
-    },
-    {
-      "h": "cbcfb8c",
-      "date": "2026-10-21",
-      "subject": "AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen"
-    },
-    {
-      "h": "ec245d5",
-      "date": "2026-10-21",
-      "subject": "AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card"
-    },
-    {
       "h": "adf590b",
       "date": "2026-10-21",
       "subject": "Status board"
@@ -1131,6 +963,31 @@
       "h": "914a1c5",
       "date": "2026-10-21",
       "subject": "AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today"
+    },
+    {
+      "h": "b84a2db",
+      "date": "2026-10-21",
+      "subject": "AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card"
+    },
+    {
+      "h": "e941200",
+      "date": "2026-10-21",
+      "subject": "Code map and status board"
+    },
+    {
+      "h": "39d69df",
+      "date": "2026-10-21",
+      "subject": "AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts"
+    },
+    {
+      "h": "3bccfa0",
+      "date": "2026-10-21",
+      "subject": "AW-5: hourly admin checks — urgent alerts once each, and a morning digest"
+    },
+    {
+      "h": "2228db8",
+      "date": "2026-10-21",
+      "subject": "AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+"
     }
   ]
 }
