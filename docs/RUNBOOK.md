@@ -30,7 +30,7 @@ This document contains NO secret values — only where to find them.
 | `NEXT_PUBLIC_SENTRY_DSN` | Vercel env (prod) | Client-side Sentry error reporting | Same DSN as SENTRY_DSN |
 | `SENTRY_ORG` | Vercel env (prod) | Sentry org slug for source map uploads | sentry.io → Settings → Organization |
 | `SENTRY_PROJECT` | Vercel env (prod) | Sentry project slug for source map uploads | sentry.io → Settings → Projects |
-| `SHADOW_DATABASE_URL` | .env.local only + GitHub Actions secret | Prisma migrate dev shadow DB | Neon console → shadow-dev branch |
+| `SHADOW_DATABASE_URL` | .env.local only (CI uses its own Postgres since 2026-10-22) | Prisma migrate dev shadow DB | Neon console → shadow-dev branch |
 
 ---
 
