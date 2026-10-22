@@ -559,20 +559,20 @@ async function main() {
     // them — and only the owner can change what someone can open.
     const { signAdminToken } = await import('../src/lib/admin-session');
     const { signOwnerToken } = await import('../src/lib/owner-session');
-    const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'support', active: true, areas: ['messages'], areasSetAt: new Date() } });
+    const limited = await prisma.adminUser.create({ data: { name: 'Isol Messages Only', email: `${TS}-msgonly@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: ['messages'], areasSetAt: new Date() } });
     try {
-      const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'support', mfa: true })}`;
+      const c = `admin_session=${await signAdminToken({ adminId: limited.id, email: limited.email, name: limited.name, role: 'manager', mfa: true })}`;
       for (const [path, label] of [['/api/admin/revenue', 'Money'], ['/api/admin/golfers?q=isol', 'Golfers'], ['/api/admin/problems', 'Problems'], ['/api/admin/course-feed?courseId=' + data.courseA.id, 'a course timeline'], ['/api/admin/goals', 'Goals']] as const) {
         const r = await api(path, { cookie: c });
-        check(`Messages-only support → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
+        check(`Messages-only manager → ${label} → 403 (area)`, r.status === 403 && (r.body as { code?: string })?.code === 'area', JSON.stringify({ status: r.status, body: r.body }));
       }
-      checkStatus('Messages-only support → Messages → 200', (await api('/api/admin/messages', { cookie: c })).status, 200);
+      checkStatus('Messages-only manager → Messages → 200', (await api('/api/admin/messages', { cookie: c })).status, 200);
       const nb = (await api('/api/admin/nav-badges', { cookie: c })).body as { moneyProblems?: number; openProblems?: number; pendingInquiries?: number };
-      check('…the menu counts nothing outside Messages', nb?.moneyProblems === 0 && nb?.openProblems === 0 && nb?.pendingInquiries === 0, JSON.stringify(nb));
+      check('…the menu counts nothing outside Messages, and no Systems line', nb?.moneyProblems === 0 && nb?.openProblems === 0 && nb?.pendingInquiries === 0 && (nb as { systemsOk?: unknown }).systemsOk === null, JSON.stringify(nb));
       const t = (await api('/api/admin/today', { cookie: c })).body as Record<string, unknown>;
-      check('…Home shows no section from another area', t?.today === null && t?.overview === null && t?.courses === null && t?.problems === null && t?.needs === null && t?.goals === null, JSON.stringify(t));
-      const sr = (await api(`/api/admin/search?q=${encodeURIComponent(data.courseA.name.slice(0, 6))}`, { cookie: c })).body as { results?: { type: string; href: string }[] };
-      check('…search finds no course, inquiry, golfer or Money page', !!sr?.results && !sr.results.some(x => ['course', 'inquiry', 'golfer', 'guest', 'booking', 'group'].includes(x.type) || x.href === '/admin/revenue'), JSON.stringify(sr).slice(0, 300));
+      check('…Home shows no section from another area, health included', t?.health === null && t?.today === null && t?.overview === null && t?.courses === null && t?.problems === null && t?.needs === null && t?.goals === null, JSON.stringify(t));
+      const sr = (await api(`/api/admin/search?q=${encodeURIComponent('Isol')}`, { cookie: c })).body as { results?: { type: string; href: string }[] };
+      check('…search finds no course, inquiry, golfer, teammate or Money page', !!sr?.results && !sr.results.some(x => ['course', 'inquiry', 'golfer', 'guest', 'booking', 'group', 'employee'].includes(x.type) || x.href === '/admin/revenue'), JSON.stringify(sr).slice(0, 300));
 
       // Only the owner changes someone's areas — with a fresh confirmation and a reason.
       const self = await api('/api/admin/employees', { method: 'PATCH', cookie: c, body: { id: limited.id, action: 'areas', areas: ['money'], reason: 'give me money' } });

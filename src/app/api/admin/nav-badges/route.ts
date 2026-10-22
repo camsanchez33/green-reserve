@@ -43,6 +43,8 @@ export async function GET() {
   const area = (a: AdminArea, n: number) => hasArea(session, a) ? n : 0;
   return NextResponse.json({
     pendingInquiries: area('pipeline', pendingInquiries), unreadMessages: area('messages', unreadMessages),
-    moneyProblems: area('money', failed + disputes.length), openProblems: area('problems', problems.open), systemsOk,
+    moneyProblems: area('money', failed + disputes.length), openProblems: area('problems', problems.open),
+    // The top bar's systems line links to Systems (Company) — without it, no line.
+    systemsOk: hasArea(session, 'company') ? systemsOk : null,
   });
 }

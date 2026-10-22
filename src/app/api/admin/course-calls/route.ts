@@ -24,7 +24,7 @@ const parseDate = (v: unknown): Date | null => {
 async function postCall(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const noArea = areaGate(session, 'pipeline');
+  const noArea = areaGate(session, 'courses');
   if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const adminName = session.name || 'Admin';

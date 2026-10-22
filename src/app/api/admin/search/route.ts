@@ -224,7 +224,7 @@ export async function GET(req: NextRequest) {
     '/admin/announcements': 'messages', '/admin/system': 'company', '/admin/employees': 'company', '/admin/activity': 'company', '/admin/create': 'pipeline',
   };
   const TYPE_AREA: Partial<Record<ResultItem['type'], AdminArea>> = {
-    course: 'courses', group: 'courses', inquiry: 'pipeline', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',
+    course: 'courses', group: 'courses', inquiry: 'pipeline', employee: 'company', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',
   };
   const allowed = results.filter(r => {
     const area = r.type === 'nav' ? NAV_AREA[r.href] : TYPE_AREA[r.type];

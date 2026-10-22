@@ -2337,7 +2337,7 @@
     },
     {
       "path": "src/app/api/admin/nav-badges/route.ts",
-      "lines": 49,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2816,7 +2816,7 @@
     },
     {
       "path": "src/app/api/admin/session/route.ts",
-      "lines": 14,
+      "lines": 17,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2833,6 +2833,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "next/server"
       ],
@@ -10849,6 +10850,7 @@
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/search/route.ts",
+        "src/app/api/admin/session/route.ts",
         "src/app/api/admin/today/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/components/admin/AdminSidebar.tsx",

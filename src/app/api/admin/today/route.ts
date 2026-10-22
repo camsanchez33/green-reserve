@@ -30,7 +30,7 @@ export async function GET() {
   const can = (a: AdminArea) => support && hasArea(session, a);
   const [queue, healthOut, today, overview, problems, goals] = await Promise.all([
     can('pipeline') || can('courses') ? buildActionQueue(now) : null,
-    requireRole(session, MANAGER_PLUS) ? todayHealth(now) : null,
+    requireRole(session, MANAGER_PLUS) && hasArea(session, 'company') ? todayHealth(now) : null,
     can('money') ? homeToday(now) : null,
     can('money') ? homeOverview(now) : null,
     can('problems') ? listProblems(now) : null,
