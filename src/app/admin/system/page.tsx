@@ -239,7 +239,7 @@ export default function AdminSystemPage() {
     { id: 'birdie', label: 'Birdie', dot: data.birdie?.enabled ? 'ok' : 'neutral', text: data.birdie?.enabled ? `On · ${data.birdie.todayReplies} of ${data.birdie.dailyCap} replies today` : 'Off' },
     { id: 'deployed', label: 'What’s live', dot: p.env === 'production' ? 'ok' : 'warn', text: `${p.env}${p.commitSha ? ` · ${p.commitSha}` : ''}` },
     { id: 'data', label: 'Data check', dot: !orphanChecked ? 'neutral' : orphanItems.length ? 'warn' : orphanNote ? 'neutral' : 'ok',
-      text: !orphanChecked ? 'Not run this visit' : orphanItems.length ? `${orphanItems.length} record${orphanItems.length === 1 ? '' : 's'} to clean up` : orphanNote ? 'Owner only' : 'Clean' },
+      text: !orphanChecked ? 'Not run this visit' : orphanItems.length ? `${orphanItems.length} record${orphanItems.length === 1 ? '' : 's'} to clean up` : orphanNote ? 'Couldn’t check — see below' : 'Clean' },
     { id: 'records', label: 'Backups and CI', dot: 'neutral', text: 'Checked on GitHub — links below' },
   ] : [];
 
