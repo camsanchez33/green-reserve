@@ -8,6 +8,7 @@ import { friendlyStripeError } from '@/lib/stripe-errors';
 import { FAILED_CHARGE_WHERE, missedCheckInWhere, openDisputes } from '@/lib/money-problems';
 import { counterFeesUncollected } from '@/lib/access-fee';
 import { roundChargeCents, roundApplicationFeeCents } from '@/lib/shop';
+import { feesByDay } from '@/lib/fees-by-day';
 
 // REVISE_QUEUE A-06 — /admin/revenue rebuilt as a real P&L. ONE period picker
 // (day / week / month-to-date / custom) drives the ENTIRE page. Support+ sees
@@ -194,7 +195,14 @@ export async function GET(req: NextRequest) {
   // GR fee unless a saved card let us charge it separately. Not a problem to
   // chase — a cost to watch, per course. Counter/phone bookings never carry a
   // fee (accessFeeTotal 0), so they are not counted.
-  const counter = await counterFeesUncollected(inCurrent);
+  const [counter, counterAll, paidRows] = await Promise.all([
+    counterFeesUncollected(inCurrent),
+    // ADMIN-C Money → Not collected: the all-time figure beside the period's.
+    counterFeesUncollected({ gte: new Date(0), lt: new Date() }),
+    // ADMIN-C Money → Overview chart: the headline's own rows (round fees on
+    // paid rounds, by paidAt), this period and the prior one to the same point.
+    prisma.booking.findMany({ where: { ...PAID, paidAt: { gte: prior.start, lt: current.end } }, select: { paidAt: true, accessFeeTotal: true } }),
+  ]);
   const counterUncollectedByCourse = counter.byCourse;
   const counterUncollectedCents = counter.cents;
   const counterUncollectedRounds = counter.rounds;
@@ -202,6 +210,9 @@ export async function GET(req: NextRequest) {
     const c = counterUncollectedByCourse.get(row.courseId);
     if (c) { row.counterRounds = c.rounds; row.counterFeesUncollected = c.cents / 100; }
   }
+
+  // Fees by day for the chart (lib/fees-by-day.ts): the headline's own rows.
+  const daily = feesByDay(paidRows.map(r => ({ paidAt: r.paidAt, cents: r.accessFeeTotal })), current, prior);
 
   // ---- Problems (ALL-TIME): money that should exist and does not ----
   const failedCheckIn = failedCheckIns.map(b => ({
@@ -253,7 +264,10 @@ export async function GET(req: NextRequest) {
       separateFeeCharges: sepCharged._count.id,
       counterFeesUncollected: counterUncollectedCents / 100,
       counterRoundsUncollected: counterUncollectedRounds,
+      counterFeesUncollectedAllTime: counterAll.cents / 100,
+      counterRoundsUncollectedAllTime: counterAll.rounds,
     },
+    daily: { current: daily.current.map(c => c / 100), prior: daily.prior.map(c => c / 100) },
     byCourse,
     moneyInMotion: {
       upcomingCheckIns,
