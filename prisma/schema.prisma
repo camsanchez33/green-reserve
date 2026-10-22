@@ -1468,6 +1468,14 @@ model CourseEvent {
   payments            CourseEventPayment[]
   /// W2-9b: the headcount staff confirmed for the balance; null = not confirmed yet.
   finalHeadcount      Int?
+  /// W2-9d (Cam 2026-10-22): the public sign-up page, /events/[id]. Off until the course opens it.
+  signupOpen          Boolean             @default(false)
+  /// now = a spot is held 30 minutes while they pay; later = they sign up, the course collects after.
+  signupPay           String              @default("later")
+  /// Most players one person can sign up together (1–4).
+  signupMaxGroup      Int                 @default(4)
+  /// The course's own questions, asked of every player: [{ id, label, required }].
+  signupQuestions     Json                @default("[]")
 
   @@index([courseId, date])
 }
@@ -1500,6 +1508,15 @@ model CourseEventPlayer {
   /// Shotgun: the hole this group starts on. Tee times: null.
   startHole Int?
   payments  CourseEventPayment[]
+  /// W2-9d: in = on the list; held = signed up online, a spot kept while they pay (until holdUntil); waitlist = the event was full.
+  status    String      @default("in")
+  holdUntil DateTime?
+  /// staff | signup
+  source    String      @default("staff")
+  /// Players signed up together share a key (they pay and are paired together).
+  groupKey  String      @default("")
+  /// Answers to the course's sign-up questions: { questionId: answer }.
+  answers   Json        @default("{}")
   sortOrder Int         @default(0)
   createdAt DateTime    @default(now())
 
@@ -1541,6 +1558,8 @@ model CourseEventPayment {
   headcount       Int?
   /// W2-9c: a player's own payment (their pay link, or paid at the course); null = the organizer's.
   playerId        String?
+  /// W2-9d: a sign-up group's payment (one charge for everyone signed up together); '' = not a group's.
+  groupKey        String              @default("")
   player          CourseEventPlayer?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
   note            String              @default("")
   /// Sum of refunds that went through or are in flight (reserved before Stripe is called).

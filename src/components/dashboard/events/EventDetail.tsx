@@ -10,17 +10,24 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { KINDS } from './EventSetup';
 import EventMoney, { type EventPayment, type Money } from './EventMoney';
+import EventSignup, { type SignupQuestion } from './EventSignup';
 
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
-export type EventPlayer = { id: string; name: string; email: string; phone: string; groupNo: number | null; startHole: number | null };
+export type EventPlayer = {
+  id: string; name: string; email: string; phone: string; groupNo: number | null; startHole: number | null;
+  /** W2-9d: in = on the list; held = signed up online and paying (until holdUntil); waitlist; lapsed = the hold ran out unpaid. */
+  status: string; holdUntil: string | null; source: string; groupKey: string; answers: Record<string, string>;
+};
 export type EventFull = {
   id: string; name: string; kind: string; date: string; format: string; startTime: string; holdFrom: string; holdTo: string; holdToCustom: boolean; shareCourse: boolean; holdNineIds: string[]; keepOpen: string[];
   productId: string | null; holes: number; groups: number; players: number;
   organizerName: string; organizerEmail: string; organizerPhone: string; pricePerPlayerCents: number; includes: string[];
   terms: string; notes: string; status: string; tasks: EventTask[]; entrants: EventPlayer[]; payments: EventPayment[];
+  signupOpen: boolean; signupPay: string; signupMaxGroup: number; signupQuestions: SignupQuestion[];
 };
 export type EventData = {
   event: EventFull; today: string; courseHoles: number; money: Money; feeOn: boolean;
+  signup: { url: string; questions: SignupQuestion[] };
   held: { id: string; time: string; round: string | null }[];
   toMove: { time: string; golfers: string }[]; blockedOther: number; unheld: string[];
 };
@@ -48,15 +55,21 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const [askVia, setAskVia] = useState<'email' | 'sms'>('email');
   const [paidHere, setPaidHere] = useState<{ id: string; amount: string; method: string } | null>(null);
   const [copied, setCopied] = useState('');
-  const theirs = (id: string) => e.payments.filter(x => x.playerId === id);
-  const stateOf = (id: string): 'paid' | 'paying' | 'sent' | 'none' => {
-    const ps = theirs(id);
+  // W2-9d: only players on the list are paired, counted and asked to pay; a sign-up group's one payment covers each of them.
+  const onList = e.entrants.filter(p => p.status === 'in');
+  const notYet = e.entrants.filter(p => p.status !== 'in');
+  const theirs = (p: EventPlayer) => e.payments.filter(x => x.playerId === p.id || (!!p.groupKey && x.groupKey === p.groupKey));
+  const stateOf = (p: EventPlayer): 'paid' | 'paying' | 'sent' | 'none' => {
+    const ps = theirs(p);
     if (ps.some(x => x.status === 'paid' && x.amountCents > x.refundedCents)) return 'paid';
     if (ps.some(x => x.status === 'paying')) return 'paying';
     if (ps.some(x => x.status === 'open' || x.status === 'paying')) return 'sent';
     return 'none';
   };
-  const unpaid = e.entrants.filter(p => stateOf(p.id) === 'none').length;
+  const unpaid = onList.filter(p => stateOf(p) === 'none').length;
+  const questions = data.signup.questions;
+  const answersOf = (p: EventPlayer) => questions.filter(q => p.answers?.[q.id]).map(q => `${q.label}: ${p.answers[q.id]}`).join(' · ');
+  const spotsLeft = e.players > 0 ? Math.max(0, e.players - onList.length - e.entrants.filter(p => p.status === 'held' && p.holdUntil && new Date(p.holdUntil) > new Date()).length) : null;
 
   /** A payment action (the payments route), then refresh the event in place. */
   async function payAct(key: string, body: Record<string, unknown>, done?: (r: Record<string, unknown>) => string) {
@@ -82,9 +95,9 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const open = e.tasks.filter(t => !t.doneAt);
   const overdue = open.filter(t => t.dueDate && t.dueDate < today);
   const groups = new Map<number, EventPlayer[]>();
-  for (const p of e.entrants) if (p.groupNo != null) groups.set(p.groupNo, [...(groups.get(p.groupNo) ?? []), p]);
+  for (const p of onList) if (p.groupNo != null) groups.set(p.groupNo, [...(groups.get(p.groupNo) ?? []), p]);
   const sortedGroups = [...groups.entries()].sort((a, b) => a[0] - b[0]);
-  const ungrouped = e.entrants.filter(p => p.groupNo == null);
+  const ungrouped = onList.filter(p => p.groupNo == null);
   const heldTimes = [...new Set(held.map(h => h.time))];
   const startOf = (g: number, hole: number | null) => e.format === 'shotgun'
     ? `${formatTeeTime(e.startTime)}${hole ? `, hole ${hole}` : ''}`
@@ -153,7 +166,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
           {data.blockedOther > 0 && <p className="text-[13px] text-ink-soft mt-2">{data.blockedOther} time{data.blockedOther === 1 ? ' is' : 's are'} held by another event.</p>}
           <div className="divide-y divide-line-soft text-[13.5px] mt-4">
             {[
-              ['Players', [e.players && `${e.players} expected`, e.groups && `${e.groups} groups`, e.entrants.length && `${e.entrants.length} on the list`].filter(Boolean).join(', ') || 'Not set yet'],
+              ['Players', [e.players && `${e.players} expected`, e.groups && `${e.groups} groups`, onList.length && `${onList.length} on the list`, notYet.length && `${notYet.length} signed up, not on it yet`].filter(Boolean).join(', ') || 'Not set yet'],
               ['Organizer', [e.organizerName, e.organizerEmail, e.organizerPhone].filter(Boolean).join(' · ') || 'Not set yet'],
               ['Price', e.pricePerPlayerCents ? `$${(e.pricePerPlayerCents / 100).toFixed(2)} per player` : 'Not set yet'],
               ['Included', e.includes.join(', ') || 'Nothing listed'],
@@ -200,6 +213,12 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
       </div>
 
       <div className="print:hidden">
+        <EventSignup live={live} url={data.signup.url} priceSet={e.pricePerPlayerCents > 0} spotsLeft={spotsLeft} waiting={notYet} busy={busy}
+          settings={{ signupOpen: e.signupOpen, signupPay: e.signupPay, signupMaxGroup: e.signupMaxGroup, signupQuestions: questions }}
+          act={(key, body, done) => act(key, body, done ? r => done(r) : undefined)} />
+      </div>
+
+      <div className="print:hidden">
         <EventMoney eventId={e.id} live={live} pricePerPlayerCents={e.pricePerPlayerCents} money={data.money} payments={e.payments} canRefund={canRefund} reload={reload}
           organizer={{ name: e.organizerName, email: e.organizerEmail, phone: e.organizerPhone }} />
       </div>
@@ -207,7 +226,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
       <Card className="p-5 print:shadow-none print:p-0">
         <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3 print:hidden">
           <h2 className="text-[15px] font-semibold text-ink">Players and pairings</h2>
-          <span className="text-[12.5px] text-ink-muted">{e.entrants.length} player{e.entrants.length === 1 ? '' : 's'}{sortedGroups.length ? ` in ${sortedGroups.length} group${sortedGroups.length === 1 ? '' : 's'}` : ''}</span>
+          <span className="text-[12.5px] text-ink-muted">{onList.length} player{onList.length === 1 ? '' : 's'}{sortedGroups.length ? ` in ${sortedGroups.length} group${sortedGroups.length === 1 ? '' : 's'}` : ''}</span>
         </div>
 
         {live && (
@@ -220,12 +239,12 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
           </div>
         )}
 
-        {e.entrants.length > 0 && live && (
+        {onList.length > 0 && live && (
           <div className="flex flex-wrap items-center gap-2 mb-4 print:hidden">
             <label className="text-[13px] text-ink-soft flex items-center gap-2">Groups of
               <select className={INPUT} value={size} onChange={ev => setSize(Number(ev.target.value))}>{[2, 3, 4, 5].map(n => <option key={n}>{n}</option>)}</select>
             </label>
-            <button disabled={!!busy} onClick={() => act('auto', { action: 'pairings_auto', size }, () => 'Players put into groups in list order. Change any group or hole below.')} className={SECONDARY}>
+            <button disabled={!!busy} onClick={() => act('auto', { action: 'pairings_auto', size }, () => 'Players put into groups in list order, with people who signed up together kept together. Change any group or hole below.')} className={SECONDARY}>
               {busy === 'auto' ? 'Pairing…' : 'Pair in list order'}
             </button>
             {sortedGroups.length > 0 && <>
@@ -239,7 +258,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
           </div>
         )}
 
-        {e.entrants.length > 0 && live && unpaid > 0 && (
+        {onList.length > 0 && live && unpaid > 0 && (
           <form className="flex flex-wrap items-end gap-2 mb-4 print:hidden bg-paper/70 rounded-md px-3 py-3" onSubmit={async ev => {
             ev.preventDefault();
             await payAct('ask', { action: 'player_links', amount: askAmount, via: askVia }, r => {
@@ -279,7 +298,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
           </div>
         )}
 
-        {e.entrants.length > 0 && (
+        {onList.length > 0 && (
           <div className="overflow-x-auto print:hidden">
             <table className="w-full text-[13.5px]">
               <thead><tr className="text-left text-ink-muted border-b border-line">
@@ -289,7 +308,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
               <tbody className="divide-y divide-line-soft">
                 {[...sortedGroups.flatMap(([, ps]) => ps), ...ungrouped].map(p => (
                   <tr key={p.id}>
-                    <td className="py-2 pr-3 text-ink">{p.name}</td>
+                    <td className="py-2 pr-3 text-ink">{p.name}{answersOf(p) && <div className="text-[12px] text-ink-muted">{answersOf(p)}</div>}</td>
                     <td className="py-2 pr-3 text-ink-soft">{[p.email, p.phone].filter(Boolean).join(' · ') || '—'}</td>
                     <td className="py-2 pr-3">
                       <input type="number" min={1} max={250} aria-label={`Group for ${p.name}`} disabled={!live || !!busy} defaultValue={p.groupNo ?? ''} key={`g${p.id}${p.groupNo}`}
@@ -303,12 +322,12 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                     )}
                     <td className="py-2 pr-3">
                       {(() => {
-                        const st = stateOf(p.id);
-                        const link = theirs(p.id).find(x => x.status === 'open')?.payUrl ?? null;
+                        const st = stateOf(p);
+                        const link = theirs(p).find(x => x.status === 'open')?.payUrl ?? null;
                         if (st === 'paid') return <StatusDot status="ok" label="Paid" />;
                         // Their card is going through: nothing to do until it lands.
                         if (st === 'paying') return <StatusDot status="warn" label="Paying now" />;
-                        const openLink = theirs(p.id).find(x => x.status === 'open');
+                        const openLink = theirs(p).find(x => x.status === 'open');
                         if (paidHere?.id === p.id) return (
                           <span className="flex flex-wrap items-center gap-1.5">
                             {/* With a link out, it's that link that gets paid — its amount, not a new one. */}
@@ -347,7 +366,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             </table>
           </div>
         )}
-        {e.entrants.length === 0 && <p className="text-[13.5px] text-ink-muted print:hidden">No players yet.</p>}
+        {onList.length === 0 && <p className="text-[13.5px] text-ink-muted print:hidden">No players on the list yet.</p>}
       </Card>
     </div>
   );

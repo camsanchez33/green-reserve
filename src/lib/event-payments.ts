@@ -76,6 +76,38 @@ async function playerOf(eventId: string, playerId: unknown) {
   return player ? { player } : { error: fail(404, 'That player isn\u2019t on this event any more — refresh the page.') };
 }
 
+/**
+ * W2-9d: a player's own payments — their own, plus their sign-up group's (one
+ * charge paid by whoever signed the group up covers everyone in it).
+ */
+export function playerPaymentsWhere(eventId: string, player: { id: string; groupKey: string }) {
+  return { eventId, OR: [{ playerId: player.id }, ...(player.groupKey ? [{ groupKey: player.groupKey }] : [])] };
+}
+
+/** W2-9d: how long a paying-now sign-up keeps its spots while they pay. */
+export const HOLD_MINUTES = 30;
+
+/**
+ * W2-9d: a sign-up group's hold, checked before their card is charged. Null =
+ * fine to charge (still held and in time, or already on the list).
+ */
+export async function holdProblem(groupKey: string, now: Date = new Date()): Promise<string | null> {
+  if (!groupKey) return null;
+  const ps = await prisma.courseEventPlayer.findMany({ where: { groupKey }, select: { status: true, holdUntil: true } });
+  if (!ps.length) return 'The course took this sign-up off the list — ask them about it.';
+  if (ps.every(p => p.status === 'in')) return null;
+  if (ps.some(p => p.status === 'waitlist')) return 'You\u2019re on the waiting list — the course will be in touch if a spot opens.';
+  if (ps.some(p => p.status === 'held' && p.holdUntil && p.holdUntil > now)) return null;
+  return `Your ${HOLD_MINUTES}-minute hold ran out, so the spots went back. Sign up again if there\u2019s still room.`;
+}
+
+/** W2-9d: a sign-up group's payment went through — they're on the list (even if the hold had just run out: the money is taken). */
+async function confirmGroupOf(paymentId: string) {
+  const p = await prisma.courseEventPayment.findUnique({ where: { id: paymentId }, select: { groupKey: true, status: true } });
+  if (!p?.groupKey || p.status !== 'paid') return;
+  await prisma.courseEventPlayer.updateMany({ where: { groupKey: p.groupKey, status: { in: ['held', 'lapsed'] } }, data: { status: 'in', holdUntil: null } });
+}
+
 /** Pure: where one player's own payments stand. */
 export function playerPayState(payments: { status: string; amountCents: number; refundedCents: number }[]): 'paid' | 'sent' | 'none' {
   if (payments.some(p => p.status === 'paid' && p.amountCents > p.refundedCents)) return 'paid';
@@ -110,7 +142,7 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
   // the counter and their card can't both land.
   const r = await prisma.$transaction(async tx => {
     await tx.$queryRaw`SELECT id FROM "CourseEventPlayer" WHERE id = ${player.id} FOR UPDATE`;
-    const theirs = await tx.courseEventPayment.findMany({ where: { eventId, playerId: player.id }, select: { status: true, amountCents: true, refundedCents: true } });
+    const theirs = await tx.courseEventPayment.findMany({ where: playerPaymentsWhere(eventId, player), select: { status: true, amountCents: true, refundedCents: true } });
     if (theirs.some(x => x.status === 'paying')) return 'paying' as const;
     const state = playerPayState(theirs);
     if (state !== 'none') return state;
@@ -149,7 +181,7 @@ export async function createPayLink(courseId: string, eventId: string, input: Re
       // One live link per player. The player's row is locked while we check and
       // create, so two sends at once can't both make a link.
       await tx.$queryRaw`SELECT id FROM "CourseEventPlayer" WHERE id = ${player.id} FOR UPDATE`;
-      const theirs = await tx.courseEventPayment.findMany({ where: { eventId, playerId: player.id }, select: { status: true, amountCents: true, refundedCents: true } });
+      const theirs = await tx.courseEventPayment.findMany({ where: playerPaymentsWhere(eventId, player), select: { status: true, amountCents: true, refundedCents: true } });
       const state = playerPayState(theirs);
       if (state !== 'none') return state;
     }
@@ -199,6 +231,7 @@ export async function settleOpenPayment(courseId: string, paymentId: string, to:
     const p = await prisma.courseEventPayment.findFirst({ where: { id: paymentId, courseId }, select: { status: true } });
     return fail(p ? 409 : 404, p ? whyNotOpen(p.status) : 'Payment not found.');
   }
+  if (to !== 'void') await confirmGroupOf(paymentId);
   return { ok: true, value: null };
 }
 
@@ -229,6 +262,9 @@ export async function chargeEventPayment(paymentId: string, token: string, payme
   const p = await paymentForPayPage(paymentId, token);
   if (!p) return fail(404, 'This pay link is not valid any more. Ask the course for a new one.');
   if (p.status === 'paid') return fail(409, 'This is already paid. Thank you!');
+  // W2-9d: a sign-up's payment only while its spots are held.
+  const held = await holdProblem(p.groupKey);
+  if (held) return fail(409, held);
   if (p.status === 'void') return fail(409, 'The course cancelled this pay link.');
   if (p.event.status !== 'planned') return fail(409, 'This event was cancelled — nothing can be paid toward it.');
   const course = p.event.course;
@@ -244,6 +280,11 @@ export async function chargeEventPayment(paymentId: string, token: string, payme
     data: { status: 'paying', chargeStartedAt: now },
   });
   if (claimed.count === 0) return fail(409, 'A payment is already going through — wait a moment and refresh.');
+  // A sign-up's spots stay held while the card goes through.
+  if (p.groupKey) {
+    const until = new Date(now.getTime() + STALE_CHARGE_MS);
+    await prisma.courseEventPlayer.updateMany({ where: { groupKey: p.groupKey, status: 'held', holdUntil: { lt: until } }, data: { holdUntil: until } });
+  }
   const release = () => prisma.courseEventPayment.updateMany({ where: { id: paymentId, status: 'paying', chargeStartedAt: now }, data: { status: 'open', chargeStartedAt: null } });
   const unsure = fail(502, 'We couldn’t confirm the payment. Please don’t pay again — wait a few minutes and reopen this link, or call the course.');
 
@@ -303,10 +344,11 @@ async function paymentIntent(paymentId: string, existingId: string, amountCents:
 
 async function markPaid(paymentId: string, stamp: Date, paymentIntentId: string) {
   const done = await prisma.courseEventPayment.updateMany({ where: { id: paymentId, status: 'paying', chargeStartedAt: stamp }, data: { status: 'paid', paidAt: new Date(), paymentIntentId } });
-  if (done.count) return;
+  if (done.count) { await confirmGroupOf(paymentId); return; }
   // The money is taken; record it even if the claim went stale.
   console.error(JSON.stringify({ ev: 'event_payment.charge.claim_lost', paymentId, paymentIntentId }));
   await prisma.courseEventPayment.updateMany({ where: { id: paymentId, status: { in: ['open', 'paying'] } }, data: { status: 'paid', paidAt: new Date(), paymentIntentId } });
+  await confirmGroupOf(paymentId);
 }
 
 /** Settle a link left 'paying' by a request that never finished: read its intent. Called when the event page loads. */

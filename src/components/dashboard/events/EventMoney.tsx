@@ -20,6 +20,8 @@ export type EventPayment = {
   stuck: boolean;
   /** W2-9c: a player's own payment; null = the organizer's. */
   playerId: string | null;
+  /** W2-9d: a sign-up group's one payment for everyone in it; '' = not a group's. */
+  groupKey: string;
 };
 export type Money = { headcount: number; headcountConfirmed: boolean; totalCents: number; paidCents: number; refundedCents: number; keptCents: number; openCents: number; owedCents: number };
 

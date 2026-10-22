@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 22:10 UTC · branch `claude/test-course-isolation` · HEAD `c8ed1ea` · working tree **18 dirty file(s)**
+Generated 2026-10-22 22:32 UTC · branch `claude/test-course-isolation` · HEAD `a96c112` · working tree **30 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 135 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 137 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `a96c112` | 2026-10-22 | TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree |
+| `0a2e03b` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists |
 | `6f40852` | 2026-10-22 | Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189) |
 | `2a4d5ec` | 2026-10-22 | TEST-1 review: a reset releases event-held tee times; wording fixes |
 | `0d72aad` | 2026-10-22 | TEST-1: launch wipe of test data and resettable test courses |
@@ -150,26 +152,28 @@ Generated 2026-10-22 22:10 UTC · branch `claude/test-course-isolation` · HEAD 
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (18 file(s))
+### Uncommitted working tree (30 file(s))
 
-- `M CLAUDE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M src/app/admin/courses/page.tsx`
-- `M src/app/api/admin/nav-badges/route.ts`
-- `M src/app/api/admin/revenue/route.ts`
-- `M src/app/api/courses/route.ts`
-- `M src/app/courses/[slug]/page.tsx`
-- `M src/app/sitemap.ts`
-- `M src/lib/access-fee.ts`
-- `M src/lib/admin-action-queue.ts`
-- `M src/lib/admin-checks.ts`
-- `M src/lib/admin-goals.ts`
-- `M src/lib/admin-home.ts`
-- `M src/lib/admin-today.ts`
-- `?? scripts/real-courses-db-test.ts`
-- `?? src/lib/real-courses.ts`
+- `M  .github/workflows/schema-check.yml`
+- `UU CLAUDE.md`
+- `M  OPERATOR_REWORK_SPEC.md`
+- `M  PASSWORD_CHECKLIST.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `M  docs/RUNBOOK.md`
+- `M  docs/SHIPPING.md`
+- `UU docs/codemap.json`
+- `A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql`
+- `UU prisma/schema.prisma`
+- `M  scripts/design-guard.baseline.json`
+- `A  scripts/event-signup-db-test.ts`
+- `M  src/app/api/event-payment/[id]/route.ts`
+- `A  src/app/api/event-signup/[id]/route.ts`
+- `M  src/app/api/operator/events/[id]/payments/route.ts`
+- `M  src/app/api/operator/events/[id]/route.ts`
+- `M  src/app/api/operator/events/route.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -255,6 +259,8 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
@@ -294,6 +300,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `a96c112` 2026-10-22 — TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree
+- `0a2e03b` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists
 - `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
 - `2a4d5ec` 2026-10-22 — TEST-1 review: a reset releases event-held tee times; wording fixes
 - `0d72aad` 2026-10-22 — TEST-1: launch wipe of test data and resettable test courses
@@ -304,8 +312,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
 - `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
 - `a5c912b` 2026-10-22 — Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)
-- `5e73b48` 2026-10-22 — ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)
-- `694230a` 2026-10-22 — W2-9c Events: each player's own pay link; paid at the course per player
 
 ---
 

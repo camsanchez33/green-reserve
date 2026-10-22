@@ -1,34 +1,50 @@
 {
-  "generatedAt": "2026-10-22T22:10:18.013Z",
+  "generatedAt": "2026-10-22T22:32:34.043Z",
   "repo": {
-    "head": "c8ed1ea",
+    "head": "a96c112",
     "branch": "claude/test-course-isolation",
-    "dirtyCount": 18,
+    "dirtyCount": 30,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M src/app/admin/courses/page.tsx",
-      " M src/app/api/admin/nav-badges/route.ts",
-      " M src/app/api/admin/revenue/route.ts",
-      " M src/app/api/courses/route.ts",
-      " M src/app/courses/[slug]/page.tsx",
-      " M src/app/sitemap.ts",
-      " M src/lib/access-fee.ts",
-      " M src/lib/admin-action-queue.ts",
-      " M src/lib/admin-checks.ts",
-      " M src/lib/admin-goals.ts",
-      " M src/lib/admin-home.ts",
-      " M src/lib/admin-today.ts",
-      "?? scripts/real-courses-db-test.ts",
-      "?? src/lib/real-courses.ts"
+      "M  .github/workflows/schema-check.yml",
+      "UU CLAUDE.md",
+      "M  OPERATOR_REWORK_SPEC.md",
+      "M  PASSWORD_CHECKLIST.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "M  docs/RUNBOOK.md",
+      "M  docs/SHIPPING.md",
+      "UU docs/codemap.json",
+      "A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql",
+      "UU prisma/schema.prisma",
+      "M  scripts/design-guard.baseline.json",
+      "A  scripts/event-signup-db-test.ts",
+      "M  src/app/api/event-payment/[id]/route.ts",
+      "A  src/app/api/event-signup/[id]/route.ts",
+      "M  src/app/api/operator/events/[id]/payments/route.ts",
+      "M  src/app/api/operator/events/[id]/route.ts",
+      "M  src/app/api/operator/events/route.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "a96c112",
+        "date": "2026-10-22T22:17:20+00:00",
+        "subject": "TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0a2e03b",
+        "date": "2026-10-22T22:10:19+00:00",
+        "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "6f40852",
         "date": "2026-10-22T18:01:54-04:00",
@@ -1146,6 +1162,18 @@
       "ageDays": 0
     },
     {
+      "file": "CLAUDE.md",
+      "openRefs": 1,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
+      "file": "CLAUDE.md",
+      "openRefs": 1,
+      "lastTouched": "2026-10-22",
+      "ageDays": 0
+    },
+    {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
@@ -1365,6 +1393,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "a96c112",
+      "date": "2026-10-22",
+      "subject": "TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree"
+    },
+    {
+      "h": "0a2e03b",
+      "date": "2026-10-22",
+      "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists"
+    },
+    {
       "h": "6f40852",
       "date": "2026-10-22",
       "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)"
@@ -1413,16 +1451,6 @@
       "h": "a5c912b",
       "date": "2026-10-22",
       "subject": "Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)"
-    },
-    {
-      "h": "5e73b48",
-      "date": "2026-10-22",
-      "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)"
-    },
-    {
-      "h": "694230a",
-      "date": "2026-10-22",
-      "subject": "W2-9c Events: each player's own pay link; paid at the course per player"
     }
   ]
 }
