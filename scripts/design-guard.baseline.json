@@ -40,7 +40,6 @@
     "lucide": 4
   },
   "src/app/admin/employees/page.tsx": {
-    "uppercase": 8,
     "lucide": 1
   },
   "src/app/admin/forgot-password/page.tsx": {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { loadEvidence, evidenceText } from '@/lib/dispute-evidence';
 import { auditAdmin } from '@/lib/admin-audit';
 
@@ -10,6 +10,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ boo
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'The evidence pack needs manager access.' }, { status: 403 });
+  const noArea = areaGate(session, 'money');
+  if (noArea) return noArea;
   const { bookingId } = await params;
   const input = await loadEvidence(bookingId);
   if (!input) return NextResponse.json({ error: 'That booking no longer exists.' }, { status: 404 });

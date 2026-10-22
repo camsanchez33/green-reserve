@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { resolveAdminSession, AdminSessionUnavailable } from '@/lib/admin-session';
 import { AdminSessionProvider, type AdminSessionView } from '@/lib/admin-session-context';
+import { effectiveAreas } from '@/lib/admin-areas';
 import { STAFF_LOOK_CLASS } from '@/lib/staff-fonts';
 import StepUpDialog from '@/components/admin/StepUpDialog';
 import ReasonDialog from '@/components/admin/ReasonDialog';
@@ -26,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   let unavailable = false;
   try {
     const s = await resolveAdminSession();
-    if (s) session = { adminId: s.adminId, email: s.email, name: s.name, role: s.role, mfa: s.mfa === true };
+    if (s) session = { adminId: s.adminId, email: s.email, name: s.name, role: s.role, mfa: s.mfa === true, areas: effectiveAreas(s.role, s.areas ?? null) };
   } catch (err) {
     // A DB blip is not "no session" — the provider shows a retry, not a login.
     if (err instanceof AdminSessionUnavailable) unavailable = true;

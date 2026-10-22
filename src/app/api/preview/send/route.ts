@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { signPreviewToken } from '@/lib/preview-token';
 import { sendPreviewWithDashboardAccessEmail } from '@/lib/email';
 import { getApprovalState } from '@/lib/approval-state';
@@ -17,6 +17,8 @@ import { withAudit } from '@/lib/admin-audit';
 async function sendPreview(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'pipeline');
+  if (noArea) return noArea;
   // MP-2b: this route ROTATES AN OPERATOR'S PASSWORD. It was gated on "any admin
   // session", so a viewer-role employee could POST an arbitrary courseId, lock
   // that operator out of their own dashboard, and read the new password out of

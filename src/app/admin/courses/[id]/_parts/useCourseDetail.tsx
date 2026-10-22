@@ -256,7 +256,9 @@ export function useCourseDetail() {
         setTxTotal(d.total);
       } else {
         setTxItems([]);
-        setTxError(r.status === 403 ? 'Transactions require support access.'
+        // AW-11: a 403 can also be "not in your areas" (transactions are Money) — the server says which.
+        const body = r.status === 403 ? await r.json().catch(() => ({})) as { error?: string } : {};
+        setTxError(r.status === 403 ? (body.error || 'Transactions require support access.')
           : r.status === 401 ? 'Your session ended — sign in again.'
           : 'Could not load transactions. Try again.');
       }

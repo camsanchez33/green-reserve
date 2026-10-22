@@ -147,6 +147,9 @@ Every admin action must show: pending state → then success or an explicit erro
 ### Staff permissions (SP-A, STAFF_POLICY_SPEC Part A)
 Staff logins are permissioned PER PERSON by the course owner (Settings → Staff & permissions). The catalog, presets and dependencies live in ONE file, `src/lib/staff-permissions.ts`; `resolveDashboardSession()` exposes `session.permissions` and every staff-reachable route gates with `requirePermission(session, key)`. The client (`useDashboardAccess()`) only hides — the route is the control. A new staff-reachable action needs a key in the catalog AND a `requirePermission` call. Staff rows with `permissionsSetAt` null resolve as the Legacy preset (pre-SP-A powers minus weather cancel and waiving fees). Never grantable: staff management, Stripe, the agreement, the cancellation policy (`STAFF_FORBIDDEN` stays on those).
 
+### Admin areas (AW-11, Cam 2026-10-22: "per-person access")
+Admin logins are permissioned per person by the owner on Team: the ROLE (viewer · support · manager) says how much, the AREAS say where — Pipeline, Courses, Golfers, Money, Messages, Problems, Company. ONE catalog, `src/lib/admin-areas.ts`; `resolveAdminSession()` reads `areas` from the row on every request (`AdminUser.areasSetAt` null = never set = every area, so nobody lost access when this shipped; the owner always has everything). Every area route calls `areaGate(session, '<area>')` after its role check; Home (`/api/admin/today`), the menu counts, search and Ask filter what they return by area; the menu only hides. A new admin route needs an area AND an `areaGate` call — `scripts/admin-areas-test.ts` fails on any admin route that neither checks an area nor is owner-only (or is on its short "every login" list). Changing someone's areas is owner-only, step-up confirmed, with a reason (`employee_areas`).
+
 ### Session policy (per surface)
 
 | Surface | Cookie | JWT TTL | Renewal |

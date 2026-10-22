@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-522 source files · 253 routes · 170 libraries · 55 models
+523 source files · 253 routes · 171 libraries · 55 models
 
 ## Single sources of truth
 
@@ -62,12 +62,12 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 524 |
 | `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 320 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 761 |
-| `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 410 |
+| `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
 | `/admin/goals` | admin | client-side | page | `src/app/admin/goals/page.tsx` | 164 |
 | `/admin/golfers` | admin | client-side | page | `src/app/admin/golfers/page.tsx` | 457 |
 | `/admin/groups` | admin | client-side | page | `src/app/admin/groups/page.tsx` | 208 |
-| `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 961 |
+| `/admin/inquiries` | admin | client-side | page | `src/app/admin/inquiries/page.tsx` | 963 |
 | `/admin/inquiries/[id]` | admin | client-side | page | `src/app/admin/inquiries/[id]/page.tsx` | 2254 |
 | `/admin/login` | admin | client-side | page | `src/app/admin/login/page.tsx` | 137 |
 | `/admin/messages` | admin | client-side | page | `src/app/admin/messages/page.tsx` | 479 |
@@ -76,69 +76,69 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 1074 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
 | `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 569 |
-| `/api/admin/activity` | admin | file | GET | `src/app/api/admin/activity/route.ts` | 145 |
+| `/api/admin/activity` | admin | file | GET | `src/app/api/admin/activity/route.ts` | 147 |
 | `/api/admin/agreement-versions` | admin | file | GET POST | `src/app/api/admin/agreement-versions/route.ts` | 57 |
-| `/api/admin/archive-course` | admin | file | POST | `src/app/api/admin/archive-course/route.ts` | 77 |
+| `/api/admin/archive-course` | admin | file | POST | `src/app/api/admin/archive-course/route.ts` | 79 |
 | `/api/admin/ask` | admin | file | POST | `src/app/api/admin/ask/route.ts` | 121 |
 | `/api/admin/audit` | admin | file | GET | `src/app/api/admin/audit/route.ts` | 48 |
 | `/api/admin/backfill-orphaned-inquiries` | admin | file | POST | `src/app/api/admin/backfill-orphaned-inquiries/route.ts` | 46 |
 | `/api/admin/bootstrap` | admin | secret header | POST | `src/app/api/admin/bootstrap/route.ts` | 31 |
-| `/api/admin/broadcasts` | admin | file | GET POST | `src/app/api/admin/broadcasts/route.ts` | 136 |
+| `/api/admin/broadcasts` | admin | file | GET POST | `src/app/api/admin/broadcasts/route.ts` | 140 |
 | `/api/admin/change-password` | admin | file | POST | `src/app/api/admin/change-password/route.ts` | 31 |
-| `/api/admin/company-documents` | admin | file | DELETE GET POST | `src/app/api/admin/company-documents/route.ts` | 69 |
-| `/api/admin/company-documents/download` | admin | file | GET | `src/app/api/admin/company-documents/download/route.ts` | 35 |
-| `/api/admin/company-documents/upload` | admin | file | POST | `src/app/api/admin/company-documents/upload/route.ts` | 46 |
-| `/api/admin/course-calls` | admin | file | POST | `src/app/api/admin/course-calls/route.ts` | 121 |
-| `/api/admin/course-detail` | admin | file | GET PATCH | `src/app/api/admin/course-detail/route.ts` | 341 |
-| `/api/admin/course-documents` | admin | file | GET POST | `src/app/api/admin/course-documents/route.ts` | 85 |
-| `/api/admin/course-documents/download` | admin | file | GET | `src/app/api/admin/course-documents/download/route.ts` | 59 |
-| `/api/admin/course-documents/record` | admin | file | POST | `src/app/api/admin/course-documents/record/route.ts` | 39 |
-| `/api/admin/course-documents/upload` | admin | file | POST | `src/app/api/admin/course-documents/upload/route.ts` | 60 |
-| `/api/admin/course-feed` | admin | file | GET | `src/app/api/admin/course-feed/route.ts` | 20 |
-| `/api/admin/course-groups` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/course-groups/route.ts` | 109 |
-| `/api/admin/course-members` | admin | file | GET | `src/app/api/admin/course-members/route.ts` | 51 |
+| `/api/admin/company-documents` | admin | file | DELETE GET POST | `src/app/api/admin/company-documents/route.ts` | 71 |
+| `/api/admin/company-documents/download` | admin | file | GET | `src/app/api/admin/company-documents/download/route.ts` | 37 |
+| `/api/admin/company-documents/upload` | admin | file | POST | `src/app/api/admin/company-documents/upload/route.ts` | 48 |
+| `/api/admin/course-calls` | admin | file | POST | `src/app/api/admin/course-calls/route.ts` | 123 |
+| `/api/admin/course-detail` | admin | file | GET PATCH | `src/app/api/admin/course-detail/route.ts` | 345 |
+| `/api/admin/course-documents` | admin | file | GET POST | `src/app/api/admin/course-documents/route.ts` | 89 |
+| `/api/admin/course-documents/download` | admin | file | GET | `src/app/api/admin/course-documents/download/route.ts` | 61 |
+| `/api/admin/course-documents/record` | admin | file | POST | `src/app/api/admin/course-documents/record/route.ts` | 41 |
+| `/api/admin/course-documents/upload` | admin | file | POST | `src/app/api/admin/course-documents/upload/route.ts` | 62 |
+| `/api/admin/course-feed` | admin | file | GET | `src/app/api/admin/course-feed/route.ts` | 22 |
+| `/api/admin/course-groups` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/course-groups/route.ts` | 111 |
+| `/api/admin/course-members` | admin | file | GET | `src/app/api/admin/course-members/route.ts` | 53 |
 | `/api/admin/course-payouts` | admin | file | GET | `src/app/api/admin/course-payouts/route.ts` | 49 |
-| `/api/admin/course-reminders` | admin | file | PATCH | `src/app/api/admin/course-reminders/route.ts` | 20 |
-| `/api/admin/course-settings` | admin | file | GET PATCH | `src/app/api/admin/course-settings/route.ts` | 79 |
-| `/api/admin/courses` | admin | file | GET | `src/app/api/admin/courses/route.ts` | 244 |
-| `/api/admin/create-course` | admin | file | GET POST | `src/app/api/admin/create-course/route.ts` | 188 |
-| `/api/admin/disputes/[bookingId]/evidence` | admin | file | GET | `src/app/api/admin/disputes/[bookingId]/evidence/route.ts` | 27 |
-| `/api/admin/employees` | admin | file | GET PATCH POST | `src/app/api/admin/employees/route.ts` | 117 |
+| `/api/admin/course-reminders` | admin | file | PATCH | `src/app/api/admin/course-reminders/route.ts` | 22 |
+| `/api/admin/course-settings` | admin | file | GET PATCH | `src/app/api/admin/course-settings/route.ts` | 83 |
+| `/api/admin/courses` | admin | file | GET | `src/app/api/admin/courses/route.ts` | 246 |
+| `/api/admin/create-course` | admin | file | GET POST | `src/app/api/admin/create-course/route.ts` | 192 |
+| `/api/admin/disputes/[bookingId]/evidence` | admin | file | GET | `src/app/api/admin/disputes/[bookingId]/evidence/route.ts` | 29 |
+| `/api/admin/employees` | admin | file | GET PATCH POST | `src/app/api/admin/employees/route.ts` | 146 |
 | `/api/admin/expenses` | admin | file | GET POST | `src/app/api/admin/expenses/route.ts` | 47 |
 | `/api/admin/expenses/[id]` | admin | file | DELETE PATCH | `src/app/api/admin/expenses/[id]/route.ts` | 78 |
 | `/api/admin/forgot-password` | admin | entry | POST | `src/app/api/admin/forgot-password/route.ts` | 45 |
-| `/api/admin/goals` | admin | file | DELETE GET POST | `src/app/api/admin/goals/route.ts` | 55 |
-| `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 251 |
-| `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1287 |
+| `/api/admin/goals` | admin | file | DELETE GET POST | `src/app/api/admin/goals/route.ts` | 61 |
+| `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 255 |
+| `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1295 |
 | `/api/admin/login` | admin | entry | POST | `src/app/api/admin/login/route.ts` | 88 |
 | `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 19 |
-| `/api/admin/messages` | admin | file | GET PATCH POST | `src/app/api/admin/messages/route.ts` | 215 |
-| `/api/admin/nav-badges` | admin | file | GET | `src/app/api/admin/nav-badges/route.ts` | 43 |
+| `/api/admin/messages` | admin | file | GET PATCH POST | `src/app/api/admin/messages/route.ts` | 221 |
+| `/api/admin/nav-badges` | admin | file | GET | `src/app/api/admin/nav-badges/route.ts` | 51 |
 | `/api/admin/orphan-sweep` | admin | file | GET POST | `src/app/api/admin/orphan-sweep/route.ts` | 49 |
 | `/api/admin/owner-devices` | admin | file | DELETE GET | `src/app/api/admin/owner-devices/route.ts` | 55 |
 | `/api/admin/passkeys` | admin | file | DELETE GET POST | `src/app/api/admin/passkeys/route.ts` | 82 |
 | `/api/admin/platform-stripe` | admin | file | GET | `src/app/api/admin/platform-stripe/route.ts` | 117 |
-| `/api/admin/problems` | admin | file | GET PATCH | `src/app/api/admin/problems/route.ts` | 94 |
+| `/api/admin/problems` | admin | file | GET PATCH | `src/app/api/admin/problems/route.ts` | 98 |
 | `/api/admin/reconcile-lifecycle-pairs` | admin | file | POST | `src/app/api/admin/reconcile-lifecycle-pairs/route.ts` | 23 |
-| `/api/admin/refund` | admin | file | POST | `src/app/api/admin/refund/route.ts` | 28 |
-| `/api/admin/request-re-review` | admin | file | POST | `src/app/api/admin/request-re-review/route.ts` | 39 |
-| `/api/admin/resend-staff-setup` | admin | file | POST | `src/app/api/admin/resend-staff-setup/route.ts` | 47 |
-| `/api/admin/retry-charge/[bookingId]` | admin | file | POST | `src/app/api/admin/retry-charge/[bookingId]/route.ts` | 44 |
-| `/api/admin/revenue` | admin | file | GET | `src/app/api/admin/revenue/route.ts` | 357 |
-| `/api/admin/schedule` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/schedule/route.ts` | 75 |
-| `/api/admin/search` | admin | file | GET | `src/app/api/admin/search/route.ts` | 220 |
-| `/api/admin/send-golive-reminder` | admin | file | POST | `src/app/api/admin/send-golive-reminder/route.ts` | 48 |
-| `/api/admin/sentry-test` | admin | file | POST | `src/app/api/admin/sentry-test/route.ts` | 21 |
-| `/api/admin/session` | admin | file | GET | `src/app/api/admin/session/route.ts` | 14 |
+| `/api/admin/refund` | admin | file | POST | `src/app/api/admin/refund/route.ts` | 30 |
+| `/api/admin/request-re-review` | admin | file | POST | `src/app/api/admin/request-re-review/route.ts` | 41 |
+| `/api/admin/resend-staff-setup` | admin | file | POST | `src/app/api/admin/resend-staff-setup/route.ts` | 49 |
+| `/api/admin/retry-charge/[bookingId]` | admin | file | POST | `src/app/api/admin/retry-charge/[bookingId]/route.ts` | 46 |
+| `/api/admin/revenue` | admin | file | GET | `src/app/api/admin/revenue/route.ts` | 359 |
+| `/api/admin/schedule` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/schedule/route.ts` | 83 |
+| `/api/admin/search` | admin | file | GET | `src/app/api/admin/search/route.ts` | 235 |
+| `/api/admin/send-golive-reminder` | admin | file | POST | `src/app/api/admin/send-golive-reminder/route.ts` | 50 |
+| `/api/admin/sentry-test` | admin | file | POST | `src/app/api/admin/sentry-test/route.ts` | 23 |
+| `/api/admin/session` | admin | file | GET | `src/app/api/admin/session/route.ts` | 17 |
 | `/api/admin/set-password` | admin | entry | POST | `src/app/api/admin/set-password/route.ts` | 73 |
 | `/api/admin/stripe-match` | admin | file | GET | `src/app/api/admin/stripe-match/route.ts` | 29 |
-| `/api/admin/system` | admin | file | GET | `src/app/api/admin/system/route.ts` | 107 |
-| `/api/admin/tee-sheet` | admin | file | GET PATCH POST | `src/app/api/admin/tee-sheet/route.ts` | 122 |
-| `/api/admin/today` | admin | file | GET | `src/app/api/admin/today/route.ts` | 47 |
-| `/api/admin/transactions` | admin | file | GET | `src/app/api/admin/transactions/route.ts` | 141 |
-| `/api/admin/transactions/export` | admin | file | GET | `src/app/api/admin/transactions/export/route.ts` | 91 |
+| `/api/admin/system` | admin | file | GET | `src/app/api/admin/system/route.ts` | 109 |
+| `/api/admin/tee-sheet` | admin | file | GET PATCH POST | `src/app/api/admin/tee-sheet/route.ts` | 128 |
+| `/api/admin/today` | admin | file | GET | `src/app/api/admin/today/route.ts` | 52 |
+| `/api/admin/transactions` | admin | file | GET | `src/app/api/admin/transactions/route.ts` | 143 |
+| `/api/admin/transactions/export` | admin | file | GET | `src/app/api/admin/transactions/export/route.ts` | 93 |
 | `/api/admin/two-factor` | admin | file | GET POST | `src/app/api/admin/two-factor/route.ts` | 96 |
-| `/api/admin/verify-operator` | admin | file | POST | `src/app/api/admin/verify-operator/route.ts` | 42 |
+| `/api/admin/verify-operator` | admin | file | POST | `src/app/api/admin/verify-operator/route.ts` | 44 |
 | `/api/alerts` | public | public | POST | `src/app/api/alerts/route.ts` | 52 |
 | `/api/alerts/unsubscribe/[token]` | public | public | GET | `src/app/api/alerts/unsubscribe/[token]/route.ts` | 53 |
 | `/api/auth/2fa/resend` | public | token | POST | `src/app/api/auth/2fa/resend/route.ts` | 32 |
@@ -256,8 +256,8 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/preview/[courseId]/approve` | public | token | POST | `src/app/api/preview/[courseId]/approve/route.ts` | 70 |
 | `/api/preview/[courseId]/request-changes` | public | token | POST | `src/app/api/preview/[courseId]/request-changes/route.ts` | 38 |
 | `/api/preview/[courseId]/tee-times` | public | token | GET | `src/app/api/preview/[courseId]/tee-times/route.ts` | 37 |
-| `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 152 |
-| `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 74 |
+| `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 154 |
+| `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 76 |
 | `/api/shop-sale/[id]` | public | token | GET POST | `src/app/api/shop-sale/[id]/route.ts` | 33 |
 | `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 134 |
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |
@@ -313,11 +313,11 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
 | `src/lib/prisma.ts` | 216 | 15 |  | `prisma` |
-| `src/lib/admin-session.ts` | 67 | 183 |  | `AdminSession`, `AdminSessionUnavailable`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole`, `resolveAdminSession` +6 more |
+| `src/lib/admin-session.ts` | 67 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
 | `src/lib/email.ts` | 54 | 2107 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +62 more |
 | `src/lib/session.ts` | 54 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/rate-limit.ts` | 46 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
-| `src/lib/format.ts` | 44 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
+| `src/lib/format.ts` | 45 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/admin-audit.ts` | 40 | 191 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/course-time.ts` | 33 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/agreement-required.ts` | 29 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
@@ -333,8 +333,9 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-call.ts` | 15 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
 | `src/lib/booking-fees.ts` | 13 | 36 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `hoursLabel`, `serviceFeeLabel`, `SHOP_FEE_LABEL`, `SHOP_FEE_ON` +1 more |
 | `src/lib/shop.ts` | 13 | 156 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
+| `src/lib/admin-areas.ts` | 12 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
 | `src/lib/booking-events.ts` | 12 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
-| `src/lib/admin-session-context.tsx` | 11 | 77 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
+| `src/lib/admin-session-context.tsx` | 11 | 80 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/step-up-client.ts` | 11 | 70 | AW-1c: | `askReason`, `registerReasonHandler`, `registerStepUpHandler`, `stepUpFetch`, `withReason` |
 | `src/lib/cron-log.ts` | 10 | 141 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/staff-permissions.ts` | 10 | 138 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
@@ -442,7 +443,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/tee-colour.ts` | 2 | 22 | Settings rework (Cam 2026-10-19: | `teeColour` |
 | `src/lib/two-factor.ts` | 2 | 41 |  | `issueTwoFactorCode` |
 | `src/lib/admin-ask-links.ts` | 1 | 15 | AW-3b: | `ADMIN_LINK`, `safeAdminPath` |
-| `src/lib/admin-ask.ts` | 1 | 156 | AW-3b (Cam 2026-10-21: | `ASK_TOOL_NAMES`, `ASK_TOOLS`, `AskOutcome`, `runAskTool` |
+| `src/lib/admin-ask.ts` | 1 | 159 | AW-3b (Cam 2026-10-21: | `ASK_TOOL_NAMES`, `ASK_TOOLS`, `AskOutcome`, `runAskTool` |
 | `src/lib/admin-checks.ts` | 1 | 222 | AW-5 (Cam 2026-10-21: | `DIGEST_HOUR_ET`, `digestFacts`, `DigestFacts`, `digestSummary`, `Finding`, `runAdminChecks`, `runMorningDigest`, `runUrgentChecks` +2 more |
 | `src/lib/admin-course-page.ts` | 1 | 59 | AW-7 (Cam 2026-10-21): | `courseMoney`, `courseWeeks`, `FailedChargeRow` |
 | `src/lib/admin-home.ts` | 1 | 128 | ADMIN-C (Cam 2026-10-22, mockup C "Clean hub"): | `homeCourseStats`, `HomeCourseStats`, `homeOverview`, `homeToday` |
@@ -489,11 +490,11 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/Card.tsx` | 59 | 17 |  | `Card`, `CARD` |
+| `src/components/ui/Card.tsx` | 58 | 17 |  | `Card`, `CARD` |
 | `src/components/ui/StatusDot.tsx` | 58 | 36 |  | `StatusDot` |
 | `src/components/ui/field.ts` | 40 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
-| `src/components/admin/AdminSidebar.tsx` | 19 | 234 |  | `AdminNavKey`, `default (AdminSidebar)` |
-| `src/components/ui/Eyebrow.tsx` | 18 | 19 |  | `Eyebrow`, `EYEBROW` |
+| `src/components/admin/AdminSidebar.tsx` | 19 | 236 |  | `AdminNavKey`, `default (AdminSidebar)` |
+| `src/components/ui/Eyebrow.tsx` | 17 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
 | `src/components/dashboard/LoadError.tsx` | 10 | 16 | SD-10. | `LoadError` |
 | `src/components/OperatorSidebar.tsx` | 10 | 286 |  | `default (OperatorSidebar)`, `OperatorNavKey` |
@@ -599,9 +600,9 @@ without opening anything.
 
 ### AdminUser
 
-26 fields · 10 writer(s) · 16 reader(s)
+28 fields · 10 writer(s) · 16 reader(s)
 
-- fields: `id`, `email`, `name`, `passwordHash`, `role`, `active`, `mustChangePassword`, `lastLoginAt`, `createdAt`, `setPasswordToken`, `setPasswordTokenExpiry`, `twoFactorCode`, `twoFactorCodeExpiry`, `twoFactorAttempts`, `twoFactorSecret`, `twoFactorEnrolledAt`, `twoFactorRecoveryCodes`, `failedLoginAttempts`, `lockoutUntil`, `sessionVersion`, `auditLogs`, `ownerSessions`, `ownerDevices`, `ownerPasskeys`, `passkeyChallenge`, `passkeyChallengeExpiry`
+- fields: `id`, `email`, `name`, `passwordHash`, `role`, `active`, `mustChangePassword`, `lastLoginAt`, `createdAt`, `setPasswordToken`, `setPasswordTokenExpiry`, `twoFactorCode`, `twoFactorCodeExpiry`, `twoFactorAttempts`, `twoFactorSecret`, `twoFactorEnrolledAt`, `twoFactorRecoveryCodes`, `failedLoginAttempts`, `lockoutUntil`, `sessionVersion`, `areas`, `areasSetAt`, `auditLogs`, `ownerSessions`, `ownerDevices`, `ownerPasskeys`, `passkeyChallenge`, `passkeyChallengeExpiry`
 - writers: `src/app/api/admin/bootstrap/route.ts`, `src/app/api/admin/change-password/route.ts`, `src/app/api/admin/employees/route.ts`, `src/app/api/admin/forgot-password/route.ts`, `src/app/api/admin/login/route.ts`, `src/app/api/admin/set-password/route.ts`, `src/app/api/admin/two-factor/route.ts`, `src/app/api/cam/login/route.ts`, `src/app/api/cam/step-up/route.ts`, `src/lib/owner-passkey.ts`
 - readers: `src/app/api/admin/audit/route.ts`, `src/app/api/admin/bootstrap/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/change-password/route.ts`, `src/app/api/admin/employees/route.ts`, `src/app/api/admin/forgot-password/route.ts`, `src/app/api/admin/login/route.ts`, `src/app/api/admin/passkeys/route.ts`, `src/app/api/admin/problems/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/set-password/route.ts`, `src/app/api/admin/two-factor/route.ts` +4 more (see `docs/codemap.json`)
 

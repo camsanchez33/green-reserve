@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireRole, SUPPORT_PLUS, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, SUPPORT_PLUS, OWNER_ONLY, ownerGateError, areaGate } from '@/lib/admin-session';
 import { startOfPlatformDay } from '@/lib/admin-day';
 import { GOAL_METRICS, isGoalMetric, listGoals } from '@/lib/admin-goals';
 import { needReason, reasonOf, auditAdmin, bodyWithReason } from '@/lib/admin-audit';
@@ -13,6 +13,8 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 export async function GET() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
+  const noArea = areaGate(session, 'company');
+  if (noArea) return noArea;
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Goals are for support and above.' }, { status: 403 });
   return NextResponse.json({ goals: await listGoals(new Date()), canEdit: requireRole(session, OWNER_ONLY) });
 }
@@ -20,6 +22,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
+  const noArea = areaGate(session, 'company');
+  if (noArea) return noArea;
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   const body = await req.json().catch(() => null) as { metric?: unknown; target?: unknown; dueDate?: unknown } | null;
   if (!body || !isGoalMetric(body.metric)) return NextResponse.json({ error: 'Pick what the goal measures.' }, { status: 400 });
@@ -41,6 +45,8 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 });
+  const noArea = areaGate(session, 'company');
+  if (noArea) return noArea;
   if (!requireRole(session, OWNER_ONLY)) return NextResponse.json({ error: ownerGateError(session) }, { status: 403 });
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Which goal?' }, { status: 400 });

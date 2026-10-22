@@ -129,7 +129,7 @@ function seenText(c: HomeCourse): string {
 }
 
 export default function AdminHomePage() {
-  const { role } = useAdminSession();
+  const { role, areas } = useAdminSession();
   const [data, setData] = useState<Home | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -196,7 +196,7 @@ export default function AdminHomePage() {
   // A course's to-dos join Needs you only when no open problem already names that course (no double listing).
   const problemCourses = new Set((problems ?? []).map(p => p.courseId).filter(Boolean));
   const courseTodos = (courses ?? []).filter(c => c.rows.length > 0 && !problemCourses.has(c.id));
-  const seesNothing = data && !today && !courses;
+  const seesNothing = data && !today && !courses && !needs && !problems && !data.goals;
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -229,7 +229,7 @@ export default function AdminHomePage() {
 
           {seesNothing && (
             <p className="text-[14px] text-ink-soft">
-              Your role sees <Link href="/admin/inquiries" className="text-pine font-medium hover:underline">Pipeline</Link> and <Link href="/admin/courses" className="text-pine font-medium hover:underline">Courses</Link>.
+              Nothing on Home is part of your login. Use the menu on the left{role === 'viewer' && (areas.includes('pipeline') || areas.includes('courses')) ? <> — you can read {areas.includes('pipeline') && <Link href="/admin/inquiries" className="text-pine font-medium hover:underline">Pipeline</Link>}{areas.includes('pipeline') && areas.includes('courses') && ' and '}{areas.includes('courses') && <Link href="/admin/courses" className="text-pine font-medium hover:underline">Courses</Link>}</> : ''}.
             </p>
           )}
 

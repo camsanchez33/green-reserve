@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 522,
+    "files": 523,
     "routes": 253,
-    "libs": 170,
+    "libs": 171,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -591,7 +591,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 1090,
+      "lines": 1092,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -738,12 +738,12 @@
     },
     {
       "path": "src/app/admin/employees/page.tsx",
-      "lines": 410,
-      "purpose": "",
+      "lines": 278,
+      "purpose": "AW-11 (Cam 2026-10-22, \"per-person access\"; ADMIN-C look):",
       "brain": [],
       "exports": [
         {
-          "name": "default (EmployeesPage)",
+          "name": "default (TeamPage)",
           "kind": "component"
         }
       ],
@@ -754,17 +754,16 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
         "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/admin-areas",
         "@/lib/admin-fetch",
         "@/lib/admin-session-context",
+        "@/lib/format",
         "@/lib/step-up-client",
         "lucide-react",
         "next/link",
-        "next/navigation",
         "react"
       ],
       "usedBy": []
@@ -925,7 +924,7 @@
     },
     {
       "path": "src/app/admin/inquiries/page.tsx",
-      "lines": 961,
+      "lines": 963,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -963,7 +962,7 @@
     },
     {
       "path": "src/app/admin/layout.tsx",
-      "lines": 49,
+      "lines": 50,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -988,6 +987,7 @@
       "imports": [
         "@/components/admin/ReasonDialog",
         "@/components/admin/StepUpDialog",
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "@/lib/admin-session-context",
         "@/lib/staff-fonts",
@@ -1229,7 +1229,7 @@
     },
     {
       "path": "src/app/api/admin/activity/route.ts",
-      "lines": 145,
+      "lines": 147,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1287,7 +1287,7 @@
     },
     {
       "path": "src/app/api/admin/archive-course/route.ts",
-      "lines": 77,
+      "lines": 79,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1423,7 +1423,7 @@
     },
     {
       "path": "src/app/api/admin/broadcasts/route.ts",
-      "lines": 136,
+      "lines": 140,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1482,7 +1482,7 @@
     },
     {
       "path": "src/app/api/admin/company-documents/download/route.ts",
-      "lines": 35,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1509,7 +1509,7 @@
     },
     {
       "path": "src/app/api/admin/company-documents/route.ts",
-      "lines": 69,
+      "lines": 71,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1548,7 +1548,7 @@
     },
     {
       "path": "src/app/api/admin/company-documents/upload/route.ts",
-      "lines": 46,
+      "lines": 48,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1575,7 +1575,7 @@
     },
     {
       "path": "src/app/api/admin/course-calls/route.ts",
-      "lines": 121,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1604,7 +1604,7 @@
     },
     {
       "path": "src/app/api/admin/course-detail/route.ts",
-      "lines": 341,
+      "lines": 345,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1648,7 +1648,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/download/route.ts",
-      "lines": 59,
+      "lines": 61,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1674,7 +1674,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/record/route.ts",
-      "lines": 39,
+      "lines": 41,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1702,7 +1702,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/route.ts",
-      "lines": 85,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1739,7 +1739,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/upload/route.ts",
-      "lines": 60,
+      "lines": 62,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1765,7 +1765,7 @@
     },
     {
       "path": "src/app/api/admin/course-feed/route.ts",
-      "lines": 20,
+      "lines": 22,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1790,7 +1790,7 @@
     },
     {
       "path": "src/app/api/admin/course-groups/route.ts",
-      "lines": 109,
+      "lines": 111,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1833,7 +1833,7 @@
     },
     {
       "path": "src/app/api/admin/course-members/route.ts",
-      "lines": 51,
+      "lines": 53,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1885,7 +1885,7 @@
     },
     {
       "path": "src/app/api/admin/course-reminders/route.ts",
-      "lines": 20,
+      "lines": 22,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1911,7 +1911,7 @@
     },
     {
       "path": "src/app/api/admin/course-settings/route.ts",
-      "lines": 79,
+      "lines": 83,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1944,7 +1944,7 @@
     },
     {
       "path": "src/app/api/admin/courses/route.ts",
-      "lines": 244,
+      "lines": 246,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1977,7 +1977,7 @@
     },
     {
       "path": "src/app/api/admin/create-course/route.ts",
-      "lines": 188,
+      "lines": 192,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2012,7 +2012,7 @@
     },
     {
       "path": "src/app/api/admin/disputes/[bookingId]/evidence/route.ts",
-      "lines": 27,
+      "lines": 29,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2038,7 +2038,7 @@
     },
     {
       "path": "src/app/api/admin/employees/route.ts",
-      "lines": 117,
+      "lines": 146,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2065,6 +2065,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/prisma",
@@ -2167,7 +2168,7 @@
     },
     {
       "path": "src/app/api/admin/goals/route.ts",
-      "lines": 55,
+      "lines": 61,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2205,7 +2206,7 @@
     },
     {
       "path": "src/app/api/admin/golfers/route.ts",
-      "lines": 251,
+      "lines": 255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2239,7 +2240,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1287,
+      "lines": 1295,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2348,7 +2349,7 @@
     },
     {
       "path": "src/app/api/admin/messages/route.ts",
-      "lines": 215,
+      "lines": 221,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2388,7 +2389,7 @@
     },
     {
       "path": "src/app/api/admin/nav-badges/route.ts",
-      "lines": 43,
+      "lines": 51,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2405,6 +2406,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "@/lib/admin-today",
         "@/lib/money-problems",
@@ -2546,7 +2548,7 @@
     },
     {
       "path": "src/app/api/admin/problems/route.ts",
-      "lines": 94,
+      "lines": 98,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2604,7 +2606,7 @@
     },
     {
       "path": "src/app/api/admin/refund/route.ts",
-      "lines": 28,
+      "lines": 30,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2630,7 +2632,7 @@
     },
     {
       "path": "src/app/api/admin/request-re-review/route.ts",
-      "lines": 39,
+      "lines": 41,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2657,7 +2659,7 @@
     },
     {
       "path": "src/app/api/admin/resend-staff-setup/route.ts",
-      "lines": 47,
+      "lines": 49,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2685,7 +2687,7 @@
     },
     {
       "path": "src/app/api/admin/retry-charge/[bookingId]/route.ts",
-      "lines": 44,
+      "lines": 46,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2712,7 +2714,7 @@
     },
     {
       "path": "src/app/api/admin/revenue/route.ts",
-      "lines": 357,
+      "lines": 359,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2745,7 +2747,7 @@
     },
     {
       "path": "src/app/api/admin/schedule/route.ts",
-      "lines": 75,
+      "lines": 83,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2786,7 +2788,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 220,
+      "lines": 235,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2803,6 +2805,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "@/lib/prisma",
         "next/server"
@@ -2811,7 +2814,7 @@
     },
     {
       "path": "src/app/api/admin/send-golive-reminder/route.ts",
-      "lines": 48,
+      "lines": 50,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2839,7 +2842,7 @@
     },
     {
       "path": "src/app/api/admin/sentry-test/route.ts",
-      "lines": 21,
+      "lines": 23,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2865,7 +2868,7 @@
     },
     {
       "path": "src/app/api/admin/session/route.ts",
-      "lines": 14,
+      "lines": 17,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2882,6 +2885,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "next/server"
       ],
@@ -2944,7 +2948,7 @@
     },
     {
       "path": "src/app/api/admin/system/route.ts",
-      "lines": 107,
+      "lines": 109,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2974,7 +2978,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 122,
+      "lines": 128,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3014,7 +3018,7 @@
     },
     {
       "path": "src/app/api/admin/today/route.ts",
-      "lines": 47,
+      "lines": 52,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3032,6 +3036,7 @@
       "guard": "file",
       "imports": [
         "@/lib/admin-action-queue",
+        "@/lib/admin-areas",
         "@/lib/admin-goals",
         "@/lib/admin-home",
         "@/lib/admin-session",
@@ -3043,7 +3048,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/export/route.ts",
-      "lines": 91,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3069,7 +3074,7 @@
     },
     {
       "path": "src/app/api/admin/transactions/route.ts",
-      "lines": 141,
+      "lines": 143,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3130,7 +3135,7 @@
     },
     {
       "path": "src/app/api/admin/verify-operator/route.ts",
-      "lines": 42,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6741,7 +6746,7 @@
     },
     {
       "path": "src/app/api/preview/send/route.ts",
-      "lines": 152,
+      "lines": 154,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6772,7 +6777,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 74,
+      "lines": 76,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6789,6 +6794,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-session",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -8856,7 +8862,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 234,
+      "lines": 236,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8877,6 +8883,7 @@
       "imports": [
         "@/components/admin/CommandPalette",
         "@/components/ui/StatusDot",
+        "@/lib/admin-areas",
         "@/lib/admin-roles",
         "@/lib/admin-session-context",
         "next/image",
@@ -10362,7 +10369,6 @@
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
-        "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/groups/page.tsx",
@@ -10478,7 +10484,6 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/create/page.tsx",
-        "src/app/admin/employees/page.tsx",
         "src/app/admin/forgot-password/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
@@ -10880,6 +10885,58 @@
       ]
     },
     {
+      "path": "src/lib/admin-areas.ts",
+      "lines": 44,
+      "purpose": "AW-11 (Cam 2026-10-22:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ADMIN_AREAS",
+          "kind": "const"
+        },
+        {
+          "name": "AdminArea",
+          "kind": "type"
+        },
+        {
+          "name": "ALL_AREAS",
+          "kind": "const"
+        },
+        {
+          "name": "effectiveAreas",
+          "kind": "fn"
+        },
+        {
+          "name": "hasArea",
+          "kind": "fn"
+        },
+        {
+          "name": "isAdminArea",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/employees/page.tsx",
+        "src/app/admin/layout.tsx",
+        "src/app/api/admin/employees/route.ts",
+        "src/app/api/admin/nav-badges/route.ts",
+        "src/app/api/admin/search/route.ts",
+        "src/app/api/admin/session/route.ts",
+        "src/app/api/admin/today/route.ts",
+        "src/app/api/receipt/[bookingId]/route.ts",
+        "src/components/admin/AdminSidebar.tsx",
+        "src/lib/admin-ask.ts",
+        "src/lib/admin-session-context.tsx",
+        "src/lib/admin-session.ts"
+      ]
+    },
+    {
       "path": "src/lib/admin-ask-links.ts",
       "lines": 15,
       "purpose": "AW-3b:",
@@ -10906,7 +10963,7 @@
     },
     {
       "path": "src/lib/admin-ask.ts",
-      "lines": 156,
+      "lines": 159,
       "purpose": "AW-3b (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -10933,6 +10990,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./admin-areas",
         "./admin-day",
         "./admin-roles",
         "./money-problems",
@@ -11477,7 +11535,7 @@
     },
     {
       "path": "src/lib/admin-session-context.tsx",
-      "lines": 77,
+      "lines": 80,
       "purpose": "MP-11a (ADMIN_V4 V4-7, LAW rule 2):",
       "brain": [],
       "exports": [
@@ -11504,6 +11562,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/admin-areas",
         "@/lib/admin-fetch",
         "next/navigation",
         "react"
@@ -11524,7 +11583,7 @@
     },
     {
       "path": "src/lib/admin-session.ts",
-      "lines": 183,
+      "lines": 201,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11535,6 +11594,10 @@
         {
           "name": "AdminSessionUnavailable",
           "kind": "class"
+        },
+        {
+          "name": "areaGate",
+          "kind": "fn"
         },
         {
           "name": "MANAGER_PLUS",
@@ -11591,6 +11654,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./admin-areas",
         "./admin-roles",
         "./owner-session",
         "./prisma",
@@ -15726,6 +15790,7 @@
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/courses/page.tsx",
+        "src/app/admin/employees/page.tsx",
         "src/app/admin/goals/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
@@ -20253,6 +20318,14 @@
         {
           "name": "sessionVersion",
           "type": "Int"
+        },
+        {
+          "name": "areas",
+          "type": "String[]"
+        },
+        {
+          "name": "areasSetAt",
+          "type": "DateTime?"
         },
         {
           "name": "auditLogs",

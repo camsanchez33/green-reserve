@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveAdminSession, requireRole, MANAGER_PLUS, stepUpRequired } from '@/lib/admin-session';
+import { resolveAdminSession, requireRole, MANAGER_PLUS, stepUpRequired, areaGate } from '@/lib/admin-session';
 import { refundBooking } from '@/lib/refund-booking';
 import { needReason, reasonOf, auditAdmin, courseOfBooking } from '@/lib/admin-audit';
 
@@ -9,6 +9,8 @@ import { needReason, reasonOf, auditAdmin, courseOfBooking } from '@/lib/admin-a
 export async function POST(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const noArea = areaGate(session, 'golfers');
+  if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Refunds need manager access.' }, { status: 403 });
   const su = stepUpRequired(session); if (su) return su;
 
