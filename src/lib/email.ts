@@ -2084,7 +2084,7 @@ export async function sendEventPairingsEmail(data: {
 /** W2-9b: a pay link for an event (deposit, balance or any payment the course asks for). Replies go to the staff who sent it. */
 export async function sendEventPayLinkEmail(data: {
   email: string; name: string; courseName: string; replyTo: string;
-  eventName: string; dateLabel: string; label: string; amountCents: number; feeCents: number; payUrl: string; terms: string;
+  eventName: string; dateLabel: string; label: string; amountCents: number; feeCents: number; payUrl: string; terms: string; courseId?: string;
 }) {
   const e = escapeHtml;
   const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -2102,5 +2102,5 @@ export async function sendEventPayLinkEmail(data: {
     ${data.terms ? `<p style="margin:0 0 12px;color:#3F453E;font-size:13px;"><strong>${e(data.courseName)}&rsquo;s terms:</strong> ${e(data.terms)}</p>` : ''}
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Apple Pay, Google Pay or card. The charge comes from ${e(data.courseName)}. Questions? Reply to this email.</p>
   `);
-  await getResend().emails.send({ from: FROM, to: data.email, replyTo: data.replyTo, subject: `${data.label} for ${data.eventName} — ${data.courseName}`, html });
+  await getResend().emails.send({ meta: { kind: 'event_pay_link_email', courseId: data.courseId }, from: FROM, to: data.email, replyTo: data.replyTo, subject: `${data.label} for ${data.eventName} — ${data.courseName}`, html });
 }
