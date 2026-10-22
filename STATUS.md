@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-21 20:50 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6b0ebeb` · working tree **2 dirty file(s)**
+Generated 2026-10-22 00:17 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f8d9737` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 96 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 100 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `f8d9737` | 2026-10-22 | Messages: keep Open the course in the header below lg |
+| `3020c49` | 2026-10-22 | AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review) |
+| `f31213a` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (#172) |
+| `42adddb` | 2026-10-21 | Codemap and status board |
 | `6b0ebeb` | 2026-10-21 | AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links |
 | `821ddf9` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (in review) |
 | `4abfebb` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (#171) |
@@ -200,7 +204,7 @@ Nothing awaiting review.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-21 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 4d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 1d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 9d |
@@ -238,6 +242,10 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `f8d9737` 2026-10-22 — Messages: keep Open the course in the header below lg
+- `3020c49` 2026-10-22 — AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)
+- `f31213a` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)
+- `42adddb` 2026-10-21 — Codemap and status board
 - `6b0ebeb` 2026-10-21 — AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links
 - `821ddf9` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)
 - `4abfebb` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (#171)
@@ -246,10 +254,6 @@ Nothing awaiting review.
 - `d58220f` 2026-10-21 — AW-6b: inquiry page — the one next step first (#169)
 - `a85a078` 2026-10-21 — AW-4b: Today shows each course with its own to-dos; Goals tab (#170)
 - `27af530` 2026-10-21 — Status board
-- `cbcfb8c` 2026-10-21 — AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen
-- `ec245d5` 2026-10-21 — AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card
-- `adf590b` 2026-10-21 — Status board
-- `914a1c5` 2026-10-21 — AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today
 
 ---
 
