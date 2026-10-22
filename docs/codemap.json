@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 487,
+    "files": 488,
     "routes": 237,
     "libs": 157,
     "models": 48,
@@ -10042,6 +10042,32 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
       ]
+    },
+    {
+      "path": "src/instrumentation.ts",
+      "lines": 16,
+      "purpose": "BRAIN-0 (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "onRequestError",
+          "kind": "const"
+        },
+        {
+          "name": "register",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "../sentry.server.config",
+        "@sentry/nextjs"
+      ],
+      "usedBy": []
     },
     {
       "path": "src/lib/access-fee.ts",

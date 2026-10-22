@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-487 source files · 237 routes · 157 libraries · 48 models
+488 source files · 237 routes · 157 libraries · 48 models
 
 ## Single sources of truth
 
