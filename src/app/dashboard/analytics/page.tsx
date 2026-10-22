@@ -36,6 +36,7 @@ const usd2 = (c: number | null | undefined) => c == null ? '—' : `$${(c / 100)
 const pctS = (p: number | null | undefined) => p == null ? '—' : `${Math.round(p)}%`;
 const fmtDay = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 const fmtTime = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+const fmtWeekday = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 const fmtHour = (h: number) => `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
 const DAY_NAME: Record<string, string> = { Sun: 'Sunday', Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday' };
 const plural = (n: number, one: string, many = one + 's') => `${n.toLocaleString()} ${n === 1 ? one : many}`;
@@ -321,6 +322,25 @@ function RevenueTab({ d }: { d: Data }) {
         </Section>
       </div>
 
+      {/* W2-8 (4): money beyond the green fee — its own line, never in revenue. */}
+      <Section title="Beyond the green fee" why="Carts and the pro shop. Shop sales are shown here on their own and aren’t counted in your revenue above. Before sales tax.">
+        <div className="divide-y divide-line-soft max-w-xl">
+          <Line label="Rounds with a cart" sub={`${d.revenue.beyond.cartRounds} of ${plural(d.revenue.beyond.rounds, 'paid booking')}`} value={pctS(d.revenue.beyond.cartPct)} />
+          <Line label="Shop items added to rounds" sub={d.revenue.beyond.shopPerRoundCents == null ? undefined : `${usd2(d.revenue.beyond.shopPerRoundCents)} per round played`} value={usd(d.revenue.beyond.shopOnRoundsCents)} />
+          <Line label="Walk-up shop sales" sub={plural(d.revenue.beyond.walkUpSales, 'sale')} value={usd(d.revenue.beyond.walkUpCents)} />
+        </div>
+      </Section>
+
+      {/* W2-8 (2): what golfers paid against the price posted for their tee time. */}
+      <Section title="What golfers paid against your posted price"
+        why={d.revenue.rates.postedCents === 0
+          ? 'Green fees on paid rounds, against the price posted for each tee time. Nothing paid in these dates yet.'
+          : `Green fees on paid rounds came to ${pctS(d.revenue.rates.ofPostedPct)} of the price posted for those tee times — ${d.revenue.rates.belowPostedCents >= 0 ? `${usd(d.revenue.rates.belowPostedCents)} below posted` : `${usd(-d.revenue.rates.belowPostedCents)} above posted`}, through member and resident rates and prices staff set by hand. Twilight and other rounds are measured against their own posted price.`}
+        action={d.revenue.rates.rows.length > 0 ? <Download onClick={() => downloadCsv(`rate-vs-posted-${d.range.from}-${d.range.to}`, ['Rate', 'Players', 'Paid', 'Posted', '% of posted'], d.revenue.rates.rows.map(r => [r.rate, r.players, r.paidCents / 100, r.postedCents / 100, r.ofPostedPct]))} /> : undefined}>
+        <Table head={['Rate', 'Players', 'Paid', 'Posted', 'Of posted']} empty="No paid rounds in these dates."
+          rows={d.revenue.rates.rows.map(r => [r.kind === 'member' ? `${r.rate} (member)` : r.rate, r.players, usd(r.paidCents), usd(r.postedCents), pctS(r.ofPostedPct)])} />
+      </Section>
+
       <Section title="Coming up" why="Bookings for tee times that haven’t happened yet, and what they’re worth to you when they play.">
         <div className="divide-y divide-line-soft max-w-xl">
           <Line label="Upcoming bookings" sub={plural(d.revenue.pipeline.upcomingBookings, 'booking')} value={usd(d.revenue.upcomingCents)} />
@@ -335,20 +355,48 @@ function RevenueTab({ d }: { d: Data }) {
 
 function BusyTab({ d }: { d: Data }) {
   const emptiest = [...d.unfilled.rows].sort((a, b) => b.open - a.open || a.date.localeCompare(b.date)).slice(0, 12);
+  // W2-8 (1): the same squares, shaded by what each hour EARNED per spot offered.
+  const [earned, setEarned] = useState(false);
+  const grid = earned ? d.utilization.earnedPerSpot : d.utilization.heatmap;
+  const maxEarned = Math.max(1, ...d.utilization.earnedPerSpot.rows.flatMap(r => r.cells.map(c => c ?? 0)));
+  const shade = (c: number) => earned ? (c / maxEarned) * 100 : c;
+  const u = d.utilization;
+  // W2-8 (5): the next two weeks against where the same days usually stand by now.
+  const pace = u.pace.filter(p => p.offered > 0);
+  const behind = pace.filter(p => p.usual != null && p.usual > 0 && p.booked < p.usual * 0.8);
   return (
     <div className="space-y-10">
+      <Section title="The next two weeks"
+        why={pace.length === 0 ? 'No tee times are out for the next two weeks yet.'
+          : behind.length === 0 ? 'Players booked so far for each coming day, against the same weekday the same number of days out over the last four weeks. Nothing is running well behind.'
+          : `Players booked so far for each coming day, against the same weekday the same number of days out over the last four weeks. ${behind.length === 1 ? `${fmtWeekday(behind[0].date)} is` : `${plural(behind.length, 'day')} are`} running behind — there’s still time to fill ${behind.length === 1 ? 'it' : 'them'}.`}>
+        <Table head={['Day', 'Booked so far', 'Usually by now', 'Spots offered']} empty="No tee times are out for the next two weeks yet."
+          rows={pace.map(p => [
+            <span key="d" className="inline-flex items-center gap-2">{fmtWeekday(p.date)}{behind.includes(p) && <StatusDot status="warn" label="behind" />}</span>,
+            p.booked, p.usual == null ? '—' : p.usual, p.offered,
+          ])} />
+      </Section>
+
       <Section title="When your tee sheet fills"
-        why="Each square is one hour on one day of the week, and the number is the share of spots booked. Darker means fuller — the light squares are where there’s room to sell."
-        action={<><Ask q="Looking at when my tee sheet fills, which hours should I focus on filling?" /><Download onClick={() => downloadCsv(`how-full-${d.range.from}-${d.range.to}`, ['Day', ...d.utilization.heatmap.hours.map(h => `${h}:00`)], d.utilization.heatmap.rows.map(r => [r.dow, ...r.cells]))} /></>}>
-        {d.utilization.heatmap.hours.length === 0 ? <p className="text-[13px] text-ink-soft">No tee times in these dates.</p> : (
+        why={earned
+          ? 'Each square is one hour on one day of the week, and the number is what it earned for every spot you offered — sold or not, tee times already played. A full hour of cheap rounds can earn less than a half-full hour at full price.'
+          : 'Each square is one hour on one day of the week, and the number is the share of spots booked. Darker means fuller — the light squares are where there’s room to sell.'}
+        action={<><Ask q="Looking at when my tee sheet fills, which hours should I focus on filling?" /><Download onClick={() => downloadCsv(`${earned ? 'earned-per-spot' : 'how-full'}-${d.range.from}-${d.range.to}`, ['Day', ...grid.hours.map(h => `${h}:00`)], grid.rows.map(r => [r.dow, ...r.cells.map(c => c == null ? null : earned ? c / 100 : c)]))} /></>}>
+        <div className="flex gap-1 mb-3 text-[12.5px]" role="group" aria-label="Show">
+          {([[false, 'How full'], [true, 'Earned per spot']] as [boolean, string][]).map(([v, l]) => (
+            <button key={l} type="button" aria-pressed={earned === v} onClick={() => setEarned(v)}
+              className={'px-2.5 py-1 rounded-md border ' + (earned === v ? 'bg-pine text-white border-pine' : 'bg-white text-ink-soft border-line hover:text-ink')}>{l}</button>
+          ))}
+        </div>
+        {grid.hours.length === 0 ? <p className="text-[13px] text-ink-soft">No tee times in these dates.</p> : (
           <div className="overflow-x-auto">
             <table className="text-[12px] tabular-nums">
-              <thead><tr><th />{d.utilization.heatmap.hours.map(h => <th key={h} className="px-0.5 pb-1 font-medium text-ink-muted">{fmtHour(h)}</th>)}</tr></thead>
-              <tbody>{d.utilization.heatmap.rows.map(r => (
+              <thead><tr><th />{grid.hours.map(h => <th key={h} className="px-0.5 pb-1 font-medium text-ink-muted">{fmtHour(h)}</th>)}</tr></thead>
+              <tbody>{grid.rows.map(r => (
                 <tr key={r.dow}><td className="pr-3 text-ink">{r.dow}</td>{r.cells.map((c, i) => (
-                  <td key={i} className="p-[1px]"><div title={c == null ? 'No tee times' : `${DAY_NAME[r.dow] ?? r.dow} ${fmtHour(d.utilization.heatmap.hours[i])}: ${Math.round(c)}% booked`}
-                    className={'w-12 h-8 rounded-[4px] flex items-center justify-center ' + (c == null ? 'bg-paper text-ink-faint' : c >= 60 ? 'text-white' : 'text-ink')}
-                    style={c == null ? undefined : { background: `color-mix(in srgb, var(--color-pine) ${Math.round(8 + c * 0.92)}%, white)` }}>{c == null ? '' : `${Math.round(c)}`}</div></td>
+                  <td key={i} className="p-[1px]"><div title={c == null ? (earned ? 'Nothing played yet' : 'No tee times') : `${DAY_NAME[r.dow] ?? r.dow} ${fmtHour(grid.hours[i])}: ${earned ? `${usd2(c)} per spot offered` : `${Math.round(c)}% booked`}`}
+                    className={'w-12 h-8 rounded-[4px] flex items-center justify-center ' + (c == null ? 'bg-paper text-ink-faint' : shade(c) >= 60 ? 'text-white' : 'text-ink')}
+                    style={c == null ? undefined : { background: `color-mix(in srgb, var(--color-pine) ${Math.round(8 + shade(c) * 0.92)}%, white)` }}>{c == null ? '' : earned ? `$${Math.round(c / 100)}` : `${Math.round(c)}`}</div></td>
                 ))}</tr>
               ))}</tbody>
             </table>
@@ -365,6 +413,14 @@ function BusyTab({ d }: { d: Data }) {
             : <div className="space-y-2">{d.utilization.byHour.map(r => <BarRow key={r.hour} label={fmtHour(r.hour)} labelW="w-14" value={r.fillPct ?? 0} max={100} right={pctS(r.fillPct)} hint={`${r.booked} of ${r.sale} spots`} />)}</div>}
         </Section>
       </div>
+
+      {/* W2-8 (6): where demand was more than the tee sheet offered. */}
+      <Section title="Golfers you turned away"
+        why={`${plural(u.soldOutTimes, 'tee time')} sold out. ${u.alerts.count === 0 ? 'Nobody asked to hear when a full time opened up.' : `${plural(u.alerts.count, 'golfer')} (${plural(u.alerts.players, 'player')}) asked to be told when a time opened; ${u.alerts.notified} ${u.alerts.notified === 1 ? 'was' : 'were'} told.`} Hours that keep selling out are where you could add times or hold your price.`}
+        action={u.alerts.count > 0 ? <Download onClick={() => downloadCsv(`waiting-for-a-time-${d.range.from}-${d.range.to}`, ['Date', 'Time', 'Players', 'Told'], u.alerts.rows.map(a => [a.date, a.time, a.players, a.notified ? 'yes' : 'no']))} /> : undefined}>
+        <Table head={['Day', 'Hour', 'Times sold out']} empty="Nothing sold out in these dates."
+          rows={u.soldOutByHour.map(r => [DAY_NAME[r.dow] ?? r.dow, fmtHour(r.hour), r.times])} />
+      </Section>
 
       <Section title="Tee times that went out with open spots"
         why={`${plural(d.unfilled.slots, 'tee time')} went out with room left — ${plural(d.unfilled.openSpots, 'spot')} nobody booked. The ones with the most open spots are first.`}
@@ -383,19 +439,33 @@ function MissesTab({ d }: { d: Data }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <Fig label="No-shows" value={String(d.noShows.count)} sub={`${pctS(d.noShows.ratePct)} of bookings whose tee time has passed`} />
         <Fig label="Worth" value={usd(d.noShows.impactCents)} sub="the no-show groups’ rounds" />
-        <Fig label="Cancellations" value={String(c.count)} sub={`${pctS(c.ratePct)} of bookings`} />
+        <Fig label="Cancellations" value={String(c.count)} sub={`${pctS(c.ratePct)} of bookings${c.calledOff.bookings ? ', not counting rounds you called off' : ''}`} />
         <Fig label="Booked again" value={pctS(c.rebookedPct)} sub="of cancelled times, by someone else" />
       </div>
       <div className="grid lg:grid-cols-2 gap-10">
         <Section title="No-shows"
-          why={`A group counts as a no-show when it hasn’t checked in ${d.graceMinutes} minutes after its tee time, whether or not your staff marked it.`}
+          why={`A group counts as a no-show when it hasn’t checked in ${d.graceMinutes} minutes after its tee time, whether or not your staff marked it.${d.noShows.shortShows.groups ? ` Another ${plural(d.noShows.shortShows.groups, 'group')} turned up short — ${plural(d.noShows.shortShows.missingPlayers, 'player')} fewer than booked.` : ''}`}
           action={<><Ask q="Who didn’t show up in these dates, and what can I do about repeat no-shows?" /><Download onClick={() => downloadCsv(`no-shows-${d.range.from}-${d.range.to}`, ['Date', 'Time', 'Golfer', 'Players', 'Worth', 'Marked by staff'], d.noShows.rows.map(r => [r.date, r.time, r.name, r.players, r.valueCents / 100, r.marked ? 'yes' : 'no']))} /></>}>
+          {/* W2-8 (7): the evidence a course needs before turning on a no-show fee. */}
+          {(d.noShows.byFeePolicy.withFee.bookings > 0 && d.noShows.byFeePolicy.withoutFee.bookings > 0) && (
+            <div className="divide-y divide-line-soft mb-5">
+              <Line label="With a card and a fee" value={`${pctS(d.noShows.byFeePolicy.withFee.noShowPct)} no-shows`} sub={`${pctS(d.noShows.byFeePolicy.withFee.didntPlayPct)} of booked players didn’t play · ${plural(d.noShows.byFeePolicy.withFee.bookings, 'booking')}`} />
+              <Line label="With no fee" value={`${pctS(d.noShows.byFeePolicy.withoutFee.noShowPct)} no-shows`} sub={`${pctS(d.noShows.byFeePolicy.withoutFee.didntPlayPct)} of booked players didn’t play · ${plural(d.noShows.byFeePolicy.withoutFee.bookings, 'booking')}`} />
+            </div>
+          )}
           <h4 className="text-[13px] font-semibold text-ink mb-1">Missed more than once</h4>
           <Table head={['Golfer', 'Times']} empty="Nobody missed more than once." rows={d.noShows.repeat.map(r => [r.name, r.count])} />
         </Section>
         <Section title="Cancellations"
           why={c.count === 0 ? 'No cancellations in these dates.' : `${plural(c.count, 'booking')} cancelled, worth ${usd(c.lostCents)} after the ${usd(c.lateFeesKeptCents)} in late fees you kept.`}
           action={<><Ask q="How far ahead do golfers cancel, and is my cancellation window right?" /><Download onClick={() => downloadCsv(`cancellations-${d.range.from}-${d.range.to}`, ['Date', 'Time', 'Golfer', 'Players', 'Worth', 'Cancelled at', 'Cancelled by'], c.rows.map(r => [r.date, r.time, r.name, r.players, r.valueCents / 100, r.cancelledAt, r.by ?? 'not tracked']))} /></>}>
+          {/* W2-8 (8): weather and closures are the course's call, not the golfer's. */}
+          {(c.calledOff.bookings > 0 || d.utilization.closedDays.length > 0) && (
+            <p className="text-[13px] text-ink-soft mb-4">
+              {c.calledOff.bookings > 0 ? `You called off ${plural(c.calledOff.bookings, 'booking')} (${plural(c.calledOff.players, 'player')})${c.calledOff.weather ? `, ${c.calledOff.weather} for weather` : ''}${c.calledOff.closure ? `, ${c.calledOff.closure} when the course closed` : ''} — not counted as cancellations. ` : ''}
+              {d.utilization.closedDays.length > 0 ? `Closed ${plural(d.utilization.closedDays.length, 'day')}: ${d.utilization.closedDays.map(x => `${fmtDay(x.date)}${x.reason ? ` (${x.reason})` : ''}`).join(', ')}.` : ''}
+            </p>
+          )}
           {c.count > 0 && (<>
             <h4 className="text-[13px] font-semibold text-ink mb-2">How long before the tee time</h4>
             <div className="space-y-2 mb-6">
@@ -437,6 +507,31 @@ function GolfersTab({ d }: { d: Data }) {
         <Table head={['Golfer', 'Bookings', 'Players', 'Spent']} empty="No golfers to show yet." rows={g.topByRounds.map(r => [r.name, r.rounds, r.players, usd(r.spendCents)])} />
         {g.unidentifiedBookings > 0 && <p className="text-[12.5px] text-ink-muted mt-2">{plural(g.unidentifiedBookings, 'walk-in')} had no email or phone, so they can’t be counted here. Take a phone number at the counter.</p>}
       </Section>
+
+      {/* W2-8 (9): the regulars to call — Cam 2026-10-22: name, email and phone shown. */}
+      <Section title="Regulars who’ve gone quiet"
+        why="Golfers with three or more rounds whose last round was more than twice their usual gap ago (and at least two weeks). A call or a note now is cheaper than finding a new golfer."
+        action={g.goneQuiet.length > 0 ? <Download onClick={() => downloadCsv(`gone-quiet-${d.range.to}`, ['Golfer', 'Email', 'Phone', 'Rounds', 'Last played', 'Usually every (days)', 'Days since'], g.goneQuiet.map(r => [r.name, r.email, r.phone, r.rounds, r.lastPlayed, r.usualGapDays, r.daysSince]))} /> : undefined}>
+        <Table head={['Golfer', 'Email', 'Phone', 'Rounds', 'Last played', 'Usually every']} empty="Nobody who played regularly has gone quiet."
+          rows={g.goneQuiet.slice(0, 15).map(r => [r.name, r.email ? <a href={`mailto:${r.email}`} className="text-pine hover:underline">{r.email}</a> : '—', r.phone ? <a href={`tel:${r.phone.replace(/[^\d+]/g, '')}`} className="text-pine hover:underline">{r.phone}</a> : '—', r.rounds, fmtDay(r.lastPlayed), `${r.usualGapDays} days`])} />
+      </Section>
+
+      {/* W2-8 (3): the table a city or county asks for, as a download. */}
+      {(() => {
+        const rows = g.residents.rows;
+        const t = rows.reduce((a, r) => ({ rp: a.rp + r.resPlayers, op: a.op + r.otherPlayers, rc: a.rc + r.resCents, oc: a.oc + r.otherCents }), { rp: 0, op: 0, rc: 0, oc: 0 });
+        if (t.rp === 0) return null;
+        return (
+          <Section title="Residents and everyone else"
+            why={`Rounds paid for in these dates, from ${fmtDay(g.residents.since)} on (when resident rates started being recorded): ${plural(t.rp, 'resident player')} paid ${usd(t.rc)} in green fees; ${plural(t.op, 'other player')} paid ${usd(t.oc)}. Download it for your city or county.`}
+            action={<Download onClick={() => downloadCsv(`residents-${d.range.from}-${d.range.to}`, ['Date', 'Resident players', 'Other players', 'Resident green fees', 'Other green fees'], rows.map(r => [r.date, r.resPlayers, r.otherPlayers, r.resCents / 100, r.otherCents / 100]))} />}>
+            <div className="divide-y divide-line-soft max-w-md">
+              <Line label="Resident players" value={t.rp.toLocaleString()} sub={usd(t.rc)} />
+              <Line label="Everyone else" value={t.op.toLocaleString()} sub={usd(t.oc)} />
+            </div>
+          </Section>
+        );
+      })()}
     </div>
   );
 }

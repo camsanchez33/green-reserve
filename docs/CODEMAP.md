@@ -262,7 +262,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 862 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1466 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
-| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 610 |
+| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 705 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 63 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 76 |
@@ -347,12 +347,12 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/booking-rules.ts` | 6 | 84 | W2-6 slice 3 (Cam 2026-10-20: | `groupSizeError`, `isWalkingPolicy`, `readRoundRules`, `RuleCourse`, `RuleRound`, `Rules`, `rulesFor`, `WALKING_POLICIES` +2 more |
 | `src/lib/calcom.ts` | 6 | 93 | CAL-1 — Cal.com as the call scheduler, in place of the Google Calendar grid. | `calcomBookingUrl`, `calcomCreatedBy`, `calcomEmbedUrl`, `calcomManageLinks`, `calcomStatus`, `calcomUidOf`, `verifyCalcomSignature` |
 | `src/lib/call-answers.ts` | 6 | 349 | INQUIRY_CALL_SPEC IC-5 — structured discovery-call answers. | `BOOKING_METHOD_OPTIONS`, `CALL_FIELDS`, `CallAnswers`, `callRecapLines`, `DAY_SHORT`, `emptyAnswers`, `FieldSpec`, `FieldType` +19 more |
-| `src/lib/cancel-booking.ts` | 6 | 273 |  | `CancellationOptions`, `performCancellation` |
+| `src/lib/cancel-booking.ts` | 6 | 276 |  | `CancellationOptions`, `performCancellation` |
 | `src/lib/manage-access.ts` | 6 | 17 | R-AUTH-003 / R-GOLF-003 (G13) — who may manage a booking from the golfer side. | `canManageBooking` |
 | `src/lib/password.ts` | 6 | 14 | Shared password strength rule — used on registration, reset, and in-dashboard change-password, both server-side (enforcement) and client-side (live hint). | `PASSWORD_REQUIREMENTS_HINT`, `validatePasswordStrength` |
 | `src/lib/round-shop-tax.ts` | 6 | 146 | W2-7 part B2 (Cam 2026-10-20: | `EnsureResult`, `ensureShopTax`, `recordPendingRoundShopTax`, `recordRoundShopTax`, `refreshOpenRoundShopTax`, `shopTaxKey`, `TAX_UNAVAILABLE` |
 | `src/lib/twilio.ts` | 6 | 45 |  | `sendSms`, `sendSmsOtp`, `smsConfigured` |
-| `src/lib/analytics.ts` | 5 | 335 | AN-1 (Cam 2026-10-01): | `Analytics`, `computeAnalytics`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `previousRange`, `Range` |
+| `src/lib/analytics.ts` | 5 | 535 | AN-1 (Cam 2026-10-01): | `Analytics`, `computeAnalytics`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `previousRange`, `Range`, `RES_START` |
 | `src/lib/approval-state.ts` | 5 | 41 |  | `ApprovalState`, `getApprovalState` |
 | `src/lib/course-plan.ts` | 5 | 279 | W2-6 Schedule simplification (Cam 2026-10-21: | `ALL_DAYS`, `autoName`, `blankPlan`, `checkPlan`, `checkRows`, `columnNames`, `CompiledRow`, `compilePlan` +11 more |
 | `src/lib/expenses.ts` | 5 | 77 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +3 more |
@@ -404,7 +404,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/birdie/guardrails.ts` | 2 | 74 | BIRDIE_AI_SPEC B1 — scope, caps and the kill switch. | `BIRDIE_MODEL`, `birdieEnabled`, `BirdieTurn`, `birdieUsageToday`, `checkCaps`, `logConversation`, `MAX_HISTORY_TURNS`, `MAX_REPLY_TOKENS` +4 more |
 | `src/lib/birdie/tools.ts` | 2 | 182 | BIRDIE_AI_SPEC B4a (Cam 2026-10-05) — live-data READ tools for the operator persona. | `READ_TOOLS`, `runReadTool`, `ToolContext`, `ToolOutcome` |
 | `src/lib/calcom-url.ts` | 2 | 21 | The prefilled Cal.com booking link — no server-only imports, so the /for-courses thanks page can build it in the browser (FB-1 review) as well as the server routes (via lib/calcom.ts). | `calcomEmbedUrl` |
-| `src/lib/course-closure.ts` | 2 | 128 | MP-5b. | `cancelFutureBookingsForClosure`, `closureImpact`, `ClosureImpact`, `ClosureResult`, `notifyOperatorOfClosure` |
+| `src/lib/course-closure.ts` | 2 | 129 | MP-5b. | `cancelFutureBookingsForClosure`, `closureImpact`, `ClosureImpact`, `ClosureResult`, `notifyOperatorOfClosure` |
 | `src/lib/course-group.ts` | 2 | 13 | GRP-1 (Cam 2026-10-19, after golfbergencounty.com): | `groupCourseIds` |
 | `src/lib/course-shape-setup.ts` | 2 | 179 | W2-6 (Cam 2026-10-20: | `applyCourseSetup`, `planCourseSetup`, `SetupInput`, `SetupPreview` |
 | `src/lib/course-shape.ts` | 2 | 116 | W2-6 (Cam 2026-10-20: | `guessShape`, `isStockLabel`, `PlanNine`, `PlanRound`, `shapeDef`, `ShapeDef`, `ShapeKey`, `shapeNines` +2 more |
@@ -604,11 +604,11 @@ without opening anything.
 
 ### Blackout
 
-5 fields · 3 writer(s) · 6 reader(s)
+5 fields · 3 writer(s) · 7 reader(s)
 
 - fields: `id`, `courseId`, `course`, `date`, `reason`
 - writers: `src/app/api/operator/blackouts/route.ts`, `src/lib/lifecycle.ts`, `src/lib/weather-cancel.ts`
-- readers: `src/app/api/operator/blackouts/route.ts`, `src/lib/birdie/proposals.ts`, `src/lib/birdie/tools.ts`, `src/lib/schedule-preview.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/weather-cancel.ts`
+- readers: `src/app/api/operator/blackouts/route.ts`, `src/lib/analytics.ts`, `src/lib/birdie/proposals.ts`, `src/lib/birdie/tools.ts`, `src/lib/schedule-preview.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/weather-cancel.ts`
 
 ### Booking
 
@@ -860,11 +860,11 @@ without opening anything.
 
 ### ShopSale
 
-19 fields · 2 writer(s) · 3 reader(s)
+19 fields · 2 writer(s) · 4 reader(s)
 
 - fields: `id`, `courseId`, `course`, `status`, `totalCents`, `taxCents`, `taxCalculationId`, `taxTransactionId`, `customerName`, `customerPhone`, `customerEmail`, `payToken`, `paymentIntentId`, `chargeStartedAt`, `paidAt`, `voidedAt`, `soldBy`, `createdAt`, `lines`
 - writers: `src/lib/sales-tax.ts`, `src/lib/shop-sales.ts`
-- readers: `src/app/api/operator/shop-sales/route.ts`, `src/lib/sales-tax.ts`, `src/lib/shop-sales.ts`
+- readers: `src/app/api/operator/shop-sales/route.ts`, `src/lib/analytics.ts`, `src/lib/sales-tax.ts`, `src/lib/shop-sales.ts`
 
 ### ShopSaleLine
 
@@ -908,11 +908,11 @@ without opening anything.
 
 ### TeeTimeAlert
 
-14 fields · 4 writer(s) · 3 reader(s)
+14 fields · 4 writer(s) · 4 reader(s)
 
 - fields: `id`, `courseId`, `course`, `email`, `name`, `date`, `windowStart`, `windowEnd`, `players`, `teeTimeId`, `teeTime`, `token`, `notifiedAt`, `createdAt`
 - writers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/cancel-booking.ts`, `src/lib/lifecycle.ts`
-- readers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/cancel-booking.ts`
+- readers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/analytics.ts`, `src/lib/cancel-booking.ts`
 
 ### TeeTimeSchedule
 

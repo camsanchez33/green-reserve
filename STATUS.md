@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 01:40 UTC · branch `pr-w26` · HEAD `679076b` · working tree **2 dirty file(s)**
+Generated 2026-10-22 01:44 UTC · branch `pr-w28` · HEAD `d7d45ed` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 105 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 106 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ce88bd1` | 2026-10-22 | Codemap and status board |
 | `164896a` | 2026-10-21 | BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175) |
 | `e8c4fe4` | 2026-10-22 | W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan |
 | `1d2a5db` | 2026-10-21 | BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174) |
@@ -120,13 +121,20 @@ Generated 2026-10-22 01:40 UTC · branch `pr-w26` · HEAD `679076b` · working t
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (9 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `M  OPERATOR_REWORK_SPEC.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  scripts/analytics-w28-db-test.ts`
+- `M  src/app/dashboard/analytics/page.tsx`
+- `M  src/lib/analytics.ts`
+- `M  src/lib/cancel-booking.ts`
+- `M  src/lib/course-closure.ts`
+- `M  src/lib/weather-cancel.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -248,6 +256,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `ce88bd1` 2026-10-22 — Codemap and status board
 - `164896a` 2026-10-21 — BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)
 - `e8c4fe4` 2026-10-22 — W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan
 - `1d2a5db` 2026-10-21 — BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)
@@ -259,7 +268,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `42adddb` 2026-10-21 — Codemap and status board
 - `6b0ebeb` 2026-10-21 — AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links
 - `821ddf9` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)
-- `4abfebb` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (#171)
 
 ---
 

@@ -1,18 +1,32 @@
 {
-  "generatedAt": "2026-10-22T01:40:21.591Z",
+  "generatedAt": "2026-10-22T01:44:09.221Z",
   "repo": {
-    "head": "679076b",
-    "branch": "pr-w26",
-    "dirtyCount": 2,
+    "head": "d7d45ed",
+    "branch": "pr-w28",
+    "dirtyCount": 9,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M  OPERATOR_REWORK_SPEC.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  scripts/analytics-w28-db-test.ts",
+      "M  src/app/dashboard/analytics/page.tsx",
+      "M  src/lib/analytics.ts",
+      "M  src/lib/cancel-booking.ts",
+      "M  src/lib/course-closure.ts",
+      "M  src/lib/weather-cancel.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "ce88bd1",
+        "date": "2026-10-22T01:40:22+00:00",
+        "subject": "Codemap and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "164896a",
         "date": "2026-10-21T21:10:24-04:00",
@@ -1139,6 +1153,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ce88bd1",
+      "date": "2026-10-22",
+      "subject": "Codemap and status board"
+    },
+    {
       "h": "164896a",
       "date": "2026-10-21",
       "subject": "BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)"
@@ -1192,11 +1211,6 @@
       "h": "821ddf9",
       "date": "2026-10-21",
       "subject": "AW-7: course page — Bookings, Money, Setup, Contact & notes (in review)"
-    },
-    {
-      "h": "4abfebb",
-      "date": "2026-10-21",
-      "subject": "AW-6c: Leads column, Add a lead, Move to Talking (#171)"
     }
   ]
 }
