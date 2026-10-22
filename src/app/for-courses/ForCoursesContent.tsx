@@ -4,6 +4,7 @@ import Link from 'next/link';
 import PlainHeader from '@/components/PlainHeader';
 import { ArrowLeft } from 'lucide-react';
 import { calcomEmbedUrl } from '@/lib/calcom-url';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 const STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -239,7 +240,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             </button>
             <p className="text-center text-xs text-ink-soft">
               No, something else?{' '}
-              <a href="mailto:thegreenreserve@outlook.com" className="text-ink-soft underline hover:text-ink">thegreenreserve@outlook.com</a>.
+              <a href={`mailto:${ADMIN_EMAIL}`} className="text-ink-soft underline hover:text-ink">{ADMIN_EMAIL}</a>.
             </p>
           </>
         )}
@@ -293,7 +294,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
             </button>
             <p className="text-center text-xs text-ink-soft">
               Didn&apos;t arrive? Check spam, or{' '}
-              <a href="mailto:thegreenreserve@outlook.com" className="text-ink-soft underline hover:text-ink">email us</a>.
+              <a href={`mailto:${ADMIN_EMAIL}`} className="text-ink-soft underline hover:text-ink">email us</a>.
             </p>
           </>
         )}
@@ -338,10 +339,10 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
                   GreenReserve email or use the address below.
                 </p>
                 <a
-                  href="mailto:thegreenreserve@outlook.com"
+                  href={`mailto:${ADMIN_EMAIL}`}
                   className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-sm transition-colors"
                 >
-                  Email thegreenreserve@outlook.com
+                  Email {ADMIN_EMAIL}
                 </a>
               </>
             )}

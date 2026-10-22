@@ -3,6 +3,7 @@ import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { gateSheetAccess } from '@/lib/sheet-token';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB — the client downscales large images before upload
 const ALLOWED_TYPES: Record<string, string> = {
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(
-      { error: 'Photo uploads are not available yet. Email thegreenreserve@outlook.com to send photos.' },
+      { error: `Photo uploads are not available yet. Email ${ADMIN_EMAIL} to send photos.` },
       { status: 503 },
     );
   }

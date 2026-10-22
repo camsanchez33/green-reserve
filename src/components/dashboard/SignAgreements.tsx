@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Loader2 } from 'lucide-react';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 type DocDto = {
   document: 'operator_agreement' | 'brand_license' | 'accuracy_attestation';
@@ -122,7 +123,7 @@ export default function SignAgreements({ onSigned, continueLabel = 'Sign and con
   }
   const toSign = data.documents.filter(d => !d.signed);
   if (data.documents.length === 0) {
-    return <p className="text-sm text-ink-soft">No agreements are ready to sign right now — contact thegreenreserve@outlook.com.</p>;
+    return <p className="text-sm text-ink-soft">No agreements are ready to sign right now — contact {ADMIN_EMAIL}.</p>;
   }
   if (toSign.length === 0) {
     return (

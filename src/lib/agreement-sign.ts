@@ -14,6 +14,7 @@ import { agreementStatus } from './agreement-gate';
 import { logAgreementAccepted } from './course-timeline';
 import { renderAgreementPdf } from './agreement-pdf';
 import { sendSignedAgreementsEmail } from './email';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 export type SignInput = {
   courseId: string;
@@ -53,7 +54,7 @@ export async function recordSigning(input: SignInput): Promise<SignResult> {
   if (signerTitle.length < 2) return { ok: false, status: 400, error: 'Enter your title.' };
 
   const docs = signableDocuments();
-  if (docs.length === 0) return { ok: false, status: 503, error: 'No agreements are ready to sign right now. Contact thegreenreserve@outlook.com.' };
+  if (docs.length === 0) return { ok: false, status: 503, error: `No agreements are ready to sign right now. Contact ${ADMIN_EMAIL}.` };
   const status = await agreementStatus(input.courseId);
   // A document is signed now when the course has no row for its current
   // version and needs one — including a re-acceptance bump, where an older row

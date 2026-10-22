@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { previewFor } from '@/lib/seo';
+import { SUPPORT_EMAIL } from '@/lib/contact';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -206,7 +207,7 @@ export default function TermsOfServicePage() {
                 <h2 className="font-semibold text-base text-ink mb-2">Contact</h2>
                 <p>
                   Questions about these terms? Reach us at{' '}
-                  <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>.
+                  <a href={`mailto:${SUPPORT_EMAIL}`} className="text-pine font-medium hover:underline">{SUPPORT_EMAIL}</a>.
                 </p>
               </section>
             </div>

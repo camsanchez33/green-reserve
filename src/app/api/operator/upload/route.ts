@@ -3,6 +3,7 @@ import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { put, del } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 // Course branding image upload (logo / hero photo) via Vercel Blob.
 // Requires BLOB_READ_WRITE_TOKEN in the environment (auto-set when a Blob
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return NextResponse.json({ error: 'Image storage is not configured yet. Contact thegreenreserve@outlook.com.' }, { status: 503 });
+    return NextResponse.json({ error: `Image storage is not configured yet. Contact ${ADMIN_EMAIL}.` }, { status: 503 });
   }
 
   const form = await req.formData();

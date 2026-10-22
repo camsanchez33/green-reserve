@@ -2,12 +2,12 @@ import { after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendMessageNotificationEmail } from '@/lib/email';
 import { CATEGORY_LABEL, CHANGE_CATEGORIES, encodeChangesRequested, type ChangeItem } from '@/lib/change-requests';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 const VALID_CATEGORIES = new Set<string>(CHANGE_CATEGORIES.map(c => c.key));
 const MAX_ITEMS = 6;
 const MAX_DETAIL = 2000;
 
-const ADMIN_EMAIL = 'thegreenreserve@outlook.com';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export function cleanChangeItems(items: unknown): ChangeItem[] {

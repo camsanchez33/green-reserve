@@ -4,6 +4,7 @@ import { sendInquiryNotification, sendInquiryConfirmation, sendInquiryAlreadyBui
 import { ALIVE_STATUSES, encodeResubmit } from '@/lib/inquiry-status';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 import { issueCallInvite, deliverCallInvite, inviteUrl } from '@/lib/call-invite';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
   // no limit at all. Five an hour per connection is generous for a human.
   // Keyed on the platform-set hop, not the client-writable leftmost x-forwarded-for.
   if (!(await rateLimit(`inquiry:${evidentiaryIp(req)}`, 5, 3600))) {
-    return NextResponse.json({ error: 'Too many submissions from this connection — try again in an hour, or email thegreenreserve@outlook.com.' }, { status: 429 });
+    return NextResponse.json({ error: `Too many submissions from this connection — try again in an hour, or email ${ADMIN_EMAIL}.` }, { status: 429 });
   }
 
   // CLUB-0 (Cam 2026-10-05: "just the short one and book a demo"): the form is
