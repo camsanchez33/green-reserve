@@ -60,6 +60,13 @@ function EventsInner() {
     if (!r.ok) { setLoadError(r.error); return; }
     setDetail(r.data);
   }, []);
+  // After a payment action: refresh in place (the event stays on screen).
+  const refreshDetail = useCallback(async () => {
+    if (!id) return;
+    const r = await dfetch<EventData>(`/api/operator/events/${id}`);
+    if (!r.ok) { setNote(`Saved, but the page couldn\u2019t refresh: ${r.error}`); return; }
+    setDetail(r.data); loadList();
+  }, [id, loadList]);
 
   useEffect(() => { loadList(); }, [loadList]);
   useEffect(() => { if (id) loadDetail(id); else setDetail(null); }, [id, loadDetail]);
@@ -120,7 +127,8 @@ function EventsInner() {
 
             {mode === 'view' && id && detail && (
               <EventDetail data={detail} onChange={d => { setDetail(d); loadList(); }} onEdit={() => { setNote(''); setMode('edit'); }}
-                onBack={() => { setNote(''); router.push('/dashboard/events'); }} />
+                onBack={() => { setNote(''); router.push('/dashboard/events'); }}
+                canRefund={!access.loaded || access.can('money.refund')} reload={refreshDetail} />
             )}
             {mode === 'view' && id && !detail && !loadError && <p className="text-sm text-ink-muted">Loading the event…</p>}
 

@@ -9,6 +9,7 @@ import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { KINDS } from './EventSetup';
+import EventMoney, { type EventPayment, type Money } from './EventMoney';
 
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
 export type EventPlayer = { id: string; name: string; email: string; phone: string; groupNo: number | null; startHole: number | null };
@@ -16,10 +17,10 @@ export type EventFull = {
   id: string; name: string; kind: string; date: string; format: string; startTime: string; holdFrom: string; holdTo: string; holdToCustom: boolean; shareCourse: boolean; holdNineIds: string[]; keepOpen: string[];
   productId: string | null; holes: number; groups: number; players: number;
   organizerName: string; organizerEmail: string; organizerPhone: string; pricePerPlayerCents: number; includes: string[];
-  terms: string; notes: string; status: string; tasks: EventTask[]; entrants: EventPlayer[];
+  terms: string; notes: string; status: string; tasks: EventTask[]; entrants: EventPlayer[]; payments: EventPayment[];
 };
 export type EventData = {
-  event: EventFull; today: string; courseHoles: number;
+  event: EventFull; today: string; courseHoles: number; money: Money; feeOn: boolean;
   held: { id: string; time: string; round: string | null }[];
   toMove: { time: string; golfers: string }[]; blockedOther: number; unheld: string[];
 };
@@ -28,8 +29,9 @@ const BTN = 'px-3 py-2 rounded-md text-[13px] font-medium transition-colors disa
 const PRIMARY = BTN + ' bg-pine hover:bg-pine-hover text-white';
 const SECONDARY = BTN + ' bg-white border border-line text-ink hover:bg-paper';
 
-export default function EventDetail({ data, onChange, onEdit, onBack }: {
+export default function EventDetail({ data, onChange, onEdit, onBack, canRefund, reload }: {
   data: EventData; onChange: (d: EventData) => void; onEdit: () => void; onBack: () => void;
+  canRefund: boolean; reload: () => Promise<void>;
 }) {
   const { event: e, today, held, toMove } = data;
   const [busy, setBusy] = useState('');
@@ -169,6 +171,11 @@ export default function EventDetail({ data, onChange, onEdit, onBack }: {
             </form>
           )}
         </Card>
+      </div>
+
+      <div className="print:hidden">
+        <EventMoney eventId={e.id} live={live} pricePerPlayerCents={e.pricePerPlayerCents} money={data.money} payments={e.payments} canRefund={canRefund} reload={reload}
+          organizer={{ name: e.organizerName, email: e.organizerEmail, phone: e.organizerPhone }} />
       </div>
 
       <Card className="p-5 print:shadow-none print:p-0">

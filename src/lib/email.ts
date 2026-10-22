@@ -2063,3 +2063,27 @@ export async function sendEventPairingsEmail(data: {
   `);
   await getResend().emails.send({ from: FROM, to: data.email, replyTo: data.replyTo, subject: `Your group for ${data.eventName}`, html });
 }
+
+/** W2-9b: a pay link for an event (deposit, balance or any payment the course asks for). Replies go to the staff who sent it. */
+export async function sendEventPayLinkEmail(data: {
+  email: string; name: string; courseName: string; replyTo: string;
+  eventName: string; dateLabel: string; label: string; amountCents: number; feeCents: number; payUrl: string; terms: string;
+}) {
+  const e = escapeHtml;
+  const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const row = (l: string, v: string, bold = false) => `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:${bold ? '#141814' : '#3F453E'};font-size:14px;${bold ? 'font-weight:700;' : ''}">${l}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;text-align:right;${bold ? 'font-weight:700;' : ''}">${v}</td></tr>`;
+  const total = data.amountCents + data.feeCents;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${e(data.label)} for ${e(data.eventName)}</h1>
+    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${e(firstName(data.name))}, ${e(data.courseName)} has sent you a payment for ${e(data.eventName)} on ${e(data.dateLabel)}.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+      ${row(e(data.label), money(data.amountCents))}
+      ${data.feeCents ? row('GreenReserve service fee', money(data.feeCents)) : ''}
+      ${row('Total', money(total), true)}
+    </table>
+    <a href="${data.payUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin:16px 0;">Pay ${money(total)}</a>
+    ${data.terms ? `<p style="margin:0 0 12px;color:#3F453E;font-size:13px;"><strong>${e(data.courseName)}&rsquo;s terms:</strong> ${e(data.terms)}</p>` : ''}
+    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Apple Pay, Google Pay or card. The charge comes from ${e(data.courseName)}. Questions? Reply to this email.</p>
+  `);
+  await getResend().emails.send({ from: FROM, to: data.email, replyTo: data.replyTo, subject: `${data.label} for ${data.eventName} — ${data.courseName}`, html });
+}

@@ -14,6 +14,8 @@ import { sendEventPairingsEmail, isPlaceholderEmail } from '@/lib/email';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { todayIn } from '@/lib/course-time';
 import { heldBy, ninesByProduct } from '@/lib/event-hold';
+import { eventMoney, reconcileStuckPayments, voidOpenLinks, METHOD_LABEL } from '@/lib/event-payments';
+import { EVENT_FEE_ON } from '@/lib/booking-fees';
 
 // W2-9 Events: one event — its details, the tee times it holds, its checklist
 // and its players. Needs "Run events"; every write also needs the current
@@ -37,11 +39,20 @@ async function heldTimes(eventId: string) {
 }
 
 async function load(courseId: string, id: string) {
+  // W2-9b: a card payment left half-done by a request that never finished is settled from Stripe first.
+  await reconcileStuckPayments(courseId, id).catch(() => {});
   const event = await prisma.courseEvent.findFirst({
     where: { id, courseId },
     include: {
       tasks: { orderBy: [{ sortOrder: 'asc' }, { dueDate: 'asc' }] },
       entrants: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] },
+      payments: {
+        orderBy: { createdAt: 'asc' },
+        // The pay token stays on the server; staff get the link only when they ask for it.
+        select: { id: true, kind: true, label: true, amountCents: true, feeCents: true, method: true, status: true, paidAt: true, voidedAt: true, createdAt: true,
+          payerName: true, payerEmail: true, payerPhone: true, headcount: true, note: true, refundedCents: true, createdBy: true, payToken: true,
+          refunds: { orderBy: { createdAt: 'asc' }, select: { id: true, amountCents: true, status: true, reason: true, error: true, createdBy: true, createdAt: true } } },
+      },
     },
   });
   if (!event) return null;
@@ -60,7 +71,10 @@ async function load(courseId: string, id: string) {
   const asPlanned = { ...event, status: 'planned' };
   const inScope = inWindow.filter(s => heldBy([asPlanned], s.productId ?? null, s.time, ninesOf(s.productId ?? null)));
   return {
-    event,
+    event: { ...event, payments: event.payments.map(({ payToken, ...p }) => ({ ...p, methodLabel: METHOD_LABEL[p.method] ?? p.method,
+      payUrl: p.status === 'open' && payToken ? `${process.env.NEXT_PUBLIC_URL}/pay/event/${p.id}?token=${payToken}` : null })) },
+    money: eventMoney({ ...event, entrants: event.entrants.length }, event.payments),
+    feeOn: EVENT_FEE_ON,
     today: todayIn(course?.timezone),
     courseHoles: course?.holes ?? 18,
     held: held.map(h => ({ id: h.id, time: h.time, round: h.product?.label ?? null })),
@@ -113,7 +127,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
       case 'cancel': {
         const r = await cancelEvent(courseId, id);
-        return NextResponse.json({ ...(await load(courseId, id)), released: r?.released ?? 0 });
+        // Open pay links stop working with the event; money already paid stays (refund it on the event if the course decides to).
+        const links = await voidOpenLinks(courseId, id);
+        return NextResponse.json({ ...(await load(courseId, id)), released: r?.released ?? 0, linksVoided: links.voided, linkErrors: links.failed });
       }
       case 'rehold': {
         // After the course moves a group out, hold the times that are now free.
