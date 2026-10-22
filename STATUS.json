@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-10-22T22:22:52.394Z",
+  "generatedAt": "2026-10-22T22:25:18.707Z",
   "repo": {
-    "head": "67e5ac4",
+    "head": "187022a",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 20,
+    "dirtyCount": 31,
     "dirty": [
-      "M  CLAUDE.md",
+      "M  .github/workflows/schema-check.yml",
+      " M CLAUDE.md",
+      "M  OPERATOR_REWORK_SPEC.md",
+      "M  PASSWORD_CHECKLIST.md",
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
-      "M  docs/CODEMAP.md",
-      "M  docs/codemap.json",
-      "M  scripts/operator-nav-test.ts",
-      "M  scripts/tt-card-test.ts",
-      "M  src/app/dashboard/analytics/page.tsx",
-      "M  src/app/dashboard/events/page.tsx",
-      "M  src/app/dashboard/layout.tsx",
-      "M  src/app/dashboard/members/page.tsx",
-      "M  src/app/dashboard/messages/page.tsx",
-      "M  src/app/dashboard/money/page.tsx",
-      "M  src/app/dashboard/page.tsx",
-      "M  src/app/dashboard/schedules/page.tsx",
-      "M  src/app/dashboard/settings/page.tsx",
-      "M  src/app/dashboard/shop/page.tsx",
-      "M  src/app/globals.css",
-      "M  src/components/OperatorSidebar.tsx"
+      "UU docs/CODEMAP.md",
+      "M  docs/RUNBOOK.md",
+      "M  docs/SHIPPING.md",
+      "UU docs/codemap.json",
+      "A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql",
+      "M  prisma/schema.prisma",
+      " M scripts/contact-email-test.ts",
+      "M  scripts/design-guard.baseline.json",
+      "A  scripts/event-signup-db-test.ts",
+      "M  src/app/api/event-payment/[id]/route.ts",
+      "A  src/app/api/event-signup/[id]/route.ts",
+      "M  src/app/api/operator/events/[id]/payments/route.ts",
+      "M  src/app/api/operator/events/[id]/route.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -418,6 +418,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "6f40852",
+      "date": "2026-10-22",
+      "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)"
+    },
+    {
       "h": "67e5ac4",
       "date": "2026-10-22",
       "subject": "queue/spec update: old addresses replaced in specs, legal queue and design prototypes"
@@ -471,11 +476,6 @@
       "h": "a5c912b",
       "date": "2026-10-22",
       "subject": "Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)"
-    },
-    {
-      "h": "5e73b48",
-      "date": "2026-10-22",
-      "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)"
     }
   ]
 }

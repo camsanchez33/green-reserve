@@ -71,7 +71,7 @@ Just put your existing passwords into KeePassXC so they exist somewhere safe.
       vercel env rm SHADOW_DATABASE_URL development
       vercel env add SHADOW_DATABASE_URL development
       ```
-- [ ] 3.5 GitHub → Settings → Secrets → Actions → `SHADOW_DATABASE_URL` → Update → paste same URL
+- [ ] 3.5 (No longer needed: CI's schema check uses its own Postgres since 2026-10-22. Delete the GitHub Actions secret `SHADOW_DATABASE_URL` if it is still there.)
 
 ## PHASE 4 — ADMIN_TOKEN
 

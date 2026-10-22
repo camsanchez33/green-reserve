@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 524,
-    "routes": 253,
-    "libs": 172,
+    "files": 529,
+    "routes": 255,
+    "libs": 173,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4097,7 +4097,7 @@
     },
     {
       "path": "src/app/api/event-payment/[id]/route.ts",
-      "lines": 33,
+      "lines": 45,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4120,7 +4120,34 @@
       "guard": "token",
       "imports": [
         "@/lib/event-payments",
+        "@/lib/event-signup",
         "@/lib/format",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/event-signup/[id]/route.ts",
+      "lines": 19,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/event-signup/[id]",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/event-signup",
         "@/lib/rate-limit",
         "next/server"
       ],
@@ -5277,7 +5304,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/payments/route.ts",
-      "lines": 151,
+      "lines": 155,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5313,7 +5340,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 246,
+      "lines": 288,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5346,6 +5373,7 @@
         "@/lib/email",
         "@/lib/event-hold",
         "@/lib/event-payments",
+        "@/lib/event-signup",
         "@/lib/format",
         "@/lib/prisma",
         "@/lib/session",
@@ -7968,6 +7996,66 @@
       "usedBy": []
     },
     {
+      "path": "src/app/events/[id]/SignupForm.tsx",
+      "lines": 88,
+      "purpose": "W2-9d:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (SignupForm)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/field",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/events/[id]/page.tsx"
+      ]
+    },
+    {
+      "path": "src/app/events/[id]/page.tsx",
+      "lines": 56,
+      "purpose": "W2-9d (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (EventSignupPage)",
+          "kind": "component"
+        },
+        {
+          "name": "dynamic",
+          "kind": "const"
+        },
+        {
+          "name": "metadata",
+          "kind": "const"
+        }
+      ],
+      "route": "/events/[id]",
+      "kind": "page",
+      "methods": [],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "./SignupForm",
+        "@/components/CourseHeaderBar",
+        "@/components/ui/Card",
+        "@/lib/event-signup",
+        "@/lib/format",
+        "next"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
       "lines": 595,
       "purpose": "",
@@ -8303,7 +8391,7 @@
     },
     {
       "path": "src/app/pay/event/[id]/page.tsx",
-      "lines": 144,
+      "lines": 147,
       "purpose": "W2-9b:",
       "brain": [],
       "exports": [
@@ -8647,6 +8735,7 @@
         "src/app/book/BookClient.tsx",
         "src/app/checkin/[bookingId]/page.tsx",
         "src/app/courses/[slug]/account/accept-invite/page.tsx",
+        "src/app/events/[id]/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
@@ -9893,7 +9982,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 355,
+      "lines": 374,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -9926,6 +10015,7 @@
       "imports": [
         "./EventMoney",
         "./EventSetup",
+        "./EventSignup",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
@@ -9934,12 +10024,13 @@
         "react"
       ],
       "usedBy": [
-        "src/app/dashboard/events/page.tsx"
+        "src/app/dashboard/events/page.tsx",
+        "src/components/dashboard/events/EventSignup.tsx"
       ]
     },
     {
       "path": "src/components/dashboard/events/EventMoney.tsx",
-      "lines": 266,
+      "lines": 268,
       "purpose": "W2-9b:",
       "brain": [],
       "exports": [
@@ -10021,6 +10112,37 @@
       ],
       "usedBy": [
         "src/app/dashboard/events/page.tsx",
+        "src/components/dashboard/events/EventDetail.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/events/EventSignup.tsx",
+      "lines": 143,
+      "purpose": "W2-9d (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (EventSignup)",
+          "kind": "component"
+        },
+        {
+          "name": "SignupQuestion",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./EventDetail",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "react"
+      ],
+      "usedBy": [
         "src/components/dashboard/events/EventDetail.tsx"
       ]
     },
@@ -10406,6 +10528,8 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/app/events/[id]/SignupForm.tsx",
+        "src/app/events/[id]/page.tsx",
         "src/app/g/[slug]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
@@ -10423,6 +10547,7 @@
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
+        "src/components/dashboard/events/EventSignup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -10704,6 +10829,7 @@
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
+        "src/components/dashboard/events/EventSignup.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -10756,6 +10882,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
+        "src/app/events/[id]/SignupForm.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryCallCards.tsx",
         "src/components/admin/LeadDialogs.tsx",
@@ -10772,6 +10899,7 @@
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
+        "src/components/dashboard/events/EventSignup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
       ]
@@ -13978,7 +14106,7 @@
     },
     {
       "path": "src/lib/course-events.ts",
-      "lines": 312,
+      "lines": 326,
       "purpose": "W2-9 Events (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -14577,6 +14705,7 @@
         "src/lib/booking-events.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/event-signup.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
@@ -15150,7 +15279,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2111,
+      "lines": 2149,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15299,6 +15428,10 @@
           "kind": "fn"
         },
         {
+          "name": "sendEventSignupEmail",
+          "kind": "fn"
+        },
+        {
           "name": "sendFrostDelayEmail",
           "kind": "fn"
         },
@@ -15433,6 +15566,10 @@
         {
           "name": "sendTwoFactorCodeEmail",
           "kind": "fn"
+        },
+        {
+          "name": "SignupEmailVariant",
+          "kind": "type"
         }
       ],
       "route": null,
@@ -15496,6 +15633,7 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
+        "src/lib/event-signup.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/monthly-review.ts",
@@ -15538,7 +15676,7 @@
     },
     {
       "path": "src/lib/event-payments.ts",
-      "lines": 409,
+      "lines": 451,
       "purpose": "W2-9b (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -15563,6 +15701,14 @@
           "kind": "fn"
         },
         {
+          "name": "HOLD_MINUTES",
+          "kind": "const"
+        },
+        {
+          "name": "holdProblem",
+          "kind": "fn"
+        },
+        {
           "name": "MAX_EVENT_PAYMENT_CENTS",
           "kind": "const"
         },
@@ -15576,6 +15722,10 @@
         },
         {
           "name": "paymentForPayPage",
+          "kind": "fn"
+        },
+        {
+          "name": "playerPaymentsWhere",
           "kind": "fn"
         },
         {
@@ -15634,7 +15784,95 @@
       "usedBy": [
         "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
-        "src/app/api/operator/events/[id]/route.ts"
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/lib/event-signup.ts"
+      ]
+    },
+    {
+      "path": "src/lib/event-signup.ts",
+      "lines": 229,
+      "purpose": "W2-9d (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cleanQuestions",
+          "kind": "fn"
+        },
+        {
+          "name": "HOLD_MINUTES",
+          "kind": "reexport"
+        },
+        {
+          "name": "lapseHolds",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_GROUP",
+          "kind": "const"
+        },
+        {
+          "name": "MAX_QUESTIONS",
+          "kind": "const"
+        },
+        {
+          "name": "moveOntoList",
+          "kind": "fn"
+        },
+        {
+          "name": "questionsOf",
+          "kind": "fn"
+        },
+        {
+          "name": "sendSignupConfirmation",
+          "kind": "fn"
+        },
+        {
+          "name": "SignupInput",
+          "kind": "type"
+        },
+        {
+          "name": "signupPage",
+          "kind": "fn"
+        },
+        {
+          "name": "SignupQuestion",
+          "kind": "type"
+        },
+        {
+          "name": "SignupResult",
+          "kind": "type"
+        },
+        {
+          "name": "signupSettings",
+          "kind": "fn"
+        },
+        {
+          "name": "spotsTaken",
+          "kind": "fn"
+        },
+        {
+          "name": "submitSignup",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./email",
+        "./event-payments",
+        "./format",
+        "./prisma",
+        "crypto"
+      ],
+      "usedBy": [
+        "src/app/api/event-payment/[id]/route.ts",
+        "src/app/api/event-signup/[id]/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/events/[id]/page.tsx"
       ]
     },
     {
@@ -15884,6 +16122,7 @@
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/app/events/[id]/page.tsx",
         "src/app/g/[slug]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
@@ -15895,6 +16134,7 @@
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
+        "src/lib/event-signup.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts"
       ]
@@ -17641,6 +17881,7 @@
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
+        "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/auth/me/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
@@ -17754,6 +17995,7 @@
         "src/lib/cron-log.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/event-payments.ts",
+        "src/lib/event-signup.ts",
         "src/lib/frost-delay.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
@@ -17980,6 +18222,7 @@
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/event-payment/[id]/route.ts",
+        "src/app/api/event-signup/[id]/route.ts",
         "src/app/api/golfer/auth/otp/request/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/inquiries/route.ts",
@@ -22009,9 +22252,26 @@
         {
           "name": "finalHeadcount",
           "type": "Int?"
+        },
+        {
+          "name": "signupOpen",
+          "type": "Boolean"
+        },
+        {
+          "name": "signupPay",
+          "type": "String"
+        },
+        {
+          "name": "signupMaxGroup",
+          "type": "Int"
+        },
+        {
+          "name": "signupQuestions",
+          "type": "Json"
         }
       ],
       "writers": [
+        "src/app/api/operator/events/[id]/route.ts",
         "src/lib/course-events.ts"
       ],
       "readers": [
@@ -22020,6 +22280,7 @@
         "src/app/api/operator/events/route.ts",
         "src/lib/course-events.ts",
         "src/lib/event-payments.ts",
+        "src/lib/event-signup.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
     },
@@ -22107,6 +22368,10 @@
           "type": "String?"
         },
         {
+          "name": "groupKey",
+          "type": "String"
+        },
+        {
           "name": "player",
           "type": "CourseEventPlayer?"
         },
@@ -22137,7 +22402,8 @@
       "readers": [
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
-        "src/lib/event-payments.ts"
+        "src/lib/event-payments.ts",
+        "src/lib/event-signup.ts"
       ]
     },
     {
@@ -22180,6 +22446,26 @@
           "type": "CourseEventPayment[]"
         },
         {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "holdUntil",
+          "type": "DateTime?"
+        },
+        {
+          "name": "source",
+          "type": "String"
+        },
+        {
+          "name": "groupKey",
+          "type": "String"
+        },
+        {
+          "name": "answers",
+          "type": "Json"
+        },
+        {
           "name": "sortOrder",
           "type": "Int"
         },
@@ -22189,12 +22475,16 @@
         }
       ],
       "writers": [
-        "src/app/api/operator/events/[id]/route.ts"
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/lib/event-payments.ts",
+        "src/lib/event-signup.ts"
       ],
       "readers": [
+        "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
-        "src/lib/event-payments.ts"
+        "src/lib/event-payments.ts",
+        "src/lib/event-signup.ts"
       ]
     },
     {

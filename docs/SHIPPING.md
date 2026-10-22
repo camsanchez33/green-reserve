@@ -75,7 +75,7 @@ Every schema change must pass ALL of these before merging to main:
 3. `/api/health` returns `{"ok":true,"db":"up"}` after deploy
 4. `.github/workflows/schema-check.yml` is green on the PR
 
-GitHub secret `SHADOW_DATABASE_URL` must be set in the repo for the CI check to work.
+The CI check replays the migrations on its own throwaway Postgres (a service container in `schema-check.yml`, since 2026-10-22); it needs no secret. The old GitHub secret `SHADOW_DATABASE_URL` is unused and can be deleted.
 
 ---
 

@@ -2108,3 +2108,41 @@ export async function sendEventPayLinkEmail(data: {
   `, BILLING_EMAIL);
   await getResend().emails.send({ meta: { kind: 'event_pay_link_email', courseId: data.courseId }, from: FROM_BILLING, to: data.email, replyTo: data.replyTo, subject: `${data.label} for ${data.eventName} — ${data.courseName}`, html });
 }
+
+/** W2-9d: an event sign-up, emailed to whoever signed the group up. */
+export type SignupEmailVariant = 'in' | 'paid' | 'waitlist' | 'moved_in';
+export async function sendEventSignupEmail(data: {
+  variant: SignupEmailVariant; email: string; name: string; players: string[];
+  courseName: string; coursePhone: string; replyTo: string | null;
+  eventName: string; dateLabel: string; startLabel: string; paidCents: number; terms: string; courseId?: string;
+}) {
+  const e = escapeHtml;
+  const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const row = (l: string, v: string) => `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">${l}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;text-align:right;">${v}</td></tr>`;
+  const wait = data.variant === 'waitlist';
+  // MAIL-1 (Cam 2026-10-22): money moved → billing@; only about the round → support@.
+  const paid = data.variant === 'paid' && data.paidCents > 0;
+  const heading = wait ? `You’re on the waiting list` : data.variant === 'moved_in' ? `A spot opened — you’re in` : `You’re signed up`;
+  const lead = wait
+    ? `${e(data.eventName)} is full right now, so ${e(data.courseName)} has put you on the waiting list. They’ll email you if a spot opens. Nothing has been charged.`
+    : data.variant === 'moved_in'
+      ? `${e(data.courseName)} has moved you off the waiting list — you’re playing in ${e(data.eventName)}.`
+      : `You’re on the list for ${e(data.eventName)} at ${e(data.courseName)}.`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${heading}</h1>
+    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${e(firstName(data.name))}, ${lead}</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      ${row('Event', e(data.eventName))}
+      ${row('Date', e(data.dateLabel))}
+      ${row('Start', e(data.startLabel))}
+      ${row(data.players.length === 1 ? 'Player' : 'Players', data.players.map(e).join('<br>'))}
+      ${data.variant === 'paid' && data.paidCents ? row('Paid', money(data.paidCents)) : ''}
+    </table>
+    ${data.terms && !wait ? `<p style="margin:0 0 12px;color:#3F453E;font-size:13px;"><strong>${e(data.courseName)}&rsquo;s terms:</strong> ${e(data.terms)}</p>` : ''}
+    <p style="margin:0;color:#6B706A;font-size:13px;">Questions or need to drop out? Reply to this email${data.coursePhone ? ` or call ${e(data.courseName)} at ${e(data.coursePhone)}` : ''}.</p>
+  `, paid ? BILLING_EMAIL : SUPPORT_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'event_signup_email', courseId: data.courseId },
+    from: paid ? FROM_BILLING : FROM_SUPPORT, to: data.email, subject: subj(`${heading}: ${data.eventName}`), html,
+    ...(data.replyTo ? { replyTo: data.replyTo } : {}),
+  });
+}

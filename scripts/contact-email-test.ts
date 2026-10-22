@@ -23,6 +23,7 @@ for (const n of ['sendInquiryConfirmation', 'sendSignedAgreementsEmail', 'sendCo
   check(`${n} is sent from admin@`, fn(n).includes('from: FROM_ADMIN') && fn(n).includes(', ADMIN_EMAIL);'));
 // The build ignores type errors, so an email still on the old FROM would ship and throw when sent.
 check('every email names one of the four senders', !/from: FROM\b(?!_)/.test(e));
+check('an event sign-up that took payment comes from billing@, otherwise support@', fn('sendEventSignupEmail').includes('from: paid ? FROM_BILLING : FROM_SUPPORT') && fn('sendEventSignupEmail').includes(', paid ? BILLING_EMAIL : SUPPORT_EMAIL);'));
 check('no replyTo override sends replies to a dead inbox', !e.includes('REPLY_TO'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 if (failed) process.exit(1);
