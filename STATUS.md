@@ -4,15 +4,22 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 21:25 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `da32563` · working tree clean
+Generated 2026-10-22 21:29 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `4f553f1` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-19**. 116 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-19**. 123 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ad8c721` | 2026-10-22 | Regenerate status board |
 | `da32563` | 2026-10-22 | Event pay-link email: say a reply reaches the course |
+| `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
+| `3c63c5d` | 2026-10-22 | AW-11 Team: per-person access — each employee's role and areas (#186) |
+| `75ac7d5` | 2026-10-22 | AW-10 Golfers: lookup only, in the new admin look (#185) |
+| `95e1b37` | 2026-10-22 | Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184) |
+| `a5c912b` | 2026-10-22 | Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183) |
+| `5e73b48` | 2026-10-22 | ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182) |
 | `b9fe29f` | 2026-10-22 | W2-9b: event pay-link email and text say what they are (BRAIN-1b message log) |
 | `40be0a7` | 2026-10-22 | Status board |
 | `e449074` | 2026-10-22 | W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close |
@@ -212,7 +219,7 @@ Nothing awaiting review.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-22 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 3d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 3d |
@@ -250,18 +257,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `ad8c721` 2026-10-22 — Regenerate status board
 - `da32563` 2026-10-22 — Event pay-link email: say a reply reaches the course
+- `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
+- `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
+- `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
+- `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
+- `a5c912b` 2026-10-22 — Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)
+- `5e73b48` 2026-10-22 — ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)
 - `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
 - `40be0a7` 2026-10-22 — Status board
 - `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
 - `4438d60` 2026-10-22 — Status board
-- `b001c14` 2026-10-22 — W2-9b: narrow the recorded payment in the test (typecheck)
-- `4086e37` 2026-10-22 — W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds
-- `f4bc1a4` 2026-10-22 — Regenerate status board
-- `58642d3` 2026-10-22 — Regenerate status board and code map
-- `d8306c5` 2026-10-22 — MAIL-1: a cancellation that refunded money also comes from billing@
-- `c39a10c` 2026-10-22 — MAIL-1: a cancellation that kept a fee comes from billing@
-- `7feae5c` 2026-10-22 — W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup
 
 ---
 
