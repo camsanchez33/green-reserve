@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { resolveAdminSession, requireRole, OWNER_ONLY, ownerGateError } from '@/lib/admin-session';
 import { reconcileLifecyclePairs } from '@/lib/lifecycle';
+import { withAudit } from '@/lib/admin-audit';
 
 // One-time backfill (RUN_QUEUE "LIFECYCLE PARITY LAW" item 6) — existing
 // course/inquiry pairs that drifted out of parity before archivePair/
 // restorePair existed (e.g. archived course + still-active inquiry) get
 // reconciled here, with the full list of what changed returned so this
 // never silently rewrites history.
-export async function POST() {
+async function reconcile() {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // MP-2c: writes status changes across every course/inquiry pair, attributed to the caller.
@@ -16,3 +17,6 @@ export async function POST() {
   const report = await reconcileLifecyclePairs(session.name);
   return NextResponse.json({ fixed: report.length, changes: report });
 }
+
+// BRAIN-1a: recorded.
+export const POST = withAudit(reconcile, () => ({ action: 'reconcile_lifecycle_pairs', targetType: 'system', targetId: '' }));

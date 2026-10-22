@@ -7,6 +7,7 @@ import { getCourseTimeline, latestAgreementAcceptance, logNoteAdded, CURRENT_AGR
 import { CURRENT_TERMS_VERSION } from '@/lib/terms';
 import { agreementStatus } from '@/lib/agreement-gate';
 import { listVersions, loadDocument, type AgreementDocument } from '@/lib/agreements';
+import { auditAdmin } from '@/lib/admin-audit';
 
 // A-05 item 5 — Documents tab: auto records (operator agreement acceptance,
 // Stripe connected-account agreement date fetched live from Stripe — no
@@ -78,5 +79,6 @@ export async function POST(req: NextRequest) {
   if (!courseId || kind !== 'note' || !text?.trim()) return NextResponse.json({ error: 'Missing courseId or text' }, { status: 400 });
   const ok = await logNoteAdded(courseId, text.trim(), session.name);
   if (!ok) return NextResponse.json({ error: 'No linked inquiry to log against for this course' }, { status: 400 });
+  await auditAdmin(session, { action: 'note_add', targetType: 'course', targetId: courseId, courseId, after: { text: text.trim() } });
   return NextResponse.json({ success: true });
 }

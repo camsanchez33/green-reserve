@@ -5,6 +5,7 @@ import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { performCancellation } from '@/lib/cancel-booking';
 import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
+import { needReason, reasonOf, auditAdmin, courseOfBooking } from '@/lib/admin-audit';
 
 // GET /api/admin/tee-sheet?courseId=X&date=Y
 export async function GET(req: NextRequest) {
@@ -44,6 +45,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
 
   if (body.action === 'cancel_booking') {
+    const nr = needReason('cancel_booking', body); if (nr) return nr;
     // MP-1 fix-now #4: this used to flip status and adjust the slot counts
     // inline — a second cancellation implementation that sent no golfer email,
     // fired no tee-time alerts, and had no already-cancelled guard, so two
@@ -53,6 +55,7 @@ export async function PATCH(req: NextRequest) {
     if ('error' in result) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
+    await auditAdmin(session, { action: 'cancel_booking', targetType: 'booking', targetId: String(body.bookingId), courseId: await courseOfBooking(String(body.bookingId)), after: { status: 'cancelled', feeCharged: result.feeCharged }, reason: reasonOf(body) });
     return NextResponse.json({ success: true, feeCharged: result.feeCharged });
   }
 
@@ -61,6 +64,7 @@ export async function PATCH(req: NextRequest) {
     if (!body.teeTimeId) return NextResponse.json({ error: 'Missing teeTimeId' }, { status: 400 });
     const row = await setTeeTimeBlocked(body.teeTimeId, body.action === 'block');
     if (!row) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
+    await auditAdmin(session, { action: body.action === 'block' ? 'tee_time_block' : 'tee_time_unblock', targetType: 'tee_time', targetId: String(body.teeTimeId), courseId: (await prisma.teeTime.findUnique({ where: { id: String(body.teeTimeId) }, select: { courseId: true } }))?.courseId ?? null });
     return NextResponse.json({ success: true });
   }
 
@@ -102,6 +106,7 @@ export async function POST(req: NextRequest) {
       paymentStatus: 'manual',
       status: 'confirmed',
     }, { type: 'admin', id: session.adminId });
+    await auditAdmin(session, { action: 'booking_add', targetType: 'booking', targetId: claimed.id, courseId: teeTime.courseId, after: { teeTimeId, golferName, players } });
     return NextResponse.json({ success: true, bookingId: claimed.id });
   } catch (err) {
     if (err instanceof TeeTimeClaimError) {

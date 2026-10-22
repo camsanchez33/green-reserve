@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, stepUpRequired } from '@/lib/admin-session';
 import { performCheckIn, collectPayment } from '@/lib/checkin-booking';
 import { friendlyStripeError } from '@/lib/stripe-errors';
+import { needReason, reasonOf, auditAdmin, courseOfBooking } from '@/lib/admin-audit';
 
 // REVISE_QUEUE A-06 item 4 — retry a failed check-in charge from the revenue
 // page. Reuses the SAME vetted charge path staff use (no parallel money
@@ -24,15 +25,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   // Body is optional — a bare POST is charge-only, which is what the button
   // has always claimed to do.
   let checkIn = false;
+  let body: unknown = null;
   try {
-    const body = await req.json();
-    checkIn = body?.checkIn === true;
+    body = await req.json();
+    checkIn = (body as { checkIn?: unknown })?.checkIn === true;
   } catch { /* no body — charge only */ }
+  // BRAIN-1a: retrying a charge moves money — the admin says why.
+  const nr = needReason('retry_charge', body); if (nr) return nr;
 
   const result = checkIn ? await performCheckIn(bookingId, { type: 'admin', id: session.adminId }) : await collectPayment(bookingId, { type: 'admin', id: session.adminId });
   if ('error' in result) {
     // Surface a plain-English version, never raw Stripe prose.
     return NextResponse.json({ error: friendlyStripeError(result.error), raw: result.error }, { status: result.status });
   }
+  await auditAdmin(session, { action: 'retry_charge', targetType: 'booking', targetId: bookingId, courseId: await courseOfBooking(bookingId), after: { totalCharged: result.totalCharged, checkedIn: checkIn }, reason: reasonOf(body) });
   return NextResponse.json({ success: true, totalCharged: result.totalCharged, checkedIn: checkIn });
 }

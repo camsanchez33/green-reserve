@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-session';
+import { withAudit } from '@/lib/admin-audit';
 
 // GET deliberately removed (MP-2, ADMIN_V4 V4-2 leak). It returned EVERY
 // operator's live verificationToken plus a ready-made /dashboard/verify link —
@@ -15,7 +16,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS } from '@/lib/admin-sess
 // a future run mis-rank the remaining setupLink emitters, which grant password
 // knowledge rather than a session.
 
-export async function POST(req: NextRequest) {
+async function verifyOperator(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -35,3 +36,6 @@ export async function POST(req: NextRequest) {
   // grant a session; see the note at the top of this file.)
   return NextResponse.json({ email, verified: true });
 }
+
+// BRAIN-1a: vouching for an operator's email grants access — said with a reason.
+export const POST = withAudit(verifyOperator, body => ({ action: 'verify_operator', targetType: 'operator', targetId: String(body.email ?? '') }));

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, ownerGateError } from '@/lib/admin-session';
 import { isExpenseCategory, isExpenseCadence } from '@/lib/expenses';
+import { auditAdmin } from '@/lib/admin-audit';
 
 // EXPENSE TRACKER (RUN_QUEUE) — GreenReserve's own fixed operating costs.
 // OWNER-only end to end: these are the company's private books, not per-course
@@ -40,5 +41,6 @@ export async function POST(req: NextRequest) {
   const expense = await prisma.expense.create({
     data: { name, amountCents, category, cadence, startedAt },
   });
+  await auditAdmin(session, { action: 'expense_add', targetType: 'expense', targetId: expense.id, after: { name, amountCents, category, cadence } });
   return NextResponse.json({ expense });
 }

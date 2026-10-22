@@ -28,6 +28,8 @@ export async function GET(req: NextRequest) {
     include: {
       // L2: the product label rides along so the sheet can say "North + South · 18h".
       product: { select: { label: true } },
+      // W2-9: the event holding a blocked time, so the sheet can name it.
+      event: { select: { id: true, name: true } },
       ...(withBookings ? { bookings: {
       where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
       select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true, cancellationFeeTotal: true, roundPaymentIntentId: true,

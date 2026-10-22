@@ -221,7 +221,7 @@ export default function RevenuePage() {
     if (expenseBusy) return;
     setExpenseBusy(e.id); setExpenseError('');
     try {
-      const res = await fetch(`/api/admin/expenses/${e.id}`, { method: 'DELETE' });
+      const res = await stepUpFetch(`/api/admin/expenses/${e.id}`, { method: 'DELETE' });
       if (res.ok) { await loadExpenses(); load(period, customFrom, customTo); }
       else { const err = await res.json().catch(() => ({})); setExpenseError(err.error || 'Could not delete.'); }
     } catch {

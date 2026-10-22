@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 488,
-    "routes": 237,
-    "libs": 158,
-    "models": 48,
+    "files": 502,
+    "routes": 243,
+    "libs": 162,
+    "models": 51,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -81,8 +81,65 @@
       "usedBy": []
     },
     {
+      "path": "src/app/admin/announcements/page.tsx",
+      "lines": 261,
+      "purpose": "AW-8a (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (AnnouncementsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/announcements",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/ErrorState",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/admin-fetch",
+        "@/lib/admin-session-context",
+        "@/lib/format",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/admin/audit/page.tsx",
+      "lines": 137,
+      "purpose": "BRAIN-1a (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (AdminAuditPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/admin/audit",
+      "kind": "page",
+      "methods": [],
+      "auth": "admin",
+      "guard": "client-side",
+      "imports": [
+        "@/components/admin/AdminSidebar",
+        "@/components/ui/Card",
+        "@/components/ui/field",
+        "@/lib/admin-fetch",
+        "next/link",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/admin/broadcasts/page.tsx",
-      "lines": 13,
+      "lines": 12,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -505,7 +562,7 @@
     },
     {
       "path": "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
-      "lines": 1071,
+      "lines": 1090,
       "purpose": "MP-12 (ADMIN_V4 V4-9):",
       "brain": [],
       "exports": [
@@ -651,7 +708,7 @@
     },
     {
       "path": "src/app/admin/employees/page.tsx",
-      "lines": 407,
+      "lines": 410,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -676,6 +733,7 @@
         "@/lib/admin-session-context",
         "@/lib/step-up-client",
         "lucide-react",
+        "next/link",
         "next/navigation",
         "react"
       ],
@@ -708,7 +766,7 @@
     },
     {
       "path": "src/app/admin/goals/page.tsx",
-      "lines": 163,
+      "lines": 164,
       "purpose": "AW-4b (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -728,6 +786,7 @@
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/format",
+        "@/lib/step-up-client",
         "react"
       ],
       "usedBy": []
@@ -798,7 +857,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2253,
+      "lines": 2254,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -829,6 +888,7 @@
         "@/lib/inquiry-board",
         "@/lib/inquiry-call",
         "@/lib/inquiry-status",
+        "@/lib/step-up-client",
         "lucide-react",
         "next/navigation",
         "react"
@@ -837,7 +897,7 @@
     },
     {
       "path": "src/app/admin/inquiries/page.tsx",
-      "lines": 949,
+      "lines": 957,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -865,6 +925,7 @@
         "@/lib/inquiry-call",
         "@/lib/inquiry-needs",
         "@/lib/inquiry-status",
+        "@/lib/step-up-client",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -874,7 +935,7 @@
     },
     {
       "path": "src/app/admin/layout.tsx",
-      "lines": 40,
+      "lines": 43,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -897,6 +958,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/admin/ReasonDialog",
         "@/components/admin/StepUpDialog",
         "@/lib/admin-session",
         "@/lib/admin-session-context",
@@ -933,7 +995,7 @@
     },
     {
       "path": "src/app/admin/messages/page.tsx",
-      "lines": 695,
+      "lines": 479,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -949,13 +1011,9 @@
       "guard": "client-side",
       "imports": [
         "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
         "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
         "@/components/ui/StatusDot",
-        "@/components/ui/field",
         "@/lib/admin-fetch",
-        "@/lib/admin-session-context",
         "@/lib/format",
         "@/lib/thread-signal",
         "lucide-react",
@@ -1145,7 +1203,7 @@
     },
     {
       "path": "src/app/api/admin/agreement-versions/route.ts",
-      "lines": 58,
+      "lines": 57,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1167,6 +1225,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/agreement-publish",
         "@/lib/prisma",
@@ -1176,7 +1235,7 @@
     },
     {
       "path": "src/app/api/admin/archive-course/route.ts",
-      "lines": 71,
+      "lines": 77,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1193,6 +1252,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/course-closure",
         "@/lib/lifecycle",
@@ -1233,8 +1293,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/admin/audit/route.ts",
+      "lines": 48,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/audit",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-audit",
+        "@/lib/admin-session",
+        "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
-      "lines": 42,
+      "lines": 46,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1251,6 +1337,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/prisma",
         "next/server"
@@ -1284,7 +1371,7 @@
     },
     {
       "path": "src/app/api/admin/broadcasts/route.ts",
-      "lines": 132,
+      "lines": 136,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1306,6 +1393,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/email",
         "@/lib/prisma",
@@ -1315,7 +1403,7 @@
     },
     {
       "path": "src/app/api/admin/change-password/route.ts",
-      "lines": 27,
+      "lines": 31,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1332,6 +1420,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/prisma",
         "bcryptjs",
@@ -1368,7 +1457,7 @@
     },
     {
       "path": "src/app/api/admin/company-documents/route.ts",
-      "lines": 70,
+      "lines": 69,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1395,6 +1484,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/company-documents",
         "@/lib/prisma",
@@ -1433,7 +1523,7 @@
     },
     {
       "path": "src/app/api/admin/course-calls/route.ts",
-      "lines": 115,
+      "lines": 121,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1450,6 +1540,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/course-checkin",
         "@/lib/course-timeline",
@@ -1461,7 +1552,7 @@
     },
     {
       "path": "src/app/api/admin/course-detail/route.ts",
-      "lines": 329,
+      "lines": 341,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1483,6 +1574,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-course-page",
         "@/lib/admin-session",
         "@/lib/agreement-gate",
@@ -1530,7 +1622,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/record/route.ts",
-      "lines": 37,
+      "lines": 39,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1547,6 +1639,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/course-timeline",
         "@/lib/private-blob",
@@ -1557,7 +1650,7 @@
     },
     {
       "path": "src/app/api/admin/course-documents/route.ts",
-      "lines": 83,
+      "lines": 85,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1579,6 +1672,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/agreement-gate",
         "@/lib/agreements",
@@ -1619,7 +1713,7 @@
     },
     {
       "path": "src/app/api/admin/course-groups/route.ts",
-      "lines": 100,
+      "lines": 109,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1651,6 +1745,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/course-timeline",
         "@/lib/prisma",
@@ -1687,7 +1782,7 @@
     },
     {
       "path": "src/app/api/admin/course-reminders/route.ts",
-      "lines": 18,
+      "lines": 20,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1704,6 +1799,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/course-timeline",
         "next/server"
@@ -1712,7 +1808,7 @@
     },
     {
       "path": "src/app/api/admin/course-settings/route.ts",
-      "lines": 72,
+      "lines": 79,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1734,6 +1830,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/course-timeline",
         "@/lib/course-wire",
@@ -1777,7 +1874,7 @@
     },
     {
       "path": "src/app/api/admin/create-course/route.ts",
-      "lines": 184,
+      "lines": 188,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1799,6 +1896,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/email",
         "@/lib/money",
@@ -1811,7 +1909,7 @@
     },
     {
       "path": "src/app/api/admin/employees/route.ts",
-      "lines": 102,
+      "lines": 117,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1838,6 +1936,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/prisma",
         "bcryptjs",
@@ -1848,7 +1947,7 @@
     },
     {
       "path": "src/app/api/admin/expenses/[id]/route.ts",
-      "lines": 72,
+      "lines": 78,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1870,6 +1969,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/expenses",
         "@/lib/prisma",
@@ -1879,7 +1979,7 @@
     },
     {
       "path": "src/app/api/admin/expenses/route.ts",
-      "lines": 45,
+      "lines": 47,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1901,6 +2001,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/expenses",
         "@/lib/prisma",
@@ -1937,7 +2038,7 @@
     },
     {
       "path": "src/app/api/admin/goals/route.ts",
-      "lines": 53,
+      "lines": 55,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1964,6 +2065,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-day",
         "@/lib/admin-goals",
         "@/lib/admin-session",
@@ -1974,7 +2076,7 @@
     },
     {
       "path": "src/app/api/admin/golfers/route.ts",
-      "lines": 250,
+      "lines": 251,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1996,6 +2098,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/cancel-booking",
         "@/lib/email",
@@ -2007,7 +2110,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1272,
+      "lines": 1287,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2039,6 +2142,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/agreement-gate",
         "@/lib/calcom",
@@ -2115,7 +2219,7 @@
     },
     {
       "path": "src/app/api/admin/messages/route.ts",
-      "lines": 211,
+      "lines": 215,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2142,6 +2246,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/change-requests",
         "@/lib/email",
@@ -2180,7 +2285,7 @@
     },
     {
       "path": "src/app/api/admin/orphan-sweep/route.ts",
-      "lines": 45,
+      "lines": 49,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2202,6 +2307,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/lifecycle",
         "next/server"
@@ -2210,7 +2316,7 @@
     },
     {
       "path": "src/app/api/admin/owner-devices/route.ts",
-      "lines": 51,
+      "lines": 55,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2232,6 +2338,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/owner-session",
         "@/lib/prisma",
@@ -2241,7 +2348,7 @@
     },
     {
       "path": "src/app/api/admin/passkeys/route.ts",
-      "lines": 76,
+      "lines": 82,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2268,6 +2375,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/email",
         "@/lib/owner-passkey",
@@ -2307,7 +2415,7 @@
     },
     {
       "path": "src/app/api/admin/reconcile-lifecycle-pairs/route.ts",
-      "lines": 19,
+      "lines": 23,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2324,6 +2432,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/lifecycle",
         "next/server"
@@ -2332,7 +2441,7 @@
     },
     {
       "path": "src/app/api/admin/refund/route.ts",
-      "lines": 24,
+      "lines": 28,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2349,6 +2458,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/refund-booking",
         "next/server"
@@ -2357,7 +2467,7 @@
     },
     {
       "path": "src/app/api/admin/request-re-review/route.ts",
-      "lines": 35,
+      "lines": 39,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2374,6 +2484,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/change-requests",
         "@/lib/prisma",
@@ -2383,7 +2494,7 @@
     },
     {
       "path": "src/app/api/admin/resend-staff-setup/route.ts",
-      "lines": 40,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2400,6 +2511,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/contact",
         "@/lib/prisma",
@@ -2410,7 +2522,7 @@
     },
     {
       "path": "src/app/api/admin/retry-charge/[bookingId]/route.ts",
-      "lines": 39,
+      "lines": 44,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2427,6 +2539,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/checkin-booking",
         "@/lib/stripe-errors",
@@ -2468,7 +2581,7 @@
     },
     {
       "path": "src/app/api/admin/schedule/route.ts",
-      "lines": 67,
+      "lines": 75,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2500,6 +2613,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/schedule-service",
         "next/server"
@@ -2533,7 +2647,7 @@
     },
     {
       "path": "src/app/api/admin/send-golive-reminder/route.ts",
-      "lines": 44,
+      "lines": 48,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2550,6 +2664,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/course-timeline",
         "@/lib/email",
@@ -2642,7 +2757,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 117,
+      "lines": 122,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2669,6 +2784,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/cancel-booking",
         "@/lib/claim-tee-time",
@@ -2761,7 +2877,7 @@
     },
     {
       "path": "src/app/api/admin/two-factor/route.ts",
-      "lines": 92,
+      "lines": 96,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2783,6 +2899,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/owner-totp",
         "@/lib/prisma",
@@ -2793,7 +2910,7 @@
     },
     {
       "path": "src/app/api/admin/verify-operator/route.ts",
-      "lines": 38,
+      "lines": 42,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2810,6 +2927,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/prisma",
         "crypto",
@@ -4906,6 +5024,78 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/events/[id]/route.ts",
+      "lines": 218,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/events/[id]",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/course-events",
+        "@/lib/course-time",
+        "@/lib/email",
+        "@/lib/format",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/events/route.ts",
+      "lines": 67,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/events",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/course-events",
+        "@/lib/course-time",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/frost-delay/route.ts",
       "lines": 33,
       "purpose": "",
@@ -5533,7 +5723,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/preview/route.ts",
-      "lines": 27,
+      "lines": 32,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5550,6 +5740,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/course-plan",
         "@/lib/schedule-preview",
         "@/lib/schedule-service",
         "@/lib/session",
@@ -5559,7 +5750,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/route.ts",
-      "lines": 89,
+      "lines": 96,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5597,6 +5788,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/course-plan",
         "@/lib/schedule-service",
         "@/lib/session",
         "next/server"
@@ -6011,7 +6203,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 142,
+      "lines": 144,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6268,7 +6460,7 @@
     },
     {
       "path": "src/app/api/preview/send/route.ts",
-      "lines": 148,
+      "lines": 152,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6285,6 +6477,7 @@
       "auth": "admin",
       "guard": "file",
       "imports": [
+        "@/lib/admin-audit",
         "@/lib/admin-session",
         "@/lib/approval-state",
         "@/lib/email",
@@ -6886,7 +7079,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 610,
+      "lines": 705,
       "purpose": "AN-3 (Cam 2026-10-19, after AN-2):",
       "brain": [],
       "exports": [
@@ -6934,6 +7127,38 @@
       "guard": "middleware",
       "imports": [
         "next/navigation"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/dashboard/events/page.tsx",
+      "lines": 165,
+      "purpose": "W2-9 Events (Cam 2026-10-21/22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (EventsPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/events",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/OperatorSidebar",
+        "@/components/dashboard/StaffNotice",
+        "@/components/dashboard/events/EventDetail",
+        "@/components/dashboard/events/EventSetup",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "@/lib/use-dashboard-access",
+        "next/image",
+        "next/navigation",
+        "react"
       ],
       "usedBy": []
     },
@@ -7135,12 +7360,12 @@
     },
     {
       "path": "src/app/dashboard/outings/page.tsx",
-      "lines": 27,
+      "lines": 5,
       "purpose": "",
       "brain": [],
       "exports": [
         {
-          "name": "default (OutingsPage)",
+          "name": "default (Page)",
           "kind": "component"
         }
       ],
@@ -7150,15 +7375,13 @@
       "auth": "operator",
       "guard": "middleware",
       "imports": [
-        "@/components/OperatorSidebar",
-        "next/image",
-        "next/link"
+        "next/navigation"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1466,
+      "lines": 1488,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7196,6 +7419,7 @@
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
         "lucide-react",
+        "next/link",
         "next/navigation",
         "react"
       ],
@@ -7249,8 +7473,8 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 597,
-      "purpose": "Schedule rework (Cam 2026-10-19:",
+      "lines": 604,
+      "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
         {
@@ -7270,9 +7494,9 @@
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
+        "@/lib/course-plan",
         "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/schedule-plans",
         "@/lib/use-dashboard-access",
         "next/link",
         "react"
@@ -7380,12 +7604,12 @@
     },
     {
       "path": "src/app/dashboard/tournaments/page.tsx",
-      "lines": 27,
+      "lines": 5,
       "purpose": "",
       "brain": [],
       "exports": [
         {
-          "name": "default (TournamentsPage)",
+          "name": "default (Page)",
           "kind": "component"
         }
       ],
@@ -7395,9 +7619,7 @@
       "auth": "operator",
       "guard": "middleware",
       "imports": [
-        "@/components/OperatorSidebar",
-        "next/image",
-        "next/link"
+        "next/navigation"
       ],
       "usedBy": []
     },
@@ -8241,7 +8463,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 288,
+      "lines": 286,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8274,15 +8496,14 @@
       ],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
-        "src/app/dashboard/outings/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/dashboard/shop/page.tsx",
-        "src/app/dashboard/tournaments/page.tsx",
         "src/lib/dashboard-visits.ts"
       ]
     },
@@ -8338,7 +8559,7 @@
     },
     {
       "path": "src/components/admin/AdminSidebar.tsx",
-      "lines": 202,
+      "lines": 206,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8367,6 +8588,8 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/announcements/page.tsx",
+        "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/page.tsx",
         "src/app/admin/courses/page.tsx",
@@ -8687,6 +8910,32 @@
       ],
       "usedBy": [
         "src/app/admin/profile/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/admin/ReasonDialog.tsx",
+      "lines": 48,
+      "purpose": "BRAIN-1a (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (ReasonDialog)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Modal",
+        "@/components/ui/field",
+        "@/lib/step-up-client",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/admin/layout.tsx"
       ]
     },
     {
@@ -9175,6 +9424,7 @@
         "@/lib/use-dashboard-access"
       ],
       "usedBy": [
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/settings/page.tsx",
@@ -9239,7 +9489,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetBoard.tsx",
-      "lines": 164,
+      "lines": 165,
       "purpose": "SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -9316,6 +9566,95 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/events/EventDetail.tsx",
+      "lines": 253,
+      "purpose": "W2-9 Events:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (EventDetail)",
+          "kind": "component"
+        },
+        {
+          "name": "EventData",
+          "kind": "type"
+        },
+        {
+          "name": "EventFull",
+          "kind": "type"
+        },
+        {
+          "name": "EventPlayer",
+          "kind": "type"
+        },
+        {
+          "name": "EventTask",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./EventSetup",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/events/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/events/EventSetup.tsx",
+      "lines": 292,
+      "purpose": "W2-9 Events:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "blankForm",
+          "kind": "fn"
+        },
+        {
+          "name": "default (EventSetup)",
+          "kind": "component"
+        },
+        {
+          "name": "EventForm",
+          "kind": "type"
+        },
+        {
+          "name": "KINDS",
+          "kind": "const"
+        },
+        {
+          "name": "Product",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/events/page.tsx",
+        "src/components/dashboard/events/EventDetail.tsx"
       ]
     },
     {
@@ -9668,6 +10007,8 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/announcements/page.tsx",
+        "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
@@ -9687,7 +10028,6 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
-        "src/app/admin/messages/page.tsx",
         "src/app/admin/page.tsx",
         "src/app/admin/profile/page.tsx",
         "src/app/admin/revenue/page.tsx",
@@ -9697,6 +10037,7 @@
         "src/app/cam/page.tsx",
         "src/app/contact/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -9717,6 +10058,8 @@
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -9752,6 +10095,7 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/announcements/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
@@ -9799,7 +10143,6 @@
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/login/page.tsx",
-        "src/app/admin/messages/page.tsx",
         "src/app/admin/profile/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
@@ -9841,6 +10184,7 @@
         "src/app/admin/system/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/LeadDialogs.tsx",
+        "src/components/admin/ReasonDialog.tsx",
         "src/components/admin/StepUpDialog.tsx"
       ]
     },
@@ -9952,6 +10296,7 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/announcements/page.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
         "src/app/admin/courses/[id]/_parts/MoneyTab.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
@@ -9974,6 +10319,7 @@
         "src/app/courses/[slug]/account/AccountPortalClient.tsx",
         "src/app/courses/[slug]/member/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/login/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/onboarding/page.tsx",
@@ -9996,6 +10342,7 @@
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/Toast.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -10027,6 +10374,8 @@
       "imports": [],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/announcements/page.tsx",
+        "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/shared.tsx",
         "src/app/admin/create/page.tsx",
@@ -10037,7 +10386,6 @@
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/admin/login/page.tsx",
-        "src/app/admin/messages/page.tsx",
         "src/app/admin/profile/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
@@ -10051,6 +10399,7 @@
         "src/components/admin/LeadDialogs.tsx",
         "src/components/admin/OwnerPasskeysCard.tsx",
         "src/components/admin/OwnerTwoFactorCard.tsx",
+        "src/components/admin/ReasonDialog.tsx",
         "src/components/admin/StepUpDialog.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
@@ -10058,9 +10407,37 @@
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
       ]
+    },
+    {
+      "path": "src/instrumentation.ts",
+      "lines": 16,
+      "purpose": "BRAIN-0 (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "onRequestError",
+          "kind": "const"
+        },
+        {
+          "name": "register",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "../sentry.server.config",
+        "@sentry/nextjs"
+      ],
+      "usedBy": []
     },
     {
       "path": "src/lib/access-fee.ts",
@@ -10219,6 +10596,115 @@
       ],
       "usedBy": [
         "src/app/api/admin/ask/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/admin-audit.ts",
+      "lines": 188,
+      "purpose": "BRAIN-1a (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ACTION_LABELS",
+          "kind": "const"
+        },
+        {
+          "name": "auditAdmin",
+          "kind": "fn"
+        },
+        {
+          "name": "AuditEntry",
+          "kind": "type"
+        },
+        {
+          "name": "bodyWithReason",
+          "kind": "fn"
+        },
+        {
+          "name": "changedFields",
+          "kind": "fn"
+        },
+        {
+          "name": "courseOfBooking",
+          "kind": "fn"
+        },
+        {
+          "name": "needReason",
+          "kind": "fn"
+        },
+        {
+          "name": "REASON_ACTIONS",
+          "kind": "const"
+        },
+        {
+          "name": "REASON_MAX",
+          "kind": "const"
+        },
+        {
+          "name": "REASON_MIN",
+          "kind": "const"
+        },
+        {
+          "name": "reasonOf",
+          "kind": "fn"
+        },
+        {
+          "name": "redact",
+          "kind": "fn"
+        },
+        {
+          "name": "withAudit",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./admin-session",
+        "./prisma",
+        "@sentry/nextjs",
+        "next/server"
+      ],
+      "usedBy": [
+        "src/app/api/admin/agreement-versions/route.ts",
+        "src/app/api/admin/archive-course/route.ts",
+        "src/app/api/admin/audit/route.ts",
+        "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
+        "src/app/api/admin/broadcasts/route.ts",
+        "src/app/api/admin/change-password/route.ts",
+        "src/app/api/admin/company-documents/route.ts",
+        "src/app/api/admin/course-calls/route.ts",
+        "src/app/api/admin/course-detail/route.ts",
+        "src/app/api/admin/course-documents/record/route.ts",
+        "src/app/api/admin/course-documents/route.ts",
+        "src/app/api/admin/course-groups/route.ts",
+        "src/app/api/admin/course-reminders/route.ts",
+        "src/app/api/admin/course-settings/route.ts",
+        "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/employees/route.ts",
+        "src/app/api/admin/expenses/[id]/route.ts",
+        "src/app/api/admin/expenses/route.ts",
+        "src/app/api/admin/goals/route.ts",
+        "src/app/api/admin/golfers/route.ts",
+        "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/orphan-sweep/route.ts",
+        "src/app/api/admin/owner-devices/route.ts",
+        "src/app/api/admin/passkeys/route.ts",
+        "src/app/api/admin/reconcile-lifecycle-pairs/route.ts",
+        "src/app/api/admin/refund/route.ts",
+        "src/app/api/admin/request-re-review/route.ts",
+        "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/admin/retry-charge/[bookingId]/route.ts",
+        "src/app/api/admin/schedule/route.ts",
+        "src/app/api/admin/send-golive-reminder/route.ts",
+        "src/app/api/admin/tee-sheet/route.ts",
+        "src/app/api/admin/two-factor/route.ts",
+        "src/app/api/admin/verify-operator/route.ts",
+        "src/app/api/preview/send/route.ts"
       ]
     },
     {
@@ -10498,6 +10984,8 @@
       ],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/announcements/page.tsx",
+        "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/page.tsx",
         "src/app/admin/employees/page.tsx",
@@ -10629,12 +11117,12 @@
         "react"
       ],
       "usedBy": [
+        "src/app/admin/announcements/page.tsx",
         "src/app/admin/employees/page.tsx",
         "src/app/admin/golfers/page.tsx",
         "src/app/admin/groups/page.tsx",
         "src/app/admin/inquiries/page.tsx",
         "src/app/admin/layout.tsx",
-        "src/app/admin/messages/page.tsx",
         "src/app/admin/page.tsx",
         "src/app/admin/profile/page.tsx",
         "src/app/admin/system/page.tsx",
@@ -10723,6 +11211,7 @@
         "src/app/api/admin/agreement-versions/route.ts",
         "src/app/api/admin/archive-course/route.ts",
         "src/app/api/admin/ask/route.ts",
+        "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/change-password/route.ts",
@@ -10776,7 +11265,8 @@
         "src/app/api/cam/login/route.ts",
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/preview/send/route.ts",
-        "src/app/api/receipt/[bookingId]/route.ts"
+        "src/app/api/receipt/[bookingId]/route.ts",
+        "src/lib/admin-audit.ts"
       ]
     },
     {
@@ -11038,6 +11528,8 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
@@ -11182,7 +11674,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 335,
+      "lines": 535,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -11213,6 +11705,10 @@
         {
           "name": "Range",
           "kind": "type"
+        },
+        {
+          "name": "RES_START",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -12320,7 +12816,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 273,
+      "lines": 276,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12949,7 +13445,7 @@
     },
     {
       "path": "src/lib/course-closure.ts",
-      "lines": 128,
+      "lines": 129,
       "purpose": "MP-5b.",
       "brain": [],
       "exports": [
@@ -12987,6 +13483,121 @@
       "usedBy": [
         "src/app/api/admin/archive-course/route.ts",
         "src/app/api/admin/course-detail/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/course-events.ts",
+      "lines": 285,
+      "purpose": "W2-9 Events (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "applyHold",
+          "kind": "fn"
+        },
+        {
+          "name": "autoPairings",
+          "kind": "fn"
+        },
+        {
+          "name": "cancelEvent",
+          "kind": "fn"
+        },
+        {
+          "name": "createEvent",
+          "kind": "fn"
+        },
+        {
+          "name": "DEFAULT_TASKS",
+          "kind": "const"
+        },
+        {
+          "name": "dueFor",
+          "kind": "fn"
+        },
+        {
+          "name": "EVENT_KINDS",
+          "kind": "const"
+        },
+        {
+          "name": "EventError",
+          "kind": "class"
+        },
+        {
+          "name": "eventFields",
+          "kind": "fn"
+        },
+        {
+          "name": "EventInput",
+          "kind": "type"
+        },
+        {
+          "name": "EventKind",
+          "kind": "type"
+        },
+        {
+          "name": "heldBy",
+          "kind": "reexport"
+        },
+        {
+          "name": "HoldReport",
+          "kind": "type"
+        },
+        {
+          "name": "isDate",
+          "kind": "fn"
+        },
+        {
+          "name": "isTime",
+          "kind": "fn"
+        },
+        {
+          "name": "KIND_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "parsePlayers",
+          "kind": "fn"
+        },
+        {
+          "name": "previewEvent",
+          "kind": "fn"
+        },
+        {
+          "name": "releaseHold",
+          "kind": "fn"
+        },
+        {
+          "name": "shotgunWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "teeTimesWindow",
+          "kind": "fn"
+        },
+        {
+          "name": "unheldTimes",
+          "kind": "fn"
+        },
+        {
+          "name": "updateEvent",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./event-hold",
+        "./prisma",
+        "./tee-sheet-engine"
+      ],
+      "usedBy": [
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts"
       ]
     },
     {
@@ -13137,6 +13748,105 @@
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/tee-sheet/route.ts",
         "src/lib/admin-course-page.ts"
+      ]
+    },
+    {
+      "path": "src/lib/course-plan.ts",
+      "lines": 279,
+      "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ALL_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "autoName",
+          "kind": "fn"
+        },
+        {
+          "name": "blankPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "checkPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "checkRows",
+          "kind": "fn"
+        },
+        {
+          "name": "columnNames",
+          "kind": "fn"
+        },
+        {
+          "name": "CompiledRow",
+          "kind": "type"
+        },
+        {
+          "name": "compilePlan",
+          "kind": "fn"
+        },
+        {
+          "name": "CoursePlan",
+          "kind": "type"
+        },
+        {
+          "name": "DayPlan",
+          "kind": "type"
+        },
+        {
+          "name": "daysOf",
+          "kind": "fn"
+        },
+        {
+          "name": "emptyCell",
+          "kind": "fn"
+        },
+        {
+          "name": "isTime",
+          "kind": "fn"
+        },
+        {
+          "name": "PlanRound",
+          "kind": "type"
+        },
+        {
+          "name": "PriceCell",
+          "kind": "type"
+        },
+        {
+          "name": "readPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "RoundSale",
+          "kind": "type"
+        },
+        {
+          "name": "setRoundSale",
+          "kind": "fn"
+        },
+        {
+          "name": "snap",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./schedule-conflict"
+      ],
+      "usedBy": [
+        "src/app/api/operator/schedule/preview/route.ts",
+        "src/app/api/operator/schedule/route.ts",
+        "src/app/dashboard/schedules/page.tsx",
+        "src/lib/schedule-preview.ts",
+        "src/lib/schedule-service.ts"
       ]
     },
     {
@@ -13356,6 +14066,8 @@
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
@@ -13371,6 +14083,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
@@ -13633,7 +14346,7 @@
     },
     {
       "path": "src/lib/cron-log.ts",
-      "lines": 136,
+      "lines": 141,
       "purpose": "MP-8b:",
       "brain": [],
       "exports": [
@@ -13670,6 +14383,7 @@
       "imports": [
         "./cron-auth",
         "./prisma",
+        "@sentry/nextjs",
         "next/server"
       ],
       "usedBy": [
@@ -13733,6 +14447,7 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -13746,6 +14461,8 @@
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
@@ -13851,7 +14568,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2046,
+      "lines": 2068,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13989,6 +14706,10 @@
         },
         {
           "name": "sendDetailsSubmittedNotification",
+          "kind": "fn"
+        },
+        {
+          "name": "sendEventPairingsEmail",
           "kind": "fn"
         },
         {
@@ -14171,6 +14892,7 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/change-password/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -14193,6 +14915,32 @@
         "src/lib/submit-change-request.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
+      ]
+    },
+    {
+      "path": "src/lib/event-hold.ts",
+      "lines": 12,
+      "purpose": "W2-9:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "heldBy",
+          "kind": "fn"
+        },
+        {
+          "name": "HoldEvent",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/lib/course-events.ts",
+        "src/lib/tee-sheet-engine.ts"
       ]
     },
     {
@@ -14382,6 +15130,7 @@
       "imports": [],
       "usedBy": [
         "src/app/admin/activity/page.tsx",
+        "src/app/admin/announcements/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
@@ -14401,7 +15150,9 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/system/page.tsx",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/page.tsx",
@@ -14412,6 +15163,8 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
@@ -16057,6 +16810,7 @@
       "usedBy": [
         "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/agreement-versions/route.ts",
+        "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
         "src/app/api/admin/bootstrap/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
@@ -16156,6 +16910,8 @@
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
@@ -16200,6 +16956,7 @@
         "src/lib/access-fee.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-audit.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-goals.ts",
@@ -16223,6 +16980,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
         "src/lib/course-closure.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-group.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
@@ -16744,6 +17502,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/operator/course-products/route.ts",
+        "src/lib/course-plan.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
@@ -16786,13 +17545,12 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/schedules/page.tsx",
         "src/lib/schedule-service.ts"
       ]
     },
     {
       "path": "src/lib/schedule-preview.ts",
-      "lines": 149,
+      "lines": 154,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -16823,6 +17581,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./course-plan",
         "./course-time",
         "./prisma",
         "./schedule-conflict",
@@ -16836,10 +17595,14 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 310,
+      "lines": 358,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [
+        {
+          "name": "compileCoursePlan",
+          "kind": "fn"
+        },
         {
           "name": "createSchedule",
           "kind": "fn"
@@ -16850,6 +17613,14 @@
         },
         {
           "name": "listSchedules",
+          "kind": "fn"
+        },
+        {
+          "name": "planRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "saveCoursePlan",
           "kind": "fn"
         },
         {
@@ -16891,6 +17662,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./course-plan",
         "./course-timeline",
         "./money",
         "./prisma",
@@ -17056,6 +17828,8 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/import/route.ts",
@@ -17587,7 +18361,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 135,
+      "lines": 138,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -17665,16 +18439,28 @@
     },
     {
       "path": "src/lib/step-up-client.ts",
-      "lines": 27,
+      "lines": 70,
       "purpose": "AW-1c:",
       "brain": [],
       "exports": [
+        {
+          "name": "askReason",
+          "kind": "fn"
+        },
+        {
+          "name": "registerReasonHandler",
+          "kind": "fn"
+        },
         {
           "name": "registerStepUpHandler",
           "kind": "fn"
         },
         {
           "name": "stepUpFetch",
+          "kind": "fn"
+        },
+        {
+          "name": "withReason",
           "kind": "fn"
         }
       ],
@@ -17687,9 +18473,13 @@
       "usedBy": [
         "src/app/admin/courses/[id]/_parts/useCourseDetail.tsx",
         "src/app/admin/employees/page.tsx",
+        "src/app/admin/goals/page.tsx",
+        "src/app/admin/inquiries/[id]/page.tsx",
+        "src/app/admin/inquiries/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/components/admin/OwnerDevicesCard.tsx",
         "src/components/admin/OwnerPasskeysCard.tsx",
+        "src/components/admin/ReasonDialog.tsx",
         "src/components/admin/StepUpDialog.tsx",
         "src/lib/admin-fetch.ts"
       ]
@@ -17877,7 +18667,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 247,
+      "lines": 252,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17918,6 +18708,7 @@
       "imports": [
         "./booking-window",
         "./course-time",
+        "./event-hold",
         "./prisma"
       ],
       "usedBy": [
@@ -17926,6 +18717,7 @@
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
@@ -18221,6 +19013,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
@@ -18506,16 +19299,36 @@
           "type": "String"
         },
         {
+          "name": "reason",
+          "type": "String"
+        },
+        {
+          "name": "before",
+          "type": "Json?"
+        },
+        {
+          "name": "after",
+          "type": "Json?"
+        },
+        {
+          "name": "courseId",
+          "type": "String?"
+        },
+        {
+          "name": "actorName",
+          "type": "String"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         }
       ],
       "writers": [
-        "src/app/api/admin/agreement-versions/route.ts",
-        "src/app/api/admin/company-documents/route.ts",
-        "src/app/api/admin/goals/route.ts"
+        "src/lib/admin-audit.ts"
       ],
-      "readers": []
+      "readers": [
+        "src/app/api/admin/audit/route.ts"
+      ]
     },
     {
       "name": "AdminGoal",
@@ -18553,6 +19366,7 @@
         "src/app/api/admin/goals/route.ts"
       ],
       "readers": [
+        "src/app/api/admin/goals/route.ts",
         "src/lib/admin-goals.ts"
       ]
     },
@@ -18677,6 +19491,7 @@
         "src/lib/owner-passkey.ts"
       ],
       "readers": [
+        "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/bootstrap/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/change-password/route.ts",
@@ -18919,8 +19734,10 @@
       ],
       "readers": [
         "src/app/api/operator/blackouts/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/course-events.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -19205,6 +20022,7 @@
         "src/lib/access-fee.ts",
         "src/lib/admin-action-queue.ts",
         "src/lib/admin-ask.ts",
+        "src/lib/admin-audit.ts",
         "src/lib/admin-checks.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-goals.ts",
@@ -19934,6 +20752,10 @@
           "type": "TeeTimeAlert[]"
         },
         {
+          "name": "events",
+          "type": "CourseEvent[]"
+        },
+        {
           "name": "nines",
           "type": "Nine[]"
         },
@@ -19997,6 +20819,7 @@
       ],
       "readers": [
         "src/app/api/admin/activity/route.ts",
+        "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/course-calls/route.ts",
         "src/app/api/admin/course-detail/route.ts",
@@ -20027,6 +20850,8 @@
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
@@ -20066,6 +20891,7 @@
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/course-closure.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-group.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/go-live-preflight.ts",
@@ -20076,8 +20902,235 @@
         "src/lib/public-tee-times.ts",
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
+        "src/lib/schedule-service.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "name": "CourseEvent",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "date",
+          "type": "String"
+        },
+        {
+          "name": "format",
+          "type": "String"
+        },
+        {
+          "name": "startTime",
+          "type": "String"
+        },
+        {
+          "name": "holdFrom",
+          "type": "String"
+        },
+        {
+          "name": "holdTo",
+          "type": "String"
+        },
+        {
+          "name": "holdToCustom",
+          "type": "Boolean"
+        },
+        {
+          "name": "productId",
+          "type": "String?"
+        },
+        {
+          "name": "holes",
+          "type": "Int"
+        },
+        {
+          "name": "groups",
+          "type": "Int"
+        },
+        {
+          "name": "players",
+          "type": "Int"
+        },
+        {
+          "name": "organizerName",
+          "type": "String"
+        },
+        {
+          "name": "organizerEmail",
+          "type": "String"
+        },
+        {
+          "name": "organizerPhone",
+          "type": "String"
+        },
+        {
+          "name": "pricePerPlayerCents",
+          "type": "Int"
+        },
+        {
+          "name": "includes",
+          "type": "String[]"
+        },
+        {
+          "name": "terms",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "tasks",
+          "type": "CourseEventTask[]"
+        },
+        {
+          "name": "entrants",
+          "type": "CourseEventPlayer[]"
+        },
+        {
+          "name": "teeTimes",
+          "type": "TeeTime[]"
+        }
+      ],
+      "writers": [
+        "src/lib/course-events.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
+        "src/lib/course-events.ts",
+        "src/lib/tee-sheet-engine.ts"
+      ]
+    },
+    {
+      "name": "CourseEventPlayer",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "eventId",
+          "type": "String"
+        },
+        {
+          "name": "event",
+          "type": "CourseEvent"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "email",
+          "type": "String"
+        },
+        {
+          "name": "phone",
+          "type": "String"
+        },
+        {
+          "name": "groupNo",
+          "type": "Int?"
+        },
+        {
+          "name": "startHole",
+          "type": "Int?"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/events/[id]/route.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/events/[id]/route.ts"
+      ]
+    },
+    {
+      "name": "CourseEventTask",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "eventId",
+          "type": "String"
+        },
+        {
+          "name": "event",
+          "type": "CourseEvent"
+        },
+        {
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "name": "dueDate",
+          "type": "String?"
+        },
+        {
+          "name": "doneAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "doneBy",
+          "type": "String"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/lib/course-events.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/events/[id]/route.ts",
+        "src/lib/course-events.ts"
       ]
     },
     {
@@ -20780,10 +21833,12 @@
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/operator/course-products/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/tee-sets/route.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
@@ -21948,6 +23003,7 @@
       ],
       "readers": [
         "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ]
@@ -22198,6 +23254,14 @@
           "type": "TeeTimeAlert[]"
         },
         {
+          "name": "eventId",
+          "type": "String?"
+        },
+        {
+          "name": "event",
+          "type": "CourseEvent?"
+        },
+        {
           "name": "productId",
           "type": "String?"
         },
@@ -22209,6 +23273,7 @@
       "writers": [
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
+        "src/lib/course-events.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/schedule-service.ts",
@@ -22223,6 +23288,7 @@
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
@@ -22230,6 +23296,7 @@
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
@@ -22309,6 +23376,7 @@
       "readers": [
         "src/app/api/alerts/route.ts",
         "src/app/api/alerts/unsubscribe/[token]/route.ts",
+        "src/lib/analytics.ts",
         "src/lib/cancel-booking.ts"
       ]
     },
@@ -22411,6 +23479,7 @@
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
+        "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",

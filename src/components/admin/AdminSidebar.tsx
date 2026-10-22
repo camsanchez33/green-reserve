@@ -7,7 +7,7 @@ import { Search } from 'lucide-react';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 
-export type AdminNavKey = 'overview' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'broadcasts' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company';
+export type AdminNavKey = 'overview' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'activity' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -97,6 +97,8 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       { key: 'courses',   label: 'Courses',       href: '/admin/courses',   minRole: VIEWER_PLUS },
       { key: 'groups',    label: 'Course groups', href: '/admin/groups',    minRole: SUPPORT_PLUS },
       { key: 'messages',  label: 'Messages',      href: '/admin/messages',  minRole: SUPPORT_PLUS },
+      // AW-8a: its own page, no longer a tab inside Messages.
+      { key: 'announcements', label: 'Announcements', href: '/admin/announcements', minRole: SUPPORT_PLUS },
     ] },
     { label: 'Money', items: [
       { key: 'revenue', label: 'Revenue', href: '/admin/revenue', minRole: SUPPORT_PLUS },
@@ -107,6 +109,8 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
     ] },
     { label: 'System', items: [
       { key: 'system',   label: 'Health',       href: '/admin/system',   minRole: MANAGER_PLUS },
+      // BRAIN-1a: every admin action, who did it and why — owner only.
+      { key: 'audit',    label: 'Audit',        href: '/admin/audit',    minRole: OWNER_ONLY },
       { key: 'activity', label: 'Activity',     href: '/admin/activity', minRole: SUPPORT_PLUS },
       { key: 'create',   label: 'Manual build', href: '/admin/create',   minRole: MANAGER_PLUS },
       // CO-DOCS: the company's own paperwork (LLC filing, EIN, bank) — owner only.

@@ -6,6 +6,7 @@ import {
   generateTotpSecret, totpUri, totpQrSvg, totpMatchStep, generateRecoveryCodes,
   signEnrolToken, verifyEnrolToken,
 } from '@/lib/owner-totp';
+import { withAudit } from '@/lib/admin-audit';
 
 // OWNER TOTP 2FA — enrolment and recovery codes, on /admin/profile.
 //
@@ -42,7 +43,7 @@ export async function GET() {
   });
 }
 
-export async function POST(req: NextRequest) {
+async function twoFactor(req: NextRequest) {
   const g = await gate();
   if ('error' in g) return g.error;
   const ip = clientIp(req);
@@ -89,3 +90,6 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ error: `Unknown action "${action}"` }, { status: 400 });
 }
+
+// BRAIN-1a: turning on or regenerating two-factor is recorded; starting setup is not.
+export const POST = withAudit(twoFactor, body => body.action === 'confirm' || body.action === 'regenerate' ? { action: `two_factor_${String(body.action)}`, targetType: 'admin', targetId: 'self', after: {} } : null);

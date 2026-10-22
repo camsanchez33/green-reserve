@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { listSchedules, createSchedule, updateSchedule, deleteSchedule, ScheduleConflictError, ScheduleProductError } from '@/lib/schedule-service';
+import { withAudit } from '@/lib/admin-audit';
 
 // L2: the service refuses a save that would double-book a nine (409) or names a
 // product this course does not own (400); everything else is unchanged.
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(await listSchedules(courseId));
 }
 
-export async function POST(req: NextRequest) {
+async function addSchedule(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
   catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
-export async function PATCH(req: NextRequest) {
+async function editSchedule(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -53,7 +54,7 @@ export async function PATCH(req: NextRequest) {
   } catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
-export async function DELETE(req: NextRequest) {
+async function removeSchedule(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -64,3 +65,10 @@ export async function DELETE(req: NextRequest) {
   if (!removed) return NextResponse.json({ error: 'Schedule not found' }, { status: 404 });
   return NextResponse.json({ success: true });
 }
+
+// BRAIN-1a: schedule changes are recorded; deleting one needs a reason.
+export const POST = withAudit(addSchedule, body => ({ action: 'schedule_add', targetType: 'schedule', targetId: '', courseId: String(body.courseId ?? '') || null }));
+
+export const PATCH = withAudit(editSchedule, body => ({ action: 'schedule_edit', targetType: 'schedule', targetId: String(body.id ?? ''), courseId: String(body.courseId ?? '') || null }));
+
+export const DELETE = withAudit(removeSchedule, body => ({ action: 'schedule_delete', targetType: 'schedule', targetId: String(body.id ?? ''), courseId: String(body.courseId ?? '') || null }));

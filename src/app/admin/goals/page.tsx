@@ -8,6 +8,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { Card } from '@/components/ui/Card';
 import { formatMoney } from '@/lib/format';
 import { INPUT } from '@/components/ui/field';
+import { stepUpFetch } from '@/lib/step-up-client';
 
 type Metric = 'courses_live' | 'online_rounds' | 'fees';
 interface Goal {
@@ -71,7 +72,7 @@ export default function AdminGoalsPage() {
   async function remove(id: string) {
     setRemoving(id); setRemoveError(s => ({ ...s, [id]: '' }));
     try {
-      const r = await fetch(`/api/admin/goals?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      const r = await stepUpFetch(`/api/admin/goals?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) setRemoveError(s => ({ ...s, [id]: d.error || `Couldn’t remove it (${r.status}).` }));
       else await load();

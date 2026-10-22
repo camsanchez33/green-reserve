@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 01:04 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `8860edb` · working tree clean
+Generated 2026-10-22 02:04 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `21a19af` · working tree **103 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-19**. 76 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-19**. 78 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `21a19af` | 2026-10-22 | test-email.js: send from support@ (hello@ no longer exists) |
+| `1301b0a` | 2026-10-22 | Regenerate status board |
 | `8860edb` | 2026-10-22 | MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@ |
 | `f31213a` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (#172) |
 | `4abfebb` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (#171) |
@@ -90,6 +92,32 @@ Generated 2026-10-22 01:04 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD
 | `92cdf08` | 2026-10-19 | Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (103 file(s))
+
+- `M  ADMIN_V5_SPEC.md`
+- `M  OPERATOR_REWORK_SPEC.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  prisma/migrations/20261022003636_brain1a_admin_audit/migration.sql`
+- `A  prisma/migrations/20261022010603_w2_9_events/migration.sql`
+- `M  prisma/schema.prisma`
+- `A  scripts/admin-audit-test.ts`
+- `M  scripts/admin-nav-test.ts`
+- `A  scripts/analytics-w28-db-test.ts`
+- `A  scripts/course-plan-test.ts`
+- `M  scripts/design-guard.baseline.json`
+- `A  scripts/events-db-test.ts`
+- `A  scripts/events-test.ts`
+- `M  scripts/isolation-test.ts`
+- `M  scripts/schedule-periods-test.ts`
+- `M  scripts/schedule-rework-test.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -174,7 +202,6 @@ Nothing awaiting review.
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 2d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-20 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 1d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 2d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 2d |
@@ -194,6 +221,7 @@ Nothing awaiting review.
 | `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `GOLFER_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `HARDENING_SPEC.md` | 0 | 2026-10-19 | 2d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 2d |
@@ -210,6 +238,8 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `21a19af` 2026-10-22 — test-email.js: send from support@ (hello@ no longer exists)
+- `1301b0a` 2026-10-22 — Regenerate status board
 - `8860edb` 2026-10-22 — MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@
 - `f31213a` 2026-10-21 — AW-7: course page — Bookings, Money, Setup, Contact & notes (#172)
 - `4abfebb` 2026-10-21 — AW-6c: Leads column, Add a lead, Move to Talking (#171)
@@ -220,8 +250,6 @@ Nothing awaiting review.
 - `b84a2db` 2026-10-21 — AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card
 - `e941200` 2026-10-21 — Code map and status board
 - `39d69df` 2026-10-21 — AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts
-- `3bccfa0` 2026-10-21 — AW-5: hourly admin checks — urgent alerts once each, and a morning digest
-- `2228db8` 2026-10-21 — AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+
 
 ---
 

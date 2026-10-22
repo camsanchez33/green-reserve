@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { courseToWire, courseMoneyFromWire } from '@/lib/course-wire';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS } from '@/lib/admin-session';
 import { logSettingsChanged } from '@/lib/course-timeline';
+import { auditAdmin, changedFields } from '@/lib/admin-audit';
 
 // GET /api/admin/course-settings?courseId=X — full course record for the admin editor
 export async function GET(req: NextRequest) {
@@ -51,13 +52,16 @@ export async function PATCH(req: NextRequest) {
   // logged to the course timeline so the operator's change history stays
   // honest even when Cam makes the fix on the phone with them.
   const keys = Object.keys(data);
-  const before = keys.length > 0
-    ? await prisma.course.findUnique({ where: { id: courseId }, select: Object.fromEntries(keys.map(k => [k, true])) })
-    : null;
   // MP-3 B2b: money arrives in dollars under its old field names and is
   // mapped to the *Cents columns here. Deliberately out of the allowlist so a
   // raw dollar value can never be written straight into a cents column.
-  Object.assign(data, courseMoneyFromWire(body));
+  const money = courseMoneyFromWire(body);
+  // BRAIN-1a: the audit record covers the money columns too.
+  const allKeys = [...keys, ...Object.keys(money)];
+  const before = allKeys.length > 0
+    ? await prisma.course.findUnique({ where: { id: courseId }, select: Object.fromEntries(allKeys.map(k => [k, true])) })
+    : null;
+  Object.assign(data, money);
   const updated = await prisma.course.update({ where: { id: courseId }, data });
 
   if (before) {
@@ -65,6 +69,9 @@ export async function PATCH(req: NextRequest) {
       .filter(k => JSON.stringify((before as Record<string, unknown>)[k]) !== JSON.stringify(data[k]))
       .map(k => ({ field: k, from: (before as Record<string, unknown>)[k], to: data[k] }));
     if (changes.length > 0) await logSettingsChanged(courseId, changes, session.name);
+    const pick = (o: Record<string, unknown>) => Object.fromEntries(allKeys.map(k => [k, o[k]]));
+    const diff = changedFields(pick(before as Record<string, unknown>), pick(updated as unknown as Record<string, unknown>));
+    if (Object.keys(diff.after).length > 0) await auditAdmin(session, { action: 'course_settings', targetType: 'course', targetId: courseId, courseId, ...diff });
   }
 
   return NextResponse.json(updated);

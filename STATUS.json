@@ -1,15 +1,50 @@
 {
-  "generatedAt": "2026-10-22T01:04:47.989Z",
+  "generatedAt": "2026-10-22T02:04:42.313Z",
   "repo": {
-    "head": "8860edb",
+    "head": "21a19af",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 103,
+    "dirty": [
+      "M  ADMIN_V5_SPEC.md",
+      "M  OPERATOR_REWORK_SPEC.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  prisma/migrations/20261022003636_brain1a_admin_audit/migration.sql",
+      "A  prisma/migrations/20261022010603_w2_9_events/migration.sql",
+      "M  prisma/schema.prisma",
+      "A  scripts/admin-audit-test.ts",
+      "M  scripts/admin-nav-test.ts",
+      "A  scripts/analytics-w28-db-test.ts",
+      "A  scripts/course-plan-test.ts",
+      "M  scripts/design-guard.baseline.json",
+      "A  scripts/events-db-test.ts",
+      "A  scripts/events-test.ts",
+      "M  scripts/isolation-test.ts",
+      "M  scripts/schedule-periods-test.ts",
+      "M  scripts/schedule-rework-test.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-19T10:10:52-04:00",
     "unrecorded": [
+      {
+        "h": "21a19af",
+        "date": "2026-10-22T01:06:34+00:00",
+        "subject": "test-email.js: send from support@ (hello@ no longer exists)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1301b0a",
+        "date": "2026-10-22T01:05:18+00:00",
+        "subject": "Regenerate status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "8860edb",
         "date": "2026-10-22T01:03:19+00:00",
@@ -729,12 +764,6 @@
       "ageDays": 0
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-19",
-      "ageDays": 1
-    },
-    {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
@@ -849,6 +878,12 @@
       "ageDays": 2
     },
     {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 2
+    },
+    {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
@@ -930,6 +965,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "21a19af",
+      "date": "2026-10-22",
+      "subject": "test-email.js: send from support@ (hello@ no longer exists)"
+    },
+    {
+      "h": "1301b0a",
+      "date": "2026-10-22",
+      "subject": "Regenerate status board"
+    },
+    {
       "h": "8860edb",
       "date": "2026-10-22",
       "subject": "MAIL-1: Google Workspace addresses — support@, admin@, billing@, noreply@"
@@ -978,16 +1023,6 @@
       "h": "39d69df",
       "date": "2026-10-21",
       "subject": "AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts"
-    },
-    {
-      "h": "3bccfa0",
-      "date": "2026-10-21",
-      "subject": "AW-5: hourly admin checks — urgent alerts once each, and a morning digest"
-    },
-    {
-      "h": "2228db8",
-      "date": "2026-10-21",
-      "subject": "AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+"
     }
   ]
 }

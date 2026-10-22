@@ -2043,3 +2043,25 @@ export async function sendAdminDigest(data: {
   `, ADMIN_EMAIL);
   await getResend().emails.send({ from: FROM_ADMIN, to: ADMIN_EMAIL, subject: `[GreenReserve] Morning digest — ${f.date}`, html });
 }
+
+/** W2-9: a player's group in an event — sent from the event's player list. Replies go to the course (the staff who sent it). */
+export async function sendEventPairingsEmail(data: {
+  name: string; email: string; courseName: string; coursePhone: string; replyTo: string;
+  eventName: string; dateLabel: string; startLabel: string; groupNo: number; startHole: number | null; groupmates: string[];
+}) {
+  const e = escapeHtml;
+  const row = (label: string, value: string) => `<tr><td style="padding:6px 0;color:#6B706A;font-size:14px;width:120px;vertical-align:top;">${label}</td><td style="padding:6px 0;color:#141814;font-size:14px;">${value}</td></tr>`;
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your group for ${e(data.eventName)}</h1>
+    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${e(firstName(data.name))}, here is where you start at ${e(data.courseName)}.</p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;border-top:1px solid #E3E4DE;border-bottom:1px solid #E3E4DE;margin-bottom:20px;">
+      ${row('Date', e(data.dateLabel))}
+      ${row(data.startHole ? 'Shotgun' : 'Tee time', e(data.startLabel))}
+      ${row('Group', String(data.groupNo))}
+      ${data.startHole ? row('Starting hole', String(data.startHole)) : ''}
+      ${data.groupmates.length ? row('Playing with', data.groupmates.map(e).join('<br>')) : ''}
+    </table>
+    <p style="margin:0;color:#6B706A;font-size:13px;">Questions? Reply to this email${data.coursePhone ? ` or call ${e(data.courseName)} at ${e(data.coursePhone)}` : ''}.</p>
+  `);
+  await getResend().emails.send({ from: FROM_SUPPORT, to: data.email, replyTo: data.replyTo, subject: `Your group for ${data.eventName}`, html });
+}
