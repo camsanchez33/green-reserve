@@ -4,15 +4,22 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 21:27 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fc5c6aa` · working tree **4 dirty file(s)**
+Generated 2026-10-22 21:51 UTC · branch `claude/test-data-reset` · HEAD `8fd8e0f` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 125 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 132 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `91df6b9` | 2026-10-22 | W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send |
 | `fc5c6aa` | 2026-10-22 | W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through) |
+| `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
+| `3c63c5d` | 2026-10-22 | AW-11 Team: per-person access — each employee's role and areas (#186) |
+| `75ac7d5` | 2026-10-22 | AW-10 Golfers: lookup only, in the new admin look (#185) |
+| `95e1b37` | 2026-10-22 | Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184) |
+| `a5c912b` | 2026-10-22 | Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183) |
+| `5e73b48` | 2026-10-22 | ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182) |
 | `694230a` | 2026-10-22 | W2-9c Events: each player's own pay link; paid at the course per player |
 | `b9fe29f` | 2026-10-22 | W2-9b: event pay-link email and text say what they are (BRAIN-1b message log) |
 | `40be0a7` | 2026-10-22 | Status board |
@@ -140,12 +147,21 @@ Generated 2026-10-22 21:27 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (13 file(s))
 
+- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/operator/events/[id]/payments/route.ts`
-- `M src/components/dashboard/events/EventDetail.tsx`
+- `M prisma/schema.prisma`
+- `M src/app/admin/courses/[id]/page.tsx`
+- `M src/app/admin/system/page.tsx`
+- `M src/lib/admin-audit.ts`
+- `?? prisma/migrations/20261022214444_test1_course_is_test/`
+- `?? scripts/data-reset-db-test.ts`
+- `?? src/app/api/admin/data-reset/`
+- `?? src/app/api/admin/test-course/`
+- `?? src/components/admin/TestDataTools.tsx`
+- `?? src/lib/data-reset.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -230,58 +246,58 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-21 | 1d |
+| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-21 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 10d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 14d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 14d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 14d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 14d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 17d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 17d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 17d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 21d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 23d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `ARCHITECTURE.md` | 0 | 2026-09-29 | 23d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 23d |
 
 ## Recent commits
 
+- `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
 - `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
+- `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
+- `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
+- `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
+- `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
+- `a5c912b` 2026-10-22 — Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)
+- `5e73b48` 2026-10-22 — ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)
 - `694230a` 2026-10-22 — W2-9c Events: each player's own pay link; paid at the course per player
 - `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
 - `40be0a7` 2026-10-22 — Status board
 - `e449074` 2026-10-22 — W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close
-- `4438d60` 2026-10-22 — Status board
-- `b001c14` 2026-10-22 — W2-9b: narrow the recorded payment in the test (typecheck)
-- `4086e37` 2026-10-22 — W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds
-- `7feae5c` 2026-10-22 — W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup
-- `478ec76` 2026-10-22 — W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet
-- `4bd2042` 2026-10-21 — BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)
-- `512e214` 2026-10-22 — queue/spec update
 
 ---
 

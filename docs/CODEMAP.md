@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-523 source files · 253 routes · 171 libraries · 55 models
+527 source files · 255 routes · 172 libraries · 55 models
 
 ## Single sources of truth
 
@@ -60,7 +60,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/broadcasts` | admin | client-side | page | `src/app/admin/broadcasts/page.tsx` | 12 |
 | `/admin/company-documents` | admin | client-side | page | `src/app/admin/company-documents/page.tsx` | 165 |
 | `/admin/courses` | admin | client-side | page | `src/app/admin/courses/page.tsx` | 524 |
-| `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 320 |
+| `/admin/courses/[id]` | admin | client-side | page | `src/app/admin/courses/[id]/page.tsx` | 326 |
 | `/admin/create` | admin | client-side | page | `src/app/admin/create/page.tsx` | 761 |
 | `/admin/employees` | admin | client-side | page | `src/app/admin/employees/page.tsx` | 278 |
 | `/admin/forgot-password` | admin | client-side | page | `src/app/admin/forgot-password/page.tsx` | 67 |
@@ -75,7 +75,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/admin/profile` | admin | client-side | page | `src/app/admin/profile/page.tsx` | 123 |
 | `/admin/revenue` | admin | client-side | page | `src/app/admin/revenue/page.tsx` | 1074 |
 | `/admin/set-password` | admin | client-side | page | `src/app/admin/set-password/page.tsx` | 159 |
-| `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 595 |
+| `/admin/system` | admin | client-side | page | `src/app/admin/system/page.tsx` | 603 |
 | `/api/admin/activity` | admin | file | GET | `src/app/api/admin/activity/route.ts` | 147 |
 | `/api/admin/agreement-versions` | admin | file | GET POST | `src/app/api/admin/agreement-versions/route.ts` | 57 |
 | `/api/admin/archive-course` | admin | file | POST | `src/app/api/admin/archive-course/route.ts` | 79 |
@@ -102,6 +102,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/course-settings` | admin | file | GET PATCH | `src/app/api/admin/course-settings/route.ts` | 83 |
 | `/api/admin/courses` | admin | file | GET | `src/app/api/admin/courses/route.ts` | 246 |
 | `/api/admin/create-course` | admin | file | GET POST | `src/app/api/admin/create-course/route.ts` | 192 |
+| `/api/admin/data-reset` | admin | file | GET POST | `src/app/api/admin/data-reset/route.ts` | 32 |
 | `/api/admin/disputes/[bookingId]/evidence` | admin | file | GET | `src/app/api/admin/disputes/[bookingId]/evidence/route.ts` | 29 |
 | `/api/admin/employees` | admin | file | GET PATCH POST | `src/app/api/admin/employees/route.ts` | 146 |
 | `/api/admin/expenses` | admin | file | GET POST | `src/app/api/admin/expenses/route.ts` | 47 |
@@ -134,6 +135,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/stripe-match` | admin | file | GET | `src/app/api/admin/stripe-match/route.ts` | 29 |
 | `/api/admin/system` | admin | file | GET | `src/app/api/admin/system/route.ts` | 109 |
 | `/api/admin/tee-sheet` | admin | file | GET PATCH POST | `src/app/api/admin/tee-sheet/route.ts` | 128 |
+| `/api/admin/test-course` | admin | file | GET PATCH POST | `src/app/api/admin/test-course/route.ts` | 53 |
 | `/api/admin/today` | admin | file | GET | `src/app/api/admin/today/route.ts` | 52 |
 | `/api/admin/transactions` | admin | file | GET | `src/app/api/admin/transactions/route.ts` | 143 |
 | `/api/admin/transactions/export` | admin | file | GET | `src/app/api/admin/transactions/export/route.ts` | 93 |
@@ -312,21 +314,21 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 216 | 15 |  | `prisma` |
-| `src/lib/admin-session.ts` | 67 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
+| `src/lib/prisma.ts` | 218 | 15 |  | `prisma` |
+| `src/lib/admin-session.ts` | 69 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
 | `src/lib/email.ts` | 54 | 2107 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +62 more |
 | `src/lib/session.ts` | 54 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/rate-limit.ts` | 46 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 45 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
-| `src/lib/admin-audit.ts` | 40 | 191 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
+| `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/course-time.ts` | 33 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/agreement-required.ts` | 29 | 122 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
 | `src/lib/stripe.ts` | 25 | 96 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/dashboard-fetch.ts` | 22 | 43 | SD-10 (from the SD review). | `dfetch`, `DFetchResult` |
+| `src/lib/admin-fetch.ts` | 17 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/change-requests.ts` | 17 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
-| `src/lib/admin-fetch.ts` | 16 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
 | `src/lib/inquiry-status.ts` | 16 | 480 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +23 more |
 | `src/lib/cancel-policy.ts` | 15 | 240 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardRequired`, `chargesNoShow`, `chargesOnLateCancel` +14 more |
 | `src/lib/course-timeline.ts` | 15 | 363 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `buildCourseFeed`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload` +26 more |
@@ -334,8 +336,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/booking-fees.ts` | 13 | 36 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `hoursLabel`, `serviceFeeLabel`, `SHOP_FEE_LABEL`, `SHOP_FEE_ON` +1 more |
 | `src/lib/shop.ts` | 13 | 156 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `addItemToBooking`, `MAX_BOOKING_SHOP_CENTS`, `MAX_ITEM_PRICE_CENTS`, `MAX_LINE_QUANTITY`, `removeLineFromBooking`, `roundApplicationFeeCents`, `roundChargeCents`, `roundChargedTotal` +9 more |
 | `src/lib/admin-areas.ts` | 12 | 44 | AW-11 (Cam 2026-10-22: | `ADMIN_AREAS`, `AdminArea`, `ALL_AREAS`, `effectiveAreas`, `hasArea`, `isAdminArea` |
+| `src/lib/admin-session-context.tsx` | 12 | 80 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/booking-events.ts` | 12 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
-| `src/lib/admin-session-context.tsx` | 11 | 80 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/step-up-client.ts` | 11 | 70 | AW-1c: | `askReason`, `registerReasonHandler`, `registerStepUpHandler`, `stepUpFetch`, `withReason` |
 | `src/lib/cron-log.ts` | 10 | 141 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/staff-permissions.ts` | 10 | 138 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
@@ -430,6 +432,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-shape.ts` | 2 | 116 | W2-6 (Cam 2026-10-20: | `guessShape`, `isStockLabel`, `PlanNine`, `PlanRound`, `shapeDef`, `ShapeDef`, `ShapeKey`, `shapeNines` +2 more |
 | `src/lib/course-timeline-groups.ts` | 2 | 16 | BRAIN-1b: | `FEED_GROUPS`, `FeedGroup`, `FeedItem` |
 | `src/lib/courses-data.ts` | 2 | 324 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
+| `src/lib/data-reset.ts` | 2 | 143 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
 | `src/lib/facilities.ts` | 2 | 55 | Settings rework (Cam 2026-10-19: | `FacilityFields`, `facilityLines`, `FOOD_TYPES`, `RANGE_TYPES`, `TOURNAMENT_FREQ` |
 | `src/lib/image-resize.ts` | 2 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/inquiry-action-queue.ts` | 2 | 105 | The Overview action queue's inquiry rows. | `ActionQueueRow`, `buildInquiryQueueRows`, `QueueInquiry` |
@@ -490,9 +493,9 @@ Sorted the same way.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/components/ui/StatusDot.tsx` | 59 | 36 |  | `StatusDot` |
+| `src/components/ui/StatusDot.tsx` | 60 | 36 |  | `StatusDot` |
 | `src/components/ui/Card.tsx` | 55 | 17 |  | `Card`, `CARD` |
-| `src/components/ui/field.ts` | 40 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
+| `src/components/ui/field.ts` | 41 | 8 | MP-9: | `INPUT`, `INPUT_COMPACT` |
 | `src/components/admin/AdminSidebar.tsx` | 19 | 236 |  | `AdminNavKey`, `default (AdminSidebar)` |
 | `src/components/ui/Eyebrow.tsx` | 14 | 19 |  | `Eyebrow`, `EYEBROW` |
 | `src/components/dashboard/Toast.tsx` | 11 | 70 | SD-2. | `toast`, `Toaster`, `ToastKind` |
@@ -510,6 +513,7 @@ Sorted the same way.
 | `src/components/PlainHeader.tsx` | 3 | 17 |  | `default (PlainHeader)` |
 | `src/components/admin/CourseCheckInCard.tsx` | 2 | 364 | COURSES_SHEET_SPEC CS-3 §2 — the "Next check-in" card on a live course's Overview. | `CourseCallRow`, `default (CourseCheckInCard)`, `describeCheckIn` |
 | `src/components/admin/LeadDialogs.tsx` | 2 | 129 | AW-6c (Cam 2026-10-21: | `AddLeadDialog`, `MoveToTalkingDialog` |
+| `src/components/admin/TestDataTools.tsx` | 2 | 170 | TEST-1 (Cam 2026-10-22): | `LaunchWipeCard`, `TestCourseCard` |
 | `src/components/dashboard/events/EventSetup.tsx` | 2 | 344 | W2-9 Events: | `blankForm`, `default (EventSetup)`, `EventForm`, `KINDS`, `NineOpt`, `Product` |
 | `src/components/dashboard/money/PayoutsTable.tsx` | 2 | 73 | Money rework (Cam 2026-10-19): | `fmtDay`, `Payout`, `PayoutsData`, `PayoutsTable`, `usd` |
 | `src/components/TrustNote.tsx` | 2 | 12 |  | `TrustNote` |
@@ -568,11 +572,11 @@ without opening anything.
 
 ### AdminAlert
 
-16 fields · 2 writer(s) · 4 reader(s)
+16 fields · 3 writer(s) · 5 reader(s)
 
 - fields: `id`, `key`, `kind`, `title`, `detail`, `href`, `firstSeenAt`, `lastSeenAt`, `alertedAt`, `resolvedAt`, `ownerId`, `ownerName`, `courseId`, `snoozedUntil`, `snoozeReason`, `events`
-- writers: `src/app/api/admin/problems/route.ts`, `src/lib/admin-checks.ts`
-- readers: `src/app/api/admin/problems/route.ts`, `src/lib/admin-checks.ts`, `src/lib/course-timeline.ts`, `src/lib/problems.ts`
+- writers: `src/app/api/admin/problems/route.ts`, `src/lib/admin-checks.ts`, `src/lib/data-reset.ts`
+- readers: `src/app/api/admin/problems/route.ts`, `src/lib/admin-checks.ts`, `src/lib/course-timeline.ts`, `src/lib/data-reset.ts`, `src/lib/problems.ts`
 
 ### AdminAlertEvent
 
@@ -648,19 +652,19 @@ without opening anything.
 
 ### Booking
 
-58 fields · 10 writer(s) · 53 reader(s)
+58 fields · 11 writer(s) · 54 reader(s)
 
 - fields: `id`, `teeTimeId`, `teeTime`, `courseId`, `course`, `golferAccountId`, `golferAccount`, `golferName`, `golferEmail`, `golferPhone`, `players`, `appliedRate`, `greenFeeTotal`, `cartFeeTotal`, `cartSelected`, `rangeBallsSize`, `rangeBallsTotal`, `accessFeeTotal`, `totalAmount`, `stripeCustomerId`, `stripePaymentMethodId`, `stripePaymentIntentId`, `cancellationFeeTotal`, `cancellationFeeChargeId`, `cancellationFeeChargedAt`, `cancelledAt`, `checkInToken`, `checkedInAt`, `roundPaymentIntentId`, `checkInFailReason`, `paymentStatus`, `status`, `termsAcceptedAt`, `termsVersion`, `cancellationFeeApplies`, `lateFeeTimingAtBooking`, `noShowFeeTotal`, `autoNoShowMinutesAtBooking`, `source`, `checkedInPlayers`, `noShowAt`, `paidOffline`, `cancellationHoursAtBooking`, `paidAt`, `shopTotalCents`, `shopFeeCents`, `shopLockedAt`, `shopTaxCents`, `shopTaxCalculationId`, `shopTaxKey`, `shopTaxExpiresAt`, `shopTaxTransactionId`, `roundChargedCents`, `residentPlayers`, `residentRateCents`, `createdAt`, `paymentEvents`, `shopItems`
-- writers: `src/app/api/cron/cancellation-cutoff/route.ts`, `src/app/api/cron/hourly/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/access-fee.ts`, `src/lib/checkin-booking.ts`, `src/lib/lifecycle.ts`, `src/lib/refund-booking.ts`, `src/lib/round-shop-tax.ts`
-- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/golfers/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/platform-stripe/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stripe-match/route.ts`, `src/app/api/admin/transactions/export/route.ts`, `src/app/api/admin/transactions/route.ts` +41 more (see `docs/codemap.json`)
+- writers: `src/app/api/cron/cancellation-cutoff/route.ts`, `src/app/api/cron/hourly/route.ts`, `src/app/api/golfer/auth/otp/verify/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/access-fee.ts`, `src/lib/checkin-booking.ts`, `src/lib/data-reset.ts`, `src/lib/lifecycle.ts`, `src/lib/refund-booking.ts`, `src/lib/round-shop-tax.ts`
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/golfers/route.ts`, `src/app/api/admin/messages/route.ts`, `src/app/api/admin/nav-badges/route.ts`, `src/app/api/admin/platform-stripe/route.ts`, `src/app/api/admin/revenue/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/admin/stripe-match/route.ts`, `src/app/api/admin/transactions/export/route.ts`, `src/app/api/admin/transactions/route.ts` +42 more (see `docs/codemap.json`)
 
 ### BookingEvent
 
-12 fields · 0 writer(s) · 5 reader(s)
+12 fields · 1 writer(s) · 6 reader(s)
 
 - fields: `id`, `bookingId`, `courseId`, `type`, `occurredAt`, `actorType`, `actorId`, `amountCents`, `playerCount`, `teeTimeAt`, `stripeId`, `metadata`
-- writers: **none** — nothing in `src/` writes this model
-- readers: `src/lib/analytics.ts`, `src/lib/course-timeline.ts`, `src/lib/dispute-evidence.ts`, `src/lib/no-show-fee.ts`, `src/lib/receipt-charges.ts`
+- writers: `src/lib/data-reset.ts`
+- readers: `src/lib/analytics.ts`, `src/lib/course-timeline.ts`, `src/lib/data-reset.ts`, `src/lib/dispute-evidence.ts`, `src/lib/no-show-fee.ts`, `src/lib/receipt-charges.ts`
 
 ### BookingShopItem
 
@@ -688,19 +692,19 @@ without opening anything.
 
 ### Course
 
-122 fields · 15 writer(s) · 93 reader(s)
+123 fields · 16 writer(s) · 95 reader(s)
 
-- fields: `id`, `slug`, `name`, `type`, `city`, `state`, `zipCode`, `address`, `phone`, `website`, `bookingUrl`, `holes`, `par`, `yardage`, `slope`, `courseRating`, `description`, `amenities`, `walkingAllowed`, `walkingNote`, `cartRequired`, `dresscode`, `minPlayers`, `maxPlayers`, `cancellationHours`, `checkInWindowHours`, `lateCancellationFeeCents`, `lateFeeBasis`, `lateFeeTiming`, `noShowFeeCents`, `noShowFeeBasis`, `autoNoShowMinutes`, `timezone`, `rainCheckPolicy`, `publicAdvanceDays`, `memberAdvanceDays`, `hasMemberPricing`, `hasResidentPricing`, `residentCounty`, `residentState`, `residentProofRequired`, `hasCaddies`, `caddieType`, `caddieLooperRateCents`, `caddieForeRateCents`, `caddieNote`, `hasDrivingRange`, `drivingRangeType`, `rangeBallsFree`, `rangeBallsSmallPriceCents`, `rangeBallsMediumPriceCents`, `rangeBallsLargePriceCents`, `hasPuttingGreen`, `hasShortGameArea`, `hasProShop`, `proShopPhone`, `restaurantType`, `hasCartGirl`, `tournamentFrequency`, `hasLessons`, `hasClubRental`, `clubRentalRateCents`, `hasPushCartRental`, `pushCartRateCents`, `hasBagStorage`, `hasLockerRoom`, `hasGpsCarts`, `hasTournaments`, `stripeAccountId`, `stripeAccountActive`, `shopTaxOn`, `rating`, `reviewCount`, `imageGradient`, `brandColor`, `establishedYear`, `logoUrl`, `heroImageUrl`, `confirmationNote`, `featured`, `active`, `liveStatus`, `firstWentLiveAt`, `offlineAt`, `welcomeEmailSentAt`, `adminNotes`, `archivedAt`, `archivedBy`, `createdAt`, `updatedAt`, `operatorId`, `operator`, `conditions`, `conditionsUpdatedAt`, `giftCardUrl`, `heroPhotoUrl`, `teeTimes`, `bookings`, `schedules`, `blackouts`, `memberships`, `residents`, `groupId`, `group`, `membershipTiers`, `staff`, `teeSets`, `thread`, `photos`, `teeTimeAlerts`, `events`, `nines`, `nextCheckInAt`, `staffLastSeenAt`, `calls`, `legalName`, `agreements`, `courseProducts`, `monthlyReviews`, `golferMessages`, `shopItems`, `shopSales`
-- writers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-groups/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/operator/conditions/route.ts`, `src/app/api/operator/courses/route.ts`, `src/app/api/operator/settings/route.ts`, `src/app/api/operator/stripe/callback/route.ts`, `src/app/api/operator/stripe/connect/route.ts`, `src/app/api/operator/upload/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/agreement-sign.ts`, `src/lib/lifecycle.ts`, `src/lib/sales-tax.ts`
-- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/audit/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-documents/route.ts`, `src/app/api/admin/course-groups/route.ts`, `src/app/api/admin/course-payouts/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts` +81 more (see `docs/codemap.json`)
+- fields: `id`, `isTest`, `slug`, `name`, `type`, `city`, `state`, `zipCode`, `address`, `phone`, `website`, `bookingUrl`, `holes`, `par`, `yardage`, `slope`, `courseRating`, `description`, `amenities`, `walkingAllowed`, `walkingNote`, `cartRequired`, `dresscode`, `minPlayers`, `maxPlayers`, `cancellationHours`, `checkInWindowHours`, `lateCancellationFeeCents`, `lateFeeBasis`, `lateFeeTiming`, `noShowFeeCents`, `noShowFeeBasis`, `autoNoShowMinutes`, `timezone`, `rainCheckPolicy`, `publicAdvanceDays`, `memberAdvanceDays`, `hasMemberPricing`, `hasResidentPricing`, `residentCounty`, `residentState`, `residentProofRequired`, `hasCaddies`, `caddieType`, `caddieLooperRateCents`, `caddieForeRateCents`, `caddieNote`, `hasDrivingRange`, `drivingRangeType`, `rangeBallsFree`, `rangeBallsSmallPriceCents`, `rangeBallsMediumPriceCents`, `rangeBallsLargePriceCents`, `hasPuttingGreen`, `hasShortGameArea`, `hasProShop`, `proShopPhone`, `restaurantType`, `hasCartGirl`, `tournamentFrequency`, `hasLessons`, `hasClubRental`, `clubRentalRateCents`, `hasPushCartRental`, `pushCartRateCents`, `hasBagStorage`, `hasLockerRoom`, `hasGpsCarts`, `hasTournaments`, `stripeAccountId`, `stripeAccountActive`, `shopTaxOn`, `rating`, `reviewCount`, `imageGradient`, `brandColor`, `establishedYear`, `logoUrl`, `heroImageUrl`, `confirmationNote`, `featured`, `active`, `liveStatus`, `firstWentLiveAt`, `offlineAt`, `welcomeEmailSentAt`, `adminNotes`, `archivedAt`, `archivedBy`, `createdAt`, `updatedAt`, `operatorId`, `operator`, `conditions`, `conditionsUpdatedAt`, `giftCardUrl`, `heroPhotoUrl`, `teeTimes`, `bookings`, `schedules`, `blackouts`, `memberships`, `residents`, `groupId`, `group`, `membershipTiers`, `staff`, `teeSets`, `thread`, `photos`, `teeTimeAlerts`, `events`, `nines`, `nextCheckInAt`, `staffLastSeenAt`, `calls`, `legalName`, `agreements`, `courseProducts`, `monthlyReviews`, `golferMessages`, `shopItems`, `shopSales`
+- writers: `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-groups/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/inquiries/route.ts`, `src/app/api/admin/test-course/route.ts`, `src/app/api/operator/conditions/route.ts`, `src/app/api/operator/courses/route.ts`, `src/app/api/operator/settings/route.ts`, `src/app/api/operator/stripe/callback/route.ts`, `src/app/api/operator/stripe/connect/route.ts`, `src/app/api/operator/upload/route.ts`, `src/app/api/stripe/webhook/route.ts`, `src/lib/agreement-sign.ts`, `src/lib/lifecycle.ts`, `src/lib/sales-tax.ts`
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/audit/route.ts`, `src/app/api/admin/broadcasts/route.ts`, `src/app/api/admin/course-calls/route.ts`, `src/app/api/admin/course-detail/route.ts`, `src/app/api/admin/course-documents/route.ts`, `src/app/api/admin/course-groups/route.ts`, `src/app/api/admin/course-payouts/route.ts`, `src/app/api/admin/course-settings/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/create-course/route.ts`, `src/app/api/admin/inquiries/route.ts` +83 more (see `docs/codemap.json`)
 
 ### CourseEvent
 
-34 fields · 1 writer(s) · 6 reader(s)
+34 fields · 2 writer(s) · 7 reader(s)
 
 - fields: `id`, `courseId`, `course`, `name`, `kind`, `date`, `format`, `startTime`, `holdFrom`, `holdTo`, `holdToCustom`, `productId`, `shareCourse`, `holdNineIds`, `keepOpen`, `holes`, `groups`, `players`, `organizerName`, `organizerEmail`, `organizerPhone`, `pricePerPlayerCents`, `includes`, `terms`, `notes`, `status`, `createdBy`, `createdAt`, `updatedAt`, `tasks`, `entrants`, `teeTimes`, `payments`, `finalHeadcount`
-- writers: `src/lib/course-events.ts`
-- readers: `src/app/api/operator/events/[id]/payments/route.ts`, `src/app/api/operator/events/[id]/route.ts`, `src/app/api/operator/events/route.ts`, `src/lib/course-events.ts`, `src/lib/event-payments.ts`, `src/lib/tee-sheet-engine.ts`
+- writers: `src/lib/course-events.ts`, `src/lib/data-reset.ts`
+- readers: `src/app/api/operator/events/[id]/payments/route.ts`, `src/app/api/operator/events/[id]/route.ts`, `src/app/api/operator/events/route.ts`, `src/lib/course-events.ts`, `src/lib/data-reset.ts`, `src/lib/event-payments.ts`, `src/lib/tee-sheet-engine.ts`
 
 ### CourseEventPayment
 
@@ -752,19 +756,19 @@ without opening anything.
 
 ### CourseMembership
 
-24 fields · 7 writer(s) · 23 reader(s)
+24 fields · 8 writer(s) · 24 reader(s)
 
 - fields: `id`, `golferId`, `golfer`, `courseId`, `course`, `tierId`, `tier`, `membershipType`, `inviteEmail`, `inviteName`, `invitePhone`, `inviteAccepted`, `status`, `addedBy`, `expiresAt`, `startedAt`, `paymentStatus`, `payToken`, `lastPaidAt`, `lastPaymentIntentId`, `renewalRemindedAt`, `initiationWaived`, `notes`, `createdAt`
-- writers: `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/operator/members/remind-overdue/route.ts`, `src/app/api/operator/members/route.ts`, `src/lib/lifecycle.ts`, `src/lib/member-import.ts`
-- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/course-members/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/transactions/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/member/[courseSlug]/payments/route.ts`, `src/app/api/member/[courseSlug]/send-code/route.ts`, `src/app/api/member/[courseSlug]/session/route.ts` +11 more (see `docs/codemap.json`)
+- writers: `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/operator/members/remind-overdue/route.ts`, `src/app/api/operator/members/route.ts`, `src/lib/data-reset.ts`, `src/lib/lifecycle.ts`, `src/lib/member-import.ts`
+- readers: `src/app/api/admin/activity/route.ts`, `src/app/api/admin/course-members/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/transactions/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/member/[courseSlug]/payments/route.ts`, `src/app/api/member/[courseSlug]/send-code/route.ts`, `src/app/api/member/[courseSlug]/session/route.ts` +12 more (see `docs/codemap.json`)
 
 ### CourseMessage
 
-12 fields · 1 writer(s) · 1 reader(s)
+12 fields · 2 writer(s) · 2 reader(s)
 
 - fields: `id`, `courseId`, `course`, `date`, `fromTime`, `toTime`, `body`, `sentEmail`, `sentSms`, `failed`, `sentBy`, `createdAt`
-- writers: `src/lib/golfer-messages.ts`
-- readers: `src/app/api/operator/golfer-messages/route.ts`
+- writers: `src/lib/data-reset.ts`, `src/lib/golfer-messages.ts`
+- readers: `src/app/api/operator/golfer-messages/route.ts`, `src/lib/data-reset.ts`
 
 ### CourseOperator
 
@@ -800,11 +804,11 @@ without opening anything.
 
 ### CourseResident
 
-11 fields · 1 writer(s) · 2 reader(s)
+11 fields · 2 writer(s) · 3 reader(s)
 
 - fields: `id`, `courseId`, `course`, `name`, `email`, `cardNumber`, `expiresOn`, `notes`, `addedBy`, `createdAt`, `updatedAt`
-- writers: `src/app/api/operator/residents/route.ts`
-- readers: `src/app/api/operator/residents/route.ts`, `src/lib/member-session.ts`
+- writers: `src/app/api/operator/residents/route.ts`, `src/lib/data-reset.ts`
+- readers: `src/app/api/operator/residents/route.ts`, `src/lib/data-reset.ts`, `src/lib/member-session.ts`
 
 ### CourseStaff
 
@@ -864,19 +868,19 @@ without opening anything.
 
 ### MessageThread
 
-9 fields · 3 writer(s) · 5 reader(s)
+9 fields · 4 writer(s) · 6 reader(s)
 
 - fields: `id`, `courseId`, `adminLastEmailAt`, `operatorLastEmailAt`, `closedAt`, `updatedAt`, `createdAt`, `course`, `messages`
-- writers: `src/app/api/admin/messages/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/submit-change-request.ts`
-- readers: `src/app/api/admin/messages/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/admin-action-queue.ts`, `src/lib/submit-change-request.ts`
+- writers: `src/app/api/admin/messages/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/data-reset.ts`, `src/lib/submit-change-request.ts`
+- readers: `src/app/api/admin/messages/route.ts`, `src/app/api/admin/search/route.ts`, `src/app/api/operator/messages/route.ts`, `src/lib/admin-action-queue.ts`, `src/lib/data-reset.ts`, `src/lib/submit-change-request.ts`
 
 ### MonthlyReview
 
-13 fields · 1 writer(s) · 2 reader(s)
+13 fields · 2 writer(s) · 3 reader(s)
 
 - fields: `id`, `courseId`, `course`, `month`, `isBaseline`, `metrics`, `status`, `body`, `model`, `error`, `emailedAt`, `createdAt`, `updatedAt`
-- writers: `src/lib/monthly-review.ts`
-- readers: `src/app/api/operator/monthly-reviews/route.ts`, `src/lib/monthly-review.ts`
+- writers: `src/lib/data-reset.ts`, `src/lib/monthly-review.ts`
+- readers: `src/app/api/operator/monthly-reviews/route.ts`, `src/lib/data-reset.ts`, `src/lib/monthly-review.ts`
 
 ### Nine
 
@@ -928,11 +932,11 @@ without opening anything.
 
 ### SentMessage
 
-11 fields · 1 writer(s) · 2 reader(s)
+11 fields · 2 writer(s) · 3 reader(s)
 
 - fields: `id`, `channel`, `kind`, `to`, `courseId`, `bookingId`, `inquiryId`, `status`, `providerId`, `error`, `createdAt`
-- writers: `src/lib/sent-messages.ts`
-- readers: `src/lib/course-timeline.ts`, `src/lib/dispute-evidence.ts`
+- writers: `src/lib/data-reset.ts`, `src/lib/sent-messages.ts`
+- readers: `src/lib/course-timeline.ts`, `src/lib/data-reset.ts`, `src/lib/dispute-evidence.ts`
 
 ### ShopItem
 
@@ -944,11 +948,11 @@ without opening anything.
 
 ### ShopSale
 
-19 fields · 2 writer(s) · 4 reader(s)
+19 fields · 3 writer(s) · 5 reader(s)
 
 - fields: `id`, `courseId`, `course`, `status`, `totalCents`, `taxCents`, `taxCalculationId`, `taxTransactionId`, `customerName`, `customerPhone`, `customerEmail`, `payToken`, `paymentIntentId`, `chargeStartedAt`, `paidAt`, `voidedAt`, `soldBy`, `createdAt`, `lines`
-- writers: `src/lib/sales-tax.ts`, `src/lib/shop-sales.ts`
-- readers: `src/app/api/operator/shop-sales/route.ts`, `src/lib/analytics.ts`, `src/lib/sales-tax.ts`, `src/lib/shop-sales.ts`
+- writers: `src/lib/data-reset.ts`, `src/lib/sales-tax.ts`, `src/lib/shop-sales.ts`
+- readers: `src/app/api/operator/shop-sales/route.ts`, `src/lib/analytics.ts`, `src/lib/data-reset.ts`, `src/lib/sales-tax.ts`, `src/lib/shop-sales.ts`
 
 ### ShopSaleLine
 
@@ -984,19 +988,19 @@ without opening anything.
 
 ### TeeTime
 
-22 fields · 8 writer(s) · 25 reader(s)
+22 fields · 9 writer(s) · 26 reader(s)
 
 - fields: `id`, `courseId`, `course`, `date`, `time`, `holes`, `playersAvailable`, `playersBooked`, `greenFeeCents`, `memberRateCents`, `residentRateCents`, `cartFeeCents`, `walkingAllowed`, `tierName`, `status`, `createdAt`, `bookings`, `teeTimeAlerts`, `eventId`, `event`, `productId`, `product`
-- writers: `src/app/api/operator/blackouts/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/course-events.ts`, `src/lib/frost-delay.ts`, `src/lib/lifecycle.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/weather-cancel.ts`
-- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/manage/[bookingId]/swap-time/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/operator/events/[id]/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/lib/admin-home.ts` +13 more (see `docs/codemap.json`)
+- writers: `src/app/api/operator/blackouts/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/lib/course-events.ts`, `src/lib/data-reset.ts`, `src/lib/frost-delay.ts`, `src/lib/lifecycle.ts`, `src/lib/schedule-service.ts`, `src/lib/tee-sheet-engine.ts`, `src/lib/weather-cancel.ts`
+- readers: `src/app/api/admin/tee-sheet/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/manage/[bookingId]/available-times/route.ts`, `src/app/api/manage/[bookingId]/swap-time/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts`, `src/app/api/operator/bookings/route.ts`, `src/app/api/operator/events/[id]/route.ts`, `src/app/api/operator/tee-times/route.ts`, `src/app/api/preview/[courseId]/route.ts`, `src/app/api/preview/[courseId]/tee-times/route.ts`, `src/lib/admin-home.ts` +14 more (see `docs/codemap.json`)
 
 ### TeeTimeAlert
 
-14 fields · 4 writer(s) · 4 reader(s)
+14 fields · 5 writer(s) · 5 reader(s)
 
 - fields: `id`, `courseId`, `course`, `email`, `name`, `date`, `windowStart`, `windowEnd`, `players`, `teeTimeId`, `teeTime`, `token`, `notifiedAt`, `createdAt`
-- writers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/cancel-booking.ts`, `src/lib/lifecycle.ts`
-- readers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/analytics.ts`, `src/lib/cancel-booking.ts`
+- writers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/cancel-booking.ts`, `src/lib/data-reset.ts`, `src/lib/lifecycle.ts`
+- readers: `src/app/api/alerts/route.ts`, `src/app/api/alerts/unsubscribe/[token]/route.ts`, `src/lib/analytics.ts`, `src/lib/cancel-booking.ts`, `src/lib/data-reset.ts`
 
 ### TeeTimeSchedule
 
