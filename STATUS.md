@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 22:02 UTC · branch `claude/test-data-reset` · HEAD `2a4d5ec` · working tree **20 dirty file(s)**
+Generated 2026-10-22 22:24 UTC · branch `claude/test-data-reset` · HEAD `edf2260` · working tree **25 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 134 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 137 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `b50c821` | 2026-10-22 | Docs: the schema check needs no SHADOW_DATABASE_URL secret now |
+| `b40fa6f` | 2026-10-22 | Schema check: replay migrations on the run's own Postgres |
+| `6f40852` | 2026-10-22 | Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189) |
 | `2a4d5ec` | 2026-10-22 | TEST-1 review: a reset releases event-held tee times; wording fixes |
 | `0d72aad` | 2026-10-22 | TEST-1: launch wipe of test data and resettable test courses |
 | `91df6b9` | 2026-10-22 | W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send |
@@ -149,28 +152,28 @@ Generated 2026-10-22 22:02 UTC · branch `claude/test-data-reset` · HEAD `2a4d5
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (20 file(s))
+### Uncommitted working tree (25 file(s))
 
-- `M  CLAUDE.md`
+- `M  OPERATOR_REWORK_SPEC.md`
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
-- `M  docs/CODEMAP.md`
-- `M  docs/codemap.json`
-- `M  scripts/operator-nav-test.ts`
-- `M  scripts/tt-card-test.ts`
-- `M  src/app/dashboard/analytics/page.tsx`
-- `M  src/app/dashboard/events/page.tsx`
-- `M  src/app/dashboard/layout.tsx`
-- `M  src/app/dashboard/members/page.tsx`
-- `M  src/app/dashboard/messages/page.tsx`
-- `M  src/app/dashboard/money/page.tsx`
-- `M  src/app/dashboard/page.tsx`
-- `M  src/app/dashboard/schedules/page.tsx`
-- `M  src/app/dashboard/settings/page.tsx`
-- `M  src/app/dashboard/shop/page.tsx`
-- `M  src/app/globals.css`
-- `M  src/components/OperatorSidebar.tsx`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql`
+- `M  prisma/schema.prisma`
+- `M  scripts/design-guard.baseline.json`
+- `A  scripts/event-signup-db-test.ts`
+- `M  src/app/api/event-payment/[id]/route.ts`
+- `A  src/app/api/event-signup/[id]/route.ts`
+- `M  src/app/api/operator/events/[id]/payments/route.ts`
+- `M  src/app/api/operator/events/[id]/route.ts`
+- `M  src/app/api/operator/events/route.ts`
+- `A  src/app/events/[id]/SignupForm.tsx`
+- `A  src/app/events/[id]/page.tsx`
+- `M  src/app/pay/event/[id]/page.tsx`
+- `M  src/components/dashboard/events/EventDetail.tsx`
+- `M  src/components/dashboard/events/EventMoney.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -295,6 +298,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `b50c821` 2026-10-22 — Docs: the schema check needs no SHADOW_DATABASE_URL secret now
+- `b40fa6f` 2026-10-22 — Schema check: replay migrations on the run's own Postgres
+- `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
 - `2a4d5ec` 2026-10-22 — TEST-1 review: a reset releases event-held tee times; wording fixes
 - `0d72aad` 2026-10-22 — TEST-1: launch wipe of test data and resettable test courses
 - `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
@@ -304,9 +310,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
 - `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
 - `a5c912b` 2026-10-22 — Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)
-- `5e73b48` 2026-10-22 — ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)
-- `694230a` 2026-10-22 — W2-9c Events: each player's own pay link; paid at the course per player
-- `b9fe29f` 2026-10-22 — W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)
 
 ---
 

@@ -1,36 +1,57 @@
 {
-  "generatedAt": "2026-10-22T22:02:12.215Z",
+  "generatedAt": "2026-10-22T22:24:30.038Z",
   "repo": {
-    "head": "2a4d5ec",
+    "head": "edf2260",
     "branch": "claude/test-data-reset",
-    "dirtyCount": 20,
+    "dirtyCount": 25,
     "dirty": [
-      "M  CLAUDE.md",
+      "M  OPERATOR_REWORK_SPEC.md",
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
-      "M  docs/CODEMAP.md",
-      "M  docs/codemap.json",
-      "M  scripts/operator-nav-test.ts",
-      "M  scripts/tt-card-test.ts",
-      "M  src/app/dashboard/analytics/page.tsx",
-      "M  src/app/dashboard/events/page.tsx",
-      "M  src/app/dashboard/layout.tsx",
-      "M  src/app/dashboard/members/page.tsx",
-      "M  src/app/dashboard/messages/page.tsx",
-      "M  src/app/dashboard/money/page.tsx",
-      "M  src/app/dashboard/page.tsx",
-      "M  src/app/dashboard/schedules/page.tsx",
-      "M  src/app/dashboard/settings/page.tsx",
-      "M  src/app/dashboard/shop/page.tsx",
-      "M  src/app/globals.css",
-      "M  src/components/OperatorSidebar.tsx"
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql",
+      "M  prisma/schema.prisma",
+      "M  scripts/design-guard.baseline.json",
+      "A  scripts/event-signup-db-test.ts",
+      "M  src/app/api/event-payment/[id]/route.ts",
+      "A  src/app/api/event-signup/[id]/route.ts",
+      "M  src/app/api/operator/events/[id]/payments/route.ts",
+      "M  src/app/api/operator/events/[id]/route.ts",
+      "M  src/app/api/operator/events/route.ts",
+      "A  src/app/events/[id]/SignupForm.tsx",
+      "A  src/app/events/[id]/page.tsx",
+      "M  src/app/pay/event/[id]/page.tsx",
+      "M  src/components/dashboard/events/EventDetail.tsx",
+      "M  src/components/dashboard/events/EventMoney.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "b50c821",
+        "date": "2026-10-22T22:17:33+00:00",
+        "subject": "Docs: the schema check needs no SHADOW_DATABASE_URL secret now",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b40fa6f",
+        "date": "2026-10-22T22:12:43+00:00",
+        "subject": "Schema check: replay migrations on the run's own Postgres",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6f40852",
+        "date": "2026-10-22T18:01:54-04:00",
+        "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "2a4d5ec",
         "date": "2026-10-22T22:00:32+00:00",
@@ -1360,6 +1381,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b50c821",
+      "date": "2026-10-22",
+      "subject": "Docs: the schema check needs no SHADOW_DATABASE_URL secret now"
+    },
+    {
+      "h": "b40fa6f",
+      "date": "2026-10-22",
+      "subject": "Schema check: replay migrations on the run's own Postgres"
+    },
+    {
+      "h": "6f40852",
+      "date": "2026-10-22",
+      "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)"
+    },
+    {
       "h": "2a4d5ec",
       "date": "2026-10-22",
       "subject": "TEST-1 review: a reset releases event-held tee times; wording fixes"
@@ -1403,21 +1439,6 @@
       "h": "a5c912b",
       "date": "2026-10-22",
       "subject": "Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)"
-    },
-    {
-      "h": "5e73b48",
-      "date": "2026-10-22",
-      "subject": "ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)"
-    },
-    {
-      "h": "694230a",
-      "date": "2026-10-22",
-      "subject": "W2-9c Events: each player's own pay link; paid at the course per player"
-    },
-    {
-      "h": "b9fe29f",
-      "date": "2026-10-22",
-      "subject": "W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)"
     }
   ]
 }

@@ -16,7 +16,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 const cardStyle = { style: { base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } }, invalid: { color: '#A3452F' } } };
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-type Pay = { status: 'open' | 'paid' | 'void'; eventCancelled: boolean; label: string; amountCents: number; feeCents: number; eventName: string; dateLabel: string; courseName: string; brandColor: string; logoUrl: string; photoUrl: string };
+type Pay = { status: 'open' | 'paid' | 'void'; eventCancelled: boolean; signup: boolean; holdNote: string | null; holdUntil: string | null; label: string; amountCents: number; feeCents: number; eventName: string; dateLabel: string; courseName: string; brandColor: string; logoUrl: string; photoUrl: string };
 
 function PayForm({ paymentId, token, pay, onPaid, onError }: { paymentId: string; token: string; pay: Pay; onPaid: () => void; onError: (m: string) => void }) {
   const stripe = useStripe();
@@ -111,21 +111,24 @@ function PayEventInner() {
   if (!pay) return <main className="min-h-screen bg-paper flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-ink-faint" aria-label="Loading" /></main>;
 
   const done = paid || pay.status === 'paid';
-  const closed = !done && (pay.status === 'void' || pay.eventCancelled);
+  // W2-9d: a sign-up whose hold ran out (or that went to the waiting list) can't be paid.
+  const closed = !done && (pay.status === 'void' || pay.eventCancelled || !!pay.holdNote);
+  const heldUntil = pay.holdUntil ? new Date(pay.holdUntil).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : null;
   return (
     <main className="min-h-screen bg-paper">
       <CourseHeaderBar courseName={pay.courseName} accent={pay.brandColor} logoUrl={pay.logoUrl} photoUrl={pay.photoUrl} />
       <div className="max-w-md mx-auto px-4 py-8">
         <Card className="p-5">
-          <h1 className="font-serif text-[26px] font-semibold text-ink leading-tight">{done ? 'Paid. Thank you!' : closed ? 'This pay link is closed' : pay.eventName}</h1>
+          <h1 className="font-serif text-[26px] font-semibold text-ink leading-tight">{done ? (pay.signup ? 'You’re signed up' : 'Paid. Thank you!') : closed ? 'This pay link is closed' : pay.eventName}</h1>
           <p className="text-sm text-ink-soft mt-1">{done || closed ? `${pay.eventName} · ${pay.dateLabel}` : pay.dateLabel}</p>
-          {closed && <p className="text-sm text-ink-soft mt-2">Nothing was charged. Ask {pay.courseName} if that’s a mistake.</p>}
+          {closed && <p className="text-sm text-ink-soft mt-2">{pay.holdNote ? `${pay.holdNote} Nothing was charged.` : `Nothing was charged. Ask ${pay.courseName} if that’s a mistake.`}</p>}
+          {!done && !closed && heldUntil && <p className="text-sm text-ink mt-2">Your spots are held until {heldUntil}. Pay before then to keep them.</p>}
           <ul className="divide-y divide-line-soft mt-4 text-sm">
             <li className="flex justify-between gap-3 py-2"><span className="text-ink">{pay.label}</span><span className="tabular-nums text-ink">{usd(pay.amountCents)}</span></li>
             {pay.feeCents > 0 && <li className="flex justify-between gap-3 py-2 text-ink-soft"><span>GreenReserve service fee</span><span className="tabular-nums">{usd(pay.feeCents)}</span></li>}
             <li className="flex justify-between gap-3 py-2.5 font-semibold"><span className="text-ink">Total</span><span className="tabular-nums text-ink">{usd(pay.amountCents + pay.feeCents)}</span></li>
           </ul>
-          {done && <p className="text-sm text-ink-soft mt-3">The payment went through. You can close this page.</p>}
+          {done && <p className="text-sm text-ink-soft mt-3">{pay.signup ? 'The payment went through and your spots are confirmed. We’ve emailed you the details.' : 'The payment went through. You can close this page.'}</p>}
           {!done && !closed && pay.status === 'open' && (
             <div className="mt-5">
               {error && <p className="mb-3 text-sm text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2" role="alert">{error}</p>}
