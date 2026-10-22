@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-22 02:38 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ e449074</span>
-    <span>tree clean</span>
+    <span>2026-10-22 02:39 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 40be0a7</span>
+    <span>24 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">120 runs have shipped that the queue doesn't know about</div>
+<div class="lede">121 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">40be0a7</span><span>Status board</span></li>
 <li><span class="h">e449074</span><span>W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close</span></li>
 <li><span class="h">4438d60</span><span>Status board</span></li>
 <li><span class="h">b001c14</span><span>W2-9b: narrow the recorded payment in the test (typecheck)</span></li>
@@ -254,6 +255,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
+<section><h2>Working tree right now</h2>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M  ADMIN_V5_SPEC.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  prisma/migrations/20261022013931_brain1b_sent_messages/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>M  scripts/admin-course-page-test.ts</code></li><li><code>A  scripts/course-feed-db-test.ts</code></li><li><code>A  src/app/admin/courses/[id]/_parts/TimelineTab.tsx</code></li><li><code>M  src/app/admin/courses/[id]/page.tsx</code></li><li><code>M  src/app/admin/system/page.tsx</code></li><li><code>A  src/app/api/admin/course-feed/route.ts</code></li><li><code>M  src/app/api/admin/resend-staff-setup/route.ts</code></li><li><code>A  src/app/api/admin/sentry-test/route.ts</code></li><li><code>M  src/app/api/operator/bookings/route.ts</code></li><li><code>M  src/app/api/operator/events/[id]/route.ts</code></li><li><code>M  src/app/api/operator/shop-sales/route.ts</code></li><li><code>M  src/lib/admin-audit.ts</code></li><li><code>M  src/lib/admin-course-tabs.ts</code></li><li><code>A  src/lib/course-timeline-groups.ts</code></li><li><code>M  src/lib/course-timeline.ts</code></li></ul>
+</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
@@ -333,6 +339,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 14d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">40be0a7</td><td class="num">2026-10-22</td><td>Status board</td></tr>
 <tr><td class="num">e449074</td><td class="num">2026-10-22</td><td>W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close</td></tr>
 <tr><td class="num">4438d60</td><td class="num">2026-10-22</td><td>Status board</td></tr>
 <tr><td class="num">b001c14</td><td class="num">2026-10-22</td><td>W2-9b: narrow the recorded payment in the test (typecheck)</td></tr>
@@ -344,7 +351,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">e85978d</td><td class="num">2026-10-22</td><td>W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit</td></tr>
 <tr><td class="num">ce88bd1</td><td class="num">2026-10-22</td><td>Codemap and status board</td></tr>
 <tr><td class="num">087c1a2</td><td class="num">2026-10-22</td><td>W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks</td></tr>
-<tr><td class="num">28a5f3a</td><td class="num">2026-10-22</td><td>W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

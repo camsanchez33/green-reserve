@@ -971,6 +971,31 @@ model AdminGoal {
   @@index([dueAt])
 }
 
+/// BRAIN-1b (Cam 2026-10-22): every email and text GreenReserve sends, one row
+/// each — what kind, to whom, about which course/booking/inquiry, and whether
+/// the provider took it. Never the subject or body (some carry sign-in codes).
+/// Written by the one email choke point (lib/email.ts getResend) and
+/// lib/twilio.ts; read by the course timeline.
+model SentMessage {
+  id         String   @id @default(cuid())
+  channel    String   // "email" | "sms"
+  kind       String
+  to         String
+  courseId   String?
+  bookingId  String?
+  inquiryId  String?
+  status     String   // "sent" | "failed"
+  providerId String   @default("")
+  error      String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([courseId, createdAt])
+  @@index([to, createdAt])
+  @@index([bookingId])
+  @@index([inquiryId])
+  @@index([createdAt])
+}
+
 model Expense {
   id          String    @id @default(cuid())
   name        String

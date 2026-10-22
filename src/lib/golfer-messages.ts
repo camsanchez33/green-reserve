@@ -93,12 +93,12 @@ export async function sendCourseMessage(opts: {
     }
     if (r.email) {
       try {
-        await sendCourseNoticeEmail({ to: r.email, golferName: r.name, courseName: course.name, replyTo: course.operator?.email ?? null, dateLabel, teeTime: formatTeeTime(r.teeTime), body: opts.body });
+        await sendCourseNoticeEmail({ courseId: opts.courseId, to: r.email, golferName: r.name, courseName: course.name, replyTo: course.operator?.email ?? null, dateLabel, teeTime: formatTeeTime(r.teeTime), body: opts.body });
         sentEmail++;
       } catch (err) { failed.push({ name: r.name, how: 'email', error: err instanceof Error ? err.message : String(err) }); }
     }
     if (doSms && r.phone) {
-      try { await sendSms(normalizePhone(r.phone), text); sentSms++; }
+      try { await sendSms(normalizePhone(r.phone), text, { kind: 'course_notice_text', courseId: opts.courseId }); sentSms++; }
       catch (err) { failed.push({ name: r.name, how: 'sms', error: err instanceof Error ? err.message : String(err) }); }
     }
     if ((i + 1) % 20 === 0) await save();

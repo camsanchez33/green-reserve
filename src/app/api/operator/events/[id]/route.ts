@@ -214,7 +214,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           const start = event.format === 'shotgun' ? event.startTime : (times[g2 - 1] ?? event.startTime);
           try {
             await sendEventPairingsEmail({
-              name: p.name, email: p.email, courseName: course?.name ?? '', coursePhone: course?.phone ?? '', replyTo: g.session.email,
+              courseId, name: p.name, email: p.email, courseName: course?.name ?? '', coursePhone: course?.phone ?? '', replyTo: g.session.email,
               eventName: event.name, dateLabel: formatTeeDay(event.date), startLabel: formatTeeTime(start),
               groupNo: g2, startHole: event.format === 'shotgun' ? p.startHole : null,
               groupmates: grouped.filter(o => o.groupNo === g2 && o.id !== p.id).map(o => o.name),

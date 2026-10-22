@@ -22,13 +22,13 @@ check('…but a sign-in counts', done({ ...ready, owner: { emailVerified: false 
 check('no owner at all → not done', done({ ...ready, owner: null }).staff === false);
 
 const base = { archived: false, failedCharges: 0, setup: setupChecks(ready), unreadMessages: 0, checkInOverdue: false };
-check('nothing wrong → opens on Bookings', openingTab(base) === 'bookings');
+check('nothing wrong → opens on the Timeline', openingTab(base) === 'timeline');
 check('a failed charge → Money', openingTab({ ...base, failedCharges: 1, unreadMessages: 2 }) === 'money');
 check('setup incomplete → Setup (before Contact)', openingTab({ ...base, setup: setupChecks({ ...ready, hasSchedule: false }), unreadMessages: 1 }) === 'setup');
 check('unread message → Contact & notes', openingTab({ ...base, unreadMessages: 1 }) === 'contact');
 check('check-in due → Contact & notes', openingTab({ ...base, checkInOverdue: true }) === 'contact');
 check('?tab= wins', openingTab({ ...base, failedCharges: 3 }, 'bookings') === 'bookings');
-check('an unknown ?tab= is ignored', openingTab(base, 'overview') === 'bookings');
+check('an unknown ?tab= is ignored', openingTab(base, 'overview') === 'timeline');
 check('archived → no tab has a problem', Object.values(tabProblems({ ...base, archived: true, failedCharges: 2 })).every(v => !v));
 
 check('weeks start on Monday', weekStart('2030-06-12') === '2030-06-10' && weekStart('2030-06-10') === '2030-06-10' && weekStart('2030-06-16') === '2030-06-10');

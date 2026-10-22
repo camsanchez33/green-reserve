@@ -1,11 +1,13 @@
 // AW-7 (Cam 2026-10-21): the admin course page's four tabs — Bookings, Money,
 // Setup, Contact & notes — and which one it opens on: the tab with a problem,
-// otherwise Bookings. Client-safe: no database.
+// otherwise the Timeline (BRAIN-1b, Cam 2026-10-22: the course page leads with
+// its whole story). Client-safe: no database.
 import { addDaysStr } from './course-time';
 
-export type CourseTab = 'bookings' | 'money' | 'setup' | 'contact';
+export type CourseTab = 'timeline' | 'bookings' | 'money' | 'setup' | 'contact';
 
 export const COURSE_TABS: { key: CourseTab; label: string }[] = [
+  { key: 'timeline', label: 'Timeline' },
   { key: 'bookings', label: 'Bookings' },
   { key: 'money', label: 'Money' },
   { key: 'setup', label: 'Setup' },
@@ -49,8 +51,9 @@ export type ProblemInput = {
 
 /** Which tabs have a problem. Money first: it is money already lost. */
 export function tabProblems(i: ProblemInput): Record<CourseTab, boolean> {
-  if (i.archived) return { bookings: false, money: false, setup: false, contact: false };
+  if (i.archived) return { timeline: false, bookings: false, money: false, setup: false, contact: false };
   return {
+    timeline: false,
     bookings: false,
     money: i.failedCharges > 0,
     setup: i.setup.some(s => !s.done),
@@ -61,7 +64,7 @@ export function tabProblems(i: ProblemInput): Record<CourseTab, boolean> {
 export function openingTab(i: ProblemInput, asked?: string | null): CourseTab {
   if (asked && COURSE_TABS.some(t => t.key === asked)) return asked as CourseTab;
   const p = tabProblems(i);
-  return (['money', 'setup', 'contact'] as CourseTab[]).find(t => p[t]) ?? 'bookings';
+  return (['money', 'setup', 'contact'] as CourseTab[]).find(t => p[t]) ?? 'timeline';
 }
 
 export const COURSE_WEEKS = 8;

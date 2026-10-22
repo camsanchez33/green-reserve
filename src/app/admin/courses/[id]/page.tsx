@@ -9,6 +9,7 @@ import { useCourseDetail, courseSetupChecks, courseTabProblems } from './_parts/
 import { CourseDetailContext } from './_parts/context';
 import { CourseDialogs } from './_parts/CourseDialogs';
 import { BookingsTab } from './_parts/BookingsTab';
+import { TimelineTab } from './_parts/TimelineTab';
 import { MoneyTab } from './_parts/MoneyTab';
 import { SetupTab } from './_parts/SetupTab';
 import { ContactTab } from './_parts/ContactTab';
@@ -301,6 +302,7 @@ export default function CourseDetailPage() {
         {/* Tab content */}
         <div className="px-8 py-7 flex-1">
 
+          {tab === 'timeline' && <TimelineTab/>}
           {tab === 'bookings' && <BookingsTab/>}
           {tab === 'money' && <MoneyTab/>}
           {tab === 'setup' && <SetupTab/>}
