@@ -33,6 +33,11 @@
 //   turned away      tee times that sold out, and TeeTimeAlert sign-ups for a
 //                    date in the range (golfers who asked to hear of an opening).
 //   residents        RES-1 resident players on paid rounds, from RES_START.
+//   beyond the fee   (W2-8) rounds with a cart ÷ paid rounds; shop items added
+//                    to paid rounds (before tax); walk-up shop sales paid in the
+//                    range (before tax). Never part of revenue.
+//   gone quiet       (W2-8) a golfer with 3+ rounds on different days whose last
+//                    round is 14+ days and more than twice their usual gap ago.
 import type { BookingEventType } from '@prisma/client';
 import { prisma } from './prisma';
 import { DEFAULT_TZ, isValidTimezone, todayIn, addDaysStr } from './course-time';
@@ -91,6 +96,8 @@ async function load(courseId: string, range: Range) {
           cancelledAt: true, createdAt: true, source: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true,
           // W2-8: residents (RES-1) and whether the booking carried a fee policy.
           residentPlayers: true, residentRateCents: true, cancellationFeeApplies: true,
+          // W2-8 (4): pro-shop items added to the round (POS-1a), before tax.
+          shopTotalCents: true,
         },
       },
     },
@@ -267,6 +274,15 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     resRows.set(b.date, r);
   }
 
+  // ── W2-8 (4): spend beyond the green fee — carts, shop items on rounds, walk-up shop sales ──
+  // Pro-shop money is its own line (Cam 2026-10-22): never part of "revenue".
+  const cartRounds = collectedB.filter(b => b.cartFeeTotal > 0).length;
+  const shopOnRounds = collectedB.reduce((n, b) => n + b.shopTotalCents, 0);
+  const walkUps = await prisma.shopSale.findMany({
+    where: { courseId, status: { in: ['paid_cash', 'paid_card'] }, paidAt: { gte: new Date(teeMs(range.from, '00:00')), lt: new Date(teeMs(addDaysStr(range.to, 1), '00:00')) } },
+    select: { totalCents: true, taxCents: true },
+  });
+
   // ── 6. Customers ─────────────────────────────────────────────────────────
   // History is all-time up to the range end, so "returning" knows the past.
   const history = await prisma.booking.findMany({
@@ -302,6 +318,26 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     let sum = 0; for (let i = 1; i < ds.length; i++) sum += daysBetween(ds[i - 1], ds[i]);
     gaps.push(sum / (ds.length - 1));
   }
+  // W2-8 (9): regulars who've gone quiet — 3+ rounds on different days, and the
+  // time since their last round is more than twice their usual gap (and at
+  // least two weeks), measured to the end of the range (or today).
+  const asOf = range.to < today ? range.to : today;
+  const contactOf = new Map<string, { email: string; phone: string }>();
+  for (const h of history) {
+    const k = customerKey(h); if (!k || contactOf.has(k)) continue;
+    const email = h.golferEmail.trim().toLowerCase();
+    contactOf.set(k, { email: email && !email.endsWith(PLACEHOLDER_EMAIL_DOMAIN) ? email : '', phone: h.golferPhone.trim() });
+  }
+  const goneQuiet: { name: string; email: string; phone: string; rounds: number; lastPlayed: string; usualGapDays: number; daysSince: number }[] = [];
+  for (const [k, v] of visits) {
+    const ds = [...new Set(v.dates.filter(x => x <= asOf))].sort();
+    if (ds.length < 3) continue;
+    const usual = daysBetween(ds[0], ds[ds.length - 1]) / (ds.length - 1);
+    const since = daysBetween(ds[ds.length - 1], asOf);
+    if (since >= 14 && since > 2 * usual) goneQuiet.push({ name: v.name, ...(contactOf.get(k) ?? { email: '', phone: '' }), rounds: ds.length, lastPlayed: ds[ds.length - 1], usualGapDays: Math.round(usual), daysSince: since });
+  }
+  goneQuiet.sort((a, b) => b.rounds - a.rounds || b.daysSince - a.daysSince);
+
   // Retention: of the customers who played in the previous equal-length
   // period, the share who played again in this one.
   const prev = previousRange(range);
@@ -334,6 +370,12 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     revenue: {
       expectedCents: expected, collectedCents: collected, gapCents: expected - collected, gapPct: pct(expected - collected, expected),
       cardCents: card, counterCents: counter, outstandingCents: outstanding, outstandingBookings: outstandingB.length, upcomingCents: upcoming,
+      // W2-8 (4): beyond the green fee — rounds with a cart, shop items on rounds, and walk-up shop sales (before tax).
+      beyond: {
+        cartRounds, rounds: collectedB.length, cartPct: pct(cartRounds, collectedB.length),
+        shopOnRoundsCents: shopOnRounds, shopPerRoundCents: roundsPlayed ? Math.round(shopOnRounds / roundsPlayed) : null,
+        walkUpSales: walkUps.length, walkUpCents: walkUps.reduce((n, w) => n + w.totalCents - w.taxCents, 0),
+      },
       greenCents: greenCollected, cartCents: cartCollected, lateFeesKeptCents: lateFeesKept, holdsHeldCents: holdsHeld, greenReserveFeesCents: grFees,
       pipeline: {
         upcomingBookings: upcomingB.length,
@@ -393,6 +435,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       unidentifiedBookings: unidentified, unidentifiedPlayers,
       members: { active: membersActive, onFile: membersOnFile, tiers },
       // W2-8 (3): residents vs everyone else, per day of rounds paid (recorded from RES_START).
+      goneQuiet: goneQuiet.slice(0, 50),
       residents: { since: RES_START, rows: [...resRows.entries()].sort().map(([date, r]) => ({ date, ...r })) },
       topByRounds: [...top].sort((a, b) => b.rounds - a.rounds || b.spendCents - a.spendCents).slice(0, 10),
       topBySpend: [...top].sort((a, b) => b.spendCents - a.spendCents || b.rounds - a.rounds).slice(0, 10),

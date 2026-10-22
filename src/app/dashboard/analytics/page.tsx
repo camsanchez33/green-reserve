@@ -321,6 +321,15 @@ function RevenueTab({ d }: { d: Data }) {
         </Section>
       </div>
 
+      {/* W2-8 (4): money beyond the green fee — its own line, never in revenue. */}
+      <Section title="Beyond the green fee" why="Carts and the pro shop. Shop sales are shown here on their own and aren’t counted in your revenue above. Before sales tax.">
+        <div className="divide-y divide-line-soft max-w-xl">
+          <Line label="Rounds with a cart" sub={`${d.revenue.beyond.cartRounds} of ${plural(d.revenue.beyond.rounds, 'paid booking')}`} value={pctS(d.revenue.beyond.cartPct)} />
+          <Line label="Shop items added to rounds" sub={d.revenue.beyond.shopPerRoundCents == null ? undefined : `${usd2(d.revenue.beyond.shopPerRoundCents)} per round played`} value={usd(d.revenue.beyond.shopOnRoundsCents)} />
+          <Line label="Walk-up shop sales" sub={plural(d.revenue.beyond.walkUpSales, 'sale')} value={usd(d.revenue.beyond.walkUpCents)} />
+        </div>
+      </Section>
+
       <Section title="Coming up" why="Bookings for tee times that haven’t happened yet, and what they’re worth to you when they play.">
         <div className="divide-y divide-line-soft max-w-xl">
           <Line label="Upcoming bookings" sub={plural(d.revenue.pipeline.upcomingBookings, 'booking')} value={usd(d.revenue.upcomingCents)} />
@@ -472,6 +481,14 @@ function GolfersTab({ d }: { d: Data }) {
         action={<><Ask q="Who are my regulars, and who used to come often but hasn’t been back?" /><Download onClick={() => downloadCsv(`regulars-${d.range.from}-${d.range.to}`, ['Golfer', 'Bookings', 'Players', 'Spent'], g.topByRounds.map(r => [r.name, r.rounds, r.players, r.spendCents / 100]))} /></>}>
         <Table head={['Golfer', 'Bookings', 'Players', 'Spent']} empty="No golfers to show yet." rows={g.topByRounds.map(r => [r.name, r.rounds, r.players, usd(r.spendCents)])} />
         {g.unidentifiedBookings > 0 && <p className="text-[12.5px] text-ink-muted mt-2">{plural(g.unidentifiedBookings, 'walk-in')} had no email or phone, so they can’t be counted here. Take a phone number at the counter.</p>}
+      </Section>
+
+      {/* W2-8 (9): the regulars to call — Cam 2026-10-22: name, email and phone shown. */}
+      <Section title="Regulars who’ve gone quiet"
+        why="Golfers with three or more rounds whose last round was more than twice their usual gap ago (and at least two weeks). A call or a note now is cheaper than finding a new golfer."
+        action={g.goneQuiet.length > 0 ? <Download onClick={() => downloadCsv(`gone-quiet-${d.range.to}`, ['Golfer', 'Email', 'Phone', 'Rounds', 'Last played', 'Usually every (days)', 'Days since'], g.goneQuiet.map(r => [r.name, r.email, r.phone, r.rounds, r.lastPlayed, r.usualGapDays, r.daysSince]))} /> : undefined}>
+        <Table head={['Golfer', 'Email', 'Phone', 'Rounds', 'Last played', 'Usually every']} empty="Nobody who played regularly has gone quiet."
+          rows={g.goneQuiet.slice(0, 15).map(r => [r.name, r.email ? <a href={`mailto:${r.email}`} className="text-pine hover:underline">{r.email}</a> : '—', r.phone ? <a href={`tel:${r.phone.replace(/[^\d+]/g, '')}`} className="text-pine hover:underline">{r.phone}</a> : '—', r.rounds, fmtDay(r.lastPlayed), `${r.usualGapDays} days`])} />
       </Section>
 
       {/* W2-8 (3): the table a city or county asks for, as a download. */}

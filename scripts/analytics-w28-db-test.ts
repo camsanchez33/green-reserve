@@ -16,6 +16,7 @@ async function cleanup() {
   await prisma.bookingEvent.deleteMany({ where: { courseId } });
   await prisma.booking.deleteMany({ where: { courseId } });
   await prisma.teeTimeAlert.deleteMany({ where: { courseId } });
+  await prisma.shopSale.deleteMany({ where: { courseId } });
   await prisma.teeTime.deleteMany({ where: { courseId } });
   await prisma.blackout.deleteMany({ where: { courseId } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
@@ -43,7 +44,15 @@ async function main() {
 
   // 8:00 — sold out, paid, 2 residents at $30, all 4 checked in.
   const t8 = await tt('08:00', 4);
-  await bk(t8.id, { status: 'completed', paymentStatus: 'paid', checkedInAt: new Date('2030-11-06T08:00:00Z'), checkedInPlayers: 4, residentPlayers: 2, residentRateCents: 3000, greenFeeTotal: 16000, totalAmount: 16000 });
+  await bk(t8.id, { status: 'completed', paymentStatus: 'paid', checkedInAt: new Date('2030-11-06T08:00:00Z'), checkedInPlayers: 4, residentPlayers: 2, residentRateCents: 3000, greenFeeTotal: 16000, totalAmount: 16000, cartFeeTotal: 4000, shopTotalCents: 1500 });
+  // A walk-up shop sale that day ($10 + $1 tax), and one never paid.
+  await prisma.shopSale.create({ data: { courseId: course.id, status: 'paid_cash', totalCents: 1100, taxCents: 100, paidAt: new Date('2030-11-06T10:00:00Z') } });
+  await prisma.shopSale.create({ data: { courseId: course.id, status: 'open', totalCents: 5000 } });
+  // A regular who played every week in September, then stopped.
+  for (const day of ['2030-09-01', '2030-09-08', '2030-09-15']) {
+    const t = await prisma.teeTime.create({ data: { courseId: course.id, date: day, time: '07:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 1, status: 'available' } });
+    await prisma.booking.create({ data: { teeTimeId: t.id, courseId: course.id, golferName: 'Quiet Pat', golferEmail: `${TAG}+pat@test.local`, golferPhone: '201-555-0199', players: 1, greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 5000, status: 'completed', paymentStatus: 'paid', checkedInAt: new Date(day + 'T07:00:00Z'), checkedInPlayers: 1 } });
+  }
   // 9:00 — booked 4, turned up 3 (short-show), fee policy on, paid at the counter.
   const t9 = await tt('09:00', 4);
   await bk(t9.id, { status: 'completed', paymentStatus: 'paid_offline', checkedInAt: new Date('2030-11-06T09:00:00Z'), checkedInPlayers: 3, cancellationFeeApplies: true, greenFeeTotal: 15000, totalAmount: 15000 });
@@ -64,7 +73,7 @@ async function main() {
   const a = await computeAnalytics(course.id, { from: '2030-11-04', to: '2030-11-10' }, now);
   const wedRow = a.utilization.earnedPerSpot.rows.find(r => r.dow === 'Wed')!;
   const hourIdx = (h: number) => a.utilization.earnedPerSpot.hours.indexOf(h);
-  check('earned per spot at 8: $160 collected ÷ 4 spots = $40', wedRow.cells[hourIdx(8)] === 4000, JSON.stringify(wedRow));
+  check('earned per spot at 8: ($160 green + $40 cart) ÷ 4 spots = $50', wedRow.cells[hourIdx(8)] === 5000, JSON.stringify(wedRow));
   check('earned per spot at 10 (a no-show, nothing collected): $0', wedRow.cells[hourIdx(10)] === 0);
   check('sold out: the four full times', a.utilization.soldOutTimes === 4, String(a.utilization.soldOutTimes));
   check('a golfer waiting for a time (2 players)', a.utilization.alerts.count === 1 && a.utilization.alerts.players === 2 && a.utilization.alerts.notified === 0);
@@ -74,6 +83,13 @@ async function main() {
   check('booked players who didn’t play, with a fee: 5 of 8 (a no-show group of 4 + 1 short)', a.noShows.byFeePolicy.withFee.didntPlayPct === 62.5, JSON.stringify(a.noShows.byFeePolicy.withFee));
   check('the weather call-off is not a cancellation', a.cancellations.count === 1 && a.cancellations.calledOff.bookings === 1 && a.cancellations.calledOff.weather === 1, JSON.stringify(a.cancellations.calledOff));
   check('cancellation rate leaves it out: 1 of 5', a.cancellations.ratePct === 20, String(a.cancellations.ratePct));
+  const by = a.revenue.beyond;
+  check('rounds with a cart: 1 of 2 paid bookings', by.cartRounds === 1 && by.rounds === 2 && by.cartPct === 50, JSON.stringify(by));
+  check('shop items on rounds: $15', by.shopOnRoundsCents === 1500);
+  check('walk-up shop sales: 1 paid, $10 before tax (the open one left out)', by.walkUpSales === 1 && by.walkUpCents === 1000);
+  check('shop money is not in revenue', a.revenue.collectedCents === 16000 + 4000 + 15000, String(a.revenue.collectedCents));
+  const quiet = a.customers.goneQuiet;
+  check('a weekly regular who stopped is on the gone-quiet list, with email and phone', quiet.length === 1 && quiet[0].name === 'Quiet Pat' && quiet[0].email === `${TAG}+pat@test.local` && quiet[0].phone === '201-555-0199' && quiet[0].usualGapDays === 7, JSON.stringify(quiet));
   const res = a.customers.residents.rows;
   check('residents: 2 resident players paying $60, 5 others paying $250', res.reduce((n, r) => n + r.resPlayers, 0) === 2 && res.reduce((n, r) => n + r.resCents, 0) === 6000 && res.reduce((n, r) => n + r.otherPlayers, 0) === 5 && res.reduce((n, r) => n + r.otherCents, 0) === 25000, JSON.stringify(res));
 
