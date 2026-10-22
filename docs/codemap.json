@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 493,
+    "files": 494,
     "routes": 240,
-    "libs": 158,
+    "libs": 159,
     "models": 48,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5646,7 +5646,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/preview/route.ts",
-      "lines": 27,
+      "lines": 32,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5663,6 +5663,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/course-plan",
         "@/lib/schedule-preview",
         "@/lib/schedule-service",
         "@/lib/session",
@@ -5672,7 +5673,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/route.ts",
-      "lines": 89,
+      "lines": 96,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5710,6 +5711,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/course-plan",
         "@/lib/schedule-service",
         "@/lib/session",
         "next/server"
@@ -7356,8 +7358,8 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 597,
-      "purpose": "Schedule rework (Cam 2026-10-19:",
+      "lines": 604,
+      "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
         {
@@ -7377,9 +7379,9 @@
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
+        "@/lib/course-plan",
         "@/lib/dashboard-fetch",
         "@/lib/format",
-        "@/lib/schedule-plans",
         "@/lib/use-dashboard-access",
         "next/link",
         "react"
@@ -13357,6 +13359,105 @@
       ]
     },
     {
+      "path": "src/lib/course-plan.ts",
+      "lines": 279,
+      "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ALL_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "autoName",
+          "kind": "fn"
+        },
+        {
+          "name": "blankPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "checkPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "checkRows",
+          "kind": "fn"
+        },
+        {
+          "name": "columnNames",
+          "kind": "fn"
+        },
+        {
+          "name": "CompiledRow",
+          "kind": "type"
+        },
+        {
+          "name": "compilePlan",
+          "kind": "fn"
+        },
+        {
+          "name": "CoursePlan",
+          "kind": "type"
+        },
+        {
+          "name": "DayPlan",
+          "kind": "type"
+        },
+        {
+          "name": "daysOf",
+          "kind": "fn"
+        },
+        {
+          "name": "emptyCell",
+          "kind": "fn"
+        },
+        {
+          "name": "isTime",
+          "kind": "fn"
+        },
+        {
+          "name": "PlanRound",
+          "kind": "type"
+        },
+        {
+          "name": "PriceCell",
+          "kind": "type"
+        },
+        {
+          "name": "readPlan",
+          "kind": "fn"
+        },
+        {
+          "name": "RoundSale",
+          "kind": "type"
+        },
+        {
+          "name": "setRoundSale",
+          "kind": "fn"
+        },
+        {
+          "name": "snap",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./schedule-conflict"
+      ],
+      "usedBy": [
+        "src/app/api/operator/schedule/preview/route.ts",
+        "src/app/api/operator/schedule/route.ts",
+        "src/app/dashboard/schedules/page.tsx",
+        "src/lib/schedule-preview.ts",
+        "src/lib/schedule-service.ts"
+      ]
+    },
+    {
       "path": "src/lib/course-rounds.ts",
       "lines": 20,
       "purpose": "Settings rework (Cam 2026-10-19):",
@@ -16964,6 +17065,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/operator/course-products/route.ts",
+        "src/lib/course-plan.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
@@ -17006,13 +17108,12 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/schedules/page.tsx",
         "src/lib/schedule-service.ts"
       ]
     },
     {
       "path": "src/lib/schedule-preview.ts",
-      "lines": 149,
+      "lines": 154,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -17043,6 +17144,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./course-plan",
         "./course-time",
         "./prisma",
         "./schedule-conflict",
@@ -17056,10 +17158,14 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 310,
+      "lines": 357,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [
+        {
+          "name": "compileCoursePlan",
+          "kind": "fn"
+        },
         {
           "name": "createSchedule",
           "kind": "fn"
@@ -17070,6 +17176,14 @@
         },
         {
           "name": "listSchedules",
+          "kind": "fn"
+        },
+        {
+          "name": "planRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "saveCoursePlan",
           "kind": "fn"
         },
         {
@@ -17111,6 +17225,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./course-plan",
         "./course-timeline",
         "./money",
         "./prisma",
@@ -20335,6 +20450,7 @@
         "src/lib/public-tee-times.ts",
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
+        "src/lib/schedule-service.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
       ]

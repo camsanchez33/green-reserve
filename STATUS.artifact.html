@@ -117,14 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-22 01:39 UTC</span><span>HEAD @ e59ed92</span>
-    <span>58 uncommitted</span>
+    <span>2026-10-22 01:40 UTC</span><span>pr-w26 @ 679076b</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">101 runs have shipped that the queue doesn't know about</div>
+<div class="lede">105 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">164896a</span><span>BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)</span></li>
+<li><span class="h">e8c4fe4</span><span>W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan</span></li>
+<li><span class="h">1d2a5db</span><span>BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)</span></li>
+<li><span class="h">4cd3e1a</span><span>W2-6 Schedule simplification: open hours, what golfers can book, one price table</span></li>
 <li><span class="h">e59ed92</span><span>Codemap and status board</span></li>
 <li><span class="h">f8d9737</span><span>Messages: keep Open the course in the header below lg</span></li>
 <li><span class="h">3020c49</span><span>AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)</span></li>
@@ -229,16 +233,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
-  <div class="tile t-warn"><span class="n">0</span><span class="l">Awaiting review</span></div>
+  <div class="tile t-warn"><span class="n">1</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">6</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">5</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  ADMIN_V5_SPEC.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  prisma/migrations/20261022003636_brain1a_admin_audit/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>A  scripts/admin-audit-test.ts</code></li><li><code>M  scripts/admin-nav-test.ts</code></li><li><code>M  scripts/isolation-test.ts</code></li><li><code>A  src/app/admin/audit/page.tsx</code></li><li><code>M  src/app/admin/courses/[id]/_parts/useCourseDetail.tsx</code></li><li><code>M  src/app/admin/employees/page.tsx</code></li><li><code>M  src/app/admin/goals/page.tsx</code></li><li><code>M  src/app/admin/inquiries/[id]/page.tsx</code></li><li><code>M  src/app/admin/inquiries/page.tsx</code></li><li><code>M  src/app/admin/layout.tsx</code></li><li><code>M  src/app/admin/revenue/page.tsx</code></li><li><code>M  src/app/api/admin/agreement-versions/route.ts</code></li><li><code>M  src/app/api/admin/archive-course/route.ts</code></li><li><code>A  src/app/api/admin/audit/route.ts</code></li><li><code>M  src/app/api/admin/backfill-orphaned-inquiries/route.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -246,8 +250,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">2</span><span class="t">RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against the code).</span><span class="where">:56</span></div>
 <div class="row"><span class="idx">3</span><span class="t">LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed</span><span class="where">:235</span></div>
 <div class="row"><span class="idx">4</span><span class="t">CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf</span><span class="where">:338</span></div>
-<div class="row"><span class="idx">5</span><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="where">:2357</span></div>
-<div class="row"><span class="idx">6</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2993</span></div>
+<div class="row"><span class="idx">5</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2993</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -270,6 +273,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
+<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">91d</span><span class="where">b88c8bf</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:49</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:56</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:235</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:338</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2357</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2993</span></li></ul>
@@ -283,7 +287,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-21 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 4d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 0d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 2d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 9d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
@@ -319,6 +323,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 13d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">164896a</td><td class="num">2026-10-21</td><td>BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)</td></tr>
+<tr><td class="num">e8c4fe4</td><td class="num">2026-10-22</td><td>W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan</td></tr>
+<tr><td class="num">1d2a5db</td><td class="num">2026-10-21</td><td>BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)</td></tr>
+<tr><td class="num">4cd3e1a</td><td class="num">2026-10-22</td><td>W2-6 Schedule simplification: open hours, what golfers can book, one price table</td></tr>
 <tr><td class="num">e59ed92</td><td class="num">2026-10-22</td><td>Codemap and status board</td></tr>
 <tr><td class="num">f8d9737</td><td class="num">2026-10-22</td><td>Messages: keep Open the course in the header below lg</td></tr>
 <tr><td class="num">3020c49</td><td class="num">2026-10-22</td><td>AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)</td></tr>
@@ -327,10 +335,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">6b0ebeb</td><td class="num">2026-10-21</td><td>AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links</td></tr>
 <tr><td class="num">821ddf9</td><td class="num">2026-10-21</td><td>AW-7: course page — Bookings, Money, Setup, Contact &amp; notes (in review)</td></tr>
 <tr><td class="num">4abfebb</td><td class="num">2026-10-21</td><td>AW-6c: Leads column, Add a lead, Move to Talking (#171)</td></tr>
-<tr><td class="num">a526731</td><td class="num">2026-10-21</td><td>Codemap and status board</td></tr>
-<tr><td class="num">fe16f64</td><td class="num">2026-10-21</td><td>AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)</td></tr>
-<tr><td class="num">d58220f</td><td class="num">2026-10-21</td><td>AW-6b: inquiry page — the one next step first (#169)</td></tr>
-<tr><td class="num">a85a078</td><td class="num">2026-10-21</td><td>AW-4b: Today shows each course with its own to-dos; Goals tab (#170)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
