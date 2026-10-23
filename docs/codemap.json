@@ -4958,7 +4958,7 @@
     },
     {
       "path": "src/app/api/operator/agreement/route.ts",
-      "lines": 37,
+      "lines": 38,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4980,6 +4980,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/agreement-gate",
         "@/lib/agreements",
         "@/lib/course-timeline",
         "@/lib/prisma",
@@ -12210,7 +12211,7 @@
     },
     {
       "path": "src/lib/agreement-gate.ts",
-      "lines": 100,
+      "lines": 117,
       "purpose": "AG-1:",
       "brain": [],
       "exports": [
@@ -12228,6 +12229,10 @@
         },
         {
           "name": "hasAcceptedAgreement",
+          "kind": "fn"
+        },
+        {
+          "name": "latestOperatorAgreement",
           "kind": "fn"
         }
       ],
@@ -12247,6 +12252,7 @@
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
+        "src/app/api/operator/agreement/route.ts",
         "src/app/api/operator/announcements/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/lib/agreement-sign.ts"

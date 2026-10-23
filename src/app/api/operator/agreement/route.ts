@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
-import { logAgreementAccepted, getCourseTimeline, latestAgreementAcceptance } from '@/lib/course-timeline';
+import { logAgreementAccepted } from '@/lib/course-timeline';
+import { latestOperatorAgreement } from '@/lib/agreement-gate';
 import { loadDocument } from '@/lib/agreements';
 import { clientIp } from '@/lib/rate-limit';
 
 // A-05 item 5a — Operator Agreement clickwrap, an extension of the existing
-// first-login onboarding flow (dashboard/onboarding). Acceptance (version +
-// who + when) is logged to the course timeline — no schema change.
+// first-login onboarding flow (dashboard/onboarding). GET answers "has this
+// course accepted?" from the signed AgreementAcceptance rows (the timeline line
+// only for acceptances from before them) — lib/agreement-gate.ts.
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const events = await getCourseTimeline(session.courseId);
-  return NextResponse.json({ agreement: events ? latestAgreementAcceptance(events) : null });
+  return NextResponse.json({ agreement: await latestOperatorAgreement(session.courseId) });
 }
 
 export async function POST(req: NextRequest) {
