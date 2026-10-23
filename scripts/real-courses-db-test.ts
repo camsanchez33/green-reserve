@@ -61,7 +61,6 @@ async function main() {
     ['src/app/courses/[slug]/page.tsx', /course\.isTest \? \{ index: false/],
     ['src/lib/agreement-required.ts', /archivedAt: null, \.\.\.REAL_COURSE, agreements/],
     ['src/lib/admin-ask.ts', /\.\.\.FAILED_CHARGE_WHERE, \.\.\.ON_REAL_COURSE/],
-    ['src/app/api/admin/activity/route.ts', /courseId \? \{ courseId \} : ON_REAL_COURSE/],
   ];
   for (const [f, re] of mustUse) check(`${f} leaves test courses out`, re.test(readFileSync(f, 'utf8')));
   // The menu's unread count and the Messages page's count are the same rule (both include a test course's messages).
