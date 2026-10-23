@@ -119,6 +119,8 @@ export default function MembersPage() {
   const [filterTier, setFilterTier] = useState('all');
   const [filterStatus, setFilterStatus] = useState('active');
   const [search, setSearch] = useState('');
+  // DASH-C search: a member result opens this list filtered to them.
+  useEffect(() => { const q = new URLSearchParams(window.location.search).get('q'); if (q) setSearch(q.slice(0, 80)); }, []);
   const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const canEdit = pageAccess.can('members.edit');

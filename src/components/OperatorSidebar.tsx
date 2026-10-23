@@ -13,6 +13,7 @@ import { confirmLeave } from '@/lib/unsaved-guard';
 import AgreementNotice from '@/components/dashboard/AgreementNotice';
 import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
+import OperatorSearch from '@/components/dashboard/OperatorSearch';
 
 export type OperatorNavKey =
   | 'home' | 'teesheet' | 'analytics' | 'money' | 'events'
@@ -235,6 +236,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           <div className="text-[12px] text-ink-muted truncate">{meta}</div>
         </div>
       </div>
+      <OperatorSearch />
       <nav aria-label="Dashboard" className="flex flex-col gap-px text-[14px]">
         {navItems.filter(n => !n.soon && visible(n.key)).map(item => {
           const isActive = active === item.key;

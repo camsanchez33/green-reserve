@@ -509,6 +509,13 @@ function DashboardPageInner() {
 
   useEffect(() => { loadTimes(selectedDate); }, [selectedDate, loadTimes]);
   useEffect(() => { if (searchParams.get('tab') === 'analytics') router.replace('/dashboard/analytics'); }, [searchParams, router]);
+  // DASH-C search: a result opens the sheet on its day, filtered to the golfer.
+  useEffect(() => {
+    const d = searchParams.get('date');
+    if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) setSelectedDate(d);
+    const q = searchParams.get('q');
+    if (q) setSearch(q.slice(0, 80));
+  }, [searchParams]);
 
   async function saveConditions() {
     setSavingConditions(true);
