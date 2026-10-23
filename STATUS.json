@@ -1,27 +1,31 @@
 {
-  "generatedAt": "2026-10-23T21:45:54.233Z",
+  "generatedAt": "2026-10-23T21:52:01.397Z",
   "repo": {
-    "head": "e9a83ae",
+    "head": "09dc048",
     "branch": "claude/activity-audit",
-    "dirtyCount": 11,
-    "dirty": [
-      "M ADMIN_V5_SPEC.md",
-      " M CLAUDE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/design-guard.baseline.json",
-      " M scripts/isolation-test.ts",
-      " M scripts/real-courses-db-test.ts",
-      " M src/app/admin/activity/page.tsx",
-      "D  src/app/api/admin/activity/route.ts",
-      " M src/app/api/admin/search/route.ts",
-      " M src/app/api/admin/transactions/route.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "09dc048",
+        "date": "2026-10-23T21:51:59+00:00",
+        "subject": "Activity retirement: drop the dead nav key, mark A-09 retired",
+        "ids": [
+          "A-09"
+        ],
+        "matches": []
+      },
+      {
+        "h": "606bad0",
+        "date": "2026-10-23T21:45:55+00:00",
+        "subject": "Retire the admin Activity page (AW-12)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d2b41f2",
         "date": "2026-10-23T19:16:02+00:00",
@@ -120,8 +124,8 @@
     "runAwaiting": 1,
     "runInFlight": 1,
     "runNotStarted": 5,
-    "reviseDone": 14,
-    "reviseOpen": 8,
+    "reviseDone": 15,
+    "reviseOpen": 7,
     "ideas": 17,
     "parked": 7
   },
@@ -233,7 +237,7 @@
     ]
   },
   "revise": {
-    "done": 14,
+    "done": 15,
     "open": [
       {
         "title": "A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0,",
@@ -248,11 +252,6 @@
       {
         "title": "A-08 /admin/messages — threads (Cam 2026-07-23: functionally fine, \"just needs to look a little better\" — visual notes go to the AESTHETIC PASS; only structural findings would reopen this)",
         "line": 555,
-        "state": "not-started"
-      },
-      {
-        "title": "A-09 /admin/activity — ledger + filters",
-        "line": 556,
         "state": "not-started"
       },
       {
@@ -291,15 +290,9 @@
       "ageDays": 6
     },
     {
-      "file": "AGREEMENT_SPEC.md",
+      "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
+      "lastTouched": "2026-10-23",
       "ageDays": 0
     },
     {
@@ -309,37 +302,43 @@
       "ageDays": 0
     },
     {
-      "file": "ONBOARDING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
-    },
-    {
-      "file": "ONBOARDING_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
-    },
-    {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
       "ageDays": 0
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
+      "file": "ONBOARDING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
+      "file": "ONBOARDING_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "RECEIPT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
-    },
-    {
-      "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
       "ageDays": 1
@@ -504,6 +503,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "09dc048",
+      "date": "2026-10-23",
+      "subject": "Activity retirement: drop the dead nav key, mark A-09 retired"
+    },
+    {
+      "h": "606bad0",
+      "date": "2026-10-23",
+      "subject": "Retire the admin Activity page (AW-12)"
+    },
+    {
       "h": "d2b41f2",
       "date": "2026-10-23",
       "subject": "Regenerate the status board"
@@ -552,16 +561,6 @@
       "h": "e0bc004",
       "date": "2026-10-22",
       "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)"
-    },
-    {
-      "h": "4b621c0",
-      "date": "2026-10-22",
-      "subject": "Regenerate status board"
-    },
-    {
-      "h": "b4ba083",
-      "date": "2026-10-22",
-      "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)"
     }
   ]
 }

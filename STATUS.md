@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 21:45 UTC · branch `claude/activity-audit` · HEAD `e9a83ae` · working tree **11 dirty file(s)**
+Generated 2026-10-23 21:52 UTC · branch `claude/activity-audit` · HEAD `09dc048` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 13 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 15 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `09dc048` | 2026-10-23 | Activity retirement: drop the dead nav key, mark A-09 retired |
+| `606bad0` | 2026-10-23 | Retire the admin Activity page (AW-12) |
 | `d2b41f2` | 2026-10-23 | Regenerate the status board |
 | `d6efdc1` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
 | `85bb916` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
@@ -27,23 +29,6 @@ Generated 2026-10-23 21:45 UTC · branch `claude/activity-audit` · HEAD `e9a83a
 | `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (11 file(s))
-
-- `M ADMIN_V5_SPEC.md`
-- `M CLAUDE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/design-guard.baseline.json`
-- `M scripts/isolation-test.ts`
-- `M scripts/real-courses-db-test.ts`
-- `M src/app/admin/activity/page.tsx`
-- `D  src/app/api/admin/activity/route.ts`
-- `M src/app/api/admin/search/route.ts`
-- `M src/app/api/admin/transactions/route.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -78,12 +63,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Revise campaign (page-by-page pass)
 
-14 pages closed · 8 open. One page in flight at a time.
+15 pages closed · 7 open. One page in flight at a time.
 
 - A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0, — `REVISE_QUEUE.md:292`
 - A-07 /admin/golfers — support lookup — `REVISE_QUEUE.md:554`
 - A-08 /admin/messages — threads (Cam 2026-07-23: functionally fine, "just needs to look a little better" — visual notes go to the AESTHETIC PASS; only structural — `REVISE_QUEUE.md:555`
-- A-09 /admin/activity — ledger + filters — `REVISE_QUEUE.md:556`
 - A-10 /admin/employees — roles, provisioning — `REVISE_QUEUE.md:557`
 - A-11 /admin/broadcasts — compose, preview, history — `REVISE_QUEUE.md:558`
 - A-12 /admin/create — manual build wizard (in-person tool) — `REVISE_QUEUE.md:559`
@@ -127,15 +111,15 @@ This is the distinction a raw checkbox count gets wrong.
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-23 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 6d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 18d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 18d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 18d |
@@ -165,6 +149,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `09dc048` 2026-10-23 — Activity retirement: drop the dead nav key, mark A-09 retired
+- `606bad0` 2026-10-23 — Retire the admin Activity page (AW-12)
 - `d2b41f2` 2026-10-23 — Regenerate the status board
 - `d6efdc1` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
 - `85bb916` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
@@ -175,9 +161,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `966741b` 2026-10-22 — Course dashboard search: find a golfer, booking or member from the menu (#195)
 - `dd3cfd1` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
 - `e0bc004` 2026-10-22 — Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)
-- `4b621c0` 2026-10-22 — Regenerate status board
-- `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
 
 ---
 
-**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 8 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 7 revise pages open · 17 ideas · 7 parked.
