@@ -1,30 +1,21 @@
 {
-  "generatedAt": "2026-10-22T22:32:34.043Z",
+  "generatedAt": "2026-10-23T02:19:37.527Z",
   "repo": {
-    "head": "a96c112",
-    "branch": "claude/test-course-isolation",
-    "dirtyCount": 30,
+    "head": "b4ba083",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 11,
     "dirty": [
-      "M  .github/workflows/schema-check.yml",
-      "UU CLAUDE.md",
-      "M  OPERATOR_REWORK_SPEC.md",
-      "M  PASSWORD_CHECKLIST.md",
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "UU docs/CODEMAP.md",
-      "M  docs/RUNBOOK.md",
-      "M  docs/SHIPPING.md",
-      "UU docs/codemap.json",
-      "A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql",
-      "UU prisma/schema.prisma",
-      "M  scripts/design-guard.baseline.json",
-      "A  scripts/event-signup-db-test.ts",
-      "M  src/app/api/event-payment/[id]/route.ts",
-      "A  src/app/api/event-signup/[id]/route.ts",
-      "M  src/app/api/operator/events/[id]/payments/route.ts",
-      "M  src/app/api/operator/events/[id]/route.ts",
-      "M  src/app/api/operator/events/route.ts"
+      "M HOMEPAGE_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M src/app/HomeContent.tsx",
+      " M src/app/checkin/[bookingId]/page.tsx",
+      " M src/app/home.module.css",
+      " M src/app/teesheet/page.tsx",
+      " M src/components/dashboard/events/EventSignup.tsx",
+      "?? public/home/shots/",
+      "?? scripts/screenshots/",
+      "?? src/components/home/ProductShot.tsx"
     ],
     "looksLikeRunInProgress": true
   },
@@ -32,16 +23,37 @@
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
       {
-        "h": "a96c112",
-        "date": "2026-10-22T22:17:20+00:00",
-        "subject": "TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree",
+        "h": "b4ba083",
+        "date": "2026-10-22T18:39:37-04:00",
+        "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "0a2e03b",
-        "date": "2026-10-22T22:10:19+00:00",
-        "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists",
+        "h": "3754fcb",
+        "date": "2026-10-22T18:31:59-04:00",
+        "subject": "TEST-1: launch wipe of test data, and resettable test courses (#190)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d0a4769",
+        "date": "2026-10-22T18:21:52-04:00",
+        "subject": "CI: the schema check replays migrations on its own Postgres (#192)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "04301ce",
+        "date": "2026-10-22T22:10:32+00:00",
+        "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2734cbd",
+        "date": "2026-10-22T22:04:58+00:00",
+        "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later",
         "ids": [],
         "matches": []
       },
@@ -49,20 +61,6 @@
         "h": "6f40852",
         "date": "2026-10-22T18:01:54-04:00",
         "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "2a4d5ec",
-        "date": "2026-10-22T22:00:32+00:00",
-        "subject": "TEST-1 review: a reset releases event-held tee times; wording fixes",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "0d72aad",
-        "date": "2026-10-22T21:51:22+00:00",
-        "subject": "TEST-1: launch wipe of test data and resettable test courses",
         "ids": [],
         "matches": []
       },
@@ -1162,18 +1160,6 @@
       "ageDays": 0
     },
     {
-      "file": "CLAUDE.md",
-      "openRefs": 1,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
-    },
-    {
-      "file": "CLAUDE.md",
-      "openRefs": 1,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
-    },
-    {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
@@ -1195,227 +1181,232 @@
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-19",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-11",
-      "ageDays": 10
-    },
-    {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 17
-    },
-    {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 17
-    },
-    {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-04",
-      "ageDays": 17
-    },
-    {
-      "file": "UI_REVISE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-01",
-      "ageDays": 21
+      "ageDays": 11
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
+    },
+    {
+      "file": "REVIEW_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 23
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
+    },
+    {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
+    },
+    {
+      "file": "UI_REVISE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-07",
+      "ageDays": 15
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "a96c112",
+      "h": "b4ba083",
       "date": "2026-10-22",
-      "subject": "TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree"
+      "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)"
     },
     {
-      "h": "0a2e03b",
+      "h": "3754fcb",
       "date": "2026-10-22",
-      "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists"
+      "subject": "TEST-1: launch wipe of test data, and resettable test courses (#190)"
+    },
+    {
+      "h": "d0a4769",
+      "date": "2026-10-22",
+      "subject": "CI: the schema check replays migrations on its own Postgres (#192)"
+    },
+    {
+      "h": "04301ce",
+      "date": "2026-10-22",
+      "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses"
+    },
+    {
+      "h": "2734cbd",
+      "date": "2026-10-22",
+      "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later"
     },
     {
       "h": "6f40852",
       "date": "2026-10-22",
       "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)"
-    },
-    {
-      "h": "2a4d5ec",
-      "date": "2026-10-22",
-      "subject": "TEST-1 review: a reset releases event-held tee times; wording fixes"
-    },
-    {
-      "h": "0d72aad",
-      "date": "2026-10-22",
-      "subject": "TEST-1: launch wipe of test data and resettable test courses"
     },
     {
       "h": "91df6b9",
@@ -1446,11 +1437,6 @@
       "h": "95e1b37",
       "date": "2026-10-22",
       "subject": "Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)"
-    },
-    {
-      "h": "a5c912b",
-      "date": "2026-10-22",
-      "subject": "Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)"
     }
   ]
 }

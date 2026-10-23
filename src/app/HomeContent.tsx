@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { LaptopDemo } from '@/components/home/TeeSheetDemo';
+import ProductShot from '@/components/home/ProductShot';
 import s from './home.module.css';
 
 // HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07): Cam's own layout. One idea per
@@ -27,6 +28,27 @@ const DOES = [
   'Staff logins, with permissions you set for each person',
   'An AI assistant that answers questions about your day and drafts changes for you to confirm',
   'Analytics for every day, and at the end of each month a written review of how the course did',
+];
+
+const FEATURES: { h: string; p: string; shot: string; device: 'laptop' | 'phone'; alt: string }[] = [
+  {
+    h: 'An assistant that knows your course.',
+    p: 'Ask who hasn’t paid, how last week went or which hours sit empty, and it answers from your own tee sheet. It can draft a change for you, like a pay link, a blocked time or a moved group, and nothing happens until you confirm it.',
+    shot: 'assistant', device: 'laptop',
+    alt: 'The tee sheet with the AI assistant open, listing this afternoon’s unpaid groups and offering to text one of them a pay link',
+  },
+  {
+    h: 'Know how your course is doing.',
+    p: 'Revenue, how full the sheet was and what each round brought in, against the week before, in plain words. At the start of every month you get a written review of the month before, built only from your own numbers.',
+    shot: 'analytics', device: 'laptop',
+    alt: 'The analytics page: revenue, tee sheet filled, rounds played and average per round, what to look at, and September’s monthly review',
+  },
+  {
+    h: 'Paid at the counter or on their phone.',
+    p: 'Text a group a pay link and they pay on their own phone, with Apple Pay, Google Pay or a card. When your policy has late-cancel or no-show fees, golfers save a card when they book, so the fee is covered.',
+    shot: 'pay', device: 'phone',
+    alt: 'A golfer’s phone showing their tee time, the total and a card field to check in and pay',
+  },
 ];
 
 export default function HomeContent() {
@@ -76,6 +98,20 @@ export default function HomeContent() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* WHAT IT DOES (Cam 2026-10-19 picks; rows 2026-10-23) — the assistant, analytics and the monthly
+          review, payments: each beside a real screenshot. Marketing copy says "an AI assistant", never "Birdie". */}
+      <section className={`${s.col} ${s.features}`} id="features">
+        {FEATURES.map(f => (
+          <div key={f.shot} className={s.feat}>
+            <div>
+              <h2 className={s.display}>{f.h}</h2>
+              <p>{f.p}</p>
+            </div>
+            <div className={s.featMedia}><ProductShot shot={f.shot} device={f.device} alt={f.alt} /></div>
+          </div>
+        ))}
       </section>
 
       {/* SEE HOW IT WORKS — the working demo on a laptop, then Book a demo. */}
