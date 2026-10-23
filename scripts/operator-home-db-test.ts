@@ -43,22 +43,27 @@ async function main() {
   await book(t11.id, 3); // 11:00, never checked in: past the 30-minute grace at noon
   await book(t13.id, 1, { checkInFailReason: 'card_declined' });
   await book(t14.id, 4, { status: 'cancelled' });
+  // A declined card on a group past its time, with shop items on the round.
+  const t1030 = await tt(TODAY, '10:30');
+  await book(t1030.id, 2, { checkInFailReason: 'card_declined', shopTotalCents: 2000, shopTaxCents: 160 });
   const lw = await tt(LAST_WEEK, '08:00');
   await book(lw.id, 4);
 
   const owner = await operatorHome(course.id, { money: true, messages: true }, NOW);
-  check('players today count live bookings only (cancelled left out)', owner.players.today === 6, owner.players);
+  check('players today count live bookings only (cancelled left out)', owner.players.today === 8, owner.players);
   check('…against the same weekday last week', owner.players.lastWeek === 4, owner.players);
-  check('players land in their tee-time hour', owner.hours[8].today === 2 && owner.hours[11].today === 3 && owner.hours[13].today === 1 && owner.hours[14].today === 0 && owner.hours[8].lastWeek === 4);
-  check('fill counts spots in times that are not blocked', owner.fillPct.today === Math.round((6 / 16) * 100), owner.fillPct);
+  check('players land in their tee-time hour', owner.hours[10].today === 2 && owner.hours[8].today === 2 && owner.hours[11].today === 3 && owner.hours[13].today === 1 && owner.hours[14].today === 0 && owner.hours[8].lastWeek === 4);
+  check('fill counts spots in times that are not blocked', owner.fillPct.today === Math.round((8 / 20) * 100), owner.fillPct);
   check('a group past its tee time plus the grace, not checked in, needs you', owner.late.length === 1 && owner.late[0].time === '11:00', owner.late);
-  check('a declined card needs you, with its amount for a login that sees payments', owner.declined.length === 1 && owner.declined[0].amountCents === 5150, owner.declined);
+  const shopDecline = owner.declined.find(d => d.time === '10:30');
+  check('declined cards need you, each with what the retry will charge (round + shop items)', owner.declined.length === 2 && owner.declinedTotal === 2 && shopDecline?.amountCents === 10300 + 2000 + 160, owner.declined);
+  check('a declined group past its time is not listed again as late', !owner.late.some(l => l.time === '10:30'));
   check('coming up starts at the course clock and skips blocked times', owner.comingUp.map(s => s.time).join(',') === '13:00,14:00', owner.comingUp.map(s => s.time));
-  check('money uses the Analytics definitions (paid today)', !!owner.money && owner.money.paidCents === 10000 && owner.money.paidRounds === 1, owner.money);
+  check('money uses the Analytics definitions (paid today, counted in groups)', !!owner.money && owner.money.paidCents === 10000 && owner.money.paidGroups === 1, owner.money);
 
   const staff = await operatorHome(course.id, { money: false, messages: false }, NOW);
   check('a login without payments gets no money', staff.money === null);
-  check('…and sees who declined, not how much', staff.declined.length === 1 && staff.declined[0].amountCents === null);
+  check('…and sees who declined, not how much', staff.declined.length === 2 && staff.declined.every(d => d.amountCents === null));
   check('…and no unread count without messages', staff.unreadMessages === 0);
 
   const route = readFileSync('src/app/api/operator/home/route.ts', 'utf8');

@@ -7,6 +7,7 @@
 import { prisma } from './prisma';
 import { todayIn, clockIn, addDaysStr } from './course-time';
 import { computeAnalytics, NO_SHOW_GRACE_MIN } from './analytics';
+import { roundChargeCents } from './shop';
 
 const LIVE = { status: { in: ['confirmed', 'completed'] } };
 
@@ -37,7 +38,8 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   const clock = clockIn(tz, now);
   const lastWeek = addDaysStr(today, -7);
 
-  const [cur, prev, slots, declined, unread] = await Promise.all([
+  const declinedWhere = { courseId, checkInFailReason: { not: '' }, checkedInAt: null, status: { not: 'cancelled' } };
+  const [cur, prev, slots, declined, declinedTotal, unread] = await Promise.all([
     dayShape(courseId, today),
     dayShape(courseId, lastWeek),
     prisma.teeTime.findMany({
@@ -48,18 +50,21 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     }),
     // A card that was tried at check-in and declined, and nobody has collected since.
     prisma.booking.findMany({
-      where: { courseId, checkInFailReason: { not: '' }, checkedInAt: null, status: { not: 'cancelled' } },
-      orderBy: { createdAt: 'desc' }, take: 10,
-      select: { id: true, golferName: true, totalAmount: true, teeTime: { select: { date: true, time: true } } },
+      where: declinedWhere, orderBy: { createdAt: 'desc' }, take: 10,
+      // POS-1a: what the retry will charge — the round plus any shop items on it.
+      select: { id: true, golferName: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, teeTime: { select: { date: true, time: true } } },
     }),
+    prisma.booking.count({ where: declinedWhere }),
     // The same count as the menu's Messages badge (/api/operator/messages?unreadCount=1).
     opts.messages ? prisma.message.count({ where: { thread: { courseId }, senderType: 'admin', readAt: null } }) : Promise.resolve(0),
   ]);
 
+  const declinedIds = new Set(declined.map(d => d.id));
   // Past their tee time plus the no-show grace, still not checked in or marked.
   const graceAgo = minusMinutes(clock, NO_SHOW_GRACE_MIN);
   const late = slots.flatMap(s => s.time.slice(0, 5) <= graceAgo
-    ? s.bookings.filter(b => b.status === 'confirmed' && !b.checkedInAt && !b.noShowAt).map(b => ({ id: b.id, name: b.golferName, time: s.time.slice(0, 5) }))
+    // A declined card is listed on its own above, not again here.
+    ? s.bookings.filter(b => b.status === 'confirmed' && !b.checkedInAt && !b.noShowAt && !declinedIds.has(b.id)).map(b => ({ id: b.id, name: b.golferName, time: s.time.slice(0, 5) }))
     : []);
 
   const comingUp: HomeSlot[] = slots.filter(s => s.time.slice(0, 5) >= clock.slice(0, 5)).slice(0, 6).map(s => ({
@@ -68,14 +73,15 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     groups: s.bookings.map(b => ({ id: b.id, name: b.golferName, players: b.players, paymentStatus: b.paymentStatus, checkedIn: !!b.checkedInAt })),
   }));
 
-  let money: null | { paidCents: number; paidRounds: number; outstandingCents: number; outstandingGroups: number; lateFeesWeekCents: number } = null;
+  let money: null | { paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateFeesWeekCents: number } = null;
   if (opts.money) {
     const [day, week] = await Promise.all([
       computeAnalytics(courseId, { from: today, to: today }, now),
       computeAnalytics(courseId, { from: addDaysStr(today, -6), to: today }, now),
     ]);
     money = {
-      paidCents: day.revenue.collectedCents, paidRounds: day.revenue.beyond.rounds,
+      // Paid bookings (groups), as Analytics' collected set; Analytics' "rounds" are players.
+      paidCents: day.revenue.collectedCents, paidGroups: day.revenue.beyond.rounds,
       outstandingCents: day.revenue.outstandingCents, outstandingGroups: day.revenue.outstandingBookings,
       lateFeesWeekCents: week.revenue.lateFeesKeptCents,
     };
@@ -88,7 +94,8 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     fillPct: { today: cur.fillPct, lastWeek: prev.fillPct },
     money,
     // Amounts are money: a login without payments sees who, not how much.
-    declined: declined.map(d => ({ id: d.id, name: d.golferName, date: d.teeTime.date, time: d.teeTime.time.slice(0, 5), amountCents: opts.money ? d.totalAmount : null })),
+    declined: declined.map(d => ({ id: d.id, name: d.golferName, date: d.teeTime.date, time: d.teeTime.time.slice(0, 5), amountCents: opts.money ? roundChargeCents(d) : null })),
+    declinedTotal,
     late,
     unreadMessages: unread,
     comingUp,

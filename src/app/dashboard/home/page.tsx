@@ -18,8 +18,9 @@ type Home = {
   hours: { hour: number; today: number; lastWeek: number }[];
   players: { today: number; lastWeek: number };
   fillPct: { today: number | null; lastWeek: number | null };
-  money: null | { paidCents: number; paidRounds: number; outstandingCents: number; outstandingGroups: number; lateFeesWeekCents: number };
+  money: null | { paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateFeesWeekCents: number };
   declined: { id: string; name: string; date: string; time: string; amountCents: number | null }[];
+  declinedTotal: number;
   late: { id: string; name: string; time: string }[];
   unreadMessages: number;
   comingUp: { time: string; open: number; groups: Group[] }[];
@@ -71,7 +72,7 @@ export default function DashboardHome() {
   const peak = Math.max(1, ...shown.map(h => Math.max(h.today, h.lastWeek)));
 
   const paidOut30 = payouts?.payouts.filter(p => p.status === 'paid' && Date.now() - new Date(p.arrivalDate).getTime() < 30 * 86_400_000).reduce((s, p) => s + p.amountCents, 0) ?? null;
-  const needs = home ? home.declined.length + home.late.length + (home.unreadMessages > 0 ? 1 : 0) : 0;
+  const needs = home ? home.declinedTotal + home.late.length + (home.unreadMessages > 0 ? 1 : 0) : 0;
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
@@ -114,9 +115,9 @@ export default function DashboardHome() {
                   <div className="px-4 py-3.5 border-l border-line"><div className="text-[13px] text-ink-soft">Tee sheet filled</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-1">{home.fillPct.today === null ? '—' : `${home.fillPct.today}%`}</div>
                     <div className="text-[12.5px] text-ink-muted">{home.fillPct.lastWeek === null ? 'no tee times last week' : `${home.fillPct.lastWeek}% last week`}</div></div>
                   {home.money && <>
-                    <div className="px-4 py-3.5 border-t lg:border-t-0 lg:border-l border-line"><div className="text-[13px] text-ink-soft">Paid today</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-1">{usd(home.money.paidCents)}</div><div className="text-[12.5px] text-ink-muted">{home.money.paidRounds} round{home.money.paidRounds === 1 ? '' : 's'} paid</div></div>
-                    <div className="px-4 py-3.5 border-t border-l lg:border-t-0 border-line"><div className="text-[13px] text-ink-soft">Played, not paid</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-1">{usd(home.money.outstandingCents)}</div>
-                      <div className={`text-[12.5px] ${home.money.outstandingGroups ? 'text-warn' : 'text-ink-muted'}`}>{home.money.outstandingGroups ? `${home.money.outstandingGroups} group${home.money.outstandingGroups === 1 ? '' : 's'} so far today` : 'every group so far has paid'}</div></div>
+                    <div className="px-4 py-3.5 border-t lg:border-t-0 lg:border-l border-line"><div className="text-[13px] text-ink-soft">Paid today</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-1">{usd(home.money.paidCents)}</div><div className="text-[12.5px] text-ink-muted">{home.money.paidGroups} group{home.money.paidGroups === 1 ? '' : 's'} paid</div></div>
+                    <div className="px-4 py-3.5 border-t border-l lg:border-t-0 border-line"><div className="text-[13px] text-ink-soft">Not paid yet</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-1">{usd(home.money.outstandingCents)}</div>
+                      <div className={`text-[12.5px] ${home.money.outstandingGroups ? 'text-warn' : 'text-ink-muted'}`}>{home.money.outstandingGroups ? `${home.money.outstandingGroups} group${home.money.outstandingGroups === 1 ? '' : 's'} past their time today, no-shows included` : 'every group so far has paid'}</div></div>
                   </>}
                 </div>
               </section>
@@ -131,9 +132,12 @@ export default function DashboardHome() {
                       <div key={d.id} className="flex items-center gap-3 px-4 py-3">
                         <StatusDot status="bad" label="" />
                         <div className="flex-1 min-w-0"><div className="truncate">Card declined — {d.name}</div><div className="text-[12.5px] text-ink-muted">{d.date === home.today ? fmtTime(d.time) : `${d.date} ${fmtTime(d.time)}`}{d.amountCents !== null ? ` · ${usd(d.amountCents)}` : ''}</div></div>
-                        <Link href={d.amountCents !== null ? '/dashboard/money' : '/dashboard'} className="text-[13px] font-medium text-pine">Open</Link>
+                        <Link href="/dashboard" className="text-[13px] font-medium text-pine">Open</Link>
                       </div>
                     ))}
+                    {home.declinedTotal > home.declined.length && (
+                      <div className="flex items-center gap-3 px-4 py-3 text-ink-soft"><StatusDot status="bad" label="" /><span className="flex-1">and {home.declinedTotal - home.declined.length} more declined card{home.declinedTotal - home.declined.length === 1 ? '' : 's'}</span></div>
+                    )}
                     {home.late.length > 0 && (
                       <div className="flex items-center gap-3 px-4 py-3">
                         <StatusDot status="warn" label="" />

@@ -7595,7 +7595,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 205,
+      "lines": 209,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -17618,7 +17618,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 103,
+      "lines": 110,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -17643,7 +17643,8 @@
       "imports": [
         "./analytics",
         "./course-time",
-        "./prisma"
+        "./prisma",
+        "./shop"
       ],
       "usedBy": [
         "src/app/api/operator/home/route.ts"
@@ -19661,6 +19662,7 @@
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/operator-home.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
         "src/lib/shop-catalog.ts",
