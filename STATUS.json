@@ -1,15 +1,47 @@
 {
-  "generatedAt": "2026-10-23T02:03:10.982Z",
+  "generatedAt": "2026-10-23T02:18:31.159Z",
   "repo": {
-    "head": "f25fb46",
-    "branch": "claude/dash-home",
-    "dirtyCount": 0,
-    "dirty": [],
+    "head": "ddcd38a",
+    "branch": "claude/dash-search",
+    "dirtyCount": 3,
+    "dirty": [
+      "UU CLAUDE.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "ddcd38a",
+        "date": "2026-10-23T02:18:12+00:00",
+        "subject": "Search: phone matches skip cancelled bookings too",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d7d5f6c",
+        "date": "2026-10-23T02:16:44+00:00",
+        "subject": "Search review: only what the target page shows; tee sheet holds a linked day; Members follows each link",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "86c3e72",
+        "date": "2026-10-23T02:09:37+00:00",
+        "subject": "Course dashboard search: find a golfer, booking or member from the menu",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ac5adaf",
+        "date": "2026-10-23T02:03:13+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f25fb46",
         "date": "2026-10-23T02:01:40+00:00",
@@ -1162,6 +1194,18 @@
       "ageDays": 0
     },
     {
+      "file": "CLAUDE.md",
+      "openRefs": 1,
+      "lastTouched": "2026-10-23",
+      "ageDays": 0
+    },
+    {
+      "file": "CLAUDE.md",
+      "openRefs": 1,
+      "lastTouched": "2026-10-23",
+      "ageDays": 0
+    },
+    {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
@@ -1381,6 +1425,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ddcd38a",
+      "date": "2026-10-23",
+      "subject": "Search: phone matches skip cancelled bookings too"
+    },
+    {
+      "h": "d7d5f6c",
+      "date": "2026-10-23",
+      "subject": "Search review: only what the target page shows; tee sheet holds a linked day; Members follows each link"
+    },
+    {
+      "h": "86c3e72",
+      "date": "2026-10-23",
+      "subject": "Course dashboard search: find a golfer, booking or member from the menu"
+    },
+    {
+      "h": "ac5adaf",
+      "date": "2026-10-23",
+      "subject": "Status board"
+    },
+    {
       "h": "f25fb46",
       "date": "2026-10-23",
       "subject": "Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count"
@@ -1419,26 +1483,6 @@
       "h": "6f40852",
       "date": "2026-10-22",
       "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)"
-    },
-    {
-      "h": "91df6b9",
-      "date": "2026-10-22",
-      "subject": "W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send"
-    },
-    {
-      "h": "fc5c6aa",
-      "date": "2026-10-22",
-      "subject": "W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)"
-    },
-    {
-      "h": "6ea9b46",
-      "date": "2026-10-22",
-      "subject": "Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)"
-    },
-    {
-      "h": "3c63c5d",
-      "date": "2026-10-22",
-      "subject": "AW-11 Team: per-person access — each employee's role and areas (#186)"
     }
   ]
 }

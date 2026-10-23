@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 536,
-    "routes": 259,
-    "libs": 175,
+    "files": 539,
+    "routes": 260,
+    "libs": 176,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -6209,6 +6209,31 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/search/route.ts",
+      "lines": 16,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/search",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/operator-search",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/settings/route.ts",
       "lines": 123,
       "purpose": "",
@@ -7674,7 +7699,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 685,
+      "lines": 694,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7702,6 +7727,7 @@
         "@/lib/format",
         "@/lib/use-dashboard-access",
         "lucide-react",
+        "next/navigation",
         "react"
       ],
       "usedBy": []
@@ -7817,7 +7843,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1488,
+      "lines": 1498,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8982,7 +9008,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 285,
+      "lines": 287,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9004,6 +9030,7 @@
         "@/components/AnnouncementBanner",
         "@/components/birdie/BirdieWidget",
         "@/components/dashboard/AgreementNotice",
+        "@/components/dashboard/OperatorSearch",
         "@/components/dashboard/Toast",
         "@/lib/dashboard-visits",
         "@/lib/unsaved-guard",
@@ -9805,6 +9832,35 @@
       ],
       "usedBy": [
         "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/OperatorSearch.tsx",
+      "lines": 87,
+      "purpose": "DASH-C:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (OperatorSearch)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/lib/dashboard-fetch",
+        "@/lib/operator-search",
+        "@/lib/unsaved-guard",
+        "lucide-react",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": [
+        "src/components/OperatorSidebar.tsx"
       ]
     },
     {
@@ -10684,6 +10740,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
+        "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
@@ -14815,6 +14872,7 @@
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/operator-home.ts",
+        "src/lib/operator-search.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -15242,6 +15300,7 @@
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
@@ -17651,6 +17710,35 @@
       ]
     },
     {
+      "path": "src/lib/operator-search.ts",
+      "lines": 58,
+      "purpose": "DASH-C search (the mockups' \"Find a golfer, booking or member\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "operatorSearch",
+          "kind": "fn"
+        },
+        {
+          "name": "SearchResult",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/search/route.ts",
+        "src/components/dashboard/OperatorSearch.tsx"
+      ]
+    },
+    {
       "path": "src/lib/owner-passkey.ts",
       "lines": 111,
       "purpose": "AW-1b (Cam 2026-10-21:",
@@ -18214,6 +18302,7 @@
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/operator-home.ts",
+        "src/lib/operator-search.ts",
         "src/lib/owner-passkey.ts",
         "src/lib/owner-session.ts",
         "src/lib/problems.ts",
@@ -19182,6 +19271,7 @@
         "src/app/api/operator/sales-tax/route.ts",
         "src/app/api/operator/schedule/preview/route.ts",
         "src/app/api/operator/schedule/route.ts",
+        "src/app/api/operator/search/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-items/route.ts",
@@ -20349,7 +20439,8 @@
       "usedBy": [
         "src/app/dashboard/settings/page.tsx",
         "src/components/OperatorSidebar.tsx",
-        "src/components/birdie/BirdieWidget.tsx"
+        "src/components/birdie/BirdieWidget.tsx",
+        "src/components/dashboard/OperatorSearch.tsx"
       ]
     },
     {
@@ -21488,6 +21579,7 @@
         "src/lib/lifecycle.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/operator-home.ts",
+        "src/lib/operator-search.ts",
         "src/lib/real-courses.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
@@ -22370,6 +22462,7 @@
         "src/lib/lifecycle.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts",
+        "src/lib/operator-search.ts",
         "src/lib/problems.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
@@ -23253,7 +23346,8 @@
         "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
-        "src/lib/member-session.ts"
+        "src/lib/member-session.ts",
+        "src/lib/operator-search.ts"
       ]
     },
     {
