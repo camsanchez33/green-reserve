@@ -121,7 +121,7 @@ export default function BirdieWidget() {
       });
       if (!r.ok || !r.body) {
         const d = await r.json().catch(() => ({}));
-        setTurns([...history, { role: 'assistant', content: String(d.error || `Birdie could not answer (${r.status}).`), error: true }]);
+        setTurns([...history, { role: 'assistant', content: String(d.error || `The assistant could not answer (${r.status}).`), error: true }]);
         return;
       }
       // B4a: the reply is NDJSON — one {"t","d"} event per line. "text" is reply
@@ -156,7 +156,7 @@ export default function BirdieWidget() {
       setTurns([...history, { role: 'assistant', content: acc || (cards.length ? '' : "…I didn't get a reply. Ask again?"), error: !acc && !cards.length, cards }]);
     } catch (err) {
       if ((err as { name?: string }).name === 'AbortError') return;
-      setTurns([...history, { role: 'assistant', content: 'Network error — Birdie could not answer. Check your connection and try again.', error: true }]);
+      setTurns([...history, { role: 'assistant', content: 'Network error — the assistant could not answer. Check your connection and try again.', error: true }]);
     } finally {
       setBusy(false);
       abortRef.current = null;
@@ -168,20 +168,20 @@ export default function BirdieWidget() {
   return (
     <>
       {!open && tucked && (
-        <button type="button" onClick={show} aria-label="Open Birdie"
+        <button type="button" onClick={show} aria-label="Open the assistant"
           className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-white border border-r-0 border-line rounded-l-md px-1.5 py-3 text-[12px] font-semibold text-pine hover:bg-paper [writing-mode:vertical-rl]">
-          Birdie
+          Assistant
         </button>
       )}
       {!open && !tucked && (
         <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 md:bottom-5 md:right-5 z-40 flex items-end gap-1.5">
-          <button type="button" onClick={tuck} aria-label="Tuck Birdie away" title="Tuck Birdie away"
+          <button type="button" onClick={tuck} aria-label="Tuck the assistant away" title="Tuck the assistant away"
             className="mb-1 w-9 h-9 rounded-full bg-white border border-line text-ink-muted hover:text-ink text-[13px] leading-none flex items-center justify-center">›</button>
           {/* Cam 2026-10-19: "it must be obvious that this is where you ask
               questions" — the circle says "Ask" so it doesn't read as a logo.
               W2-1: back in the corner on every screen (it reverses #143's top-bar
               button); the › beside it tucks it to an edge tab when it is in the way. */}
-          <button type="button" onClick={show} aria-label="Ask Birdie"
+          <button type="button" onClick={show} aria-label="Ask the assistant"
             className="w-14 h-14 rounded-full bg-white border border-pine/30 hover:border-pine/60 transition-colors flex flex-col items-center justify-center gap-0.5"
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
             <Image src="/brand/golfer.svg" unoptimized alt="" width={18} height={22} className="h-[22px] w-auto" />
@@ -190,11 +190,11 @@ export default function BirdieWidget() {
         </div>
       )}
       {open && (
-        <div role="dialog" aria-label="Birdie" className="fixed bottom-5 right-5 z-40 w-[min(380px,calc(100vw-2rem))] max-h-[min(600px,calc(100vh-2.5rem))] bg-white rounded-lg shadow-card flex flex-col" style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
+        <div role="dialog" aria-label="Assistant" className="fixed bottom-5 right-5 z-40 w-[min(380px,calc(100vw-2rem))] max-h-[min(600px,calc(100vh-2.5rem))] bg-white rounded-lg shadow-card flex flex-col" style={{ boxShadow: '0 1px 2px rgba(0,0,0,.08)' }}>
           <div className="flex items-center gap-2.5 px-4 py-3 border-b border-line">
             <Image src="/brand/golfer.svg" unoptimized alt="" width={22} height={27} className="h-7 w-auto" />
             <div className="min-w-0">
-              <div className="text-[15px] font-semibold text-ink leading-tight">Ask Birdie</div>
+              <div className="text-[15px] font-semibold text-ink leading-tight">Assistant</div>
               <div className="text-[12px] text-ink-soft truncate">Your course&apos;s assistant. Ask in plain words.</div>
             </div>
             <button type="button" onClick={close} aria-label="Close" className="ml-auto text-ink-muted hover:text-ink transition-colors"><X className="w-4 h-4" /></button>
@@ -212,13 +212,13 @@ export default function BirdieWidget() {
             {turns.map((t, i) => (
               <div key={i} className={t.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
                 <div className={'max-w-[88%] text-sm whitespace-pre-wrap leading-relaxed rounded-md px-3 py-2 ' + (t.role === 'user' ? 'bg-pine text-white' : t.error ? 'bg-bad/5 border border-bad/20 text-bad' : 'bg-paper text-ink')}>
-                  {t.role === 'assistant' && !t.content && t.pending ? <span className="text-ink-muted">{t.status || 'Birdie is thinking…'}</span> : t.role === 'assistant' ? <>{renderReply(t.content)}{t.pending && t.status ? <span className="block mt-1 text-ink-muted">{t.status}</span> : null}{t.cards?.map(c => <ConfirmCard key={c.id} card={c} />)}</> : t.content}
+                  {t.role === 'assistant' && !t.content && t.pending ? <span className="text-ink-muted">{t.status || 'Thinking…'}</span> : t.role === 'assistant' ? <>{renderReply(t.content)}{t.pending && t.status ? <span className="block mt-1 text-ink-muted">{t.status}</span> : null}{t.cards?.map(c => <ConfirmCard key={c.id} card={c} />)}</> : t.content}
                 </div>
               </div>
             ))}
           </div>
           <form className="flex items-center gap-2 px-3 py-3 border-t border-line" onSubmit={e => { e.preventDefault(); ask(input); }}>
-            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} placeholder="Ask a question…" className={iCls} maxLength={1500} disabled={busy} aria-label="Message Birdie" />
+            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} placeholder="Ask a question…" className={iCls} maxLength={1500} disabled={busy} aria-label="Message the assistant" />
             <button type="submit" disabled={busy || !input.trim()} aria-label="Send" className="w-9 h-9 flex items-center justify-center rounded-md bg-pine hover:bg-pine-hover disabled:opacity-50 text-white transition-colors"><Send className="w-4 h-4" /></button>
           </form>
         </div>

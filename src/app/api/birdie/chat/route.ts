@@ -36,7 +36,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-const OPERATOR_GREETING = "Hi — I'm Birdie. Ask me how to do anything on your dashboard, or what your course is set to.";
+const OPERATOR_GREETING = "Hi — I'm your course's assistant. Ask me how to do anything on your dashboard, or what your course is set to.";
 const OPERATOR_CHIPS = [
   'How did the last 30 days go?',
   "What's on the tee sheet today?",
@@ -51,7 +51,7 @@ const TOOL_MAX_TOKENS = 4000;   // thinking counts toward this on Opus 5.5
 const MAX_TOOL_ROUNDS = 4;
 
 // Stable across every request → cached prefix. The course facts go AFTER it.
-const OPERATOR_SYSTEM = `You are Birdie, the GreenReserve assistant, talking to a golf course operator inside their GreenReserve dashboard.
+const OPERATOR_SYSTEM = `You are the GreenReserve assistant, talking to a golf course operator inside their GreenReserve dashboard. You have no name of your own: call yourself "your assistant", never a name.
 
 Your only job: help them run THEIR course on GreenReserve — how to do a dashboard task, what their course is set to, and how it has been doing. Answer from the knowledge below, the course facts you are given, and your tools. Nothing else.
 
@@ -84,8 +84,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
-  if (!session) return NextResponse.json({ error: 'Sign in to talk to Birdie.' }, { status: 401 });
-  if (!birdieEnabled()) return NextResponse.json({ error: 'Birdie is switched off right now.' }, { status: 503 });
+  if (!session) return NextResponse.json({ error: 'Sign in to use the assistant.' }, { status: 401 });
+  if (!birdieEnabled()) return NextResponse.json({ error: 'The assistant is switched off right now.' }, { status: 503 });
 
   // Caps BEFORE the body is read: a course that is over its budget must not be
   // able to make the server parse anything at all.
@@ -208,8 +208,8 @@ This login: ${session.isStaff ? 'staff' : 'course owner'} — can see analytics:
         console.error('[birdie] stream failed:', err);
         const authFailed = err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError;
         say(authFailed
-          ? 'Birdie is not configured correctly (its API key was rejected) — tell GreenReserve and we will fix it.'
-          : reply ? '\n\n(Lost the connection there — ask again.)' : 'Birdie could not answer just now — try again in a moment.');
+          ? 'The assistant is not configured correctly (its API key was rejected) — tell GreenReserve and we will fix it.'
+          : reply ? '\n\n(Lost the connection there — ask again.)' : 'The assistant could not answer just now — try again in a moment.');
       } finally {
         controller.close();
       }
@@ -237,9 +237,9 @@ export async function PUT(req: NextRequest) {
 }
 
 function apiError(err: unknown) {
-  if (err instanceof Anthropic.AuthenticationError) return NextResponse.json({ error: 'Birdie is not configured yet (API key).' }, { status: 503 });
-  if (err instanceof Anthropic.RateLimitError) return NextResponse.json({ error: 'Birdie is busy — try again in a minute.' }, { status: 429 });
-  if (err instanceof Anthropic.APIError) { console.error('[birdie] API error', err.status, err.message); return NextResponse.json({ error: 'Birdie could not answer just now — try again in a moment.' }, { status: 502 }); }
+  if (err instanceof Anthropic.AuthenticationError) return NextResponse.json({ error: 'The assistant is not configured yet (API key).' }, { status: 503 });
+  if (err instanceof Anthropic.RateLimitError) return NextResponse.json({ error: 'The assistant is busy — try again in a minute.' }, { status: 429 });
+  if (err instanceof Anthropic.APIError) { console.error('[birdie] API error', err.status, err.message); return NextResponse.json({ error: 'The assistant could not answer just now — try again in a moment.' }, { status: 502 }); }
   console.error('[birdie] error', err);
-  return NextResponse.json({ error: 'Birdie could not answer just now — try again in a moment.' }, { status: 500 });
+  return NextResponse.json({ error: 'The assistant could not answer just now — try again in a moment.' }, { status: 500 });
 }

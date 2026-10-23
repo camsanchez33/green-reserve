@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 539,
+    "files": 540,
     "routes": 260,
     "libs": 176,
     "models": 55,
@@ -26,7 +26,7 @@
   "files": [
     {
       "path": "src/app/HomeContent.tsx",
-      "lines": 97,
+      "lines": 133,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -42,6 +42,7 @@
       "guard": null,
       "imports": [
         "./home.module.css",
+        "@/components/home/ProductShot",
         "@/components/home/TeeSheetDemo",
         "next/image",
         "next/link"
@@ -7236,7 +7237,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 377,
+      "lines": 378,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8715,7 +8716,7 @@
     },
     {
       "path": "src/app/teesheet/page.tsx",
-      "lines": 206,
+      "lines": 218,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8734,6 +8735,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/components/home/ProductShot",
         "@/lib/faq",
         "@/lib/seo",
         "next",
@@ -10314,7 +10316,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventSignup.tsx",
-      "lines": 143,
+      "lines": 145,
       "purpose": "W2-9d (Cam 2026-10-22):",
       "brain": [],
       "exports": [
@@ -10617,6 +10619,31 @@
       ],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/home/ProductShot.tsx",
+      "lines": 16,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (ProductShot)",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/app/home.module.css",
+        "next/image"
+      ],
+      "usedBy": [
+        "src/app/HomeContent.tsx",
+        "src/app/teesheet/page.tsx"
       ]
     },
     {
