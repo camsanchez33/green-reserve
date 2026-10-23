@@ -232,7 +232,7 @@ function MoneyPageInner() {
                     );
                   })}
                   {overview.declinedTotal > overview.declined.length && (
-                    <li className="px-4 py-3 text-[13px] text-ink-soft">and {overview.declinedTotal - overview.declined.length} more declined card{overview.declinedTotal - overview.declined.length === 1 ? '' : 's'}, older than these</li>
+                    <li className="px-4 py-3 text-[13px] text-ink-soft">and {overview.declinedTotal - overview.declined.length} more declined card{overview.declinedTotal - overview.declined.length === 1 ? '' : 's'}</li>
                   )}
                 </ul>
               </Card>
