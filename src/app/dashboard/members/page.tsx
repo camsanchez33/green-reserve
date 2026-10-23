@@ -244,7 +244,7 @@ export default function MembersPage() {
           <button onClick={closeWizard} className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4"/>Back to Member Management
           </button>
-          <h1 className="font-serif text-[32px] leading-none text-ink">
+          <h1 className="font-serif text-[32px] leading-none text-ink mb-2">
             {editingTier ? 'Edit membership tier' : 'New membership tier'}
           </h1>
           <p className="text-sm text-ink-soft mb-8">
@@ -426,7 +426,7 @@ export default function MembersPage() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" view="members.view" edit="members.edit" />
         <div className="max-w-lg mx-auto px-6 py-16 text-center">
-          <h1 className="font-serif text-[32px] leading-none text-ink">Tier created</h1>
+          <h1 className="font-serif text-[32px] leading-none text-ink mb-3">Tier created</h1>
           <p className="text-sm text-ink-soft mb-8">
             <span className="font-medium" style={{ color: createdTier.color }}>{createdTier.name}</span> is live. Anyone you add to it gets member rates automatically at checkout.
           </p>
