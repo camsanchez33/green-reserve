@@ -1,21 +1,29 @@
 {
-  "generatedAt": "2026-10-23T19:12:36.673Z",
+  "generatedAt": "2026-10-23T19:16:00.652Z",
   "repo": {
-    "head": "eb459834",
+    "head": "d6efdc1b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 5,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/operator/agreement/route.ts",
-      " M src/lib/agreement-gate.ts",
-      "?? scripts/agreement-prompt-db-test.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "d6efdc1b",
+        "date": "2026-10-23T19:15:21+00:00",
+        "subject": "Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "85bb9160",
+        "date": "2026-10-23T19:12:51+00:00",
+        "subject": "The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "3148eed2",
         "date": "2026-10-22T22:56:06-04:00",
@@ -477,6 +485,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d6efdc1b",
+      "date": "2026-10-23",
+      "subject": "Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)"
+    },
+    {
+      "h": "85bb9160",
+      "date": "2026-10-23",
+      "subject": "The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again"
+    },
+    {
       "h": "3148eed2",
       "date": "2026-10-22",
       "subject": "Money: Needs you — declined cards with a pay link (DASH-C) (#198)"
@@ -525,16 +543,6 @@
       "h": "3754fcb4",
       "date": "2026-10-22",
       "subject": "TEST-1: launch wipe of test data, and resettable test courses (#190)"
-    },
-    {
-      "h": "d0a4769f",
-      "date": "2026-10-22",
-      "subject": "CI: the schema check replays migrations on its own Postgres (#192)"
-    },
-    {
-      "h": "04301cec",
-      "date": "2026-10-22",
-      "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses"
     }
   ]
 }

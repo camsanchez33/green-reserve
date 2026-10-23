@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 19:12 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `eb459834` · working tree **5 dirty file(s)**
+Generated 2026-10-23 19:16 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d6efdc1b` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 10 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 12 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `d6efdc1b` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
+| `85bb9160` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
 | `3148eed2` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
 | `3c88148d` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
 | `946d4a54` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
@@ -24,17 +26,6 @@ Generated 2026-10-23 19:12 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `2734cbdb` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (5 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/app/api/operator/agreement/route.ts`
-- `M src/lib/agreement-gate.ts`
-- `?? scripts/agreement-prompt-db-test.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -156,6 +147,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `d6efdc1b` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
+- `85bb9160` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
 - `3148eed2` 2026-10-22 — Money: Needs you — declined cards with a pay link (DASH-C) (#198)
 - `3c88148d` 2026-10-22 — Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)
 - `946d4a54` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
@@ -166,8 +159,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `4b621c06` 2026-10-22 — Regenerate status board
 - `b4ba0832` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
 - `3754fcb4` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
-- `d0a4769f` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
-- `04301cec` 2026-10-22 — W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses
 
 ---
 
