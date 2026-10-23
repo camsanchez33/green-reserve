@@ -4,7 +4,7 @@
 // Needs a database. Run: npx tsx scripts/operator-home-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { operatorHome } from '../src/lib/operator-home';
+import { operatorHome, declinedCards } from '../src/lib/operator-home';
 
 const TAG = 'ophomedbtest';
 let failed = 0;
@@ -45,26 +45,45 @@ async function main() {
   await book(t14.id, 4, { status: 'cancelled' });
   // A declined card on a group past its time, with shop items on the round.
   const t1030 = await tt(TODAY, '10:30');
-  await book(t1030.id, 2, { checkInFailReason: 'card_declined', shopTotalCents: 2000, shopTaxCents: 160 });
+  await book(t1030.id, 2, { checkInFailReason: 'card_declined', shopTotalCents: 2000, shopTaxCents: 160, golferPhone: '(555) 123-4567', checkInToken: `${TAG}-tok` });
+  // A walk-in's placeholder email can't be sent a link, nor can a booking with no token.
+  const t1045 = await tt(TODAY, '10:45');
+  await book(t1045.id, 1, { checkInFailReason: 'card_declined', golferEmail: `walkin${TAG}@noemail.greenreserve.app`, checkInToken: `${TAG}-tok2` });
+  // Declined, then paid at the counter: the counter clears the reason, so it is not listed.
+  const t0930 = await tt(TODAY, '09:30');
+  await book(t0930.id, 1, { status: 'completed', paymentStatus: 'paid_offline', checkedInAt: new Date('2031-05-14T09:30:00Z'), checkInFailReason: '' });
   const lw = await tt(LAST_WEEK, '08:00');
   await book(lw.id, 4);
 
   const owner = await operatorHome(course.id, { money: true, messages: true }, NOW);
-  check('players today count live bookings only (cancelled left out)', owner.players.today === 8, owner.players);
+  check('players today count live bookings only (cancelled left out)', owner.players.today === 10, owner.players);
   check('…against the same weekday last week', owner.players.lastWeek === 4, owner.players);
-  check('players land in their tee-time hour', owner.hours[10].today === 2 && owner.hours[8].today === 2 && owner.hours[11].today === 3 && owner.hours[13].today === 1 && owner.hours[14].today === 0 && owner.hours[8].lastWeek === 4);
-  check('fill counts spots in times that are not blocked', owner.fillPct.today === Math.round((8 / 20) * 100), owner.fillPct);
+  check('players land in their tee-time hour', owner.hours[10].today === 3 && owner.hours[9].today === 1 && owner.hours[8].today === 2 && owner.hours[11].today === 3 && owner.hours[13].today === 1 && owner.hours[14].today === 0 && owner.hours[8].lastWeek === 4);
+  check('fill counts spots in times that are not blocked', owner.fillPct.today === Math.round((10 / 28) * 100), owner.fillPct);
   check('a group past its tee time plus the grace, not checked in, needs you', owner.late.length === 1 && owner.late[0].time === '11:00', owner.late);
   const shopDecline = owner.declined.find(d => d.time === '10:30');
-  check('declined cards need you, each with what the retry will charge (round + shop items)', owner.declined.length === 2 && owner.declinedTotal === 2 && shopDecline?.amountCents === 10300 + 2000 + 160, owner.declined);
+  check('declined cards need you, each with what the retry will charge (round + shop items)', owner.declined.length === 3 && owner.declinedTotal === 3 && shopDecline?.amountCents === 10300 + 2000 + 160, owner.declined);
   check('a declined group past its time is not listed again as late', !owner.late.some(l => l.time === '10:30'));
   check('coming up starts at the course clock and skips blocked times', owner.comingUp.map(s => s.time).join(',') === '13:00,14:00', owner.comingUp.map(s => s.time));
-  check('money uses the Analytics definitions (paid today, counted in groups)', !!owner.money && owner.money.paidCents === 10000 && owner.money.paidGroups === 1, owner.money);
+  check('money uses the Analytics definitions (paid today by card or at the counter, counted in groups)', !!owner.money && owner.money.paidCents === 15000 && owner.money.paidGroups === 2, owner.money);
 
   const staff = await operatorHome(course.id, { money: false, messages: false }, NOW);
   check('a login without payments gets no money', staff.money === null);
-  check('…and sees who declined, not how much', staff.declined.length === 2 && staff.declined.every(d => d.amountCents === null));
+  check('…and sees who declined, not how much', staff.declined.length === 3 && staff.declined.every(d => d.amountCents === null));
   check('…and no unread count without messages', staff.unreadMessages === 0);
+
+  // Money → Needs you reads the same list, with which pay link each one can take.
+  const money = await declinedCards(course.id, true);
+  const byTime = Object.fromEntries(money.rows.map(r => [r.time, r]));
+  check('Money and Home list the same declined cards', money.total === owner.declinedTotal && money.rows.map(r => r.id).join() === owner.declined.map(d => d.id).join());
+  check('a mobile number means it can be texted; a real email with a token means it can be emailed', byTime['10:30']?.canText === true && byTime['10:30']?.canEmail === true, byTime['10:30']);
+  check('no token: no email link; no phone: no text', byTime['13:00']?.canEmail === false && byTime['13:00']?.canText === false, byTime['13:00']);
+  check('a walk-in placeholder email is never offered', byTime['10:45']?.canEmail === false, byTime['10:45']);
+  check('the flags are booleans — no phone or email leaves the server', money.rows.every(r => !('golferPhone' in r) && !('golferEmail' in r)));
+  const overview = readFileSync('src/app/api/operator/money/overview/route.ts', 'utf8');
+  check('Money\'s overview is gated by payments and uses the shared list', /requirePermission\(session, 'money\.payments'\)/.test(overview) && /declinedCards\(session\.courseId, true\)/.test(overview));
+  const page = readFileSync('src/app/dashboard/money/page.tsx', 'utf8');
+  check('Money\'s pay-link buttons need the tee sheet\'s check-in permission, like the route', /access\.can\('sheet\.checkin'\)/.test(page) && /action: 'send_pay_link'/.test(page));
 
   const route = readFileSync('src/app/api/operator/home/route.ts', 'utf8');
   check('the route gates money and messages per permission', /money: can\(session, 'money\.payments'\)/.test(route) && /messages: can\(session, 'messages\.use'\)/.test(route) && /requirePermission\(session, 'sheet\.view'\)/.test(route));

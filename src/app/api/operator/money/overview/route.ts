@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
 import { computeAnalytics } from '@/lib/analytics';
+import { declinedCards } from '@/lib/operator-home';
 
 // Money rework (Cam 2026-10-19, OPERATOR_REWORK_SPEC): the line at the top of
 // Money — this week's paid and not-yet-paid, the same definitions as Analytics
@@ -16,12 +17,18 @@ export async function GET() {
   const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true, stripeAccountActive: true, stripeAccountId: true } });
   const today = todayIn(course?.timezone);
   const from = addDaysStr(today, -6);
-  const a = await computeAnalytics(session.courseId, { from, to: today });
+  const [a, declined] = await Promise.all([
+    computeAnalytics(session.courseId, { from, to: today }),
+    // DASH-C: Money → Needs you, the same list Home shows.
+    declinedCards(session.courseId, true),
+  ]);
   return NextResponse.json({
     week: { from, to: today },
     paidCents: a.revenue.collectedCents,
     notPaidCents: a.revenue.outstandingCents,
     notPaidGroups: a.revenue.outstandingBookings,
+    declined: declined.rows,
+    declinedTotal: declined.total,
     stripeConnected: !!(course?.stripeAccountActive && course.stripeAccountId),
   }, { headers: { 'Cache-Control': 'no-store' } });
 }
