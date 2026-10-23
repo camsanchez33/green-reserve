@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 01:53 UTC · branch `claude/dash-home` · HEAD `b4ba083` · working tree **8 dirty file(s)**
+Generated 2026-10-23 02:03 UTC · branch `claude/dash-home` · HEAD `f25fb46` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 138 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 140 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `f25fb46` | 2026-10-23 | Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count |
+| `cb05dbc` | 2026-10-23 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up |
 | `b4ba083` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists (#193) |
 | `3754fcb` | 2026-10-22 | TEST-1: launch wipe of test data, and resettable test courses (#190) |
 | `d0a4769` | 2026-10-22 | CI: the schema check replays migrations on its own Postgres (#192) |
@@ -153,20 +155,6 @@ Generated 2026-10-23 01:53 UTC · branch `claude/dash-home` · HEAD `b4ba083` ·
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
-
-- `M CLAUDE.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M src/components/OperatorSidebar.tsx`
-- `?? scripts/operator-home-db-test.ts`
-- `?? src/app/api/operator/home/`
-- `?? src/app/dashboard/home/`
-- `?? src/lib/operator-home.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
-
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -247,12 +235,12 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 10d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 11d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 17d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 17d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 18d |
@@ -287,6 +275,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `f25fb46` 2026-10-23 — Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count
+- `cb05dbc` 2026-10-23 — Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up
 - `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
 - `3754fcb` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
 - `d0a4769` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
@@ -297,8 +287,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
 - `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
-- `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
-- `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
 
 ---
 

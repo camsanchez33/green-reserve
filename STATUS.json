@@ -1,24 +1,29 @@
 {
-  "generatedAt": "2026-10-23T01:53:49.978Z",
+  "generatedAt": "2026-10-23T02:03:10.982Z",
   "repo": {
-    "head": "b4ba083",
+    "head": "f25fb46",
     "branch": "claude/dash-home",
-    "dirtyCount": 8,
-    "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/components/OperatorSidebar.tsx",
-      "?? scripts/operator-home-db-test.ts",
-      "?? src/app/api/operator/home/",
-      "?? src/app/dashboard/home/",
-      "?? src/lib/operator-home.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "f25fb46",
+        "date": "2026-10-23T02:01:40+00:00",
+        "subject": "Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "cb05dbc",
+        "date": "2026-10-23T01:53:51+00:00",
+        "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "b4ba083",
         "date": "2026-10-22T18:39:37-04:00",
@@ -1153,7 +1158,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-22",
+      "lastTouched": "2026-10-23",
       "ageDays": 0
     },
     {
@@ -1184,7 +1189,7 @@
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-11",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
@@ -1376,6 +1381,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f25fb46",
+      "date": "2026-10-23",
+      "subject": "Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count"
+    },
+    {
+      "h": "cb05dbc",
+      "date": "2026-10-23",
+      "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up"
+    },
+    {
       "h": "b4ba083",
       "date": "2026-10-22",
       "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)"
@@ -1424,16 +1439,6 @@
       "h": "3c63c5d",
       "date": "2026-10-22",
       "subject": "AW-11 Team: per-person access — each employee's role and areas (#186)"
-    },
-    {
-      "h": "75ac7d5",
-      "date": "2026-10-22",
-      "subject": "AW-10 Golfers: lookup only, in the new admin look (#185)"
-    },
-    {
-      "h": "95e1b37",
-      "date": "2026-10-22",
-      "subject": "Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)"
     }
   ]
 }
