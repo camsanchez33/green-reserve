@@ -21,7 +21,7 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   const digits = q.replace(/\D/g, '');
   // Phones are stored as typed ("555-867-5309"), so match on their digits.
   const phoneIds = opts.contact && digits.length >= 4
-    ? (await prisma.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Booking" WHERE "courseId" = ${courseId} AND regexp_replace("golferPhone", '[^0-9]', '', 'g') LIKE ${'%' + digits + '%'} LIMIT 50`).map(r => r.id)
+    ? (await prisma.$queryRaw<{ id: string }[]>`SELECT b."id" FROM "Booking" b JOIN "TeeTime" t ON t."id" = b."teeTimeId" WHERE b."courseId" = ${courseId} AND t."date" >= ${since} AND regexp_replace(b."golferPhone", '[^0-9]', '', 'g') LIKE ${'%' + digits + '%'} ORDER BY t."date" DESC LIMIT 50`).map(r => r.id)
     : [];
   const bookingOr = [
     { golferName: contains(q) },
@@ -29,12 +29,14 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   ];
   const [bookings, members] = await Promise.all([
     prisma.booking.findMany({
-      where: { courseId, OR: bookingOr, teeTime: { date: { gte: since } } },
+      // Only what the tee sheet shows (it lists confirmed and completed groups).
+      where: { courseId, status: { in: ['confirmed', 'completed'] }, OR: bookingOr, teeTime: { date: { gte: since } } },
       orderBy: [{ teeTime: { date: 'desc' } }, { teeTime: { time: 'asc' } }], take: 8,
       select: { id: true, golferName: true, players: true, status: true, teeTime: { select: { date: true, time: true } } },
     }),
     opts.members ? prisma.courseMembership.findMany({
-      where: { courseId, OR: [
+      // Active members only: Members opens on its active list.
+      where: { courseId, status: 'active', OR: [
         { inviteName: contains(q) },
         { golfer: { OR: [{ firstName: contains(q) }, { lastName: contains(q) }] } },
         ...(opts.contact ? [{ inviteEmail: contains(q) }, { golfer: { email: contains(q) } }] : []),

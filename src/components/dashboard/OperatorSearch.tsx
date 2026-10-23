@@ -22,6 +22,7 @@ export default function OperatorSearch() {
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState<SearchResult[] | null>(null);
+  const [resultsFor, setResultsFor] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -29,15 +30,15 @@ export default function OperatorSearch() {
 
   useEffect(() => {
     const term = q.trim();
-    if (term.length < 2) { setResults(null); setError(''); return; }
+    if (term.length < 2) { setResults(null); setError(''); setBusy(false); return; }
     const id = ++seq.current;
     const t = setTimeout(async () => {
       setBusy(true);
       const r = await dfetch<{ results: SearchResult[] }>(`/api/operator/search?q=${encodeURIComponent(term)}`);
-      if (id !== seq.current) return; // a newer search is on its way
+      if (id !== seq.current) return; // a newer search is on its way (it clears busy)
       setBusy(false);
       if (!r.ok || !r.data) { setError(r.ok ? 'Search came back empty — try again.' : r.error); setResults(null); return; }
-      setError(''); setResults(r.data.results);
+      setError(''); setResults(r.data.results); setResultsFor(term);
     }, 250);
     return () => clearTimeout(t);
   }, [q]);
@@ -61,7 +62,7 @@ export default function OperatorSearch() {
         <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" aria-hidden="true" />
         <span className="sr-only">Find a golfer, booking or member</span>
         <input value={q} onChange={e => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
-          onKeyDown={e => { if (e.key === 'Escape') setOpen(false); if (e.key === 'Enter' && results?.[0]) go(results[0].href); }}
+          onKeyDown={e => { if (e.key === 'Escape') setOpen(false); if (e.key === 'Enter' && results?.[0] && resultsFor === q.trim()) go(results[0].href); }}
           placeholder="Find a golfer or member" className="flex-1 min-w-0 bg-transparent text-[13px] text-ink placeholder-ink-faint outline-none" />
       </label>
       {showPanel && (
@@ -74,7 +75,7 @@ export default function OperatorSearch() {
                 className="w-full text-left px-3 py-2 hover:bg-paper flex flex-col">
                 <span className="truncate text-ink">{r.name}</span>
                 <span className="text-[12px] text-ink-muted truncate">
-                  {r.kind === 'booking' ? `${fmtDate(r.date)} ${fmtTime(r.time)} · ${r.players}${r.status === 'cancelled' ? ' · cancelled' : ''}` : `Member · ${r.tier}`}
+                  {r.kind === 'booking' ? `${fmtDate(r.date)} ${fmtTime(r.time)} · ${r.players} player${r.players === 1 ? '' : 's'}` : `Member · ${r.tier}`}
                 </span>
               </button>
             ))}

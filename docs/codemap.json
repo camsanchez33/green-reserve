@@ -7699,7 +7699,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 687,
+      "lines": 694,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7727,6 +7727,7 @@
         "@/lib/format",
         "@/lib/use-dashboard-access",
         "lucide-react",
+        "next/navigation",
         "react"
       ],
       "usedBy": []
@@ -7842,7 +7843,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1495,
+      "lines": 1498,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9835,7 +9836,7 @@
     },
     {
       "path": "src/components/dashboard/OperatorSearch.tsx",
-      "lines": 86,
+      "lines": 87,
       "purpose": "DASH-C:",
       "brain": [],
       "exports": [
@@ -17710,7 +17711,7 @@
     },
     {
       "path": "src/lib/operator-search.ts",
-      "lines": 56,
+      "lines": 58,
       "purpose": "DASH-C search (the mockups' \"Find a golfer, booking or member\"):",
       "brain": [],
       "exports": [

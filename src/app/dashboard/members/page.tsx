@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Check, X, ArrowLeft, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
@@ -73,7 +74,7 @@ type View = 'list' | 'wizard' | 'complete';
 const WIZARD_STEPS = [{ n: 1, label: 'Name & Color' }, { n: 2, label: 'Pricing' }, { n: 3, label: 'Benefits & Fees' }];
 
 /* ─── Main ────────────────────────────────────────────────────────────────── */
-export default function MembersPage() {
+function MembersPageInner() {
   const pageAccess = useDashboardAccess();
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -120,7 +121,8 @@ export default function MembersPage() {
   const [filterStatus, setFilterStatus] = useState('active');
   const [search, setSearch] = useState('');
   // DASH-C search: a member result opens this list filtered to them.
-  useEffect(() => { const q = new URLSearchParams(window.location.search).get('q'); if (q) setSearch(q.slice(0, 80)); }, []);
+  const searchParams = useSearchParams();
+  useEffect(() => { const q = searchParams.get('q'); if (q) setSearch(q.slice(0, 80)); }, [searchParams]);
   const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const canEdit = pageAccess.can('members.edit');
@@ -683,4 +685,9 @@ export default function MembersPage() {
       </main>
     </div>
   );
+}
+
+// useSearchParams needs a Suspense boundary (DASH-C search opens Members at ?q=).
+export default function MembersPage() {
+  return <Suspense fallback={<div className="min-h-screen bg-white" />}><MembersPageInner /></Suspense>;
 }
