@@ -31,6 +31,23 @@ export async function hasAcceptedAgreement(courseId: string): Promise<boolean> {
   return !!latestAgreementAcceptance(events);
 }
 
+/**
+ * The course's latest Operator Agreement acceptance, for the dashboard's
+ * "Please sign" prompt: the signed rows first (the record), then — for a course
+ * that accepted before AG-1 — the line on its onboarding timeline. The timeline
+ * only exists for a course built from an inquiry, so reading it alone asked a
+ * course built by hand to sign forever (Cam 2026-10-23).
+ */
+export async function latestOperatorAgreement(courseId: string): Promise<{ version: string; acceptedBy: string; at: string } | null> {
+  const row = await prisma.agreementAcceptance.findFirst({
+    where: { courseId, document: 'operator_agreement' },
+    orderBy: { acceptedAt: 'desc' }, select: { version: true, signerEmail: true, acceptedAt: true },
+  });
+  if (row) return { version: row.version, acceptedBy: row.signerEmail, at: row.acceptedAt.toISOString() };
+  const events = await getCourseTimeline(courseId);
+  return events ? latestAgreementAcceptance(events) : null;
+}
+
 export type AgreementDocStatus = {
   document: AgreementDocument;
   version: string;

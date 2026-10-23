@@ -4,45 +4,28 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 03:23 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `4b621c0` · working tree **47 dirty file(s)**
+Generated 2026-10-23 19:16 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d6efdc1b` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 3 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 12 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `4b621c0` | 2026-10-22 | Regenerate status board |
-| `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
-| `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
+| `d6efdc1b` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
+| `85bb9160` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
+| `3148eed2` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
+| `3c88148d` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
+| `946d4a54` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
+| `a5789298` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
+| `966741b9` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
+| `dd3cfd14` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
+| `e0bc004d` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
+| `4b621c06` | 2026-10-22 | Regenerate status board |
+| `04301cec` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
+| `2734cbdb` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (47 file(s))
-
-- `M  CLAUDE.md`
-- `M  HOMEPAGE_SPEC.md`
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `UU docs/CODEMAP.md`
-- `UU docs/codemap.json`
-- `A  public/home/shots/analytics.png`
-- `A  public/home/shots/assistant.png`
-- `A  public/home/shots/booking-page.png`
-- `A  public/home/shots/pay.png`
-- `A  public/home/shots/tee-sheet.png`
-- `M  scripts/birdie-messages-test.ts`
-- `M  scripts/checkin-wording-test.ts`
-- `M  scripts/design-guard.baseline.json`
-- `A  scripts/operator-home-db-test.ts`
-- `A  scripts/operator-search-db-test.ts`
-- `A  scripts/screenshots/capture.ts`
-- `A  scripts/screenshots/seed.ts`
-- `M  src/app/HomeContent.tsx`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -54,7 +37,9 @@ the queue header's `git checkout -- .` cleanup until that run has committed, or 
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-Nothing awaiting review.
+| item | shipped | age | commit | source |
+|---|---|---|---|---|
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 93d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -62,8 +47,7 @@ Nothing awaiting review.
 2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
 3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
 4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2357`
-6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
@@ -123,59 +107,59 @@ Nothing awaiting review.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 3d |
+| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 6d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 3d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `ARCHITECTURE.md` | 0 | 2026-10-19 | 3d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-19 | 3d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 15d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 15d |
 
 ## Recent commits
 
-- `4b621c0` 2026-10-22 — Regenerate status board
-- `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
-- `3754fcb` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
-- `d0a4769` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
-- `04301ce` 2026-10-22 — W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses
-- `2734cbd` 2026-10-22 — W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later
-- `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
-- `67e5ac4` 2026-10-22 — queue/spec update: old addresses replaced in specs, legal queue and design prototypes
-- `9935d2e` 2026-10-22 — Regenerate status board
-- `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
-- `ad8c721` 2026-10-22 — Regenerate status board
-- `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
+- `d6efdc1b` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
+- `85bb9160` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
+- `3148eed2` 2026-10-22 — Money: Needs you — declined cards with a pay link (DASH-C) (#198)
+- `3c88148d` 2026-10-22 — Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)
+- `946d4a54` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
+- `a5789298` 2026-10-23 — Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line
+- `966741b9` 2026-10-22 — Course dashboard search: find a golfer, booking or member from the menu (#195)
+- `dd3cfd14` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
+- `e0bc004d` 2026-10-22 — Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)
+- `4b621c06` 2026-10-22 — Regenerate status board
+- `b4ba0832` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
+- `3754fcb4` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
 
 ---
 
-**Totals:** 298 done · 0 awaiting review · 1 in flight · 6 not started · 8 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 8 revise pages open · 17 ideas · 7 parked.
