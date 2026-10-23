@@ -147,10 +147,10 @@ function MoneyPageInner() {
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active="money"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <div className="px-4 sm:px-10 py-7">
           <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div className="min-w-0">
-              <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Payments and payouts</h1>
+              <h1 className="font-serif text-[32px] leading-none text-ink">Payments and payouts</h1>
               <p className="text-[14px] text-ink-soft mt-2.5">What golfers have paid your course, and when Stripe sends it to your bank.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">

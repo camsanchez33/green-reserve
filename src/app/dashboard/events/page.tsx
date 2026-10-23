@@ -107,7 +107,7 @@ function EventsInner() {
       <OperatorSidebar active="events" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8">
         {!canRun ? <StaffNotice what="events" view="events.manage" /> : (
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+          <div className="px-4 sm:px-10 py-7 space-y-5">
             {loadError && (
               <div role="alert" className="bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-[13.5px] text-ink flex items-center justify-between gap-3" data-print-hide>
                 <span>{loadError}</span>
@@ -135,7 +135,7 @@ function EventsInner() {
             {mode === 'view' && !id && (
               <>
                 <div className="flex flex-wrap items-end justify-between gap-3">
-                  <h1 className="font-serif text-[30px] font-semibold leading-none text-ink">Events</h1>
+                  <h1 className="font-serif text-[32px] leading-none text-ink">Events</h1>
                   <button onClick={() => { setNote(''); setMode('new'); }} disabled={!list}
                     className="px-4 py-2.5 rounded-md text-[13.5px] font-medium bg-pine hover:bg-pine-hover text-white disabled:opacity-50">Set up an event</button>
                 </div>
