@@ -5714,7 +5714,7 @@
     },
     {
       "path": "src/app/api/operator/money/overview/route.ts",
-      "lines": 28,
+      "lines": 35,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5733,6 +5733,7 @@
       "imports": [
         "@/lib/analytics",
         "@/lib/course-time",
+        "@/lib/operator-home",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -7764,7 +7765,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 231,
+      "lines": 288,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -7787,7 +7788,10 @@
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/money/types",
         "@/components/ui/Card",
+        "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "@/lib/operator-home",
         "@/lib/use-dashboard-access",
         "lucide-react",
         "next/navigation",
@@ -10434,7 +10438,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 115,
+      "lines": 117,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11033,6 +11037,7 @@
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/login/page.tsx",
         "src/app/dashboard/members/page.tsx",
+        "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
@@ -15894,6 +15899,7 @@
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/monthly-review.ts",
+        "src/lib/operator-home.ts",
         "src/lib/refund-booking.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/two-factor.ts",
@@ -16377,6 +16383,7 @@
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
+        "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
         "src/app/events/[id]/page.tsx",
@@ -17704,10 +17711,18 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 110,
+      "lines": 132,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
+        {
+          "name": "DeclinedCard",
+          "kind": "type"
+        },
+        {
+          "name": "declinedCards",
+          "kind": "fn"
+        },
         {
           "name": "HomeGroup",
           "kind": "type"
@@ -17729,11 +17744,14 @@
       "imports": [
         "./analytics",
         "./course-time",
+        "./email",
         "./prisma",
         "./shop"
       ],
       "usedBy": [
-        "src/app/api/operator/home/route.ts"
+        "src/app/api/operator/home/route.ts",
+        "src/app/api/operator/money/overview/route.ts",
+        "src/app/dashboard/money/page.tsx"
       ]
     },
     {

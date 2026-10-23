@@ -33,13 +33,15 @@ const FILTERS = [['all', 'All'], ['paid', 'Paid'], ['unpaid', 'Not paid yet'], [
 type Filter = typeof FILTERS[number][0];
 const DAYS_SHOWN = 14;
 
-export function PaymentsPanel({ bookings, dateFilter, onClearDate }: {
+export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter = 'all' }: {
   bookings: MoneyBooking[];
+  /** Money's "See them" opens this tab on Not paid yet (?show=unpaid). */
+  initialFilter?: Filter;
   dateFilter: string;
   onClearDate: () => void;
 }) {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<Filter>(initialFilter);
   const [showAll, setShowAll] = useState(false);
   const today = new Date().toLocaleDateString('en-CA');
   const q = search.trim().toLowerCase();

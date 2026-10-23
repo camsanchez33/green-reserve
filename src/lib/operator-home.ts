@@ -8,6 +8,7 @@ import { prisma } from './prisma';
 import { todayIn, clockIn, addDaysStr } from './course-time';
 import { computeAnalytics, NO_SHOW_GRACE_MIN } from './analytics';
 import { roundChargeCents } from './shop';
+import { isPlaceholderEmail } from './email';
 
 const LIVE = { status: { in: ['confirmed', 'completed'] } };
 
@@ -28,6 +29,35 @@ async function dayShape(courseId: string, date: string) {
   return { hours, players, fillPct: offered ? Math.round((players / offered) * 100) : null };
 }
 
+export type DeclinedCard = { id: string; name: string; date: string; time: string; amountCents: number | null; canText: boolean; canEmail: boolean };
+
+/** A card that was tried at check-in and declined, and nobody has collected
+ *  since — newest first, the first `take`, and how many there are in all. Home
+ *  and Money → Needs you read the same list. Every paid path clears
+ *  checkInFailReason, so a group that paid another way drops off. canText /
+ *  canEmail say which pay link the booking can be sent (the route's own rules). */
+export async function declinedCards(courseId: string, withAmounts: boolean, take = 10): Promise<{ rows: DeclinedCard[]; total: number }> {
+  const where = { courseId, checkInFailReason: { not: '' }, checkedInAt: null, status: { not: 'cancelled' } };
+  const [rows, total] = await Promise.all([
+    prisma.booking.findMany({
+      where, orderBy: { createdAt: 'desc' }, take,
+      // POS-1a: what the retry will charge — the round plus any shop items on it.
+      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, teeTime: { select: { date: true, time: true } } },
+    }),
+    prisma.booking.count({ where }),
+  ]);
+  return {
+    total,
+    rows: rows.map(d => ({
+      id: d.id, name: d.golferName, date: d.teeTime.date, time: d.teeTime.time.slice(0, 5),
+      // Amounts are money: a login without payments sees who, not how much.
+      amountCents: withAmounts ? roundChargeCents(d) : null,
+      canText: (d.golferPhone || '').replace(/\D/g, '').length >= 10,
+      canEmail: !!d.checkInToken && !!d.golferEmail && !isPlaceholderEmail(d.golferEmail),
+    })),
+  };
+}
+
 export type HomeGroup = { id: string; name: string; players: number; paymentStatus: string; checkedIn: boolean };
 export type HomeSlot = { time: string; open: number; groups: HomeGroup[] };
 
@@ -38,8 +68,7 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   const clock = clockIn(tz, now);
   const lastWeek = addDaysStr(today, -7);
 
-  const declinedWhere = { courseId, checkInFailReason: { not: '' }, checkedInAt: null, status: { not: 'cancelled' } };
-  const [cur, prev, slots, declined, declinedTotal, unread] = await Promise.all([
+  const [cur, prev, slots, { rows: declined, total: declinedTotal }, unread] = await Promise.all([
     dayShape(courseId, today),
     dayShape(courseId, lastWeek),
     prisma.teeTime.findMany({
@@ -48,13 +77,7 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
       select: { time: true, playersAvailable: true, playersBooked: true,
         bookings: { where: LIVE, orderBy: { createdAt: 'asc' }, select: { id: true, golferName: true, players: true, paymentStatus: true, checkedInAt: true, noShowAt: true, status: true } } },
     }),
-    // A card that was tried at check-in and declined, and nobody has collected since.
-    prisma.booking.findMany({
-      where: declinedWhere, orderBy: { createdAt: 'desc' }, take: 10,
-      // POS-1a: what the retry will charge — the round plus any shop items on it.
-      select: { id: true, golferName: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, teeTime: { select: { date: true, time: true } } },
-    }),
-    prisma.booking.count({ where: declinedWhere }),
+    declinedCards(courseId, opts.money),
     // The same count as the menu's Messages badge (/api/operator/messages?unreadCount=1).
     opts.messages ? prisma.message.count({ where: { thread: { courseId }, senderType: 'admin', readAt: null } }) : Promise.resolve(0),
   ]);
@@ -93,8 +116,7 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     players: { today: cur.players, lastWeek: prev.players },
     fillPct: { today: cur.fillPct, lastWeek: prev.fillPct },
     money,
-    // Amounts are money: a login without payments sees who, not how much.
-    declined: declined.map(d => ({ id: d.id, name: d.golferName, date: d.teeTime.date, time: d.teeTime.time.slice(0, 5), amountCents: opts.money ? roundChargeCents(d) : null })),
+    declined,
     declinedTotal,
     late,
     unreadMessages: unread,
