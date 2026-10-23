@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 02:03 UTC · branch `claude/dash-home` · HEAD `f25fb46` · working tree clean
+Generated 2026-10-23 02:18 UTC · branch `claude/dash-search` · HEAD `ddcd38a` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 140 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 144 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ddcd38a` | 2026-10-23 | Search: phone matches skip cancelled bookings too |
+| `d7d5f6c` | 2026-10-23 | Search review: only what the target page shows; tee sheet holds a linked day; Members follows each link |
+| `86c3e72` | 2026-10-23 | Course dashboard search: find a golfer, booking or member from the menu |
+| `ac5adaf` | 2026-10-23 | Status board |
 | `f25fb46` | 2026-10-23 | Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count |
 | `cb05dbc` | 2026-10-23 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up |
 | `b4ba083` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists (#193) |
@@ -155,6 +159,15 @@ Generated 2026-10-23 02:03 UTC · branch `claude/dash-home` · HEAD `f25fb46` ·
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
+### Uncommitted working tree (3 file(s))
+
+- `UU CLAUDE.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
+
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -236,6 +249,8 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-23 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
@@ -275,6 +290,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `ddcd38a` 2026-10-23 — Search: phone matches skip cancelled bookings too
+- `d7d5f6c` 2026-10-23 — Search review: only what the target page shows; tee sheet holds a linked day; Members follows each link
+- `86c3e72` 2026-10-23 — Course dashboard search: find a golfer, booking or member from the menu
+- `ac5adaf` 2026-10-23 — Status board
 - `f25fb46` 2026-10-23 — Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count
 - `cb05dbc` 2026-10-23 — Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up
 - `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
@@ -283,10 +302,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `04301ce` 2026-10-22 — W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses
 - `2734cbd` 2026-10-22 — W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later
 - `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
-- `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
-- `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
-- `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
-- `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
 
 ---
 

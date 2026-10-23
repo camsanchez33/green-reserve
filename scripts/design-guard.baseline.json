@@ -240,6 +240,9 @@
   "src/components/dashboard/MoveGroupModal.tsx": {
     "lucide": 2
   },
+  "src/components/dashboard/OperatorSearch.tsx": {
+    "lucide": 1
+  },
   "src/components/dashboard/SignAgreements.tsx": {
     "input": 1,
     "lucide": 1
