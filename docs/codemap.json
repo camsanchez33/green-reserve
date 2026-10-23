@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 533,
-    "routes": 257,
-    "libs": 174,
+    "files": 536,
+    "routes": 259,
+    "libs": 175,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5550,6 +5550,31 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/home/route.ts",
+      "lines": 15,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/home",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/operator-home",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/members/import/route.ts",
       "lines": 35,
       "purpose": "",
@@ -7569,6 +7594,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/dashboard/home/page.tsx",
+      "lines": 209,
+      "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (DashboardHome)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/home",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/OperatorSidebar",
+        "@/components/dashboard/LoadError",
+        "@/components/dashboard/money/PayoutsTable",
+        "@/components/ui/StatusDot",
+        "@/lib/dashboard-fetch",
+        "@/lib/use-dashboard-access",
+        "next/link",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/dashboard/layout.tsx",
       "lines": 18,
       "purpose": "Auth protection for /dashboard/* is handled by src/middleware.ts.",
@@ -8929,7 +8982,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 282,
+      "lines": 285,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8963,6 +9016,7 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -9713,6 +9767,7 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -10418,6 +10473,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx"
       ]
@@ -10890,6 +10946,7 @@
         "src/app/courses/[slug]/member/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/login/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/onboarding/page.tsx",
@@ -12437,7 +12494,8 @@
         "src/app/api/operator/money/overview/route.ts",
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
-        "src/lib/monthly-review.ts"
+        "src/lib/monthly-review.ts",
+        "src/lib/operator-home.ts"
       ]
     },
     {
@@ -14756,6 +14814,7 @@
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
+        "src/lib/operator-home.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -15173,6 +15232,7 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -17557,6 +17617,40 @@
       ]
     },
     {
+      "path": "src/lib/operator-home.ts",
+      "lines": 110,
+      "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "HomeGroup",
+          "kind": "type"
+        },
+        {
+          "name": "HomeSlot",
+          "kind": "type"
+        },
+        {
+          "name": "operatorHome",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./analytics",
+        "./course-time",
+        "./prisma",
+        "./shop"
+      ],
+      "usedBy": [
+        "src/app/api/operator/home/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/owner-passkey.ts",
       "lines": 111,
       "purpose": "AW-1b (Cam 2026-10-21:",
@@ -18119,6 +18213,7 @@
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
+        "src/lib/operator-home.ts",
         "src/lib/owner-passkey.ts",
         "src/lib/owner-session.ts",
         "src/lib/problems.ts",
@@ -19067,6 +19162,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
+        "src/app/api/operator/home/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
@@ -19566,6 +19662,7 @@
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/admin-course-page.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/operator-home.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
         "src/lib/shop-catalog.ts",
@@ -20281,6 +20378,7 @@
       ],
       "usedBy": [
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
@@ -21389,6 +21487,7 @@
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
         "src/lib/no-show-fee.ts",
+        "src/lib/operator-home.ts",
         "src/lib/real-courses.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
@@ -22270,6 +22369,7 @@
         "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
         "src/lib/monthly-review.ts",
+        "src/lib/operator-home.ts",
         "src/lib/problems.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
@@ -24027,7 +24127,8 @@
         "src/app/api/admin/messages/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/operator/messages/route.ts",
-        "src/lib/course-timeline.ts"
+        "src/lib/course-timeline.ts",
+        "src/lib/operator-home.ts"
       ]
     },
     {
@@ -25001,6 +25102,7 @@
         "src/lib/data-reset.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
+        "src/lib/operator-home.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",

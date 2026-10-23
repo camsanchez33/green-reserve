@@ -4,19 +4,22 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 22:32 UTC · branch `claude/test-course-isolation` · HEAD `a96c112` · working tree **30 dirty file(s)**
+Generated 2026-10-23 02:03 UTC · branch `claude/dash-home` · HEAD `f25fb46` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 137 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 140 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `a96c112` | 2026-10-22 | TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree |
-| `0a2e03b` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists |
+| `f25fb46` | 2026-10-23 | Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count |
+| `cb05dbc` | 2026-10-23 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up |
+| `b4ba083` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists (#193) |
+| `3754fcb` | 2026-10-22 | TEST-1: launch wipe of test data, and resettable test courses (#190) |
+| `d0a4769` | 2026-10-22 | CI: the schema check replays migrations on its own Postgres (#192) |
+| `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
+| `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 | `6f40852` | 2026-10-22 | Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189) |
-| `2a4d5ec` | 2026-10-22 | TEST-1 review: a reset releases event-held tee times; wording fixes |
-| `0d72aad` | 2026-10-22 | TEST-1: launch wipe of test data and resettable test courses |
 | `91df6b9` | 2026-10-22 | W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send |
 | `fc5c6aa` | 2026-10-22 | W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through) |
 | `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
@@ -152,32 +155,6 @@ Generated 2026-10-22 22:32 UTC · branch `claude/test-course-isolation` · HEAD 
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (30 file(s))
-
-- `M  .github/workflows/schema-check.yml`
-- `UU CLAUDE.md`
-- `M  OPERATOR_REWORK_SPEC.md`
-- `M  PASSWORD_CHECKLIST.md`
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `UU docs/CODEMAP.md`
-- `M  docs/RUNBOOK.md`
-- `M  docs/SHIPPING.md`
-- `UU docs/codemap.json`
-- `A  prisma/migrations/20261022214400_w2_9d_signup/migration.sql`
-- `UU prisma/schema.prisma`
-- `M  scripts/design-guard.baseline.json`
-- `A  scripts/event-signup-db-test.ts`
-- `M  src/app/api/event-payment/[id]/route.ts`
-- `A  src/app/api/event-signup/[id]/route.ts`
-- `M  src/app/api/operator/events/[id]/payments/route.ts`
-- `M  src/app/api/operator/events/[id]/route.ts`
-- `M  src/app/api/operator/events/route.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
-
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -258,17 +235,15 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
-| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
-| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 2d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 10d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 11d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 17d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-05 | 17d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 17d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 18d |
 | `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 21d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 23d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 23d |
@@ -300,18 +275,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `a96c112` 2026-10-22 — TEST-2 review: overdue agreements, Ask and Activity leave test courses out; unread counts agree
-- `0a2e03b` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists
+- `f25fb46` 2026-10-23 — Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count
+- `cb05dbc` 2026-10-23 — Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up
+- `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
+- `3754fcb` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
+- `d0a4769` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
+- `04301ce` 2026-10-22 — W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses
+- `2734cbd` 2026-10-22 — W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later
 - `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
-- `2a4d5ec` 2026-10-22 — TEST-1 review: a reset releases event-held tee times; wording fixes
-- `0d72aad` 2026-10-22 — TEST-1: launch wipe of test data and resettable test courses
 - `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
 - `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
 - `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
-- `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
-- `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
-- `a5c912b` 2026-10-22 — Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)
 
 ---
 
