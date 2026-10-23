@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { previewFor } from '@/lib/seo';
 import Link from 'next/link';
 import { HOME_FAQ, faqJsonLd } from '@/lib/faq';
+import ProductShot from '@/components/home/ProductShot';
 
 // HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07): the long version. The homepage's
 // "Learn more about the tee sheet" cards land here — everything a course gets,
@@ -17,7 +18,9 @@ export const metadata: Metadata = {
   ...previewFor('The Tee Sheet | GreenReserve', 'Everything a golf course gets with GreenReserve: its own booking page, one tee sheet for online, phone and walk-in bookings, payments to its own Stripe account, members, staff permissions, an assistant and analytics.'),
 };
 
-const FEATURES: { h: string; p: string; items: string[] }[] = [
+// shot: a real screenshot of it (public/home/shots, scripts/screenshots/capture.ts).
+type Shot = { shot: string; device: 'laptop' | 'phone'; alt: string };
+const FEATURES: { h: string; p: string; items: string[]; shot?: Shot }[] = [
   {
     h: 'Your booking page',
     p: 'Golfers book on a page that looks like your course, not like us.',
@@ -28,6 +31,7 @@ const FEATURES: { h: string; p: string; items: string[] }[] = [
       'A confirmation email, with a note from your course if you add one',
       'Golfers can ask to be told when a full time opens up',
     ],
+    shot: { shot: 'booking-page', device: 'phone', alt: 'A course’s booking page on a phone: the course name, a row of days and the morning’s tee times with prices' },
   },
   {
     h: 'The tee sheet',
@@ -40,6 +44,7 @@ const FEATURES: { h: string; p: string; items: string[] }[] = [
       'Call off a stormy afternoon in one step, with every golfer told',
       'A course alert banner on your booking page for closures and notices',
     ],
+    shot: { shot: 'tee-sheet', device: 'laptop', alt: 'The tee sheet: a square for every tee time with its groups, paid ones edged in green and unpaid in amber, and the next time marked Next up' },
   },
   {
     h: 'Payments',
@@ -50,6 +55,7 @@ const FEATURES: { h: string; p: string; items: string[] }[] = [
       'Cash at the counter is marked paid from the tee sheet',
       'Staff can take a card at the counter when they need to',
     ],
+    shot: { shot: 'pay', device: 'phone', alt: 'A golfer’s phone showing their tee time, the total and a card field to check in and pay' },
   },
   {
     h: 'Cancellations and no-shows',
@@ -84,6 +90,7 @@ const FEATURES: { h: string; p: string; items: string[] }[] = [
       'Ask how today looks, find a golfer’s booking, or check a schedule',
       'It can draft a change to the sheet, and nothing changes until you confirm it',
     ],
+    shot: { shot: 'assistant', device: 'laptop', alt: 'The tee sheet with the AI assistant open, listing the groups still to check in this afternoon and drafting a pay link for one of them' },
   },
   {
     h: 'Analytics',
@@ -92,7 +99,9 @@ const FEATURES: { h: string; p: string; items: string[] }[] = [
       'Revenue collected and still owed',
       'How full each day ran, and the tee times that went unsold',
       'No-shows, how far ahead golfers book, and where bookings come from',
+      'At the start of each month, a written review of the month before, built only from your own numbers',
     ],
+    shot: { shot: 'analytics', device: 'laptop', alt: 'The analytics page: revenue, tee sheet filled, rounds played and average per round, what to look at, and September’s monthly review' },
   },
 ];
 
@@ -132,11 +141,14 @@ export default function TeeSheetPage() {
                 <h3 className="font-serif text-[26px] leading-tight">{f.h}</h3>
                 <p className="mt-2 text-[16px]">{f.p}</p>
               </div>
-              <ul className="list-none p-0 m-0">
-                {f.items.map(i => (
-                  <li key={i} className="relative pl-5 py-2 text-[16px] leading-snug border-b border-line last:border-b-0 before:content-[''] before:absolute before:left-0 before:top-[18px] before:w-2 before:h-0.5 before:bg-fairway">{i}</li>
-                ))}
-              </ul>
+              <div>
+                <ul className="list-none p-0 m-0">
+                  {f.items.map(i => (
+                    <li key={i} className="relative pl-5 py-2 text-[16px] leading-snug border-b border-line last:border-b-0 before:content-[''] before:absolute before:left-0 before:top-[18px] before:w-2 before:h-0.5 before:bg-fairway">{i}</li>
+                  ))}
+                </ul>
+                {f.shot && <div className="mt-8"><ProductShot {...f.shot} /></div>}
+              </div>
             </div>
           ))}
         </div>

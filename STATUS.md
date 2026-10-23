@@ -4,17 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 02:30 UTC · branch `claude/dash-restyle` · HEAD `3e23bc5` · working tree clean
+Generated 2026-10-23 02:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `02177b7` · working tree **11 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 142 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 143 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `1d55474` | 2026-10-23 | Members: keep the gap under the wizard titles |
+| `946d4a5` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
+| `a578929` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
 | `966741b` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
-| `01be261` | 2026-10-23 | Course dashboard tabs: full width and one title style (DASH-C step 3, zero behaviour) |
+| `dd3cfd1` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
 | `e0bc004` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
 | `b4ba083` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists (#193) |
 | `3754fcb` | 2026-10-22 | TEST-1: launch wipe of test data, and resettable test courses (#190) |
@@ -157,6 +158,23 @@ Generated 2026-10-23 02:30 UTC · branch `claude/dash-restyle` · HEAD `3e23bc5`
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
+### Uncommitted working tree (11 file(s))
+
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  src/app/dashboard/analytics/page.tsx`
+- `M  src/app/dashboard/events/page.tsx`
+- `M  src/app/dashboard/members/page.tsx`
+- `M  src/app/dashboard/messages/page.tsx`
+- `M  src/app/dashboard/money/page.tsx`
+- `M  src/app/dashboard/schedules/page.tsx`
+- `M  src/app/dashboard/settings/page.tsx`
+- `M  src/app/dashboard/shop/page.tsx`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -237,49 +255,50 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 11d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 17d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 17d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 18d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 21d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 23d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `ARCHITECTURE.md` | 0 | 2026-09-29 | 23d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `RECEIPT_SPEC.md` | 0 | 2026-09-29 | 23d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 23d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 15d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 15d |
 
 ## Recent commits
 
-- `1d55474` 2026-10-23 — Members: keep the gap under the wizard titles
+- `946d4a5` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
+- `a578929` 2026-10-23 — Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line
 - `966741b` 2026-10-22 — Course dashboard search: find a golfer, booking or member from the menu (#195)
-- `01be261` 2026-10-23 — Course dashboard tabs: full width and one title style (DASH-C step 3, zero behaviour)
+- `dd3cfd1` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
 - `e0bc004` 2026-10-22 — Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)
 - `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
 - `3754fcb` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
@@ -288,7 +307,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2734cbd` 2026-10-22 — W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later
 - `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
 - `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
-- `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 
 ---
 

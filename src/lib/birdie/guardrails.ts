@@ -46,10 +46,10 @@ const dayKey = () => new Date().toISOString().slice(0, 10);
  */
 export async function checkCaps(courseKey: string): Promise<string | null> {
   if (!(await rateLimit(`birdie:course:${courseKey}`, PER_SESSION_PER_HOUR, 3600))) {
-    return 'Birdie has answered a lot in the last hour — give it a little while, or write to us on Messages.';
+    return 'The assistant has answered a lot in the last hour — give it a little while, or write to us on Messages.';
   }
   if (!(await rateLimit(`birdie:day:${dayKey()}`, PLATFORM_PER_DAY, 86_400))) {
-    return "Birdie is resting for today. Everything it can help with is a page away in the sidebar, or write to us on Messages.";
+    return "The assistant is resting for today. Everything it can help with is a page away in the sidebar, or write to us on Messages.";
   }
   return null;
 }
