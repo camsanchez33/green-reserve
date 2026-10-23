@@ -15,7 +15,7 @@ import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
 
 export type OperatorNavKey =
-  | 'teesheet' | 'analytics' | 'money' | 'events'
+  | 'home' | 'teesheet' | 'analytics' | 'money' | 'events'
   | 'schedule' | 'members' | 'settings' | 'messages' | 'shop';
 
 interface CourseIdentity {
@@ -123,6 +123,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   const meta = [establishedYear ? `Est. ${establishedYear}` : null, typeLabel].filter(Boolean).join(' · ');
 
   const navItems: { key: OperatorNavKey; label: string; href: string; icon: React.ReactNode; soon?: boolean }[] = [
+    // DASH-C (Cam 2026-10-22): Home — today at a glance — comes first.
+    { key: 'home',          label: 'Home',         href: '/dashboard/home',          icon: null }, // not on the phone bar, so no icon
     { key: 'teesheet',      label: 'Tee sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
     { key: 'analytics',     label: 'Analytics',    href: '/dashboard/analytics', icon: <BarChart2 className="w-4 h-4"/> },
     // W2-9 (Cam 2026-10-22): the Tournaments and Outings placeholders became one Events tab.
@@ -143,6 +145,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
   // SP-A: each item shows when the login may open it (owners: always). The
   // routes refuse the rest; this keeps doors that would 403 off the rail.
   const visible = (k: OperatorNavKey) => !isStaff || ({
+    home: access.can('sheet.view'),
     teesheet: true,
     analytics: access.can('analytics.view'),
     events: access.can('events.manage'),
