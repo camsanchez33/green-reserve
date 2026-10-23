@@ -532,9 +532,9 @@ function SettingsPageInner() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="these settings" edit="settings.edit" />
         {/* Settings rework: the serif title alone — what is missing is the Finish setting up list below. */}
-        <div className="bg-white border-b border-line px-6 py-4 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
+        <div className="bg-white border-b border-line px-4 sm:px-10 py-5 flex flex-wrap items-start justify-between gap-3 sticky top-0 z-10">
           <div className="min-w-0">
-            <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Settings</h1>
+            <h1 className="font-serif text-[32px] leading-none text-ink">Settings</h1>
           </div>
           {!NO_SAVE_BUTTON.includes(active) && (
             <button onClick={save} disabled={saving || !formLoaded || (!dirty && !saved)}
@@ -556,7 +556,7 @@ function SettingsPageInner() {
           </div>
         )}
 
-        <div className="max-w-5xl mx-auto px-6 py-6">
+        <div className="px-4 sm:px-10 py-7">
           {formLoaded && <FinishSetup items={setupItems} />}
 
           <div className="flex flex-col md:flex-row gap-6">

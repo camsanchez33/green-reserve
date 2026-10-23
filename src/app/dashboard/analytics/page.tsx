@@ -622,10 +622,10 @@ function AnalyticsInner() {
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active="analytics" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div className="px-4 sm:px-10 py-7">
           <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
             <div className="min-w-0 max-w-[46em]">
-              <h1 className="text-[30px] font-serif font-semibold leading-none text-ink">Analytics</h1>
+              <h1 className="font-serif text-[32px] leading-none text-ink">Analytics</h1>
               <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">{d ? summary(d) : 'Loading…'}</p>
             </div>
             {range && today && <DateRangeButton value={range} today={today} onChange={r => { setRange(r); load(r); }} />}
