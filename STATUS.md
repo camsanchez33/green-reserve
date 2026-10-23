@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 02:35 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a578929` · working tree **2 dirty file(s)**
+Generated 2026-10-23 02:35 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `946d4a5` · working tree **18 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 140 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 141 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `946d4a5` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
 | `a578929` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
 | `dd3cfd1` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
 | `b4ba083` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists (#193) |
@@ -155,10 +156,26 @@ Generated 2026-10-23 02:35 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (18 file(s))
 
-- `M scripts/birdie-messages-test.ts`
-- `M src/components/birdie/BirdieWidget.tsx`
+- `M  CLAUDE.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `M  scripts/design-guard.baseline.json`
+- `A  scripts/operator-home-db-test.ts`
+- `A  scripts/operator-search-db-test.ts`
+- `A  src/app/api/operator/home/route.ts`
+- `A  src/app/api/operator/search/route.ts`
+- `A  src/app/dashboard/home/page.tsx`
+- `M  src/app/dashboard/members/page.tsx`
+- `M  src/app/dashboard/page.tsx`
+- `M  src/components/OperatorSidebar.tsx`
+- `A  src/components/dashboard/OperatorSearch.tsx`
+- `A  src/lib/operator-home.ts`
+- `A  src/lib/operator-search.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -283,6 +300,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `946d4a5` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
 - `a578929` 2026-10-23 — Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line
 - `dd3cfd1` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
 - `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
@@ -294,7 +312,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
 - `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
-- `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
 
 ---
 

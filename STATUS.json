@@ -1,18 +1,41 @@
 {
-  "generatedAt": "2026-10-23T02:35:01.749Z",
+  "generatedAt": "2026-10-23T02:35:55.979Z",
   "repo": {
-    "head": "a578929",
+    "head": "946d4a5",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
+    "dirtyCount": 18,
     "dirty": [
-      "M scripts/birdie-messages-test.ts",
-      " M src/components/birdie/BirdieWidget.tsx"
+      "M  CLAUDE.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "M  scripts/design-guard.baseline.json",
+      "A  scripts/operator-home-db-test.ts",
+      "A  scripts/operator-search-db-test.ts",
+      "A  src/app/api/operator/home/route.ts",
+      "A  src/app/api/operator/search/route.ts",
+      "A  src/app/dashboard/home/page.tsx",
+      "M  src/app/dashboard/members/page.tsx",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/components/OperatorSidebar.tsx",
+      "A  src/components/dashboard/OperatorSearch.tsx",
+      "A  src/lib/operator-home.ts",
+      "A  src/lib/operator-search.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
+      {
+        "h": "946d4a5",
+        "date": "2026-10-23T02:35:12+00:00",
+        "subject": "The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "a578929",
         "date": "2026-10-23T02:33:17+00:00",
@@ -1384,6 +1407,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "946d4a5",
+      "date": "2026-10-23",
+      "subject": "The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie"
+    },
+    {
       "h": "a578929",
       "date": "2026-10-23",
       "subject": "Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no \"Birdie\" anywhere a course sees); a test for the pay-page fee line"
@@ -1437,11 +1465,6 @@
       "h": "6ea9b46",
       "date": "2026-10-22",
       "subject": "Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)"
-    },
-    {
-      "h": "3c63c5d",
-      "date": "2026-10-22",
-      "subject": "AW-11 Team: per-person access — each employee's role and areas (#186)"
     }
   ]
 }
