@@ -21,7 +21,7 @@ export async function operatorSearch(courseId: string, rawQ: string, opts: { con
   const digits = q.replace(/\D/g, '');
   // Phones are stored as typed ("555-867-5309"), so match on their digits.
   const phoneIds = opts.contact && digits.length >= 4
-    ? (await prisma.$queryRaw<{ id: string }[]>`SELECT b."id" FROM "Booking" b JOIN "TeeTime" t ON t."id" = b."teeTimeId" WHERE b."courseId" = ${courseId} AND t."date" >= ${since} AND regexp_replace(b."golferPhone", '[^0-9]', '', 'g') LIKE ${'%' + digits + '%'} ORDER BY t."date" DESC LIMIT 50`).map(r => r.id)
+    ? (await prisma.$queryRaw<{ id: string }[]>`SELECT b."id" FROM "Booking" b JOIN "TeeTime" t ON t."id" = b."teeTimeId" WHERE b."courseId" = ${courseId} AND b."status" IN ('confirmed', 'completed') AND t."date" >= ${since} AND regexp_replace(b."golferPhone", '[^0-9]', '', 'g') LIKE ${'%' + digits + '%'} ORDER BY t."date" DESC LIMIT 50`).map(r => r.id)
     : [];
   const bookingOr = [
     { golferName: contains(q) },
