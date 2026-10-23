@@ -5,6 +5,9 @@ import { readFileSync } from 'fs';
 let failed = 0;
 const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`); if (!ok) failed++; };
 const w = readFileSync('src/components/birdie/BirdieWidget.tsx', 'utf8');
+// Cam 2026-10-23: nothing a course sees says "Birdie" (the code keeps the name internally).
+const shown = w.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+check('the widget never shows the word Birdie', !/(^|[>'"`\s])Birdie([\s<'"`.,!?]|$)/m.test(shown.replace(/import[^\n]*\n/g, '').replace(/\bBirdie(Widget|Turn)\b/g, '')));
 check('Birdie can be tucked into an edge tab', w.includes('aria-label="Tuck the assistant away"') && w.includes('aria-label="Open the assistant"'));
 check('…and stays tucked until opened', w.includes("localStorage.setItem(TUCK_KEY, '1')") && w.includes("localStorage.getItem(TUCK_KEY) === '1'"));
 check('an Ask Birdie link untucks it', /onAsk[\s\S]{0,300}setTucked\(false\)/.test(w));

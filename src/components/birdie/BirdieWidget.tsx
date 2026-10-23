@@ -170,7 +170,7 @@ export default function BirdieWidget() {
       {!open && tucked && (
         <button type="button" onClick={show} aria-label="Open the assistant"
           className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-white border border-r-0 border-line rounded-l-md px-1.5 py-3 text-[12px] font-semibold text-pine hover:bg-paper [writing-mode:vertical-rl]">
-          Birdie
+          Assistant
         </button>
       )}
       {!open && !tucked && (
