@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 let failed = 0;
 const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`); if (!ok) failed++; };
 const w = readFileSync('src/components/birdie/BirdieWidget.tsx', 'utf8');
-check('Birdie can be tucked into an edge tab', w.includes('aria-label="Tuck Birdie away"') && w.includes('aria-label="Open Birdie"'));
+check('Birdie can be tucked into an edge tab', w.includes('aria-label="Tuck the assistant away"') && w.includes('aria-label="Open the assistant"'));
 check('…and stays tucked until opened', w.includes("localStorage.setItem(TUCK_KEY, '1')") && w.includes("localStorage.getItem(TUCK_KEY) === '1'"));
 check('an Ask Birdie link untucks it', /onAsk[\s\S]{0,300}setTucked\(false\)/.test(w));
 check('on phones it sits above the bottom tab bar', w.includes('fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4'));

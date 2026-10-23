@@ -499,7 +499,7 @@ function SettingsPageInner() {
           setForm(f => ({ ...f, description: d.description }));
           setDirtyFields(s => { if (!s.has('description')) return s; const next = new Set(s); next.delete('description'); return next; });
         })
-        .catch(() => toast('Birdie saved the description. Reload to see it here.'));
+        .catch(() => toast('The assistant saved the description. Reload to see it here.'));
     };
     window.addEventListener(APPLIED_EVENT, onApplied);
     return () => window.removeEventListener(APPLIED_EVENT, onApplied);
@@ -682,7 +682,7 @@ function SettingsPageInner() {
                 <Field label="Description">
                   {birdieOn && access.can('settings.edit') && (
                     <button type="button" onClick={askForDescription} className="mb-1.5 text-[12.5px] font-medium text-pine hover:underline underline-offset-4">
-                      {String(form.description ?? '').trim() ? 'Ask Birdie to improve it' : 'Ask Birdie to write it'}
+                      {String(form.description ?? '').trim() ? 'Ask the assistant to improve it' : 'Ask the assistant to write it'}
                     </button>
                   )}
                   <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>

@@ -141,8 +141,11 @@ the same shots under its booking page, tee sheet, payments, assistant and
 analytics sections. The images (`public/home/shots/`) are the live UI of a
 fictional seeded course ("Hollow Brook Golf Club"): `scripts/screenshots/seed.ts`
 then `scripts/screenshots/capture.ts` (local DB only; steps in the file). The one
-staged part is the assistant's reply, built from the seeded sheet's real unpaid
-groups. Cam: these are placeholders until the DASH-C restyle lands — RETAKE them
+staged part is the assistant's reply text, built only from what its
+get_tee_sheet tool returns for the seeded day; its confirm card is the real
+propose_send_pay_link output. Cam (2026-10-23) chose to rename the assistant in
+the product rather than hide "Birdie" in the shot: nothing a course sees says
+"Birdie" now (CLAUDE.md). Cam: these are placeholders until the DASH-C restyle lands — RETAKE them
 with the two scripts once it does.
 
 ## 0. HOME-2 — Cam's own layout (Cam 2026-10-07) — CURRENT

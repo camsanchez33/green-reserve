@@ -12,15 +12,17 @@
 // install (npm i --prefix /tmp/pw playwright → /tmp/pw/node_modules/playwright).
 // Writes public/home/shots/*.png.
 //
-// The one thing not live: the AI assistant's reply. Its answer is built here
-// from the seeded tee sheet (the real unpaid groups) and handed to the real
-// widget, because the screenshot must not depend on a model call.
+// The one thing not live: the AI assistant's reply text, built here from
+// exactly what its get_tee_sheet tool returns for the seeded day and handed to
+// the real widget (a screenshot must not depend on a model call). Its confirm
+// card is the product's own, drafted by the real propose_send_pay_link.
 import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { prisma } from '../../src/lib/prisma';
 import { signToken } from '../../src/lib/auth';
 import { formatTeeTime } from '../../src/lib/format';
+import { runProposeTool } from '../../src/lib/birdie/proposals';
 
 const BASE = process.env.SHOTS_URL ?? 'http://localhost:3124';
 const OUT = path.join(process.cwd(), 'public/home/shots');
@@ -86,17 +88,18 @@ async function main() {
   // ── The AI assistant: a real question about the day, answered from the seeded sheet, with a drafted change ──
   {
     const ctx = await laptop(); const p = await ctx.newPage();
-    const names = phoneGroups.slice(0, 3).map(g => `${g.golferName} at ${formatTeeTime(g.teeTime.time)} (${g.players} players, ${usd(g.totalAmount)})`);
-    const reply = `${phoneGroups.length} groups booked by phone this afternoon haven’t paid yet: ${names.join(', ')}${phoneGroups.length > 3 ? ` and ${phoneGroups.length - 3} more` : ''}. I can text ${payFor.golferName.split(' ')[0]} a pay link now — they’d pay on their phone with Apple Pay, Google Pay or a card.`;
-    const card = {
-      id: 'shot-card', title: `Text ${payFor.golferName} a pay link`,
-      changes: [{ label: 'Group', from: '', to: `${payFor.golferName} · ${formatTeeTime(payFor.teeTime.time)} · ${payFor.players} players` }, { label: 'Amount', from: '', to: usd(payFor.totalAmount) }],
-      note: 'They pay on their own phone; the tee sheet turns green when it lands.',
-      call: { method: 'PATCH', path: '/api/operator/bookings', body: { id: payFor.id, action: 'send_pay_link', via: 'sms' } },
-    };
+    // The reply holds only what the assistant's get_tee_sheet tool sees (names, times, players, booked
+    // vs checked in); the card is the product's own, made by its real propose_send_pay_link.
+    const due = unpaid.filter(g => !g.checkedInAt && !g.noShowAt);
+    const names = due.slice(0, 3).map(g => `${g.golferName} at ${formatTeeTime(g.teeTime.time)} (${g.players})`);
+    const reply = `${due.length} groups are booked this afternoon and haven’t checked in yet: ${names.join(', ')}${due.length > 3 ? ` and ${due.length - 3} more` : ''}. I can text ${payFor.golferName.split(' ')[0]} their pay link so they can pay before they arrive.`;
+    const drafted = await runProposeTool('propose_send_pay_link', { date: today, time: payFor.teeTime.time, golfer: payFor.golferName, via: 'sms' },
+      { courseId: course.id, timezone: TZ, can: () => true });
+    if (!('card' in drafted) || !drafted.card) throw new Error(`The real pay-link card refused: ${JSON.stringify(drafted)}`);
+    const card = drafted.card;
     await p.route('**/api/birdie/chat', async (route: { request: () => { method: () => string }; fulfill: (o: object) => Promise<void> }) => {
       if (route.request().method() === 'GET') {
-        return route.fulfill({ json: { enabled: true, persona: 'operator', greeting: "Hi — I'm Birdie. Ask me how to do anything on your dashboard, or what your course is set to.", chips: [], helpsWith: '' } });
+        return route.fulfill({ json: { enabled: true, persona: 'operator', greeting: "Hi — I'm your course's assistant. Ask me how to do anything on your dashboard, or what your course is set to.", chips: [], helpsWith: '' } });
       }
       const lines = [{ t: 'status', d: 'Looking at today’s tee sheet…' }, { t: 'text', d: reply }, { t: 'card', d: card }];
       return route.fulfill({ status: 200, contentType: 'application/x-ndjson', body: lines.map(l => JSON.stringify(l)).join('\n') + '\n' });
@@ -104,8 +107,8 @@ async function main() {
     await p.goto(`${BASE}/dashboard`, { waitUntil: 'load', timeout: 240000 });
     await p.getByText('Next up').first().waitFor({ timeout: 120000 });
     await clean(p);
-    await p.getByRole('button', { name: /Open Birdie|Ask Birdie/ }).first().click();
-    await p.getByLabel('Message Birdie').fill('Who hasn’t paid for this afternoon?');
+    await p.getByRole('button', { name: /Open the assistant|Ask the assistant/ }).first().click();
+    await p.getByLabel('Message the assistant').fill('Who’s still to check in this afternoon?');
     await p.getByRole('button', { name: 'Send' }).click();
     await p.getByText(card.title).waitFor({ timeout: 30000 });
     await p.waitForTimeout(400);

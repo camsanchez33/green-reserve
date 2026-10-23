@@ -90,7 +90,7 @@ const FEATURES: { h: string; p: string; items: string[]; shot?: Shot }[] = [
       'Ask how today looks, find a golfer’s booking, or check a schedule',
       'It can draft a change to the sheet, and nothing changes until you confirm it',
     ],
-    shot: { shot: 'assistant', device: 'laptop', alt: 'The tee sheet with the AI assistant open, listing this afternoon’s unpaid groups and offering to text one of them a pay link' },
+    shot: { shot: 'assistant', device: 'laptop', alt: 'The tee sheet with the AI assistant open, listing the groups still to check in this afternoon and drafting a pay link for one of them' },
   },
   {
     h: 'Analytics',

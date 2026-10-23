@@ -33,9 +33,9 @@ const DOES = [
 const FEATURES: { h: string; p: string; shot: string; device: 'laptop' | 'phone'; alt: string }[] = [
   {
     h: 'An assistant that knows your course.',
-    p: 'Ask who hasn’t paid, how last week went or which hours sit empty, and it answers from your own tee sheet. It can draft a change for you, like a pay link, a blocked time or a moved group, and nothing happens until you confirm it.',
+    p: 'Ask who’s still to check in, how last week went or which hours sit empty, and it answers from your own tee sheet. It can draft a change for you, like a pay link, a blocked time or a moved group, and nothing happens until you confirm it.',
     shot: 'assistant', device: 'laptop',
-    alt: 'The tee sheet with the AI assistant open, listing this afternoon’s unpaid groups and offering to text one of them a pay link',
+    alt: 'The tee sheet with the AI assistant open, listing the groups still to check in this afternoon and drafting a pay link for one of them',
   },
   {
     h: 'Know how your course is doing.',

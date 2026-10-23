@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 02:19 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b4ba083` · working tree **11 dirty file(s)**
+Generated 2026-10-23 02:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `dd3cfd1` · working tree **17 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 138 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-17**. 139 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `dd3cfd1` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
 | `b4ba083` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists (#193) |
 | `3754fcb` | 2026-10-22 | TEST-1: launch wipe of test data, and resettable test courses (#190) |
 | `d0a4769` | 2026-10-22 | CI: the schema check replays migrations on its own Postgres (#192) |
@@ -153,19 +154,25 @@ Generated 2026-10-23 02:19 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (17 file(s))
 
+- `M CLAUDE.md`
 - `M HOMEPAGE_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `M public/home/shots/assistant.png`
+- `M public/home/shots/pay.png`
+- `M public/home/shots/tee-sheet.png`
+- `M scripts/birdie-messages-test.ts`
+- `M scripts/checkin-wording-test.ts`
+- `M scripts/screenshots/capture.ts`
+- `M scripts/screenshots/seed.ts`
 - `M src/app/HomeContent.tsx`
-- `M src/app/checkin/[bookingId]/page.tsx`
-- `M src/app/home.module.css`
+- `M src/app/api/birdie/chat/route.ts`
+- `M src/app/dashboard/analytics/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
 - `M src/app/teesheet/page.tsx`
-- `M src/components/dashboard/events/EventSignup.tsx`
-- `?? public/home/shots/`
-- `?? scripts/screenshots/`
-- `?? src/components/home/ProductShot.tsx`
+- `M src/components/birdie/BirdieWidget.tsx`
+- `M src/components/birdie/ConfirmCard.tsx`
+- `M src/lib/birdie/guardrails.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -253,8 +260,8 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 1 | 2026-10-22 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-19 | 3d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 11d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 15d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 15d |
@@ -290,6 +297,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `dd3cfd1` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
 - `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
 - `3754fcb` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
 - `d0a4769` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
@@ -301,7 +309,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `6ea9b46` 2026-10-22 — Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)
 - `3c63c5d` 2026-10-22 — AW-11 Team: per-person access — each employee's role and areas (#186)
 - `75ac7d5` 2026-10-22 — AW-10 Golfers: lookup only, in the new admin look (#185)
-- `95e1b37` 2026-10-22 — Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)
 
 ---
 

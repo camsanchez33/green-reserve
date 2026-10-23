@@ -1,6 +1,6 @@
 // Product screenshots (Cam 2026-10-23): a fictional course with a believable
 // day on the tee sheet and two months of history, for scripts/screenshots/
-// capture.cjs to photograph. LOCAL DATABASES ONLY — it refuses any other host.
+// capture.ts to photograph. LOCAL DATABASES ONLY — it refuses any other host.
 //
 // Run: DATABASE_URL=postgresql://…@localhost:…/gr_shots npx tsx scripts/screenshots/seed.ts
 // Prints the course id and an operator token for the capture script.
@@ -29,7 +29,7 @@ const pick = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)];
 // A pool of regulars (who come back) plus one-offs, so "booked more than once" reads like a real course.
 const REGULARS = Array.from({ length: 140 }, () => `${pick(FIRST)} ${pick(LAST)}`);
 const golfer = () => rnd() < 0.6 ? pick(REGULARS) : `${pick(FIRST)} ${pick(LAST)}`;
-/** Today, the capture is taken at 10:05 (capture.cjs fixes the browser's clock): earlier rounds have been played. */
+/** Today, the capture is taken at 10:05 (capture.ts fixes the browser's clock): earlier rounds have been played. */
 export const NOW_HOUR = 10;
 const pad = (n: number) => String(n).padStart(2, '0');
 const addDays = (d: string, n: number) => { const t = new Date(`${d}T12:00:00Z`); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
