@@ -133,8 +133,8 @@ export default function ShopPage() {
       <OperatorSidebar active="shop" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8">
         {access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-            <h1 className="font-serif text-[30px] font-semibold leading-none text-ink">Pro shop</h1>
+          <div className="px-4 sm:px-10 py-7">
+            <h1 className="font-serif text-[32px] leading-none text-ink">Pro shop</h1>
             <p className="text-[13.5px] text-ink-soft mt-2">Walk-up sales{sales ? ` · ${usd(todayTotal)} taken today` : ''}. For a group that’s playing, add items to their round from the tee sheet instead.</p>
 
             {loadError && (

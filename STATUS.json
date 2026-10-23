@@ -1,58 +1,40 @@
 {
-  "generatedAt": "2026-10-23T02:18:31.159Z",
+  "generatedAt": "2026-10-23T02:30:38.440Z",
   "repo": {
-    "head": "ddcd38a",
-    "branch": "claude/dash-search",
-    "dirtyCount": 3,
-    "dirty": [
-      "UU CLAUDE.md",
-      "UU docs/CODEMAP.md",
-      "UU docs/codemap.json"
-    ],
+    "head": "3e23bc5",
+    "branch": "claude/dash-restyle",
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-17T12:44:52-04:00",
     "unrecorded": [
       {
-        "h": "ddcd38a",
-        "date": "2026-10-23T02:18:12+00:00",
-        "subject": "Search: phone matches skip cancelled bookings too",
+        "h": "1d55474",
+        "date": "2026-10-23T02:28:18+00:00",
+        "subject": "Members: keep the gap under the wizard titles",
         "ids": [],
         "matches": []
       },
       {
-        "h": "d7d5f6c",
-        "date": "2026-10-23T02:16:44+00:00",
-        "subject": "Search review: only what the target page shows; tee sheet holds a linked day; Members follows each link",
+        "h": "966741b",
+        "date": "2026-10-22T22:24:25-04:00",
+        "subject": "Course dashboard search: find a golfer, booking or member from the menu (#195)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "86c3e72",
-        "date": "2026-10-23T02:09:37+00:00",
-        "subject": "Course dashboard search: find a golfer, booking or member from the menu",
+        "h": "01be261",
+        "date": "2026-10-23T02:24:20+00:00",
+        "subject": "Course dashboard tabs: full width and one title style (DASH-C step 3, zero behaviour)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "ac5adaf",
-        "date": "2026-10-23T02:03:13+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "f25fb46",
-        "date": "2026-10-23T02:01:40+00:00",
-        "subject": "Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "cb05dbc",
-        "date": "2026-10-23T01:53:51+00:00",
-        "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up",
+        "h": "e0bc004",
+        "date": "2026-10-22T22:09:55-04:00",
+        "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)",
         "ids": [],
         "matches": []
       },
@@ -1190,19 +1172,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-23",
-      "ageDays": 0
-    },
-    {
-      "file": "CLAUDE.md",
-      "openRefs": 1,
-      "lastTouched": "2026-10-23",
-      "ageDays": 0
-    },
-    {
-      "file": "CLAUDE.md",
-      "openRefs": 1,
-      "lastTouched": "2026-10-23",
+      "lastTouched": "2026-10-22",
       "ageDays": 0
     },
     {
@@ -1425,34 +1395,24 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "ddcd38a",
+      "h": "1d55474",
       "date": "2026-10-23",
-      "subject": "Search: phone matches skip cancelled bookings too"
+      "subject": "Members: keep the gap under the wizard titles"
     },
     {
-      "h": "d7d5f6c",
-      "date": "2026-10-23",
-      "subject": "Search review: only what the target page shows; tee sheet holds a linked day; Members follows each link"
+      "h": "966741b",
+      "date": "2026-10-22",
+      "subject": "Course dashboard search: find a golfer, booking or member from the menu (#195)"
     },
     {
-      "h": "86c3e72",
+      "h": "01be261",
       "date": "2026-10-23",
-      "subject": "Course dashboard search: find a golfer, booking or member from the menu"
+      "subject": "Course dashboard tabs: full width and one title style (DASH-C step 3, zero behaviour)"
     },
     {
-      "h": "ac5adaf",
-      "date": "2026-10-23",
-      "subject": "Status board"
-    },
-    {
-      "h": "f25fb46",
-      "date": "2026-10-23",
-      "subject": "Home review: declined amount is what the retry charges; groups, not rounds; one Open path; no double count"
-    },
-    {
-      "h": "cb05dbc",
-      "date": "2026-10-23",
-      "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up"
+      "h": "e0bc004",
+      "date": "2026-10-22",
+      "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)"
     },
     {
       "h": "b4ba083",
@@ -1483,6 +1443,16 @@
       "h": "6f40852",
       "date": "2026-10-22",
       "subject": "Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)"
+    },
+    {
+      "h": "91df6b9",
+      "date": "2026-10-22",
+      "subject": "W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send"
+    },
+    {
+      "h": "fc5c6aa",
+      "date": "2026-10-22",
+      "subject": "W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)"
     }
   ]
 }
