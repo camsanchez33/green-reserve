@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
       ip: clientIp(req), userAgent: (req.headers.get('user-agent') ?? '').slice(0, 300),
     },
   });
-  // The timeline line stays as history for the admin Documents tab.
-  const ok = await logAgreementAccepted(session.courseId, session.email, doc.version);
-  if (!ok) return NextResponse.json({ error: 'Could not record acceptance' }, { status: 400 });
+  // The row above is the record. The timeline line is history for the admin
+  // Documents tab, and a course built by hand has no timeline to write it to.
+  await logAgreementAccepted(session.courseId, session.email, doc.version);
   return NextResponse.json({ success: true, version: doc.version });
 }
