@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { sendMessageNotificationEmail } from '@/lib/email';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
-const ADMIN_EMAIL = 'thegreenreserve@outlook.com';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 // GET /api/operator/messages — own thread with all messages

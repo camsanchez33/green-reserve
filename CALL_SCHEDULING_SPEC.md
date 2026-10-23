@@ -194,7 +194,7 @@ On booking, two go out:
 - **To the course:** "You're booked — [day, date, time] ET", the agenda, who calls
   whom, the reschedule/cancel link, and a **.ics attachment** so it lands in their
   own calendar with no integration on their side.
-- **To Cam** (`hello@greenreserve.app`): course, contact, phone, time, and a link
+- **To Cam** (`admin@greenreserve.app`): course, contact, phone, time, and a link
   to the inquiry.
 
 Reschedule sends the same pair with "moved to"; cancel sends "cancelled" plus a

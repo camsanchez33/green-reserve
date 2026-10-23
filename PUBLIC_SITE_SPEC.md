@@ -25,13 +25,13 @@ agent/session is working in this repo.
    hello@greenreserve.com, links to /about /contact /how-it-works, "discovery layer"
    tagline). Current source may already be correct — the deploy is serving a stale build
    of that page. Ensure there is exactly ONE `Footer` component used by every public page
-   with: $1.50/player copy, hello@greenreserve.app, links = List Your Course, Operator
+   with: $1.50/player copy, support@greenreserve.app, links = List Your Course, Operator
    Login, Contact, Privacy, Terms. Nothing else. If /for-courses has its own inline
    footer or layout, remove it and use the shared component so the stale version is
    replaced on deploy.
 
 3. **/contact page.** Simple, light-theme, matches design system: heading, one paragraph
-   (we respond within 1 business day), hello@greenreserve.app as a mailto, and a button
+   (we respond within 1 business day), support@greenreserve.app as a mailto, and a button
    to /for-courses. No form.
 
 4. **Interest form: all 50 US states** in the state dropdown (alphabetical, keep NJ

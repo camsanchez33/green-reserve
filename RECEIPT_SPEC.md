@@ -46,7 +46,7 @@ Also add one short line under the total on the booking page order summary:
     (if any), GreenReserve service fee ($1.50 × players), late-cancel fee refund
     line (negative, only if one was refunded at check-in) — then Total charged
   - Payment line: "Paid at check-in" + card brand/last4 if available (see R2c)
-  - Footer: hello@greenreserve.app, greenreserve.app
+  - Footer: billing@greenreserve.app, greenreserve.app
 - States: if booking is checked in → full receipt. If confirmed but not checked
   in → "Booking confirmation" variant showing the same line items as ESTIMATED
   ("Due at course") with $0.00 paid so far. If cancelled → cancelled notice

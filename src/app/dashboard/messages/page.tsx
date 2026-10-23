@@ -8,6 +8,7 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { toast } from '@/components/dashboard/Toast';
 import { formatStamp as fmtFull } from '@/lib/format';
 import { Card } from '@/components/ui/Card';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 interface MessageItem {
   id: string; senderType: 'admin' | 'operator'; senderName: string;
@@ -97,7 +98,7 @@ function MessagesContent() {
           {/* Cam 2026-10-19: say when to expect a reply, and offer email. */}
           <p className="text-[14px] text-ink-soft mt-2.5 max-w-[46em] leading-snug">
             Questions, changes or anything not working — write to the GreenReserve team here. We reply within one business day.
-            Prefer email? <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>
+            Prefer email? <a href={`mailto:${ADMIN_EMAIL}`} className="text-pine font-medium hover:underline">{ADMIN_EMAIL}</a>
           </p>
         </div>
 

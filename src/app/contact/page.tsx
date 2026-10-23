@@ -2,14 +2,14 @@ import type { Metadata } from 'next';
 import { previewFor } from '@/lib/seo';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
+import { ADMIN_EMAIL, SUPPORT_EMAIL } from '@/lib/contact';
 
 // HOMEPAGE_SPEC §11 (Cam 2026-10-19): three paths — a course thinking about
 // GreenReserve, a course already on it, a golfer with a booking (sent to their
 // course: GreenReserve doesn't run the tee sheet). One phone number and the one
-// inbox (thegreenreserve@outlook.com; hello@ is send-only, CLAUDE.md).
+// inbox per audience (lib/contact.ts, MAIL-1): courses admin@, golfers support@.
 const PHONE = '(845) 499-3515';
 const TEL = '+18454993515';
-const EMAIL = 'thegreenreserve@outlook.com';
 const DESCRIPTION = 'Talk to GreenReserve: book a demo for your course, get help with your tee sheet, or find out who to call about a booking.';
 
 export const metadata: Metadata = {
@@ -54,7 +54,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <dt className="text-[13px] text-ink-muted">Email</dt>
-                <dd className="mt-0.5 break-words"><a href={`mailto:${EMAIL}`} className={link}>{EMAIL}</a></dd>
+                <dd className="mt-0.5 break-words"><a href={`mailto:${ADMIN_EMAIL}`} className={link}>{ADMIN_EMAIL}</a></dd>
               </div>
             </dl>
             <p className="text-[13.5px] text-ink-soft mt-4">
@@ -68,7 +68,7 @@ export default function ContactPage() {
               Your course runs its own tee sheet, so the course is who can help with your round. Open <span className="text-ink">Manage my booking</span> from your confirmation email: there you can change players, move your time or cancel, and find the course&apos;s phone number for anything else, such as weather or a refund.
             </p>
             <p className="text-[14.5px] text-ink-soft leading-relaxed mt-3">
-              Can&apos;t find your confirmation, or something went wrong with the booking itself? Email <a href={`mailto:${EMAIL}`} className={link + ' break-words'}>{EMAIL}</a> with the course name and the date of your round.
+              Can&apos;t find your confirmation, or something went wrong with the booking itself? Email <a href={`mailto:${SUPPORT_EMAIL}`} className={link + ' break-words'}>{SUPPORT_EMAIL}</a> with the course name and the date of your round.
             </p>
           </Card>
         </div>

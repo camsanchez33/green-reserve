@@ -117,170 +117,30 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-23 02:44 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 02177b7</span>
-    <span>11 uncommitted</span>
+    <span>2026-10-23 03:23 UTC</span><span>claude/youthful-keller-rvz1hm @ 4b621c0</span>
+    <span>47 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">143 runs have shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-10-17. These commits appear nowhere in it.</p>
+<div class="lede">3 runs have shipped that the queue doesn't know about</div>
+<p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">946d4a5</span><span>The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie</span></li>
-<li><span class="h">a578929</span><span>Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no &quot;Birdie&quot; anywhere a course sees); a test for the pay-page fee line</span></li>
-<li><span class="h">966741b</span><span>Course dashboard search: find a golfer, booking or member from the menu (#195)</span></li>
-<li><span class="h">dd3cfd1</span><span>Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit</span></li>
-<li><span class="h">e0bc004</span><span>Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)</span></li>
-<li><span class="h">b4ba083</span><span>TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)</span></li>
-<li><span class="h">3754fcb</span><span>TEST-1: launch wipe of test data, and resettable test courses (#190)</span></li>
-<li><span class="h">d0a4769</span><span>CI: the schema check replays migrations on its own Postgres (#192)</span></li>
+<li><span class="h">4b621c0</span><span>Regenerate status board</span></li>
 <li><span class="h">04301ce</span><span>W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses</span></li>
 <li><span class="h">2734cbd</span><span>W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later</span></li>
-<li><span class="h">6f40852</span><span>Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)</span></li>
-<li><span class="h">91df6b9</span><span>W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send</span></li>
-<li><span class="h">fc5c6aa</span><span>W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)</span></li>
-<li><span class="h">6ea9b46</span><span>Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187)</span></li>
-<li><span class="h">3c63c5d</span><span>AW-11 Team: per-person access — each employee's role and areas (#186)</span></li>
-<li><span class="h">75ac7d5</span><span>AW-10 Golfers: lookup only, in the new admin look (#185)</span></li>
-<li><span class="h">95e1b37</span><span>Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184)</span></li>
-<li><span class="h">a5c912b</span><span>Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183)</span></li>
-<li><span class="h">5e73b48</span><span>ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182)</span></li>
-<li><span class="h">694230a</span><span>W2-9c Events: each player's own pay link; paid at the course per player</span></li>
-<li><span class="h">b9fe29f</span><span>W2-9b: event pay-link email and text say what they are (BRAIN-1b message log)</span></li>
-<li><span class="h">40be0a7</span><span>Status board</span></li>
-<li><span class="h">e449074</span><span>W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close</span></li>
-<li><span class="h">4438d60</span><span>Status board</span></li>
-<li><span class="h">b001c14</span><span>W2-9b: narrow the recorded payment in the test (typecheck)</span></li>
-<li><span class="h">4086e37</span><span>W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds</span></li>
-<li><span class="h">7feae5c</span><span>W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup</span></li>
-<li><span class="h">478ec76</span><span>W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet</span></li>
-<li><span class="h">4bd2042</span><span>BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179)</span></li>
-<li><span class="h">8c73613</span><span>W2-9a: releasing an event's hold checks the day being released, not the day it moved to</span></li>
-<li><span class="h">e85978d</span><span>W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit</span></li>
-<li><span class="h">ce88bd1</span><span>Codemap and status board</span></li>
-<li><span class="h">087c1a2</span><span>W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks</span></li>
-<li><span class="h">28a5f3a</span><span>W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings</span></li>
-<li><span class="h">164896a</span><span>BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175)</span></li>
-<li><span class="h">0cb3627</span><span>W2-8b: a regular who has booked again is not 'gone quiet'</span></li>
-<li><span class="h">ffcefc6</span><span>W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet</span></li>
-<li><span class="h">aad9ee0</span><span>W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players</span></li>
-<li><span class="h">f367f8d</span><span>W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents</span></li>
-<li><span class="h">e8c4fe4</span><span>W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan</span></li>
-<li><span class="h">1d2a5db</span><span>BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174)</span></li>
-<li><span class="h">4cd3e1a</span><span>W2-6 Schedule simplification: open hours, what golfers can book, one price table</span></li>
-<li><span class="h">e59ed92</span><span>Codemap and status board</span></li>
-<li><span class="h">f8d9737</span><span>Messages: keep Open the course in the header below lg</span></li>
-<li><span class="h">3020c49</span><span>AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review)</span></li>
-<li><span class="h">f31213a</span><span>AW-7: course page — Bookings, Money, Setup, Contact &amp; notes (#172)</span></li>
-<li><span class="h">42adddb</span><span>Codemap and status board</span></li>
-<li><span class="h">6b0ebeb</span><span>AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links</span></li>
-<li><span class="h">821ddf9</span><span>AW-7: course page — Bookings, Money, Setup, Contact &amp; notes (in review)</span></li>
-<li><span class="h">4abfebb</span><span>AW-6c: Leads column, Add a lead, Move to Talking (#171)</span></li>
-<li><span class="h">a526731</span><span>Codemap and status board</span></li>
-<li><span class="h">fe16f64</span><span>AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review)</span></li>
-<li><span class="h">d58220f</span><span>AW-6b: inquiry page — the one next step first (#169)</span></li>
-<li><span class="h">a85a078</span><span>AW-4b: Today shows each course with its own to-dos; Goals tab (#170)</span></li>
-<li><span class="h">27af530</span><span>Status board</span></li>
-<li><span class="h">cbcfb8c</span><span>AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen</span></li>
-<li><span class="h">ec245d5</span><span>AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card</span></li>
-<li><span class="h">adf590b</span><span>Status board</span></li>
-<li><span class="h">914a1c5</span><span>AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today</span></li>
-<li><span class="h">b84a2db</span><span>AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card</span></li>
-<li><span class="h">e941200</span><span>Code map and status board</span></li>
-<li><span class="h">39d69df</span><span>AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts</span></li>
-<li><span class="h">3bccfa0</span><span>AW-5: hourly admin checks — urgent alerts once each, and a morning digest</span></li>
-<li><span class="h">2228db8</span><span>AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+</span></li>
-<li><span class="h">c78b7aa</span><span>AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding</span></li>
-<li><span class="h">224db02</span><span>Status board and code map</span></li>
-<li><span class="h">4c61670</span><span>AW-3b: Ask in the admin search — read-only AI answers with links to admin pages</span></li>
-<li><span class="h">905572d</span><span>Regenerate code map</span></li>
-<li><span class="h">474f3f0</span><span>Status board</span></li>
-<li><span class="h">e66b258</span><span>AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations</span></li>
-<li><span class="h">fc9a048</span><span>Status board</span></li>
-<li><span class="h">5982380</span><span>AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step</span></li>
-<li><span class="h">2807e2b</span><span>AW-1c: re-confirm risky owner actions; owner device list; passkey change emails</span></li>
-<li><span class="h">5fc7ad8</span><span>Regenerate code map</span></li>
-<li><span class="h">a6a13af</span><span>AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board</span></li>
-<li><span class="h">00a9007</span><span>AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists</span></li>
-<li><span class="h">ccbfb06</span><span>AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161)</span></li>
-<li><span class="h">0671dab</span><span>Regenerate code map after main merge</span></li>
-<li><span class="h">4fda831</span><span>AW-1a: dummy hash at the real cost; status board</span></li>
-<li><span class="h">fc3a0fc</span><span>AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails</span></li>
-<li><span class="h">eeea53c</span><span>AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner</span></li>
-<li><span class="h">315e3e3</span><span>W2-7 B2: sales tax on pro-shop items added to a round (#159)</span></li>
-<li><span class="h">2798d62</span><span>W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board</span></li>
-<li><span class="h">557be09</span><span>W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched</span></li>
-<li><span class="h">063dc87</span><span>W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid</span></li>
-<li><span class="h">507507a</span><span>W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158)</span></li>
-<li><span class="h">85be7e1</span><span>Regenerate code map and status board after main merge</span></li>
-<li><span class="h">248dc36</span><span>W2-6 slice 3: window-cap test, spec status, status board</span></li>
-<li><span class="h">d8a856f</span><span>W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping</span></li>
-<li><span class="h">290c10f</span><span>W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking</span></li>
-<li><span class="h">ddb40f0</span><span>W2-6 slice 2: schedule overlaps warn instead of block (#156)</span></li>
-<li><span class="h">bc1db3d</span><span>W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board</span></li>
-<li><span class="h">27ef910</span><span>W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused</span></li>
-<li><span class="h">e96323e</span><span>W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155)</span></li>
-<li><span class="h">77187a1</span><span>Status board</span></li>
-<li><span class="h">42ff2e4</span><span>W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day</span></li>
-<li><span class="h">dea0574</span><span>W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had</span></li>
-<li><span class="h">39e62f4</span><span>W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154)</span></li>
-<li><span class="h">773326d</span><span>W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales)</span></li>
-<li><span class="h">ad6524b</span><span>W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151)</span></li>
-<li><span class="h">bd86947</span><span>Sign-in page: full-screen photo with the sign-in card under the logo (#153)</span></li>
-<li><span class="h">fff11a1</span><span>Emails: one clean look for every email (EMAIL-2) (#152)</span></li>
-<li><span class="h">8287f54</span><span>Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150)</span></li>
-<li><span class="h">cb98de8</span><span>W2-4/5: price periods inside one schedule; Prices &amp; fees reorganised (#149)</span></li>
-<li><span class="h">223121d</span><span>Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148)</span></li>
-<li><span class="h">95da45f</span><span>Member portal: show a resident their own spot at the resident rate, as booking charges (#146)</span></li>
-<li><span class="h">9910cf6</span><span>Member portal: show members exactly what booking charges (#145)</span></li>
-<li><span class="h">dbd4737</span><span>Status board: regenerate (#144)</span></li>
-<li><span class="h">428da80</span><span>Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143)</span></li>
-<li><span class="h">0419675</span><span>Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142)</span></li>
-<li><span class="h">b14b998</span><span>Course groups: one golfer page and one resident list for courses run together (#141)</span></li>
-<li><span class="h">662f294</span><span>Members: import a list, and each member's last round (#140)</span></li>
-<li><span class="h">9aba8a1</span><span>Settings: Who pays what, one table of every kind of golfer and their price (#139)</span></li>
-<li><span class="h">a8c71b9</span><span>Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138)</span></li>
-<li><span class="h">c17100d</span><span>Dashboard nav: every tab fits on every screen (#137)</span></li>
-<li><span class="h">668b8ce</span><span>Residents: staff keep a resident list; residents book at the resident rate (#136)</span></li>
-<li><span class="h">73245fc</span><span>Status board after Settings part 2 and the pro shop (#135)</span></li>
-<li><span class="h">cb884f2</span><span>Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134)</span></li>
-<li><span class="h">cd9c3a1</span><span>Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131)</span></li>
-<li><span class="h">1cf8419</span><span>Homepage hero: Learn more instead of Book a demo (#133)</span></li>
-<li><span class="h">a37365e</span><span>Email: log Resend's message id and accept time for every send (#132)</span></li>
-<li><span class="h">e226ed7</span><span>Members: a self-joined member put on a tier gets a pay link, and dues emails reach them (#130)</span></li>
-<li><span class="h">27e358a</span><span>Members: list first, one plain dues line per member, remind count matches who actually gets emailed (#128)</span></li>
-<li><span class="h">49d373a</span><span>Settings part 1: sections in setup order, a &quot;Finish setting up&quot; list, Staff and Your account split (#129)</span></li>
-<li><span class="h">fc1c99e</span><span>Schedule rework: your week at a glance, named price periods, closed-days calendar, every save shows what it changes (#127)</span></li>
-<li><span class="h">45ac49a</span><span>Add time: warn and ask once when a new time is within 5 minutes of another (#120)</span></li>
-<li><span class="h">33ae355</span><span>Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126)</span></li>
-<li><span class="h">92cdf08</span><span>Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124)</span></li>
-<li><span class="h">7af1de5</span><span>Golfers tick a box to agree to the Terms and Privacy Policy before booking or changing a booking (#123)</span></li>
-<li><span class="h">31b018f</span><span>2FA page: says where the code went, new code by email or text (#119)</span></li>
-<li><span class="h">25f5082</span><span>Hotfix: regenerating a day no longer wipes its open tee times (#125)</span></li>
-<li><span class="h">8ef438a</span><span>Analytics rework (AN-3): one date button, golf-standard four, plain explanations, Ask Birdie; no tab-switch colour flash (#122)</span></li>
-<li><span class="h">9450ca4</span><span>Legal: Terms, Privacy, Operator Agreement v2026-11 and Brand License match the product (#121)</span></li>
-<li><span class="h">636b0ca</span><span>Homepage batch 2: no section lines, four feature tiles, Send us a note, phone frame, /for-courses without terms (#118)</span></li>
-<li><span class="h">556cf10</span><span>Tee sheet batch 2: no logo box, Weather and Message renamed and explained, course alert can email today's golfers (#117)</span></li>
-<li><span class="h">bb8b1cc</span><span>Operator login: photo panel beside the form, &quot;Need help signing in?&quot; (#116)</span></li>
-<li><span class="h">014eadb</span><span>Tee sheet batch 1: awaiting check-in, tidy bar, alerts + key up top, tinted squares (#115)</span></li>
-<li><span class="h">458b063</span><span>Homepage about section + 'Your AI assistant' on marketing pages (#114)</span></li>
-<li><span class="h">1203da1</span><span>Walk 1 fixes: no fee on cash, dues lock, link previews, plain confirmation email (#113)</span></li>
-<li><span class="h">a77263a</span><span>Homepage hero: 'The tee sheet your course deserves.' + Walk 1 decisions (#112)</span></li>
-<li><span class="h">8c863b9</span><span>Launch security: late-fee dodge, party-size fees, phone takeover, booking flood (#111)</span></li>
-<li><span class="h">8bc5a27</span><span>Homepage hero: links green above the ocean at dusk (#110)</span></li>
-<li><span class="h">293f1d7</span><span>Homepage hero: sun through the pines photo (#109)</span></li>
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
-  <div class="tile t-warn"><span class="n">1</span><span class="l">Awaiting review</span></div>
+  <div class="tile t-warn"><span class="n">0</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">5</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">6</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">8</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>M  src/app/dashboard/analytics/page.tsx</code></li><li><code>M  src/app/dashboard/events/page.tsx</code></li><li><code>M  src/app/dashboard/members/page.tsx</code></li><li><code>M  src/app/dashboard/messages/page.tsx</code></li><li><code>M  src/app/dashboard/money/page.tsx</code></li><li><code>M  src/app/dashboard/schedules/page.tsx</code></li><li><code>M  src/app/dashboard/settings/page.tsx</code></li><li><code>M  src/app/dashboard/shop/page.tsx</code></li></ul>
+<ul class="plain"><li><code>M  CLAUDE.md</code></li><li><code>M  HOMEPAGE_SPEC.md</code></li><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>A  public/home/shots/analytics.png</code></li><li><code>A  public/home/shots/assistant.png</code></li><li><code>A  public/home/shots/booking-page.png</code></li><li><code>A  public/home/shots/pay.png</code></li><li><code>A  public/home/shots/tee-sheet.png</code></li><li><code>M  scripts/birdie-messages-test.ts</code></li><li><code>M  scripts/checkin-wording-test.ts</code></li><li><code>M  scripts/design-guard.baseline.json</code></li><li><code>A  scripts/operator-home-db-test.ts</code></li><li><code>A  scripts/operator-search-db-test.ts</code></li><li><code>A  scripts/screenshots/capture.ts</code></li><li><code>A  scripts/screenshots/seed.ts</code></li><li><code>M  src/app/HomeContent.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -288,7 +148,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="idx">2</span><span class="t">RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against the code).</span><span class="where">:56</span></div>
 <div class="row"><span class="idx">3</span><span class="t">LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed</span><span class="where">:235</span></div>
 <div class="row"><span class="idx">4</span><span class="t">CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf</span><span class="where">:338</span></div>
-<div class="row"><span class="idx">5</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2993</span></div>
+<div class="row"><span class="idx">5</span><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="where">:2357</span></div>
+<div class="row"><span class="idx">6</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2993</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">14 pages closed, 8 open. One page in flight at a time.</p>
@@ -311,7 +172,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">92d</span><span class="where">b88c8bf</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:49</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:56</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:235</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:338</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2357</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2993</span></li></ul>
@@ -322,57 +182,57 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-23 &middot; 0d</td></tr>
-<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 5d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-19 &middot; 3d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
-<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-11 &middot; 11d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 3d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">946d4a5</td><td class="num">2026-10-23</td><td>The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie</td></tr>
-<tr><td class="num">a578929</td><td class="num">2026-10-23</td><td>Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no &quot;Birdie&quot; anywhere a course sees); a test for the pay-page fee line</td></tr>
-<tr><td class="num">966741b</td><td class="num">2026-10-22</td><td>Course dashboard search: find a golfer, booking or member from the menu (#195)</td></tr>
-<tr><td class="num">dd3cfd1</td><td class="num">2026-10-23</td><td>Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit</td></tr>
-<tr><td class="num">e0bc004</td><td class="num">2026-10-22</td><td>Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)</td></tr>
+<tr><td class="num">4b621c0</td><td class="num">2026-10-22</td><td>Regenerate status board</td></tr>
 <tr><td class="num">b4ba083</td><td class="num">2026-10-22</td><td>TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)</td></tr>
 <tr><td class="num">3754fcb</td><td class="num">2026-10-22</td><td>TEST-1: launch wipe of test data, and resettable test courses (#190)</td></tr>
 <tr><td class="num">d0a4769</td><td class="num">2026-10-22</td><td>CI: the schema check replays migrations on its own Postgres (#192)</td></tr>
 <tr><td class="num">04301ce</td><td class="num">2026-10-22</td><td>W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses</td></tr>
 <tr><td class="num">2734cbd</td><td class="num">2026-10-22</td><td>W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later</td></tr>
 <tr><td class="num">6f40852</td><td class="num">2026-10-22</td><td>Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)</td></tr>
+<tr><td class="num">67e5ac4</td><td class="num">2026-10-22</td><td>queue/spec update: old addresses replaced in specs, legal queue and design prototypes</td></tr>
+<tr><td class="num">9935d2e</td><td class="num">2026-10-22</td><td>Regenerate status board</td></tr>
 <tr><td class="num">91df6b9</td><td class="num">2026-10-22</td><td>W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send</td></tr>
+<tr><td class="num">ad8c721</td><td class="num">2026-10-22</td><td>Regenerate status board</td></tr>
+<tr><td class="num">fc5c6aa</td><td class="num">2026-10-22</td><td>W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

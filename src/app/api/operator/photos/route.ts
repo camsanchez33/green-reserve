@@ -3,6 +3,7 @@ import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB — the client downscales large images before upload
 const ALLOWED_TYPES: Record<string, string> = {
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
   const agreementBlock = await requireAgreementCurrent(session.courseId); if (agreementBlock) return agreementBlock; // AG-3 §3
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return NextResponse.json({ error: 'Image storage is not configured. Contact thegreenreserve@outlook.com.' }, { status: 503 });
+    return NextResponse.json({ error: `Image storage is not configured. Contact ${ADMIN_EMAIL}.` }, { status: 503 });
   }
 
   const existing = await prisma.coursePhoto.count({ where: { courseId: session.courseId } });

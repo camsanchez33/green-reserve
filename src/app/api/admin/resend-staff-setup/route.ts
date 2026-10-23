@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { Resend } from 'resend';
+import { ADMIN_EMAIL } from '@/lib/contact';
 import { withAudit } from '@/lib/admin-audit';
 import { logSent } from '@/lib/sent-messages';
 
@@ -28,8 +29,7 @@ async function resendStaffSetup(req: NextRequest) {
   // when the function froze, and Resend never throws — so the admin was told
   // "sent" either way (CLAUDE.md gotchas 6 and 7).
   const r = await resend.emails.send({
-    from: 'GreenReserve <hello@greenreserve.app>',
-    replyTo: 'thegreenreserve@outlook.com',
+    from: `GreenReserve <${ADMIN_EMAIL}>`,
     to: staff.email,
     subject: `Your GreenReserve staff login — ${staff.course?.name ?? ''}`,
     html: `<p>Hi ${staff.name},</p><p>Here is your dashboard login link:</p><p><a href="${loginUrl}">${loginUrl}</a></p><p>Your login email: <strong>${staff.email}</strong></p><p>If you&apos;ve forgotten your password, use the reset link on the login page.</p>`,

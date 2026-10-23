@@ -10,6 +10,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import PlainHeader from '@/components/PlainHeader';
 import { Check, Loader2 } from 'lucide-react';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 type Booked = { scheduledAt: string; durationMin: number; direction: string; phone: string };
 type Info = {
@@ -17,7 +18,7 @@ type Info = {
   booked: Booked | null;
   calcomUrl: string | null; calcomManage: { reschedule: string; cancel: string } | null;
 };
-const CONTACT = 'thegreenreserve@outlook.com';
+const CONTACT = ADMIN_EMAIL;
 const TZ = 'America/New_York';
 const fmtFull = (iso: string) => new Date(iso).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: TZ });
 

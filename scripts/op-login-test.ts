@@ -12,6 +12,6 @@ check('the homepage photo fills the screen with the cream logo on it', shell.inc
 check('the code, forgot and reset pages share the same photo look', ['src/app/dashboard/2fa/page.tsx', 'src/app/dashboard/forgot-password/page.tsx', 'src/app/dashboard/reset-password/page.tsx'].every(f => readFileSync(f, 'utf8').includes('<AuthPhotoShell')));
 check('a "Need help signing in?" line', s.includes('Need help signing in?'));
 check('the form submits on Enter as a real form', s.includes('<form onSubmit='));
-check('help goes to the admin inbox, never the send-only address', s.includes('mailto:thegreenreserve@outlook.com') && !s.includes('hello@greenreserve.app'));
+check('help goes to the course inbox (admin@, MAIL-1), never the send-only noreply@', s.includes('mailto:${ADMIN_EMAIL}') && !s.includes('NOREPLY_EMAIL') && !s.includes('noreply@'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

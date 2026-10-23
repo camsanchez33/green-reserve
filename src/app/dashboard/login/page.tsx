@@ -3,6 +3,7 @@ import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AuthPhotoShell, AUTH_PHOTO_LINKS, AUTH_PHOTO_LINK } from '@/components/AuthPhotoShell';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { ADMIN_EMAIL } from '@/lib/contact';
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -63,7 +64,7 @@ function LoginContent() {
           </form>
 
           <div className={'mt-5 space-y-1.5 text-center ' + AUTH_PHOTO_LINKS}>
-            <p>Need help signing in? <a href="mailto:thegreenreserve@outlook.com?subject=Help%20signing%20in" className={AUTH_PHOTO_LINK}>Email GreenReserve support</a></p>
+            <p>Need help signing in? <a href={`mailto:${ADMIN_EMAIL}?subject=Help%20signing%20in`} className={AUTH_PHOTO_LINK}>Email GreenReserve support</a></p>
             <p>Don&apos;t have an account? <a href="/for-courses" className={AUTH_PHOTO_LINK}>Ask a question →</a></p>
           </div>
     </AuthPhotoShell>

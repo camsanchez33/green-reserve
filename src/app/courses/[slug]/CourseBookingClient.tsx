@@ -14,6 +14,7 @@ import { ACCESS_FEE_PER_PLAYER, hoursLabel } from '@/lib/booking-fees';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { SUPPORT_EMAIL } from '@/lib/contact';
 
 const TYPE_LABELS: Record<string, string> = {
   public:         'Public',
@@ -549,7 +550,7 @@ export default function CourseDetailPage({
         <div className="text-center">
           <Image src="/brand/golfer.svg" unoptimized alt="" width={56} height={69} className="mx-auto mb-4" />
           <h1 className="text-2xl font-semibold text-ink mb-2">We couldn&apos;t find that course.</h1>
-          <p className="text-ink text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href="mailto:thegreenreserve@outlook.com" className="text-pine hover:underline">thegreenreserve@outlook.com</a>.</p>
+          <p className="text-ink text-sm mt-2">Please use the booking link on your course&apos;s website, or contact <a href={`mailto:${SUPPORT_EMAIL}`} className="text-pine hover:underline">{SUPPORT_EMAIL}</a>.</p>
           <Link href="/" className="mt-6 inline-block text-sm text-pine hover:underline">← Back to home</Link>
         </div>
       </div>

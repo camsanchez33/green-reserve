@@ -38,7 +38,7 @@ they think an answer is permanent.
 1. **Applicant confirmation email** (sent on inquiry submit): keep the 3-step
    structure but rewrite copy to feel like a person, not a system: address the
    contact by first name, name their course, state the actual reply window, sign
-   from hello@greenreserve.app. Include their submitted answers at the bottom
+   from admin@greenreserve.app. Include their submitted answers at the bottom
    ("What you told us") so they have a record.
 2. **Details-sheet follow-up email**: when a course submits the details sheet,
    they currently get nothing. Send "We got your details — here's what you told
@@ -338,7 +338,7 @@ sight of their page must not be the live launch.
 2. **"Send preview" action** — on the inquiry page (Building stage) and the
    draft course detail header. Sends an email to the inquiry contact:
    "Your page is ready for a look" + preview button + "reply to this email
-   with anything you want changed" (reply-to: hello@greenreserve.app). Can be
+   with anything you want changed" (reply-to: admin@greenreserve.app). Can be
    re-sent after edits ("Send updated preview") — each send logged to the
    inquiry status timeline ("Preview sent by Cam").
 3. **Next-step card update** for Building stage: primary action becomes

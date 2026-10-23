@@ -2010,7 +2010,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   when asked. Please do one real click-through on a draft test course
   (e.g. DaisyLinks) to confirm: button shows pending → checkmark, survives a
   reload, and the "{course} approved their page" email actually lands at
-  hello@greenreserve.app. Original spec:
+  admin@greenreserve.app. Original spec:
   checklist approve button is a dead wire (no migration) — on the V13
   Getting Started checklist, "Looks good — approve" gives NO feedback, the
   step is unchecked again after reload, and the V12 admin notification email
@@ -2022,7 +2022,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (3) the checklist's "Review your booking page" step must DERIVE from
   pageApprovalStatus (the V12 computed value) so it survives reload;
   (4) the admin notification email ("{course} approved their page — ready to
-  go live") must fire — verify delivery to hello@greenreserve.app, not just
+  go live") must fire — verify delivery to admin@greenreserve.app, not just
   code that looks right;
   (5) test the Request-changes path from the checklist the same way (it
   should open the V13b structured form once that ships);
@@ -2533,7 +2533,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
   (cfeb2e1) replaces that screen with the ask-then-code flow. Walking the old
   one would be testing something already gone. The API half of this item —
   no resubmit event, blind response, gated email — is unchanged by SD-11 and
-  stands reviewed. Close this when SD-11's walk passes. a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd have to log in to change information"). 21c8d25 fixed the unverified-contact-change hole; this closes the remaining case. In the POST /api/inquiries dedupe block, when the matched inquiry has a `builtCourseId` (i.e. the course exists), do NOT record a resubmit event at all: respond with the normal success shape (keep the response identical/blind — do not leak that the course exists) and have the success screen + confirmation email say "<Course> already has a GreenReserve page — sign in at /dashboard to update your details, or email hello@greenreserve.app". Contact details for a built course change in ONE place: the operator dashboard. Deliberately NOT extended to not-yet-built inquiries — there the 21c8d25 rule (email must match the one on file) is the right level, because blocking outright would also block a GM fixing their own typo'd phone. Small, no migration.
+  stands reviewed. Close this when SD-11's walk passes. a BUILT course's resubmit goes to sign-in, not to a correction (Cam 2026-09-16: "if a course is already created it can't be created again — they'd have to log in to change information"). 21c8d25 fixed the unverified-contact-change hole; this closes the remaining case. In the POST /api/inquiries dedupe block, when the matched inquiry has a `builtCourseId` (i.e. the course exists), do NOT record a resubmit event at all: respond with the normal success shape (keep the response identical/blind — do not leak that the course exists) and have the success screen + confirmation email say "<Course> already has a GreenReserve page — sign in at /dashboard to update your details, or email admin@greenreserve.app". Contact details for a built course change in ONE place: the operator dashboard. Deliberately NOT extended to not-yet-built inquiries — there the 21c8d25 rule (email must match the one on file) is the right level, because blocking outright would also block a GM fixing their own typo'd phone. Small, no migration.
   BUILT: POST /api/inquiries selects builtCourseId and records NO resubmit event
   when it is set. New sendInquiryAlreadyBuilt email; a separate /for-courses
   success screen naming the course, with the dashboard button and the hello@

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { previewFor } from '@/lib/seo';
 import Link from 'next/link';
 import { HOME_FAQ, faqJsonLd } from '@/lib/faq';
+import { ADMIN_EMAIL } from '@/lib/contact';
 import ProductShot from '@/components/home/ProductShot';
 
 // HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07): the long version. The homepage's
@@ -203,7 +204,7 @@ export default function TeeSheetPage() {
             <h2 className={H2}>Talk to us.</h2>
             <p className="mt-4 text-[17px] leading-relaxed">
               Book a demo and we&apos;ll show it with your own course&apos;s times and prices, or email{' '}
-              <a href="mailto:thegreenreserve@outlook.com" className="font-semibold underline decoration-fairway decoration-2 underline-offset-4">thegreenreserve@outlook.com</a>.
+              <a href={`mailto:${ADMIN_EMAIL}`} className="font-semibold underline decoration-fairway decoration-2 underline-offset-4">{ADMIN_EMAIL}</a>.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-6">
               <a href="/demo" className={BTN}>Book a demo <span aria-hidden="true">→</span></a>

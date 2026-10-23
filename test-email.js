@@ -14,7 +14,7 @@ async function main() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'GreenReserve <hello@greenreserve.app>',
+      from: 'GreenReserve <support@greenreserve.app>',
       to: ['camsanchez33@icloud.com'],
       subject: 'GreenReserve email test',
       html: '<p>If you got this, Resend is working.</p>',

@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 540,
+    "files": 541,
     "routes": 260,
-    "libs": 176,
+    "libs": 177,
     "models": 55,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -2710,6 +2710,7 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
+        "@/lib/contact",
         "@/lib/prisma",
         "@/lib/sent-messages",
         "next/server",
@@ -4484,7 +4485,7 @@
     },
     {
       "path": "src/app/api/inquiries/route.ts",
-      "lines": 296,
+      "lines": 297,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4502,6 +4503,7 @@
       "guard": "public",
       "imports": [
         "@/lib/call-invite",
+        "@/lib/contact",
         "@/lib/email",
         "@/lib/inquiry-status",
         "@/lib/prisma",
@@ -4567,7 +4569,7 @@
     },
     {
       "path": "src/app/api/inquiries/upload/route.ts",
-      "lines": 48,
+      "lines": 49,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4584,6 +4586,7 @@
       "auth": "public",
       "guard": "token",
       "imports": [
+        "@/lib/contact",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/sheet-token",
@@ -5705,6 +5708,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/contact",
         "@/lib/email",
         "@/lib/prisma",
         "@/lib/session",
@@ -5888,7 +5892,7 @@
     },
     {
       "path": "src/app/api/operator/photos/route.ts",
-      "lines": 57,
+      "lines": 58,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5911,6 +5915,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/contact",
         "@/lib/prisma",
         "@/lib/session",
         "@vercel/blob",
@@ -6730,7 +6735,7 @@
     },
     {
       "path": "src/app/api/operator/upload/route.ts",
-      "lines": 88,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6753,6 +6758,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/contact",
         "@/lib/prisma",
         "@/lib/session",
         "@vercel/blob",
@@ -7113,7 +7119,7 @@
     },
     {
       "path": "src/app/call/[token]/page.tsx",
-      "lines": 141,
+      "lines": 142,
       "purpose": "/call/[token] — the course books its discovery call.",
       "brain": [],
       "exports": [
@@ -7129,6 +7135,7 @@
       "guard": "public",
       "imports": [
         "@/components/PlainHeader",
+        "@/lib/contact",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -7238,7 +7245,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 378,
+      "lines": 379,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7256,6 +7263,7 @@
         "@/components/CourseHeaderBar",
         "@/components/GolferExitLinks",
         "@/lib/booking-fees",
+        "@/lib/contact",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
         "lucide-react",
@@ -7311,6 +7319,7 @@
       "guard": "public",
       "imports": [
         "@/components/ui/Card",
+        "@/lib/contact",
         "@/lib/seo",
         "next",
         "next/link"
@@ -7319,7 +7328,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1837,
+      "lines": 1838,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7339,6 +7348,7 @@
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
         "@/lib/change-requests",
+        "@/lib/contact",
         "@/lib/courses-data",
         "@/lib/demo-courses",
         "@/lib/tee-colour",
@@ -7677,7 +7687,7 @@
     },
     {
       "path": "src/app/dashboard/login/page.tsx",
-      "lines": 76,
+      "lines": 77,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7694,6 +7704,7 @@
       "imports": [
         "@/components/AuthPhotoShell",
         "@/components/ui/StatusDot",
+        "@/lib/contact",
         "next/navigation",
         "react"
       ],
@@ -7736,7 +7747,7 @@
     },
     {
       "path": "src/app/dashboard/messages/page.tsx",
-      "lines": 195,
+      "lines": 196,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7755,6 +7766,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
+        "@/lib/contact",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "lucide-react",
@@ -8203,7 +8215,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 594,
+      "lines": 595,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8220,6 +8232,7 @@
       "imports": [
         "@/components/PlainHeader",
         "@/lib/calcom-url",
+        "@/lib/contact",
         "lucide-react",
         "next/link",
         "react"
@@ -8619,7 +8632,7 @@
     },
     {
       "path": "src/app/privacy/page.tsx",
-      "lines": 247,
+      "lines": 248,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8638,6 +8651,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/contact",
         "@/lib/seo",
         "next"
       ],
@@ -8645,7 +8659,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 261,
+      "lines": 262,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8664,6 +8678,7 @@
         "@/components/GolferExitLinks",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
+        "@/lib/contact",
         "lucide-react",
         "next/navigation",
         "react"
@@ -8720,7 +8735,7 @@
     },
     {
       "path": "src/app/teesheet/page.tsx",
-      "lines": 218,
+      "lines": 219,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8740,6 +8755,7 @@
       "guard": "public",
       "imports": [
         "@/components/home/ProductShot",
+        "@/lib/contact",
         "@/lib/faq",
         "@/lib/seo",
         "next",
@@ -8749,7 +8765,7 @@
     },
     {
       "path": "src/app/terms/page.tsx",
-      "lines": 220,
+      "lines": 221,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8768,6 +8784,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/contact",
         "@/lib/seo",
         "next"
       ],
@@ -8911,7 +8928,7 @@
     },
     {
       "path": "src/components/Footer.tsx",
-      "lines": 78,
+      "lines": 79,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8927,6 +8944,7 @@
       "guard": null,
       "imports": [
         "@/lib/booking-mode",
+        "@/lib/contact",
         "next/image",
         "next/link",
         "next/navigation"
@@ -9993,7 +10011,7 @@
     },
     {
       "path": "src/components/dashboard/SignAgreements.tsx",
-      "lines": 221,
+      "lines": 222,
       "purpose": "AGREEMENT_SPEC AG-2 §1 — the \"Sign\" step.",
       "brain": [],
       "exports": [
@@ -10009,6 +10027,7 @@
       "guard": null,
       "imports": [
         "@/components/ui/StatusDot",
+        "@/lib/contact",
         "lucide-react",
         "react"
       ],
@@ -12410,7 +12429,7 @@
     },
     {
       "path": "src/lib/agreement-sign.ts",
-      "lines": 206,
+      "lines": 207,
       "purpose": "AGREEMENT_SPEC AG-2 — the signing service.",
       "brain": [],
       "exports": [
@@ -12447,6 +12466,7 @@
         "./course-timeline",
         "./email",
         "./private-blob",
+        "@/lib/contact",
         "@/lib/prisma",
         "@vercel/blob"
       ],
@@ -13682,7 +13702,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 276,
+      "lines": 280,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14136,6 +14156,60 @@
         "src/app/api/admin/company-documents/download/route.ts",
         "src/app/api/admin/company-documents/route.ts",
         "src/app/api/admin/company-documents/upload/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/contact.ts",
+      "lines": 20,
+      "purpose": "MAIL-1 (Cam 2026-10-22):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ADMIN_EMAIL",
+          "kind": "const"
+        },
+        {
+          "name": "BILLING_EMAIL",
+          "kind": "const"
+        },
+        {
+          "name": "NOREPLY_EMAIL",
+          "kind": "const"
+        },
+        {
+          "name": "SUPPORT_EMAIL",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/admin/resend-staff-setup/route.ts",
+        "src/app/api/inquiries/route.ts",
+        "src/app/api/inquiries/upload/route.ts",
+        "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/photos/route.ts",
+        "src/app/api/operator/upload/route.ts",
+        "src/app/call/[token]/page.tsx",
+        "src/app/checkin/[bookingId]/page.tsx",
+        "src/app/contact/page.tsx",
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/dashboard/login/page.tsx",
+        "src/app/dashboard/messages/page.tsx",
+        "src/app/for-courses/ForCoursesContent.tsx",
+        "src/app/privacy/page.tsx",
+        "src/app/receipt/[bookingId]/page.tsx",
+        "src/app/teesheet/page.tsx",
+        "src/app/terms/page.tsx",
+        "src/components/Footer.tsx",
+        "src/components/dashboard/SignAgreements.tsx",
+        "src/lib/agreement-sign.ts",
+        "src/lib/email.ts",
+        "src/lib/submit-change-request.ts"
       ]
     },
     {
@@ -15542,7 +15616,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2143,
+      "lines": 2149,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15843,6 +15917,7 @@
       "imports": [
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
+        "@/lib/contact",
         "@/lib/sent-messages",
         "@/lib/stripe",
         "resend"
@@ -20094,6 +20169,7 @@
       "guard": null,
       "imports": [
         "@/lib/change-requests",
+        "@/lib/contact",
         "@/lib/email",
         "@/lib/prisma",
         "next/server"

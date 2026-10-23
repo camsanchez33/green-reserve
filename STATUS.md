@@ -4,173 +4,42 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 02:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `02177b7` · working tree **11 dirty file(s)**
+Generated 2026-10-23 03:23 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `4b621c0` · working tree **47 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-17**. 143 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 3 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `946d4a5` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
-| `a578929` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
-| `966741b` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
-| `dd3cfd1` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
-| `e0bc004` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
-| `b4ba083` | 2026-10-22 | TEST-2: test courses stay out of platform numbers, Problems and public lists (#193) |
-| `3754fcb` | 2026-10-22 | TEST-1: launch wipe of test data, and resettable test courses (#190) |
-| `d0a4769` | 2026-10-22 | CI: the schema check replays migrations on its own Postgres (#192) |
+| `4b621c0` | 2026-10-22 | Regenerate status board |
 | `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
 | `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
-| `6f40852` | 2026-10-22 | Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189) |
-| `91df6b9` | 2026-10-22 | W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send |
-| `fc5c6aa` | 2026-10-22 | W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through) |
-| `6ea9b46` | 2026-10-22 | Admin: Systems reorganised, Company docs and My profile restyled (AW-14/15/16) (#187) |
-| `3c63c5d` | 2026-10-22 | AW-11 Team: per-person access — each employee's role and areas (#186) |
-| `75ac7d5` | 2026-10-22 | AW-10 Golfers: lookup only, in the new admin look (#185) |
-| `95e1b37` | 2026-10-22 | Money PR2b: payouts to each course, dispute evidence pack, closed disputes, monthly Stripe match (#184) |
-| `a5c912b` | 2026-10-22 | Money PR2a: Revenue becomes Money — five tabs from the approved mockup (#183) |
-| `5e73b48` | 2026-10-22 | ADMIN-C PR1: admin rebuilt to mockup C — menu, top bar, Home, Problems (#182) |
-| `694230a` | 2026-10-22 | W2-9c Events: each player's own pay link; paid at the course per player |
-| `b9fe29f` | 2026-10-22 | W2-9b: event pay-link email and text say what they are (BRAIN-1b message log) |
-| `40be0a7` | 2026-10-22 | Status board |
-| `e449074` | 2026-10-22 | W2-9b review fixes: a refund retried after 24h can't go out twice; cancelling an event says which links it couldn't close |
-| `4438d60` | 2026-10-22 | Status board |
-| `b001c14` | 2026-10-22 | W2-9b: narrow the recorded payment in the test (typecheck) |
-| `4086e37` | 2026-10-22 | W2-9b Events: pay at the course, and pay links for deposits, balances or any amount; refunds |
-| `7feae5c` | 2026-10-22 | W2-9 review notes: Birdie won't draft reopening event-held times; selection style and single-round wording in setup |
-| `478ec76` | 2026-10-22 | W2-9: events close the whole course or share it; held times are changed on the event, not the tee sheet |
-| `4bd2042` | 2026-10-21 | BRAIN-1b: every email and text logged; course page leads with a Timeline; Sentry test button (#179) |
-| `8c73613` | 2026-10-22 | W2-9a: releasing an event's hold checks the day being released, not the day it moved to |
-| `e85978d` | 2026-10-22 | W2-9a review fixes: offer to hold any open time in the window; pairings email stays inside the time limit |
-| `ce88bd1` | 2026-10-22 | Codemap and status board |
-| `087c1a2` | 2026-10-22 | W2-8c analytics: rate paid vs posted, and booking pace for the next two weeks |
-| `28a5f3a` | 2026-10-22 | W2-9a Events: set up an outing or tournament, hold its tee times, prep checklist, players and pairings |
-| `164896a` | 2026-10-21 | BRAIN-1a: every admin change is recorded; money, access and deletes need a reason; Audit page (#175) |
-| `0cb3627` | 2026-10-22 | W2-8b: a regular who has booked again is not 'gone quiet' |
-| `ffcefc6` | 2026-10-22 | W2-8b analytics: beyond the green fee (carts, shop) and regulars who've gone quiet |
-| `aad9ee0` | 2026-10-22 | W2-8a review fixes: residents table starts Oct 19, 'didn't play' counts no-show players |
-| `f367f8d` | 2026-10-22 | W2-8a analytics: earned per spot, turned away, short-shows, weather kept out of cancellations, residents |
-| `e8c4fe4` | 2026-10-22 | W2-6 review fixes: walking per round, reopened days keep prices, server-side checks, unsaved first plan |
-| `1d2a5db` | 2026-10-21 | BRAIN-0: load Sentry on the server (instrumentation hook); admin foundation plan in the spec (#174) |
-| `4cd3e1a` | 2026-10-22 | W2-6 Schedule simplification: open hours, what golfers can book, one price table |
-| `e59ed92` | 2026-10-22 | Codemap and status board |
-| `f8d9737` | 2026-10-22 | Messages: keep Open the course in the header below lg |
-| `3020c49` | 2026-10-22 | AW-8a: Announcements page of its own; Messages inbox in three groups with a course panel (in review) |
-| `f31213a` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (#172) |
-| `42adddb` | 2026-10-21 | Codemap and status board |
-| `6b0ebeb` | 2026-10-21 | AW-7 review fixes: per-reminder sent state, plain-English decline reasons, tab=setup links |
-| `821ddf9` | 2026-10-21 | AW-7: course page — Bookings, Money, Setup, Contact & notes (in review) |
-| `4abfebb` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (#171) |
-| `a526731` | 2026-10-21 | Codemap and status board |
-| `fe16f64` | 2026-10-21 | AW-6c: Leads column, Add a lead, Move to Talking (WIP, in review) |
-| `d58220f` | 2026-10-21 | AW-6b: inquiry page — the one next step first (#169) |
-| `a85a078` | 2026-10-21 | AW-4b: Today shows each course with its own to-dos; Goals tab (#170) |
-| `27af530` | 2026-10-21 | Status board |
-| `cbcfb8c` | 2026-10-21 | AW-6b review: resend sheet and build stay in the menu when a call or snooze takes the step; guidance never claims a call that didn't happen |
-| `ec245d5` | 2026-10-21 | AW-6b: inquiry page leads with the one next step; call card in a dialog; compact lead card |
-| `adf590b` | 2026-10-21 | Status board |
-| `914a1c5` | 2026-10-21 | AW-6a review: building steps from the ledger (send / updated / resend preview, go live); confirm before an in-place resend; stuck rule matches Today |
-| `b84a2db` | 2026-10-21 | AW-6a: Inquiries board — Talking, Setting up, Live, one next step per card |
-| `e941200` | 2026-10-21 | Code map and status board |
-| `39d69df` | 2026-10-21 | AW-5 review: a killed digest run can't lose the day; bounded model call; no double send; upsert new alerts |
-| `3bccfa0` | 2026-10-21 | AW-5: hourly admin checks — urgent alerts once each, and a morning digest |
-| `2228db8` | 2026-10-21 | AW-4 review: 'Paid through courses'; a booked discovery call isn't stuck; Resend preview manager+ |
-| `c78b7aa` | 2026-10-21 | AW-4: admin Today page — needs you now, platform health, money vs last month, onboarding |
-| `224db02` | 2026-10-21 | Status board and code map |
-| `4c61670` | 2026-10-21 | AW-3b: Ask in the admin search — read-only AI answers with links to admin pages |
-| `905572d` | 2026-10-21 | Regenerate code map |
-| `474f3f0` | 2026-10-21 | Status board |
-| `e66b258` | 2026-10-21 | AW-3a: admin rail grouped by job, search on top; search finds bookings, groups, conversations |
-| `fc9a048` | 2026-10-21 | Status board |
-| `5982380` | 2026-10-21 | AW-1c review: step-up gate and passkey-marker tests; replay guard reads a carried step |
-| `2807e2b` | 2026-10-21 | AW-1c: re-confirm risky owner actions; owner device list; passkey change emails |
-| `5fc7ad8` | 2026-10-21 | Regenerate code map |
-| `a6a13af` | 2026-10-21 | AW-1b: a passkey sign-in keeps the used-authenticator-step marker; AW-1c notes; status board |
-| `00a9007` | 2026-10-21 | AW-1b: owner passkeys — Face ID / Touch ID / security key at /cam, the authenticator app as backup, no email codes once a passkey exists |
-| `ccbfb06` | 2026-10-20 | AW-1a: owner signs in only at /cam (approved devices, revocable 4h sessions, sign-in alerts) (#161) |
-| `0671dab` | 2026-10-21 | Regenerate code map after main merge |
-| `4fda831` | 2026-10-21 | AW-1a: dummy hash at the real cost; status board |
-| `fc3a0fc` | 2026-10-21 | AW-1a: review fixes — the verify step never says whose email it is, /cam without the marketing header, fixed approval-link origin, even timing for unknown emails |
-| `eeea53c` | 2026-10-21 | AW-1a: owner signs in only at /cam — approved devices, revocable 4-hour sessions on their own cookie, an email on every sign-in; /admin never mentions the owner |
-| `315e3e3` | 2026-10-20 | W2-7 B2: sales tax on pro-shop items added to a round (#159) |
-| `2798d62` | 2026-10-21 | W2-7 B2: sweep keeps quotes with no expiry; a charge meeting another attempt's lock stops; status board |
-| `557be09` | 2026-10-21 | W2-7 B2: review fixes — tax quoted under the charge's own lock, stale/expired quotes never recorded, open rounds refreshed when tax is switched |
-| `063dc87` | 2026-10-21 | W2-7 B2: sales tax on pro-shop items added to a round, charged with the round and recorded once paid |
-| `507507a` | 2026-10-20 | W2-6 slice 3: per-round booking rules (walking, group size, how far ahead) (#158) |
-| `85be7e1` | 2026-10-21 | Regenerate code map and status board after main merge |
-| `248dc36` | 2026-10-21 | W2-6 slice 3: window-cap test, spec status, status board |
-| `d8a856f` | 2026-10-21 | W2-6 slice 3: review fixes — golfer pages read the time's own cart rule, shared input class, round window capped at the course's, preview uses the shared tee-time mapping |
-| `290c10f` | 2026-10-21 | W2-6 slice 3: per-round booking rules (walking, group size, how far ahead), enforced at booking |
-| `ddb40f0` | 2026-10-20 | W2-6 slice 2: schedule overlaps warn instead of block (#156) |
-| `bc1db3d` | 2026-10-21 | W2-6 slice 2: reviewer notes — engine comment, note text in full ink; status board |
-| `27ef910` | 2026-10-21 | W2-6 slice 2: schedule overlaps warn instead of block — only one tee time sold twice is refused |
-| `e96323e` | 2026-10-20 | W2-6 slice 1: one-save course setup (shape, nines, par, rounds) (#155) |
-| `77187a1` | 2026-10-20 | Status board |
-| `42ff2e4` | 2026-10-20 | W2-6: review fixes — schedules keep their holes, round renames shown, retired rounds cleared on every day |
-| `dea0574` | 2026-10-20 | W2-6: one-save course setup — shape, nines, par and rounds, retiring what the old shape had |
-| `39e62f4` | 2026-10-20 | W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) (#154) |
-| `773326d` | 2026-10-20 | W2-7 part B1: pro-shop sales tax through Stripe Tax (walk-up sales) |
-| `ad6524b` | 2026-10-19 | W2-7 part A: pro shop options, SKU, bulk/CSV/AI add, faster selling (#151) |
-| `bd86947` | 2026-10-19 | Sign-in page: full-screen photo with the sign-in card under the logo (#153) |
-| `fff11a1` | 2026-10-19 | Emails: one clean look for every email (EMAIL-2) (#152) |
-| `8287f54` | 2026-10-19 | Brand: the golfer short mark in email footers and receipts; Powered by GreenReserve in the dashboard bar (#150) |
-| `cb98de8` | 2026-10-19 | W2-4/5: price periods inside one schedule; Prices & fees reorganised (#149) |
-| `223121d` | 2026-10-19 | Walkthrough 2 quick wins: homepage free hero, Birdie in the corner, owner label, last tee time at the end time (#148) |
-| `95da45f` | 2026-10-19 | Member portal: show a resident their own spot at the resident rate, as booking charges (#146) |
-| `9910cf6` | 2026-10-19 | Member portal: show members exactly what booking charges (#145) |
-| `dbd4737` | 2026-10-19 | Status board: regenerate (#144) |
-| `428da80` | 2026-10-19 | Birdie: Ask Birdie in the top bar on desktop; the phone launcher says Ask (#143) |
-| `0419675` | 2026-10-19 | Contact: three paths, phone and inbox; the course's phone on Manage my booking (#142) |
-| `b14b998` | 2026-10-19 | Course groups: one golfer page and one resident list for courses run together (#141) |
-| `662f294` | 2026-10-19 | Members: import a list, and each member's last round (#140) |
-| `9aba8a1` | 2026-10-19 | Settings: Who pays what, one table of every kind of golfer and their price (#139) |
-| `a8c71b9` | 2026-10-19 | Tee sheet: the time's card — beside the sheet on a laptop, a full sheet on a phone (#138) |
-| `c17100d` | 2026-10-19 | Dashboard nav: every tab fits on every screen (#137) |
-| `668b8ce` | 2026-10-19 | Residents: staff keep a resident list; residents book at the resident rate (#136) |
-| `73245fc` | 2026-10-19 | Status board after Settings part 2 and the pro shop (#135) |
-| `cb884f2` | 2026-10-19 | Pro shop: catalog with stock, walk-up sales (cash or a pay link), sell page (#134) |
-| `cd9c3a1` | 2026-10-19 | Settings part 2: guided course layout, booking rules, facilities checklist, Birdie writes the description; golfers see all of it (#131) |
-| `1cf8419` | 2026-10-19 | Homepage hero: Learn more instead of Book a demo (#133) |
-| `a37365e` | 2026-10-19 | Email: log Resend's message id and accept time for every send (#132) |
-| `e226ed7` | 2026-10-19 | Members: a self-joined member put on a tier gets a pay link, and dues emails reach them (#130) |
-| `27e358a` | 2026-10-19 | Members: list first, one plain dues line per member, remind count matches who actually gets emailed (#128) |
-| `49d373a` | 2026-10-19 | Settings part 1: sections in setup order, a "Finish setting up" list, Staff and Your account split (#129) |
-| `fc1c99e` | 2026-10-19 | Schedule rework: your week at a glance, named price periods, closed-days calendar, every save shows what it changes (#127) |
-| `45ac49a` | 2026-10-19 | Add time: warn and ask once when a new time is within 5 minutes of another (#120) |
-| `33ae355` | 2026-10-19 | Birdie tucks into an edge tab and stays clear of buttons; Messages says when we reply (#126) |
-| `92cdf08` | 2026-10-19 | Payments and payouts: overview, payments by day, Stripe payouts table, cancellations history; policy lives in Settings (#124) |
-| `7af1de5` | 2026-10-19 | Golfers tick a box to agree to the Terms and Privacy Policy before booking or changing a booking (#123) |
-| `31b018f` | 2026-10-19 | 2FA page: says where the code went, new code by email or text (#119) |
-| `25f5082` | 2026-10-19 | Hotfix: regenerating a day no longer wipes its open tee times (#125) |
-| `8ef438a` | 2026-10-19 | Analytics rework (AN-3): one date button, golf-standard four, plain explanations, Ask Birdie; no tab-switch colour flash (#122) |
-| `9450ca4` | 2026-10-19 | Legal: Terms, Privacy, Operator Agreement v2026-11 and Brand License match the product (#121) |
-| `636b0ca` | 2026-10-18 | Homepage batch 2: no section lines, four feature tiles, Send us a note, phone frame, /for-courses without terms (#118) |
-| `556cf10` | 2026-10-18 | Tee sheet batch 2: no logo box, Weather and Message renamed and explained, course alert can email today's golfers (#117) |
-| `bb8b1cc` | 2026-10-18 | Operator login: photo panel beside the form, "Need help signing in?" (#116) |
-| `014eadb` | 2026-10-18 | Tee sheet batch 1: awaiting check-in, tidy bar, alerts + key up top, tinted squares (#115) |
-| `458b063` | 2026-10-18 | Homepage about section + 'Your AI assistant' on marketing pages (#114) |
-| `1203da1` | 2026-10-18 | Walk 1 fixes: no fee on cash, dues lock, link previews, plain confirmation email (#113) |
-| `a77263a` | 2026-10-18 | Homepage hero: 'The tee sheet your course deserves.' + Walk 1 decisions (#112) |
-| `8c863b9` | 2026-10-18 | Launch security: late-fee dodge, party-size fees, phone takeover, booking flood (#111) |
-| `8bc5a27` | 2026-10-17 | Homepage hero: links green above the ocean at dusk (#110) |
-| `293f1d7` | 2026-10-17 | Homepage hero: sun through the pines photo (#109) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (47 file(s))
 
+- `M  CLAUDE.md`
+- `M  HOMEPAGE_SPEC.md`
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
-- `M  src/app/dashboard/analytics/page.tsx`
-- `M  src/app/dashboard/events/page.tsx`
-- `M  src/app/dashboard/members/page.tsx`
-- `M  src/app/dashboard/messages/page.tsx`
-- `M  src/app/dashboard/money/page.tsx`
-- `M  src/app/dashboard/schedules/page.tsx`
-- `M  src/app/dashboard/settings/page.tsx`
-- `M  src/app/dashboard/shop/page.tsx`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  public/home/shots/analytics.png`
+- `A  public/home/shots/assistant.png`
+- `A  public/home/shots/booking-page.png`
+- `A  public/home/shots/pay.png`
+- `A  public/home/shots/tee-sheet.png`
+- `M  scripts/birdie-messages-test.ts`
+- `M  scripts/checkin-wording-test.ts`
+- `M  scripts/design-guard.baseline.json`
+- `A  scripts/operator-home-db-test.ts`
+- `A  scripts/operator-search-db-test.ts`
+- `A  scripts/screenshots/capture.ts`
+- `A  scripts/screenshots/seed.ts`
+- `M  src/app/HomeContent.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -185,9 +54,7 @@ the queue header's `git checkout -- .` cleanup until that run has committed, or 
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-| item | shipped | age | commit | source |
-|---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 92d | `b88c8bf` | `RUN_QUEUE.md:2357` |
+Nothing awaiting review.
 
 ## Not started — the actual queue
 
@@ -195,7 +62,8 @@ This is the distinction a raw checkbox count gets wrong.
 2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
 3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
 4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+5. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2357`
+6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
@@ -255,59 +123,59 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 5d |
+| `CLAUDE.md` | 1 | 2026-10-22 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 3d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-11 | 11d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 15d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 15d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `ARCHITECTURE.md` | 0 | 2026-10-19 | 3d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-19 | 3d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-19 | 3d |
 
 ## Recent commits
 
-- `946d4a5` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
-- `a578929` 2026-10-23 — Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line
-- `966741b` 2026-10-22 — Course dashboard search: find a golfer, booking or member from the menu (#195)
-- `dd3cfd1` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
-- `e0bc004` 2026-10-22 — Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)
+- `4b621c0` 2026-10-22 — Regenerate status board
 - `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
 - `3754fcb` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
 - `d0a4769` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
 - `04301ce` 2026-10-22 — W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses
 - `2734cbd` 2026-10-22 — W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later
 - `6f40852` 2026-10-22 — Course dashboard: white left menu, white pages, Inter (DASH-C step 1) (#189)
+- `67e5ac4` 2026-10-22 — queue/spec update: old addresses replaced in specs, legal queue and design prototypes
+- `9935d2e` 2026-10-22 — Regenerate status board
 - `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
+- `ad8c721` 2026-10-22 — Regenerate status board
+- `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
 
 ---
 
-**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 8 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 0 awaiting review · 1 in flight · 6 not started · 8 revise pages open · 17 ideas · 7 parked.

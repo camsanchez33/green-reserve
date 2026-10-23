@@ -6,6 +6,7 @@ import { serviceFeeLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { BILLING_EMAIL } from '@/lib/contact';
 
 type ReceiptData = {
   bookingId: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
@@ -236,7 +237,7 @@ function ReceiptPageInner() {
             <div className="border-t border-line px-6 py-4 flex items-center justify-center gap-2.5 text-xs text-ink-muted">
               {/* eslint-disable-next-line @next/next/no-img-element -- prints with the receipt; next/image adds nothing for a 28px static mark */}
               <img src="/brand/mark.svg" alt="" width={28} height={28} loading="lazy" className="w-7 h-7 rounded-md shrink-0" />
-              <span>Booked through GreenReserve · greenreserve.app · thegreenreserve@outlook.com</span>
+              <span>Booked through GreenReserve · greenreserve.app · {BILLING_EMAIL}</span>
             </div>
           </div>
 

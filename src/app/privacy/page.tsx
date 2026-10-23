@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { previewFor } from '@/lib/seo';
+import { SUPPORT_EMAIL } from '@/lib/contact';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -146,7 +147,7 @@ export default function PrivacyPolicyPage() {
                 </h2>
                 <p>
                   You can ask for a copy of the data we hold on you, or ask us to delete your account and personal information, by
-                  emailing <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>.
+                  emailing <a href={`mailto:${SUPPORT_EMAIL}`} className="text-pine font-medium hover:underline">{SUPPORT_EMAIL}</a>.
                   We process requests within a reasonable time, except for records we must keep for accounting or legal purposes.
                 </p>
               </section>
@@ -233,7 +234,7 @@ export default function PrivacyPolicyPage() {
                 <h2 className="font-semibold text-base text-ink mb-2">Contact</h2>
                 <p>
                   Questions about this policy? Reach us at{' '}
-                  <a href="mailto:thegreenreserve@outlook.com" className="text-pine font-medium hover:underline">thegreenreserve@outlook.com</a>.
+                  <a href={`mailto:${SUPPORT_EMAIL}`} className="text-pine font-medium hover:underline">{SUPPORT_EMAIL}</a>.
                 </p>
               </section>
             </div>
