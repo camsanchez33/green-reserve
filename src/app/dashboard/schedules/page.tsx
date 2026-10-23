@@ -372,9 +372,9 @@ export default function SchedulesPage() {
       <OperatorSidebar active="schedule" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the schedule" view="schedule.view" edit="schedule.edit" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <div className="px-4 sm:px-10 py-7 space-y-6">
           <div className="min-w-0 max-w-[46em]">
-            <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Schedule</h1>
+            <h1 className="font-serif text-[32px] leading-none text-ink">Schedule</h1>
             <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">When you&apos;re open, what golfers can book, and what it costs. Saving updates your tee sheet straight away, and times that already have bookings never change.</p>
           </div>
 
@@ -558,7 +558,7 @@ export default function SchedulesPage() {
       {/* Unsaved changes: one save for the whole page, with a preview first. */}
       {dirty && canEdit && (
         <div className="fixed bottom-16 md:bottom-0 inset-x-0 md:left-[var(--op-rail-w)] z-40 bg-white border-t border-line">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+          <div className="px-4 sm:px-10 py-3 flex items-center justify-between gap-3">
             <span className="text-[13.5px] text-ink">You have changes that aren&apos;t saved yet.</span>
             <div className="flex items-center gap-2">
               <button type="button" onClick={() => setPlan(JSON.parse(saved))} className="px-3 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Undo changes</button>

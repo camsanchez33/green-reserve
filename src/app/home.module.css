@@ -212,7 +212,30 @@
 .seeCta { margin-top: 72px; display: flex; flex-direction: column; align-items: center; gap: 14px; scroll-margin-top: 24px; }
 .seeCta span { font-size: 15px; }
 
+/* WHAT IT DOES (Cam 2026-10-23) — three features, each beside a real
+   screenshot of the product (public/home/shots, taken by
+   scripts/screenshots/capture.ts) in the demo's laptop or phone frame. */
+.features { padding-block: 24px 112px; }
+.feat { display: grid; grid-template-columns: 5fr 7fr; gap: 72px; align-items: center; }
+.feat + .feat { margin-top: 112px; }
+.feat:nth-child(even) .featMedia { order: -1; }
+.feat h2 { font-size: clamp(28px, 2.8vw, 40px); line-height: 1.06; color: var(--forest); }
+.feat p { margin: 16px 0 0; font-size: 18px; line-height: 1.6; max-width: 30em; }
+.featMedia { min-width: 0; }
+
+/* ProductShot.tsx: the demo's frames around a screenshot, on any page (the
+   vars live on .root, so the frame carries its own). */
+.shot { --lift: 0 1px 2px rgba(20,24,20,.06), 0 24px 48px -24px rgba(20,24,20,.35); --paper: #FFFFFF; }
+.shot img { display: block; width: 100%; height: auto; }
+.shot .laptopScreen > img { border-radius: 4px; }
+.shotPhone { display: flex; justify-content: center; }
+.shotPhone .phone { width: 300px; }
+
 @media (max-width: 1000px) {
+  .feat { grid-template-columns: 1fr; gap: 36px; }
+  .feat:nth-child(even) .featMedia { order: 0; }
+  .feat + .feat { margin-top: 80px; }
+  .features { padding-block: 8px 72px; }
   .aboutGrid { grid-template-columns: 1fr; gap: 36px; }
   .about { padding-block: 72px; }
   .see { padding-block: 72px; }

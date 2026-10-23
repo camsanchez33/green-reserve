@@ -1,15 +1,43 @@
 {
-  "generatedAt": "2026-10-22T22:44:22.796Z",
+  "generatedAt": "2026-10-23T03:23:04.733Z",
   "repo": {
-    "head": "56546e9",
+    "head": "4b621c0",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 47,
+    "dirty": [
+      "M  CLAUDE.md",
+      "M  HOMEPAGE_SPEC.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "A  public/home/shots/analytics.png",
+      "A  public/home/shots/assistant.png",
+      "A  public/home/shots/booking-page.png",
+      "A  public/home/shots/pay.png",
+      "A  public/home/shots/tee-sheet.png",
+      "M  scripts/birdie-messages-test.ts",
+      "M  scripts/checkin-wording-test.ts",
+      "M  scripts/design-guard.baseline.json",
+      "A  scripts/operator-home-db-test.ts",
+      "A  scripts/operator-search-db-test.ts",
+      "A  scripts/screenshots/capture.ts",
+      "A  scripts/screenshots/seed.ts",
+      "M  src/app/HomeContent.tsx"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "4b621c0",
+        "date": "2026-10-22T22:44:23+00:00",
+        "subject": "Regenerate status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "04301ce",
         "date": "2026-10-22T22:10:32+00:00",
@@ -412,6 +440,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4b621c0",
+      "date": "2026-10-22",
+      "subject": "Regenerate status board"
+    },
+    {
       "h": "b4ba083",
       "date": "2026-10-22",
       "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)"
@@ -465,11 +498,6 @@
       "h": "fc5c6aa",
       "date": "2026-10-22",
       "subject": "W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)"
-    },
-    {
-      "h": "da32563",
-      "date": "2026-10-22",
-      "subject": "Event pay-link email: say a reply reaches the course"
     }
   ]
 }

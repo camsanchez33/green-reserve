@@ -75,6 +75,8 @@ export default function EventSignup({ live, url, settings, priceSet, spotsLeft, 
               ? <>Golfers sign up at <a href={url} target="_blank" rel="noreferrer" className="underline underline-offset-2 break-all">{url}</a>. </>
               : 'A page where golfers sign themselves up, in groups of up to four. '}
             {settings.signupPay === 'now' ? 'They pay when they sign up; their spots are held 30 minutes while they do.' : 'They sign up now and pay later — send pay links or take it at the course.'}
+            {/* Cam 2026-10-23: a limit is the course's choice; say where it is set and what it does. */}
+            {spotsLeft == null && ' There’s no player limit, so sign-ups never fill up. To cap them and use a waiting list, set Players expected under Change details.'}
             {spotsLeft != null && settings.signupOpen && (spotsLeft === 0 ? ' It’s full — new sign-ups go on the waiting list.' : ` ${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left; after that, sign-ups go on a waiting list.`)}
           </p>
           {settings.signupQuestions.length > 0 && <p className="text-[13px] text-ink-soft mt-1">Also asks: {settings.signupQuestions.map(q => q.label + (q.required ? '' : ' (optional)')).join(', ')}.</p>}

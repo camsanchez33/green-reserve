@@ -4,18 +4,45 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-22 22:44 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `56546e9` · working tree clean
+Generated 2026-10-23 03:23 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `4b621c0` · working tree **47 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 2 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 3 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `4b621c0` | 2026-10-22 | Regenerate status board |
 | `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
 | `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (47 file(s))
+
+- `M  CLAUDE.md`
+- `M  HOMEPAGE_SPEC.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `A  public/home/shots/analytics.png`
+- `A  public/home/shots/assistant.png`
+- `A  public/home/shots/booking-page.png`
+- `A  public/home/shots/pay.png`
+- `A  public/home/shots/tee-sheet.png`
+- `M  scripts/birdie-messages-test.ts`
+- `M  scripts/checkin-wording-test.ts`
+- `M  scripts/design-guard.baseline.json`
+- `A  scripts/operator-home-db-test.ts`
+- `A  scripts/operator-search-db-test.ts`
+- `A  scripts/screenshots/capture.ts`
+- `A  scripts/screenshots/seed.ts`
+- `M  src/app/HomeContent.tsx`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -136,6 +163,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `4b621c0` 2026-10-22 — Regenerate status board
 - `b4ba083` 2026-10-22 — TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)
 - `3754fcb` 2026-10-22 — TEST-1: launch wipe of test data, and resettable test courses (#190)
 - `d0a4769` 2026-10-22 — CI: the schema check replays migrations on its own Postgres (#192)
@@ -147,7 +175,6 @@ Nothing awaiting review.
 - `91df6b9` 2026-10-22 — W2-9c: a player removed during a bulk send is reported as removed, not as a link that didn't send
 - `ad8c721` 2026-10-22 — Regenerate status board
 - `fc5c6aa` 2026-10-22 — W2-9c review fixes: a player can't be paid twice (cash at the counter while their card goes through)
-- `da32563` 2026-10-22 — Event pay-link email: say a reply reaches the course
 
 ---
 

@@ -2,7 +2,7 @@
 import { CARD } from '@/components/ui/Card';
 import Link from 'next/link';
 import { MonthPicker } from '@/components/ui/MonthPicker';
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
 import { todayIn, clockIn, DEFAULT_TZ } from '@/lib/course-time';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -92,7 +92,10 @@ function DashboardPageInner() {
   // SD-3: the course's timezone drives "today" and "now" on this page.
   const [courseTz, setCourseTz] = useState(DEFAULT_TZ);
   const today = () => todayIn(courseTz);
-  const [selectedDate, setSelectedDate] = useState(todayFallback());
+  // DASH-C search: a ?date= link opens that day, and the course-clock re-seed below leaves it alone.
+  const urlDate = (() => { const d = searchParams.get('date'); return d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null; })();
+  const urlDateRef = useRef(urlDate);
+  const [selectedDate, setSelectedDate] = useState(urlDate ?? todayFallback());
   const [teeTimes, setTeeTimes]   = useState<TeeTime[]>([]);
   const [loading, setLoading]     = useState(true);
   const [courseName, setCourseName] = useState('');
@@ -386,7 +389,7 @@ function DashboardPageInner() {
       if (c?.timezone && c.timezone !== DEFAULT_TZ) {
         // SD-3: re-seed the selected day on the course's clock (once, on load).
         setCourseTz(c.timezone);
-        setSelectedDate(prev => prev === todayFallback() ? todayIn(c.timezone) : prev);
+        if (!urlDateRef.current) setSelectedDate(prev => prev === todayFallback() ? todayIn(c.timezone) : prev);
       }
       setCourseArchived(!!c?.archivedAt);
       setCourseDraft(!c?.active || c?.liveStatus !== 'live');
@@ -509,6 +512,13 @@ function DashboardPageInner() {
 
   useEffect(() => { loadTimes(selectedDate); }, [selectedDate, loadTimes]);
   useEffect(() => { if (searchParams.get('tab') === 'analytics') router.replace('/dashboard/analytics'); }, [searchParams, router]);
+  // DASH-C search: a result opens the sheet on its day, filtered to the golfer.
+  useEffect(() => {
+    const d = searchParams.get('date');
+    if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) { urlDateRef.current = d; setSelectedDate(d); }
+    const q = searchParams.get('q');
+    if (q) setSearch(q.slice(0, 80));
+  }, [searchParams]);
 
   async function saveConditions() {
     setSavingConditions(true);

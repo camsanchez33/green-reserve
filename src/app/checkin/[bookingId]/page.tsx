@@ -284,7 +284,8 @@ function CheckInPageInner() {
         <div className="flex justify-between text-ink-soft"><span>Green fee</span><span>${(info.greenFeeTotal / 100).toFixed(2)}</span></div>
         {cartCents > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee</span><span>${(cartCents / 100).toFixed(2)}</span></div>}
         {info.rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls</span><span>${(info.rangeBallsTotal / 100).toFixed(2)}</span></div>}
-        <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee ($1.50 × {info.players})</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>
+        {/* Phone and walk-in bookings carry no booking fee: no "$1.50 × 4 … $0.00" line. */}
+        {info.accessFeeTotal > 0 && <div className="flex justify-between text-ink-soft"><span>GreenReserve service fee (${(info.accessFeeTotal / info.players / 100).toFixed(2)} × {info.players})</span><span>${(info.accessFeeTotal / 100).toFixed(2)}</span></div>}
         {(info.shopLines ?? []).map((l, i) => (
           <div key={i} className="flex justify-between text-ink-soft"><span>{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span><span>${(l.unitPriceCents * l.quantity / 100).toFixed(2)}</span></div>
         ))}

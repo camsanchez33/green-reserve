@@ -105,7 +105,7 @@ function Line({ label, value, sub, strong }: { label: string; value: string; sub
 }
 
 /** "Ask Birdie" — shown only once Birdie is on, so it never does nothing. */
-function Ask({ q, children = 'Ask Birdie about this' }: { q: string; children?: React.ReactNode }) {
+function Ask({ q, children = 'Ask the assistant about this' }: { q: string; children?: React.ReactNode }) {
   const on = useBirdieReady();
   if (!on) return null;
   return <button onClick={() => askBirdie(q)} className="shrink-0 text-[12.5px] font-medium text-pine hover:underline underline-offset-4">{children}</button>;
@@ -622,10 +622,10 @@ function AnalyticsInner() {
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active="analytics" />
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div className="px-4 sm:px-10 py-7">
           <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
             <div className="min-w-0 max-w-[46em]">
-              <h1 className="text-[30px] font-serif font-semibold leading-none text-ink">Analytics</h1>
+              <h1 className="font-serif text-[32px] leading-none text-ink">Analytics</h1>
               <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">{d ? summary(d) : 'Loading…'}</p>
             </div>
             {range && today && <DateRangeButton value={range} today={today} onChange={r => { setRange(r); load(r); }} />}
@@ -658,7 +658,7 @@ function AnalyticsInner() {
               <Card className="p-5">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-3">
                   <h2 className="text-[17px] font-semibold text-ink">What to look at</h2>
-                  {birdieOn && <span className="text-[12.5px] text-ink-muted">Birdie, your assistant, can explain any of these</span>}
+                  {birdieOn && <span className="text-[12.5px] text-ink-muted">Your assistant can explain any of these</span>}
                 </div>
                 <ul className="divide-y divide-line-soft">
                   {notes.map((n, i) => (
@@ -668,7 +668,7 @@ function AnalyticsInner() {
                         <p className="text-[14px] text-ink leading-snug">{n.text}</p>
                         {n.tryThis && <p className="text-[13px] text-ink-soft mt-1 leading-snug">{n.tryThis}</p>}
                       </div>
-                      <Ask q={n.ask}>Ask Birdie</Ask>
+                      <Ask q={n.ask}>Ask the assistant</Ask>
                     </li>
                   ))}
                 </ul>

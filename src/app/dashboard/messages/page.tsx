@@ -90,10 +90,10 @@ function MessagesContent() {
       <OperatorSidebar active="messages"/>
 
       <main className="flex-1 flex flex-col md:overflow-hidden pb-24 md:pb-0">
-        <div className="px-6 py-4 border-b border-line shrink-0 bg-white">
+        <div className="px-4 sm:px-10 py-5 border-b border-line shrink-0 bg-white">
           {/* U-O (§1b): serif title + one sentence of this thread's numbers. */}
           <div className="flex items-center gap-2">
-            <h1 className="text-[30px] font-serif font-semibold tracking-tight text-ink leading-none">Messages</h1>
+            <h1 className="font-serif text-[32px] leading-none text-ink">Messages</h1>
           </div>
           {/* Cam 2026-10-19: say when to expect a reply, and offer email. */}
           <p className="text-[14px] text-ink-soft mt-2.5 max-w-[46em] leading-snug">
@@ -102,7 +102,7 @@ function MessagesContent() {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-10 py-5 space-y-4">
           {annError && <LoadError message={`Couldn't load announcements — ${annError}`} onRetry={loadAnnouncements} />}
           {announcements.length > 0 && (
             <Card id="announcements">

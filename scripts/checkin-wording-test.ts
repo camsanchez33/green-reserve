@@ -23,6 +23,9 @@ check('the route returns paidOffline', /paidOffline: booking\.paidOffline/.test(
 const page = readFileSync('src/app/checkin/[bookingId]/page.tsx', 'utf8');
 check('the page has a cancelled state', /info\.status === 'cancelled'/.test(page));
 check('a cash round is not "charged to your card"', /paidAtCounter/.test(page));
+// Phone and walk-in bookings carry no booking fee: no "$1.50 × 4 … $0.00" line (Cam 2026-10-23, seen in a screenshot).
+check('the booking-fee line shows only when there is a fee', /info\.accessFeeTotal > 0 && <div[^>]*><span>GreenReserve service fee/.test(page));
+check('the fee line is not hard-coded at $1.50', !/service fee \(\$1\.50 ×/.test(page));
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

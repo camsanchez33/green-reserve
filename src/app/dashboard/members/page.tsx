@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Check, X, ArrowLeft, RefreshCw } from 'lucide-react';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
@@ -73,7 +74,7 @@ type View = 'list' | 'wizard' | 'complete';
 const WIZARD_STEPS = [{ n: 1, label: 'Name & Color' }, { n: 2, label: 'Pricing' }, { n: 3, label: 'Benefits & Fees' }];
 
 /* ─── Main ────────────────────────────────────────────────────────────────── */
-export default function MembersPage() {
+function MembersPageInner() {
   const pageAccess = useDashboardAccess();
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -119,6 +120,9 @@ export default function MembersPage() {
   const [filterTier, setFilterTier] = useState('all');
   const [filterStatus, setFilterStatus] = useState('active');
   const [search, setSearch] = useState('');
+  // DASH-C search: a member result opens this list filtered to them.
+  const searchParams = useSearchParams();
+  useEffect(() => { const q = searchParams.get('q'); if (q) setSearch(q.slice(0, 80)); }, [searchParams]);
   const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const canEdit = pageAccess.can('members.edit');
@@ -244,7 +248,7 @@ export default function MembersPage() {
           <button onClick={closeWizard} className="flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4"/>Back to Member Management
           </button>
-          <h1 className="text-[30px] font-serif leading-none text-ink mb-2">
+          <h1 className="font-serif text-[32px] leading-none text-ink mb-2">
             {editingTier ? 'Edit membership tier' : 'New membership tier'}
           </h1>
           <p className="text-sm text-ink-soft mb-8">
@@ -426,7 +430,7 @@ export default function MembersPage() {
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" view="members.view" edit="members.edit" />
         <div className="max-w-lg mx-auto px-6 py-16 text-center">
-          <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Tier created</h1>
+          <h1 className="font-serif text-[32px] leading-none text-ink mb-3">Tier created</h1>
           <p className="text-sm text-ink-soft mb-8">
             <span className="font-medium" style={{ color: createdTier.color }}>{createdTier.name}</span> is live. Anyone you add to it gets member rates automatically at checkout.
           </p>
@@ -492,10 +496,10 @@ export default function MembersPage() {
       <OperatorSidebar active="members"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         <StaffNotice what="the members list" view="members.view" edit="members.edit" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <div className="px-4 sm:px-10 py-7 space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 max-w-[46em]">
-              <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Members</h1>
+              <h1 className="font-serif text-[32px] leading-none text-ink">Members</h1>
               <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">
                 {members.length === 0 ? 'Your members, what they pay and when they renew. Members book at their own rates and further ahead.'
                   : <>{active.length} active · {unpaid} with dues unpaid · {renewing} renewing in the next 30 days</>}
@@ -681,4 +685,9 @@ export default function MembersPage() {
       </main>
     </div>
   );
+}
+
+// useSearchParams needs a Suspense boundary (DASH-C search opens Members at ?q=).
+export default function MembersPage() {
+  return <Suspense fallback={<div className="min-h-screen bg-white" />}><MembersPageInner /></Suspense>;
 }

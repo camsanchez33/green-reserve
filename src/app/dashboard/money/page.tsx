@@ -16,8 +16,12 @@ import { CancellationsPanel } from '@/components/dashboard/money/CancellationsPa
 import { PayoutsPanel } from '@/components/dashboard/money/PayoutsPanel';
 import type { MoneyBooking, MoneyCourse } from '@/components/dashboard/money/types';
 import type { PayoutsData } from '@/components/dashboard/money/PayoutsTable';
+import { StatusDot } from '@/components/ui/StatusDot';
+import { formatTeeTime, formatTeeDate } from '@/lib/format';
+import type { DeclinedCard } from '@/lib/operator-home';
 
-type Overview = { week: { from: string; to: string }; paidCents: number; notPaidCents: number; notPaidGroups: number; stripeConnected: boolean };
+type Overview = { week: { from: string; to: string }; paidCents: number; notPaidCents: number; notPaidGroups: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
+const usd2 = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const fmtArrival = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 
@@ -39,6 +43,7 @@ function MoneyPageInner() {
   const dateFilter = searchParams.get('date') || '';
   const stripeParam = searchParams.get('stripe');
   const tabParam = searchParams.get('tab');
+  const showParam = searchParams.get('show');
 
   const [bookings, setBookings] = useState<MoneyBooking[]>([]);
   const [dated, setDated] = useState<MoneyBooking[] | null>(null);
@@ -58,9 +63,10 @@ function MoneyPageInner() {
   const requested = (tabParam && TABS.some(t => t.key === tabParam) ? tabParam : (stripeParam ? 'payouts' : 'payments')) as TabKey;
   const active: TabKey = tabs.some(t => t.key === requested) ? requested : (tabs[0]?.key ?? 'cancellations');
 
-  const setTab = (key: TabKey) => {
+  const setTab = (key: TabKey, show?: 'unpaid') => {
     const q = new URLSearchParams(searchParams.toString());
     q.set('tab', key);
+    if (show) q.set('show', show); else q.delete('show');
     router.replace(`/dashboard/money?${q.toString()}`, { scroll: false });
   };
 
@@ -132,6 +138,20 @@ function MoneyPageInner() {
   useEffect(() => { if (access.loaded) loadOverview(); }, [access.loaded, loadOverview]);
   const refresh = () => { loadBookings(); loadCourse(); loadOverview(); };
 
+  // DASH-C Needs you: (re)send a declined group their pay link, the tee sheet's
+  // own action and permission. One row at a time; each says what happened.
+  const canSendLink = access.can('sheet.checkin');
+  const [linkBusy, setLinkBusy] = useState<string | null>(null);
+  const [linkResult, setLinkResult] = useState<Record<string, { ok: boolean; text: string }>>({});
+  async function sendPayLink(d: DeclinedCard, via: 'sms' | 'email') {
+    setLinkBusy(d.id);
+    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: d.id, action: 'send_pay_link', via }) });
+    setLinkBusy(null);
+    setLinkResult(m => ({ ...m, [d.id]: r.ok
+      ? { ok: true, text: `${via === 'sms' ? 'Texted' : 'Emailed'} to ${r.data.sentTo}. This clears once they pay.` }
+      : { ok: false, text: r.error } }));
+  }
+
   async function openStripe() {
     setOpeningStripe(true); setStripeError('');
     const r = await dfetch<{ url: string }>('/api/operator/stripe/dashboard-link', { method: 'POST' });
@@ -147,10 +167,10 @@ function MoneyPageInner() {
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active="money"/>
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <div className="px-4 sm:px-10 py-7">
           <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div className="min-w-0">
-              <h1 className="text-[30px] font-serif font-semibold leading-none tracking-tight text-ink">Payments and payouts</h1>
+              <h1 className="font-serif text-[32px] leading-none text-ink">Payments and payouts</h1>
               <p className="text-[14px] text-ink-soft mt-2.5">What golfers have paid your course, and when Stripe sends it to your bank.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -172,7 +192,8 @@ function MoneyPageInner() {
           {(overview || nextPayout !== undefined || (seesPayouts && !payoutError && courseLoaded && !course.stripeAccountActive)) && (
             <Card className="grid grid-cols-1 sm:grid-cols-3 gap-px !bg-line overflow-hidden mb-6">
               {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Paid in the last 7 days</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.paidCents)}</div><div className="text-[12.5px] text-ink-muted">for rounds played</div></div>}
-              {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Not paid yet</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.notPaidCents)}</div><div className="text-[12.5px] text-ink-muted">{overview.notPaidGroups === 0 ? 'every group in the last 7 days has paid' : `${overview.notPaidGroups} group${overview.notPaidGroups === 1 ? '' : 's'} in the last 7 days, no-shows included`}</div></div>}
+              {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Not paid yet</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.notPaidCents)}</div><div className="text-[12.5px] text-ink-muted">{overview.notPaidGroups === 0 ? 'every group in the last 7 days has paid' : `${overview.notPaidGroups} group${overview.notPaidGroups === 1 ? '' : 's'} in the last 7 days, no-shows included`}</div>
+                {overview.notPaidGroups > 0 && tabs.some(t => t.key === 'payments') && <button onClick={() => setTab('payments', 'unpaid')} className="mt-1 text-[12.5px] font-medium text-pine hover:underline">See them</button>}</div>}
               {seesPayouts && !payoutError && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Next payout</div>
                 {nextPayout ? <><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">lands in your bank {fmtArrival(nextPayout.arrivalDate)}</div></>
                   : courseLoaded && !course.stripeAccountActive ? <div className="text-[13.5px] text-ink-soft mt-1.5">Connect Stripe to get paid (Payouts tab).</div>
@@ -180,6 +201,42 @@ function MoneyPageInner() {
                   : <div className="text-[13.5px] text-ink-soft mt-1.5">Checking Stripe…</div>}
               </div>}
             </Card>
+          )}
+
+          {overview && overview.declinedTotal > 0 && (
+            <section className="mb-6" aria-labelledby="money-needs">
+              <h2 id="money-needs" className="text-[15px] font-semibold text-ink mb-2">Needs you</h2>
+              <Card>
+                <ul className="divide-y divide-line-soft">
+                  {overview.declined.map(d => {
+                    const res = linkResult[d.id];
+                    return (
+                      <li key={d.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 text-[13.5px]">
+                        <StatusDot status="bad" label="" />
+                        <div className="flex-1 min-w-[12rem]">
+                          <div className="text-ink">Card declined — {d.name}</div>
+                          <div className="text-[12.5px] text-ink-muted tabular-nums">{formatTeeDate(d.date)} {formatTeeTime(d.time)}{d.amountCents !== null ? ` · ${usd2(d.amountCents)}` : ''}</div>
+                          {res && <div role={res.ok ? 'status' : 'alert'} className={'text-[12.5px] mt-0.5 ' + (res.ok ? 'text-ok' : 'text-bad')}>{res.text}</div>}
+                        </div>
+                        {canSendLink && (d.canText || d.canEmail) ? (
+                          <div className="flex gap-2 shrink-0">
+                            {d.canText && <button onClick={() => sendPayLink(d, 'sms')} disabled={linkBusy !== null}
+                              className="text-[13px] font-medium text-ink px-3 py-1.5 rounded-md bg-white border border-line hover:border-line-strong disabled:opacity-50">{linkBusy === d.id ? 'Sending…' : 'Text pay link'}</button>}
+                            {d.canEmail && <button onClick={() => sendPayLink(d, 'email')} disabled={linkBusy !== null}
+                              className="text-[13px] font-medium text-ink px-3 py-1.5 rounded-md bg-white border border-line hover:border-line-strong disabled:opacity-50">{linkBusy === d.id ? 'Sending…' : 'Email pay link'}</button>}
+                          </div>
+                        ) : (
+                          <span className="text-[12.5px] text-ink-muted shrink-0">{canSendLink ? 'No phone or email on file — take payment at the counter' : 'Take payment on the tee sheet'}</span>
+                        )}
+                      </li>
+                    );
+                  })}
+                  {overview.declinedTotal > overview.declined.length && (
+                    <li className="px-4 py-3 text-[13px] text-ink-soft">and {overview.declinedTotal - overview.declined.length} more declined card{overview.declinedTotal - overview.declined.length === 1 ? '' : 's'}</li>
+                  )}
+                </ul>
+              </Card>
+            </section>
           )}
 
           <div className="flex gap-6 border-b border-line mb-5" role="tablist">
@@ -209,7 +266,7 @@ function MoneyPageInner() {
           {!access.loaded || tabs.length === 0 ? null : loading ? (
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
           ) : active === 'payments' ? (
-            <PaymentsPanel bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
+            <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
           ) : active === 'cancellations' ? (
             <CancellationsPanel bookings={bookings} course={course}/>
           ) : (

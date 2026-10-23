@@ -18,7 +18,7 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
   async function confirm() {
     // Belt and braces: the server only builds allow-listed calls, and the
     // widget re-checks before it sends anything.
-    if (!isProposalCard(card)) { setState({ kind: 'error', message: 'This draft is not one Birdie is allowed to apply.' }); return; }
+    if (!isProposalCard(card)) { setState({ kind: 'error', message: 'This draft is not one the assistant is allowed to apply.' }); return; }
     setState({ kind: 'applying' });
     let ok = false;
     let message = '';
