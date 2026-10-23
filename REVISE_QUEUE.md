@@ -553,7 +553,7 @@ in flight at a time.
 
 - [ ] A-07 /admin/golfers — support lookup
 - [ ] A-08 /admin/messages — threads (Cam 2026-07-23: functionally fine, "just needs to look a little better" — visual notes go to the AESTHETIC PASS; only structural findings would reopen this)
-- [ ] A-09 /admin/activity — ledger + filters
+- [x] A-09 /admin/activity — ledger + filters — RETIRED (AW-12, Cam 2026-10-23: the page is gone, /admin/activity redirects to Audit)
 - [ ] A-10 /admin/employees — roles, provisioning
 - [ ] A-11 /admin/broadcasts — compose, preview, history
 - [ ] A-12 /admin/create — manual build wizard (in-person tool)

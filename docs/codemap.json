@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 541,
-    "routes": 260,
+    "files": 540,
+    "routes": 259,
     "libs": 177,
     "models": 55,
     "orphans": 10,
@@ -53,12 +53,12 @@
     },
     {
       "path": "src/app/admin/activity/page.tsx",
-      "lines": 211,
+      "lines": 9,
       "purpose": "",
       "brain": [],
       "exports": [
         {
-          "name": "default (ActivityPage)",
+          "name": "default (ActivityRetired)",
           "kind": "component"
         }
       ],
@@ -68,16 +68,7 @@
       "auth": "admin",
       "guard": "client-side",
       "imports": [
-        "@/components/admin/AdminSidebar",
-        "@/components/ui/Card",
-        "@/components/ui/ErrorState",
-        "@/components/ui/Eyebrow",
-        "@/components/ui/StatusDot",
-        "@/components/ui/field",
-        "@/lib/admin-fetch",
-        "@/lib/format",
-        "next/navigation",
-        "react"
+        "next/navigation"
       ],
       "usedBy": []
     },
@@ -1223,33 +1214,6 @@
         "lucide-react",
         "next/navigation",
         "react"
-      ],
-      "usedBy": []
-    },
-    {
-      "path": "src/app/api/admin/activity/route.ts",
-      "lines": 149,
-      "purpose": "",
-      "brain": [],
-      "exports": [
-        {
-          "name": "GET",
-          "kind": "route"
-        }
-      ],
-      "route": "/api/admin/activity",
-      "kind": "api",
-      "methods": [
-        "GET"
-      ],
-      "auth": "admin",
-      "guard": "file",
-      "imports": [
-        "@/lib/admin-session",
-        "@/lib/money",
-        "@/lib/prisma",
-        "@/lib/real-courses",
-        "next/server"
       ],
       "usedBy": []
     },
@@ -2822,7 +2786,7 @@
     },
     {
       "path": "src/app/api/admin/search/route.ts",
-      "lines": 235,
+      "lines": 234,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9160,7 +9124,6 @@
         "react"
       ],
       "usedBy": [
-        "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
@@ -10744,7 +10707,6 @@
         "react"
       ],
       "usedBy": [
-        "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
         "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
@@ -10832,7 +10794,6 @@
         "next/link"
       ],
       "usedBy": [
-        "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/page.tsx",
@@ -10868,7 +10829,6 @@
         "react"
       ],
       "usedBy": [
-        "src/app/admin/activity/page.tsx",
         "src/app/admin/courses/[id]/_parts/CourseDialogs.tsx",
         "src/app/admin/courses/[id]/_parts/OperateTab.tsx",
         "src/app/admin/courses/[id]/_parts/SetupTab.tsx",
@@ -11026,7 +10986,6 @@
         "react"
       ],
       "usedBy": [
-        "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/ContactTab.tsx",
@@ -11113,7 +11072,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
@@ -11793,7 +11751,6 @@
         "./step-up-client"
       ],
       "usedBy": [
-        "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/audit/page.tsx",
         "src/app/admin/company-documents/page.tsx",
@@ -12070,7 +12027,6 @@
       ],
       "usedBy": [
         "src/app/admin/layout.tsx",
-        "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/agreement-versions/route.ts",
         "src/app/api/admin/archive-course/route.ts",
         "src/app/api/admin/ask/route.ts",
@@ -16434,7 +16390,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/admin/activity/page.tsx",
         "src/app/admin/announcements/page.tsx",
         "src/app/admin/company-documents/page.tsx",
         "src/app/admin/courses/[id]/_parts/BookingsTab.tsx",
@@ -17527,7 +17482,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
@@ -18229,7 +18183,6 @@
         "@prisma/client"
       ],
       "usedBy": [
-        "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/agreement-versions/route.ts",
         "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/backfill-orphaned-inquiries/route.ts",
@@ -18700,7 +18653,6 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/lib/access-fee.ts",
@@ -21656,7 +21608,6 @@
         "src/lib/round-shop-tax.ts"
       ],
       "readers": [
-        "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/golfers/route.ts",
@@ -22502,7 +22453,6 @@
         "src/lib/sales-tax.ts"
       ],
       "readers": [
-        "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/audit/route.ts",
         "src/app/api/admin/broadcasts/route.ts",
         "src/app/api/admin/course-calls/route.ts",
@@ -23450,7 +23400,6 @@
         "src/lib/member-import.ts"
       ],
       "readers": [
-        "src/app/api/admin/activity/route.ts",
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/transactions/route.ts",

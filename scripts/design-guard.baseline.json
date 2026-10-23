@@ -1,7 +1,4 @@
 {
-  "src/app/admin/activity/page.tsx": {
-    "uppercase": 2
-  },
   "src/app/admin/announcements/page.tsx": {
     "lucide": 1
   },
