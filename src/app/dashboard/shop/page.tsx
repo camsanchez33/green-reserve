@@ -29,6 +29,10 @@ type Sale = {
   discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number; receiptSentAt: string | null; refunds: Refund[];
 };
 type Custom = { key: string; name: string; priceCents: number; quantity: number };
+// POS-3 R2: green fees at the register — today's groups that owe, and walk-ins.
+type Owing = { bookingId: string; time: string; holes: number; golferName: string; players: number; dueCents: number; noShow: boolean };
+type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean };
+type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number };
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
 type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string };
 
@@ -36,6 +40,7 @@ const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
 const isPaid = (s: Sale) => s.status === 'paid_cash' || s.status === 'paid_card';
 const LINK = 'text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50';
+const clock = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
 const time = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'neutral' }> = {
   paid_cash: { label: 'Paid in cash', tone: 'ok' },
@@ -70,6 +75,12 @@ export default function ShopPage() {
   const [receipt, setReceipt] = useState<{ id: string; via: 'email' | 'sms'; to: string } | null>(null);
   const [refund, setRefund] = useState<{ id: string; amount: string; reason: string; restock: boolean; confirm: boolean } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [tab, setTab] = useState<'items' | 'rounds'>('items');
+  const [roundsData, setRoundsData] = useState<{ owing: Owing[]; open: OpenTime[] } | null>(null);
+  const [roundsError, setRoundsError] = useState('');
+  const [picked, setPicked] = useState<string[]>([]);
+  const [walkIns, setWalkIns] = useState<WalkIn[]>([]);
+  const [walkForm, setWalkForm] = useState<{ teeTimeId: string; name: string; players: number; cart: boolean } | null>(null);
   const [quoteError, setQuoteError] = useState('');
   const [quoteTry, setQuoteTry] = useState(0);
 
@@ -83,6 +94,10 @@ export default function ShopPage() {
     if (!s.ok) { setLoadError(s.error); return; }
     setItems(i.data.items.filter(x => x.active));
     setSales(s.data.sales);
+  }, []);
+  const loadRounds = useCallback(async () => {
+    const r = await dfetch<{ owing: Owing[]; open: OpenTime[] }>('/api/operator/shop-sales/rounds');
+    if (r.ok) { setRoundsData(r.data); setRoundsError(''); } else setRoundsError(r.error);
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -119,11 +134,16 @@ export default function ShopPage() {
     return () => { live = false; clearTimeout(t); };
   }, [cartKey, quoteTry]);
   const priced = quote && quote.key === cartKey ? quote : null;
-  const due = priced ? priced.totalCents : subtotal;
+  const pickedRounds = (roundsData?.owing ?? []).filter(o => picked.includes(o.bookingId));
+  const roundsCents = pickedRounds.reduce((n, o) => n + o.dueCents, 0) + walkIns.reduce((n, w) => n + w.estimateCents, 0);
+  const hasRounds = pickedRounds.length + walkIns.length > 0;
+  const itemsEmpty = salePayload.length === 0;
+  const due = (itemsEmpty ? 0 : priced ? priced.totalCents : subtotal) + roundsCents;
+  const ready = itemsEmpty ? hasRounds : !!priced;
   const tenderedCents = toCents(tendered);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
   const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
-  const empty = salePayload.length === 0;
+  const empty = itemsEmpty && !hasRounds;
 
   // A scanner types the code and presses Enter: an exact SKU goes straight into the sale.
   function scan(code: string) {
@@ -134,10 +154,12 @@ export default function ShopPage() {
 
   async function ringUp() {
     setBusy('sale'); setError(''); setNote(''); setJustPaid(null);
-    const r = await dfetch<{ sale: Sale; sent?: boolean; sendError?: string }>('/api/operator/shop-sales', {
+    const r = await dfetch<{ sale: Sale; sent?: boolean; sendError?: string; skipped?: string[]; notes?: string[] }>('/api/operator/shop-sales', {
       method: 'POST',
       body: JSON.stringify({
-        lines: salePayload, discount: discountPayload,
+        lines: salePayload, discount: itemsEmpty ? undefined : discountPayload,
+        bookingIds: pickedRounds.map(o => o.bookingId),
+        walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart })),
         pay: pay === 'cash' ? 'cash' : 'link', via: pay === 'email' ? 'email' : 'sms', taxCalculationId: priced?.taxCalculationId || undefined,
         cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
@@ -145,7 +167,10 @@ export default function ShopPage() {
     });
     setBusy('');
     if (!r.ok) { setError(r.error); return; }
-    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' });
+    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setPicked([]); setWalkIns([]);
+    if (hasRounds) loadRounds();
+    if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total below is what was taken.`);
+    if (r.data.notes?.length) setNote(r.data.notes.join(' '));
     if (r.data.sendError) setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from the list below, or take cash.`);
     else if (pay === 'cash') { setJustPaid(r.data.sale); setReceipt({ id: r.data.sale.id, via: 'email', to: '' }); }
     else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows as paid below when they pay.`);
@@ -199,7 +224,12 @@ export default function ShopPage() {
   const canRefund = access.can('money.refund');
   // Recording cash is the counter-payment power, as on the tee sheet.
   const canCash = access.can('sheet.counter_payment');
-  const payChoices = ([['cash', 'Cash'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const).filter(([k]) => k !== 'cash' || canCash);
+  // Rounds at the register are cash for now (the card reader is next).
+  const payChoices = ([['cash', 'Cash'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const).filter(([k]) => (k !== 'cash' || canCash) && (k === 'cash' || !hasRounds));
+  useEffect(() => { if (hasRounds) setPay('cash'); }, [hasRounds]);
+  useEffect(() => { if (access.loaded && canCash) loadRounds(); }, [access.loaded, canCash, loadRounds]);
+  const canWalkIn = access.can('sheet.walkin');
+  const walkTime = roundsData?.open.find(t => t.teeTimeId === walkForm?.teeTimeId) ?? null;
   useEffect(() => { if (access.loaded && !canCash) setPay(p => (p === 'cash' ? 'sms' : p)); }, [access.loaded, canCash]);
   const needContact = pay === 'sms' ? customer.phone.replace(/\D/g, '').length < 10 : pay === 'email' ? !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(customer.email.trim()) : false;
   const todayTotal = (sales ?? []).filter(s => isPaid(s) && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString()).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
@@ -224,11 +254,81 @@ export default function ShopPage() {
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
               <Card className="p-5">
-                {!items && !loadError && <p className="text-sm text-ink-muted">Loading your shop…</p>}
-                {items && items.length === 0 && (
+                {canCash && (
+                  <div className="flex gap-1 mb-4" role="tablist" aria-label="Ring up">
+                    {([['items', 'Shop items'], ['rounds', 'Rounds today']] as const).map(([k, l]) => (
+                      <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+                        className={'px-3 py-1.5 rounded-md border text-[13px] ' + (tab === k ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{l}</button>
+                    ))}
+                  </div>
+                )}
+                {tab === 'rounds' && (
+                  <div>
+                    {roundsError && <p className="text-sm text-bad" role="alert">{roundsError} <button onClick={loadRounds} className="underline font-medium">Retry</button></p>}
+                    {!roundsData && !roundsError && <p className="text-sm text-ink-muted">Loading today’s tee sheet…</p>}
+                    {roundsData && (
+                      <>
+                        <h2 className="text-[13px] font-semibold text-ink mb-2">Groups still to pay</h2>
+                        {roundsData.owing.length === 0 ? <p className="text-sm text-ink-soft">Every group today has paid.</p> : (
+                          <ul className="divide-y divide-line-soft">
+                            {roundsData.owing.map(o => {
+                              const on = picked.includes(o.bookingId);
+                              return (
+                                <li key={o.bookingId} className="flex items-center justify-between gap-3 py-2 text-sm">
+                                  <span className="min-w-0"><span className="tabular-nums text-ink-soft">{clock(o.time)}</span> · <span className="text-ink">{o.golferName}</span> <span className="text-ink-muted">· {o.players} player{o.players === 1 ? '' : 's'} · {o.holes} holes{o.noShow ? ' · marked no-show' : ''}</span></span>
+                                  <span className="flex items-center gap-3 shrink-0">
+                                    <span className="tabular-nums text-ink">{usd(o.dueCents)}</span>
+                                    <button onClick={() => setPicked(p => on ? p.filter(x => x !== o.bookingId) : [...p, o.bookingId])} aria-pressed={on} className={LINK}>{on ? 'Added' : 'Add'}</button>
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                        {canWalkIn && (
+                          <div className="mt-5">
+                            <h2 className="text-[13px] font-semibold text-ink mb-2">Walk-in</h2>
+                            {roundsData.open.length === 0 ? <p className="text-sm text-ink-soft">No open tee times left today.</p> : !walkForm ? (
+                              <button onClick={() => { const t = roundsData.open[0]; setWalkForm({ teeTimeId: t.teeTimeId, name: '', players: Math.min(2, t.spots), cart: !t.walkingAllowed || t.cartFeeCents > 0 }); }} className={LINK}>Book a walk-in onto the next open time</button>
+                            ) : (
+                              <form className="bg-paper/70 rounded-md p-3 space-y-2 max-w-md" onSubmit={e => {
+                                e.preventDefault();
+                                if (!walkTime || walkForm.name.trim().length < 2) { setError('Pick a time and enter the golfer’s name.'); return; }
+                                const cart = walkForm.cart || !walkTime.walkingAllowed;
+                                setWalkIns(ws => [...ws, { key: `w${Date.now()}`, teeTimeId: walkTime.teeTimeId, time: walkTime.time, golferName: walkForm.name.trim(), players: walkForm.players, cart, estimateCents: (walkTime.greenFeeCents + (cart ? walkTime.cartFeeCents : 0)) * walkForm.players }]);
+                                setWalkForm(null); setError('');
+                              }}>
+                                <div className="flex flex-wrap gap-2">
+                                  <select value={walkForm.teeTimeId} onChange={e => { const t = roundsData.open.find(x => x.teeTimeId === e.target.value)!; setWalkForm({ ...walkForm, teeTimeId: t.teeTimeId, players: Math.min(walkForm.players, t.spots), cart: walkForm.cart || !t.walkingAllowed }); }} aria-label="Tee time" className={INPUT}>
+                                    {roundsData.open.map(t => <option key={t.teeTimeId} value={t.teeTimeId}>{clock(t.time)}{t.round ? ` · ${t.round}` : ''} · {t.spots} open</option>)}
+                                  </select>
+                                  <input type="number" min={1} max={walkTime?.spots ?? 4} value={walkForm.players} onChange={e => setWalkForm({ ...walkForm, players: Math.max(1, Math.min(walkTime?.spots ?? 4, Number(e.target.value) || 1)) })} aria-label="Players" className={INPUT + ' w-20'} />
+                                </div>
+                                <input value={walkForm.name} onChange={e => setWalkForm({ ...walkForm, name: e.target.value })} placeholder="Golfer’s name" aria-label="Golfer’s name" maxLength={120} className={INPUT + ' w-full'} autoFocus />
+                                {walkTime && walkTime.cartFeeCents > 0 && (
+                                  <label className="flex items-center gap-2 text-[13px] text-ink">
+                                    <input type="checkbox" checked={walkForm.cart || !walkTime.walkingAllowed} disabled={!walkTime.walkingAllowed} onChange={e => setWalkForm({ ...walkForm, cart: e.target.checked })} className="accent-pine" />
+                                    Cart ({usd(walkTime.cartFeeCents)} / player){!walkTime.walkingAllowed ? ' — required on this time' : ''}
+                                  </label>
+                                )}
+                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkTime.greenFeeCents + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)} at the standard rate. It goes on the tee sheet, checked in and paid, when you take the cash.</p>}
+                                <div className="flex gap-2">
+                                  <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add to the sale</button>
+                                  <button type="button" onClick={() => setWalkForm(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Cancel</button>
+                                </div>
+                              </form>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+                {tab === 'items' && !items && !loadError && <p className="text-sm text-ink-muted">Loading your shop…</p>}
+                {tab === 'items' && items && items.length === 0 && (
                   <p className="text-sm text-ink-soft">Your shop has no items yet. <Link href="/dashboard/settings?section=Pro+shop" className="text-pine font-medium underline">Add them in Settings → Pro shop</Link>.</p>
                 )}
-                {tree.length > 0 && (
+                {tab === 'items' && tree.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 mb-4">
                     <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (!scan(q) && q.trim()) setNote(''); } }}
@@ -239,8 +339,8 @@ export default function ShopPage() {
                     ))}
                   </div>
                 )}
-                {tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Scanned a code? Add it as the item’s SKU in Settings → Pro shop.' : ''}</p>}
-                {groups.map(([group, list]) => (
+                {tab === 'items' && tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Scanned a code? Add it as the item’s SKU in Settings → Pro shop.' : ''}</p>}
+                {tab === 'items' && groups.map(([group, list]) => (
                   <section key={group} className="mb-4 last:mb-0">
                     <h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -311,6 +411,24 @@ export default function ShopPage() {
                         </span>
                       </li>
                     ))}
+                    {pickedRounds.map(o => (
+                      <li key={o.bookingId} className="flex items-center justify-between gap-2 py-2 text-sm">
+                        <span className="min-w-0 truncate text-ink">{clock(o.time)} round · {o.golferName} · {o.players}</span>
+                        <span className="flex items-center gap-3 shrink-0">
+                          <button onClick={() => setPicked(p => p.filter(x => x !== o.bookingId))} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
+                          <span className="w-16 text-right tabular-nums text-ink">{usd(o.dueCents)}</span>
+                        </span>
+                      </li>
+                    ))}
+                    {walkIns.map(w => (
+                      <li key={w.key} className="flex items-center justify-between gap-2 py-2 text-sm">
+                        <span className="min-w-0 truncate text-ink">{clock(w.time)} walk-in · {w.golferName} · {w.players}{w.cart ? ' · cart' : ''}</span>
+                        <span className="flex items-center gap-3 shrink-0">
+                          <button onClick={() => setWalkIns(ws => ws.filter(x => x.key !== w.key))} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
+                          <span className="w-16 text-right tabular-nums text-ink">{usd(w.estimateCents)}</span>
+                        </span>
+                      </li>
+                    ))}
                     {customs.map(c => (
                       <li key={c.key} className="flex items-center justify-between gap-2 py-2 text-sm">
                         <span className="min-w-0 truncate text-ink">{c.name}</span>
@@ -324,11 +442,11 @@ export default function ShopPage() {
                     ))}
                     {priced && priced.discountCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Discount{discount?.note.trim() ? ` (${discount.note.trim()})` : ''}</span><span className="tabular-nums">−{usd(priced.discountCents)}</span></li>}
                     {priced && priced.taxCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Sales tax</span><span className="tabular-nums">{usd(priced.taxCents)}</span></li>}
-                    <li className="flex justify-between py-2.5 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums">{priced ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
+                    <li className="flex justify-between py-2.5 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums">{ready ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
                   </ul>
                 )}
 
-                {!empty && canDiscount && (
+                {!itemsEmpty && canDiscount && (
                   discount === null
                     ? <button type="button" onClick={() => setDiscount({ mode: 'percent', value: '', note: '' })} className={LINK + ' mt-2'}>Add a discount</button>
                     : (
@@ -357,7 +475,8 @@ export default function ShopPage() {
                         </label>
                       ))}
                     </div>
-                    {pay === 'cash' && priced && due > 0 && (
+                    {hasRounds && <p className="text-[12.5px] text-ink-muted">Rounds are paid in cash here for now. Each group is checked in and marked paid at the counter on the tee sheet. Discounts apply to shop items only.</p>}
+                    {pay === 'cash' && ready && due > 0 && (
                       <div>
                         <span className="block text-[13px] font-medium text-ink mb-1.5">Cash handed over <span className="font-normal text-ink-muted">(optional)</span></span>
                         <div className="flex flex-wrap gap-1.5">
@@ -383,7 +502,7 @@ export default function ShopPage() {
                       </div>
                     )}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
-                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !priced || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due)}
+                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due)}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
                       {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : `Send ${usd(due)} pay link`}
                     </button>

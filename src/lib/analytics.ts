@@ -340,7 +340,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const shopOnRounds = collectedB.reduce((n, b) => n + b.shopTotalCents, 0);
   const walkUps = await prisma.shopSale.findMany({
     where: { courseId, status: { in: ['paid_cash', 'paid_card'] }, paidAt: { gte: new Date(teeMs(range.from, '00:00')), lt: new Date(teeMs(addDaysStr(range.to, 1), '00:00')) } },
-    select: { totalCents: true, taxCents: true, refundedCents: true },
+    select: { totalCents: true, taxCents: true, refundedCents: true, roundsCents: true },
   });
   const walkUp = walkUpNet(walkUps);
 
@@ -539,13 +539,16 @@ export function headline(a: Analytics) {
  * tax included, so the pre-tax part kept is the sale's pre-tax amount times
  * the share of the sale not refunded. A sale refunded in full counts as none.
  */
-export function walkUpNet(sales: { totalCents: number; taxCents: number; refundedCents?: number }[]): { sales: number; cents: number } {
+export function walkUpNet(sales: { totalCents: number; taxCents: number; refundedCents?: number; roundsCents?: number }[]): { sales: number; cents: number } {
   let n = 0, cents = 0;
   for (const w of sales) {
     const refunded = w.refundedCents ?? 0;
     if (w.totalCents > 0 && refunded >= w.totalCents) continue;
+    // POS-3 R2: green fees paid at the register are rounds (counted with the bookings), not shop sales.
+    const items = w.totalCents - w.taxCents - (w.roundsCents ?? 0);
+    if (items <= 0 && (w.roundsCents ?? 0) > 0) continue;
     n++;
-    cents += w.totalCents > 0 ? Math.round((w.totalCents - w.taxCents) * (w.totalCents - refunded) / w.totalCents) : 0;
+    cents += w.totalCents > 0 ? Math.round(items * (w.totalCents - refunded) / w.totalCents) : 0;
   }
   return { sales: n, cents };
 }

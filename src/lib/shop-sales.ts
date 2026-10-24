@@ -189,12 +189,20 @@ export async function createSale(opts: {
   discount?: DiscountInput;
   /** POS-3: cash handed over (cents), for the change; must cover the total. */
   cashTenderedCents?: unknown;
+  /** POS-3 R2: rounds already paid at the counter (settleAtCounter) — lines on the receipt, no tax, no discount, no stock. Cash only. */
+  rounds?: { bookingId: string; name: string; amountCents: number }[];
 }): Promise<Result<SaleView & { payToken: string }>> {
-  const p = await priceLines(opts.courseId, opts.lines);
+  const rounds = opts.pay === 'cash' ? opts.rounds ?? [] : [];
+  const roundsCents = rounds.reduce((n, r) => n + r.amountCents, 0);
+  const noItems = rounds.length > 0 && Array.isArray(opts.lines) && opts.lines.length === 0;
+  const p = noItems ? { ok: true as const, value: { lines: [] as PricedLine[], subtotalCents: 0 } } : await priceLines(opts.courseId, opts.lines);
   if (!p.ok) return p;
   const d = discountFor(p.value.subtotalCents, opts.discount);
   if (!d.ok) return d;
-  const lines = p.value.lines.map(({ taxCategory: _t, reference: _r, ...l }) => l);
+  const lines = [
+    ...p.value.lines.map(({ taxCategory: _t, reference: _r, ...l }) => ({ ...l, bookingId: null as string | null })),
+    ...rounds.map(r => ({ shopItemId: null, name: r.name.slice(0, 120), unitPriceCents: r.amountCents, quantity: 1, bookingId: r.bookingId })),
+  ];
   // W2-7 part B: sales tax from Stripe Tax when the course has it on.
   let tax = { taxCents: 0, calculationId: '' };
   try {
@@ -203,7 +211,7 @@ export async function createSale(opts: {
     console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId: opts.courseId, error: err instanceof Error ? err.message : String(err) }));
     return fail(502, TAX_DOWN);
   }
-  const totalCents = p.value.subtotalCents - d.value.discountCents + tax.taxCents;
+  const totalCents = p.value.subtotalCents - d.value.discountCents + tax.taxCents + roundsCents;
   if (opts.pay === 'link' && totalCents <= 0) return fail(400, 'This sale comes to nothing — take it as cash instead.');
   if (opts.pay === 'link' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up pay links are not set up for the shop fee yet.');
   let cashTenderedCents: number | null = null;
@@ -222,7 +230,7 @@ export async function createSale(opts: {
       data: {
         courseId: opts.courseId, totalCents, taxCents: tax.taxCents, taxCalculationId: tax.calculationId, soldBy: opts.soldBy, customerName: name, customerPhone: phone, customerEmail: email, payToken,
         status: opts.pay === 'cash' ? 'paid_cash' : 'open', paidAt: opts.pay === 'cash' ? new Date() : null,
-        discountCents: d.value.discountCents, discountNote: d.value.note, cashTenderedCents,
+        discountCents: d.value.discountCents, discountNote: d.value.note, cashTenderedCents, roundsCents,
         lines: { create: lines },
       },
       include: SALE_INCLUDE,

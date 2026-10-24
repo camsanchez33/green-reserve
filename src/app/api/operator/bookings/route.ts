@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureShopTax, recordRoundShopTax } from '@/lib/round-shop-tax';
-import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from '@/lib/booking-events';
+import { recordBookingEvent, teeTimeInstant, type EventActor } from '@/lib/booking-events';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, can, requirePermission } from '@/lib/session';
 import type { PermissionKey } from '@/lib/staff-permissions';
 import { performCancellation } from '@/lib/cancel-booking';
 import { performCheckIn } from '@/lib/checkin-booking';
-import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
 import { sendBookingConfirmation, sendCheckInAvailableEmail, sendBookingModifiedEmail, isPlaceholderEmail } from '@/lib/email';
 import { moveBooking } from '@/lib/move-booking';
 import { setBookingResidents } from '@/lib/booking-residents';
-import { todayIn, isPastIn } from '@/lib/course-time';
+import { isPastIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
-import { refundSeparateAccessFee, liveSeparateFee } from '@/lib/access-fee';
-import { refundOnConnectedAccount } from '@/lib/stripe';
+import { refundSeparateAccessFee } from '@/lib/access-fee';
 import { markNoShow, refundNoShowFee } from '@/lib/no-show-fee';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { formatTeeTime } from '@/lib/format';
+import { settleAtCounter, createCounterBooking } from '@/lib/counter-pay';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
@@ -213,52 +211,10 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true, ...(notes.length ? { fee: notes.join(' ') } : {}) });
   }
   if (action === 'paid_offline') {
-    if (booking.status === 'cancelled') return NextResponse.json({ error: 'This booking was cancelled.' }, { status: 409 });
-    if (booking.status === 'completed') return NextResponse.json({ error: 'Already checked in.' }, { status: 409 });
-    // Review (HIGH): a round already charged by card (an admin "collect
-    // payment") is paid — marking it paid offline would hide that payment and
-    // take the booking fee a second time.
-    if (booking.paymentStatus === 'paid') return NextResponse.json({ error: 'This round was already paid by card — check them in instead.' }, { status: 409 });
-    const hadHoldFee = booking.paymentStatus === 'cancellation_fee_charged' && !!booking.cancellationFeeChargeId;
-    // W2-7 B2: bring the shop items' sales tax up to date before the counter
-    // closes the round. Cash is never blocked (PAY-2): if Stripe can't be
-    // reached, the round still closes and the tax stays as last quoted.
-    await ensureShopTax(id);
-    // This branch completes the booking WITHOUT performCheckIn (CLAUDE.md) —
-    // so it writes its own checked_in event, or counter check-ins vanish from the log.
-    await prisma.$transaction(async (tx) => {
-      await tx.booking.update({
-        where: { id },
-        data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}),
-          // POS-1a: shop items are paid at the counter too; GreenReserve's shop fee is never collected in cash.
-          shopFeeCents: 0 },
-      });
-      await recordBookingEvent(tx, { ...evBase, type: 'checked_in', amountCents: booking.totalAmount, playerCount: cip ?? booking.players, metadata: { paidOffline: true } });
-    });
-    // The tax on shop items paid at the counter goes on the course's tax record too (the hourly cron retries).
-    await recordRoundShopTax(id);
-    // They paid the round at the counter, so the hold fee the cron took after
-    // the cutoff goes back — exactly as a card check-in refunds it (review: this
-    // branch skips performCheckIn and kept it).
-    let holdNote: string | null = null;
-    if (hadHoldFee && booking.course.stripeAccountId) {
-      try {
-        const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId });
-        await recordBookingEventSafe({ ...evBase, type: 'fee_refunded', amountCents: refund.amount, playerCount: booking.players, stripeId: refund.id, metadata: { reason: 'hold_refunded_at_checkin', paidOffline: true } });
-      } catch (err) {
-        holdNote = `The late-cancellation hold fee could not be refunded automatically (${err instanceof Error ? err.message : 'Stripe error'}) — GreenReserve will follow up.`;
-      }
-    }
-    // Cash at the counter collects no GreenReserve fee, card on file or not
-    // (Cam 2026-10-19, HOMEPAGE_SPEC §0a; PAY-2): it is counted on Admin →
-    // Revenue instead. A booking fee already taken separately (a no-show
-    // charge, then the group turned up and paid cash) goes back.
-    let refundNote: string | null = null;
-    if (await liveSeparateFee(id)) {
-      const r = await refundSeparateAccessFee(id, 'paid at the counter — no GreenReserve fee on cash', 'operator', actorName);
-      if (!r.ok) refundNote = `GreenReserve's booking fee could not be refunded to the golfer's card (${r.error}) — GreenReserve will follow up.`;
-    }
-    return NextResponse.json({ success: true, fee: [holdNote, refundNote].filter(Boolean).join(' ') || null });
+    // One place for a round paid at the counter (lib/counter-pay) — the register calls it too.
+    const r = await settleAtCounter(session.courseId, id, { actor: staff, actorName, checkedInPlayers: cip });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ success: true, fee: r.note });
   }
 
   const result = action === 'cancel'
@@ -281,56 +237,21 @@ export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request' }, { status: 400 }); }
 
-  const teeTimeId = String(body.teeTimeId ?? '');
-  const golferName = String(body.golferName ?? '').trim().slice(0, 120);
-  const golferEmail = String(body.golferEmail ?? '').trim().toLowerCase().slice(0, 200);
-  const golferPhone = String(body.golferPhone ?? '').trim().slice(0, 40);
-  const players = Number(body.players);
-  const source = body.source === 'phone' ? 'phone' : 'walk_in';
-  const cartSelected = body.cartSelected === true;
   const checkInNow = body.checkInNow === true;
   if (checkInNow) { const d = requirePermission(session, 'sheet.counter_payment'); if (d) return d; } // SP-A: checked in = paid at the counter
-  if (!teeTimeId || golferName.length < 2) return NextResponse.json({ error: 'Enter the golfer’s name.' }, { status: 400 });
-  if (!Number.isInteger(players) || players < 1 || players > 8) return NextResponse.json({ error: 'Players must be between 1 and 8.' }, { status: 400 });
-  if (golferEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(golferEmail)) return NextResponse.json({ error: 'That email doesn’t look right.' }, { status: 400 });
-
-  const teeTime = await prisma.teeTime.findUnique({ where: { id: teeTimeId }, include: { course: true } });
-  if (!teeTime || teeTime.courseId !== session.courseId) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
-  if (teeTime.date < todayIn(teeTime.course.timezone)) return NextResponse.json({ error: 'That date has passed.' }, { status: 409 });
-
-  // CART-1: a tee time that can't be walked charges a cart for everyone.
-  const cart = cartSelected || teeTime.walkingAllowed === false;
-  const greenFeeTotal = teeTime.greenFeeCents * players;
-  const cartFeeTotal = cart ? teeTime.cartFeeCents * players : 0;
-  // No platform fee on a counter booking — nothing is collected online.
+  const golferName = String(body.golferName ?? '').trim().slice(0, 120);
+  const golferEmail = String(body.golferEmail ?? '').trim().toLowerCase().slice(0, 200);
+  const players = Number(body.players);
+  // One place for a counter booking (lib/counter-pay) — the register calls it too.
+  const made = await createCounterBooking(session.courseId, {
+    teeTimeId: String(body.teeTimeId ?? ''), golferName, golferEmail, golferPhone: String(body.golferPhone ?? ''),
+    players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in', paidNow: checkInNow,
+  }, { type: 'staff', id: session.staffId ?? session.operatorId });
+  if (!made.ok) return NextResponse.json({ error: made.error }, { status: made.status });
+  const { greenFeeTotal, cartFeeTotal, totalAmount } = made;
   const accessFeeTotal = 0;
-  const totalAmount = greenFeeTotal + cartFeeTotal;
-
-  let claimed: { id: string; checkInToken: string | null };
-  try {
-    claimed = await claimTeeTime({
-      teeTimeId, courseId: teeTime.courseId,
-      golferName, golferEmail: golferEmail || `${source}+${Date.now()}@noemail.greenreserve.app`, golferPhone,
-      players, appliedRate: 'standard',
-      greenFeeTotal, cartFeeTotal, cartSelected: cart, accessFeeTotal, totalAmount,
-      checkInToken: golferEmail ? randomUUID() : null,
-      paymentStatus: checkInNow ? 'paid_offline' : 'manual',
-      status: checkInNow ? 'completed' : 'confirmed',
-      checkedInAt: checkInNow ? new Date() : null,
-      paidAt: checkInNow ? new Date() : null,
-      paidOffline: checkInNow,
-      source,
-      cancellationHoursAtBooking: teeTime.course.cancellationHours,
-    }, { type: 'staff', id: session.staffId ?? session.operatorId });
-  } catch (err) {
-    if (err instanceof TeeTimeClaimError) {
-      if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
-      if (err.code === 'BLOCKED') return NextResponse.json({ error: 'This tee time is blocked.' }, { status: 409 });
-      if (err.code === 'FULL' || err.code === 'CONFLICT') return NextResponse.json({ error: 'That time just filled up.' }, { status: 409 });
-      if (err.code === 'SPOTS') return NextResponse.json({ error: `Only ${err.spotsLeft} spot${err.spotsLeft === 1 ? '' : 's'} left.` }, { status: 409 });
-    }
-    throw err;
-  }
+  const claimed = { id: made.id, checkInToken: made.checkInToken };
+  const teeTime = { ...made.teeTime, course: made.course };
 
   let emailSent: boolean | null = null;
   if (golferEmail && !checkInNow) {

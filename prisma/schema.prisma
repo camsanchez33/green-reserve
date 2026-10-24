@@ -1357,6 +1357,9 @@ model ShopSale {
   refundedCents    Int            @default(0)
   /// The last receipt sent (email or text).
   receiptSentAt    DateTime?
+  /// POS-3 R2: green fees paid at the register in this sale (the rounds are
+  /// their own bookings, paid at the counter; this part is not shop revenue).
+  roundsCents      Int            @default(0)
   refunds          ShopSaleRefund[]
   lines            ShopSaleLine[]
 
@@ -1374,6 +1377,8 @@ model ShopSaleLine {
   name           String
   unitPriceCents Int
   quantity       Int       @default(1)
+  /// POS-3 R2: a round paid at the register — the booking it settled (no item, no tax, no stock).
+  bookingId      String?
 
   @@index([saleId])
   @@index([shopItemId])

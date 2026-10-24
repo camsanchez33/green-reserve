@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { createSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, type SaleView } from '@/lib/shop-sales';
 import { rateLimit } from '@/lib/rate-limit';
+import { ringUpCash } from '@/lib/register';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { sendShopSalePayLinkEmail, sendShopReceiptEmail, isPlaceholderEmail } from '@/lib/email';
@@ -80,6 +81,23 @@ export async function POST(req: NextRequest) {
   if (hasDiscount(body.discount as never)) {
     const denied = requirePermission(g.session, 'shop.discount');
     if (denied) return denied;
+  }
+  // POS-3 R2: green fees at the register — today's groups and walk-ins, paid in cash with the items.
+  const bookingIds = Array.isArray(body.bookingIds) ? body.bookingIds.filter((x): x is string => typeof x === 'string') : [];
+  const walkIns = Array.isArray(body.walkIns) ? body.walkIns as Record<string, unknown>[] : [];
+  if (bookingIds.length || walkIns.length) {
+    if (pay !== 'cash') return NextResponse.json({ error: 'Rounds are paid in cash at the register for now — send a pay link from the tee sheet instead.' }, { status: 400 });
+    if (walkIns.length) { const denied = requirePermission(g.session, 'sheet.walkin'); if (denied) return denied; }
+    const r = await ringUpCash(g.session.courseId, {
+      lines: Array.isArray(body.lines) ? body.lines : [], discount: body.discount as never, cashTenderedCents: body.cashTenderedCents,
+      taxCalculationId: typeof body.taxCalculationId === 'string' ? body.taxCalculationId : undefined,
+      bookingIds,
+      walkIns: walkIns.map(w => ({ teeTimeId: String(w.teeTimeId ?? ''), golferName: String(w.golferName ?? ''), golferPhone: String(w.golferPhone ?? ''), golferEmail: String(w.golferEmail ?? ''), players: Number(w.players), cartSelected: w.cartSelected === true })),
+      soldBy: g.session.email, actor: { type: 'staff', id: g.session.staffId ?? g.session.operatorId },
+      customerName: body.customerName as string, customerPhone: body.customerPhone as string, customerEmail: body.customerEmail as string,
+    });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r.value);
   }
   const via = body.via === 'email' ? 'email' : 'sms';
   const course = await prisma.course.findUnique({ where: { id: g.session.courseId }, select: { name: true, stripeAccountId: true, stripeAccountActive: true } });

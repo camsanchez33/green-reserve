@@ -1,16 +1,26 @@
 {
-  "generatedAt": "2026-10-24T03:33:42.739Z",
+  "generatedAt": "2026-10-24T03:54:57.709Z",
   "repo": {
-    "head": "f3faa4f2",
+    "head": "ed10fa0c",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 16,
     "dirty": [
       "M OPERATOR_REWORK_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/pos-register-db-test.ts",
+      " M prisma/schema.prisma",
+      " M scripts/cart-walk-db-test.ts",
+      " M scripts/walk1-fixes-test.ts",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/dashboard/shop/page.tsx",
       " M src/lib/analytics.ts",
-      " M src/lib/staff-permissions.ts"
+      " M src/lib/shop-sales.ts",
+      "?? prisma/migrations/20261024050000_pos3_rounds/",
+      "?? scripts/register-rounds-db-test.ts",
+      "?? src/app/api/operator/shop-sales/rounds/",
+      "?? src/lib/counter-pay.ts",
+      "?? src/lib/register.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -18,9 +28,9 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "f3faa4f2",
-        "date": "2026-10-24T03:26:24+00:00",
-        "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds",
+        "h": "ed10fa0c",
+        "date": "2026-10-23T23:42:05-04:00",
+        "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)",
         "ids": [],
         "matches": []
       },
@@ -345,7 +355,7 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-24",
+      "lastTouched": "2026-10-23",
       "ageDays": 0
     },
     {
@@ -550,9 +560,9 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "f3faa4f2",
-      "date": "2026-10-24",
-      "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds"
+      "h": "ed10fa0c",
+      "date": "2026-10-23",
+      "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)"
     },
     {
       "h": "6fd9158d",

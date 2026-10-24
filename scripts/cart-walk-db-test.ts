@@ -85,7 +85,9 @@ async function cleanup() {
   // The counter's walk-in/phone form: the route forces the cart on a cart-only time, and the form shows it.
   const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
   const sheet = readFileSync('src/app/dashboard/page.tsx', 'utf8');
-  ok('a walk-in on a cart-only time is charged the cart', route.includes('cartSelected || teeTime.walkingAllowed === false') && !route.includes('teeTime.course.cartRequired'));
+  // POS-3 R2: the counter booking lives in lib/counter-pay (the tee sheet and the register both use it).
+  const counter = readFileSync('src/lib/counter-pay.ts', 'utf8');
+  ok('a walk-in on a cart-only time is charged the cart', route.includes('createCounterBooking(') && counter.includes("input.cartSelected === true || teeTime.walkingAllowed === false") && !route.includes('teeTime.course.cartRequired'));
   ok('…and the form locks the cart on and says so', sheet.includes('const cartForced = slot.walkingAllowed === false') && sheet.includes('required on this time'));
 
   await cleanup(); await prisma.$disconnect();

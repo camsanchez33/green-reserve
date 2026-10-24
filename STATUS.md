@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 03:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f3faa4f2` · working tree **6 dirty file(s)**
+Generated 2026-10-24 03:54 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ed10fa0c` · working tree **16 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ Generated 2026-10-24 03:33 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 | commit | date | subject |
 |---|---|---|
-| `f3faa4f2` | 2026-10-24 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds |
+| `ed10fa0c` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
 | `6fd9158d` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
 | `6d7bf2a5` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
 | `fbacc529` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
@@ -36,14 +36,24 @@ Generated 2026-10-24 03:33 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (16 file(s))
 
 - `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/pos-register-db-test.ts`
+- `M prisma/schema.prisma`
+- `M scripts/cart-walk-db-test.ts`
+- `M scripts/walk1-fixes-test.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/shop-sales/route.ts`
+- `M src/app/dashboard/shop/page.tsx`
 - `M src/lib/analytics.ts`
-- `M src/lib/staff-permissions.ts`
+- `M src/lib/shop-sales.ts`
+- `?? prisma/migrations/20261024050000_pos3_rounds/`
+- `?? scripts/register-rounds-db-test.ts`
+- `?? src/app/api/operator/shop-sales/rounds/`
+- `?? src/lib/counter-pay.ts`
+- `?? src/lib/register.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -130,7 +140,7 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 1 | 2026-10-24 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 6d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-24 | 0d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 1d |
@@ -167,7 +177,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `f3faa4f2` 2026-10-24 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds
+- `ed10fa0c` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
 - `6fd9158d` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
 - `6d7bf2a5` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
 - `fbacc529` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
