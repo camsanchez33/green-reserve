@@ -1,16 +1,25 @@
 {
-  "generatedAt": "2026-10-24T05:56:52.435Z",
+  "generatedAt": "2026-10-24T13:12:50.134Z",
   "repo": {
-    "head": "fff9ab01",
+    "head": "c8e0e662",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 15,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M CLAUDE.md",
+      " M OPERATOR_REWORK_SPEC.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/fee-at-booking-db-test.ts",
-      " M src/app/book/BookClient.tsx",
-      " M src/lib/email.ts",
-      " M src/lib/receipt-charges.ts"
+      " M prisma/schema.prisma",
+      " M scripts/shop-sales-test.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/lib/shop-sales.ts",
+      "?? prisma/migrations/20261024070000_card_reader/",
+      "?? scripts/card-reader-db-test.ts",
+      "?? src/app/api/operator/card-readers/",
+      "?? src/components/dashboard/CardReaderCard.tsx",
+      "?? src/lib/card-reader.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -18,9 +27,9 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "fff9ab01",
-        "date": "2026-10-24T05:51:15+00:00",
-        "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off)",
+        "h": "c8e0e662",
+        "date": "2026-10-24T02:05:37-04:00",
+        "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)",
         "ids": [],
         "matches": []
       },
@@ -571,9 +580,9 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "fff9ab01",
+      "h": "c8e0e662",
       "date": "2026-10-24",
-      "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off)"
+      "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)"
     },
     {
       "h": "9985445e",

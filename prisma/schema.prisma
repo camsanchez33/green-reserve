@@ -120,6 +120,8 @@ model Course {
   hasTournaments             Boolean               @default(false)
   stripeAccountId            String                @default("")
   stripeAccountActive        Boolean               @default(false)
+  /// POS-3 R3: the Stripe Terminal location on the course's account that its card readers belong to ("" = none yet).
+  terminalLocationId         String                @default("")
   /// W2-7 part B (Cam 2026-10-20): pro-shop sales tax through Stripe Tax on the
   /// course's own Stripe account. On only once its Stripe tax settings are
   /// active (head office + at least one state registration) — set in
@@ -1364,6 +1366,8 @@ model ShopSale {
   /// POS-3 R2: green fees paid at the register in this sale (the rounds are
   /// their own bookings, paid at the counter; this part is not shop revenue).
   roundsCents      Int            @default(0)
+  /// POS-3 R3: the card reader the sale is being paid on ("" = not a reader sale yet).
+  readerId         String         @default("")
   refunds          ShopSaleRefund[]
   lines            ShopSaleLine[]
 

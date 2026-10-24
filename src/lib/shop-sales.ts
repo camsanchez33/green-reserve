@@ -43,13 +43,15 @@ export type SaleView = {
   receiptSentAt: string | null; refunds: RefundView[];
   /** POS-3 R2: green fees paid in this sale (not refundable here). */
   roundsCents: number;
+  /** POS-3 R3: sent as a pay link (else rung up at the counter — cash or the card reader). */
+  link: boolean;
 };
 
 type SaleRow = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: Date; paidAt: Date | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
-  discountCents?: number; discountNote?: string; cashTenderedCents?: number | null; refundedCents?: number; receiptSentAt?: Date | null; roundsCents?: number;
+  discountCents?: number; discountNote?: string; cashTenderedCents?: number | null; refundedCents?: number; receiptSentAt?: Date | null; roundsCents?: number; payToken?: string;
   refunds?: { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdBy: string; createdAt: Date }[];
 };
 
@@ -60,6 +62,7 @@ export const saleView = (s: SaleRow): SaleView => ({
   discountCents: s.discountCents ?? 0, discountNote: s.discountNote ?? '', cashTenderedCents: s.cashTenderedCents ?? null,
   refundedCents: s.refundedCents ?? 0, receiptSentAt: s.receiptSentAt?.toISOString() ?? null, roundsCents: s.roundsCents ?? 0,
   refunds: (s.refunds ?? []).map(r => ({ ...r, createdAt: r.createdAt.toISOString() })),
+  link: !!s.payToken,
 });
 
 /** What every sale read includes, so saleView has the whole sale. */
@@ -183,7 +186,8 @@ export async function quoteSale(courseId: string, raw: unknown, discount?: Disco
 
 /** Ring up a sale. Cash is paid on the spot; a link sale waits for the customer. */
 export async function createSale(opts: {
-  courseId: string; lines: unknown; pay: 'cash' | 'link'; soldBy: string;
+  /** POS-3 R3: 'reader' = paid on the course's card reader (lib/card-reader.ts); open until the card goes through. */
+  courseId: string; lines: unknown; pay: 'cash' | 'link' | 'reader'; soldBy: string;
   customerName?: string; customerPhone?: string; customerEmail?: string;
   /** The quote the counter showed (quoteSale); reused when it still matches, else tax is worked out again. */
   taxCalculationId?: string;
@@ -214,8 +218,9 @@ export async function createSale(opts: {
     return fail(502, TAX_DOWN);
   }
   const totalCents = p.value.subtotalCents - d.value.discountCents + tax.taxCents + roundsCents;
-  if (opts.pay === 'link' && totalCents <= 0) return fail(400, 'This sale comes to nothing — take it as cash instead.');
-  if (opts.pay === 'link' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up pay links are not set up for the shop fee yet.');
+  if (opts.pay !== 'cash' && totalCents <= 0) return fail(400, 'This sale comes to nothing — take it as cash instead.');
+  if (opts.pay === 'reader' && totalCents < 50) return fail(400, 'Card payments start at $0.50 — take this one as cash.');
+  if (opts.pay !== 'cash' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up card payments are not set up for the shop fee yet.');
   let cashTenderedCents: number | null = null;
   if (opts.pay === 'cash' && opts.cashTenderedCents != null && opts.cashTenderedCents !== '') {
     const t = Number(opts.cashTenderedCents);
@@ -361,16 +366,20 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
   }
 }
 
-/** The sale's single PaymentIntent on the course's account: made once, then reused. */
-async function saleIntent(saleId: string, existingId: string, amountCents: number, courseName: string, account: string) {
+/**
+ * The sale's single PaymentIntent on the course's account: made once, then
+ * reused. A pay-link sale's takes a card typed on the customer's phone; a
+ * reader sale's (POS-3 R3) takes a card presented to the course's reader.
+ */
+export async function saleIntent(saleId: string, existingId: string, amountCents: number, courseName: string, account: string, method: 'card' | 'card_present' = 'card') {
   if (existingId) return stripe.paymentIntents.retrieve(existingId, {}, { stripeAccount: account });
   const fee = shopFeeFor(amountCents);
   const pi = await stripe.paymentIntents.create({
-    amount: amountCents, currency: 'usd', payment_method_types: ['card'],
+    amount: amountCents, currency: 'usd', payment_method_types: [method],
     application_fee_amount: fee > 0 ? fee : undefined,
     description: `Pro shop - ${courseName} - sale ${saleId}`,
-    metadata: { shopSaleId: saleId },
-  }, { stripeAccount: account, idempotencyKey: `shop-sale-intent-${saleId}` });
+    metadata: { shopSaleId: saleId, ...(method === 'card_present' ? { source: 'card_reader' } : {}) },
+  }, { stripeAccount: account, idempotencyKey: method === 'card' ? `shop-sale-intent-${saleId}` : `shop-sale-reader-intent-${saleId}` });
   await prisma.shopSale.update({ where: { id: saleId }, data: { paymentIntentId: pi.id } });
   return pi;
 }
@@ -390,6 +399,20 @@ export async function reconcileStuckSale(courseId: string, saleId: string): Prom
     return back.count ? 'open' : null;
   }
   if (!sale.course.stripeAccountId) return null;
+  // POS-3 R3: a reader sale — stop the reader first, so a card tapped later can't pay a sale shown as unpaid.
+  if (sale.readerId) {
+    try {
+      const r = await stripe.terminal.readers.retrieve(sale.readerId, {}, { stripeAccount: sale.course.stripeAccountId });
+      const action = 'deleted' in r && r.deleted ? null : (r as Stripe.Terminal.Reader).action;
+      if (action?.status === 'in_progress' && action.process_payment_intent?.payment_intent === sale.paymentIntentId) {
+        await stripe.terminal.readers.cancelAction(sale.readerId, {}, { stripeAccount: sale.course.stripeAccountId });
+      }
+    } catch (err) {
+      // Couldn't stop it: leave the sale as it is and try on the next look.
+      console.error(JSON.stringify({ ev: 'shop_sale.reader_stop.fail', saleId, error: err instanceof Error ? err.message : String(err) }));
+      return null;
+    }
+  }
   const pi = await stripe.paymentIntents.retrieve(sale.paymentIntentId, {}, { stripeAccount: sale.course.stripeAccountId });
   if (pi.status === 'succeeded') { await markCardPaid(saleId, sale.chargeStartedAt, pi.id); return 'paid_card'; }
   if (pi.status === 'requires_payment_method' || pi.status === 'canceled' || pi.status === 'requires_action') {
@@ -412,7 +435,7 @@ export async function cancelSaleIntent(courseId: string, saleId: string): Promis
   return null;
 }
 
-async function markCardPaid(saleId: string, stamp: Date, paymentIntentId: string) {
+export async function markCardPaid(saleId: string, stamp: Date, paymentIntentId: string) {
   await prisma.$transaction(async tx => {
     const done = await tx.shopSale.updateMany({
       where: { id: saleId, status: 'paying', chargeStartedAt: stamp },

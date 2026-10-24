@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 05:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fff9ab01` · working tree **6 dirty file(s)**
+Generated 2026-10-24 13:12 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c8e0e662` · working tree **15 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ Generated 2026-10-24 05:56 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 | commit | date | subject |
 |---|---|---|
-| `fff9ab01` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) |
+| `c8e0e662` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
 | `9985445e` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
 | `2e01ec99` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
 | `ed10fa0c` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
@@ -39,14 +39,23 @@ Generated 2026-10-24 05:56 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (15 file(s))
 
+- `M CLAUDE.md`
+- `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/fee-at-booking-db-test.ts`
-- `M src/app/book/BookClient.tsx`
-- `M src/lib/email.ts`
-- `M src/lib/receipt-charges.ts`
+- `M prisma/schema.prisma`
+- `M scripts/shop-sales-test.ts`
+- `M src/app/api/operator/shop-sales/route.ts`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/lib/shop-sales.ts`
+- `?? prisma/migrations/20261024070000_card_reader/`
+- `?? scripts/card-reader-db-test.ts`
+- `?? src/app/api/operator/card-readers/`
+- `?? src/components/dashboard/CardReaderCard.tsx`
+- `?? src/lib/card-reader.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -170,7 +179,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `fff9ab01` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off)
+- `c8e0e662` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
 - `9985445e` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
 - `2e01ec99` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
 - `ed10fa0c` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)

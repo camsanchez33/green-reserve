@@ -8,6 +8,7 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
 import { ShopCatalog } from '@/components/dashboard/ShopCatalog';
+import { CardReaderCard } from '@/components/dashboard/CardReaderCard';
 import { SalesTaxCard } from '@/components/dashboard/SalesTaxCard';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { describePolicy, policyFrom, LATE_FEE_TIMINGS } from '@/lib/cancel-policy';
@@ -1042,6 +1043,12 @@ function SettingsPageInner() {
               {access.loaded && !isStaffLogin && (
                 <SectionCard title="Sales tax">
                   <SalesTaxCard homeState={String(form.state ?? '')} />
+                </SectionCard>
+              )}
+              {/* POS-3 R3: owner only — a reader is Stripe hardware. */}
+              {access.loaded && !isStaffLogin && (
+                <SectionCard title="Card reader">
+                  <CardReaderCard />
                 </SectionCard>
               )}
             </div>
