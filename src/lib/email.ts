@@ -150,6 +150,11 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${serviceFeeLabel(data.players)}${data.feePaidAtBooking ? ' — charged now' : ''}</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
   `;
 
+  // FEE-AT-BOOKING: the booking fee was taken when they booked; check-in collects the rest.
+  const chargedNow = data.feePaidAtBooking
+    ? `<strong>Only the $${(data.accessFeeTotal / 100).toFixed(2)} booking fee has been charged</strong> — your card is saved to hold your spot.`
+    : '<strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.';
+  const dueAtCheckIn = data.feePaidAtBooking ? data.totalAmount - data.accessFeeTotal : data.totalAmount;
   let intro: string;
   let totalRow: string;
   let policyBox: string;
@@ -170,8 +175,8 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
   } else if (cancellationFee > 0) {
     // Card on file, course has a cancellation fee
     intro = `<h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
-    totalRow = `<tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">Estimated total at check-in</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>`;
+      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Here are your booking details for ${data.courseName}. ${chargedNow}</p>`;
+    totalRow = `<tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">Estimated total at check-in</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(dueAtCheckIn / 100).toFixed(2)}</td></tr>`;
     policyBox = `<div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:16px;margin-bottom:24px;">
       <p style="margin:0 0 4px;color:#141814;font-size:13px;font-weight:700;">Cancellation policy</p>
       ${data.policyLines?.length
@@ -185,8 +190,8 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
   } else {
     // Card on file, no cancellation fee policy
     intro = `<h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Here are your booking details for ${data.courseName}. <strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.</p>`;
-    totalRow = `<tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">Estimated total at check-in</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>`;
+      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Here are your booking details for ${data.courseName}. ${chargedNow}</p>`;
+    totalRow = `<tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">Estimated total at check-in</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(dueAtCheckIn / 100).toFixed(2)}</td></tr>`;
     policyBox = `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;">
       <p style="margin:0;color:#173B2A;font-size:13px;font-weight:600;">Free cancellation any time — this course has no late-cancellation fee.</p>
       ${(data.policyLines ?? []).filter(l => /no-show/i.test(l)).map(l => `<p style="margin:4px 0 0;color:#173B2A;font-size:13px;">${escapeHtml(l)}</p>`).join('')}
@@ -225,7 +230,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
   const noCard = data.noCard ?? false;
   const html = baseTemplate(`
     <h2 style="margin:0 0 4px;color:#141814;font-size:22px;font-weight:700;">New Booking</h2>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:14px;">A tee time has been booked at ${data.courseName.trim()}. ${noCard ? 'No card was collected — golfer pays at the course or via check-in link.' : "Their card is on file — nothing's charged until they check in (or the cancellation window closes)."}</p>
+    <p style="margin:0 0 24px;color:#3F453E;font-size:14px;">A tee time has been booked at ${data.courseName.trim()}. ${noCard ? 'No card was collected — golfer pays at the course or via check-in link.' : (data.feePaidAtBooking ? "Their card is on file — only GreenReserve's booking fee was charged; the round is charged when they check in (or the cancellation window closes)." : "Their card is on file — nothing's charged until they check in (or the cancellation window closes).")}</p>
     <div style="background:#F6F4EC;border-radius:6px;padding:20px;">
       <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${escHtml(data.golferName)} (${escHtml(data.golferEmail)})</p>
       <p style="margin:0 0 8px;"><strong>Date:</strong> ${data.date} at ${data.time}</p>
@@ -463,6 +468,8 @@ export async function sendCheckInReceiptEmail(data: {
   shopFeeCents?: number;
   /** W2-7 B2: sales tax on the shop items (already inside totalAmount). */
   shopTaxCents?: number;
+  /** FEE-AT-BOOKING: the part of the booking fee charged when they booked (not inside totalAmount). */
+  feePaidAtBookingCents?: number;
   feeRefunded: boolean; feeRefundAmount: number;
   /** SD review: a fee was owed back and the automatic refund failed — say so, do not go quiet. */
   feeRefundFailed?: boolean;
@@ -479,7 +486,7 @@ export async function sendCheckInReceiptEmail(data: {
         <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
         ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
         ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</td></tr>` : ''}
-        <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${serviceFeeLabel(data.players)}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
+        <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${serviceFeeLabel(data.players)}${data.feePaidAtBookingCents ? ` ($${(data.feePaidAtBookingCents / 100).toFixed(2)} paid when you booked)` : ''}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(Math.max(0, data.accessFeeTotal - (data.feePaidAtBookingCents ?? 0)) / 100).toFixed(2)}</td></tr>
         ${(data.shopLines ?? []).map(l => `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${escapeHtml(l.name)}${l.quantity > 1 ? ` &times; ${l.quantity}` : ''}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(l.unitPriceCents * l.quantity / 100).toFixed(2)}</td></tr>`).join('')}
         ${data.shopFeeCents ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${SHOP_FEE_LABEL}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.shopFeeCents / 100).toFixed(2)}</td></tr>` : ''}
         ${data.shopTaxCents ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Sales tax on shop items</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.shopTaxCents / 100).toFixed(2)}</td></tr>` : ''}

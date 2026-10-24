@@ -33,7 +33,7 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
   if (b.feePaymentIntentId) {
     const charged = await prisma.bookingEvent.findFirst({ where: { bookingId, type: 'fee_charged', stripeId: b.feePaymentIntentId }, select: { amountCents: true } });
     if (charged?.amountCents) out.push({ label: 'Booking fee, paid when you booked', amountCents: charged.amountCents, refunded: false });
-    for (const e of refundEvents.filter(e => String((e.metadata as { reason?: string } | null)?.reason ?? '').startsWith('booking_fee_refunded'))) {
+    for (const e of refundEvents.filter(e => String((e.metadata as { reason?: string } | null)?.reason ?? '').startsWith('booking_fee_refunded:'))) {
       if (e.amountCents) out.push({ label: 'Booking fee', amountCents: e.amountCents, refunded: true });
     }
   }
@@ -73,13 +73,14 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
 
   // GreenReserve's booking fee when it was charged on its own (with a kept late
   // fee or no-show, or a counter-paid round) rather than inside the round charge.
+  // The fee taken at booking is its own row above (FEE-AT-BOOKING) — never counted here.
   const feeCharges = await prisma.paymentEvent.findMany({
-    where: { bookingId, kind: 'fee_charged' }, orderBy: { createdAt: 'desc' }, select: { amountCents: true },
+    where: { bookingId, kind: 'fee_charged', ...(b.feePaymentIntentId ? { stripeId: { not: b.feePaymentIntentId } } : {}) }, orderBy: { createdAt: 'desc' }, select: { amountCents: true },
   });
   if (feeCharges.length) {
     const live = await liveSeparateFee(bookingId);
     // A refund from the Stripe dashboard writes fee_refunded without clearing the booking's PI.
-    const feeRefunds = await prisma.paymentEvent.count({ where: { bookingId, kind: 'fee_refunded' } });
+    const feeRefunds = await prisma.paymentEvent.count({ where: { bookingId, kind: 'fee_refunded', NOT: { detail: { startsWith: 'GreenReserve booking fee refunded' } } } });
     out.push({ label: 'Booking fee', amountCents: live?.amountCents ?? feeCharges[0].amountCents, refunded: !live || feeRefunds >= feeCharges.length });
   }
 

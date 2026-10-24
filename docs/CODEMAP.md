@@ -264,7 +264,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 154 |
 | `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 76 |
 | `/api/shop-sale/[id]` | public | token | GET POST | `src/app/api/shop-sale/[id]/route.ts` | 33 |
-| `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 137 |
+| `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 138 |
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |
 | `/book` | public | public | page | `src/app/book/page.tsx` | 33 |
 | `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 142 |
@@ -322,7 +322,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/prisma.ts` | 225 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 68 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
 | `src/lib/session.ts` | 57 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
-| `src/lib/email.ts` | 56 | 2181 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +65 more |
+| `src/lib/email.ts` | 56 | 2188 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +65 more |
 | `src/lib/format.ts` | 49 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/rate-limit.ts` | 47 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
@@ -333,9 +333,9 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/stripe.ts` | 26 | 96 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/dashboard-fetch.ts` | 24 | 43 | SD-10 (from the SD review). | `dfetch`, `DFetchResult` |
 | `src/lib/contact.ts` | 22 | 20 | MAIL-1 (Cam 2026-10-22): | `ADMIN_EMAIL`, `BILLING_EMAIL`, `NOREPLY_EMAIL`, `SUPPORT_EMAIL` |
+| `src/lib/booking-fees.ts` | 17 | 54 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `serviceFeeLabel` +3 more |
 | `src/lib/change-requests.ts` | 17 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
 | `src/lib/admin-fetch.ts` | 16 | 153 | One place that decides what an admin fetch failure MEANS. | `adminErrorMessage`, `adminFetch`, `AdminFetchAction`, `AdminFetchFailure`, `AdminFetchResult`, `LOGIN_SESSION_ENDED` |
-| `src/lib/booking-fees.ts` | 16 | 54 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `serviceFeeLabel` +3 more |
 | `src/lib/inquiry-status.ts` | 16 | 480 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +23 more |
 | `src/lib/booking-events.ts` | 15 | 85 |  | `BookingEventInput`, `EventActor`, `recordBookingEvent`, `recordBookingEventSafe`, `teeTimeInstant` |
 | `src/lib/cancel-policy.ts` | 15 | 256 | SP-B (STAFF_POLICY_SPEC Part B). | `afterCutoffLine`, `afterCutoffShort`, `bookingWindowHours`, `cancelNowWords`, `CancelPolicy`, `cardAtBooking`, `cardRequired`, `chargesNoShow` +15 more |
@@ -346,7 +346,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-session-context.tsx` | 12 | 80 | MP-11a (ADMIN_V4 V4-7, LAW rule 2): | `AdminSessionProvider`, `AdminSessionView`, `isAdminAuthPath`, `useAdminSession` |
 | `src/lib/step-up-client.ts` | 11 | 70 | AW-1c: | `askReason`, `registerReasonHandler`, `registerStepUpHandler`, `stepUpFetch`, `withReason` |
 | `src/lib/use-dashboard-access.ts` | 11 | 51 | SP-A: | `DashboardAccess`, `useDashboardAccess` |
-| `src/lib/access-fee.ts` | 10 | 186 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
+| `src/lib/access-fee.ts` | 10 | 187 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/cron-log.ts` | 10 | 141 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/real-courses.ts` | 10 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
 | `src/lib/staff-permissions.ts` | 10 | 140 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
@@ -382,7 +382,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/booking-rules.ts` | 5 | 67 | W2-6 slice 3 (Cam 2026-10-20: | `groupSizeError`, `readRoundRules`, `RuleCourse`, `RuleRound`, `Rules`, `rulesFor`, `walkingAllowedAt` |
 | `src/lib/course-plan.ts` | 5 | 286 | W2-6 Schedule simplification (Cam 2026-10-21: | `ALL_DAYS`, `autoName`, `blankPlan`, `checkPlan`, `checkRows`, `columnNames`, `CompiledRow`, `compilePlan` +11 more |
 | `src/lib/expenses.ts` | 5 | 88 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +4 more |
-| `src/lib/no-show-fee.ts` | 5 | 194 | SP-B (STAFF_POLICY_SPEC Part B4). | `chargeNoShow`, `dueAutoNoShows`, `dueNoShowCharges`, `liveNoShowCharge`, `markNoShow`, `NoShowResult`, `refundNoShowFee` |
+| `src/lib/no-show-fee.ts` | 5 | 195 | SP-B (STAFF_POLICY_SPEC Part B4). | `chargeNoShow`, `dueAutoNoShows`, `dueNoShowCharges`, `liveNoShowCharge`, `markNoShow`, `NoShowResult`, `refundNoShowFee` |
 | `src/lib/shop-sales.ts` | 5 | 568 | POS-2 (Cam 2026-10-19: | `cancelSaleIntent`, `chargeSale`, `createSale`, `discountFor`, `DiscountInput`, `hasDiscount`, `MAX_SALE_CENTS`, `MAX_SALE_LINES` +16 more |
 | `src/lib/tax-categories.ts` | 5 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
 | `src/lib/admin-course-tabs.ts` | 4 | 98 | AW-7 (Cam 2026-10-21): | `bucketWeeks`, `COURSE_TABS`, `COURSE_WEEKS`, `CourseTab`, `openingTab`, `ProblemInput`, `SetupCheck`, `SetupCheckKey` +5 more |
@@ -404,9 +404,9 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/tier-rates.ts` | 4 | 61 | The member-rate rules, shared by booking (api/bookings) and moving a group to another time (lib/move-booking.ts) so both price a member the same way. | `applyTierRates`, `isWeekend` |
 | `src/lib/unsaved-guard.ts` | 4 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/admin-action-queue.ts` | 3 | 116 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
-| `src/lib/booking-fee.ts` | 3 | 122 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
+| `src/lib/booking-fee.ts` | 3 | 123 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
 | `src/lib/booking-mode.ts` | 3 | 20 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
-| `src/lib/checkin-booking.ts` | 3 | 464 |  | `cartAddOnCentsFor`, `collectPayment`, `performCheckIn` |
+| `src/lib/checkin-booking.ts` | 3 | 466 |  | `cartAddOnCentsFor`, `collectPayment`, `performCheckIn` |
 | `src/lib/claim-tee-time.ts` | 3 | 93 |  | `claimTeeTime`, `TeeTimeClaimError` |
 | `src/lib/course-setup.ts` | 3 | 52 | COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes through before it is live. | `SETUP_STEPS`, `SetupCourseLike`, `setupProgress`, `SetupProgress`, `SetupStep`, `SetupStepKey` |
 | `src/lib/course-wire.ts` | 3 | 57 |  | `COURSE_MONEY_WIRE_FIELDS`, `courseMoneyFromWire`, `courseToWire` |
@@ -482,7 +482,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/golfer-messages.ts` | 1 | 110 | MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07: | `audience`, `checkWindow`, `MAX_MESSAGE_CHARS`, `reach`, `sendCourseMessage`, `SMS_CHARS`, `smsRoom`, `Window` |
 | `src/lib/member-import.ts` | 1 | 65 | Members → Import a list (Cam 2026-10-19, OPERATOR_REWORK_SPEC "Members = list first … Add member and Import list at the top"). | `importMembers`, `ImportOptions`, `ImportResult` |
 | `src/lib/money-tabs.ts` | 1 | 15 | ADMIN-C Money: | `isMoneyTab`, `MONEY_TABS`, `MoneyTab`, `visibleMoneyTab` |
-| `src/lib/receipt-charges.ts` | 1 | 103 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
+| `src/lib/receipt-charges.ts` | 1 | 104 | R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt. | `chargedNowCents`, `ReceiptCharge`, `receiptCharges` |
 | `src/lib/schedule-plans.ts` | 1 | 98 | W2-4 (Cam 2026-10-19: | `checkPeriods`, `groupSchedules`, `normDays`, `PlanGroup`, `PlanRow`, `snapToGrid` |
 | `src/lib/schedule-preview.ts` | 1 | 154 | Schedule rework (Cam 2026-10-19: | `diffDay`, `PREVIEW_DAYS`, `previewScheduleChange`, `ScheduleChange`, `SchedulePreview` |
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |

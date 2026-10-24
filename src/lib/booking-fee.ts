@@ -77,14 +77,15 @@ export async function chargeBookingFee(bookingId: string): Promise<{ ok: true; a
  * number, capped at what is left). Keyed by the booking and how much has been
  * refunded before, so a retry can't refund twice. Never throws.
  */
-export async function refundBookingFee(bookingId: string, amount: number | 'all', reason: string, actor: 'operator' | 'admin' | 'system' | 'golfer' = 'system', actorName?: string): Promise<{ ok: boolean; refundedCents: number; error?: string }> {
+export async function refundBookingFee(bookingId: string, amount: number | 'all', reason: string, actor: 'operator' | 'admin' | 'system' | 'golfer' = 'system', actorName?: string, retried = false): Promise<{ ok: boolean; refundedCents: number; error?: string }> {
   const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: { feePaidCents: true, feePaymentIntentId: true } });
   if (!b || !b.feePaymentIntentId || b.feePaidCents <= 0) return { ok: true, refundedCents: 0 };
   const cents = amount === 'all' ? b.feePaidCents : Math.min(Math.round(amount), b.feePaidCents);
   if (cents <= 0) return { ok: true, refundedCents: 0 };
   // Take it off the booking first, conditionally — two refunds at once can't both take the same cents.
   const held = await prisma.booking.updateMany({ where: { id: bookingId, feePaidCents: b.feePaidCents }, data: { feePaidCents: { decrement: cents } } });
-  if (!held.count) return { ok: false, refundedCents: 0, error: 'The booking fee changed at the same moment — try again.' };
+  // Another refund (a party change) moved it at the same moment: read it again and try once more.
+  if (!held.count) return retried ? { ok: false, refundedCents: 0, error: 'The booking fee changed at the same moment — try again.' } : refundBookingFee(bookingId, amount, reason, actor, actorName, true);
   let r: Stripe.Refund;
   try {
     r = await stripe.refunds.create(

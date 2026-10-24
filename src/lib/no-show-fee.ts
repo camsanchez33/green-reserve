@@ -115,9 +115,10 @@ export async function dueNoShowCharges(now: Date): Promise<string[]> {
   const scanFrom = new Date(now.getTime() - 3 * 86_400_000).toISOString().slice(0, 10);
   const candidates = await prisma.booking.findMany({
     where: { status: 'confirmed', noShowAt: { not: null }, checkedInAt: null, teeTime: { date: { gte: scanFrom } } },
-    select: { id: true, noShowAt: true, noShowFeeTotal: true, accessFeeTotal: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } },
+    select: { id: true, noShowAt: true, noShowFeeTotal: true, accessFeeTotal: true, feePaidCents: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } },
   });
-  const pastMidnight = candidates.filter(b => todayIn(b.course.timezone, now) > b.teeTime.date && (b.noShowFeeTotal > 0 || b.accessFeeTotal > 0));
+  // FEE-AT-BOOKING: a fee paid when they booked leaves nothing of GreenReserve's to charge.
+  const pastMidnight = candidates.filter(b => todayIn(b.course.timezone, now) > b.teeTime.date && (b.noShowFeeTotal > 0 || b.accessFeeTotal - b.feePaidCents > 0));
   if (!pastMidnight.length) return [];
   const attempted = await prisma.paymentEvent.findMany({
     where: {
