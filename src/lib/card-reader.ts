@@ -19,6 +19,7 @@
 // already refuse a sale whose intent succeeded (cancelSaleIntent).
 // A sale stuck 'paying' is settled from Stripe by reconcileStuckSale, as before.
 import Stripe from 'stripe';
+import { createHash } from 'crypto';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { saleIntent, markCardPaid, whyNotOpen } from './shop-sales';
@@ -68,11 +69,10 @@ export async function listReaders(courseId: string): Promise<Result<ReaderView[]
 /** The course's Terminal location, made once (keyed per course so two first readers can't make two). */
 async function ensureLocation(courseId: string, c: { name: string; address: string; city: string; state: string; zipCode: string; account: string; terminalLocationId: string }) {
   if (c.terminalLocationId) return c.terminalLocationId;
-  const loc = await stripe.terminal.locations.create({
-    display_name: c.name.slice(0, 100),
-    address: { line1: c.address || c.name, city: c.city, state: c.state, postal_code: c.zipCode, country: 'US' },
-    metadata: { courseId },
-  }, { stripeAccount: c.account, idempotencyKey: `terminal-location-${courseId}` });
+  const address = { line1: c.address || c.name, city: c.city, state: c.state, postal_code: c.zipCode, country: 'US' };
+  // Keyed by the address too: after a fix in Settings the retry is a new request, not Stripe's stored error.
+  const key = `terminal-location-${courseId}-${createHash('sha256').update(JSON.stringify(address)).digest('hex').slice(0, 16)}`;
+  const loc = await stripe.terminal.locations.create({ display_name: c.name.slice(0, 100), address, metadata: { courseId } }, { stripeAccount: c.account, idempotencyKey: key });
   // Conditional: a location saved meanwhile by another request wins (it is the same one — same key).
   await prisma.course.updateMany({ where: { id: courseId, terminalLocationId: '' }, data: { terminalLocationId: loc.id } });
   const saved = await prisma.course.findUniqueOrThrow({ where: { id: courseId }, select: { terminalLocationId: true } });
@@ -87,6 +87,9 @@ export async function registerReader(courseId: string, input: { code?: unknown; 
   if (code === SIMULATED_CODE && !terminalTestMode()) return fail(400, 'Simulated readers only work in test mode — enter the code from your reader.');
   const c = await courseStripe(courseId);
   if (!c.ok) return c;
+  if (!c.value.terminalLocationId && (!c.value.city.trim() || !c.value.state.trim() || !c.value.zipCode.trim())) {
+    return fail(400, 'Add your course’s city, state and ZIP in Settings → Your course first — Stripe needs them for a card reader.');
+  }
   try {
     const location = await ensureLocation(courseId, c.value);
     const r = await stripe.terminal.readers.create({ registration_code: code, label, location }, { stripeAccount: c.value.account });
@@ -134,7 +137,7 @@ const releaseToOpen = (saleId: string, stamp: Date) =>
  * card_present intent, and tell the reader to collect it. A sale made with a
  * pay link can't be moved to the reader (it has its own intent for the link).
  */
-export async function startReaderPayment(courseId: string, saleId: string, readerId: string): Promise<Result<{ status: 'waiting' }>> {
+export async function startReaderPayment(courseId: string, saleId: string, readerId: string): Promise<Result<{ status: 'waiting'; message?: string }>> {
   const c = await courseStripe(courseId);
   if (!c.ok) return c;
   const sale = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, select: { status: true, payToken: true, totalCents: true, paymentIntentId: true } });
@@ -143,7 +146,6 @@ export async function startReaderPayment(courseId: string, saleId: string, reade
   if (sale.status !== 'open') return fail(409, sale.status === 'paying' ? 'This sale is already on the card reader — wait for it, or cancel it on the register.' : whyNotOpen(sale.status));
   const reader = await ownReader(c.value.account, c.value.terminalLocationId, readerId);
   if (!reader.ok) return reader;
-  if (reader.value.status === 'offline') return fail(409, 'The card reader is offline — check it is on and connected to the internet, then try again.');
 
   const stamp = new Date();
   const claimed = await prisma.shopSale.updateMany({ where: { id: saleId, courseId, status: 'open', payToken: '' }, data: { status: 'paying', chargeStartedAt: stamp, readerId } });
@@ -160,10 +162,15 @@ export async function startReaderPayment(courseId: string, saleId: string, reade
   try {
     await stripe.terminal.readers.processPaymentIntent(readerId, { payment_intent: pi.id }, { stripeAccount: c.value.account, idempotencyKey: `reader-process-${pi.id}-${stamp.getTime()}` });
   } catch (err) {
-    // The reader never took the job: nothing was presented, so nothing was charged.
-    await releaseToOpen(saleId, stamp);
     console.error(JSON.stringify({ ev: 'card_reader.process.fail', courseId, saleId, readerId, error: err instanceof Error ? err.message : String(err) }));
-    return fail(409, stripeMessage(err, 'The card reader didn’t take the payment — try again.'));
+    // Stripe refused it (offline, busy, bad request): the reader never took the job, so nothing can be charged.
+    if (err instanceof Stripe.errors.StripeInvalidRequestError || err instanceof Stripe.errors.StripeCardError) {
+      await releaseToOpen(saleId, stamp);
+      return fail(409, stripeMessage(err, 'The card reader didn’t take the payment — try again.'));
+    }
+    // A timeout or a Stripe error: the reader may have the job. Keep the claim; the register's
+    // status checks read the reader and settle it (and a stuck sale is settled after 10 minutes).
+    return { ok: true, value: { status: 'waiting', message: 'Checking whether the reader got the payment…' } };
   }
   return { ok: true, value: { status: 'waiting' } };
 }
@@ -186,7 +193,13 @@ export async function readerSaleStatus(courseId: string, saleId: string): Promis
     if (!sale.paymentIntentId) return { ok: true, value: { status: 'waiting' } };
     const pi = await stripe.paymentIntents.retrieve(sale.paymentIntentId, {}, { stripeAccount: account });
     if (pi.status === 'succeeded') { await markCardPaid(saleId, sale.chargeStartedAt, pi.id); return { ok: true, value: { status: 'paid' } }; }
-    if (pi.status === 'processing' || pi.status === 'requires_capture') return { ok: true, value: { status: 'waiting' } };
+    if (pi.status === 'requires_capture') {
+      // Automatic capture is the default; should a card ever be only held, take it so the sale isn't stuck.
+      const done = await stripe.paymentIntents.capture(pi.id, {}, { stripeAccount: account, idempotencyKey: `reader-capture-${pi.id}` });
+      if (done.status === 'succeeded') { await markCardPaid(saleId, sale.chargeStartedAt, done.id); return { ok: true, value: { status: 'paid' } }; }
+      return { ok: true, value: { status: 'waiting' } };
+    }
+    if (pi.status === 'processing') return { ok: true, value: { status: 'waiting' } };
     const r = await stripe.terminal.readers.retrieve(sale.readerId, {}, { stripeAccount: account });
     const action = 'deleted' in r && r.deleted ? null : (r as Stripe.Terminal.Reader).action;
     const mine = action?.type === 'process_payment_intent' && action.process_payment_intent?.payment_intent === pi.id;
@@ -212,10 +225,18 @@ export async function cancelReaderPayment(courseId: string, saleId: string): Pro
   if (sale.status !== 'paying' || !sale.readerId || !sale.chargeStartedAt || !sale.course.stripeAccountId) return readerSaleStatus(courseId, saleId);
   const account = sale.course.stripeAccountId;
   try {
-    // Nothing on the reader any more (finished or already cancelled) is fine; the intent decides.
-    await stripe.terminal.readers.cancelAction(sale.readerId, {}, { stripeAccount: account }).catch(err => {
-      console.log(JSON.stringify({ ev: 'card_reader.cancel.no_action', saleId, error: err instanceof Error ? err.message : String(err) }));
-    });
+    try {
+      await stripe.terminal.readers.cancelAction(sale.readerId, {}, { stripeAccount: account });
+    } catch (err) {
+      // Refused: either nothing is on the reader any more (fine — the intent decides), or the
+      // reader is already authorising this card and can't be stopped. Then never release.
+      console.log(JSON.stringify({ ev: 'card_reader.cancel.refused', saleId, error: err instanceof Error ? err.message : String(err) }));
+      const r = await stripe.terminal.readers.retrieve(sale.readerId, {}, { stripeAccount: account });
+      const action = 'deleted' in r && r.deleted ? null : (r as Stripe.Terminal.Reader).action;
+      if (action?.type === 'process_payment_intent' && action.status === 'in_progress' && action.process_payment_intent?.payment_intent === sale.paymentIntentId) {
+        return { ok: true, value: { status: 'waiting', message: 'The card is already going through — wait a moment.' } };
+      }
+    }
     if (!sale.paymentIntentId) { await releaseToOpen(saleId, sale.chargeStartedAt); return { ok: true, value: { status: 'cancelled' } }; }
     const pi = await stripe.paymentIntents.retrieve(sale.paymentIntentId, {}, { stripeAccount: account });
     if (pi.status === 'succeeded') { await markCardPaid(saleId, sale.chargeStartedAt, pi.id); return { ok: true, value: { status: 'paid', message: 'The card went through before the reader stopped — the sale is paid.' } }; }

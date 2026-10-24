@@ -20,6 +20,8 @@ type Rdr = { id: string; label: string; location: string; account: string; statu
 const readers = new Map<string, Rdr>();
 const locations: { id: string; account: string; key: string }[] = [];
 let nextReaderOffline = false;
+let cancelRefused = false; // the reader is authorising: Stripe won't stop it
+let dispatch: 'ok' | 'timeout_after' | 'timeout_before' = 'ok';
 const s = stripe as unknown as Record<string, Record<string, unknown>>;
 s.paymentIntents.create = async (p: { amount: number; payment_method_types: string[] }, o: { stripeAccount: string; idempotencyKey: string }) => {
   const found = [...intents.values()].find(x => x.key === o.idempotencyKey);
@@ -31,6 +33,7 @@ s.paymentIntents.retrieve = async (id: string, _p: unknown, o: { stripeAccount: 
   const pi = intents.get(id); if (!pi || pi.account !== o.stripeAccount) throw new Stripe.errors.StripeInvalidRequestError({ message: 'No such payment_intent', type: 'invalid_request_error' } as never);
   return { ...pi };
 };
+s.paymentIntents.capture = async (id: string) => { intents.get(id)!.status = 'succeeded'; return { ...intents.get(id)! }; };
 s.paymentIntents.cancel = async (id: string) => { intents.get(id)!.status = 'canceled'; return { ...intents.get(id)! }; };
 const terminal = stripe.terminal as unknown as Record<string, Record<string, unknown>>;
 terminal.locations.create = async (_p: unknown, o: { stripeAccount: string; idempotencyKey: string }) => {
@@ -53,11 +56,15 @@ terminal.readers.processPaymentIntent = async (id: string, p: { payment_intent: 
   const r = readers.get(id)!;
   if (nextReaderOffline) { nextReaderOffline = false; throw new Stripe.errors.StripeInvalidRequestError({ message: 'Reader is offline', type: 'invalid_request_error', code: 'terminal_reader_offline' } as never); }
   if (r.action?.status === 'in_progress') throw new Stripe.errors.StripeInvalidRequestError({ message: 'Reader is busy', type: 'invalid_request_error', code: 'terminal_reader_busy' } as never);
+  if (dispatch === 'timeout_before') { dispatch = 'ok'; throw new Stripe.errors.StripeConnectionError({ message: 'timed out' } as never); }
   r.action = { type: 'process_payment_intent', status: 'in_progress', process_payment_intent: { payment_intent: p.payment_intent } };
-  processed.push(p.payment_intent); return { ...r };
+  processed.push(p.payment_intent);
+  if (dispatch === 'timeout_after') { dispatch = 'ok'; throw new Stripe.errors.StripeConnectionError({ message: 'timed out' } as never); }
+  return { ...r };
 };
 terminal.readers.cancelAction = async (id: string) => {
   const r = readers.get(id)!;
+  if (cancelRefused) throw new Stripe.errors.StripeInvalidRequestError({ message: 'Reader is processing a payment', type: 'invalid_request_error' } as never);
   if (!r.action || r.action.status !== 'in_progress') throw new Stripe.errors.StripeInvalidRequestError({ message: 'No action to cancel', type: 'invalid_request_error' } as never);
   r.action = null; return { ...r };
 };
@@ -148,6 +155,34 @@ async function cleanup() {
   readers.get(front)!.action = null; // cancelled on the reader itself
   const gone = await readerSaleStatus(c.id, s4.id);
   ok('cancelled on the reader itself: the sale goes back to open', gone.ok && gone.value.status === 'cancelled' && (await sale(s4.id)).status === 'open');
+
+  // ── Races the reviewer found ──
+  const s7 = await sell();
+  await startReaderPayment(c.id, s7.id, front);
+  cancelRefused = true; // the customer tapped; the reader is authorising and won't stop
+  const refused = await cancelReaderPayment(c.id, s7.id);
+  cancelRefused = false;
+  ok('cancel refused mid-authorisation: the sale stays on the reader, never "nothing was charged"', refused.ok && refused.value.status === 'waiting' && (await sale(s7.id)).status === 'paying', refused);
+  tap(front);
+  ok('…and the card going through is recorded', (await readerSaleStatus(c.id, s7.id)).ok && (await sale(s7.id)).status === 'paid_card');
+  const s8 = await sell();
+  dispatch = 'timeout_after';
+  const unsure = await startReaderPayment(c.id, s8.id, front);
+  ok('a timeout after the reader got the job keeps the sale on the reader', unsure.ok && (await sale(s8.id)).status === 'paying', unsure);
+  tap(front);
+  ok('…so a tap pays it', (await readerSaleStatus(c.id, s8.id)).ok && (await sale(s8.id)).status === 'paid_card');
+  const s9 = await sell();
+  dispatch = 'timeout_before';
+  await startReaderPayment(c.id, s9.id, front);
+  const never = await readerSaleStatus(c.id, s9.id);
+  ok('a timeout where the reader never got the job: the next check puts the sale back', never.ok && never.value.status === 'cancelled' && (await sale(s9.id)).status === 'open', never);
+  await startReaderPayment(c.id, s9.id, front);
+  intents.get((await sale(s9.id)).paymentIntentId)!.status = 'requires_capture';
+  ok('a card only held is taken, not left stuck', (await readerSaleStatus(c.id, s9.id)).ok && (await sale(s9.id)).status === 'paid_card');
+  readers.get(front)!.action = null;
+  const noAddr = await prisma.course.create({ data: { name: 'No address', slug: `${TAG}-d`, operatorId: op.id, address: '', city: '', state: '', zipCode: '', holes: 18, timezone: 'UTC', stripeAccountId: 'acct_d', stripeAccountActive: true } });
+  const na = await registerReader(noAddr.id, { code: SIMULATED_CODE });
+  ok('no city/state/ZIP: says to add them, before asking Stripe', !na.ok && /city, state and ZIP/.test(na.ok ? '' : na.error) && !locations.some(l => l.account === 'acct_d'), na);
 
   // ── Offline, busy ──
   nextReaderOffline = true;

@@ -14006,7 +14006,7 @@
     },
     {
       "path": "src/lib/card-reader.ts",
-      "lines": 242,
+      "lines": 263,
       "purpose": "POS-3 R3 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -14064,6 +14064,7 @@
         "./prisma",
         "./shop-sales",
         "./stripe",
+        "crypto",
         "stripe"
       ],
       "usedBy": [
