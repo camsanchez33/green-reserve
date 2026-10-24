@@ -1,36 +1,32 @@
 {
-  "generatedAt": "2026-10-24T03:00:05.851Z",
+  "generatedAt": "2026-10-24T03:09:55.292Z",
   "repo": {
-    "head": "6d7bf2a5",
+    "head": "3f1a6f50",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 30,
+    "dirtyCount": 9,
     "dirty": [
-      "M OPERATOR_REWORK_SPEC.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/birdie-isolation-test.ts",
-      " M scripts/booking-rules-test.ts",
-      " M scripts/course-plan-test.ts",
-      " M scripts/round-rules-test.ts",
-      " M scripts/schedule-rework-test.ts",
+      " M scripts/cart-walk-db-test.ts",
       " M src/app/api/bookings/route.ts",
-      " M src/app/api/courses/route.ts",
-      " M src/app/api/member/[courseSlug]/tee-times/route.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/round-rules/route.ts",
-      " M src/app/api/preview/[courseId]/route.ts",
-      " M src/app/dashboard/schedules/page.tsx",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/components/dashboard/RoundRulesCard.tsx",
-      " M src/lib/birdie/course-context.ts",
-      " M src/lib/booking-rules.ts"
+      " M src/app/book/BookClient.tsx",
+      " M src/app/courses/[slug]/CourseBookingClient.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/lib/move-booking.ts",
+      " M src/lib/schedule-service.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "3f1a6f50",
+        "date": "2026-10-24T03:00:16+00:00",
+        "subject": "CART-1: walking and the cart price per price-table cell, weekday and weekend",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "6d7bf2a5",
         "date": "2026-10-23T22:07:29-04:00",
@@ -351,7 +347,7 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-23",
+      "lastTouched": "2026-10-24",
       "ageDays": 0
     },
     {
@@ -550,6 +546,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "3f1a6f50",
+      "date": "2026-10-24",
+      "subject": "CART-1: walking and the cart price per price-table cell, weekday and weekend"
+    },
+    {
       "h": "6d7bf2a5",
       "date": "2026-10-23",
       "subject": "Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)"
@@ -603,11 +604,6 @@
       "h": "3c88148d",
       "date": "2026-10-22",
       "subject": "Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)"
-    },
-    {
-      "h": "946d4a54",
-      "date": "2026-10-23",
-      "subject": "The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie"
     }
   ]
 }

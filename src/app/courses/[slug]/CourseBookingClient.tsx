@@ -208,7 +208,7 @@ export default function CourseDetailPage({
   // GRP-1: a group page (/g/[slug]) links a time as ?tt={id}; it is picked once
   // the day's times load, if it still has room for the group.
   const pendingPick = useRef(searchParams.get('tt'));
-  // A required cart is each tee time's call (cart_required) — a round can let golfers walk on a cart-required course.
+  // A required cart is each tee time's call (cart_required, from its price-table cell — CART-1).
   const [withCart, setWithCart] = useState(false);
   const [todFilter, setTodFilter] = useState<TimeOfDay>(() => {
     const t = searchParams.get('tod');
@@ -1609,7 +1609,8 @@ export default function CourseDetailPage({
                       { label: 'Holes', value: String(course.holes) },
                       { label: 'Par', value: String(course.par) },
                       // A carts-only course says so under Walking; "Cart: Optional" beside it read as a contradiction.
-                      { label: 'Cart', value: course.walking_policy === 'never' ? '' : course.cart_required ? 'Required' : 'Optional' },
+                      // CART-1: "some" tee times are cart-only — the Walking line below says so, each time shows it.
+                      { label: 'Cart', value: course.walking_policy === 'always' ? 'Optional' : '' },
                       { label: 'State', value: course.state },
                     ].filter(f => f.value && f.value !== 'undefined' && f.value !== 'null').map(f => (
                       <div key={f.label}>

@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-24 03:00 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 6d7bf2a5</span>
-    <span>30 uncommitted</span>
+    <span>2026-10-24 03:09 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 3f1a6f50</span>
+    <span>9 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">19 runs have shipped that the queue doesn't know about</div>
+<div class="lede">20 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">3f1a6f50</span><span>CART-1: walking and the cart price per price-table cell, weekday and weekend</span></li>
 <li><span class="h">6d7bf2a5</span><span>Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)</span></li>
 <li><span class="h">fbacc529</span><span>Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)</span></li>
 <li><span class="h">592f05f4</span><span>schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday</span></li>
@@ -156,7 +157,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M OPERATOR_REWORK_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/birdie-isolation-test.ts</code></li><li><code>M scripts/booking-rules-test.ts</code></li><li><code>M scripts/course-plan-test.ts</code></li><li><code>M scripts/round-rules-test.ts</code></li><li><code>M scripts/schedule-rework-test.ts</code></li><li><code>M src/app/api/bookings/route.ts</code></li><li><code>M src/app/api/courses/route.ts</code></li><li><code>M src/app/api/member/[courseSlug]/tee-times/route.ts</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/app/api/operator/round-rules/route.ts</code></li><li><code>M src/app/api/preview/[courseId]/route.ts</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/components/dashboard/RoundRulesCard.tsx</code></li><li><code>M src/lib/birdie/course-context.ts</code></li><li><code>M src/lib/booking-rules.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/cart-walk-db-test.ts</code></li><li><code>M src/app/api/bookings/route.ts</code></li><li><code>M src/app/book/BookClient.tsx</code></li><li><code>M src/app/courses/[slug]/CourseBookingClient.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/lib/move-booking.ts</code></li><li><code>M src/lib/schedule-service.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -201,7 +202,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 6d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-24 &middot; 0d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
@@ -236,6 +237,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 16d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">3f1a6f50</td><td class="num">2026-10-24</td><td>CART-1: walking and the cart price per price-table cell, weekday and weekend</td></tr>
 <tr><td class="num">6d7bf2a5</td><td class="num">2026-10-23</td><td>Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)</td></tr>
 <tr><td class="num">fbacc529</td><td class="num">2026-10-23</td><td>Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)</td></tr>
 <tr><td class="num">592f05f4</td><td class="num">2026-10-24</td><td>schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday</td></tr>
@@ -247,7 +249,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">85bb9160</td><td class="num">2026-10-23</td><td>The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again</td></tr>
 <tr><td class="num">3148eed2</td><td class="num">2026-10-22</td><td>Money: Needs you — declined cards with a pay link (DASH-C) (#198)</td></tr>
 <tr><td class="num">3c88148d</td><td class="num">2026-10-22</td><td>Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)</td></tr>
-<tr><td class="num">946d4a54</td><td class="num">2026-10-23</td><td>The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

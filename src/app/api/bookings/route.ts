@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
   // there is no float in the money path at all.
   const greenFeePerPlayerCents = resolvedGreenFeeOverride ?? teeTimeFull.greenFeeCents;
   const cartFeePerPlayerCents  = resolvedCartFeeOverride  ?? teeTimeFull.cartFeeCents;
-  // A cart is required when the course or round says so, or this time's schedule doesn't allow walking.
+  // A cart is required when this tee time can't be walked (its price-table cell, CART-1).
   const wantsCart = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
 
   // RES-1: a signed-in golfer on the course's resident list pays the resident

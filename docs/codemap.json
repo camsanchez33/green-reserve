@@ -7289,7 +7289,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1838,
+      "lines": 1839,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7821,7 +7821,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1498,
+      "lines": 1501,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17618,7 +17618,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 228,
+      "lines": 231,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -19068,7 +19068,7 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 360,
+      "lines": 365,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [

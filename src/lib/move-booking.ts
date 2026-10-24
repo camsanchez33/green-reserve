@@ -144,7 +144,7 @@ export async function moveBooking(opts: {
 
       const slot = await tx.teeTime.findUnique({
         where: { id: opts.newTeeTimeId },
-        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, residentRateCents: true },
+        select: { id: true, courseId: true, date: true, time: true, holes: true, status: true, playersBooked: true, playersAvailable: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, residentRateCents: true, walkingAllowed: true },
       });
       if (!slot) throw new MoveError('SLOT_GONE');
       if (slot.courseId !== b.courseId) throw new MoveError('WRONG_COURSE');
@@ -170,7 +170,9 @@ export async function moveBooking(opts: {
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
       const residents = groupGreenFee(b.players, rate.greenFeeCents, opts.residentPlayers ?? b.residentPlayers, slot.residentRateCents);
       const newGreen = residents.greenFeeTotal;
-      const newCart = b.cartSelected ? rate.cartFeeCents * b.players : 0;
+      // CART-1: a group moved onto a cart-only time takes a cart there.
+      const cartOn = b.cartSelected || slot.walkingAllowed === false;
+      const newCart = cartOn ? rate.cartFeeCents * b.players : 0;
       const range = Math.round(b.rangeBallsTotal);
       const access = Math.round(b.accessFeeTotal); // per-player amount unchanged: same players
       // A round already paid (admin "collect payment" before check-in) keeps its
@@ -199,6 +201,7 @@ export async function moveBooking(opts: {
       const data: Prisma.BookingUpdateInput = { teeTime: { connect: { id: slot.id } }, ...totals };
       if (!keep) {
         data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
+        data.cartSelected = cartOn;
         if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
       }
       if (opts.terms) { data.termsAcceptedAt = now; data.termsVersion = opts.terms.version; }

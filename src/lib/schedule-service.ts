@@ -148,6 +148,9 @@ export async function updateSchedule(id: string, data: Record<string, unknown>, 
       // their existing cents values (Prisma leaves omitted fields alone).
       ...scheduleMoneyFromWire(data),
       walkingAllowed: data.walkingAllowed !== undefined ? Boolean(data.walkingAllowed) : existing.walkingAllowed,
+      // CART-1: a single-row edit means one value for every day — the weekend follows the weekday (null).
+      ...('cartFee' in data && !('cartFeeWeekend' in data) ? { cartFeeWeekendCents: null } : {}),
+      ...(data.walkingAllowed !== undefined ? { walkingWeekend: data.walkingWeekend !== undefined ? Boolean(data.walkingWeekend) : null } : {}),
     },
   });
 
@@ -253,6 +256,8 @@ export async function saveSchedulePlan(courseId: string, plan: SchedulePlan, opt
     // The editor sends dollars; the columns are cents. Every price is sent for every period.
     ...scheduleMoneyForCreate(p),
     walkingAllowed: p.walkingAllowed !== false,
+    // CART-1: this editor sends one walking value; the weekend follows it.
+    walkingWeekend: p.walkingWeekend !== undefined ? p.walkingWeekend !== false : null,
   });
   const keep = new Set(periods.map(p => p.id).filter(Boolean) as string[]);
   await prisma.$transaction([

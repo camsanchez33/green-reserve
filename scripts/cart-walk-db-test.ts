@@ -3,7 +3,9 @@
 // through the Schedule page's own save and onto the tee times it makes.
 // Run: npx tsx scripts/cart-walk-db-test.ts (needs DATABASE_URL)
 import { prisma } from '../src/lib/prisma';
-import { saveCoursePlan } from '../src/lib/schedule-service';
+import { saveCoursePlan, updateSchedule } from '../src/lib/schedule-service';
+import { moveBooking } from '../src/lib/move-booking';
+import { readFileSync } from 'fs';
 import { emptyCell, type CoursePlan } from '../src/lib/course-plan';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 import { walkingAllowedAt } from '../src/lib/booking-rules';
@@ -12,6 +14,8 @@ let failed = 0;
 const ok = (l: string, c: boolean, i = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || !i ? '' : ' — ' + i}`); if (!c) failed++; };
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
+  await prisma.bookingEvent.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTimeSchedule.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.courseProduct.deleteMany({ where: { courseId: { in: ids } } });
@@ -59,6 +63,30 @@ async function cleanup() {
   ok('Saturday twilight, 18 holes: walkable', satTwi?.walkingAllowed === true && satTwi?.cartFeeCents === 1500);
   ok('Wednesday twilight, 9 holes: cart only', wed9Twi?.walkingAllowed === false);
   ok('booking reads the tee time, not the old course-wide "carts only" word', walkingAllowedAt(wedAm!) && !walkingAllowedAt(satAm!));
+
+  // A group booked walking on a walkable time, moved onto a cart-only one, takes a cart there.
+  await prisma.teeTime.update({ where: { id: wedAm!.id }, data: { playersBooked: 2 } });
+  const g = await prisma.booking.create({ data: { teeTimeId: wedAm!.id, courseId: c.id, golferName: 'Walker', golferEmail: `${TAG}+g@t.local`, players: 2,
+    greenFeeTotal: 13000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 13000, status: 'confirmed', paymentStatus: 'card_on_file', appliedRate: 'standard' } });
+  const mv = await moveBooking({ bookingId: g.id, newTeeTimeId: satAm!.id, courseId: c.id, pricing: 'new_slot', actor: { type: 'staff', id: null } });
+  const moved = await prisma.booking.findUniqueOrThrow({ where: { id: g.id } });
+  ok('moved onto a cart-only time, the group is charged the cart there', mv.ok && moved.cartSelected === true && moved.cartFeeTotal === 5000, JSON.stringify({ ok: mv.ok, cart: moved.cartFeeTotal, sel: moved.cartSelected }));
+
+  // A single-row edit (the assistant's schedule card, the admin row editor) sets one cart price for every day.
+  const row = rows.find(r => r.productId === p18.id && r.startTime === '07:00')!;
+  await updateSchedule(row.id, { cartFee: 30, walkingAllowed: true }, { scopeCourseId: c.id });
+  const edited = await prisma.teeTimeSchedule.findUniqueOrThrow({ where: { id: row.id } });
+  ok('a single-row cart edit reaches the weekend too', edited.cartFeeCents === 3000 && edited.cartFeeWeekendCents === null && edited.walkingWeekend === null, JSON.stringify(edited));
+  const sun = days.find(d => new Date(d + 'T12:00:00Z').getUTCDay() === 0)!;
+  await generateTeeTimes(c.id, sun);
+  const sunAm = await tt(sun, p18.id, '07:00');
+  ok('…so the weekend tee times take it', sunAm?.cartFeeCents === 3000 && sunAm?.walkingAllowed === true, JSON.stringify(sunAm));
+
+  // The counter's walk-in/phone form: the route forces the cart on a cart-only time, and the form shows it.
+  const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
+  const sheet = readFileSync('src/app/dashboard/page.tsx', 'utf8');
+  ok('a walk-in on a cart-only time is charged the cart', route.includes('cartSelected || teeTime.walkingAllowed === false') && !route.includes('teeTime.course.cartRequired'));
+  ok('…and the form locks the cart on and says so', sheet.includes('const cartForced = slot.walkingAllowed === false') && sheet.includes('required on this time'));
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }
