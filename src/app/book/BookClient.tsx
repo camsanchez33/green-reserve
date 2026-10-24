@@ -222,7 +222,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 accent={accent}
                 when="Today"
                 what={confirmedData.cutoffPassed && confirmedData.cancellationFeeTotal > 0 && holdsAtCutoff({ lateFeeTimingAtBooking: confirmedData.lateFeeTiming })
-                  ? <>Booked · <strong className="text-ink font-medium">{holdTodayLine(policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}</strong></>
+                  ? <>Booked · <strong className="text-ink font-medium">{FEE_AT_BOOKING_ON ? `$${confirmedData.accessFeeTotal.toFixed(2)} booking fee charged today; ` : ''}{holdTodayLine(policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}</strong></>
                   : <>Booked · <strong className="text-ink font-medium">charged today ${(FEE_AT_BOOKING_ON && !confirmedData.noCard ? confirmedData.accessFeeTotal : 0).toFixed(2)}</strong></>}
               />
               {/* Wording from cancel-policy.ts (afterCutoffLine / insideWindowLine), by the

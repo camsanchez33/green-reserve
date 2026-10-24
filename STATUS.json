@@ -1,22 +1,15 @@
 {
-  "generatedAt": "2026-10-24T05:51:13.478Z",
+  "generatedAt": "2026-10-24T05:56:52.435Z",
   "repo": {
-    "head": "9985445e",
+    "head": "fff9ab01",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 13,
+    "dirtyCount": 6,
     "dirty": [
-      "M OPERATOR_REWORK_SPEC.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/fee-at-booking-db-test.ts",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/stripe/webhook/route.ts",
       " M src/app/book/BookClient.tsx",
-      " M src/lib/access-fee.ts",
-      " M src/lib/booking-fee.ts",
-      " M src/lib/checkin-booking.ts",
       " M src/lib/email.ts",
-      " M src/lib/no-show-fee.ts",
       " M src/lib/receipt-charges.ts"
     ],
     "looksLikeRunInProgress": true
@@ -24,6 +17,13 @@
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "fff9ab01",
+        "date": "2026-10-24T05:51:15+00:00",
+        "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "9985445e",
         "date": "2026-10-24T01:50:41-04:00",
@@ -571,6 +571,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "fff9ab01",
+      "date": "2026-10-24",
+      "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off)"
+    },
+    {
       "h": "9985445e",
       "date": "2026-10-24",
       "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)"
@@ -624,11 +629,6 @@
       "h": "d2b41f27",
       "date": "2026-10-23",
       "subject": "Regenerate the status board"
-    },
-    {
-      "h": "d6efdc1b",
-      "date": "2026-10-23",
-      "subject": "Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)"
     }
   ]
 }

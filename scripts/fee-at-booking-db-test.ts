@@ -149,6 +149,18 @@ async function cleanup() {
   // A late, older refund event can't put refunded cents back.
   const wh = readFileSync('src/app/api/stripe/webhook/route.ts', 'utf8');
   ok('the webhook only ever lowers what was paid at booking', wh.includes('feePaymentIntentId: piOf(charge.payment_intent), feePaidCents: { gt:'));
+  // The receipt: a fee taken at booking is one row, not refunded — never a second "Booking fee — refunded".
+  const { receiptCharges } = await import('../src/lib/receipt-charges');
+  const rc = await receiptCharges(grew.id);
+  const feeRows = rc.filter(r => /Booking fee/.test(r.label));
+  ok('the receipt shows the fee paid at booking once, and the later separate fee once, neither refunded', feeRows.length === 2 && feeRows.every(r => !r.refunded) && feeRows.some(r => /when you booked/.test(r.label) && r.amountCents === 300), feeRows);
+  const plain = await book((await tt(day(5))).id, 2);
+  await chargeBookingFee(plain.id);
+  const pr = (await receiptCharges(plain.id)).filter(r => /Booking fee/.test(r.label));
+  ok('…and an ordinary booking shows only the fee paid at booking', pr.length === 1 && !pr[0].refunded, pr);
+  await refundBookingFee(plain.id, 150, 'party lowered', 'golfer');
+  const pr2 = (await receiptCharges(plain.id)).filter(r => /Booking fee/.test(r.label));
+  ok('…a part refunded shows as its own refunded row', pr2.length === 2 && pr2.filter(r => r.refunded).length === 1 && pr2.find(r => r.refunded)?.amountCents === 150, pr2);
   ok('the receipt tells the booking fee refund apart from the separate fee’s', readFileSync('src/lib/receipt-charges.ts', 'utf8').includes("startsWith('booking_fee_refunded:')"));
 
   await cleanup(); await prisma.$disconnect();

@@ -230,7 +230,7 @@ export async function sendOperatorBookingNotification(data: BookingEmailData & {
   const noCard = data.noCard ?? false;
   const html = baseTemplate(`
     <h2 style="margin:0 0 4px;color:#141814;font-size:22px;font-weight:700;">New Booking</h2>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:14px;">A tee time has been booked at ${data.courseName.trim()}. ${noCard ? 'No card was collected — golfer pays at the course or via check-in link.' : "Their card is on file — nothing's charged until they check in (or the cancellation window closes)."}</p>
+    <p style="margin:0 0 24px;color:#3F453E;font-size:14px;">A tee time has been booked at ${data.courseName.trim()}. ${noCard ? 'No card was collected — golfer pays at the course or via check-in link.' : (data.feePaidAtBooking ? "Their card is on file — only GreenReserve's booking fee was charged; the round is charged when they check in (or the cancellation window closes)." : "Their card is on file — nothing's charged until they check in (or the cancellation window closes).")}</p>
     <div style="background:#F6F4EC;border-radius:6px;padding:20px;">
       <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${escHtml(data.golferName)} (${escHtml(data.golferEmail)})</p>
       <p style="margin:0 0 8px;"><strong>Date:</strong> ${data.date} at ${data.time}</p>
