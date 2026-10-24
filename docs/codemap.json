@@ -6986,7 +6986,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 137,
+      "lines": 138,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7038,7 +7038,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 725,
+      "lines": 727,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11177,7 +11177,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 186,
+      "lines": 187,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -13158,7 +13158,7 @@
     },
     {
       "path": "src/lib/booking-fee.ts",
-      "lines": 122,
+      "lines": 123,
       "purpose": "FEE-AT-BOOKING (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -13269,6 +13269,7 @@
         "src/components/home/TeeSheetDemo.tsx",
         "src/lib/booking-fee.ts",
         "src/lib/cancel-policy.ts",
+        "src/lib/checkin-booking.ts",
         "src/lib/email.ts",
         "src/lib/event-payments.ts",
         "src/lib/shop.ts"
@@ -14061,7 +14062,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 464,
+      "lines": 466,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14086,6 +14087,7 @@
       "imports": [
         "./access-fee",
         "./booking-events",
+        "./booking-fees",
         "./email",
         "./prisma",
         "./residents",
@@ -15729,7 +15731,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2181,
+      "lines": 2188,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17818,7 +17820,7 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 194,
+      "lines": 195,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [

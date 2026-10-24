@@ -33,7 +33,7 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
   if (b.feePaymentIntentId) {
     const charged = await prisma.bookingEvent.findFirst({ where: { bookingId, type: 'fee_charged', stripeId: b.feePaymentIntentId }, select: { amountCents: true } });
     if (charged?.amountCents) out.push({ label: 'Booking fee, paid when you booked', amountCents: charged.amountCents, refunded: false });
-    for (const e of refundEvents.filter(e => String((e.metadata as { reason?: string } | null)?.reason ?? '').startsWith('booking_fee_refunded'))) {
+    for (const e of refundEvents.filter(e => String((e.metadata as { reason?: string } | null)?.reason ?? '').startsWith('booking_fee_refunded:'))) {
       if (e.amountCents) out.push({ label: 'Booking fee', amountCents: e.amountCents, refunded: true });
     }
   }

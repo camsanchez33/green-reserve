@@ -2,6 +2,7 @@ import { prisma } from './prisma';
 import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
 import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { sendCheckInReceiptEmail } from './email';
+import { feeCoveredCents } from './booking-fees';
 import { refundSeparateAccessFee } from './access-fee';
 import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop';
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
@@ -421,6 +422,7 @@ async function chargeBooking(
       cartFeeTotal: booking.cartFeeTotal,
       rangeBallsTotal: booking.rangeBallsTotal,
       accessFeeTotal: booking.accessFeeTotal,
+      feePaidAtBookingCents: feeCoveredCents(booking),
       totalAmount: chargedCents ?? booking.roundChargedCents ?? roundChargeCents(booking),
       shopLines: booking.shopTotalCents > 0 ? await shopLinesFor(bookingId) : [],
       shopFeeCents: booking.shopFeeCents,

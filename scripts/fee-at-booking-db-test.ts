@@ -114,7 +114,42 @@ async function cleanup() {
 
   // The separate-fee code never touches the booking-time fee.
   const access = readFileSync('src/lib/access-fee.ts', 'utf8');
-  ok('the separate fee keeps its own column (stripePaymentIntentId), never the booking fee’s', access.includes("if (b.feePaidCents > 0) return { ok: true, charged: false, reason: 'fee charged at booking' };") && !access.includes('feePaymentIntentId'));
+  ok('the separate fee keeps its own column (stripePaymentIntentId), never the booking fee’s', access.includes('- b.feePaidCents);') && !access.includes('feePaymentIntentId'));
+
+  // Players added after booking, then a no-show: only the added players' fee is charged.
+  const grew = await book((await tt(day(5))).id, 2);
+  await chargeBookingFee(grew.id);
+  await prisma.booking.update({ where: { id: grew.id }, data: { players: 4, accessFeeTotal: 600, totalAmount: 20600 } });
+  const before2 = intents.size;
+  const add = await chargeAccessFeeSeparately(grew.id, { why: 'no_show', actor: 'system' });
+  const addPi = [...intents.values()].at(-1);
+  ok('players added since booking: a no-show charges only their part', add.ok && add.charged && intents.size === before2 + 1 && addPi?.amount === 300, { add, addPi });
+
+  // The no-show cron: a fee paid at booking at a course with no no-show fee leaves nothing due.
+  const { dueNoShowCharges } = await import('../src/lib/no-show-fee');
+  const past = await prisma.teeTime.create({ data: { courseId: c.id, date: day(-1), time: '12:00', holes: 18, greenFeeCents: 5000, playersAvailable: 4 } });
+  const ns = await book(past.id);
+  await chargeBookingFee(ns.id);
+  await prisma.booking.update({ where: { id: ns.id }, data: { noShowAt: new Date(Date.now() - 86400000) } });
+  ok('the no-show cron doesn’t keep retrying a booking whose fee was paid at booking', !(await dueNoShowCharges(new Date())).includes(ns.id));
+
+  // A refund that lost a race with another one reads again and goes through.
+  const race = await book((await tt(day(5))).id, 2);
+  await chargeBookingFee(race.id);
+  const orig = prisma.booking.updateMany.bind(prisma.booking);
+  let raced = false;
+  (prisma.booking as unknown as { updateMany: unknown }).updateMany = async (a: Parameters<typeof orig>[0]) => {
+    if (!raced && a?.where?.id === race.id) { raced = true; await prisma.booking.update({ where: { id: race.id }, data: { feePaidCents: 150 } }); }
+    return orig(a);
+  };
+  const rr = await refundBookingFee(race.id, 'all', 'race', 'golfer');
+  (prisma.booking as unknown as { updateMany: unknown }).updateMany = orig;
+  ok('a refund that lost a race retries once with the fresh amount', rr.ok && rr.refundedCents === 150 && (await prisma.booking.findUniqueOrThrow({ where: { id: race.id } })).feePaidCents === 0, rr);
+
+  // A late, older refund event can't put refunded cents back.
+  const wh = readFileSync('src/app/api/stripe/webhook/route.ts', 'utf8');
+  ok('the webhook only ever lowers what was paid at booking', wh.includes('feePaymentIntentId: piOf(charge.payment_intent), feePaidCents: { gt:'));
+  ok('the receipt tells the booking fee refund apart from the separate fee’s', readFileSync('src/lib/receipt-charges.ts', 'utf8').includes("startsWith('booking_fee_refunded:')"));
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

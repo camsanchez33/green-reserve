@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 05:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `33e799e0` · working tree **1 dirty file(s)**
+Generated 2026-10-24 05:51 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9985445e` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ Generated 2026-10-24 05:43 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 | commit | date | subject |
 |---|---|---|
-| `33e799e0` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) |
+| `9985445e` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
 | `2e01ec99` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
 | `ed10fa0c` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
 | `6fd9158d` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
@@ -38,12 +38,24 @@ Generated 2026-10-24 05:43 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (1 file(s))
+### Uncommitted working tree (13 file(s))
 
 - `M OPERATOR_REWORK_SPEC.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/fee-at-booking-db-test.ts`
+- `M src/app/api/bookings/route.ts`
+- `M src/app/api/stripe/webhook/route.ts`
+- `M src/app/book/BookClient.tsx`
+- `M src/lib/access-fee.ts`
+- `M src/lib/booking-fee.ts`
+- `M src/lib/checkin-booking.ts`
+- `M src/lib/email.ts`
+- `M src/lib/no-show-fee.ts`
+- `M src/lib/receipt-charges.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -164,7 +176,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `33e799e0` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)
+- `9985445e` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
 - `2e01ec99` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
 - `ed10fa0c` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
 - `6fd9158d` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)

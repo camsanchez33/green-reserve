@@ -1,21 +1,33 @@
 {
-  "generatedAt": "2026-10-24T05:43:24.712Z",
+  "generatedAt": "2026-10-24T05:51:13.478Z",
   "repo": {
-    "head": "33e799e0",
+    "head": "9985445e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 1,
+    "dirtyCount": 13,
     "dirty": [
-      "M OPERATOR_REWORK_SPEC.md"
+      "M OPERATOR_REWORK_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/fee-at-booking-db-test.ts",
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/stripe/webhook/route.ts",
+      " M src/app/book/BookClient.tsx",
+      " M src/lib/access-fee.ts",
+      " M src/lib/booking-fee.ts",
+      " M src/lib/checkin-booking.ts",
+      " M src/lib/email.ts",
+      " M src/lib/no-show-fee.ts",
+      " M src/lib/receipt-charges.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "33e799e0",
-        "date": "2026-10-24T05:33:30+00:00",
-        "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)",
+        "h": "9985445e",
+        "date": "2026-10-24T01:50:41-04:00",
+        "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)",
         "ids": [],
         "matches": []
       },
@@ -559,9 +571,9 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "33e799e0",
+      "h": "9985445e",
       "date": "2026-10-24",
-      "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)"
+      "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)"
     },
     {
       "h": "2e01ec99",

@@ -84,8 +84,6 @@ export async function chargeAccessFeeSeparately(bookingId: string, opts: {
     },
   });
   if (!b) return { ok: false, error: 'Booking not found' };
-  // FEE-AT-BOOKING: the fee was taken when they booked — never a second time.
-  if (b.feePaidCents > 0) return { ok: true, charged: false, reason: 'fee charged at booking' };
   // Counter bookings entered by staff carry no fee (accessFeeTotal 0).
   if (b.accessFeeTotal <= 0) return { ok: true, charged: false, reason: 'no GreenReserve fee on this booking' };
   // Review (HIGH): an admin "collect payment" can charge the round — fee
@@ -95,7 +93,10 @@ export async function chargeAccessFeeSeparately(bookingId: string, opts: {
   if (!b.stripeCustomerId || !b.stripePaymentMethodId) return { ok: true, charged: false, reason: 'no card on file' };
 
   const n = opts.players && opts.players > 0 && opts.players < b.players ? opts.players : b.players;
-  const amountCents = Math.round(b.accessFeeTotal * n / b.players);
+  // FEE-AT-BOOKING: what was taken when they booked is never charged again —
+  // only players added since then are still owed.
+  const amountCents = Math.max(0, Math.round(b.accessFeeTotal * n / b.players) - b.feePaidCents);
+  if (b.feePaidCents > 0 && amountCents === 0) return { ok: true, charged: false, reason: 'fee charged at booking' };
   if (amountCents < 50) return { ok: true, charged: false, reason: 'below Stripe minimum' };
 
   // A new fee charge is only possible after a refund, so refunds number the

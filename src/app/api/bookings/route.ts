@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
   // The page posts only the SetupIntent it just confirmed; the SetupIntent
   // (created server-side in ./setup-intent) names its own customer and card.
   if (needsCard && (typeof setupIntentId !== 'string' || !/^seti_[A-Za-z0-9]+$/.test(setupIntentId))) {
-    return NextResponse.json({ error: 'Please add a card to hold your tee time — you won’t be charged today. If this page looks out of date, refresh it.' }, { status: 400 });
+    return NextResponse.json({ error: FEE_AT_BOOKING_ON ? 'Please add a card to book this tee time — only the booking fee is charged today. If this page looks out of date, refresh it.' : 'Please add a card to hold your tee time — you won’t be charged today. If this page looks out of date, refresh it.' }, { status: 400 });
   }
   if (needsCard) try {
     const si = await stripe.setupIntents.retrieve(setupIntentId as string, { expand: ['payment_method'] });

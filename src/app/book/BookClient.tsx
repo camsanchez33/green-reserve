@@ -201,7 +201,9 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             <p className="text-ink-soft mb-6 text-sm">
               {confirmedData.noCard
                 ? <>Your spot is reserved — <strong className="text-ink">no card required</strong>. Pay at the course or use the check-in link in your confirmation email.</>
-                : <>Your card is on file but <strong className="text-ink">nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
+                : FEE_AT_BOOKING_ON
+                  ? <>Your card is on file and <strong className="text-ink">only the ${confirmedData.accessFeeTotal.toFixed(2)} booking fee was charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>
+                  : <>Your card is on file but <strong className="text-ink">nothing has been charged</strong>. We&apos;ll email you a reminder to check in and pay before your round.</>}
             </p>
 
             {/* PERS-1: the course's own note, in its own words — left-aligned, its colour on the rule. */}
@@ -221,7 +223,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 when="Today"
                 what={confirmedData.cutoffPassed && confirmedData.cancellationFeeTotal > 0 && holdsAtCutoff({ lateFeeTimingAtBooking: confirmedData.lateFeeTiming })
                   ? <>Booked · <strong className="text-ink font-medium">{holdTodayLine(policyMoney(Math.round(confirmedData.cancellationFeeTotal * 100)))}</strong></>
-                  : <>Booked · <strong className="text-ink font-medium">charged today $0.00</strong></>}
+                  : <>Booked · <strong className="text-ink font-medium">charged today ${(FEE_AT_BOOKING_ON && !confirmedData.noCard ? confirmedData.accessFeeTotal : 0).toFixed(2)}</strong></>}
               />
               {/* Wording from cancel-policy.ts (afterCutoffLine / insideWindowLine), by the
                   booking's own timing; booked past the cutoff, it says so (R-GOLF-009). */}
@@ -460,7 +462,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             <p className="text-ink text-sm font-medium mb-1.5">Cancellation policy</p>
             <ul className="space-y-1">
               {terms.lines.map((l, i) => <li key={i} className="text-ink-soft text-xs leading-relaxed">{l}</li>)}
-              {terms.cardAtBooking && (
+              {terms.cardAtBooking && !FEE_AT_BOOKING_ON && (
                 <li className="text-ink-soft text-xs leading-relaxed">When a fee above is charged, or if you pay at the counter instead of checking in, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card too.</li>
               )}
             </ul>
@@ -563,7 +565,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
     const req = stripe.paymentRequest({
       country: 'US',
       currency: 'usd',
-      total: { label: `${courseName || 'Tee time'} · card held, nothing charged today`, amount: 0, pending: true },
+      total: { label: `${courseName || 'Tee time'} · ${FEE_AT_BOOKING_ON ? 'card held, booking fee charged today' : 'card held, nothing charged today'}`, amount: 0, pending: true },
       requestPayerName: true,
       requestPayerEmail: true,
     });
