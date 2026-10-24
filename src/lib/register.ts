@@ -8,6 +8,7 @@
 import { prisma } from './prisma';
 import { formatTeeTime } from './format';
 import { settleAtCounter, createCounterBooking, counterDueCents, type CounterBookingInput } from './counter-pay';
+import { roundChargeCents } from './shop';
 import { createSale, quoteSale, type DiscountInput, type SaleView } from './shop-sales';
 import type { EventActor } from './booking-events';
 
@@ -18,7 +19,7 @@ export async function registerRounds(courseId: string, date: string, nowTime: st
   const [owing, open] = await Promise.all([
     prisma.booking.findMany({
       where: { courseId, status: 'confirmed', paymentStatus: { notIn: ['paid', 'paid_offline'] }, teeTime: { date } },
-      select: { id: true, golferName: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true, noShowAt: true, teeTime: { select: { time: true, holes: true } } },
+      select: { id: true, golferName: true, players: true, totalAmount: true, accessFeeTotal: true, feePaidCents: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, noShowAt: true, teeTime: { select: { time: true, holes: true } } },
       orderBy: { teeTime: { time: 'asc' } },
     }),
     prisma.teeTime.findMany({
@@ -28,7 +29,8 @@ export async function registerRounds(courseId: string, date: string, nowTime: st
     }),
   ]);
   return {
-    owing: owing.map(b => ({ bookingId: b.id, time: b.teeTime.time, holes: b.teeTime.holes, golferName: b.golferName, players: b.players, dueCents: counterDueCents(b), noShow: !!b.noShowAt })),
+    // dueCents: in cash at the counter (no GreenReserve fee); cardCents: on the card reader (R3b — the round's card charge, booking fee included).
+    owing: owing.map(b => ({ bookingId: b.id, time: b.teeTime.time, holes: b.teeTime.holes, golferName: b.golferName, players: b.players, dueCents: counterDueCents(b), cardCents: roundChargeCents(b), noShow: !!b.noShowAt })),
     open: open.filter(t => t.playersAvailable - t.playersBooked > 0).slice(0, 12).map(t => ({
       teeTimeId: t.id, time: t.time, holes: t.holes, round: t.product?.label ?? null, spots: t.playersAvailable - t.playersBooked,
       greenFeeCents: t.greenFeeCents, cartFeeCents: t.cartFeeCents, walkingAllowed: t.walkingAllowed,

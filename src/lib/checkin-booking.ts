@@ -51,7 +51,18 @@ type ChargeOpts = {
   /** POS-1a: the total the golfer was shown. Checked after the shop items are
    *  frozen, so the charge can never differ from it. */
   expectedTotalCents?: number;
+  /** POS-3 R3b: the round was paid on the course's card reader — this
+   *  succeeded card_present PaymentIntent (lib/reader-rounds.ts checked it). No
+   *  card is charged here; everything after the charge runs as for any card. */
+  cardPresent?: { paymentIntentId: string; amountCents: number };
 };
+
+type ChargeResult =
+  | { readonly error: string; readonly status: number }
+  | { readonly success: true; readonly totalCharged: number; readonly feeRefunded: boolean; readonly feeRefundFailed: boolean; readonly feeRefundError: string; readonly feeRefundAmount: number; readonly alreadyPaid: boolean; readonly cartAddedCents: number };
+
+/** POS-3 R3b: a reader claim older than this is settled from Stripe before anything else charges the round. */
+export const READER_STALE_MS = 10 * 60 * 1000;
 
 /**
  * B-5 (security review): the cart add-on is priced the way the booking route
@@ -104,7 +115,8 @@ async function chargeBooking(
   opts: ChargeOpts | undefined,
   mode: { recordCheckIn: boolean },
   actor: EventActor,
-) {
+  readerSettled = false,
+): Promise<ChargeResult> {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -117,13 +129,26 @@ async function chargeBooking(
   if (booking.status === 'cancelled') return { error: 'This booking was cancelled', status: 409 } as const;
   if (booking.status === 'completed') return { error: 'Already checked in', status: 409 } as const;
 
+  // POS-3 R3b: the group is on the card reader. Nothing else charges it until
+  // that is finished — two card payments for one round could both go through.
+  // A claim left 10 minutes is settled from Stripe first (lib/reader-rounds).
+  if (!opts?.cardPresent && booking.readerStartedAt) {
+    if (!readerSettled && Date.now() - booking.readerStartedAt.getTime() > READER_STALE_MS) {
+      const { settleRoundReader } = await import('./reader-rounds');
+      await settleRoundReader(booking.courseId, bookingId, actor);
+      return chargeBooking(bookingId, opts, mode, actor, true);
+    }
+    return { error: 'This group is being paid on the card reader at the pro shop — finish or cancel it there first.', status: 409 } as const;
+  }
+
   // Already paid (e.g. an earlier charge-only collect). Never charge twice.
   const alreadyPaid = booking.paymentStatus === 'paid' && !!booking.roundPaymentIntentId;
   if (alreadyPaid && !mode.recordCheckIn) {
     return { error: 'This round has already been paid — there is nothing to retry.', status: 409 } as const;
   }
 
-  if (!alreadyPaid && (!booking.course.stripeAccountActive || !booking.course.stripeAccountId)) {
+  // (A reader payment already moved the money on the course's account — record it whatever the flag says.)
+  if (!alreadyPaid && !opts?.cardPresent && (!booking.course.stripeAccountActive || !booking.course.stripeAccountId)) {
     return { error: 'Stripe setup incomplete — the operator needs to finish Stripe onboarding in dashboard Settings before card payments can be accepted.', status: 422 } as const;
   }
 
@@ -215,7 +240,7 @@ async function chargeBooking(
         const message = err instanceof Error ? err.message : 'Could not save card.';
         return { error: `Card setup failed: ${message}`, status: 402 } as const;
       }
-    } else if (!chargePaymentMethodId) {
+    } else if (!chargePaymentMethodId && !opts?.cardPresent) {
       return { error: 'No card on file -- enter card details to complete check-in.', status: 422 } as const;
     }
 
@@ -239,14 +264,23 @@ async function chargeBooking(
     // write can land in between). Never charge on a stale or missing figure.
     {
       const taxed = await ensureShopTax(bookingId, { ownLock: lockStamp });
-      if (!taxed.ok) { await unlock(); return { error: taxed.error, status: 503 } as const; }
-      booking.shopTaxCents = taxed.shopTaxCents;
+      // POS-3 R3b: a reader payment is already taken (its tax was worked out when it started) — never refuse to record it.
+      if (!taxed.ok && !opts?.cardPresent) { await unlock(); return { error: taxed.error, status: 503 } as const; }
+      if (taxed.ok) booking.shopTaxCents = taxed.shopTaxCents;
     }
-    if (opts?.expectedTotalCents != null && Number(opts.expectedTotalCents) !== roundChargeCents(booking)) {
+    if (!opts?.cardPresent && opts?.expectedTotalCents != null && Number(opts.expectedTotalCents) !== roundChargeCents(booking)) {
       await unlock();
       return { error: 'The total changed since this page loaded — the course updated the round. Refresh to see the new total, then pay.', status: 409 } as const;
     }
 
+    if (opts?.cardPresent) {
+      // POS-3 R3b: the money moved on the reader. Record exactly what Stripe took.
+      paymentIntentId = opts.cardPresent.paymentIntentId;
+      chargedCents = opts.cardPresent.amountCents;
+      if (chargedCents !== roundChargeCents(booking)) {
+        console.error(JSON.stringify({ ev: `${ev}.reader.amount_mismatch`, bookingId, charged: chargedCents, due: roundChargeCents(booking) }));
+      }
+    } else {
     // Review (security, MEDIUM): a new card changes the idempotency key. If
     // the FIRST attempt actually succeeded at Stripe but the response never
     // reached us (timeout), a retry with a new card — or, since B-5, a retry
@@ -343,6 +377,7 @@ async function chargeBooking(
       }
       return { error: `Payment failed: ${message}. Collect payment in person and contact support.`, status: 402 } as const;
     }
+    } // end card charge (not the reader)
 
     if (refundPendingFee) {
       try {

@@ -601,6 +601,11 @@ model Booking {
   /// What the round's PaymentIntent actually took (round + shop items + fee).
   /// Refunds and receipts cap against this, never a recomputed figure.
   roundChargedCents          Int?
+  /// POS-3 R3b: the round being paid on the course's card reader. While readerStartedAt is set the
+  /// booking is claimed: the pay link, card check-in and cash at the counter wait for it.
+  readerStartedAt            DateTime?
+  readerId                   String            @default("")
+  readerIntentId             String            @default("")
   /// RES-1 (Cam 2026-10-19): how many of `players` pay the resident rate, and
   /// the per-player resident rate used for them. The rest pay the booked
   /// standard (or member) rate; greenFeeTotal already includes both.

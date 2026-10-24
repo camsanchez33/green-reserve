@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 13:19 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a5d6c217` · working tree **4 dirty file(s)**
+Generated 2026-10-24 13:58 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `068ac2b6` · working tree **14 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ Generated 2026-10-24 13:19 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 | commit | date | subject |
 |---|---|---|
-| `a5d6c217` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items), server-driven |
+| `068ac2b6` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
 | `c8e0e662` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
 | `9985445e` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
 | `2e01ec99` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
@@ -40,12 +40,22 @@ Generated 2026-10-24 13:19 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (14 file(s))
 
+- `M CLAUDE.md`
+- `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/card-reader-db-test.ts`
+- `M prisma/schema.prisma`
+- `M src/app/dashboard/shop/page.tsx`
 - `M src/lib/card-reader.ts`
+- `M src/lib/checkin-booking.ts`
+- `M src/lib/counter-pay.ts`
+- `M src/lib/register.ts`
+- `?? prisma/migrations/20261024080000_reader_rounds/`
+- `?? scripts/reader-rounds-db-test.ts`
+- `?? src/app/api/operator/reader-rounds/`
+- `?? src/lib/reader-rounds.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -169,7 +179,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `a5d6c217` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items), server-driven
+- `068ac2b6` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
 - `c8e0e662` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
 - `9985445e` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
 - `2e01ec99` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)

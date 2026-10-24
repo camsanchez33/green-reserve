@@ -33,11 +33,13 @@ type Sale = {
   link: boolean;
 };
 type Reader = { id: string; label: string; online: boolean; simulated: boolean };
+/** POS-3 R3b: one group's round on the card reader. */
+type RoundOnReader = { bookingId: string; readerId: string; label: string; dueCents: number; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
 /** A sale on the card reader: waiting for the card, or what happened. */
 type ReaderSale = { sale: Sale; readerId: string; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
 type Custom = { key: string; name: string; priceCents: number; quantity: number };
 // POS-3 R2: green fees at the register — today's groups that owe, and walk-ins.
-type Owing = { bookingId: string; time: string; holes: number; golferName: string; players: number; dueCents: number; noShow: boolean };
+type Owing = { bookingId: string; time: string; holes: number; golferName: string; players: number; dueCents: number; cardCents: number; noShow: boolean };
 type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean };
 type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number };
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
@@ -69,6 +71,7 @@ export default function ShopPage() {
   const [readerId, setReaderId] = useState('');
   const [testMode, setTestMode] = useState(false);
   const [onReader, setOnReader] = useState<ReaderSale | null>(null);
+  const [roundOnReader, setRoundOnReader] = useState<RoundOnReader | null>(null);
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -150,7 +153,9 @@ export default function ShopPage() {
   }, [cartKey, quoteTry]);
   const priced = quote && quote.key === cartKey ? quote : null;
   const pickedRounds = (roundsData?.owing ?? []).filter(o => picked.includes(o.bookingId));
-  const roundsCents = pickedRounds.reduce((n, o) => n + o.dueCents, 0) + walkIns.reduce((n, w) => n + w.estimateCents, 0);
+  // A group in cash owes the round less GreenReserve's fee; on the card reader, the round's card charge (booking fee included).
+  const owed = (o: Owing) => (pay === 'reader' ? o.cardCents : o.dueCents);
+  const roundsCents = pickedRounds.reduce((n, o) => n + owed(o), 0) + walkIns.reduce((n, w) => n + w.estimateCents, 0);
   const hasRounds = pickedRounds.length + walkIns.length > 0;
   const itemsEmpty = salePayload.length === 0;
   const due = (itemsEmpty ? 0 : priced ? priced.totalCents : subtotal) + roundsCents;
@@ -168,6 +173,7 @@ export default function ShopPage() {
   }
 
   async function ringUp() {
+    if (pay === 'reader' && hasRounds) return roundToReader();
     setBusy('sale'); setError(''); setNote(''); setJustPaid(null);
     const r = await dfetch<{ sale: Sale; sent?: boolean; sendError?: string; readerError?: string; skipped?: string[]; notes?: string[] }>('/api/operator/shop-sales', {
       method: 'POST',
@@ -197,6 +203,49 @@ export default function ShopPage() {
     else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows as paid below when they pay.`);
     load();
     searchRef.current?.focus();
+  }
+
+  // POS-3 R3b: one group's round on the reader — a card payment of their booking (checked in when it goes through).
+  async function roundToReader(again?: RoundOnReader) {
+    const group = again ? null : pickedRounds[0];
+    const bookingId = again?.bookingId ?? group?.bookingId ?? '';
+    const label = again?.label ?? (group ? `${clock(group.time)} · ${group.golferName} · ${group.players} player${group.players === 1 ? '' : 's'}` : '');
+    const rid = again?.readerId ?? readerId;
+    setBusy('sale'); setError(''); setNote(''); setJustPaid(null);
+    const r = await dfetch<{ status: string; dueCents?: number; message?: string }>('/api/operator/reader-rounds', { method: 'POST', body: JSON.stringify({ bookingId, readerId: rid }) });
+    setBusy('');
+    if (!r.ok) { setRoundOnReader({ bookingId, readerId: rid, label, dueCents: again?.dueCents ?? 0, state: 'error', message: r.error }); loadRounds(); return; }
+    setPicked([]);
+    setRoundOnReader({ bookingId, readerId: rid, label, dueCents: r.data.dueCents ?? 0, state: 'waiting', message: r.data.message ?? '' });
+  }
+  useEffect(() => {
+    if (roundOnReader?.state !== 'waiting') return;
+    let live = true;
+    const t = setInterval(async () => {
+      const r = await dfetch<{ status: string; message?: string }>('/api/operator/reader-rounds', { method: 'PATCH', body: JSON.stringify({ bookingId: roundOnReader.bookingId, action: 'status' }) });
+      if (!live) return;
+      if (!r.ok) { setRoundOnReader(o => o && { ...o, message: `${r.error} Still checking…` }); return; }
+      if (r.data.status === 'paid') { setNote(`${roundOnReader.label} — paid by card and checked in.`); setRoundOnReader(null); loadRounds(); return; }
+      if (r.data.status === 'refunded') { setError(r.data.message ?? 'The round was already paid — the card payment was refunded.'); setRoundOnReader(null); loadRounds(); return; }
+      if (r.data.status === 'declined') setRoundOnReader(o => o && { ...o, state: 'declined', message: r.data.message || 'The card was declined.' });
+      else if (r.data.status === 'cancelled' || r.data.status === 'open') setRoundOnReader(o => o && { ...o, state: 'cancelled', message: 'The payment was stopped — nothing was charged.' });
+      else if (r.data.message) setRoundOnReader(o => o && { ...o, message: r.data.message ?? '' });
+    }, 2000);
+    return () => { live = false; clearInterval(t); };
+  }, [roundOnReader?.state, roundOnReader?.bookingId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function roundReaderAct(action: 'cancel' | 'simulate', card?: 'ok' | 'declined') {
+    if (!roundOnReader) return;
+    setBusy('reader'); setError('');
+    const r = await dfetch<{ status?: string; message?: string }>('/api/operator/reader-rounds', { method: 'PATCH', body: JSON.stringify({ bookingId: roundOnReader.bookingId, action, readerId: roundOnReader.readerId, card }) });
+    setBusy('');
+    if (!r.ok) { setRoundOnReader(o => o && { ...o, message: r.error }); return; }
+    if (action === 'cancel') {
+      if (r.data.status === 'paid') { setNote(`${roundOnReader.label} — the card went through before the reader stopped: paid and checked in.`); setRoundOnReader(null); loadRounds(); return; }
+      if (r.data.status === 'refunded') { setError(r.data.message ?? ''); setRoundOnReader(null); loadRounds(); return; }
+      setRoundOnReader(o => o && (r.data.status === 'waiting' ? { ...o, message: r.data.message ?? '' } : { ...o, state: 'cancelled', message: 'Cancelled — nothing was charged.' }));
+      loadRounds();
+    }
   }
 
   // POS-3 R3: while a sale is on the reader, ask every 2 seconds what it is doing.
@@ -284,9 +333,12 @@ export default function ShopPage() {
   // Recording cash is the counter-payment power, as on the tee sheet.
   const canCash = access.can('sheet.counter_payment');
   // Rounds at the register are cash for now (rounds on the card reader come next).
+  // POS-3 R3b: one group (no items, no walk-in) can go on the card reader; other mixes of rounds are cash.
+  const canCheckin = access.can('sheet.checkin');
+  const oneRoundForReader = pickedRounds.length === 1 && walkIns.length === 0 && itemsEmpty && canCheckin;
   const payChoices = ([['cash', 'Cash'], ['reader', 'Card reader'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const)
-    .filter(([k]) => (k !== 'cash' || canCash) && (k === 'cash' || !hasRounds) && (k !== 'reader' || readers.length > 0));
-  useEffect(() => { if (hasRounds) setPay('cash'); }, [hasRounds]);
+    .filter(([k]) => (k !== 'cash' || canCash) && (k !== 'reader' || readers.length > 0) && (!hasRounds || k === 'cash' || (k === 'reader' && oneRoundForReader)));
+  useEffect(() => { if (hasRounds) setPay(p => (p === 'reader' && oneRoundForReader ? p : 'cash')); }, [hasRounds, oneRoundForReader]);
   useEffect(() => { if (access.loaded && canCash) loadRounds(); }, [access.loaded, canCash, loadRounds]);
   const canWalkIn = access.can('sheet.walkin');
   const walkTime = roundsData?.open.find(t => t.teeTimeId === walkForm?.teeTimeId) ?? null;
@@ -478,7 +530,7 @@ export default function ShopPage() {
                         <span className="min-w-0 truncate text-ink">{clock(o.time)} round · {o.golferName} · {o.players}</span>
                         <span className="flex items-center gap-3 shrink-0">
                           <button onClick={() => setPicked(p => p.filter(x => x !== o.bookingId))} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
-                          <span className="w-16 text-right tabular-nums text-ink">{usd(o.dueCents)}</span>
+                          <span className="w-16 text-right tabular-nums text-ink">{usd(owed(o))}</span>
                         </span>
                       </li>
                     ))}
@@ -543,7 +595,9 @@ export default function ShopPage() {
                       </select>
                     )}
                     {pay === 'reader' && <p className="text-[12.5px] text-ink-muted">The reader asks for the card. The money goes to your Stripe account.</p>}
-                    {hasRounds && <p className="text-[12.5px] text-ink-muted">Rounds are paid in cash here for now. Each group is checked in and marked paid at the counter on the tee sheet. Discounts apply to shop items only.</p>}
+                    {hasRounds && <p className="text-[12.5px] text-ink-muted">{pay === 'reader'
+                      ? 'The group pays their round by card, booking fee included — the same as paying online — and is checked in when the card goes through.'
+                      : 'In cash, each group is checked in and marked paid at the counter on the tee sheet. One group on its own (no items) can go on the card reader. Discounts apply to shop items only.'}</p>}
                     {pay === 'cash' && ready && due > 0 && (
                       <div>
                         <span className="block text-[13px] font-medium text-ink mb-1.5">Cash handed over <span className="font-normal text-ink-muted">(optional)</span></span>
@@ -570,10 +624,32 @@ export default function ShopPage() {
                       </div>
                     )}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
-                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting'))}
+                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
                       {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
                     </button>
+                  </div>
+                )}
+                {roundOnReader && (
+                  <div className={'mt-4 border-l-[3px] pl-3 space-y-2 ' + (roundOnReader.state === 'waiting' ? 'border-warn' : 'border-bad')} role="status" aria-live="polite">
+                    <p className="text-[14px] text-ink">
+                      {roundOnReader.state === 'waiting'
+                        ? <>{roundOnReader.dueCents > 0 && <span className="font-semibold tabular-nums">{usd(roundOnReader.dueCents)} </span>}{roundOnReader.label} on {readerName(roundOnReader.readerId)} — waiting for the card.</>
+                        : <>{roundOnReader.label} — not paid. {roundOnReader.message}</>}
+                    </p>
+                    {roundOnReader.state === 'waiting' && roundOnReader.message && <p className="text-[12.5px] text-ink-muted">{roundOnReader.message}</p>}
+                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                      {roundOnReader.state === 'waiting'
+                        ? <button type="button" onClick={() => roundReaderAct('cancel')} disabled={busy === 'reader'} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Cancel on the reader</button>
+                        : <button type="button" onClick={() => roundToReader(roundOnReader)} disabled={busy === 'sale'} className={LINK}>Try the reader again</button>}
+                      {roundOnReader.state === 'waiting' && testMode && readers.find(x => x.id === roundOnReader.readerId)?.simulated && (
+                        <>
+                          <button type="button" onClick={() => roundReaderAct('simulate', 'ok')} disabled={busy === 'reader'} className={LINK}>Simulate a tap</button>
+                          <button type="button" onClick={() => roundReaderAct('simulate', 'declined')} disabled={busy === 'reader'} className={LINK}>Simulate a decline</button>
+                        </>
+                      )}
+                      {roundOnReader.state !== 'waiting' && <button type="button" onClick={() => setRoundOnReader(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Close</button>}
+                    </div>
                   </div>
                 )}
                 {onReader && (
