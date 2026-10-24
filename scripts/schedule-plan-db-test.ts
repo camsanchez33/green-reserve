@@ -23,9 +23,10 @@ async function cleanup() {
   let rows: any[] | null = await saveSchedulePlan(c.id, { replaces: [], daysOfWeek: [0,1,2,3,4,5,6], intervalMinutes: 10, holes: 18, periods: [P('Morning', '07:00', '15:00', 65), P('Twilight', '15:00', '17:00', 40)] });
   ok('created two rows', rows!.length === 2);
   const today = new Date().toISOString().slice(0, 10); // the course runs on UTC
-  // P() prices the weekend $20 above the weekday; today's slots carry whichever today is (this failed every Saturday and Sunday).
-  const weekend = [0, 6].includes(new Date(`${today}T12:00:00Z`).getUTCDay());
-  const fee = (weekday: number) => (weekday + (weekend ? 20 : 0)) * 100;
+  // Today's times take the weekend fee on Sat/Sun (P sets weekend = weekday + $20), so
+  // the expected prices follow the day the test runs — it used to fail every weekend.
+  const dow = new Date(`${today}T12:00:00Z`).getUTCDay();
+  const fee = (weekday: number) => (weekday + (dow === 0 || dow === 6 ? 20 : 0)) * 100;
   let tts = await prisma.teeTime.findMany({ where: { courseId: c.id, date: today }, orderBy: { time: 'asc' } });
   ok('slots 07:00..17:00 every 10 = 61', tts.length === 61, String(tts.length));
   ok('15:00 is twilight $40', tts.find(t => t.time === '15:00')?.greenFeeCents === fee(40) && tts.find(t => t.time === '14:50')?.greenFeeCents === fee(65));
