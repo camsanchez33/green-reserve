@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 540,
-    "routes": 259,
-    "libs": 177,
+    "files": 543,
+    "routes": 260,
+    "libs": 179,
     "models": 56,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5102,7 +5102,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 356,
+      "lines": 277,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5134,7 +5134,7 @@
         "@/lib/booking-residents",
         "@/lib/cancel-booking",
         "@/lib/checkin-booking",
-        "@/lib/claim-tee-time",
+        "@/lib/counter-pay",
         "@/lib/course-time",
         "@/lib/email",
         "@/lib/format",
@@ -5142,10 +5142,8 @@
         "@/lib/move-booking",
         "@/lib/no-show-fee",
         "@/lib/prisma",
-        "@/lib/round-shop-tax",
         "@/lib/session",
         "@/lib/staff-permissions",
-        "@/lib/stripe",
         "@/lib/twilio",
         "crypto",
         "next/server"
@@ -6339,8 +6337,35 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/shop-sales/rounds/route.ts",
+      "lines": 19,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/shop-sales/rounds",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/course-time",
+        "@/lib/prisma",
+        "@/lib/register",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 202,
+      "lines": 221,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6372,6 +6397,7 @@
         "@/lib/golfer-otp",
         "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/register",
         "@/lib/session",
         "@/lib/shop-sales",
         "@/lib/twilio",
@@ -7991,7 +8017,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 497,
+      "lines": 625,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11200,6 +11226,7 @@
         "src/lib/admin-home.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"
       ]
@@ -12515,7 +12542,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 552,
+      "lines": 557,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -13118,8 +13145,10 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
+        "src/lib/register.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -14055,7 +14084,7 @@
       "usedBy": [
         "src/app/api/admin/tee-sheet/route.ts",
         "src/app/api/bookings/route.ts",
-        "src/app/api/operator/bookings/route.ts"
+        "src/lib/counter-pay.ts"
       ]
     },
     {
@@ -14168,6 +14197,53 @@
         "src/lib/agreement-sign.ts",
         "src/lib/email.ts",
         "src/lib/submit-change-request.ts"
+      ]
+    },
+    {
+      "path": "src/lib/counter-pay.ts",
+      "lines": 150,
+      "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CounterBookingInput",
+          "kind": "type"
+        },
+        {
+          "name": "counterDueCents",
+          "kind": "fn"
+        },
+        {
+          "name": "CounterResult",
+          "kind": "type"
+        },
+        {
+          "name": "createCounterBooking",
+          "kind": "fn"
+        },
+        {
+          "name": "settleAtCounter",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./access-fee",
+        "./booking-events",
+        "./claim-tee-time",
+        "./course-time",
+        "./prisma",
+        "./round-shop-tax",
+        "./stripe",
+        "crypto"
+      ],
+      "usedBy": [
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/register.ts"
       ]
     },
     {
@@ -14928,6 +15004,7 @@
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/dashboard/page.tsx",
@@ -14942,6 +15019,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/event-signup.ts",
@@ -16450,7 +16528,8 @@
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/lib/event-signup.ts",
         "src/lib/frost-delay.ts",
-        "src/lib/golfer-messages.ts"
+        "src/lib/golfer-messages.ts",
+        "src/lib/register.ts"
       ]
     },
     {
@@ -18326,6 +18405,7 @@
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
+        "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
@@ -18375,6 +18455,7 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-events.ts",
         "src/lib/course-group.ts",
@@ -18405,6 +18486,7 @@
         "src/lib/rate-limit.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/register.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
@@ -18763,6 +18845,42 @@
       ]
     },
     {
+      "path": "src/lib/register.ts",
+      "lines": 101,
+      "purpose": "POS-3 R2 (Cam 2026-10-24:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MAX_REGISTER_ROUNDS",
+          "kind": "const"
+        },
+        {
+          "name": "registerRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "ringUpCash",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./counter-pay",
+        "./format",
+        "./prisma",
+        "./shop-sales"
+      ],
+      "usedBy": [
+        "src/app/api/operator/shop-sales/rounds/route.ts",
+        "src/app/api/operator/shop-sales/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/residents.ts",
       "lines": 66,
       "purpose": "RES-1 (Cam 2026-10-19):",
@@ -18858,10 +18976,10 @@
       "usedBy": [
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/cron/hourly/route.ts",
-        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/operator/sales-tax/route.ts",
-        "src/lib/checkin-booking.ts"
+        "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts"
       ]
     },
     {
@@ -19369,6 +19487,7 @@
         "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/quote/route.ts",
+        "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
@@ -19630,7 +19749,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 554,
+      "lines": 568,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -19748,7 +19867,8 @@
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/operator/shop-sales/quote/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
-        "src/app/api/shop-sale/[id]/route.ts"
+        "src/app/api/shop-sale/[id]/route.ts",
+        "src/lib/register.ts"
       ]
     },
     {
@@ -20146,7 +20266,6 @@
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/membership/[id]/route.ts",
-        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
         "src/app/api/operator/stripe/dashboard-link/route.ts",
@@ -20155,6 +20274,7 @@
         "src/lib/access-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/email.ts",
         "src/lib/event-payments.ts",
         "src/lib/no-show-fee.ts",
@@ -21712,6 +21832,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-metrics.ts",
         "src/lib/course-timeline.ts",
@@ -21725,6 +21846,7 @@
         "src/lib/real-courses.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/register.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sent-messages.ts",
         "src/lib/weather-cancel.ts"
@@ -22563,6 +22685,7 @@
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
@@ -25062,6 +25185,10 @@
           "type": "DateTime?"
         },
         {
+          "name": "roundsCents",
+          "type": "Int"
+        },
+        {
           "name": "refunds",
           "type": "ShopSaleRefund[]"
         },
@@ -25118,6 +25245,10 @@
         {
           "name": "quantity",
           "type": "Int"
+        },
+        {
+          "name": "bookingId",
+          "type": "String?"
         }
       ],
       "writers": [],
@@ -25433,7 +25564,6 @@
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
-        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
@@ -25443,6 +25573,7 @@
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/data-reset.ts",
@@ -25450,6 +25581,7 @@
         "src/lib/golfer-messages.ts",
         "src/lib/operator-home.ts",
         "src/lib/public-tee-times.ts",
+        "src/lib/register.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
