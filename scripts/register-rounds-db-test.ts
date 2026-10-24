@@ -69,6 +69,16 @@ async function cleanup() {
   ok('analytics counts only the item as a shop sale', walkUpNet([{ totalCents: row.totalCents, taxCents: row.taxCents, refundedCents: 0, roundsCents: row.roundsCents }]).cents === 1200);
   ok('a sale of only rounds isn’t a shop sale at all', walkUpNet([{ totalCents: 10000, taxCents: 0, roundsCents: 10000 }]).sales === 0);
 
+  // Green fees in a register sale are refunded from the booking, never from the register.
+  const { refundSale } = await import('../src/lib/shop-sales');
+  const tooMuch = await refundSale(c.id, v.id, { amountCents: 1201 }, 't');
+  ok('a register refund can’t reach the green fees in the sale', !tooMuch.ok && /tee sheet booking/.test(tooMuch.ok ? '' : tooMuch.error), tooMuch);
+  const hat = await refundSale(c.id, v.id, { restock: true }, 't');
+  ok('…the items can be refunded in full, and go back on the shelf', hat.ok && hat.value.sale.refundedCents === 1200 && (await prisma.shopItem.findUniqueOrThrow({ where: { id: balls.id } })).stockCount === 5, hat);
+  ok('…after which the sale has nothing left to refund', !(await refundSale(c.id, v.id, {}, 't')).ok);
+  ok('analytics: an item refunded in full leaves only rounds — not a shop sale', walkUpNet([{ totalCents: 18200, taxCents: 0, refundedCents: 1200, roundsCents: 17000 }]).sales === 0);
+  ok('analytics: half the items refunded counts half of them', walkUpNet([{ totalCents: 18200, taxCents: 0, refundedCents: 600, roundsCents: 17000 }]).cents === 600);
+
   const again = await ringUpCash(c.id, { lines: [], bookingIds: [g.id], walkIns: [], soldBy: 't', actor: STAFF });
   ok('a group already paid can’t be rung up again', !again.ok, again);
   const twice = await settleAtCounter(c.id, g.id, { actor: STAFF, actorName: 't' });

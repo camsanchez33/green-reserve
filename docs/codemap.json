@@ -6365,7 +6365,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 220,
+      "lines": 221,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8017,7 +8017,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 616,
+      "lines": 625,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -12542,7 +12542,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 555,
+      "lines": 557,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -19749,7 +19749,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 562,
+      "lines": 568,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [

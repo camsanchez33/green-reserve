@@ -27,6 +27,8 @@ type Sale = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: string; paidAt: string | null; customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
   discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number; receiptSentAt: string | null; refunds: Refund[];
+  /** POS-3 R2: green fees in this sale — refunded from the booking, not here. */
+  roundsCents: number;
 };
 type Custom = { key: string; name: string; priceCents: number; quantity: number };
 // POS-3 R2: green fees at the register — today's groups that owe, and walk-ins.
@@ -166,7 +168,12 @@ export default function ShopPage() {
       }),
     });
     setBusy('');
-    if (!r.ok) { setError(r.error); return; }
+    if (!r.ok) {
+      setError(r.error);
+      // The rounds went through (checked in, paid at the counter) though the items didn't: take them out of the sale.
+      if (/^The (round was|\d+ rounds were) paid/.test(r.error)) { setPicked([]); setWalkIns([]); loadRounds(); load(); }
+      return;
+    }
     setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setPicked([]); setWalkIns([]);
     if (hasRounds) loadRounds();
     if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total below is what was taken.`);
@@ -243,7 +250,7 @@ export default function ShopPage() {
         {access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (
           <div className="px-4 sm:px-10 py-7">
             <h1 className="font-serif text-[32px] leading-none text-ink">Pro shop</h1>
-            <p className="text-[13.5px] text-ink-soft mt-2">Walk-up sales{sales ? ` · ${usd(todayTotal)} taken today` : ''}. For a group that’s playing, add items to their round from the tee sheet instead.</p>
+            <p className="text-[13.5px] text-ink-soft mt-2">Walk-up sales and green fees taken at the register{sales ? ` · ${usd(todayTotal)} today` : ''}. For a group that’s playing, add items to their round from the tee sheet instead.</p>
 
             {loadError && (
               <div className="mt-4 bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-sm text-bad flex items-center justify-between gap-3" role="alert">
@@ -526,9 +533,11 @@ export default function ShopPage() {
               {sales && sales.length > 0 && (
                 <ul className="divide-y divide-line-soft">
                   {sales.map(s => {
-                    const fully = isPaid(s) && s.refundedCents >= s.totalCents;
+                    const itemsCents = s.totalCents - (s.roundsCents ?? 0);
+                    const fully = isPaid(s) && itemsCents > 0 && s.refundedCents >= itemsCents;
                     const st = fully ? { label: 'Refunded', tone: 'neutral' as const } : s.refundedCents > 0 ? { label: `${STATUS[s.status]?.label ?? s.status} · ${usd(s.refundedCents)} refunded`, tone: 'ok' as const } : STATUS[s.status] ?? { label: s.status, tone: 'neutral' as const };
-                    const left = s.totalCents - s.refundedCents;
+                    // Green fees in the sale are refunded from their booking, not here.
+                    const left = itemsCents - s.refundedCents;
                     const pending = s.refunds.filter(r => r.status === 'pending');
                     return (
                       <li key={s.id} className="px-5 py-3 text-sm">
@@ -564,14 +573,14 @@ export default function ShopPage() {
                             <div className="grid grid-cols-[110px_1fr] gap-2">
                               <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Amount</span>
                                 <div className="relative"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                                  <input value={refund.amount} onChange={e => setRefund({ ...refund, amount: e.target.value, confirm: false, restock: toCents(e.target.value) === s.totalCents && s.refundedCents === 0 ? refund.restock : false })} inputMode="decimal" className={INPUT + ' w-full pl-6'} /></div></label>
+                                  <input value={refund.amount} onChange={e => setRefund({ ...refund, amount: e.target.value, confirm: false, restock: toCents(e.target.value) === itemsCents && s.refundedCents === 0 ? refund.restock : false })} inputMode="decimal" className={INPUT + ' w-full pl-6'} /></div></label>
                               <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Reason <span className="font-normal text-ink-muted">(for your records)</span></span>
                                 <input value={refund.reason} onChange={e => setRefund({ ...refund, reason: e.target.value })} maxLength={300} className={INPUT + ' w-full'} /></label>
                             </div>
-                            {s.refundedCents === 0 && toCents(refund.amount) === s.totalCents && s.lines.length > 0 && (
+                            {s.refundedCents === 0 && toCents(refund.amount) === itemsCents && s.lines.some(l => !/ round · /.test(l.name)) && (
                               <label className="flex items-center gap-2 text-[13px] text-ink"><input type="checkbox" checked={refund.restock} onChange={e => setRefund({ ...refund, restock: e.target.checked })} className="accent-pine" />Put the items back on the shelf</label>
                             )}
-                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'Goes back to the card they paid with. It can’t be undone.' : 'Recorded only — hand the cash back yourself.'} Up to {usd(left)} can be refunded.</p>
+                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'Goes back to the card they paid with. It can’t be undone.' : 'Recorded only — hand the cash back yourself.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
                             <div className="flex gap-2">
                               {!refund.confirm
                                 ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!toCents(refund.amount)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">Refund ${refund.amount || '0'}</button>

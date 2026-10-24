@@ -48,7 +48,7 @@ export async function ringUpCash(courseId: string, opts: {
   lines: unknown[]; discount?: DiscountInput; cashTenderedCents?: unknown; taxCalculationId?: string;
   bookingIds: string[]; walkIns: CounterBookingInput[];
   soldBy: string; actor: EventActor; customerName?: string; customerPhone?: string; customerEmail?: string;
-}): Promise<Result<{ sale: SaleView; skipped: string[]; notes: string[] }>> {
+}): Promise<Result<{ sale: SaleView; skipped: string[]; notes: string[] }> | { ok: false; status: number; error: string; settled: string[] }> {
   const bookingIds = [...new Set(opts.bookingIds.filter(x => typeof x === 'string' && x))];
   const walkIns = opts.walkIns ?? [];
   if (bookingIds.length + walkIns.length > MAX_REGISTER_ROUNDS) return { ok: false, status: 400, error: `Up to ${MAX_REGISTER_ROUNDS} rounds in one sale.` };
@@ -93,7 +93,7 @@ export async function ringUpCash(courseId: string, opts: {
   if (!sale.ok) {
     // The rounds are paid (checked in at the counter) even though the items couldn't be recorded.
     console.error(JSON.stringify({ ev: 'register.items_after_rounds.fail', courseId, settled: settled.map(s => s.bookingId), error: sale.error }));
-    return { ok: false, status: sale.status, error: `${settled.length ? `The ${settled.length === 1 ? 'round was' : `${settled.length} rounds were`} paid and checked in, but ` : ''}${sale.error.charAt(0).toLowerCase()}${sale.error.slice(1)}` };
+    return { ok: false, status: sale.status, settled: settled.map(s => s.bookingId), error: `${settled.length ? `The ${settled.length === 1 ? 'round was' : `${settled.length} rounds were`} paid and checked in, but ` : ''}${sale.error.charAt(0).toLowerCase()}${sale.error.slice(1)}` };
   }
   const { payToken: _t, ...view } = sale.value;
   return { ok: true, value: { sale: view, skipped, notes } };

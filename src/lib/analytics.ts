@@ -543,12 +543,14 @@ export function walkUpNet(sales: { totalCents: number; taxCents: number; refunde
   let n = 0, cents = 0;
   for (const w of sales) {
     const refunded = w.refundedCents ?? 0;
-    if (w.totalCents > 0 && refunded >= w.totalCents) continue;
+    if (w.totalCents - (w.roundsCents ?? 0) > 0 && refunded >= w.totalCents - (w.roundsCents ?? 0)) continue;
     // POS-3 R2: green fees paid at the register are rounds (counted with the bookings), not shop sales.
     const items = w.totalCents - w.taxCents - (w.roundsCents ?? 0);
     if (items <= 0 && (w.roundsCents ?? 0) > 0) continue;
     n++;
-    cents += w.totalCents > 0 ? Math.round(items * (w.totalCents - refunded) / w.totalCents) : 0;
+    // Refunds come off the items only (green fees are refunded from the booking), tax included.
+    const itemsPaid = w.totalCents - (w.roundsCents ?? 0);
+    cents += itemsPaid > 0 ? Math.round(items * (itemsPaid - refunded) / itemsPaid) : 0;
   }
   return { sales: n, cents };
 }

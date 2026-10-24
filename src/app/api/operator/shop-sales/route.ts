@@ -96,7 +96,8 @@ export async function POST(req: NextRequest) {
       soldBy: g.session.email, actor: { type: 'staff', id: g.session.staffId ?? g.session.operatorId },
       customerName: body.customerName as string, customerPhone: body.customerPhone as string, customerEmail: body.customerEmail as string,
     });
-    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    // Rounds already settled when the items failed: the page takes them out of the sale.
+    if (!r.ok) return NextResponse.json({ error: r.error, ...('settled' in r ? { settled: r.settled } : {}) }, { status: r.status });
     return NextResponse.json(r.value);
   }
   const via = body.via === 'email' ? 'email' : 'sms';

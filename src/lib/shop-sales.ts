@@ -41,13 +41,15 @@ export type SaleView = {
   lines: { name: string; unitPriceCents: number; quantity: number }[];
   discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number;
   receiptSentAt: string | null; refunds: RefundView[];
+  /** POS-3 R2: green fees paid in this sale (not refundable here). */
+  roundsCents: number;
 };
 
 type SaleRow = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: Date; paidAt: Date | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
-  discountCents?: number; discountNote?: string; cashTenderedCents?: number | null; refundedCents?: number; receiptSentAt?: Date | null;
+  discountCents?: number; discountNote?: string; cashTenderedCents?: number | null; refundedCents?: number; receiptSentAt?: Date | null; roundsCents?: number;
   refunds?: { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdBy: string; createdAt: Date }[];
 };
 
@@ -56,7 +58,7 @@ export const saleView = (s: SaleRow): SaleView => ({
   customerName: s.customerName, customerPhone: s.customerPhone, customerEmail: s.customerEmail, soldBy: s.soldBy,
   lines: s.lines.map(l => ({ name: l.name, unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
   discountCents: s.discountCents ?? 0, discountNote: s.discountNote ?? '', cashTenderedCents: s.cashTenderedCents ?? null,
-  refundedCents: s.refundedCents ?? 0, receiptSentAt: s.receiptSentAt?.toISOString() ?? null,
+  refundedCents: s.refundedCents ?? 0, receiptSentAt: s.receiptSentAt?.toISOString() ?? null, roundsCents: s.roundsCents ?? 0,
   refunds: (s.refunds ?? []).map(r => ({ ...r, createdAt: r.createdAt.toISOString() })),
 });
 
@@ -444,17 +446,20 @@ export async function refundSale(courseId: string, saleId: string, input: { amou
   const s = await prisma.shopSale.findFirst({ where: { id: saleId, courseId } });
   if (!s) return fail(404, 'Sale not found.');
   if (!isPaid(s.status)) return fail(409, 'Only a paid sale can be refunded.');
-  const left = s.totalCents - s.refundedCents;
-  if (left <= 0) return fail(409, 'This sale has already been refunded in full.');
+  // POS-3 R2: green fees rung up here were paid at the counter on their own
+  // bookings — they are not refunded from the register, only the items are.
+  const items = s.totalCents - s.roundsCents;
+  const left = items - s.refundedCents;
+  if (left <= 0) return fail(409, s.roundsCents > 0 && items <= 0 ? 'Green fees are refunded from the tee sheet booking, not the register.' : 'This sale has already been refunded in full.');
   const amountCents = input.amountCents == null || input.amountCents === '' ? left : Number(input.amountCents);
   if (!Number.isInteger(amountCents) || amountCents < 1) return fail(400, 'Enter the amount to refund.');
-  if (amountCents > left) return fail(400, `At most $${(left / 100).toFixed(2)} can still be refunded on this sale.`);
+  if (amountCents > left) return fail(400, `At most $${(left / 100).toFixed(2)} can still be refunded on this sale${s.roundsCents ? ' (green fees are refunded from the tee sheet booking)' : ''}.`);
   const method = s.status === 'paid_card' ? 'card' : 'cash';
   // The items go back only when the whole sale is refunded in one go.
-  const restock = input.restock === true && s.refundedCents === 0 && amountCents === s.totalCents;
+  const restock = input.restock === true && s.refundedCents === 0 && amountCents === items;
   const reason = String(input.reason ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 300);
   const refund = await prisma.$transaction(async tx => {
-    const reserved = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: s.status, refundedCents: { lte: s.totalCents - amountCents } }, data: { refundedCents: { increment: amountCents } } });
+    const reserved = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: s.status, refundedCents: { lte: items - amountCents } }, data: { refundedCents: { increment: amountCents } } });
     if (!reserved.count) return null;
     const r = await tx.shopSaleRefund.create({ data: { saleId, courseId, amountCents, method, status: method === 'cash' ? 'done' : 'pending', reason, restocked: restock, createdBy: actor } });
     if (restock) {
@@ -534,14 +539,15 @@ export async function sendShopRefund(courseId: string, refundId: string): Promis
  * had no tax. Never throws; the hourly cron retries one that didn't go.
  */
 export async function reverseShopRefundTax(refundId: string): Promise<void> {
-  const r = await prisma.shopSaleRefund.findUnique({ where: { id: refundId }, include: { sale: { select: { id: true, totalCents: true, taxCents: true, taxTransactionId: true, course: { select: { stripeAccountId: true } } } } } });
+  const r = await prisma.shopSaleRefund.findUnique({ where: { id: refundId }, include: { sale: { select: { id: true, totalCents: true, roundsCents: true, taxCents: true, taxTransactionId: true, course: { select: { stripeAccountId: true } } } } } });
   if (!r || r.status !== 'done' || r.taxReversalId || r.sale.taxCents <= 0 || !r.sale.course.stripeAccountId) return;
   // A sale whose tax wasn't recorded yet is recorded first (the cron would otherwise record it whole later).
   if (!r.sale.taxTransactionId) await recordShopSaleTax(r.sale.id);
   const sale = await prisma.shopSale.findUnique({ where: { id: r.sale.id }, select: { taxTransactionId: true } });
   if (!sale?.taxTransactionId) return;
   try {
-    const whole = r.amountCents === r.sale.totalCents;
+    // The tax record holds the items only (rounds are untaxed), so "whole" is all of the items.
+    const whole = r.amountCents === r.sale.totalCents - r.sale.roundsCents;
     const rev = await stripe.tax.transactions.createReversal(
       { mode: whole ? 'full' : 'partial', original_transaction: sale.taxTransactionId, reference: `shop-refund-${r.id}`,
         ...(whole ? {} : { flat_amount: -r.amountCents }), metadata: { shopRefundId: r.id } },
