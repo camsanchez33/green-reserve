@@ -1,94 +1,109 @@
 {
-  "generatedAt": "2026-10-23T19:16:00.652Z",
+  "generatedAt": "2026-10-24T01:05:40.572Z",
   "repo": {
-    "head": "d6efdc1b",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
+    "head": "e9a83ae",
+    "branch": "claude/youthful-keller-rvz1hm",
+    "dirtyCount": 7,
+    "dirty": [
+      "M CLAUDE.md",
+      " M legal/documents/brand-license/2026-09.md",
+      " M legal/documents/brand-license/2026-11.md",
+      " M legal/documents/operator-agreement/2026-08.md",
+      " M legal/documents/operator-agreement/2026-10.md",
+      " M legal/documents/operator-agreement/2026-11.md",
+      " M scripts/contact-email-test.ts"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "d6efdc1b",
+        "h": "d2b41f2",
+        "date": "2026-10-23T19:16:02+00:00",
+        "subject": "Regenerate the status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d6efdc1",
         "date": "2026-10-23T19:15:21+00:00",
         "subject": "Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "85bb9160",
+        "h": "85bb916",
         "date": "2026-10-23T19:12:51+00:00",
         "subject": "The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again",
         "ids": [],
         "matches": []
       },
       {
-        "h": "3148eed2",
+        "h": "3148eed",
         "date": "2026-10-22T22:56:06-04:00",
         "subject": "Money: Needs you — declined cards with a pay link (DASH-C) (#198)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "3c88148d",
+        "h": "3c88148",
         "date": "2026-10-22T22:37:59-04:00",
         "subject": "Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "946d4a54",
+        "h": "946d4a5",
         "date": "2026-10-23T02:35:12+00:00",
         "subject": "The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a5789298",
+        "h": "a578929",
         "date": "2026-10-23T02:33:17+00:00",
         "subject": "Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no \"Birdie\" anywhere a course sees); a test for the pay-page fee line",
         "ids": [],
         "matches": []
       },
       {
-        "h": "966741b9",
+        "h": "966741b",
         "date": "2026-10-22T22:24:25-04:00",
         "subject": "Course dashboard search: find a golfer, booking or member from the menu (#195)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "dd3cfd14",
+        "h": "dd3cfd1",
         "date": "2026-10-23T02:19:56+00:00",
         "subject": "Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit",
         "ids": [],
         "matches": []
       },
       {
-        "h": "e0bc004d",
+        "h": "e0bc004",
         "date": "2026-10-22T22:09:55-04:00",
         "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "4b621c06",
+        "h": "4b621c0",
         "date": "2026-10-22T22:44:23+00:00",
         "subject": "Regenerate status board",
         "ids": [],
         "matches": []
       },
       {
-        "h": "04301cec",
+        "h": "04301ce",
         "date": "2026-10-22T22:10:32+00:00",
         "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses",
         "ids": [],
         "matches": []
       },
       {
-        "h": "2734cbdb",
+        "h": "2734cbd",
         "date": "2026-10-22T22:04:58+00:00",
         "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later",
         "ids": [],
@@ -98,9 +113,9 @@
   },
   "counts": {
     "runDone": 298,
-    "runAwaiting": 1,
+    "runAwaiting": 0,
     "runInFlight": 1,
-    "runNotStarted": 5,
+    "runNotStarted": 6,
     "reviseDone": 14,
     "reviseOpen": 8,
     "ideas": 17,
@@ -115,15 +130,7 @@
       ]
     }
   ],
-  "awaiting": [
-    {
-      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
-      "line": 2357,
-      "hash": "b88c8bf3",
-      "shipDate": "2026-07-22",
-      "ageDays": 93
-    }
-  ],
+  "awaiting": [],
   "next": [
     {
       "title": "WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).",
@@ -143,6 +150,11 @@
     {
       "title": "CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (\"Golf",
       "line": 338,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
+      "line": 2357,
       "section": "Queue (run in this order)"
     },
     {
@@ -268,26 +280,8 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-17",
-      "ageDays": 6
-    },
-    {
-      "file": "ADMIN_V5_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 0
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "HOMEPAGE_SPEC.md",
@@ -296,253 +290,271 @@
       "ageDays": 0
     },
     {
+      "file": "ADMIN_V5_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "d6efdc1b",
+      "h": "d2b41f2",
+      "date": "2026-10-23",
+      "subject": "Regenerate the status board"
+    },
+    {
+      "h": "d6efdc1",
       "date": "2026-10-23",
       "subject": "Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)"
     },
     {
-      "h": "85bb9160",
+      "h": "85bb916",
       "date": "2026-10-23",
       "subject": "The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again"
     },
     {
-      "h": "3148eed2",
+      "h": "3148eed",
       "date": "2026-10-22",
       "subject": "Money: Needs you — declined cards with a pay link (DASH-C) (#198)"
     },
     {
-      "h": "3c88148d",
+      "h": "3c88148",
       "date": "2026-10-22",
       "subject": "Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)"
     },
     {
-      "h": "946d4a54",
+      "h": "946d4a5",
       "date": "2026-10-23",
       "subject": "The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie"
     },
     {
-      "h": "a5789298",
+      "h": "a578929",
       "date": "2026-10-23",
       "subject": "Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no \"Birdie\" anywhere a course sees); a test for the pay-page fee line"
     },
     {
-      "h": "966741b9",
+      "h": "966741b",
       "date": "2026-10-22",
       "subject": "Course dashboard search: find a golfer, booking or member from the menu (#195)"
     },
     {
-      "h": "dd3cfd14",
+      "h": "dd3cfd1",
       "date": "2026-10-23",
       "subject": "Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit"
     },
     {
-      "h": "e0bc004d",
+      "h": "e0bc004",
       "date": "2026-10-22",
       "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)"
     },
     {
-      "h": "4b621c06",
+      "h": "4b621c0",
       "date": "2026-10-22",
       "subject": "Regenerate status board"
     },
     {
-      "h": "b4ba0832",
+      "h": "b4ba083",
       "date": "2026-10-22",
       "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)"
-    },
-    {
-      "h": "3754fcb4",
-      "date": "2026-10-22",
-      "subject": "TEST-1: launch wipe of test data, and resettable test courses (#190)"
     }
   ]
 }
