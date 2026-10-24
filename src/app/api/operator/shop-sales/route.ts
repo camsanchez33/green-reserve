@@ -5,6 +5,7 @@ import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { createSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, type SaleView } from '@/lib/shop-sales';
 import { rateLimit } from '@/lib/rate-limit';
 import { ringUpCash } from '@/lib/register';
+import { startReaderPayment, readerSaleStatus, cancelReaderPayment, simulateTap } from '@/lib/card-reader';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { sendShopSalePayLinkEmail, sendShopReceiptEmail, isPlaceholderEmail } from '@/lib/email';
@@ -16,6 +17,9 @@ import { sendShopSalePayLinkEmail, sendShopReceiptEmail, isPlaceholderEmail } fr
 // POS-3 (Cam 2026-10-24): a discount needs shop.discount; a refund needs
 // money.refund (cash recorded, card through Stripe); receipts go to whoever
 // asks, by email or text.
+// POS-3 R3: pay 'reader' sends the sale to the course's card reader (shop.sell,
+// a current agreement and Stripe, as for a pay link); the register then asks
+// reader_status until it is paid, declined or cancelled.
 
 async function gate() {
   const session = await resolveDashboardSession();
@@ -69,8 +73,10 @@ export async function POST(req: NextRequest) {
   const g = await gate();
   if ('res' in g) return g.res;
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-  const pay = body.pay === 'cash' ? 'cash' : body.pay === 'link' ? 'link' : null;
-  if (!pay) return NextResponse.json({ error: 'Choose cash or a pay link.' }, { status: 400 });
+  const pay = body.pay === 'cash' ? 'cash' : body.pay === 'link' ? 'link' : body.pay === 'reader' ? 'reader' : null;
+  if (!pay) return NextResponse.json({ error: 'Choose cash, the card reader or a pay link.' }, { status: 400 });
+  const readerId = typeof body.readerId === 'string' ? body.readerId : '';
+  if (pay === 'reader' && !readerId) return NextResponse.json({ error: 'Pick a card reader.' }, { status: 400 });
   if (pay === 'cash') {
     const denied = requirePermission(g.session, 'sheet.counter_payment');
     if (denied) return denied;
@@ -103,8 +109,8 @@ export async function POST(req: NextRequest) {
   const via = body.via === 'email' ? 'email' : 'sms';
   const course = await prisma.course.findUnique({ where: { id: g.session.courseId }, select: { name: true, stripeAccountId: true, stripeAccountActive: true } });
   if (!course) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
-  if (pay === 'link' && (!course.stripeAccountId || !course.stripeAccountActive)) {
-    return NextResponse.json({ error: 'Connect Stripe on Money → Payouts before sending pay links. Cash works now.' }, { status: 409 });
+  if (pay !== 'cash' && (!course.stripeAccountId || !course.stripeAccountActive)) {
+    return NextResponse.json({ error: `Connect Stripe on Money → Payouts before ${pay === 'reader' ? 'taking cards' : 'sending pay links'}. Cash works now.` }, { status: 409 });
   }
   if (pay === 'link') {
     // Check the address before anything is created, so a typo doesn't leave an orphan sale.
@@ -122,6 +128,12 @@ export async function POST(req: NextRequest) {
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   const { payToken, ...sale } = r.value;
   if (pay === 'cash') return NextResponse.json({ sale });
+  if (pay === 'reader') {
+    const started = await startReaderPayment(g.session.courseId, sale.id, readerId);
+    // The sale exists either way: the register offers the reader again, cash, or void.
+    if (!started.ok) return NextResponse.json({ sale, readerError: started.error }, { status: 207 });
+    return NextResponse.json({ sale, reader: 'waiting' });
+  }
   const sendError = await sendLink(g.session.courseId, sale, payToken, via, course.name);
   // The sale exists either way; staff can resend or take cash for it from the list.
   return NextResponse.json({ sale, sent: !sendError, ...(sendError ? { sendError } : {}) }, { status: sendError ? 207 : 200 });
@@ -156,6 +168,23 @@ export async function PATCH(req: NextRequest) {
     const r = await settleOpenSale(g.session.courseId, id, body.action);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ sale: r.value });
+  }
+  if (body.action === 'reader_start') {
+    const agreementBlock = await requireAgreementCurrent(g.session.courseId); // AG-3 §3: card payments
+    if (agreementBlock) return agreementBlock;
+    const r = await startReaderPayment(g.session.courseId, id, typeof body.readerId === 'string' ? body.readerId : '');
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r.value);
+  }
+  if (body.action === 'reader_status' || body.action === 'reader_cancel') {
+    const r = body.action === 'reader_status' ? await readerSaleStatus(g.session.courseId, id) : await cancelReaderPayment(g.session.courseId, id);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r.value);
+  }
+  if (body.action === 'reader_simulate') {
+    const r = await simulateTap(g.session.courseId, id, body.card === 'declined' ? 'declined' : 'ok');
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ tapped: true });
   }
   if (body.action === 'resend') {
     const agreementBlock = await requireAgreementCurrent(g.session.courseId); // AG-3 §3

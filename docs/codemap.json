@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 544,
-    "routes": 260,
-    "libs": 180,
+    "files": 547,
+    "routes": 261,
+    "libs": 181,
     "models": 56,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5185,6 +5185,41 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/card-readers/route.ts",
+      "lines": 38,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DELETE",
+          "kind": "route"
+        },
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/card-readers",
+      "kind": "api",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/card-reader",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/change-password/route.ts",
       "lines": 40,
       "purpose": "",
@@ -6368,7 +6403,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 221,
+      "lines": 250,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6396,6 +6431,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/card-reader",
         "@/lib/email",
         "@/lib/golfer-otp",
         "@/lib/prisma",
@@ -7975,7 +8011,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1184,
+      "lines": 1191,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7991,6 +8027,7 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/CardReaderCard",
         "@/components/dashboard/CourseLayoutTab",
         "@/components/dashboard/CoursePreview",
         "@/components/dashboard/SalesTaxCard",
@@ -8020,7 +8057,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 625,
+      "lines": 713,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -9645,6 +9682,32 @@
       ]
     },
     {
+      "path": "src/components/dashboard/CardReaderCard.tsx",
+      "lines": 90,
+      "purpose": "POS-3 R3:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CardReaderCard",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/CourseLayoutTab.tsx",
       "lines": 495,
       "purpose": "Settings rework (Cam 2026-10-19:",
@@ -11064,6 +11127,7 @@
         "src/components/admin/TestDataTools.tsx",
         "src/components/birdie/ConfirmCard.tsx",
         "src/components/dashboard/AgreementNotice.tsx",
+        "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
@@ -11135,6 +11199,7 @@
         "src/components/admin/ReasonDialog.tsx",
         "src/components/admin/StepUpDialog.tsx",
         "src/components/admin/TestDataTools.tsx",
+        "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
@@ -13940,6 +14005,74 @@
       ]
     },
     {
+      "path": "src/lib/card-reader.ts",
+      "lines": 263,
+      "purpose": "POS-3 R3 (Cam 2026-10-24:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cancelReaderPayment",
+          "kind": "fn"
+        },
+        {
+          "name": "listReaders",
+          "kind": "fn"
+        },
+        {
+          "name": "readerSaleStatus",
+          "kind": "fn"
+        },
+        {
+          "name": "ReaderSaleStatus",
+          "kind": "type"
+        },
+        {
+          "name": "ReaderView",
+          "kind": "type"
+        },
+        {
+          "name": "registerReader",
+          "kind": "fn"
+        },
+        {
+          "name": "removeReader",
+          "kind": "fn"
+        },
+        {
+          "name": "SIMULATED_CODE",
+          "kind": "const"
+        },
+        {
+          "name": "simulateTap",
+          "kind": "fn"
+        },
+        {
+          "name": "startReaderPayment",
+          "kind": "fn"
+        },
+        {
+          "name": "terminalTestMode",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./shop-sales",
+        "./stripe",
+        "crypto",
+        "stripe"
+      ],
+      "usedBy": [
+        "src/app/api/operator/card-readers/route.ts",
+        "src/app/api/operator/shop-sales/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/change-requests.ts",
       "lines": 149,
       "purpose": "Single source of truth for structured \"request changes\" data (V13b).",
@@ -15519,6 +15652,7 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/shop/page.tsx",
         "src/components/AnnouncementBanner.tsx",
+        "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
@@ -18520,6 +18654,7 @@
         "src/lib/booking-residents.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/card-reader.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
         "src/lib/counter-pay.ts",
@@ -19521,6 +19656,7 @@
         "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/bookings/shop/route.ts",
+        "src/app/api/operator/card-readers/route.ts",
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
@@ -19817,7 +19953,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 568,
+      "lines": 591,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -19843,6 +19979,10 @@
         },
         {
           "name": "hasDiscount",
+          "kind": "fn"
+        },
+        {
+          "name": "markCardPaid",
           "kind": "fn"
         },
         {
@@ -19883,6 +20023,10 @@
         },
         {
           "name": "saleForPayPage",
+          "kind": "fn"
+        },
+        {
+          "name": "saleIntent",
           "kind": "fn"
         },
         {
@@ -19936,6 +20080,7 @@
         "src/app/api/operator/shop-sales/quote/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/shop-sale/[id]/route.ts",
+        "src/lib/card-reader.ts",
         "src/lib/register.ts"
       ]
     },
@@ -20342,6 +20487,7 @@
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/card-reader.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
         "src/lib/email.ts",
@@ -22491,6 +22637,10 @@
           "type": "Boolean"
         },
         {
+          "name": "terminalLocationId",
+          "type": "String"
+        },
+        {
           "name": "shopTaxOn",
           "type": "Boolean"
         },
@@ -22714,6 +22864,7 @@
         "src/app/api/operator/upload/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/agreement-sign.ts",
+        "src/lib/card-reader.ts",
         "src/lib/lifecycle.ts",
         "src/lib/sales-tax.ts"
       ],
@@ -22793,6 +22944,7 @@
         "src/lib/announcement-audience.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/proposals.ts",
+        "src/lib/card-reader.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-events.ts",
         "src/lib/course-group.ts",
@@ -25269,6 +25421,10 @@
           "type": "Int"
         },
         {
+          "name": "readerId",
+          "type": "String"
+        },
+        {
           "name": "refunds",
           "type": "ShopSaleRefund[]"
         },
@@ -25279,6 +25435,7 @@
       ],
       "writers": [
         "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/card-reader.ts",
         "src/lib/data-reset.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
@@ -25286,6 +25443,7 @@
       "readers": [
         "src/app/api/operator/shop-sales/route.ts",
         "src/lib/analytics.ts",
+        "src/lib/card-reader.ts",
         "src/lib/data-reset.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"

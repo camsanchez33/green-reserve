@@ -1,16 +1,14 @@
 {
-  "generatedAt": "2026-10-24T05:56:52.435Z",
+  "generatedAt": "2026-10-24T13:19:58.522Z",
   "repo": {
-    "head": "fff9ab01",
+    "head": "a5d6c217",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 4,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/fee-at-booking-db-test.ts",
-      " M src/app/book/BookClient.tsx",
-      " M src/lib/email.ts",
-      " M src/lib/receipt-charges.ts"
+      " M scripts/card-reader-db-test.ts",
+      " M src/lib/card-reader.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -18,9 +16,16 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "fff9ab01",
-        "date": "2026-10-24T05:51:15+00:00",
-        "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off)",
+        "h": "a5d6c217",
+        "date": "2026-10-24T13:13:03+00:00",
+        "subject": "POS-3 R3a: Stripe card reader at the register (shop items), server-driven",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c8e0e662",
+        "date": "2026-10-24T02:05:37-04:00",
+        "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)",
         "ids": [],
         "matches": []
       },
@@ -571,9 +576,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "fff9ab01",
+      "h": "a5d6c217",
       "date": "2026-10-24",
-      "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off)"
+      "subject": "POS-3 R3a: Stripe card reader at the register (shop items), server-driven"
+    },
+    {
+      "h": "c8e0e662",
+      "date": "2026-10-24",
+      "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)"
     },
     {
       "h": "9985445e",
@@ -624,11 +634,6 @@
       "h": "978a3da2",
       "date": "2026-10-23",
       "subject": "Retire the admin Activity page (AW-12) (#200)"
-    },
-    {
-      "h": "d2b41f27",
-      "date": "2026-10-23",
-      "subject": "Regenerate the status board"
     }
   ]
 }

@@ -29,7 +29,12 @@ type Sale = {
   discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number; receiptSentAt: string | null; refunds: Refund[];
   /** POS-3 R2: green fees in this sale — refunded from the booking, not here. */
   roundsCents: number;
+  /** POS-3 R3: sent as a pay link (else rung up here — cash or the card reader). */
+  link: boolean;
 };
+type Reader = { id: string; label: string; online: boolean; simulated: boolean };
+/** A sale on the card reader: waiting for the card, or what happened. */
+type ReaderSale = { sale: Sale; readerId: string; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
 type Custom = { key: string; name: string; priceCents: number; quantity: number };
 // POS-3 R2: green fees at the register — today's groups that owe, and walk-ins.
 type Owing = { bookingId: string; time: string; holes: number; golferName: string; players: number; dueCents: number; noShow: boolean };
@@ -58,7 +63,12 @@ export default function ShopPage() {
   const [sales, setSales] = useState<Sale[] | null>(null);
   const [loadError, setLoadError] = useState('');
   const [cart, setCart] = useState<Record<string, number>>({});
-  const [pay, setPay] = useState<'cash' | 'sms' | 'email'>('cash');
+  const [pay, setPay] = useState<'cash' | 'reader' | 'sms' | 'email'>('cash');
+  // POS-3 R3: the course's card readers (Settings → Pro shop) and the sale on one now.
+  const [readers, setReaders] = useState<Reader[]>([]);
+  const [readerId, setReaderId] = useState('');
+  const [testMode, setTestMode] = useState(false);
+  const [onReader, setOnReader] = useState<ReaderSale | null>(null);
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' });
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -96,6 +106,9 @@ export default function ShopPage() {
     if (!s.ok) { setLoadError(s.error); return; }
     setItems(i.data.items.filter(x => x.active));
     setSales(s.data.sales);
+    // Readers are optional: a course without one (or Stripe down) still sells in cash and by link.
+    const rd = await dfetch<{ readers: Reader[]; testMode: boolean }>('/api/operator/card-readers');
+    if (rd.ok) { setReaders(rd.data.readers); setTestMode(rd.data.testMode); setReaderId(id => rd.data.readers.some(x => x.id === id) ? id : rd.data.readers[0]?.id ?? ''); }
   }, []);
   const loadRounds = useCallback(async () => {
     const r = await dfetch<{ owing: Owing[]; open: OpenTime[] }>('/api/operator/shop-sales/rounds');
@@ -156,13 +169,13 @@ export default function ShopPage() {
 
   async function ringUp() {
     setBusy('sale'); setError(''); setNote(''); setJustPaid(null);
-    const r = await dfetch<{ sale: Sale; sent?: boolean; sendError?: string; skipped?: string[]; notes?: string[] }>('/api/operator/shop-sales', {
+    const r = await dfetch<{ sale: Sale; sent?: boolean; sendError?: string; readerError?: string; skipped?: string[]; notes?: string[] }>('/api/operator/shop-sales', {
       method: 'POST',
       body: JSON.stringify({
         lines: salePayload, discount: itemsEmpty ? undefined : discountPayload,
         bookingIds: pickedRounds.map(o => o.bookingId),
         walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart })),
-        pay: pay === 'cash' ? 'cash' : 'link', via: pay === 'email' ? 'email' : 'sms', taxCalculationId: priced?.taxCalculationId || undefined,
+        pay: pay === 'cash' || pay === 'reader' ? pay : 'link', via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
         cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
       }),
@@ -178,11 +191,49 @@ export default function ShopPage() {
     if (hasRounds) loadRounds();
     if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total below is what was taken.`);
     if (r.data.notes?.length) setNote(r.data.notes.join(' '));
-    if (r.data.sendError) setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from the list below, or take cash.`);
+    if (pay === 'reader') setOnReader({ sale: r.data.sale, readerId, state: r.data.readerError ? 'error' : 'waiting', message: r.data.readerError ?? '' });
+    else if (r.data.sendError) setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from the list below, or take cash.`);
     else if (pay === 'cash') { setJustPaid(r.data.sale); setReceipt({ id: r.data.sale.id, via: 'email', to: '' }); }
     else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows as paid below when they pay.`);
     load();
     searchRef.current?.focus();
+  }
+
+  // POS-3 R3: while a sale is on the reader, ask every 2 seconds what it is doing.
+  useEffect(() => {
+    if (onReader?.state !== 'waiting') return;
+    let live = true;
+    const t = setInterval(async () => {
+      const r = await dfetch<{ status: string; message?: string }>('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: onReader.sale.id, action: 'reader_status' }) });
+      if (!live) return;
+      if (!r.ok) { setOnReader(o => o && { ...o, message: `${r.error} Still checking…` }); return; }
+      if (r.data.status === 'paid') { readerPaid(onReader.sale); return; }
+      if (r.data.status === 'declined') setOnReader(o => o && { ...o, state: 'declined', message: r.data.message || 'The card was declined.' });
+      else if (r.data.status === 'cancelled' || r.data.status === 'open') setOnReader(o => o && { ...o, state: 'cancelled', message: 'The payment was cancelled on the reader.' });
+      else if (r.data.status === 'other') { setOnReader(null); setError(r.data.message || 'This sale changed — see the list below.'); load(); }
+    }, 2000);
+    return () => { live = false; clearInterval(t); };
+  }, [onReader?.state, onReader?.sale.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function readerPaid(sale: Sale) {
+    setOnReader(null);
+    setJustPaid({ ...sale, status: 'paid_card' });
+    setReceipt({ id: sale.id, via: 'email', to: '' });
+    load();
+  }
+
+  async function readerAct(action: 'reader_start' | 'reader_cancel' | 'reader_simulate', card?: 'ok' | 'declined') {
+    if (!onReader) return;
+    setBusy('reader'); setError('');
+    const r = await dfetch<{ status?: string; message?: string }>('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: onReader.sale.id, action, readerId: onReader.readerId, card }) });
+    setBusy('');
+    if (!r.ok) { setOnReader(o => o && { ...o, state: action === 'reader_start' ? 'error' : o.state, message: r.error }); load(); return; }
+    if (action === 'reader_start') setOnReader(o => o && { ...o, state: 'waiting', message: '' });
+    if (action === 'reader_cancel') {
+      if (r.data.status === 'paid') { readerPaid(onReader.sale); setNote(r.data.message ?? ''); return; }
+      setOnReader(o => o && (r.data.status === 'waiting' ? { ...o, message: r.data.message ?? '' } : { ...o, state: 'cancelled', message: 'Cancelled — nothing was charged.' }));
+    }
+    load();
   }
 
   async function sendReceipt() {
@@ -217,7 +268,8 @@ export default function ShopPage() {
   }
 
   async function act(sale: Sale, action: 'void' | 'paid_cash' | 'resend', via?: 'sms' | 'email') {
-    if (action === 'void' && !confirm(`Void this ${usd(sale.totalCents)} sale? The pay link stops working.`)) return;
+    if (action === 'void' && !confirm(`Void this ${usd(sale.totalCents)} sale?${sale.link ? ' The pay link stops working.' : ''}`)) return;
+    if (onReader?.sale.id === sale.id) setOnReader(null);
     setBusy(sale.id); setError(''); setNote('');
     const r = await dfetch('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: sale.id, action, via }) });
     setBusy('');
@@ -231,13 +283,16 @@ export default function ShopPage() {
   const canRefund = access.can('money.refund');
   // Recording cash is the counter-payment power, as on the tee sheet.
   const canCash = access.can('sheet.counter_payment');
-  // Rounds at the register are cash for now (the card reader is next).
-  const payChoices = ([['cash', 'Cash'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const).filter(([k]) => (k !== 'cash' || canCash) && (k === 'cash' || !hasRounds));
+  // Rounds at the register are cash for now (rounds on the card reader come next).
+  const payChoices = ([['cash', 'Cash'], ['reader', 'Card reader'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const)
+    .filter(([k]) => (k !== 'cash' || canCash) && (k === 'cash' || !hasRounds) && (k !== 'reader' || readers.length > 0));
   useEffect(() => { if (hasRounds) setPay('cash'); }, [hasRounds]);
   useEffect(() => { if (access.loaded && canCash) loadRounds(); }, [access.loaded, canCash, loadRounds]);
   const canWalkIn = access.can('sheet.walkin');
   const walkTime = roundsData?.open.find(t => t.teeTimeId === walkForm?.teeTimeId) ?? null;
-  useEffect(() => { if (access.loaded && !canCash) setPay(p => (p === 'cash' ? 'sms' : p)); }, [access.loaded, canCash]);
+  useEffect(() => { if (access.loaded && !canCash) setPay(p => (p === 'cash' ? (readers.length ? 'reader' : 'sms') : p)); }, [access.loaded, canCash, readers.length]);
+  useEffect(() => { if (pay === 'reader' && !readers.length) setPay(canCash ? 'cash' : 'sms'); }, [pay, readers.length, canCash]);
+  const readerName = (id: string) => readers.find(x => x.id === id)?.label ?? 'the card reader';
   const needContact = pay === 'sms' ? customer.phone.replace(/\D/g, '').length < 10 : pay === 'email' ? !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(customer.email.trim()) : false;
   const todayTotal = (sales ?? []).filter(s => isPaid(s) && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString()).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
   // Quick cash amounts: the exact total, then the next notes up.
@@ -482,6 +537,12 @@ export default function ShopPage() {
                         </label>
                       ))}
                     </div>
+                    {pay === 'reader' && readers.length > 1 && (
+                      <select value={readerId} onChange={e => setReaderId(e.target.value)} aria-label="Card reader" className={INPUT + ' w-full'}>
+                        {readers.map(x => <option key={x.id} value={x.id}>{x.label}{x.online ? '' : ' (offline)'}</option>)}
+                      </select>
+                    )}
+                    {pay === 'reader' && <p className="text-[12.5px] text-ink-muted">The reader asks for the card. The money goes to your Stripe account.</p>}
                     {hasRounds && <p className="text-[12.5px] text-ink-muted">Rounds are paid in cash here for now. Each group is checked in and marked paid at the counter on the tee sheet. Discounts apply to shop items only.</p>}
                     {pay === 'cash' && ready && due > 0 && (
                       <div>
@@ -499,7 +560,7 @@ export default function ShopPage() {
                           : <p className="text-[13px] text-bad mt-2">That’s {usd(due - tenderedCents)} short.</p>)}
                       </div>
                     )}
-                    {pay !== 'cash' && (
+                    {(pay === 'sms' || pay === 'email') && (
                       <div className="space-y-2">
                         <input value={customer.name} onChange={e => setCustomer(c => ({ ...c, name: e.target.value }))} placeholder="Name (optional)" aria-label="Customer name" className={INPUT + ' w-full'} />
                         {pay === 'sms'
@@ -509,15 +570,38 @@ export default function ShopPage() {
                       </div>
                     )}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
-                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due)}
+                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting'))}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
-                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : `Send ${usd(due)} pay link`}
+                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
                     </button>
+                  </div>
+                )}
+                {onReader && (
+                  <div className={'mt-4 border-l-[3px] pl-3 space-y-2 ' + (onReader.state === 'waiting' ? 'border-warn' : 'border-bad')} role="status" aria-live="polite">
+                    <p className="text-[14px] text-ink">
+                      {onReader.state === 'waiting'
+                        ? <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents)}</span> on {readerName(onReader.readerId)} — waiting for the card.</>
+                        : <><span className="font-semibold tabular-nums">{usd(onReader.sale.totalCents)}</span> not paid. {onReader.message}</>}
+                    </p>
+                    {onReader.state === 'waiting' && onReader.message && <p className="text-[12.5px] text-ink-muted">{onReader.message}</p>}
+                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                      {onReader.state === 'waiting'
+                        ? <button type="button" onClick={() => readerAct('reader_cancel')} disabled={busy === 'reader'} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Cancel on the reader</button>
+                        : <button type="button" onClick={() => readerAct('reader_start')} disabled={busy === 'reader'} className={LINK}>Try the reader again</button>}
+                      {onReader.state === 'waiting' && testMode && readers.find(x => x.id === onReader.readerId)?.simulated && (
+                        <>
+                          <button type="button" onClick={() => readerAct('reader_simulate', 'ok')} disabled={busy === 'reader'} className={LINK}>Simulate a tap</button>
+                          <button type="button" onClick={() => readerAct('reader_simulate', 'declined')} disabled={busy === 'reader'} className={LINK}>Simulate a decline</button>
+                        </>
+                      )}
+                      {onReader.state !== 'waiting' && canCash && <button type="button" onClick={() => act(onReader.sale, 'paid_cash')} disabled={!!busy} className={LINK}>Took cash instead</button>}
+                      {onReader.state !== 'waiting' && <button type="button" onClick={() => act(onReader.sale, 'void')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
+                    </div>
                   </div>
                 )}
                 {justPaid && (
                   <div className="mt-4 border-l-[3px] border-ok pl-3 space-y-2">
-                    <p className="text-[14px] text-ink"><span className="font-semibold tabular-nums">{usd(justPaid.totalCents)}</span> in cash — recorded.
+                    <p className="text-[14px] text-ink"><span className="font-semibold tabular-nums">{usd(justPaid.totalCents)}</span> {justPaid.status === 'paid_card' ? 'paid by card' : 'in cash'} — recorded.
                       {justPaid.cashTenderedCents != null && <> Change: <span className="font-semibold tabular-nums">{usd(justPaid.cashTenderedCents - justPaid.totalCents)}</span>.</>}</p>
                     {receipt?.id === justPaid.id && <ReceiptForm receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + justPaid.id} onSkip={() => { setReceipt(null); setJustPaid(null); }} />}
                   </div>
@@ -535,7 +619,9 @@ export default function ShopPage() {
                   {sales.map(s => {
                     const itemsCents = s.totalCents - (s.roundsCents ?? 0);
                     const fully = isPaid(s) && itemsCents > 0 && s.refundedCents >= itemsCents;
-                    const st = fully ? { label: 'Refunded', tone: 'neutral' as const } : s.refundedCents > 0 ? { label: `${STATUS[s.status]?.label ?? s.status} · ${usd(s.refundedCents)} refunded`, tone: 'ok' as const } : STATUS[s.status] ?? { label: s.status, tone: 'neutral' as const };
+                    // A sale rung up for the card reader, not paid yet (declined or cancelled), or on the reader now.
+                    const base = !s.link && s.status === 'open' ? { label: 'Not paid — card reader', tone: 'warn' as const } : !s.link && s.status === 'paying' ? { label: 'On the card reader', tone: 'warn' as const } : STATUS[s.status];
+                    const st = fully ? { label: 'Refunded', tone: 'neutral' as const } : s.refundedCents > 0 ? { label: `${base?.label ?? s.status} · ${usd(s.refundedCents)} refunded`, tone: 'ok' as const } : base ?? { label: s.status, tone: 'neutral' as const };
                     // Green fees in the sale are refunded from their booking, not here.
                     const left = itemsCents - s.refundedCents;
                     const pending = s.refunds.filter(r => r.status === 'pending');
@@ -552,7 +638,9 @@ export default function ShopPage() {
                           {isPaid(s) && canRefund && left > 0 && <button onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setError(''); }} disabled={!!busy} className={LINK}>Refund</button>}
                           {s.status === 'open' && (
                             <>
-                              <button onClick={() => act(s, 'resend', s.customerPhone ? 'sms' : 'email')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Send again</button>
+                              {s.link
+                                ? <button onClick={() => act(s, 'resend', s.customerPhone ? 'sms' : 'email')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Send again</button>
+                                : readers.length > 0 && <button onClick={() => { setOnReader({ sale: s, readerId: readerId || readers[0].id, state: 'cancelled', message: '' }); setError(''); }} disabled={!!busy || onReader?.state === 'waiting'} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Card reader</button>}
                               {canCash && <button onClick={() => act(s, 'paid_cash')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Took cash</button>}
                               <button onClick={() => act(s, 'void')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>
                             </>
