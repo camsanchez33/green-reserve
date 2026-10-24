@@ -162,6 +162,13 @@ async function main() {
   const lu = await prisma.courseEventPlayer.findFirstOrThrow({ where: { groupKey: pcPay.groupKey } });
   check('paid at the course: the sign-up goes on the list', pc.ok && pcDone.ok && lu.status === 'in', { pcDone, lu: lu.status });
 
+  // Cam 2026-10-24: the organizer pays the course — players see no price and no terms, and never pay here.
+  const org = await mkEvent({ players: 10, payer: 'organizer', signupPay: 'now', pricePerPlayerCents: 5000, terms: 'Deposit non-refundable.' });
+  const orgPage = await signupPage(org.id);
+  check('organizer pays: the page shows no price, no terms and no paying', orgPage?.pricePerPlayerCents === 0 && orgPage.terms === '' && orgPage.payNow === false, orgPage);
+  const orgSign = await submitSignup(org.id, { players: [one('Ola', 'ola@example.com')] });
+  check('organizer pays: a sign-up goes straight on the list with nothing to pay', orgSign.ok && orgSign.value.status === 'in' && (await prisma.courseEventPayment.count({ where: { eventId: org.id } })) === 0, orgSign);
+
   // A waiting-list sign-up with pay-now makes no payment.
   const tiny = await mkEvent({ players: 1, signupPay: 'now', pricePerPlayerCents: 5000 });
   await submitSignup(tiny.id, { players: [one('Mo', 'mo@example.com')] });

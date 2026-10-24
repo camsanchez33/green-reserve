@@ -1468,6 +1468,10 @@ model CourseEvent {
   payments            CourseEventPayment[]
   /// W2-9b: the headcount staff confirmed for the balance; null = not confirmed yet.
   finalHeadcount      Int?
+  /// Cam 2026-10-24: who pays the course — organizer (one bill: deposit and
+  /// balance; players don't pay the course) or players (each pays on the sign-up
+  /// page). '' = an event made before the question: every tool shows.
+  payer               String              @default("")
   /// W2-9d (Cam 2026-10-22): the public sign-up page, /events/[id]. Off until the course opens it.
   signupOpen          Boolean             @default(false)
   /// now = a spot is held 30 minutes while they pay; later = they sign up, the course collects after.

@@ -132,6 +132,8 @@ export type EventInput = {
   shareCourse?: unknown; holdNineIds?: unknown; keepOpen?: unknown;
   organizerName?: unknown; organizerEmail?: unknown; organizerPhone?: unknown;
   pricePerPlayer?: unknown; includes?: unknown; terms?: unknown; notes?: unknown;
+  /** Cam 2026-10-24: organizer | players. */
+  payer?: unknown;
 };
 
 export class EventError extends Error {}
@@ -190,12 +192,15 @@ export async function eventFields(courseId: string, input: EventInput, opts: { a
   const keepOpen = shareCourse && Array.isArray(input.keepOpen)
     ? [...new Set(input.keepOpen.filter(isTime))].filter(t => t >= window.from && t <= window.to).sort().slice(0, 300) : [];
   const includes = Array.isArray(input.includes) ? input.includes.map(x => str(x, 60)).filter(Boolean).slice(0, 20) : [];
+  // Cam 2026-10-24 (after how courses run outings): one organizer paying the course, or each player paying on the sign-up page.
+  const payer = input.payer === 'organizer' || input.payer === 'players' ? input.payer : null;
+  if (!payer) throw new EventError('Say who pays the course: the organizer, or each player.');
   return {
     data: {
       name, kind, date: input.date, format, startTime: input.startTime, holdFrom: window.from, holdTo: window.to, holdToCustom,
       productId, holes, groups, players, shareCourse, holdNineIds, keepOpen,
       organizerName: str(input.organizerName, 120), organizerEmail: email, organizerPhone: str(input.organizerPhone, 40),
-      pricePerPlayerCents: Math.round(price * 100), includes,
+      pricePerPlayerCents: Math.round(price * 100), includes, payer,
       terms: String(input.terms ?? '').trim().slice(0, 4000), notes: String(input.notes ?? '').trim().slice(0, 4000),
     },
     teeTimesFound: found,
@@ -258,7 +263,8 @@ export async function updateEvent(courseId: string, id: string, input: EventInpu
   const moved = data.date !== existing.date || data.holdFrom !== existing.holdFrom || data.holdTo !== existing.holdTo
     || data.format !== existing.format || data.productId !== existing.productId
     || data.shareCourse !== existing.shareCourse || data.holdNineIds.join() !== existing.holdNineIds.join() || data.keepOpen.join() !== existing.keepOpen.join();
-  const event = await prisma.courseEvent.update({ where: { id }, data });
+  // The organizer pays the course: nobody pays on the sign-up page.
+  const event = await prisma.courseEvent.update({ where: { id }, data: { ...data, ...(data.payer === 'organizer' ? { signupPay: 'later' } : {}) } });
   if (data.date !== existing.date) {
     // The checklist moves with the event: every due date shifts by the same number of days.
     const shift = Math.round((Date.parse(data.date + 'T12:00:00Z') - Date.parse(existing.date + 'T12:00:00Z')) / 86_400_000);

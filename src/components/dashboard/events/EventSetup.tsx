@@ -17,6 +17,8 @@ export type EventForm = {
   shareCourse: boolean; holdNineIds: string[]; keepOpen: string[];
   organizerName: string; organizerEmail: string; organizerPhone: string;
   pricePerPlayer: string; includes: string[]; terms: string; notes: string;
+  /** Cam 2026-10-24: who pays the course — one organizer, or each player on the sign-up page. '' = not chosen yet. */
+  payer: '' | 'organizer' | 'players';
 };
 type Preview = { holdFrom: string; holdTo: string; teeTimes: number; teeTimesFound: number | null; booked: { time: string; golfers: string }[]; otherEvent: boolean; windowTimes: string[] };
 export type NineOpt = { id: string; name: string };
@@ -28,12 +30,19 @@ export const KINDS: { key: string; label: string; hint: string }[] = [
   { key: 'league', label: 'League night', hint: 'A regular group taking a block of times.' },
   { key: 'other', label: 'Other', hint: 'Anything else that needs the course held.' },
 ];
+// Cam 2026-10-24, after how courses run outings: a company or private outing is one bill to the
+// organizer (deposit, then the balance on the final headcount); a charity or open event has each
+// player pay as they sign up.
+export const PAYERS: { key: 'organizer' | 'players'; label: string; hint: string }[] = [
+  { key: 'organizer', label: 'The organizer', hint: 'one bill: a deposit, then the balance for the final headcount. Players pay the organizer, not you.' },
+  { key: 'players', label: 'Each player', hint: 'players pay their own entry when they sign up on the event’s page.' },
+];
 const INCLUDES = ['Cart', 'Range balls', 'Food', 'Drinks', 'Prizes', 'Gift bag'];
 const STEPS = ['What it is', 'When', 'Who and what', 'Review'];
 
 export const blankForm = (date: string): EventForm => ({
   name: '', kind: 'outing', date, format: 'shotgun', startTime: '08:00', holes: 18, groups: '', players: '', productId: '', holdTo: '', shareCourse: false, holdNineIds: [], keepOpen: [],
-  organizerName: '', organizerEmail: '', organizerPhone: '', pricePerPlayer: '', includes: [], terms: '', notes: '',
+  organizerName: '', organizerEmail: '', organizerPhone: '', pricePerPlayer: '', includes: [], terms: '', notes: '', payer: '',
 });
 
 const LABEL = 'block text-[13px] font-medium text-ink mb-1.5';
@@ -70,6 +79,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
       if (!f.startTime) return f.format === 'shotgun' ? 'Pick the shotgun start time.' : 'Pick the first tee time.';
       if (f.format === 'tee_times' && !(Number(f.groups) > 0)) return 'How many groups go off? It sets how many tee times are held.';
     }
+    if (s === 2 && !f.payer) return 'Say who pays the course: the organizer, or each player.';
     return '';
   }
 
@@ -230,6 +240,15 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
                 <input type="number" min={0} max={200} inputMode="numeric" className={INPUT + ' w-full'} value={f.groups} onChange={e => set('groups', e.target.value)} placeholder={f.players ? String(Math.ceil(Number(f.players) / 4)) : ''} /></label>
             )}
           </div>
+          <fieldset>
+            <legend className={LABEL}>Who pays the course?</legend>
+            {PAYERS.map(p => (
+              <label key={p.key} className="flex items-start gap-2 py-1 text-[13.5px] text-ink">
+                <input type="radio" name="payer" className="mt-1 accent-pine" checked={f.payer === p.key} onChange={() => { set('payer', p.key); setError(''); }} />
+                <span><span className="font-medium">{p.label}</span> <span className="text-ink-soft">— {p.hint}</span></span>
+              </label>
+            ))}
+          </fieldset>
           <fieldset className="space-y-3">
             <legend className="text-[15px] font-semibold text-ink mb-1">Organizer</legend>
             <label className="block"><span className={LABEL}>Name</span>
@@ -276,6 +295,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
               ['Players', [f.players && `${f.players} players`, f.groups && `${f.groups} groups`].filter(Boolean).join(', ') || 'Not set yet'],
               ['Organizer', [f.organizerName, f.organizerEmail, f.organizerPhone].filter(Boolean).join(' · ') || 'Not set yet'],
               ['Price', f.pricePerPlayer ? `$${Number(f.pricePerPlayer).toFixed(2)} per player` : 'Not set yet'],
+              ['Who pays', PAYERS.find(p => p.key === f.payer)?.label ?? 'Not chosen yet'],
               ['Included', f.includes.join(', ') || 'Nothing listed'],
             ].map(([k, v]) => (
               <div key={k} className="grid grid-cols-[110px_1fr] gap-3 py-2"><span className="text-ink-muted">{k}</span><span className="text-ink">{v}</span></div>

@@ -70,10 +70,12 @@ export async function signupPage(eventId: string) {
   const today = todayIn(e.course.timezone);
   const cap = e.players > 0 ? e.players : null;
   const taken = spotsTaken(e.entrants);
-  const payNow = e.signupPay === 'now' && e.pricePerPlayerCents > 0 && !!e.course.stripeAccountId && e.course.stripeAccountActive;
+  // Cam 2026-10-24: when the organizer pays the course, players neither pay here nor see a price.
+  const organizerPays = e.payer === 'organizer';
+  const payNow = !organizerPays && e.signupPay === 'now' && e.pricePerPlayerCents > 0 && !!e.course.stripeAccountId && e.course.stripeAccountActive;
   return {
     id: e.id, name: e.name, kind: e.kind, date: e.date, format: e.format, startTime: e.startTime, holes: e.holes,
-    pricePerPlayerCents: e.pricePerPlayerCents, includes: e.includes, terms: e.terms,
+    pricePerPlayerCents: organizerPays ? 0 : e.pricePerPlayerCents, includes: e.includes, terms: organizerPays ? '' : e.terms,
     payNow, feePerPlayerCents: payNow ? eventFeeFor('player', null) : 0,
     maxGroup: Math.min(MAX_GROUP, Math.max(1, e.signupMaxGroup)), questions: questionsOf(e.signupQuestions),
     spotsLeft: cap == null ? null : Math.max(0, cap - taken), past: e.date < today,
@@ -213,7 +215,7 @@ export async function sendSignupConfirmation(opts: { groupKey?: string; paymentI
   if (!groupKey || !variant) return false;
   const group = await prisma.courseEventPlayer.findMany({
     where: { groupKey }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-    include: { event: { select: { id: true, name: true, date: true, startTime: true, format: true, terms: true, courseId: true, course: { select: { name: true, phone: true, operator: { select: { email: true } } } } } } },
+    include: { event: { select: { id: true, name: true, date: true, startTime: true, format: true, terms: true, payer: true, courseId: true, course: { select: { name: true, phone: true, operator: { select: { email: true } } } } } } },
   });
   const lead = group[0];
   if (!lead?.email || isPlaceholderEmail(lead.email)) return false;
@@ -222,7 +224,8 @@ export async function sendSignupConfirmation(opts: { groupKey?: string; paymentI
     courseId: ev.courseId, variant, email: lead.email, name: lead.name, players: group.map(g => g.name),
     courseName: ev.course.name, coursePhone: ev.course.phone, replyTo: opts.replyTo || ev.course.operator?.email || null,
     eventName: ev.name, dateLabel: formatTeeDay(ev.date), startLabel: `${ev.format === 'shotgun' ? 'Shotgun start' : 'First tee time'} ${formatTeeTime(ev.startTime)}`,
-    paidCents, terms: ev.terms,
+    // The organizer's terms are the organizer's, not the players'.
+    paidCents, terms: ev.payer === 'organizer' ? '' : ev.terms,
   });
   return true;
 }

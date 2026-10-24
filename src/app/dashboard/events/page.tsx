@@ -34,6 +34,7 @@ function toForm(d: EventData): EventForm {
     shareCourse: e.shareCourse, holdNineIds: e.holdNineIds, keepOpen: e.keepOpen,
     organizerName: e.organizerName, organizerEmail: e.organizerEmail, organizerPhone: e.organizerPhone,
     pricePerPlayer: e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '', includes: e.includes, terms: e.terms, notes: e.notes,
+    payer: e.payer === 'organizer' || e.payer === 'players' ? e.payer : '',
   };
 }
 
