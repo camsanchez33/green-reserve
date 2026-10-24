@@ -24,6 +24,8 @@ export type EventFull = {
   organizerName: string; organizerEmail: string; organizerPhone: string; pricePerPlayerCents: number; includes: string[];
   terms: string; notes: string; status: string; tasks: EventTask[]; entrants: EventPlayer[]; payments: EventPayment[];
   signupOpen: boolean; signupPay: string; signupMaxGroup: number; signupQuestions: SignupQuestion[];
+  /** Cam 2026-10-24: organizer | players; '' = made before the question (every tool shows). */
+  payer: string;
 };
 export type EventData = {
   event: EventFull; today: string; courseHoles: number; money: Money; feeOn: boolean;
@@ -51,8 +53,9 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const live = e.status === 'planned';
   // W2-9c: players' own payments.
   const price = e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '';
-  const [askAmount, setAskAmount] = useState(price);
-  const [askVia, setAskVia] = useState<'email' | 'sms'>('email');
+  // Cam 2026-10-24: the organizer pays the course → no per-player payments here.
+  const playersPay = e.payer !== 'organizer';
+  const [linkCopied, setLinkCopied] = useState(false);
   const [paidHere, setPaidHere] = useState<{ id: string; amount: string; method: string } | null>(null);
   const [copied, setCopied] = useState('');
   // W2-9d: only players on the list are paired, counted and asked to pay; a sign-up group's one payment covers each of them.
@@ -169,6 +172,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
               ['Players', [e.players && `${e.players} expected`, e.groups && `${e.groups} groups`, onList.length && `${onList.length} on the list`, notYet.length && `${notYet.length} signed up, not on it yet`].filter(Boolean).join(', ') || 'Not set yet'],
               ['Organizer', [e.organizerName, e.organizerEmail, e.organizerPhone].filter(Boolean).join(' · ') || 'Not set yet'],
               ['Price', e.pricePerPlayerCents ? `$${(e.pricePerPlayerCents / 100).toFixed(2)} per player` : 'Not set yet'],
+              ['Who pays', e.payer === 'organizer' ? 'The organizer — one bill' : e.payer === 'players' ? 'Each player, on the sign-up page' : 'Not chosen yet — Change details'],
               ['Included', e.includes.join(', ') || 'Nothing listed'],
               ...(e.terms ? [['Terms', e.terms]] : []),
               ...(e.notes ? [['Notes', e.notes]] : []),
@@ -213,7 +217,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
       </div>
 
       <div className="print:hidden">
-        <EventSignup live={live} url={data.signup.url} priceSet={e.pricePerPlayerCents > 0} spotsLeft={spotsLeft} waiting={notYet} busy={busy}
+        <EventSignup live={live} payer={e.payer} url={data.signup.url} priceSet={e.pricePerPlayerCents > 0} spotsLeft={spotsLeft} waiting={notYet} busy={busy}
           settings={{ signupOpen: e.signupOpen, signupPay: e.signupPay, signupMaxGroup: e.signupMaxGroup, signupQuestions: questions }}
           act={(key, body, done) => act(key, body, done ? r => done(r) : undefined)} />
       </div>
@@ -258,28 +262,19 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
           </div>
         )}
 
-        {onList.length > 0 && live && unpaid > 0 && (
-          <form className="flex flex-wrap items-end gap-2 mb-4 print:hidden bg-paper/70 rounded-md px-3 py-3" onSubmit={async ev => {
-            ev.preventDefault();
-            await payAct('ask', { action: 'player_links', amount: askAmount, via: askVia }, r => {
-              const asked = Number(r.asked ?? 0), already = Number(r.already ?? 0);
-              const none = (r.noContact as string[] | undefined) ?? [], failed = (r.failed as string[] | undefined) ?? [], late = (r.notSent as string[] | undefined) ?? [], gone = (r.removed as string[] | undefined) ?? [];
-              return [`Sent ${asked} pay link${asked === 1 ? '' : 's'}.`, already ? `${already} had already paid or had a link.` : '',
-                none.length ? `No email or phone for ${none.join(', ')} — take theirs at the course.` : '',
-                failed.length ? `Didn\u2019t send: ${failed.join('; ')} — their links are made; copy them below.` : '',
-                late.length ? `Ran out of time before ${late.join(', ')} — press it again for them.` : '',
-                gone.length ? `${gone.join(', ')} ${gone.length === 1 ? 'was' : 'were'} removed from the list meanwhile — not asked.` : ''].filter(Boolean).join(' ');
-            });
-          }}>
-            <label className="block"><span className="block text-[13px] font-medium text-ink mb-1">Ask the {unpaid} player{unpaid === 1 ? '' : 's'} who haven’t paid for</span>
-              <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                <input inputMode="decimal" required aria-label="Amount each" className={INPUT + ' w-32 pl-7'} value={askAmount} onChange={ev => setAskAmount(ev.target.value)} placeholder="each" /></div></label>
-            <label className="block"><span className="block text-[13px] font-medium text-ink mb-1">Send by</span>
-              <select className={INPUT} value={askVia} onChange={ev => setAskVia(ev.target.value as 'email' | 'sms')}>
-                <option value="email">Email (text if no email)</option><option value="sms">Text (email if no mobile)</option>
-              </select></label>
-            <button type="submit" disabled={!!busy || !askAmount} className={PRIMARY}>{busy === 'ask' ? 'Sending…' : 'Send pay links'}</button>
-          </form>
+        {/* Cam 2026-10-24 (replacing "ask every player to pay"): players pay on the event's page, whose
+            link the organizer passes on — one link, not a text to every golfer. */}
+        {live && e.payer === 'players' && (
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 print:hidden bg-paper/70 rounded-md px-3 py-3 text-[13.5px] text-ink">
+            <p className="max-w-[46em]">
+              {e.signupOpen
+                ? `Players ${e.signupPay === 'now' ? 'sign up and pay' : 'sign up'} on the event’s page — send its link to the organizer to pass on.`
+                : 'Players sign up on the event’s page — open it under Sign-up page, then send its link to the organizer to pass on.'}
+              {unpaid > 0 && ` ${unpaid} player${unpaid === 1 ? '' : 's'} on the list ${unpaid === 1 ? 'hasn’t' : 'haven’t'} paid: send ${unpaid === 1 ? 'them their' : 'each their'} own link below, or take it at the course.`}
+            </p>
+            {e.signupOpen && <button onClick={async () => { try { await navigator.clipboard.writeText(data.signup.url); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); } catch { setError('Couldn’t copy — use the link on the Sign-up page card.'); } }}
+              className={SECONDARY}>{linkCopied ? 'Copied' : 'Copy the link'}</button>}
+          </div>
         )}
 
         {/* What prints: the pairings sheet alone. */}
@@ -303,7 +298,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             <table className="w-full text-[13.5px]">
               <thead><tr className="text-left text-ink-muted border-b border-line">
                 <th className="py-2 pr-3 font-medium">Player</th><th className="py-2 pr-3 font-medium">Contact</th>
-                <th className="py-2 pr-3 font-medium">Group</th>{e.format === 'shotgun' && <th className="py-2 pr-3 font-medium">Hole</th>}<th className="py-2 pr-3 font-medium">Paid</th><th />
+                <th className="py-2 pr-3 font-medium">Group</th>{e.format === 'shotgun' && <th className="py-2 pr-3 font-medium">Hole</th>}{playersPay && <th className="py-2 pr-3 font-medium">Paid</th>}<th />
               </tr></thead>
               <tbody className="divide-y divide-line-soft">
                 {[...sortedGroups.flatMap(([, ps]) => ps), ...ungrouped].map(p => (
@@ -320,7 +315,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                           className={INPUT + ' w-20'} onBlur={ev => { const v = ev.target.value === '' ? null : Number(ev.target.value); if (v !== p.startHole) act('set:' + p.id, { action: 'player_set', playerId: p.id, groupNo: p.groupNo, startHole: v }); }} />
                       </td>
                     )}
-                    <td className="py-2 pr-3">
+                    {playersPay && <td className="py-2 pr-3">
                       {(() => {
                         const st = stateOf(p);
                         const link = theirs(p).find(x => x.status === 'open')?.payUrl ?? null;
@@ -358,7 +353,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                           </span>
                         );
                       })()}
-                    </td>
+                    </td>}
                     <td className="py-2 text-right">{live && <button disabled={!!busy} onClick={() => act('del:' + p.id, { action: 'player_remove', playerId: p.id })} className="text-[12.5px] text-ink-soft hover:text-bad">Remove</button>}</td>
                   </tr>
                 ))}

@@ -4,53 +4,49 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 01:09 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `4b6af6f` · working tree **16 dirty file(s)**
+Generated 2026-10-24 01:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1a32f6b2` · working tree **11 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 15 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 16 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `4b6af6f` | 2026-10-24 | contact-email-test: spacing |
-| `e53daa8` | 2026-10-24 | MAIL-1: agreements name admin@ instead of the Outlook inbox |
-| `d2b41f2` | 2026-10-23 | Regenerate the status board |
-| `d6efdc1` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
-| `85bb916` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
-| `3148eed` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
-| `3c88148` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
-| `946d4a5` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
-| `a578929` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
-| `966741b` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
-| `dd3cfd1` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
-| `e0bc004` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
-| `4b621c0` | 2026-10-22 | Regenerate status board |
-| `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
-| `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
+| `1a32f6b2` | 2026-10-24 | schedule-plan test: expect the weekend price when today is a weekend (it failed every Saturday and Sunday, main included) |
+| `a90d492b` | 2026-10-24 | Events: say who pays the course (the organizer or each player); one sign-up link replaces texting every player |
+| `978a3da2` | 2026-10-23 | Retire the admin Activity page (AW-12) (#200) |
+| `d2b41f27` | 2026-10-23 | Regenerate the status board |
+| `d6efdc1b` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
+| `85bb9160` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
+| `3148eed2` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
+| `3c88148d` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
+| `946d4a54` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
+| `a5789298` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
+| `966741b9` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
+| `dd3cfd14` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
+| `e0bc004d` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
+| `4b621c06` | 2026-10-22 | Regenerate status board |
+| `04301cec` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
+| `2734cbdb` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (16 file(s))
+### Uncommitted working tree (11 file(s))
 
-- `M  ADMIN_V5_SPEC.md`
 - `M  CLAUDE.md`
-- `M  REVISE_QUEUE.md`
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
-- `M  docs/CODEMAP.md`
-- `M  docs/codemap.json`
-- `M  scripts/design-guard.baseline.json`
-- `M  scripts/isolation-test.ts`
-- `M  scripts/real-courses-db-test.ts`
-- `M  src/app/admin/activity/page.tsx`
-- `D  src/app/api/admin/activity/route.ts`
-- `M  src/app/api/admin/search/route.ts`
-- `M  src/app/api/admin/transactions/route.ts`
-- `M  src/components/admin/AdminSidebar.tsx`
+- `M  legal/documents/brand-license/2026-09.md`
+- `M  legal/documents/brand-license/2026-11.md`
+- `M  legal/documents/operator-agreement/2026-08.md`
+- `M  legal/documents/operator-agreement/2026-10.md`
+- `M  legal/documents/operator-agreement/2026-11.md`
+- `M  scripts/contact-email-test.ts`
+- `UU scripts/schedule-plan-db-test.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -62,7 +58,9 @@ the queue header's `git checkout -- .` cleanup until that run has committed, or 
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-Nothing awaiting review.
+| item | shipped | age | commit | source |
+|---|---|---|---|---|
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 93d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -70,8 +68,7 @@ Nothing awaiting review.
 2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
 3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
 4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2357`
-6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
@@ -130,59 +127,59 @@ Nothing awaiting review.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-24 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 4d |
+| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 6d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-24 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 4d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `ARCHITECTURE.md` | 0 | 2026-10-19 | 4d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-19 | 4d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 15d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 15d |
 
 ## Recent commits
 
-- `4b6af6f` 2026-10-24 — contact-email-test: spacing
-- `e53daa8` 2026-10-24 — MAIL-1: agreements name admin@ instead of the Outlook inbox
-- `d2b41f2` 2026-10-23 — Regenerate the status board
-- `d6efdc1` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
-- `85bb916` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
-- `3148eed` 2026-10-22 — Money: Needs you — declined cards with a pay link (DASH-C) (#198)
-- `3c88148` 2026-10-22 — Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)
-- `946d4a5` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
-- `a578929` 2026-10-23 — Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line
-- `966741b` 2026-10-22 — Course dashboard search: find a golfer, booking or member from the menu (#195)
-- `dd3cfd1` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
-- `e0bc004` 2026-10-22 — Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)
+- `1a32f6b2` 2026-10-24 — schedule-plan test: expect the weekend price when today is a weekend (it failed every Saturday and Sunday, main included)
+- `a90d492b` 2026-10-24 — Events: say who pays the course (the organizer or each player); one sign-up link replaces texting every player
+- `978a3da2` 2026-10-23 — Retire the admin Activity page (AW-12) (#200)
+- `d2b41f27` 2026-10-23 — Regenerate the status board
+- `d6efdc1b` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
+- `85bb9160` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
+- `3148eed2` 2026-10-22 — Money: Needs you — declined cards with a pay link (DASH-C) (#198)
+- `3c88148d` 2026-10-22 — Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)
+- `946d4a54` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
+- `a5789298` 2026-10-23 — Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line
+- `966741b9` 2026-10-22 — Course dashboard search: find a golfer, booking or member from the menu (#195)
+- `dd3cfd14` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
 
 ---
 
-**Totals:** 298 done · 0 awaiting review · 1 in flight · 6 not started · 7 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 7 revise pages open · 17 ideas · 7 parked.

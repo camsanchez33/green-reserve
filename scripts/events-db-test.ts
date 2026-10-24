@@ -45,7 +45,7 @@ async function main() {
   const hand = await prisma.teeTime.findFirstOrThrow({ where: { courseId, date: day, time: '10:00' } });
   await prisma.teeTime.update({ where: { id: hand.id }, data: { status: 'blocked' } });
 
-  const input = { name: 'Rotary Scramble', kind: 'outing', date: day, format: 'shotgun', startTime: '08:00', holes: 18, players: 72, groups: 18 };
+  const input = { name: 'Rotary Scramble', kind: 'outing', date: day, format: 'shotgun', startTime: '08:00', holes: 18, players: 72, groups: 18, payer: 'organizer' };
   const pv = await previewEvent(courseId, input);
   check('preview: an 18-hole shotgun at 8:00 holds 7:00 to 12:30', pv.holdFrom === '07:00' && pv.holdTo === '12:30', JSON.stringify(pv));
   check('preview names the booked group in the way', pv.booked.length === 1 && pv.booked[0].golfers === 'Early Bird', JSON.stringify(pv.booked));
@@ -79,10 +79,10 @@ async function main() {
 
   // A tee-times event on a day whose times don't exist yet: they are created held.
   const later = '2031-06-03';
-  const tt = await createEvent(courseId, { name: 'League', kind: 'league', date: later, format: 'tee_times', startTime: '17:00', groups: 3 }, 'x');
+  const tt = await createEvent(courseId, { name: 'League', kind: 'league', date: later, format: 'tee_times', startTime: '17:00', groups: 3, payer: 'players' }, 'x');
   check('a start after the schedule\u2019s last time is saved, with no tee times found to hold', tt.event.holdFrom === '17:00' && tt.event.holdTo === '17:00' && tt.teeTimesFound === 0,
     JSON.stringify({ from: tt.event.holdFrom, to: tt.event.holdTo, found: tt.teeTimesFound }));
-  const tt2 = await createEvent(courseId, { name: 'Couples', kind: 'other', date: later, format: 'tee_times', startTime: '13:00', groups: 3 }, 'x');
+  const tt2 = await createEvent(courseId, { name: 'Couples', kind: 'other', date: later, format: 'tee_times', startTime: '13:00', groups: 3, payer: 'organizer' }, 'x');
   check('three groups from 1:00 hold 1:00 to 1:20', tt2.event.holdFrom === '13:00' && tt2.event.holdTo === '13:20');
   await generateTeeTimes(courseId, later);
   const heldLater = await prisma.teeTime.findMany({ where: { courseId, date: later, eventId: tt2.event.id }, select: { time: true, status: true } });
@@ -104,6 +104,13 @@ async function main() {
 
   // Move the shotgun a day later: the old day goes back on sale, the new day is held, due dates shift.
   const next = '2031-05-15';
+  let noPayer = false;
+  try { await createEvent(courseId, { ...input, payer: undefined }, 'x'); } catch (e) { noPayer = e instanceof EventError && /who pays/.test(e.message); }
+  check('an event has to say who pays the course', noPayer);
+  await prisma.courseEvent.update({ where: { id: event.id }, data: { payer: 'players', signupPay: 'now' } });
+  await updateEvent(courseId, event.id, { ...input });
+  const switched = await prisma.courseEvent.findUniqueOrThrow({ where: { id: event.id }, select: { payer: true, signupPay: true } });
+  check('switching to the organizer paying turns off paying on the sign-up page', switched.payer === 'organizer' && switched.signupPay === 'later', JSON.stringify(switched));
   const moved = await updateEvent(courseId, event.id, { ...input, date: next });
   check('moving the event releases the old day', (await prisma.teeTime.count({ where: { courseId, date: day, status: 'blocked', eventId: null, time: { not: '10:00' } } })) === 0
     && (await prisma.teeTime.count({ where: { courseId, date: day, eventId: event.id } })) === 0);
@@ -165,7 +172,7 @@ async function main() {
   for (const pr of [f9, b9]) await prisma.teeTimeSchedule.create({ data: { courseId: two.id, productId: pr.id, daysOfWeek: [], startTime: '07:00', endTime: '10:00', intervalMinutes: 10, holes: 9, greenFeeWeekdayCents: 3000, greenFeeWeekendCents: 3500 } });
   const shareDay = '2031-08-05';
   await generateTeeTimes(two.id, shareDay);
-  const shared = { name: 'Front nine scramble', kind: 'outing', date: shareDay, format: 'shotgun', startTime: '08:00', holes: 9, shareCourse: true, holdNineIds: [front.id], keepOpen: ['08:00'] };
+  const shared = { name: 'Front nine scramble', kind: 'outing', date: shareDay, format: 'shotgun', startTime: '08:00', holes: 9, shareCourse: true, holdNineIds: [front.id], keepOpen: ['08:00'], payer: 'organizer' };
   const spv = await previewEvent(two.id, shared);
   check('preview lists every time the shared event could take', spv.windowTimes.includes('08:00') && spv.windowTimes[0] === '07:00', JSON.stringify(spv.windowTimes.slice(0, 3)));
   const se = await createEvent(two.id, shared, 'x');

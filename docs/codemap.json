@@ -5344,14 +5344,10 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/payments/route.ts",
-      "lines": 155,
+      "lines": 114,
       "purpose": "",
       "brain": [],
       "exports": [
-        {
-          "name": "maxDuration",
-          "kind": "const"
-        },
         {
           "name": "POST",
           "kind": "route"
@@ -5380,7 +5376,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 288,
+      "lines": 289,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7543,7 +7539,7 @@
     },
     {
       "path": "src/app/dashboard/events/page.tsx",
-      "lines": 174,
+      "lines": 175,
       "purpose": "W2-9 Events (Cam 2026-10-21/22):",
       "brain": [],
       "exports": [
@@ -10168,7 +10164,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 374,
+      "lines": 369,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -10255,7 +10251,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventSetup.tsx",
-      "lines": 344,
+      "lines": 364,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -10278,6 +10274,10 @@
         {
           "name": "NineOpt",
           "kind": "type"
+        },
+        {
+          "name": "PAYERS",
+          "kind": "const"
         },
         {
           "name": "Product",
@@ -10303,7 +10303,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventSignup.tsx",
-      "lines": 145,
+      "lines": 149,
       "purpose": "W2-9d (Cam 2026-10-22):",
       "brain": [],
       "exports": [
@@ -14336,7 +14336,7 @@
     },
     {
       "path": "src/lib/course-events.ts",
-      "lines": 326,
+      "lines": 332,
       "purpose": "W2-9 Events (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -16090,7 +16090,7 @@
     },
     {
       "path": "src/lib/event-signup.ts",
-      "lines": 229,
+      "lines": 232,
       "purpose": "W2-9d (Cam 2026-10-22):",
       "brain": [],
       "exports": [
@@ -22692,6 +22692,10 @@
           "type": "Int?"
         },
         {
+          "name": "payer",
+          "type": "String"
+        },
+        {
           "name": "signupOpen",
           "type": "Boolean"
         },
@@ -22921,7 +22925,6 @@
       ],
       "readers": [
         "src/app/api/event-payment/[id]/route.ts",
-        "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts"

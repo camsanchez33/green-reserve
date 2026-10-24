@@ -173,6 +173,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         // W2-9d: the public sign-up page — open or closed, pay now or later, group size, the course's questions.
         const r = signupSettings(body as Record<string, unknown>);
         if (!r.ok) return bad(r.error, r.status);
+        if (r.value.signupPay === 'now' && event.payer === 'organizer') return bad('The organizer pays the course for this event, so players don’t pay when they sign up. Change who pays under Change details.', 409);
         if (r.value.signupOpen && r.value.signupPay === 'now') {
           const course = await prisma.course.findUnique({ where: { id: courseId }, select: { stripeAccountId: true, stripeAccountActive: true } });
           if (!course?.stripeAccountId || !course.stripeAccountActive) return bad('Connect Stripe in Settings before asking players to pay when they sign up — or let them pay later.', 409);

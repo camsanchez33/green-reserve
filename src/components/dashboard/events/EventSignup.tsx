@@ -18,8 +18,9 @@ const PRIMARY = BTN + ' bg-pine hover:bg-pine-hover text-white';
 const SECONDARY = BTN + ' bg-white border border-line text-ink hover:bg-paper';
 const LINK = 'text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2 disabled:opacity-50';
 
-export default function EventSignup({ live, url, settings, priceSet, spotsLeft, waiting, busy, act }: {
-  live: boolean; url: string; settings: Settings; priceSet: boolean; spotsLeft: number | null;
+export default function EventSignup({ live, payer, url, settings, priceSet, spotsLeft, waiting, busy, act }: {
+  /** Cam 2026-10-24: organizer = players sign up with their details only; the organizer pays the course. */
+  live: boolean; payer: string; url: string; settings: Settings; priceSet: boolean; spotsLeft: number | null;
   /** Signed up but not on the list. */
   waiting: EventPlayer[];
   busy: string;
@@ -40,7 +41,7 @@ export default function EventSignup({ live, url, settings, priceSet, spotsLeft, 
   function startEdit() { setForm(settings); setEditing(true); }
   async function save(ev: React.FormEvent) {
     ev.preventDefault();
-    const ok = await act('signup', { action: 'signup_settings', ...form, signupQuestions: form.signupQuestions.filter(q => q.label.trim()) },
+    const ok = await act('signup', { action: 'signup_settings', ...form, signupPay: payer === 'organizer' ? 'later' : form.signupPay, signupQuestions: form.signupQuestions.filter(q => q.label.trim()) },
       () => form.signupOpen ? 'Sign-up page saved — it’s open.' : 'Sign-up page saved — it’s closed.');
     if (ok) setEditing(false);
   }
@@ -74,7 +75,8 @@ export default function EventSignup({ live, url, settings, priceSet, spotsLeft, 
             {settings.signupOpen
               ? <>Golfers sign up at <a href={url} target="_blank" rel="noreferrer" className="underline underline-offset-2 break-all">{url}</a>. </>
               : 'A page where golfers sign themselves up, in groups of up to four. '}
-            {settings.signupPay === 'now' ? 'They pay when they sign up; their spots are held 30 minutes while they do.' : 'They sign up now and pay later — send pay links or take it at the course.'}
+            {payer === 'organizer' ? 'They give their details; the organizer pays you for everyone.'
+              : settings.signupPay === 'now' ? 'They pay when they sign up; their spots are held 30 minutes while they do.' : 'They sign up now and pay later — send pay links or take it at the course.'}
             {/* Cam 2026-10-23: a limit is the course's choice; say where it is set and what it does. */}
             {spotsLeft == null && ' There’s no player limit, so sign-ups never fill up. To cap them and use a waiting list, set Players expected under Change details.'}
             {spotsLeft != null && settings.signupOpen && (spotsLeft === 0 ? ' It’s full — new sign-ups go on the waiting list.' : ` ${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left; after that, sign-ups go on a waiting list.`)}
@@ -93,11 +95,13 @@ export default function EventSignup({ live, url, settings, priceSet, spotsLeft, 
       {editing && (
         <form onSubmit={save} className="space-y-3 mt-1">
           <label className="flex items-center gap-2 text-[13.5px] text-ink"><input type="checkbox" className="accent-pine" checked={form.signupOpen} onChange={ev => setForm(f => ({ ...f, signupOpen: ev.target.checked }))} /> Open — golfers can sign up</label>
-          <fieldset>
-            <legend className="text-[13px] font-medium text-ink mb-1">When do they pay?</legend>
-            <label className="flex items-start gap-2 text-[13.5px] text-ink py-0.5"><input type="radio" name="signupPay" className="mt-1 accent-pine" checked={form.signupPay === 'later'} onChange={() => setForm(f => ({ ...f, signupPay: 'later' }))} /> Later — send pay links or take it at the course</label>
-            <label className="flex items-start gap-2 text-[13.5px] text-ink py-0.5"><input type="radio" name="signupPay" className="mt-1 accent-pine" checked={form.signupPay === 'now'} disabled={!priceSet} onChange={() => setForm(f => ({ ...f, signupPay: 'now' }))} /> When they sign up — by card, Apple Pay or Google Pay{!priceSet && ' (set the price per player first)'}</label>
-          </fieldset>
+          {payer === 'organizer'
+            ? <p className="text-[13px] text-ink-soft">The organizer pays you for everyone, so players only give their details here.</p>
+            : <fieldset>
+              <legend className="text-[13px] font-medium text-ink mb-1">When do they pay?</legend>
+              <label className="flex items-start gap-2 text-[13.5px] text-ink py-0.5"><input type="radio" name="signupPay" className="mt-1 accent-pine" checked={form.signupPay === 'later'} onChange={() => setForm(f => ({ ...f, signupPay: 'later' }))} /> Later — send pay links or take it at the course</label>
+              <label className="flex items-start gap-2 text-[13.5px] text-ink py-0.5"><input type="radio" name="signupPay" className="mt-1 accent-pine" checked={form.signupPay === 'now'} disabled={!priceSet} onChange={() => setForm(f => ({ ...f, signupPay: 'now' }))} /> When they sign up — by card, Apple Pay or Google Pay{!priceSet && ' (set the price per player first)'}</label>
+            </fieldset>}
           <label className="flex items-center gap-2 text-[13.5px] text-ink">One person can sign up
             <select className={INPUT} value={form.signupMaxGroup} onChange={ev => setForm(f => ({ ...f, signupMaxGroup: Number(ev.target.value) }))}>{[1, 2, 3, 4].map(n => <option key={n} value={n}>{n === 1 ? 'just themselves' : `up to ${n} players`}</option>)}</select>
           </label>
