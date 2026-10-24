@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { createSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, type SaleView } from '@/lib/shop-sales';
+import { createSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, type SaleView } from '@/lib/shop-sales';
 import { rateLimit } from '@/lib/rate-limit';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
-import { sendShopSalePayLinkEmail, isPlaceholderEmail } from '@/lib/email';
+import { sendShopSalePayLinkEmail, sendShopReceiptEmail, isPlaceholderEmail } from '@/lib/email';
 
 // POS-2 (Cam 2026-10-19): walk-up pro-shop sales. Selling needs shop.sell;
 // recording cash also needs sheet.counter_payment (the same power as marking a
 // round paid at the counter). Only card pay links need a current agreement —
 // cash is never blocked. The course is always the session's.
+// POS-3 (Cam 2026-10-24): a discount needs shop.discount; a refund needs
+// money.refund (cash recorded, card through Stripe); receipts go to whoever
+// asks, by email or text.
 
 async function gate() {
   const session = await resolveDashboardSession();
@@ -20,8 +23,6 @@ async function gate() {
   if (denied) return { res: denied };
   return { session };
 }
-
-const LINES = { select: { name: true, unitPriceCents: true, quantity: true }, orderBy: { id: 'asc' as const } };
 
 /** Today's sales and any still waiting on a pay link, newest first. */
 export async function GET() {
@@ -36,7 +37,7 @@ export async function GET() {
   }
   const sales = await prisma.shopSale.findMany({
     where: { courseId: g.session.courseId, OR: [{ createdAt: { gte: since } }, { status: { in: ['open', 'paying'] } }] },
-    orderBy: { createdAt: 'desc' }, take: 200, include: { lines: LINES },
+    orderBy: { createdAt: 'desc' }, take: 200, include: SALE_INCLUDE,
   });
   return NextResponse.json({ sales: sales.map(saleView) });
 }
@@ -55,7 +56,7 @@ async function sendLink(courseId: string, sale: SaleView, payToken: string, via:
       await sendSms(to, `${courseName}: pay $${(sale.totalCents / 100).toFixed(2)} for your pro shop items here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`, { kind: 'shop_pay_link_text', courseId });
     } else {
       if (!sale.customerEmail || isPlaceholderEmail(sale.customerEmail) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(sale.customerEmail)) return 'Add an email address to send the link.';
-      await sendShopSalePayLinkEmail({ courseId, email: sale.customerEmail, name: sale.customerName, courseName, totalCents: sale.totalCents, taxCents: sale.taxCents, lines: sale.lines, payUrl });
+      await sendShopSalePayLinkEmail({ courseId, email: sale.customerEmail, name: sale.customerName, courseName, totalCents: sale.totalCents, taxCents: sale.taxCents, lines: sale.lines, payUrl, discountCents: sale.discountCents, discountNote: sale.discountNote });
     }
     return null;
   } catch (err) {
@@ -76,6 +77,10 @@ export async function POST(req: NextRequest) {
     const agreementBlock = await requireAgreementCurrent(g.session.courseId); // AG-3 §3
     if (agreementBlock) return agreementBlock;
   }
+  if (hasDiscount(body.discount as never)) {
+    const denied = requirePermission(g.session, 'shop.discount');
+    if (denied) return denied;
+  }
   const via = body.via === 'email' ? 'email' : 'sms';
   const course = await prisma.course.findUnique({ where: { id: g.session.courseId }, select: { name: true, stripeAccountId: true, stripeAccountActive: true } });
   if (!course) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
@@ -93,6 +98,7 @@ export async function POST(req: NextRequest) {
     courseId: g.session.courseId, lines: body.lines, pay, soldBy: g.session.email,
     customerName: body.customerName as string, customerPhone: body.customerPhone as string, customerEmail: body.customerEmail as string,
     taxCalculationId: typeof body.taxCalculationId === 'string' ? body.taxCalculationId : undefined,
+    discount: body.discount as never, cashTenderedCents: pay === 'cash' ? body.cashTenderedCents : undefined,
   });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   const { payToken, ...sale } = r.value;
@@ -135,12 +141,61 @@ export async function PATCH(req: NextRequest) {
   if (body.action === 'resend') {
     const agreementBlock = await requireAgreementCurrent(g.session.courseId); // AG-3 §3
     if (agreementBlock) return agreementBlock;
-    const s = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId }, include: { lines: LINES, course: { select: { name: true } } } });
+    const s = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId }, include: { ...SALE_INCLUDE, course: { select: { name: true } } } });
     if (!s) return NextResponse.json({ error: 'Sale not found.' }, { status: 404 });
     if (s.status !== 'open' || !s.payToken) return NextResponse.json({ error: 'Only an unpaid link sale can be sent again.' }, { status: 409 });
     const err = await sendLink(g.session.courseId, saleView(s), s.payToken, body.via === 'email' ? 'email' : 'sms', s.course.name);
     if (err) return NextResponse.json({ error: err }, { status: 502 });
     return NextResponse.json({ sent: true });
+  }
+  if (body.action === 'refund') {
+    const denied = requirePermission(g.session, 'money.refund');
+    if (denied) return denied;
+    const r = await refundSale(g.session.courseId, id, { amountCents: body.amountCents, reason: body.reason, restock: body.restock }, g.session.email);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r.value);
+  }
+  if (body.action === 'refund_retry') {
+    const denied = requirePermission(g.session, 'money.refund');
+    if (denied) return denied;
+    const refundId = typeof body.refundId === 'string' ? body.refundId : '';
+    const owned = await prisma.shopSaleRefund.findFirst({ where: { id: refundId, saleId: id, courseId: g.session.courseId }, select: { id: true } });
+    if (!owned) return NextResponse.json({ error: 'Refund not found.' }, { status: 404 });
+    const r = await sendShopRefund(g.session.courseId, refundId);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    if (r.value.status === 'done') await reverseShopRefundTax(refundId); // never throws; the hourly cron retries
+    const sale = await prisma.shopSale.findUniqueOrThrow({ where: { id }, include: SALE_INCLUDE });
+    return NextResponse.json({ status: r.value.status, sale: saleView(sale) });
+  }
+  if (body.action === 'receipt') {
+    const s = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId }, include: { ...SALE_INCLUDE, course: { select: { name: true, timezone: true } } } });
+    if (!s) return NextResponse.json({ error: 'Sale not found.' }, { status: 404 });
+    if (s.status !== 'paid_cash' && s.status !== 'paid_card') return NextResponse.json({ error: 'A receipt is for a paid sale.' }, { status: 409 });
+    if (!(await rateLimit(`shop-receipt:course:${g.session.courseId}`, 120, 3600))) return NextResponse.json({ error: 'Too many receipts this hour — try again later.' }, { status: 429 });
+    if (!(await rateLimit(`shop-receipt:sale:${id}`, 5, 3600))) return NextResponse.json({ error: 'This receipt has been sent 5 times this hour.' }, { status: 429 });
+    const via = body.via === 'sms' ? 'sms' : 'email';
+    const to = String(body.to ?? '').trim() || (via === 'sms' ? s.customerPhone : s.customerEmail);
+    const v = saleView(s);
+    const paidWith = s.status === 'paid_card' ? 'Card' : 'Cash';
+    const paidAt = (s.paidAt ?? s.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: s.course.timezone || 'America/New_York' });
+    try {
+      if (via === 'sms') {
+        if (to.replace(/\D/g, '').length < 10) return NextResponse.json({ error: 'Enter a mobile number for the receipt.' }, { status: 400 });
+        const phone = normalizePhone(to);
+        if (!phone.startsWith('+1')) return NextResponse.json({ error: 'Receipts can only be texted to US and Canadian numbers — email it instead.' }, { status: 400 });
+        const items = v.lines.reduce((n, l) => n + l.quantity, 0);
+        await sendSms(phone, `${s.course.name} receipt: ${items} item${items === 1 ? '' : 's'}, $${(s.totalCents / 100).toFixed(2)} paid by ${paidWith.toLowerCase()}${s.refundedCents ? `, $${(s.refundedCents / 100).toFixed(2)} refunded` : ''}. Ref ${s.id.slice(-8).toUpperCase()}. Thank you! Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
+      } else {
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || isPlaceholderEmail(to)) return NextResponse.json({ error: 'Enter an email address for the receipt.' }, { status: 400 });
+        await sendShopReceiptEmail({ email: to.toLowerCase(), name: s.customerName, courseName: s.course.name, courseId: g.session.courseId, saleId: s.id, lines: v.lines,
+          discountCents: s.discountCents, discountNote: s.discountNote, taxCents: s.taxCents, totalCents: s.totalCents, paidWith, paidAt, cashTenderedCents: s.cashTenderedCents, refundedCents: s.refundedCents });
+      }
+    } catch (err) {
+      return NextResponse.json({ error: `The receipt didn’t send (${err instanceof Error ? err.message : 'unknown error'}). Try again.` }, { status: 502 });
+    }
+    // Keep the address the customer gave, so a later receipt or refund note can reach them.
+    await prisma.shopSale.update({ where: { id }, data: { receiptSentAt: new Date(), ...(via === 'sms' && !s.customerPhone ? { customerPhone: to.slice(0, 30) } : {}), ...(via === 'email' && !s.customerEmail ? { customerEmail: to.toLowerCase().slice(0, 200) } : {}) } });
+    return NextResponse.json({ sent: via });
   }
   return NextResponse.json({ error: 'Unknown action.' }, { status: 400 });
 }

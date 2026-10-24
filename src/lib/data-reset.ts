@@ -35,7 +35,7 @@ export const WIPED_TABLES = [
   'AgreementAcceptance', 'ShopItem',
   // golfers and activity
   'GolferAccount', 'CourseResident', 'CourseMembership', 'TeeTime', 'Booking', 'TeeTimeAlert', 'PaymentEvent',
-  'BookingEvent', 'BookingShopItem', 'SentMessage', 'ShopSale', 'ShopSaleLine', 'MonthlyReview',
+  'BookingEvent', 'BookingShopItem', 'SentMessage', 'ShopSale', 'ShopSaleLine', 'ShopSaleRefund', 'MonthlyReview',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund',
   // the pipeline
   'CourseInquiry', 'Call', 'InquiryStatusEvent', 'ChangeRequest',

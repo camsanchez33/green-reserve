@@ -16,7 +16,7 @@ export type PermissionKey =
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
   | 'analytics.view' | 'messages.use' | 'settings.edit'
-  | 'shop.sell' | 'shop.catalog'
+  | 'shop.sell' | 'shop.discount' | 'shop.catalog'
   | 'events.manage';
 
 export interface PermissionDef {
@@ -59,6 +59,8 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'schedule.edit', group: 'Schedule', label: 'Edit the schedule', help: 'Change schedules and rates, block whole days, rebuild the sheet.', requires: ['schedule.view'] },
   // POS-1a (Cam 2026-10-08): pro-shop items charged with the round.
   { key: 'shop.sell', group: 'Pro shop', label: 'Sell from the pro shop', help: 'Add shop items to a group’s round, and ring up walk-up sales paid in cash or by a pay link.' },
+  // POS-3 (Cam 2026-10-24): money off a walk-up sale — Manager has it, Front desk doesn't.
+  { key: 'shop.discount', group: 'Pro shop', label: 'Give discounts', help: 'Take money off a walk-up sale (an amount or a percent), with a note saying why.', requires: ['shop.sell'], movesMoney: true },
   { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop.', requires: ['settings.edit'] },
   // W2-9 (Cam 2026-10-22): owner + staff given it; Manager has it, Front desk doesn't.
   { key: 'events.manage', group: 'Events', label: 'Run events', help: 'Set up outings and tournaments, hold their tee times, keep the checklist and the player list.' },

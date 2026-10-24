@@ -1,19 +1,27 @@
 {
-  "generatedAt": "2026-10-24T03:09:55.292Z",
+  "generatedAt": "2026-10-24T03:26:22.511Z",
   "repo": {
-    "head": "3f1a6f50",
+    "head": "6fd9158d",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 9,
+    "dirtyCount": 17,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M OPERATOR_REWORK_SPEC.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/cart-walk-db-test.ts",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/book/BookClient.tsx",
-      " M src/app/courses/[slug]/CourseBookingClient.tsx",
-      " M src/app/dashboard/page.tsx",
-      " M src/lib/move-booking.ts",
-      " M src/lib/schedule-service.ts"
+      " M prisma/schema.prisma",
+      " M src/app/api/cron/hourly/route.ts",
+      " M src/app/api/operator/shop-sales/quote/route.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/api/shop-sale/[id]/route.ts",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/app/pay/shop/[id]/page.tsx",
+      " M src/lib/data-reset.ts",
+      " M src/lib/email.ts",
+      " M src/lib/shop-sales.ts",
+      " M src/lib/shop-tree.ts",
+      " M src/lib/staff-permissions.ts",
+      "?? prisma/migrations/20261024040000_pos3_register/",
+      "?? scripts/pos-register-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -21,9 +29,9 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "3f1a6f50",
-        "date": "2026-10-24T03:00:16+00:00",
-        "subject": "CART-1: walking and the cart price per price-table cell, weekday and weekend",
+        "h": "6fd9158d",
+        "date": "2026-10-23T23:19:31-04:00",
+        "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)",
         "ids": [],
         "matches": []
       },
@@ -339,15 +347,9 @@
       "ageDays": 0
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 0
-    },
-    {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-24",
+      "lastTouched": "2026-10-23",
       "ageDays": 0
     },
     {
@@ -360,6 +362,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 1
     },
     {
@@ -546,9 +554,9 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "3f1a6f50",
-      "date": "2026-10-24",
-      "subject": "CART-1: walking and the cart price per price-table cell, weekday and weekend"
+      "h": "6fd9158d",
+      "date": "2026-10-23",
+      "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)"
     },
     {
       "h": "6d7bf2a5",

@@ -6,7 +6,11 @@
 // Below: today's sales and any still waiting on a pay link.
 // W2-7 (Cam 2026-10-20): find an item by name, size or SKU; filter by
 // category; an item with sizes/colors opens its options to pick one.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+// POS-3 (Cam 2026-10-24: "look at how Shopify runs their POS or … Square"):
+// scan a barcode into the search box, ring up a custom amount, take money off
+// (shop.discount), enter the cash handed over for the change, send a receipt,
+// and refund a paid sale (money.refund) — cash recorded, card through Stripe.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
@@ -15,12 +19,23 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { shopTree, matches, type FlatItem, type TreeItem } from '@/lib/shop-tree';
+import { shopTree, matches, bySku, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 
 type Item = FlatItem;
-type Sale = { id: string; status: string; totalCents: number; createdAt: string; paidAt: string | null; customerName: string; customerPhone: string; customerEmail: string; soldBy: string; lines: { name: string; unitPriceCents: number; quantity: number }[] };
+type Refund = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdAt: string };
+type Sale = {
+  id: string; status: string; totalCents: number; taxCents: number; createdAt: string; paidAt: string | null; customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
+  lines: { name: string; unitPriceCents: number; quantity: number }[];
+  discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number; receiptSentAt: string | null; refunds: Refund[];
+};
+type Custom = { key: string; name: string; priceCents: number; quantity: number };
+type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
+type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
+const isPaid = (s: Sale) => s.status === 'paid_cash' || s.status === 'paid_card';
+const LINK = 'text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50';
 const time = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'neutral' }> = {
   paid_cash: { label: 'Paid in cash', tone: 'ok' },
@@ -45,7 +60,16 @@ export default function ShopPage() {
   const [cat, setCat] = useState('');
   const [picking, setPicking] = useState<string | null>(null);
   // W2-7 part B: the total with sales tax, worked out as the sale is built.
-  const [quote, setQuote] = useState<{ key: string; subtotalCents: number; taxCents: number; totalCents: number; taxCalculationId: string } | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  // POS-3: custom amounts, a discount, the cash handed over, and the sale just taken (for its receipt).
+  const [customs, setCustoms] = useState<Custom[]>([]);
+  const [customForm, setCustomForm] = useState<{ name: string; amount: string } | null>(null);
+  const [discount, setDiscount] = useState<Discount | null>(null);
+  const [tendered, setTendered] = useState('');
+  const [justPaid, setJustPaid] = useState<Sale | null>(null);
+  const [receipt, setReceipt] = useState<{ id: string; via: 'email' | 'sms'; to: string } | null>(null);
+  const [refund, setRefund] = useState<{ id: string; amount: string; reason: string; restock: boolean; confirm: boolean } | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const [quoteError, setQuoteError] = useState('');
   const [quoteTry, setQuoteTry] = useState(0);
 
@@ -74,39 +98,89 @@ export default function ShopPage() {
   }, [tree, q, cat]);
   const inCart = (it: TreeItem) => (it.options.length ? it.options.reduce((s, o) => s + (cart[o.id] ?? 0), 0) : cart[it.id] ?? 0);
   const lines = (items ?? []).filter(i => cart[i.id]).map(i => ({ item: i, quantity: cart[i.id] }));
-  const total = lines.reduce((s, l) => s + l.item.priceCents * l.quantity, 0);
-  const cartKey = lines.map(l => `${l.item.id}:${l.quantity}`).join(',');
+  const subtotal = lines.reduce((s, l) => s + l.item.priceCents * l.quantity, 0) + customs.reduce((s, c) => s + c.priceCents * c.quantity, 0);
+  const salePayload = useMemo(() => [
+    ...lines.map(l => ({ shopItemId: l.item.id, quantity: l.quantity })),
+    ...customs.map(c => ({ name: c.name, priceCents: c.priceCents, quantity: c.quantity })),
+  ], [lines, customs]); // eslint-disable-line react-hooks/exhaustive-deps
+  const discountPayload = discount && Number(discount.value) > 0
+    ? (discount.mode === 'percent' ? { percent: Number(discount.value), note: discount.note } : { amountCents: toCents(discount.value), note: discount.note })
+    : undefined;
+  const cartKey = salePayload.length ? JSON.stringify([salePayload, discountPayload ?? null]) : '';
   useEffect(() => {
     if (!cartKey) { setQuote(null); setQuoteError(''); return; }
     let live = true;
     const t = setTimeout(async () => {
-      const r = await dfetch<{ subtotalCents: number; taxCents: number; totalCents: number; taxCalculationId: string }>('/api/operator/shop-sales/quote', {
-        method: 'POST', body: JSON.stringify({ lines: cartKey.split(',').map(x => { const [shopItemId, q] = x.split(':'); return { shopItemId, quantity: Number(q) }; }) }),
-      });
+      const [l, d] = JSON.parse(cartKey);
+      const r = await dfetch<Omit<Quote, 'key'>>('/api/operator/shop-sales/quote', { method: 'POST', body: JSON.stringify({ lines: l, discount: d ?? undefined }) });
       if (!live) return;
       if (r.ok) { setQuote({ key: cartKey, ...r.data }); setQuoteError(''); } else { setQuote(null); setQuoteError(r.error); }
     }, 700); // one Stripe Tax calculation per pause, not per tap
     return () => { live = false; clearTimeout(t); };
   }, [cartKey, quoteTry]);
   const priced = quote && quote.key === cartKey ? quote : null;
-  const due = priced ? priced.totalCents : total;
+  const due = priced ? priced.totalCents : subtotal;
+  const tenderedCents = toCents(tendered);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
+  const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
+  const empty = salePayload.length === 0;
+
+  // A scanner types the code and presses Enter: an exact SKU goes straight into the sale.
+  function scan(code: string) {
+    const hit = bySku(items ?? [], code);
+    if (hit) { add(hit.id, 1); setQ(''); setNote(`Added ${hit.name}.`); setError(''); return true; }
+    return false;
+  }
 
   async function ringUp() {
-    setBusy('sale'); setError(''); setNote('');
+    setBusy('sale'); setError(''); setNote(''); setJustPaid(null);
     const r = await dfetch<{ sale: Sale; sent?: boolean; sendError?: string }>('/api/operator/shop-sales', {
       method: 'POST',
       body: JSON.stringify({
-        lines: lines.map(l => ({ shopItemId: l.item.id, quantity: l.quantity })),
+        lines: salePayload, discount: discountPayload,
         pay: pay === 'cash' ? 'cash' : 'link', via: pay === 'email' ? 'email' : 'sms', taxCalculationId: priced?.taxCalculationId || undefined,
+        cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
       }),
     });
     setBusy('');
     if (!r.ok) { setError(r.error); return; }
-    setCart({}); setCustomer({ name: '', phone: '', email: '' });
+    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' });
     if (r.data.sendError) setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from the list below, or take cash.`);
-    else setNote(pay === 'cash' ? `${usd(r.data.sale.totalCents)} in cash — recorded.` : `Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows as paid below when they pay.`);
+    else if (pay === 'cash') { setJustPaid(r.data.sale); setReceipt({ id: r.data.sale.id, via: 'email', to: '' }); }
+    else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows as paid below when they pay.`);
+    load();
+    searchRef.current?.focus();
+  }
+
+  async function sendReceipt() {
+    if (!receipt) return;
+    setBusy('receipt' + receipt.id); setError(''); setNote('');
+    const r = await dfetch('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: receipt.id, action: 'receipt', via: receipt.via, to: receipt.to }) });
+    setBusy('');
+    if (!r.ok) { setError(r.error); return; }
+    setNote(`Receipt ${receipt.via === 'sms' ? 'texted' : 'emailed'}.`);
+    setReceipt(null); setJustPaid(null);
+    load();
+  }
+
+  async function doRefund(sale: Sale) {
+    if (!refund) return;
+    setBusy('refund' + sale.id); setError(''); setNote('');
+    const r = await dfetch<{ status: 'done' | 'pending' }>('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: sale.id, action: 'refund', amountCents: toCents(refund.amount), reason: refund.reason, restock: refund.restock }) });
+    setBusy('');
+    if (!r.ok) { setError(r.error); load(); return; }
+    setRefund(null);
+    setNote(r.data.status === 'pending' ? 'Sent to Stripe — it hasn’t confirmed yet. Check back in a few minutes.' : sale.status === 'paid_card' ? 'Refunded to their card.' : 'Refund recorded — hand the cash back.');
+    load();
+  }
+
+  async function retryRefund(sale: Sale, refundId: string) {
+    setBusy('retry' + refundId); setError(''); setNote('');
+    const r = await dfetch<{ status: 'done' | 'pending' }>('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: sale.id, action: 'refund_retry', refundId }) });
+    setBusy('');
+    if (!r.ok) { setError(r.error); load(); return; }
+    setNote(r.data.status === 'done' ? 'Refund went through.' : 'Stripe still hasn’t confirmed it — try again in a few minutes.');
     load();
   }
 
@@ -121,12 +195,16 @@ export default function ShopPage() {
   }
 
   const canSell = access.can('shop.sell');
+  const canDiscount = access.can('shop.discount');
+  const canRefund = access.can('money.refund');
   // Recording cash is the counter-payment power, as on the tee sheet.
   const canCash = access.can('sheet.counter_payment');
   const payChoices = ([['cash', 'Cash'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const).filter(([k]) => k !== 'cash' || canCash);
   useEffect(() => { if (access.loaded && !canCash) setPay(p => (p === 'cash' ? 'sms' : p)); }, [access.loaded, canCash]);
   const needContact = pay === 'sms' ? customer.phone.replace(/\D/g, '').length < 10 : pay === 'email' ? !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(customer.email.trim()) : false;
-  const todayTotal = (sales ?? []).filter(s => (s.status === 'paid_cash' || s.status === 'paid_card') && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString()).reduce((t, s) => t + s.totalCents, 0);
+  const todayTotal = (sales ?? []).filter(s => isPaid(s) && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString()).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
+  // Quick cash amounts: the exact total, then the next notes up.
+  const quickCash = [due, ...[2000, 5000, 10000].filter(n => n > due)].filter((n, i, a) => n > 0 && a.indexOf(n) === i).slice(0, 4);
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
@@ -152,14 +230,16 @@ export default function ShopPage() {
                 )}
                 {tree.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <input value={q} onChange={e => setQ(e.target.value)} placeholder="Find an item, size or SKU" aria-label="Find an item" className={INPUT + ' w-56'} />
+                    <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (!scan(q) && q.trim()) setNote(''); } }}
+                      placeholder="Find or scan an item" aria-label="Find or scan an item" className={INPUT + ' w-56'} />
                     {categories.length > 1 && ['', ...categories].map(c => (
                       <button key={c || 'all'} type="button" onClick={() => setCat(c)} aria-pressed={cat === c}
                         className={'text-[12.5px] rounded-md px-2.5 py-1 border ' + (cat === c ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{c || 'All'}</button>
                     ))}
                   </div>
                 )}
-                {tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.</p>}
+                {tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Scanned a code? Add it as the item’s SKU in Settings → Pro shop.' : ''}</p>}
                 {groups.map(([group, list]) => (
                   <section key={group} className="mb-4 last:mb-0">
                     <h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>
@@ -200,8 +280,25 @@ export default function ShopPage() {
               </Card>
 
               <Card className="p-5 lg:sticky lg:top-6">
-                <h2 className="text-[15px] font-semibold text-ink">This sale</h2>
-                {lines.length === 0 ? <p className="text-sm text-ink-soft mt-2">Tap items to add them.</p> : (
+                <div className="flex items-baseline justify-between gap-2">
+                  <h2 className="text-[15px] font-semibold text-ink">This sale</h2>
+                  <button type="button" onClick={() => setCustomForm(f => f ? null : { name: '', amount: '' })} aria-expanded={!!customForm} className={LINK}>Custom amount</button>
+                </div>
+                {customForm && (
+                  <form className="mt-2 bg-paper/70 rounded-md p-3 flex flex-wrap gap-2 items-end" onSubmit={e => {
+                    e.preventDefault();
+                    const c = toCents(customForm.amount);
+                    if (!customForm.name.trim() || !c) { setError('Give the custom amount a name and a price.'); return; }
+                    setCustoms(cs => [...cs, { key: `c${Date.now()}`, name: customForm.name.trim().slice(0, 60), priceCents: c, quantity: 1 }]);
+                    setCustomForm(null); setError('');
+                  }}>
+                    <input value={customForm.name} onChange={e => setCustomForm({ ...customForm, name: e.target.value })} placeholder="What it is" aria-label="Custom amount name" maxLength={60} className={INPUT + ' flex-1 min-w-[8rem]'} autoFocus />
+                    <div className="relative w-24"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                      <input value={customForm.amount} onChange={e => setCustomForm({ ...customForm, amount: e.target.value })} inputMode="decimal" aria-label="Custom amount price" className={INPUT + ' w-full pl-6'} /></div>
+                    <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add</button>
+                  </form>
+                )}
+                {empty ? <p className="text-sm text-ink-soft mt-2">Tap or scan items to add them.</p> : (
                   <ul className="mt-2 divide-y divide-line-soft">
                     {lines.map(l => (
                       <li key={l.item.id} className="flex items-center justify-between gap-2 py-2 text-sm">
@@ -214,12 +311,44 @@ export default function ShopPage() {
                         </span>
                       </li>
                     ))}
+                    {customs.map(c => (
+                      <li key={c.key} className="flex items-center justify-between gap-2 py-2 text-sm">
+                        <span className="min-w-0 truncate text-ink">{c.name}</span>
+                        <span className="flex items-center gap-1.5 shrink-0">
+                          <button onClick={() => addCustom(c.key, -1)} aria-label={`One fewer ${c.name}`} className="w-7 h-7 rounded-md border border-line text-ink-soft hover:text-ink">−</button>
+                          <span className="w-6 text-center tabular-nums">{c.quantity}</span>
+                          <button onClick={() => addCustom(c.key, 1)} aria-label={`One more ${c.name}`} className="w-7 h-7 rounded-md border border-line text-ink-soft hover:text-ink">+</button>
+                          <span className="w-16 text-right tabular-nums text-ink">{usd(c.priceCents * c.quantity)}</span>
+                        </span>
+                      </li>
+                    ))}
+                    {priced && priced.discountCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Discount{discount?.note.trim() ? ` (${discount.note.trim()})` : ''}</span><span className="tabular-nums">−{usd(priced.discountCents)}</span></li>}
                     {priced && priced.taxCents > 0 && <li className="flex justify-between py-2 text-sm text-ink-soft"><span>Sales tax</span><span className="tabular-nums">{usd(priced.taxCents)}</span></li>}
                     <li className="flex justify-between py-2.5 text-[15px] font-semibold text-ink"><span>Total</span><span className="tabular-nums">{priced ? usd(due) : <span className="text-ink-muted font-normal text-sm">Working out the total…</span>}</span></li>
                   </ul>
                 )}
 
-                {lines.length > 0 && (
+                {!empty && canDiscount && (
+                  discount === null
+                    ? <button type="button" onClick={() => setDiscount({ mode: 'percent', value: '', note: '' })} className={LINK + ' mt-2'}>Add a discount</button>
+                    : (
+                      <div className="mt-2 bg-paper/70 rounded-md p-3 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex gap-1" role="group" aria-label="Discount as">
+                            {(['percent', 'amount'] as const).map(m => (
+                              <button key={m} type="button" aria-pressed={discount.mode === m} onClick={() => setDiscount({ ...discount, mode: m })}
+                                className={'px-2.5 py-1 rounded-md border text-[12.5px] ' + (discount.mode === m ? 'border-pine/40 bg-white text-ink font-medium' : 'border-line bg-white text-ink-soft')}>{m === 'percent' ? '% off' : '$ off'}</button>
+                            ))}
+                          </div>
+                          <input value={discount.value} onChange={e => setDiscount({ ...discount, value: e.target.value })} inputMode="decimal" aria-label={discount.mode === 'percent' ? 'Percent off' : 'Dollars off'} placeholder={discount.mode === 'percent' ? '10' : '5.00'} className={INPUT + ' w-20'} />
+                          <button type="button" onClick={() => setDiscount(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
+                        </div>
+                        <input value={discount.note} onChange={e => setDiscount({ ...discount, note: e.target.value })} maxLength={120} placeholder="Why (for your records, shown on the receipt)" aria-label="Discount reason" className={INPUT + ' w-full'} />
+                      </div>
+                    )
+                )}
+
+                {!empty && (
                   <div className="mt-3 space-y-3">
                     <div className="space-y-1.5" role="radiogroup" aria-label="How they pay">
                       {payChoices.map(([k, label]) => (
@@ -228,6 +357,22 @@ export default function ShopPage() {
                         </label>
                       ))}
                     </div>
+                    {pay === 'cash' && priced && due > 0 && (
+                      <div>
+                        <span className="block text-[13px] font-medium text-ink mb-1.5">Cash handed over <span className="font-normal text-ink-muted">(optional)</span></span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {quickCash.map(n => (
+                            <button key={n} type="button" onClick={() => setTendered((n / 100).toFixed(2))} aria-pressed={tenderedCents === n}
+                              className={'px-2.5 py-1.5 rounded-md border text-[13px] tabular-nums ' + (tenderedCents === n ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{n === due ? 'Exact' : usd(n)}</button>
+                          ))}
+                          <div className="relative w-24"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                            <input value={tendered} onChange={e => setTendered(e.target.value)} inputMode="decimal" aria-label="Cash handed over" className={INPUT + ' w-full pl-6'} /></div>
+                        </div>
+                        {tenderedCents > 0 && (tenderedCents >= due
+                          ? <p className="text-[15px] font-semibold text-ink mt-2">Change: <span className="tabular-nums">{usd(tenderedCents - due)}</span></p>
+                          : <p className="text-[13px] text-bad mt-2">That’s {usd(due - tenderedCents)} short.</p>)}
+                      </div>
+                    )}
                     {pay !== 'cash' && (
                       <div className="space-y-2">
                         <input value={customer.name} onChange={e => setCustomer(c => ({ ...c, name: e.target.value }))} placeholder="Name (optional)" aria-label="Customer name" className={INPUT + ' w-full'} />
@@ -238,10 +383,17 @@ export default function ShopPage() {
                       </div>
                     )}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
-                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !priced}
+                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !priced || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due)}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
                       {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : `Send ${usd(due)} pay link`}
                     </button>
+                  </div>
+                )}
+                {justPaid && (
+                  <div className="mt-4 border-l-[3px] border-ok pl-3 space-y-2">
+                    <p className="text-[14px] text-ink"><span className="font-semibold tabular-nums">{usd(justPaid.totalCents)}</span> in cash — recorded.
+                      {justPaid.cashTenderedCents != null && <> Change: <span className="font-semibold tabular-nums">{usd(justPaid.cashTenderedCents - justPaid.totalCents)}</span>.</>}</p>
+                    {receipt?.id === justPaid.id && <ReceiptForm receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + justPaid.id} onSkip={() => { setReceipt(null); setJustPaid(null); }} />}
                   </div>
                 )}
                 {error && <p className="mt-3 text-[13px] text-bad" role="alert">{error}</p>}
@@ -255,15 +407,21 @@ export default function ShopPage() {
               {sales && sales.length > 0 && (
                 <ul className="divide-y divide-line-soft">
                   {sales.map(s => {
-                    const st = STATUS[s.status] ?? { label: s.status, tone: 'neutral' as const };
+                    const fully = isPaid(s) && s.refundedCents >= s.totalCents;
+                    const st = fully ? { label: 'Refunded', tone: 'neutral' as const } : s.refundedCents > 0 ? { label: `${STATUS[s.status]?.label ?? s.status} · ${usd(s.refundedCents)} refunded`, tone: 'ok' as const } : STATUS[s.status] ?? { label: s.status, tone: 'neutral' as const };
+                    const left = s.totalCents - s.refundedCents;
+                    const pending = s.refunds.filter(r => r.status === 'pending');
                     return (
-                      <li key={s.id} className="px-5 py-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+                      <li key={s.id} className="px-5 py-3 text-sm">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="min-w-0">
                           <div className="text-ink"><span className="tabular-nums text-ink-soft">{time(s.createdAt)}</span> · <span className="font-medium tabular-nums">{usd(s.totalCents)}</span>{s.customerName ? ` · ${s.customerName}` : ''}</div>
-                          <div className="text-[12.5px] text-ink-muted truncate">{s.lines.map(l => `${l.name}${l.quantity > 1 ? ` × ${l.quantity}` : ''}`).join(', ')}</div>
+                          <div className="text-[12.5px] text-ink-muted truncate">{s.lines.map(l => `${l.name}${l.quantity > 1 ? ` × ${l.quantity}` : ''}`).join(', ')}{s.discountCents ? ` · ${usd(s.discountCents)} off${s.discountNote ? ` (${s.discountNote})` : ''}` : ''}</div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <StatusDot status={st.tone} label={st.label} />
+                          {isPaid(s) && <button onClick={() => { setReceipt(receipt?.id === s.id ? null : { id: s.id, via: s.customerEmail || !s.customerPhone ? 'email' : 'sms', to: s.customerEmail || s.customerPhone }); setError(''); }} disabled={!!busy} className={LINK}>Receipt</button>}
+                          {isPaid(s) && canRefund && left > 0 && <button onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setError(''); }} disabled={!!busy} className={LINK}>Refund</button>}
                           {s.status === 'open' && (
                             <>
                               <button onClick={() => act(s, 'resend', s.customerPhone ? 'sms' : 'email')} disabled={!!busy} className="text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50">Send again</button>
@@ -272,16 +430,67 @@ export default function ShopPage() {
                             </>
                           )}
                         </div>
+                        </div>
+                        {pending.map(r => (
+                          <div key={r.id} className="flex flex-wrap items-center gap-3 mt-1.5 text-[12.5px]">
+                            <StatusDot status="warn" label={`Refund ${usd(r.amountCents)} not confirmed by Stripe yet`} />
+                            {canRefund && <button onClick={() => retryRefund(s, r.id)} disabled={!!busy} className={LINK}>{busy === 'retry' + r.id ? 'Asking Stripe…' : 'Try again'}</button>}
+                          </div>
+                        ))}
+                        {receipt?.id === s.id && justPaid?.id !== s.id && (
+                          <div className="mt-2 max-w-md"><ReceiptForm receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + s.id} onSkip={() => setReceipt(null)} skipLabel="Close" /></div>
+                        )}
+                        {refund?.id === s.id && (
+                          <div className="mt-2 bg-paper/70 rounded-md p-3 space-y-2 max-w-md">
+                            <div className="grid grid-cols-[110px_1fr] gap-2">
+                              <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Amount</span>
+                                <div className="relative"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
+                                  <input value={refund.amount} onChange={e => setRefund({ ...refund, amount: e.target.value, confirm: false, restock: toCents(e.target.value) === s.totalCents && s.refundedCents === 0 ? refund.restock : false })} inputMode="decimal" className={INPUT + ' w-full pl-6'} /></div></label>
+                              <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Reason <span className="font-normal text-ink-muted">(for your records)</span></span>
+                                <input value={refund.reason} onChange={e => setRefund({ ...refund, reason: e.target.value })} maxLength={300} className={INPUT + ' w-full'} /></label>
+                            </div>
+                            {s.refundedCents === 0 && toCents(refund.amount) === s.totalCents && s.lines.length > 0 && (
+                              <label className="flex items-center gap-2 text-[13px] text-ink"><input type="checkbox" checked={refund.restock} onChange={e => setRefund({ ...refund, restock: e.target.checked })} className="accent-pine" />Put the items back on the shelf</label>
+                            )}
+                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'Goes back to the card they paid with. It can’t be undone.' : 'Recorded only — hand the cash back yourself.'} Up to {usd(left)} can be refunded.</p>
+                            <div className="flex gap-2">
+                              {!refund.confirm
+                                ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!toCents(refund.amount)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">Refund ${refund.amount || '0'}</button>
+                                : <button onClick={() => doRefund(s)} disabled={!!busy} className="px-3 py-2 rounded-md text-[13px] font-medium bg-bad text-white disabled:opacity-50">{busy === 'refund' + s.id ? 'Refunding…' : `Yes, refund $${refund.amount}`}</button>}
+                              <button onClick={() => setRefund(null)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper">Close</button>
+                            </div>
+                          </div>
+                        )}
                       </li>
                     );
                   })}
                 </ul>
               )}
-              <p className="px-5 py-3 text-[12px] text-ink-muted border-t border-line-soft">Card refunds for a paid sale are made in your Stripe dashboard for now.</p>
             </Card>
           </div>
         )}
       </main>
     </div>
+  );
+}
+
+/** POS-3: send a paid sale's receipt by email or text. */
+function ReceiptForm({ receipt, setReceipt, onSend, onSkip, busy, skipLabel = 'No receipt' }: {
+  receipt: { id: string; via: 'email' | 'sms'; to: string }; setReceipt: (r: { id: string; via: 'email' | 'sms'; to: string }) => void;
+  onSend: () => void; onSkip: () => void; busy: boolean; skipLabel?: string;
+}) {
+  return (
+    <form className="flex flex-wrap items-center gap-2" onSubmit={e => { e.preventDefault(); onSend(); }}>
+      <div className="flex gap-1" role="group" aria-label="Send the receipt by">
+        {(['email', 'sms'] as const).map(v => (
+          <button key={v} type="button" aria-pressed={receipt.via === v} onClick={() => setReceipt({ ...receipt, via: v, to: '' })}
+            className={'px-2.5 py-1 rounded-md border text-[12.5px] ' + (receipt.via === v ? 'border-pine/40 bg-white text-ink font-medium' : 'border-line bg-white text-ink-soft')}>{v === 'email' ? 'Email' : 'Text'}</button>
+        ))}
+      </div>
+      <input value={receipt.to} onChange={e => setReceipt({ ...receipt, to: e.target.value })} type={receipt.via === 'email' ? 'email' : 'tel'} required
+        placeholder={receipt.via === 'email' ? 'Their email' : 'Their mobile'} aria-label={receipt.via === 'email' ? 'Receipt email' : 'Receipt mobile number'} className={INPUT + ' flex-1 min-w-[10rem]'} />
+      <button type="submit" disabled={busy} className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2 disabled:opacity-50">{busy ? 'Sending…' : 'Send receipt'}</button>
+      <button type="button" onClick={onSkip} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">{skipLabel}</button>
+    </form>
   );
 }

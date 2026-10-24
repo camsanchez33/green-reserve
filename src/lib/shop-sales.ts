@@ -4,6 +4,11 @@
 // direct charge on the course's own Stripe account, exactly like a round.
 // GreenReserve takes nothing on a sale while SHOP_FEE_ON is false.
 //
+// POS-3 (Cam 2026-10-24: "look at how Shopify runs their POS or … Square"):
+// custom-amount lines, a discount on the whole sale (shop.discount), cash
+// handed over with the change, receipts, and refunds (cash recorded, card
+// through Stripe, the sales tax reversed on the course's account).
+//
 // One status machine, every write conditional on the status it expects:
 //   open ──(cash)──────────────▶ paid_cash
 //   open ──(card claimed)──▶ paying ──(charged)──▶ paid_card
@@ -25,65 +30,153 @@ export const MAX_SALE_LINES = 40;
 /** A claim this old belongs to a request that is gone (longer than any function run). The sale's single PaymentIntent keeps a retry to one charge either way. */
 export const STALE_CHARGE_MS = 10 * 60 * 1000;
 
-export type SaleLineInput = { shopItemId: string; quantity: number };
+/** A catalog item by id, or (POS-3) a custom amount with its own name and price. */
+export type SaleLineInput = { shopItemId?: string; name?: string; priceCents?: number; quantity: number };
+/** POS-3: money off the whole sale — a percent or an amount, and why. */
+export type DiscountInput = { percent?: unknown; amountCents?: unknown; note?: unknown } | null | undefined;
+export type RefundView = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdBy: string; createdAt: string };
 export type SaleView = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: string; paidAt: string | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
+  discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number;
+  receiptSentAt: string | null; refunds: RefundView[];
 };
 
-export const saleView = (s: {
+type SaleRow = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: Date; paidAt: Date | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
-}): SaleView => ({
+  discountCents?: number; discountNote?: string; cashTenderedCents?: number | null; refundedCents?: number; receiptSentAt?: Date | null;
+  refunds?: { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdBy: string; createdAt: Date }[];
+};
+
+export const saleView = (s: SaleRow): SaleView => ({
   id: s.id, status: s.status, totalCents: s.totalCents, taxCents: s.taxCents, createdAt: s.createdAt.toISOString(), paidAt: s.paidAt?.toISOString() ?? null,
   customerName: s.customerName, customerPhone: s.customerPhone, customerEmail: s.customerEmail, soldBy: s.soldBy,
   lines: s.lines.map(l => ({ name: l.name, unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
+  discountCents: s.discountCents ?? 0, discountNote: s.discountNote ?? '', cashTenderedCents: s.cashTenderedCents ?? null,
+  refundedCents: s.refundedCents ?? 0, receiptSentAt: s.receiptSentAt?.toISOString() ?? null,
+  refunds: (s.refunds ?? []).map(r => ({ ...r, createdAt: r.createdAt.toISOString() })),
 });
+
+/** What every sale read includes, so saleView has the whole sale. */
+export const SALE_INCLUDE = {
+  lines: { select: { name: true, unitPriceCents: true, quantity: true }, orderBy: { id: 'asc' as const } },
+  refunds: { select: { id: true, amountCents: true, method: true, status: true, reason: true, restocked: true, error: true, createdBy: true, createdAt: true }, orderBy: { createdAt: 'asc' as const } },
+};
 
 const LINES = { select: { name: true, unitPriceCents: true, quantity: true }, orderBy: { id: 'asc' as const } };
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
 
-type PricedLine = { shopItemId: string; name: string; unitPriceCents: number; quantity: number; taxCategory: string };
+type PricedLine = { shopItemId: string | null; reference: string; name: string; unitPriceCents: number; quantity: number; taxCategory: string };
 
-/** This course's active, sellable items for the requested lines, priced from the catalog — never from the client. */
+/**
+ * This course's active, sellable items for the requested lines, priced from
+ * the catalog — never from the client. A custom-amount line (POS-3: no
+ * shopItemId, a name and a price the staff member typed) is taxed as general
+ * goods and takes no stock.
+ */
 async function priceLines(courseId: string, raw: unknown): Promise<Result<{ lines: PricedLine[]; subtotalCents: number }>> {
   if (!Array.isArray(raw) || raw.length === 0) return fail(400, 'Add at least one item.');
   if (raw.length > MAX_SALE_LINES) return fail(400, `A sale can have up to ${MAX_SALE_LINES} lines.`);
   const wanted = new Map<string, number>();
+  const custom: PricedLine[] = [];
   for (const l of raw as Record<string, unknown>[]) {
     const id = typeof l?.shopItemId === 'string' ? l.shopItemId : '';
     const q = Number(l?.quantity);
-    if (!id || !Number.isInteger(q) || q < 1 || q > MAX_LINE_QUANTITY) return fail(400, `Each line needs an item and a quantity of 1 to ${MAX_LINE_QUANTITY}.`);
+    if (!Number.isInteger(q) || q < 1 || q > MAX_LINE_QUANTITY) return fail(400, `Each line needs a quantity of 1 to ${MAX_LINE_QUANTITY}.`);
+    if (!id) {
+      const name = String(l?.name ?? '').replace(/\s+/g, ' ').trim().slice(0, 60);
+      const price = Number(l?.priceCents);
+      if (!name) return fail(400, 'Give the custom amount a name, like "Range token".');
+      if (!Number.isInteger(price) || price < 1 || price > MAX_ITEM_PRICE_CENTS) return fail(400, 'A custom amount has to be between $0.01 and $10,000.');
+      custom.push({ shopItemId: null, reference: `custom-${custom.length + 1}`, name, unitPriceCents: price, quantity: q, taxCategory: 'general' });
+      continue;
+    }
     wanted.set(id, (wanted.get(id) ?? 0) + q);
   }
   for (const q of wanted.values()) if (q > MAX_LINE_QUANTITY) return fail(400, `Quantity must be 1 to ${MAX_LINE_QUANTITY}.`);
   // Tenant isolation: only this course's active items, priced from the catalog — never from the client.
   // W2-7: an item with options is sold by its option — a parent never matches
   // here, nor does an option of a hidden item.
-  const items = await prisma.shopItem.findMany({ where: { id: { in: [...wanted.keys()] }, courseId, active: true, options: { none: {} }, OR: [{ parentId: null }, { parent: { active: true } }] } });
+  const items = wanted.size ? await prisma.shopItem.findMany({ where: { id: { in: [...wanted.keys()] }, courseId, active: true, options: { none: {} }, OR: [{ parentId: null }, { parent: { active: true } }] } }) : [];
   if (items.length !== wanted.size) return fail(404, 'One of those items is not in your shop any more — refresh and try again.');
-  const lines = items.map(i => ({ shopItemId: i.id, name: i.name, unitPriceCents: i.priceCents, quantity: wanted.get(i.id)!, taxCategory: i.taxCategory }));
+  const lines: PricedLine[] = [...items.map(i => ({ shopItemId: i.id, reference: i.id, name: i.name, unitPriceCents: i.priceCents, quantity: wanted.get(i.id)!, taxCategory: i.taxCategory })), ...custom];
   if (lines.some(l => l.unitPriceCents <= 0 || l.unitPriceCents > MAX_ITEM_PRICE_CENTS)) return fail(400, 'An item has a price that needs fixing in Settings → Pro shop.');
   const subtotalCents = lines.reduce((s, l) => s + l.unitPriceCents * l.quantity, 0);
   if (subtotalCents > MAX_SALE_CENTS) return fail(400, 'That sale is over $10,000 — check the quantities.');
   return { ok: true, value: { lines, subtotalCents } };
 }
 
-const taxLines = (lines: PricedLine[]): TaxLine[] => lines.map(l => ({ reference: l.shopItemId, amountCents: l.unitPriceCents * l.quantity, quantity: l.quantity, category: l.taxCategory }));
+/** POS-3: the request asks for money off (so the route checks shop.discount). */
+export const hasDiscount = (d: DiscountInput) => !!d && ((d.percent != null && d.percent !== '' && Number(d.percent) !== 0) || (d.amountCents != null && d.amountCents !== '' && Number(d.amountCents) !== 0));
+
+/**
+ * POS-3: the discount on a sale of `subtotalCents` — a percent (0–100) or an
+ * amount in cents, never more than the sale. Null input = no discount.
+ */
+export function discountFor(subtotalCents: number, raw: DiscountInput): Result<{ discountCents: number; note: string }> {
+  const note = String(raw?.note ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
+  const pct = raw?.percent == null || raw.percent === '' ? null : Number(raw.percent);
+  const amt = raw?.amountCents == null || raw.amountCents === '' ? null : Number(raw.amountCents);
+  if (pct == null && amt == null) return { ok: true, value: { discountCents: 0, note: '' } };
+  if (pct != null && amt != null) return fail(400, 'Take off a percent or an amount, not both.');
+  let cents: number;
+  if (pct != null) {
+    if (!(pct > 0 && pct <= 100)) return fail(400, 'A percent off has to be between 1 and 100.');
+    cents = Math.round(subtotalCents * pct / 100);
+  } else {
+    if (!Number.isInteger(amt) || amt! < 1) return fail(400, 'Enter the amount to take off.');
+    if (amt! > subtotalCents) return fail(400, 'The discount can’t be more than the sale.');
+    cents = amt!;
+  }
+  return { ok: true, value: { discountCents: Math.min(cents, subtotalCents), note } };
+}
+
+/**
+ * Pure: spread a discount over the lines in proportion to what each comes to
+ * (largest remainders get the leftover cents), so sales tax is worked out on
+ * what is actually paid for each item.
+ */
+export function spreadDiscount(amounts: number[], discountCents: number): number[] {
+  const total = amounts.reduce((a, b) => a + b, 0);
+  if (!discountCents || !total) return [...amounts];
+  const exact = amounts.map(a => (a * discountCents) / total);
+  const off = exact.map(Math.floor);
+  let left = discountCents - off.reduce((a, b) => a + b, 0);
+  const order = exact.map((e, i) => ({ i, r: e - Math.floor(e) })).sort((a, b) => b.r - a.r);
+  for (const { i } of order) { if (left <= 0) break; if (off[i] < amounts[i]) { off[i]++; left--; } }
+  return amounts.map((a, i) => a - off[i]);
+}
+
+const taxLines = (lines: PricedLine[], discountCents = 0): TaxLine[] => {
+  const after = spreadDiscount(lines.map(l => l.unitPriceCents * l.quantity), discountCents);
+  return lines.map((l, i) => ({ reference: l.reference, amountCents: after[i], quantity: l.quantity, category: l.taxCategory }))
+    // A line discounted to nothing has no tax to work out (Stripe wants a positive amount).
+    .filter(l => l.amountCents > 0);
+};
 const TAX_DOWN = 'We couldn’t work out the sales tax just now — try again in a moment.';
 
+/** What the tax on these lines comes to (none when the whole sale is discounted away). */
+async function taxFor(courseId: string, lines: TaxLine[], reuseId?: string) {
+  if (!lines.length) return { taxCents: 0, calculationId: '' };
+  return (reuseId ? await reuseShopTaxQuote(courseId, reuseId, lines) : null) ?? await quoteShopTax(courseId, lines);
+}
+
 /** W2-7 part B: what a sale will come to, tax included, before it is rung up. */
-export async function quoteSale(courseId: string, raw: unknown): Promise<Result<{ subtotalCents: number; taxCents: number; totalCents: number; taxCalculationId: string }>> {
+export async function quoteSale(courseId: string, raw: unknown, discount?: DiscountInput): Promise<Result<{ subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string }>> {
   const p = await priceLines(courseId, raw);
   if (!p.ok) return p;
+  const d = discountFor(p.value.subtotalCents, discount);
+  if (!d.ok) return d;
   let q;
-  try { q = await quoteShopTax(courseId, taxLines(p.value.lines)); }
+  try { q = await taxFor(courseId, taxLines(p.value.lines, d.value.discountCents)); }
   catch (err) { console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId, error: err instanceof Error ? err.message : String(err) })); return fail(502, TAX_DOWN); }
-  return { ok: true, value: { subtotalCents: p.value.subtotalCents, taxCents: q.taxCents, totalCents: p.value.subtotalCents + q.taxCents, taxCalculationId: q.calculationId } };
+  const net = p.value.subtotalCents - d.value.discountCents;
+  return { ok: true, value: { subtotalCents: p.value.subtotalCents, discountCents: d.value.discountCents, taxCents: q.taxCents, totalCents: net + q.taxCents, taxCalculationId: q.calculationId } };
 }
 
 /** Ring up a sale. Cash is paid on the spot; a link sale waits for the customer. */
@@ -92,21 +185,33 @@ export async function createSale(opts: {
   customerName?: string; customerPhone?: string; customerEmail?: string;
   /** The quote the counter showed (quoteSale); reused when it still matches, else tax is worked out again. */
   taxCalculationId?: string;
+  /** POS-3: money off the whole sale. The route checks shop.discount before passing one. */
+  discount?: DiscountInput;
+  /** POS-3: cash handed over (cents), for the change; must cover the total. */
+  cashTenderedCents?: unknown;
 }): Promise<Result<SaleView & { payToken: string }>> {
   const p = await priceLines(opts.courseId, opts.lines);
   if (!p.ok) return p;
-  const lines = p.value.lines.map(({ taxCategory: _t, ...l }) => l);
+  const d = discountFor(p.value.subtotalCents, opts.discount);
+  if (!d.ok) return d;
+  const lines = p.value.lines.map(({ taxCategory: _t, reference: _r, ...l }) => l);
   // W2-7 part B: sales tax from Stripe Tax when the course has it on.
   let tax = { taxCents: 0, calculationId: '' };
   try {
-    tax = (opts.taxCalculationId ? await reuseShopTaxQuote(opts.courseId, opts.taxCalculationId, taxLines(p.value.lines)) : null)
-      ?? await quoteShopTax(opts.courseId, taxLines(p.value.lines));
+    tax = await taxFor(opts.courseId, taxLines(p.value.lines, d.value.discountCents), opts.taxCalculationId);
   } catch (err) {
     console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId: opts.courseId, error: err instanceof Error ? err.message : String(err) }));
     return fail(502, TAX_DOWN);
   }
-  const totalCents = p.value.subtotalCents + tax.taxCents;
+  const totalCents = p.value.subtotalCents - d.value.discountCents + tax.taxCents;
+  if (opts.pay === 'link' && totalCents <= 0) return fail(400, 'This sale comes to nothing — take it as cash instead.');
   if (opts.pay === 'link' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up pay links are not set up for the shop fee yet.');
+  let cashTenderedCents: number | null = null;
+  if (opts.pay === 'cash' && opts.cashTenderedCents != null && opts.cashTenderedCents !== '') {
+    const t = Number(opts.cashTenderedCents);
+    if (!Number.isInteger(t) || t < totalCents || t > totalCents + MAX_SALE_CENTS) return fail(400, `The cash handed over has to cover the $${(totalCents / 100).toFixed(2)} total.`);
+    cashTenderedCents = t;
+  }
 
   const name = String(opts.customerName ?? '').trim().slice(0, 80);
   const phone = String(opts.customerPhone ?? '').trim().slice(0, 30);
@@ -117,12 +222,13 @@ export async function createSale(opts: {
       data: {
         courseId: opts.courseId, totalCents, taxCents: tax.taxCents, taxCalculationId: tax.calculationId, soldBy: opts.soldBy, customerName: name, customerPhone: phone, customerEmail: email, payToken,
         status: opts.pay === 'cash' ? 'paid_cash' : 'open', paidAt: opts.pay === 'cash' ? new Date() : null,
+        discountCents: d.value.discountCents, discountNote: d.value.note, cashTenderedCents,
         lines: { create: lines },
       },
-      include: { lines: LINES },
+      include: SALE_INCLUDE,
     });
-    // Cash leaves the shelf now; a link sale only when it is paid.
-    if (opts.pay === 'cash') for (const l of lines) await takeStock(tx, l.shopItemId, l.quantity);
+    // Cash leaves the shelf now; a link sale only when it is paid. A custom amount takes no stock.
+    if (opts.pay === 'cash') for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
     return s;
   });
   if (opts.pay === 'cash') await recordShopSaleTax(sale.id); // never throws; the hourly cron retries
@@ -144,7 +250,7 @@ export async function settleOpenSale(courseId: string, saleId: string, to: 'void
       // The token stays: the customer's page then says the sale was paid or cancelled.
       data: to === 'void' ? { status: 'void', voidedAt: new Date() } : { status: 'paid_cash', paidAt: new Date() },
     });
-    const sale = await tx.shopSale.findFirst({ where: { id: saleId, courseId }, include: { lines: { select: { name: true, unitPriceCents: true, quantity: true, shopItemId: true }, orderBy: { id: 'asc' } } } });
+    const sale = await tx.shopSale.findFirst({ where: { id: saleId, courseId }, include: { ...SALE_INCLUDE, lines: { select: { name: true, unitPriceCents: true, quantity: true, shopItemId: true }, orderBy: { id: 'asc' } } } });
     if (!sale) return fail(404, 'Sale not found.');
     if (done.count === 0) return fail(409, whyNotOpen(sale.status));
     if (to === 'paid_cash') for (const l of sale.lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
@@ -313,4 +419,135 @@ async function markCardPaid(saleId: string, stamp: Date, paymentIntentId: string
     for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
   });
   await recordShopSaleTax(saleId); // never throws; the hourly cron retries
+}
+
+// ── POS-3: refunds ──────────────────────────────────────────────────────────
+
+const isPaid = (status: string) => status === 'paid_cash' || status === 'paid_card';
+
+/**
+ * Refund all or part of a paid walk-up sale. The amount is reserved on the
+ * sale first (only if that much is still unrefunded — two refunds at once
+ * can't both take the last of it). Cash is recorded and done; a card refund
+ * goes through Stripe on the course's account (sendShopRefund). A full refund
+ * can put the items back on the shelf.
+ */
+export async function refundSale(courseId: string, saleId: string, input: { amountCents?: unknown; reason?: unknown; restock?: unknown }, actor: string): Promise<Result<{ status: 'done' | 'pending'; sale: SaleView }>> {
+  const s = await prisma.shopSale.findFirst({ where: { id: saleId, courseId } });
+  if (!s) return fail(404, 'Sale not found.');
+  if (!isPaid(s.status)) return fail(409, 'Only a paid sale can be refunded.');
+  const left = s.totalCents - s.refundedCents;
+  if (left <= 0) return fail(409, 'This sale has already been refunded in full.');
+  const amountCents = input.amountCents == null || input.amountCents === '' ? left : Number(input.amountCents);
+  if (!Number.isInteger(amountCents) || amountCents < 1) return fail(400, 'Enter the amount to refund.');
+  if (amountCents > left) return fail(400, `At most $${(left / 100).toFixed(2)} can still be refunded on this sale.`);
+  const method = s.status === 'paid_card' ? 'card' : 'cash';
+  // The items go back only when the whole sale is refunded in one go.
+  const restock = input.restock === true && s.refundedCents === 0 && amountCents === s.totalCents;
+  const reason = String(input.reason ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 300);
+  const refund = await prisma.$transaction(async tx => {
+    const reserved = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: s.status, refundedCents: { lte: s.totalCents - amountCents } }, data: { refundedCents: { increment: amountCents } } });
+    if (!reserved.count) return null;
+    const r = await tx.shopSaleRefund.create({ data: { saleId, courseId, amountCents, method, status: method === 'cash' ? 'done' : 'pending', reason, restocked: restock, createdBy: actor } });
+    if (restock) {
+      const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true } });
+      for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, -l.quantity);
+    }
+    return r;
+  });
+  if (!refund) return fail(409, 'Someone else just refunded part of this — refresh and try again.');
+  let status: 'done' | 'pending' = 'done';
+  if (method === 'card') {
+    const r = await sendShopRefund(courseId, refund.id);
+    if (!r.ok) return r;
+    status = r.value.status;
+  }
+  if (status === 'done') await reverseShopRefundTax(refund.id); // never throws; the hourly cron retries
+  const sale = await prisma.shopSale.findUniqueOrThrow({ where: { id: saleId }, include: SALE_INCLUDE });
+  return { ok: true, value: { status, sale: saleView(sale) } };
+}
+
+/** Give a refund's amount back to the sale when Stripe definitely refused it. */
+async function giveBackRefund(refundId: string, saleId: string, amountCents: number, error: string) {
+  await prisma.$transaction(async tx => {
+    const r = await tx.shopSaleRefund.updateMany({ where: { id: refundId, status: 'pending' }, data: { status: 'failed', error: error.slice(0, 300) } });
+    if (!r.count) return;
+    await tx.shopSale.update({ where: { id: saleId }, data: { refundedCents: { decrement: amountCents } } });
+    const row = await tx.shopSaleRefund.findUniqueOrThrow({ where: { id: refundId } });
+    // Items put back for a refund that didn't happen come off the shelf again.
+    if (row.restocked) {
+      const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true } });
+      for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
+      await tx.shopSaleRefund.update({ where: { id: refundId }, data: { restocked: false } });
+    }
+  });
+}
+
+/**
+ * Ask Stripe for a card refund (first time, or again after an unsure answer).
+ * Stripe forgets an idempotency key after 24 hours, so it is asked first
+ * whether this refund already exists (each carries its row id in metadata).
+ */
+export async function sendShopRefund(courseId: string, refundId: string): Promise<Result<{ status: 'done' | 'pending' }>> {
+  const r = await prisma.shopSaleRefund.findFirst({ where: { id: refundId, courseId }, include: { sale: { select: { id: true, paymentIntentId: true, course: { select: { stripeAccountId: true } } } } } });
+  if (!r) return fail(404, 'Refund not found.');
+  if (r.status === 'done') return { ok: true, value: { status: 'done' } };
+  if (r.status === 'failed') return fail(409, 'This refund didn’t go through — start a new one.');
+  const account = r.sale.course.stripeAccountId;
+  if (!account || !r.sale.paymentIntentId) {
+    await giveBackRefund(r.id, r.saleId, r.amountCents, 'This sale has no card payment to refund.');
+    return fail(409, 'This sale has no card payment to refund.');
+  }
+  try {
+    const earlier = await stripe.refunds.list({ payment_intent: r.sale.paymentIntentId, limit: 100 }, { stripeAccount: account });
+    const found = earlier.data.find(x => x.metadata?.shopRefundId === r.id && x.status !== 'failed' && x.status !== 'canceled');
+    const sr = found ?? await stripe.refunds.create(
+      { payment_intent: r.sale.paymentIntentId, amount: r.amountCents, metadata: { shopRefundId: r.id, shopSaleId: r.saleId } },
+      { stripeAccount: account, idempotencyKey: `shop-refund-${r.id}` },
+    );
+    await prisma.shopSaleRefund.update({ where: { id: r.id }, data: { status: 'done', stripeRefundId: sr.id, error: '' } });
+    return { ok: true, value: { status: 'done' } };
+  } catch (err) {
+    if (err instanceof Stripe.errors.StripeInvalidRequestError || err instanceof Stripe.errors.StripeCardError) {
+      await giveBackRefund(r.id, r.saleId, r.amountCents, err.message || 'Stripe refused the refund.');
+      return fail(402, `Stripe refused the refund: ${err.message || 'no reason given'}. Nothing was refunded.`);
+    }
+    console.error(JSON.stringify({ ev: 'shop_refund.unsure', refundId: r.id, error: err instanceof Error ? err.message : String(err) }));
+    await prisma.shopSaleRefund.update({ where: { id: r.id }, data: { error: 'Stripe didn’t answer.' } });
+    return { ok: true, value: { status: 'pending' } };
+  }
+}
+
+/**
+ * Take a done refund off the sale's recorded sales tax (a reversal of the
+ * sale's tax transaction on the course's account, keyed by the refund, so a
+ * retry can't reverse it twice). The whole refund of a sale reverses all of
+ * it; a part reverses that amount, tax included. Nothing to do when the sale
+ * had no tax. Never throws; the hourly cron retries one that didn't go.
+ */
+export async function reverseShopRefundTax(refundId: string): Promise<void> {
+  const r = await prisma.shopSaleRefund.findUnique({ where: { id: refundId }, include: { sale: { select: { id: true, totalCents: true, taxCents: true, taxTransactionId: true, course: { select: { stripeAccountId: true } } } } } });
+  if (!r || r.status !== 'done' || r.taxReversalId || r.sale.taxCents <= 0 || !r.sale.course.stripeAccountId) return;
+  // A sale whose tax wasn't recorded yet is recorded first (the cron would otherwise record it whole later).
+  if (!r.sale.taxTransactionId) await recordShopSaleTax(r.sale.id);
+  const sale = await prisma.shopSale.findUnique({ where: { id: r.sale.id }, select: { taxTransactionId: true } });
+  if (!sale?.taxTransactionId) return;
+  try {
+    const whole = r.amountCents === r.sale.totalCents;
+    const rev = await stripe.tax.transactions.createReversal(
+      { mode: whole ? 'full' : 'partial', original_transaction: sale.taxTransactionId, reference: `shop-refund-${r.id}`,
+        ...(whole ? {} : { flat_amount: -r.amountCents }), metadata: { shopRefundId: r.id } },
+      { stripeAccount: r.sale.course.stripeAccountId, idempotencyKey: `tax-rev-shop-refund-${r.id}` },
+    );
+    await prisma.shopSaleRefund.update({ where: { id: r.id }, data: { taxReversalId: rev.id } });
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'sales_tax.reverse.fail', refundId: r.id, error: err instanceof Error ? err.message : String(err) }));
+  }
+}
+
+/** Hourly: reverse the tax of done refunds that didn't get their reversal yet. */
+export async function reversePendingShopRefundTax(limit = 50): Promise<number> {
+  const pending = await prisma.shopSaleRefund.findMany({ where: { status: 'done', taxReversalId: '', sale: { taxCents: { gt: 0 } } }, select: { id: true }, take: limit, orderBy: { createdAt: 'asc' } });
+  for (const r of pending) await reverseShopRefundTax(r.id);
+  return pending.length;
 }
