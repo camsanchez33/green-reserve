@@ -1348,6 +1348,16 @@ model ShopSale {
   /// Who rang it up (staff/owner email).
   soldBy           String         @default("")
   createdAt        DateTime       @default(now())
+  /// POS-3 (Cam 2026-10-24, "like Square"): money off the whole sale, and why.
+  discountCents    Int            @default(0)
+  discountNote     String         @default("")
+  /// Cash handed over (cash sales), so the receipt shows the change; null = not entered.
+  cashTenderedCents Int?
+  /// Refunded so far (cash recorded, card through Stripe); never more than totalCents.
+  refundedCents    Int            @default(0)
+  /// The last receipt sent (email or text).
+  receiptSentAt    DateTime?
+  refunds          ShopSaleRefund[]
   lines            ShopSaleLine[]
 
   @@index([courseId, createdAt])
@@ -1604,4 +1614,32 @@ model CourseEventRefund {
   createdAt      DateTime           @default(now())
 
   @@index([paymentId])
+}
+
+/// POS-3 (Cam 2026-10-24): a refund of a walk-up sale — cash handed back
+/// (recorded) or a card refund through Stripe on the course's account.
+/// pending = Stripe hasn't confirmed (Try again reuses the same key);
+/// failed = Stripe said no and the amount was given back to the sale.
+model ShopSaleRefund {
+  id             String   @id @default(cuid())
+  saleId         String
+  sale           ShopSale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  courseId       String
+  amountCents    Int
+  /// cash | card
+  method         String
+  /// pending | done | failed
+  status         String   @default("pending")
+  stripeRefundId String   @default("")
+  /// The sales-tax reversal on the course's Stripe account ("" = none needed yet, or not recorded yet).
+  taxReversalId  String   @default("")
+  reason         String   @default("")
+  /// The items went back on the shelf (a full refund only).
+  restocked      Boolean  @default(false)
+  error          String   @default("")
+  createdBy      String   @default("")
+  createdAt      DateTime @default(now())
+
+  @@index([saleId])
+  @@index([courseId, createdAt])
 }

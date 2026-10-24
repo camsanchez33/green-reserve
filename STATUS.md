@@ -4,15 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 03:09 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `3f1a6f50` · working tree **9 dirty file(s)**
+Generated 2026-10-24 03:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f3faa4f2` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 20 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 21 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `3f1a6f50` | 2026-10-24 | CART-1: walking and the cart price per price-table cell, weekday and weekend |
+| `f3faa4f2` | 2026-10-24 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds |
+| `6fd9158d` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
 | `6d7bf2a5` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
 | `fbacc529` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
 | `592f05f4` | 2026-10-24 | schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday |
@@ -35,17 +36,14 @@ Generated 2026-10-24 03:09 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (6 file(s))
 
+- `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/cart-walk-db-test.ts`
-- `M src/app/api/bookings/route.ts`
-- `M src/app/book/BookClient.tsx`
-- `M src/app/courses/[slug]/CourseBookingClient.tsx`
-- `M src/app/dashboard/page.tsx`
-- `M src/lib/move-booking.ts`
-- `M src/lib/schedule-service.ts`
+- `M scripts/pos-register-db-test.ts`
+- `M src/lib/analytics.ts`
+- `M src/lib/staff-permissions.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -132,10 +130,10 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 1 | 2026-10-24 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 6d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 0d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-24 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 1d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 1d |
@@ -169,7 +167,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `3f1a6f50` 2026-10-24 — CART-1: walking and the cart price per price-table cell, weekday and weekend
+- `f3faa4f2` 2026-10-24 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds
+- `6fd9158d` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
 - `6d7bf2a5` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
 - `fbacc529` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
 - `592f05f4` 2026-10-24 — schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday
@@ -180,7 +179,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `d6efdc1b` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
 - `85bb9160` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
 - `3148eed2` 2026-10-22 — Money: Needs you — declined cards with a pay link (DASH-C) (#198)
-- `3c88148d` 2026-10-22 — Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)
 
 ---
 

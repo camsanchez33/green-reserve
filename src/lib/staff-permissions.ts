@@ -16,7 +16,7 @@ export type PermissionKey =
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
   | 'analytics.view' | 'messages.use' | 'settings.edit'
-  | 'shop.sell' | 'shop.catalog'
+  | 'shop.sell' | 'shop.discount' | 'shop.catalog'
   | 'events.manage';
 
 export interface PermissionDef {
@@ -50,7 +50,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'sheet.golfer_contact', group: 'Tee sheet', label: 'See golfer email and phone', help: 'Shows contact details on the sheet and in bookings.' },
   { key: 'money.cancellations', group: 'Money', label: 'See cancellations', help: 'The list of cancelled bookings and any fees kept.' },
   { key: 'money.payments', group: 'Money', label: 'See payments', help: 'What was charged, per booking and in total.' },
-  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund a charge back to the golfer’s card.', requires: ['money.payments'], movesMoney: true },
+  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund a charge back to the golfer’s card, and refund pro shop sales.', requires: ['money.payments'], movesMoney: true },
   { key: 'money.charge_fee', group: 'Money', label: 'Charge a fee by hand', help: 'Charge a late or no-show fee to the card on file.', movesMoney: true },
   { key: 'money.payouts', group: 'Money', label: 'See payouts', help: 'What Stripe has paid out to the course.' },
   { key: 'members.view', group: 'Members', label: 'See members', help: 'The member list and who is paid up.' },
@@ -59,6 +59,8 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'schedule.edit', group: 'Schedule', label: 'Edit the schedule', help: 'Change schedules and rates, block whole days, rebuild the sheet.', requires: ['schedule.view'] },
   // POS-1a (Cam 2026-10-08): pro-shop items charged with the round.
   { key: 'shop.sell', group: 'Pro shop', label: 'Sell from the pro shop', help: 'Add shop items to a group’s round, and ring up walk-up sales paid in cash or by a pay link.' },
+  // POS-3 (Cam 2026-10-24): money off a walk-up sale — Manager has it, Front desk doesn't.
+  { key: 'shop.discount', group: 'Pro shop', label: 'Give discounts', help: 'Take money off a walk-up sale (an amount or a percent), with a note saying why.', requires: ['shop.sell'], movesMoney: true },
   { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop.', requires: ['settings.edit'] },
   // W2-9 (Cam 2026-10-22): owner + staff given it; Manager has it, Front desk doesn't.
   { key: 'events.manage', group: 'Events', label: 'Run events', help: 'Set up outings and tournaments, hold their tee times, keep the checklist and the player list.' },

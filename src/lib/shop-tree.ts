@@ -26,3 +26,18 @@ export function stockOf(i: TreeItem): number | null {
   const counted = i.options.filter(o => o.active && o.stockCount !== null);
   return counted.length ? counted.reduce((s, o) => s + (o.stockCount ?? 0), 0) : null;
 }
+
+/**
+ * POS-3: a barcode scanner types the code and presses Enter. The one sellable
+ * item (active, no options of its own, under an active parent) whose SKU is
+ * exactly that code, or null — never a guess between two.
+ */
+export function bySku(items: FlatItem[], code: string): FlatItem | null {
+  const c = code.trim().toLowerCase();
+  if (!c) return null;
+  const parents = new Map(items.filter(i => !i.parentId).map(i => [i.id, i]));
+  const hasKids = new Set(items.filter(i => i.parentId).map(i => i.parentId as string));
+  const hits = items.filter(i => i.active && i.sku.trim().toLowerCase() === c && !hasKids.has(i.id)
+    && (!i.parentId || parents.get(i.parentId)?.active !== false));
+  return hits.length === 1 ? hits[0] : null;
+}

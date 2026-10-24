@@ -15,7 +15,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 const cardStyle = { style: { base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } }, invalid: { color: '#A3452F' } } };
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
-type Sale = { status: 'open' | 'paid_cash' | 'paid_card' | 'void'; totalCents: number; taxCents?: number; courseName: string; brandColor: string; logoUrl: string; lines: { name: string; unitPriceCents: number; quantity: number }[] };
+type Sale = { status: 'open' | 'paid_cash' | 'paid_card' | 'void'; totalCents: number; taxCents?: number; discountCents?: number; discountNote?: string; courseName: string; brandColor: string; logoUrl: string; lines: { name: string; unitPriceCents: number; quantity: number }[] };
 
 function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; token: string; sale: Sale; onPaid: () => void; onError: (m: string) => void }) {
   const stripe = useStripe();
@@ -120,6 +120,7 @@ function PayShopInner() {
             {sale.lines.map((l, i) => (
               <li key={i} className="flex justify-between gap-3 py-2"><span className="text-ink">{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span><span className="tabular-nums text-ink">{usd(l.unitPriceCents * l.quantity)}</span></li>
             ))}
+            {!!sale.discountCents && <li className="flex justify-between gap-3 py-2 text-ink-soft"><span>Discount{sale.discountNote ? ` (${sale.discountNote})` : ''}</span><span className="tabular-nums">−{usd(sale.discountCents)}</span></li>}
             {!!sale.taxCents && <li className="flex justify-between gap-3 py-2 text-ink-soft"><span>Sales tax</span><span className="tabular-nums">{usd(sale.taxCents)}</span></li>}
             <li className="flex justify-between gap-3 py-2.5 font-semibold"><span className="text-ink">Total</span><span className="tabular-nums text-ink">{usd(sale.totalCents)}</span></li>
           </ul>

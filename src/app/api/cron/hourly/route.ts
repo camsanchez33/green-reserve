@@ -17,6 +17,7 @@ import { retryMissingAgreementPdfs } from '@/lib/agreement-sign';
 import { sendAgreementBumpNotices } from '@/lib/agreement-required';
 import { sendCallReminders } from '@/lib/call-invite';
 import { recordPendingShopTax } from '@/lib/sales-tax';
+import { reversePendingShopRefundTax } from '@/lib/shop-sales';
 import { recordPendingRoundShopTax } from '@/lib/round-shop-tax';
 import { runAdminChecks } from '@/lib/admin-checks';
 
@@ -242,6 +243,9 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   // ─── 7: W2-7 part B — record sales tax for paid pro-shop sales still missing it ──
   let shopTaxRecorded = 0;
   try { shopTaxRecorded = await recordPendingShopTax(); } catch (err) { console.error('Shop sales tax recording failed:', err); }
+  // POS-3: and take refunded walk-up sales off it (after the recording above, which a reversal needs).
+  let shopTaxReversed = 0;
+  try { shopTaxReversed = await reversePendingShopRefundTax(); } catch (err) { console.error('Shop refund tax reversal failed:', err); }
   // W2-7 B2: and for paid rounds whose shop items carried sales tax.
   let roundShopTaxRecorded = 0;
   try { roundShopTaxRecorded = await recordPendingRoundShopTax(); } catch (err) { console.error('Round shop-item sales tax recording failed:', err); }
@@ -249,5 +253,5 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
   // ─── 8: AW-5 — the admin's urgent alerts and the morning digest (last: it only reads, and never blocks the steps above) ──
   const adminChecks = await runAdminChecks(now);
 
-  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, roundShopTaxRecorded, adminChecks });
+  return NextResponse.json({ success: true, ...results, agreementPdfs, agreementNotices, callReminders, shopTaxRecorded, shopTaxReversed, roundShopTaxRecorded, adminChecks });
 });

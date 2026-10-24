@@ -4,7 +4,7 @@
     "files": 540,
     "routes": 259,
     "libs": 177,
-    "models": 55,
+    "models": 56,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -4034,7 +4034,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 254,
+      "lines": 258,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4069,6 +4069,7 @@
         "@/lib/prisma",
         "@/lib/round-shop-tax",
         "@/lib/sales-tax",
+        "@/lib/shop-sales",
         "@/lib/stripe",
         "@/lib/tee-time-utils",
         "next/server"
@@ -6313,7 +6314,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/quote/route.ts",
-      "lines": 19,
+      "lines": 21,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6339,7 +6340,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 147,
+      "lines": 202,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7990,7 +7991,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 288,
+      "lines": 497,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -8536,7 +8537,7 @@
     },
     {
       "path": "src/app/pay/shop/[id]/page.tsx",
-      "lines": 142,
+      "lines": 143,
       "purpose": "POS-2 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -12514,7 +12515,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 535,
+      "lines": 552,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -12549,6 +12550,10 @@
         {
           "name": "RES_START",
           "kind": "const"
+        },
+        {
+          "name": "walkUpNet",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -15582,7 +15587,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2149,
+      "lines": 2179,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15852,6 +15857,10 @@
         },
         {
           "name": "sendReminderEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendShopReceiptEmail",
           "kind": "fn"
         },
         {
@@ -19621,7 +19630,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 317,
+      "lines": 554,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -19635,6 +19644,18 @@
         },
         {
           "name": "createSale",
+          "kind": "fn"
+        },
+        {
+          "name": "discountFor",
+          "kind": "fn"
+        },
+        {
+          "name": "DiscountInput",
+          "kind": "type"
+        },
+        {
+          "name": "hasDiscount",
           "kind": "fn"
         },
         {
@@ -19654,6 +19675,26 @@
           "kind": "fn"
         },
         {
+          "name": "refundSale",
+          "kind": "fn"
+        },
+        {
+          "name": "RefundView",
+          "kind": "type"
+        },
+        {
+          "name": "reversePendingShopRefundTax",
+          "kind": "fn"
+        },
+        {
+          "name": "reverseShopRefundTax",
+          "kind": "fn"
+        },
+        {
+          "name": "SALE_INCLUDE",
+          "kind": "const"
+        },
+        {
           "name": "saleForPayPage",
           "kind": "fn"
         },
@@ -19670,7 +19711,15 @@
           "kind": "type"
         },
         {
+          "name": "sendShopRefund",
+          "kind": "fn"
+        },
+        {
           "name": "settleOpenSale",
+          "kind": "fn"
+        },
+        {
+          "name": "spreadDiscount",
           "kind": "fn"
         },
         {
@@ -19696,6 +19745,7 @@
         "stripe"
       ],
       "usedBy": [
+        "src/app/api/cron/hourly/route.ts",
         "src/app/api/operator/shop-sales/quote/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/shop-sale/[id]/route.ts"
@@ -19703,10 +19753,14 @@
     },
     {
       "path": "src/lib/shop-tree.ts",
-      "lines": 29,
+      "lines": 44,
       "purpose": "W2-7:",
       "brain": [],
       "exports": [
+        {
+          "name": "bySku",
+          "kind": "fn"
+        },
         {
           "name": "FlatItem",
           "kind": "type"
@@ -19867,7 +19921,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 138,
+      "lines": 140,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -24988,11 +25042,36 @@
           "type": "DateTime"
         },
         {
+          "name": "discountCents",
+          "type": "Int"
+        },
+        {
+          "name": "discountNote",
+          "type": "String"
+        },
+        {
+          "name": "cashTenderedCents",
+          "type": "Int?"
+        },
+        {
+          "name": "refundedCents",
+          "type": "Int"
+        },
+        {
+          "name": "receiptSentAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "refunds",
+          "type": "ShopSaleRefund[]"
+        },
+        {
           "name": "lines",
           "type": "ShopSaleLine[]"
         }
       ],
       "writers": [
+        "src/app/api/operator/shop-sales/route.ts",
         "src/lib/data-reset.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
@@ -25043,6 +25122,74 @@
       ],
       "writers": [],
       "readers": []
+    },
+    {
+      "name": "ShopSaleRefund",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "saleId",
+          "type": "String"
+        },
+        {
+          "name": "sale",
+          "type": "ShopSale"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "amountCents",
+          "type": "Int"
+        },
+        {
+          "name": "method",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "stripeRefundId",
+          "type": "String"
+        },
+        {
+          "name": "taxReversalId",
+          "type": "String"
+        },
+        {
+          "name": "reason",
+          "type": "String"
+        },
+        {
+          "name": "restocked",
+          "type": "Boolean"
+        },
+        {
+          "name": "error",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/shop-sales.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/shop-sales.ts"
+      ]
     },
     {
       "name": "StaffPermissionChange",
