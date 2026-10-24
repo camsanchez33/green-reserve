@@ -35,6 +35,7 @@ function toForm(d: EventData): EventForm {
     organizerName: e.organizerName, organizerEmail: e.organizerEmail, organizerPhone: e.organizerPhone,
     pricePerPlayer: e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '', includes: e.includes, terms: e.terms, notes: e.notes,
     payer: e.payer === 'organizer' || e.payer === 'players' ? e.payer : '',
+    guaranteeDaysBefore: e.guaranteeDaysBefore != null ? String(e.guaranteeDaysBefore) : '',
   };
 }
 

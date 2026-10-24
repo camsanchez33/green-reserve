@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
+import { addDaysStr } from '@/lib/course-time';
 
 export type EventForm = {
   name: string; kind: string; date: string; format: 'shotgun' | 'tee_times'; startTime: string; holes: number;
@@ -19,6 +20,8 @@ export type EventForm = {
   pricePerPlayer: string; includes: string[]; terms: string; notes: string;
   /** Cam 2026-10-24: who pays the course — one organizer, or each player on the sign-up page. '' = not chosen yet. */
   payer: '' | 'organizer' | 'players';
+  /** Organizer events: the guaranteed headcount is due this many days before; '' = not asked for. */
+  guaranteeDaysBefore: string;
 };
 type Preview = { holdFrom: string; holdTo: string; teeTimes: number; teeTimesFound: number | null; booked: { time: string; golfers: string }[]; otherEvent: boolean; windowTimes: string[] };
 export type NineOpt = { id: string; name: string };
@@ -42,7 +45,7 @@ const STEPS = ['What it is', 'When', 'Who and what', 'Review'];
 
 export const blankForm = (date: string): EventForm => ({
   name: '', kind: 'outing', date, format: 'shotgun', startTime: '08:00', holes: 18, groups: '', players: '', productId: '', holdTo: '', shareCourse: false, holdNineIds: [], keepOpen: [],
-  organizerName: '', organizerEmail: '', organizerPhone: '', pricePerPlayer: '', includes: [], terms: '', notes: '', payer: '',
+  organizerName: '', organizerEmail: '', organizerPhone: '', pricePerPlayer: '', includes: [], terms: '', notes: '', payer: '', guaranteeDaysBefore: '7',
 });
 
 const LABEL = 'block text-[13px] font-medium text-ink mb-1.5';
@@ -80,6 +83,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
       if (f.format === 'tee_times' && !(Number(f.groups) > 0)) return 'How many groups go off? It sets how many tee times are held.';
     }
     if (s === 2 && !f.payer) return 'Say who pays the course: the organizer, or each player.';
+    if (s === 2 && f.payer === 'organizer' && f.guaranteeDaysBefore !== '' && !(Number.isInteger(Number(f.guaranteeDaysBefore)) && Number(f.guaranteeDaysBefore) >= 1 && Number(f.guaranteeDaysBefore) <= 60)) return 'The headcount deadline has to be 1 to 60 days before the event.';
     return '';
   }
 
@@ -249,6 +253,16 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
               </label>
             ))}
           </fieldset>
+          {f.payer === 'organizer' && (
+            <div>
+              <label className="flex flex-wrap items-center gap-2 text-[13.5px] text-ink">
+                <span className="font-medium">Guaranteed headcount due</span>
+                <input type="number" min={1} max={60} inputMode="numeric" className={INPUT + ' w-20'} value={f.guaranteeDaysBefore} onChange={e => set('guaranteeDaysBefore', e.target.value)} aria-label="Days before the event" />
+                <span>days before the event</span>
+              </label>
+              <p className="text-[12.5px] text-ink-muted mt-1">The organizer gives you a number by then, and the balance is for at least that many players even if fewer come. Leave it blank if you don&apos;t ask for one.</p>
+            </div>
+          )}
           <fieldset className="space-y-3">
             <legend className="text-[15px] font-semibold text-ink mb-1">Organizer</legend>
             <label className="block"><span className={LABEL}>Name</span>
@@ -296,6 +310,7 @@ export default function EventSetup({ initial, eventId, products, nines, courseHo
               ['Organizer', [f.organizerName, f.organizerEmail, f.organizerPhone].filter(Boolean).join(' · ') || 'Not set yet'],
               ['Price', f.pricePerPlayer ? `$${Number(f.pricePerPlayer).toFixed(2)} per player` : 'Not set yet'],
               ['Who pays', PAYERS.find(p => p.key === f.payer)?.label ?? 'Not chosen yet'],
+              ...(f.payer === 'organizer' ? [['Headcount due', f.guaranteeDaysBefore ? `${f.guaranteeDaysBefore} day${f.guaranteeDaysBefore === '1' ? '' : 's'} before — ${formatTeeDay(addDaysStr(f.date, -Number(f.guaranteeDaysBefore)))}` : 'Not asked for']] : []),
               ['Included', f.includes.join(', ') || 'Nothing listed'],
             ].map(([k, v]) => (
               <div key={k} className="grid grid-cols-[110px_1fr] gap-3 py-2"><span className="text-ink-muted">{k}</span><span className="text-ink">{v}</span></div>

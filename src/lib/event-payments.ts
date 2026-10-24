@@ -51,10 +51,15 @@ export function eventFeeFor(kind: string, headcount: number | null, on: boolean 
   return kind === 'balance' && headcount && headcount > 0 ? headcount * ACCESS_FEE_CENTS : 0;
 }
 
-/** Pure: where an event's money stands. Only paid payments count; refunds come off. */
-export function eventMoney(e: { pricePerPlayerCents: number; finalHeadcount: number | null; players: number; entrants: number },
+/**
+ * Pure: where an event's money stands. Only paid payments count; refunds come off.
+ * Until a balance confirms the headcount, an organizer's guarantee is the floor:
+ * the higher of the guarantee and the players on the list (Cam 2026-10-24).
+ */
+export function eventMoney(e: { pricePerPlayerCents: number; finalHeadcount: number | null; players: number; entrants: number; payer?: string; guaranteedPlayers?: number | null },
   payments: { status: string; amountCents: number; refundedCents: number }[]) {
-  const headcount = e.finalHeadcount ?? (e.entrants || e.players);
+  const guaranteed = e.payer !== 'players' ? e.guaranteedPlayers ?? null : null;
+  const headcount = e.finalHeadcount ?? (guaranteed != null ? Math.max(guaranteed, e.entrants) : (e.entrants || e.players));
   const totalCents = e.pricePerPlayerCents * headcount;
   const paidCents = payments.filter(p => p.status === 'paid').reduce((n, p) => n + p.amountCents, 0);
   const refundedCents = payments.filter(p => p.status === 'paid').reduce((n, p) => n + p.refundedCents, 0);

@@ -5376,7 +5376,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 289,
+      "lines": 296,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7539,7 +7539,7 @@
     },
     {
       "path": "src/app/dashboard/events/page.tsx",
-      "lines": 175,
+      "lines": 176,
       "purpose": "W2-9 Events (Cam 2026-10-21/22):",
       "brain": [],
       "exports": [
@@ -10164,7 +10164,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 369,
+      "lines": 374,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -10212,7 +10212,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventMoney.tsx",
-      "lines": 268,
+      "lines": 315,
       "purpose": "W2-9b:",
       "brain": [],
       "exports": [
@@ -10226,6 +10226,10 @@
         },
         {
           "name": "EventRefund",
+          "kind": "type"
+        },
+        {
+          "name": "Guarantee",
           "kind": "type"
         },
         {
@@ -10243,6 +10247,7 @@
         "@/components/ui/StatusDot",
         "@/components/ui/field",
         "@/lib/dashboard-fetch",
+        "@/lib/format",
         "react"
       ],
       "usedBy": [
@@ -10251,7 +10256,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventSetup.tsx",
-      "lines": 364,
+      "lines": 379,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -10292,6 +10297,7 @@
       "imports": [
         "@/components/ui/Card",
         "@/components/ui/field",
+        "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "react"
@@ -14336,7 +14342,7 @@
     },
     {
       "path": "src/lib/course-events.ts",
-      "lines": 332,
+      "lines": 378,
       "purpose": "W2-9 Events (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -14385,6 +14391,14 @@
           "kind": "type"
         },
         {
+          "name": "guaranteeDue",
+          "kind": "fn"
+        },
+        {
+          "name": "HEADCOUNT_TASK",
+          "kind": "const"
+        },
+        {
           "name": "heldBy",
           "kind": "reexport"
         },
@@ -14414,6 +14428,10 @@
         },
         {
           "name": "releaseHold",
+          "kind": "fn"
+        },
+        {
+          "name": "setGuarantee",
           "kind": "fn"
         },
         {
@@ -14925,6 +14943,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/g/[slug]/page.tsx",
+        "src/components/dashboard/events/EventSetup.tsx",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-course-tabs.ts",
         "src/lib/admin-home.ts",
@@ -15976,7 +15995,7 @@
     },
     {
       "path": "src/lib/event-payments.ts",
-      "lines": 451,
+      "lines": 456,
       "purpose": "W2-9b (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -16430,6 +16449,7 @@
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
+        "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
@@ -22693,6 +22713,22 @@
         },
         {
           "name": "payer",
+          "type": "String"
+        },
+        {
+          "name": "guaranteeDaysBefore",
+          "type": "Int?"
+        },
+        {
+          "name": "guaranteedPlayers",
+          "type": "Int?"
+        },
+        {
+          "name": "guaranteedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "guaranteedBy",
           "type": "String"
         },
         {
