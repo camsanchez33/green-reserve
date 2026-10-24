@@ -49,7 +49,7 @@ check('reopening a closed day rebuilds it', bo.includes('await generateTeeTimes(
 const prev = readFileSync('src/app/api/operator/schedule/preview/route.ts', 'utf8');
 check('the preview needs the edit permission and writes nothing', prev.includes("requirePermission(session, 'schedule.edit')") && !/prisma\.\w+\.(create|update|delete)/.test(readFileSync('src/lib/schedule-preview.ts', 'utf8')));
 check('rounds are switched on through setRoundSale (prices every column; tested in course-plan-test)', page.includes('setRoundSale(p, key, patch, defaultCell)'));
-check('walking is set per round, so a cart-required course stays cart-only', page.includes('Golfers can walk') && page.includes('walk: e.target.checked'));
+check('walking is set per price cell, weekday and weekend (CART-1)', page.includes("label: 'Can walk'") && page.includes('walkPair(r.key, col)') && !page.includes('Golfers can walk'));
 check('the editor stacks on phones', !page.includes('<div className="grid grid-cols-3 gap-3">'));
 check('closing a day never tries to delete a row with cancelled bookings', bo.includes('bookings: { none: {} }'));
 check('reopening a past day does not regenerate it', bo.includes('if (blackout.date < todayIn(course?.timezone))'));

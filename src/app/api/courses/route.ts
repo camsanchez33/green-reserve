@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   const dbCourses = await prisma.course.findMany({
     where,
-    include: { schedules: { where: { active: true }, select: { greenFeeWeekdayCents: true } } },
+    include: { schedules: { where: { active: true }, select: { greenFeeWeekdayCents: true, walkingAllowed: true, walkingWeekend: true } } },
     orderBy: [{ featured: 'desc' }, { rating: 'desc' }],
   });
 

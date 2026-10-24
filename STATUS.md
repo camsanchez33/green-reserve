@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 01:59 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fbacc529` · working tree **13 dirty file(s)**
+Generated 2026-10-24 03:00 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6d7bf2a5` · working tree **30 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 18 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 19 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `6d7bf2a5` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
 | `fbacc529` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
 | `592f05f4` | 2026-10-24 | schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday |
 | `4b6af6fe` | 2026-10-24 | contact-email-test: spacing |
@@ -33,21 +34,28 @@ Generated 2026-10-24 01:59 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (30 file(s))
 
 - `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M prisma/schema.prisma`
-- `M scripts/events-db-test.ts`
-- `M src/app/api/operator/events/[id]/route.ts`
-- `M src/app/dashboard/events/page.tsx`
-- `M src/components/dashboard/events/EventDetail.tsx`
-- `M src/components/dashboard/events/EventMoney.tsx`
-- `M src/components/dashboard/events/EventSetup.tsx`
-- `M src/lib/course-events.ts`
-- `M src/lib/event-payments.ts`
-- `?? prisma/migrations/20261024020000_event_guarantee/`
+- `M scripts/birdie-isolation-test.ts`
+- `M scripts/booking-rules-test.ts`
+- `M scripts/course-plan-test.ts`
+- `M scripts/round-rules-test.ts`
+- `M scripts/schedule-rework-test.ts`
+- `M src/app/api/bookings/route.ts`
+- `M src/app/api/courses/route.ts`
+- `M src/app/api/member/[courseSlug]/tee-times/route.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/round-rules/route.ts`
+- `M src/app/api/preview/[courseId]/route.ts`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/components/dashboard/RoundRulesCard.tsx`
+- `M src/lib/birdie/course-context.ts`
+- `M src/lib/booking-rules.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -142,35 +150,36 @@ This is the distinction a raw checkbox count gets wrong.
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 15d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 15d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 15d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 15d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 16d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 16d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 16d |
 
 ## Recent commits
 
+- `6d7bf2a5` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
 - `fbacc529` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
 - `592f05f4` 2026-10-24 — schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday
 - `4b6af6fe` 2026-10-24 — contact-email-test: spacing
@@ -182,7 +191,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `3148eed2` 2026-10-22 — Money: Needs you — declined cards with a pay link (DASH-C) (#198)
 - `3c88148d` 2026-10-22 — Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)
 - `946d4a54` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
-- `a5789298` 2026-10-23 — Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line
 
 ---
 

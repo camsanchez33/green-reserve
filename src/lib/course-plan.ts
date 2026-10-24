@@ -8,8 +8,10 @@
 //      two times (back nine in the morning, front nine at twilight).
 //   3. What it costs — ONE price table: a row per round, a column per price
 //      change ("All day", then "+ Add a price change" from a time). Each cell
-//      has weekday / weekend, a cart price, and member / resident prices when
-//      the course has them. Price-change names are automatic from the start
+//      has weekday / weekend green fees, a weekday / weekend cart price,
+//      whether golfers can walk (weekday / weekend — CART-1, Cam 2026-10-24:
+//      "flexible based on the holes, time…"), and member / resident prices
+//      when the course has them. Price-change names are automatic from the start
 //      time (Morning / Midday / Afternoon / Twilight) and can be renamed.
 //
 // Stored, nothing changes: compilePlan() turns the plan into TeeTimeSchedule
@@ -21,14 +23,18 @@ import { checkSchedule, type ConflictProduct, type ConflictNine } from './schedu
 export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 export type PriceCell = {
-  weekday: number; weekend: number; cart: number;
+  weekday: number; weekend: number;
+  /** Cart price per rider, weekday and weekend. */
+  cart: number; cartWeekend: number;
+  /** Golfers may walk (else a cart is required and charged), weekday and weekend. */
+  walk: boolean; walkWeekend: boolean;
   memberWeekday: number | null; memberWeekend: number | null;
   residentWeekday: number | null; residentWeekend: number | null;
 };
 
 /** A round golfers can book. key = its CourseProduct id, '' for a course with no named rounds.
- *  walk: golfers may walk it; false = a cart is required (and charged) on every tee time. */
-export type RoundSale = { key: string; on: boolean; from: string | null; to: string | null; walk: boolean };
+ *  Walking is per price cell (CART-1), not per round. */
+export type RoundSale = { key: string; on: boolean; from: string | null; to: string | null };
 
 export type DayPlan = {
   /** Empty on the usual week: it covers every day no other plan claims. */
@@ -50,8 +56,8 @@ export type PlanRound = { key: string; label: string; holes: number };
 /** A row as compilePlan makes it — the shape PUT /api/operator/schedule writes (dollars). */
 export type CompiledRow = {
   productId: string | null; daysOfWeek: number[]; startTime: string; endTime: string;
-  intervalMinutes: number; holes: number; tierName: string; walkingAllowed: boolean; active: true;
-  greenFeeWeekday: number; greenFeeWeekend: number; cartFee: number;
+  intervalMinutes: number; holes: number; tierName: string; walkingAllowed: boolean; walkingWeekend: boolean; active: true;
+  greenFeeWeekday: number; greenFeeWeekend: number; cartFee: number; cartFeeWeekend: number;
   memberRateWeekday: number | null; memberRateWeekend: number | null;
   residentRateWeekday: number | null; residentRateWeekend: number | null;
 };
@@ -87,7 +93,7 @@ export function daysOf(plan: CoursePlan, d: DayPlan): number[] {
   return ALL_DAYS.filter(x => !taken.has(x));
 }
 
-export const emptyCell = (): PriceCell => ({ weekday: 0, weekend: 0, cart: 0, memberWeekday: null, memberWeekend: null, residentWeekday: null, residentWeekend: null });
+export const emptyCell = (): PriceCell => ({ weekday: 0, weekend: 0, cart: 0, cartWeekend: 0, walk: true, walkWeekend: true, memberWeekday: null, memberWeekend: null, residentWeekday: null, residentWeekend: null });
 
 /** Null when the plan can be saved, else the sentence to show. */
 export function checkPlan(plan: CoursePlan, rounds: PlanRound[]): string | null {
@@ -122,7 +128,7 @@ export function checkPlan(plan: CoursePlan, rounds: PlanRound[]): string | null 
       const cells = d.prices[r.key];
       if (!cells || cells.length !== d.changes.length + 1) return 'Fill in a price for every round and price change.';
       const okOpt = (v: number | null) => v == null || (typeof v === 'number' && v >= 0);
-      if (cells.some(c => !(c.weekday >= 0) || !(c.weekend >= 0) || !(c.cart >= 0)
+      if (cells.some(c => !(c.weekday >= 0) || !(c.weekend >= 0) || !(c.cart >= 0) || !((c.cartWeekend ?? c.cart) >= 0)
         || !okOpt(c.memberWeekday) || !okOpt(c.memberWeekend) || !okOpt(c.residentWeekday) || !okOpt(c.residentWeekend))) return 'Prices can’t be negative.';
     }
   }
@@ -150,8 +156,10 @@ export function compilePlan(plan: CoursePlan, rounds: PlanRound[]): CompiledRow[
         const cell = d.prices[r.key]?.[i] ?? emptyCell();
         rows.push({
           productId: r.key || null, daysOfWeek: days, startTime: s, endTime: e, intervalMinutes: d.interval,
-          holes: round.holes, tierName: names[i], walkingAllowed: r.walk !== false, active: true,
-          greenFeeWeekday: cell.weekday, greenFeeWeekend: cell.weekend, cartFee: cell.cart,
+          holes: round.holes, tierName: names[i], active: true,
+          // A cell from an older page may lack the weekend values: they follow the weekday ones.
+          walkingAllowed: cell.walk !== false, walkingWeekend: (cell.walkWeekend ?? cell.walk) !== false,
+          greenFeeWeekday: cell.weekday, greenFeeWeekend: cell.weekend, cartFee: cell.cart, cartFeeWeekend: cell.cartWeekend ?? cell.cart,
           memberRateWeekday: cell.memberWeekday, memberRateWeekend: cell.memberWeekend,
           residentRateWeekday: cell.residentWeekday, residentRateWeekend: cell.residentWeekend,
         });
@@ -161,10 +169,11 @@ export function compilePlan(plan: CoursePlan, rounds: PlanRound[]): CompiledRow[
   return rows;
 }
 
-type StoredRow = Omit<CompiledRow, 'active'> & { active: boolean };
+type StoredRow = Omit<CompiledRow, 'active' | 'walkingWeekend' | 'cartFeeWeekend'> & { active: boolean; walkingWeekend?: boolean | null; cartFeeWeekend?: number | null };
 
 const cellOf = (r: StoredRow): PriceCell => ({
-  weekday: r.greenFeeWeekday, weekend: r.greenFeeWeekend, cart: r.cartFee,
+  weekday: r.greenFeeWeekday, weekend: r.greenFeeWeekend, cart: r.cartFee, cartWeekend: r.cartFeeWeekend ?? r.cartFee,
+  walk: r.walkingAllowed !== false, walkWeekend: (r.walkingWeekend ?? r.walkingAllowed) !== false,
   memberWeekday: r.memberRateWeekday, memberWeekend: r.memberRateWeekend,
   residentWeekday: r.residentRateWeekday, residentWeekend: r.residentRateWeekend,
 });
@@ -172,8 +181,8 @@ const cellOf = (r: StoredRow): PriceCell => ({
 /** A blank plan: the usual week 7:00–5:00 every 8 minutes, every round on all day. */
 export function blankPlan(rounds: PlanRound[]): CoursePlan {
   const usual: DayPlan = { days: [], closed: false, first: '07:00', last: '17:00', interval: 8, changes: [], firstName: null, prices: {} };
-  for (const r of rounds) usual.prices[r.key] = [{ ...emptyCell(), weekday: r.holes <= 9 ? 30 : 55, weekend: r.holes <= 9 ? 35 : 65, cart: r.holes <= 9 ? 12 : 20 }];
-  return { rounds: rounds.map(r => ({ key: r.key, on: true, from: null, to: null, walk: true })), usual, different: [] };
+  for (const r of rounds) usual.prices[r.key] = [{ ...emptyCell(), weekday: r.holes <= 9 ? 30 : 55, weekend: r.holes <= 9 ? 35 : 65, cart: r.holes <= 9 ? 12 : 20, cartWeekend: r.holes <= 9 ? 12 : 20 }];
+  return { rounds: rounds.map(r => ({ key: r.key, on: true, from: null, to: null })), usual, different: [] };
 }
 
 /**
@@ -238,10 +247,8 @@ export function readPlan(stored: StoredRow[], rounds: PlanRound[]): CoursePlan {
   // Rounds: on when they have rows; sold window from their first to last row on the usual week.
   const roundSales: RoundSale[] = rounds.map(r => {
     const w = windows.get(r.key);
-    if (!w) return { key: r.key, on: false, from: null, to: null, walk: true };
-    // Walkable only when every one of its rows is (one cart-only row means the course requires carts on it).
-    const walk = rows.filter(x => keyOf(x) === r.key).every(x => x.walkingAllowed !== false);
-    return { key: r.key, on: true, from: w.from > usual.first ? w.from : null, to: w.to < usual.last ? w.to : null, walk };
+    if (!w) return { key: r.key, on: false, from: null, to: null };
+    return { key: r.key, on: true, from: w.from > usual.first ? w.from : null, to: w.to < usual.last ? w.to : null };
   });
   // Every sold round needs a cell in every column of every plan.
   for (const d of [usual, ...different]) {

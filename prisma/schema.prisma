@@ -635,6 +635,10 @@ model TeeTimeSchedule {
   residentRateWeekendCents Int?
   cartFeeCents             Int            @default(0)
   walkingAllowed           Boolean        @default(true)
+  /// CART-1 (Cam 2026-10-24): weekend cart price and walking; null = the same as weekdays.
+  /// cartFeeCents / walkingAllowed are the weekday values.
+  cartFeeWeekendCents      Int?
+  walkingWeekend           Boolean?
   active                   Boolean        @default(true)
   createdAt                DateTime       @default(now())
   /// L2: which bookable product this schedule generates slots for. Null = the

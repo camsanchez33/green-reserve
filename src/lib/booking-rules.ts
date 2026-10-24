@@ -4,21 +4,16 @@
 // course's rule, unless the round (CourseProduct) sets its own. Pure — the
 // booking route, the public tee-time list and the party-size change all use it.
 //
-// Walking: Course.walkingAllowed is 'always' | 'weekdays' | 'after12' | 'never',
-// and Course.cartRequired forces a cart everywhere. A round's walkingPolicy
-// (same words) replaces both for that round. A schedule's own "Golfers can
-// walk" box (TeeTime.walkingAllowed) can only take walking away.
+// Walking (CART-1, Cam 2026-10-24: walking moves into the price table): each
+// tee time says itself whether golfers may walk (TeeTime.walkingAllowed, from
+// its price-table cell, weekday or weekend). The old course-wide word
+// (Course.walkingAllowed / cartRequired) and a round's walkingPolicy are no
+// longer read for booking.
 
-export const WALKING_POLICIES = ['always', 'weekdays', 'after12', 'never'] as const;
-export type WalkingPolicy = typeof WALKING_POLICIES[number];
-export const isWalkingPolicy = (v: unknown): v is WalkingPolicy => typeof v === 'string' && (WALKING_POLICIES as readonly string[]).includes(v);
-
-export type RuleCourse = { walkingAllowed?: string | null; cartRequired?: boolean | null; minPlayers?: number | null; maxPlayers?: number | null; publicAdvanceDays?: number | null };
-export type RuleRound = { walkingPolicy?: string | null; minPlayers?: number | null; maxPlayers?: number | null; publicAdvanceDays?: number | null } | null | undefined;
+export type RuleCourse = { minPlayers?: number | null; maxPlayers?: number | null; publicAdvanceDays?: number | null };
+export type RuleRound = { minPlayers?: number | null; maxPlayers?: number | null; publicAdvanceDays?: number | null } | null | undefined;
 
 export type Rules = {
-  walking: WalkingPolicy;   // the policy that applies
-  cartAlways: boolean;      // the course forces a cart and the round doesn't say otherwise
   minPlayers: number;
   maxPlayers: number;
   publicAdvanceDays: number;
@@ -27,13 +22,9 @@ export type Rules = {
 const DEFAULT_PUBLIC_DAYS = 7;
 
 export function rulesFor(course: RuleCourse, round?: RuleRound): Rules {
-  const own = round && isWalkingPolicy(round.walkingPolicy) ? round.walkingPolicy : null;
-  const walking: WalkingPolicy = own ?? (isWalkingPolicy(course.walkingAllowed) ? course.walkingAllowed : 'always');
   const minPlayers = clampPlayers(round?.minPlayers ?? course.minPlayers ?? 1);
   const maxPlayers = Math.max(minPlayers, clampPlayers(round?.maxPlayers ?? course.maxPlayers ?? 4));
   return {
-    walking,
-    cartAlways: !own && !!course.cartRequired,
     minPlayers, maxPlayers,
     // A round only shortens the course's window — even if the course's is lowered later.
     publicAdvanceDays: Math.min(round?.publicAdvanceDays ?? Infinity, course.publicAdvanceDays ?? DEFAULT_PUBLIC_DAYS),
@@ -41,15 +32,9 @@ export function rulesFor(course: RuleCourse, round?: RuleRound): Rules {
 }
 const clampPlayers = (n: number) => Math.min(8, Math.max(1, Math.round(Number(n) || 1)));
 
-/** Whether golfers may walk this tee time (date YYYY-MM-DD, time HH:MM, course-local). */
-export function walkingAllowedAt(r: Rules, slot: { date: string; time: string; walkingAllowed?: boolean | null }): boolean {
-  if (slot.walkingAllowed === false || r.cartAlways) return false;
-  switch (r.walking) {
-    case 'never': return false;
-    case 'after12': return slot.time >= '12:00';
-    case 'weekdays': { const d = new Date(`${slot.date}T12:00:00Z`).getUTCDay(); return d >= 1 && d <= 5; }
-    default: return true;
-  }
+/** Whether golfers may walk this tee time: its own price-table cell says (CART-1). */
+export function walkingAllowedAt(slot: { walkingAllowed?: boolean | null }): boolean {
+  return slot.walkingAllowed !== false;
 }
 
 /** The sentence to refuse a group size with, or null when it's allowed. */
@@ -61,14 +46,12 @@ export function groupSizeError(r: Rules, players: number): string | null {
 
 /** Validate a round's rules from the owner's form. Blank / null = the course's rule. */
 export function readRoundRules(body: Record<string, unknown>, course: RuleCourse):
-  { ok: true; data: { walkingPolicy: string | null; minPlayers: number | null; maxPlayers: number | null; publicAdvanceDays: number | null } } | { ok: false; error: string } {
+  { ok: true; data: { minPlayers: number | null; maxPlayers: number | null; publicAdvanceDays: number | null } } | { ok: false; error: string } {
   const opt = (v: unknown, lo: number, hi: number, what: string): number | null | string => {
     if (v === null || v === undefined || v === '') return null;
     const n = Number(v);
     return Number.isInteger(n) && n >= lo && n <= hi ? n : `${what} must be a whole number from ${lo} to ${hi}, or blank for the course's rule.`;
   };
-  const w = body.walkingPolicy;
-  if (!(w === null || w === undefined || w === '' || isWalkingPolicy(w))) return { ok: false, error: 'Pick when golfers can walk, or leave it as the course rule.' };
   const min = opt(body.minPlayers, 1, 8, 'Fewest players');
   const max = opt(body.maxPlayers, 1, 8, 'Most players');
   const days = opt(body.publicAdvanceDays, 1, 365, 'Days ahead');
@@ -77,7 +60,7 @@ export function readRoundRules(body: Record<string, unknown>, course: RuleCourse
   // window drives the date picker and how far ahead tee times are made.
   const courseDays = course.publicAdvanceDays ?? DEFAULT_PUBLIC_DAYS;
   if (typeof days === 'number' && days > courseDays) return { ok: false, error: `A round can open up to ${courseDays} days ahead — the course's own window. To open further ahead, change it in Settings → Booking rules first.` };
-  const data = { walkingPolicy: isWalkingPolicy(w) ? w : null, minPlayers: min as number | null, maxPlayers: max as number | null, publicAdvanceDays: days as number | null };
+  const data = { minPlayers: min as number | null, maxPlayers: max as number | null, publicAdvanceDays: days as number | null };
   if ((data.minPlayers ?? course.minPlayers ?? 1) > (data.maxPlayers ?? course.maxPlayers ?? 4)) return { ok: false, error: `The fewest players (${data.minPlayers ?? course.minPlayers}) can't be more than the most (${data.maxPlayers ?? course.maxPlayers}).` };
   return { ok: true, data };
 }

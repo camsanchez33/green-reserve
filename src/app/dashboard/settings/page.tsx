@@ -18,7 +18,6 @@ import { validatePasswordStrength, PASSWORD_REQUIREMENTS_HINT } from '@/lib/pass
 import { setLeaveGuard, useBackGuard } from '@/lib/unsaved-guard';
 import { downscaleImage } from '@/lib/image-resize';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { walkingWords } from '@/lib/walking';
 import { askBirdie, useBirdieReady, APPLIED_EVENT } from '@/lib/birdie/ask';
 import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityFields } from '@/lib/facilities';
 import Link from 'next/link';
@@ -123,13 +122,6 @@ const FACILITY_GROUPS: { title: string; items: { key: string; label: string }[] 
     { key: 'hasTournaments', label: 'Tournaments' },
   ] },
 ];
-// The four walking rules the settings API accepts, in golfers' words.
-const WALKING_CHOICES = [
-  { key: 'always', label: 'Golfers can walk any time' },
-  { key: 'weekdays', label: 'Walking on weekdays only' },
-  { key: 'after12', label: 'Walking after 12pm only' },
-  { key: 'never', label: 'Carts only — no walking' },
-] as const;
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -477,7 +469,6 @@ function SettingsPageInner() {
     const facts = [
       `${String(form.name ?? '')}${form.city ? `, ${form.city}, ${form.state}` : ''}`,
       `${form.type === 'private' ? 'Private' : 'Public'} course${form.holes ? `, ${form.holes} holes` : ''}${form.par ? `, par ${form.par}` : ''}${form.establishedYear ? `, opened ${form.establishedYear}` : ''}`,
-      walkingWords(form.walkingAllowed as string),
       facilityPreview.length ? `Facilities: ${facilityPreview.join('; ')}` : '',
     ].filter(Boolean).join('\n');
     // Birdie's box takes 1500 characters; the current text gets what the facts leave.
@@ -512,7 +503,6 @@ function SettingsPageInner() {
     clubRentalRateCents: cents$(form.clubRentalRate), pushCartRateCents: cents$(form.pushCartRate),
     caddieLooperRateCents: cents$(form.caddieLooperRate), caddieForeRateCents: cents$(form.caddieForeRate),
   });
-  const walking = WALKING_CHOICES.some(o => o.key === form.walkingAllowed) ? form.walkingAllowed as string : 'always';
 
   const goTo = (sec: Section) => { setActive(sec); document.querySelector('main')?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); };
   const missing = (v: unknown) => !String(v ?? '').trim();
@@ -820,27 +810,22 @@ function SettingsPageInner() {
                     <textarea value={dresscodes.join('\n')} onChange={e => set('dresscode', e.target.value.split('\n'))} rows={4}
                       placeholder={'Collared shirts\nNo denim\nSoft spikes only'} className={iCls + ' resize-none'}/>
                   </Field>
-                  <Field label="Walking">
-                    <div className="space-y-2">
-                      {WALKING_CHOICES.map(o => (
-                        <label key={o.key} className={'flex items-center gap-2.5 px-3 py-2 rounded-md border cursor-pointer bg-white text-sm text-ink ' + (walking === o.key ? 'border-pine/40' : 'border-line')}>
-                          <input type="radio" name="walking" checked={walking === o.key} onChange={() => set('walkingAllowed', o.key)} className="accent-pine"/>
-                          {o.label}
-                        </label>
-                      ))}
-                    </div>
-                  </Field>
-                  <Field label="Anything else about walking or carts" hint="Optional, one sentence.">
+                  {/* CART-1 (Cam 2026-10-24): when golfers can walk is set per round and time, beside the cart price. */}
+                  <p className="text-sm text-ink">When golfers can walk, and what a cart costs, is set for each round and time on{' '}
+                    <Link href="/dashboard/schedules" className="text-pine underline underline-offset-2">Schedule → What it costs</Link>.</p>
+                  <Field label="Anything else about walking or carts" hint="Optional, one sentence. Shown on your booking page.">
                     <FInput value={form.walkingNote as string} onChange={v=>set('walkingNote',v)} placeholder="e.g. Push carts are free at the pro shop." maxLength={500}/>
                   </Field>
                 </SectionCard>
                 <div className="xl:sticky xl:top-6">
                   <div className="text-[13px] font-semibold text-ink mb-2">On your booking page</div>
                   <Card className="p-4 space-y-3 text-sm">
-                    <div>
-                      <div className="text-[13px] font-semibold text-ink">Walking</div>
-                      <div className="text-ink">{walkingWords(walking)}{String(form.walkingNote ?? '').trim() ? ` ${String(form.walkingNote).trim()}` : ''}</div>
-                    </div>
+                    {String(form.walkingNote ?? '').trim() && (
+                      <div>
+                        <div className="text-[13px] font-semibold text-ink">Walking</div>
+                        <div className="text-ink">{String(form.walkingNote).trim()}</div>
+                      </div>
+                    )}
                     {dresscodeLines.length > 0 && (
                       <div>
                         <div className="text-[13px] font-semibold text-ink">Dress code</div>

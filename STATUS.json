@@ -1,29 +1,43 @@
 {
-  "generatedAt": "2026-10-24T01:59:41.128Z",
+  "generatedAt": "2026-10-24T03:00:05.851Z",
   "repo": {
-    "head": "fbacc529",
+    "head": "6d7bf2a5",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 13,
+    "dirtyCount": 30,
     "dirty": [
       "M OPERATOR_REWORK_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M prisma/schema.prisma",
-      " M scripts/events-db-test.ts",
-      " M src/app/api/operator/events/[id]/route.ts",
-      " M src/app/dashboard/events/page.tsx",
-      " M src/components/dashboard/events/EventDetail.tsx",
-      " M src/components/dashboard/events/EventMoney.tsx",
-      " M src/components/dashboard/events/EventSetup.tsx",
-      " M src/lib/course-events.ts",
-      " M src/lib/event-payments.ts",
-      "?? prisma/migrations/20261024020000_event_guarantee/"
+      " M scripts/birdie-isolation-test.ts",
+      " M scripts/booking-rules-test.ts",
+      " M scripts/course-plan-test.ts",
+      " M scripts/round-rules-test.ts",
+      " M scripts/schedule-rework-test.ts",
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/courses/route.ts",
+      " M src/app/api/member/[courseSlug]/tee-times/route.ts",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/round-rules/route.ts",
+      " M src/app/api/preview/[courseId]/route.ts",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/app/dashboard/settings/page.tsx",
+      " M src/components/dashboard/RoundRulesCard.tsx",
+      " M src/lib/birdie/course-context.ts",
+      " M src/lib/booking-rules.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "6d7bf2a5",
+        "date": "2026-10-23T22:07:29-04:00",
+        "subject": "Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "fbacc529",
         "date": "2026-10-23T21:36:46-04:00",
@@ -380,161 +394,166 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 15
+      "ageDays": 16
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "6d7bf2a5",
+      "date": "2026-10-23",
+      "subject": "Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)"
+    },
     {
       "h": "fbacc529",
       "date": "2026-10-23",
@@ -589,11 +608,6 @@
       "h": "946d4a54",
       "date": "2026-10-23",
       "subject": "The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie"
-    },
-    {
-      "h": "a5789298",
-      "date": "2026-10-23",
-      "subject": "Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no \"Birdie\" anywhere a course sees); a test for the pay-page fee line"
     }
   ]
 }

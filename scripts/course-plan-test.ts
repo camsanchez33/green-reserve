@@ -11,7 +11,7 @@ const R18: PlanRound = { key: 'p18', label: '18 holes', holes: 18 };
 const B9: PlanRound = { key: 'pb9', label: 'Back 9', holes: 9 };
 const F9: PlanRound = { key: 'pf9', label: 'Front 9', holes: 9 };
 const rounds = [R18, B9, F9];
-const cell = (wd: number, we: number, cart: number) => ({ ...emptyCell(), weekday: wd, weekend: we, cart });
+const cell = (wd: number, we: number, cart: number) => ({ ...emptyCell(), weekday: wd, weekend: we, cart, cartWeekend: cart });
 
 // Slots a set of compiled rows makes on a date (the generator's own rule).
 const slots = (rows: ReturnType<typeof compilePlan>, date: string) => desiredSlots(date, rows.map(r => ({ ...r, ...scheduleMoneyForCreate(r) })) as never,
@@ -22,7 +22,7 @@ check('snap to the grid', snap({ first: '07:00', interval: 8 }, '15:02') === '15
 
 // The common course: 18 all day, back 9 mornings until 10:00, front 9 from 3pm; twilight price from 3pm.
 const plan: CoursePlan = {
-  rounds: [{ key: 'p18', on: true, from: null, to: '15:00', walk: true }, { key: 'pb9', on: true, from: null, to: '10:00', walk: true }, { key: 'pf9', on: true, from: '15:00', to: null, walk: true }],
+  rounds: [{ key: 'p18', on: true, from: null, to: '15:00' }, { key: 'pb9', on: true, from: null, to: '10:00' }, { key: 'pf9', on: true, from: '15:00', to: null }],
   usual: { days: [], closed: false, first: '07:00', last: '17:00', interval: 10, firstName: null, changes: [{ at: '15:00', name: null }],
     prices: { p18: [cell(65, 85, 20), cell(40, 50, 15)], pb9: [cell(35, 45, 12), cell(25, 30, 10)], pf9: [cell(35, 45, 12), cell(25, 30, 10)] } },
   different: [{ days: [1], closed: false, first: '10:00', last: '17:00', interval: 10, firstName: null, changes: [], prices: { p18: [cell(50, 50, 18)], pb9: [cell(30, 30, 10)], pf9: [cell(30, 30, 10)] } }],
@@ -79,10 +79,23 @@ check('a course with no named rounds: one row, the course as a whole', compilePl
 check('renamed column keeps its name in the rows', compilePlan({ ...plan, usual: { ...plan.usual, firstName: 'Early bird' } }, rounds).some(r => r.tierName === 'Early bird'));
 
 // Review fixes (2026-10-22).
-const cartOnly = compilePlan({ ...plan, rounds: plan.rounds.map(r => r.key === 'p18' ? { ...r, walk: false } : r) }, rounds);
-check('a cart-required round is stored cart-only', cartOnly.filter(r => r.productId === 'p18').every(r => r.walkingAllowed === false) && cartOnly.filter(r => r.productId === 'pb9').every(r => r.walkingAllowed === true));
-check('…and stays cart-only when read back and saved again', compilePlan(readPlan(cartOnly, rounds), rounds).filter(r => r.productId === 'p18').every(r => r.walkingAllowed === false));
-check('…its tee times are cart-only', get(slots(cartOnly, '2030-06-12'), 'p18', '07:00')?.walkingAllowed === false);
+// CART-1 (Cam 2026-10-24): walking and the cart price per cell, weekday and weekend.
+// 18 holes: weekend mornings ride only, twilight walkable every day; weekend cart $25.
+const flex: CoursePlan = { ...plan, usual: { ...plan.usual, prices: { ...plan.usual.prices,
+  p18: [{ ...cell(65, 85, 20), cartWeekend: 25, walk: true, walkWeekend: false }, { ...cell(40, 50, 15), walk: true, walkWeekend: true }] } } };
+const flexRows = compilePlan(flex, rounds);
+check('a cell stores weekend walking and cart apart from weekdays', flexRows.some(r => r.productId === 'p18' && r.walkingAllowed === true && r.walkingWeekend === false && r.cartFee === 20 && r.cartFeeWeekend === 25));
+const wedF = slots(flexRows, '2030-06-12'), satF = slots(flexRows, '2030-06-15');
+check('weekday morning: walkable, $20 cart', get(wedF, 'p18', '07:00')?.walkingAllowed === true && get(wedF, 'p18', '07:00')?.cartFeeCents === 2000);
+check('weekend morning: ride only, $25 cart', get(satF, 'p18', '07:00')?.walkingAllowed === false && get(satF, 'p18', '07:00')?.cartFeeCents === 2500, JSON.stringify(get(satF, 'p18', '07:00')));
+check('…the same round at twilight on the weekend can be walked', flexRows.some(r => r.productId === 'p18' && r.startTime === '15:00' && r.walkingWeekend === true && r.walkingAllowed === true));
+check('…and the 9-hole round keeps its own walking', get(satF, 'pb9', '07:00')?.walkingAllowed === true);
+const flexBack = readPlan(flexRows, rounds);
+check('read back and saved again, walking and cart prices are kept', JSON.stringify(compilePlan(flexBack, rounds).filter(r => r.productId === 'p18' && r.daysOfWeek.length === 6)) === JSON.stringify(flexRows.filter(r => r.productId === 'p18' && r.daysOfWeek.length === 6)));
+// An older stored row (no weekend values) reads as the weekday ones.
+const old = flexRows.map(r => ({ ...r, walkingWeekend: undefined, cartFeeWeekend: undefined }));
+check('an older row without weekend values follows the weekday ones', readPlan(old, rounds).usual.prices.p18[0].walkWeekend === true && readPlan(old, rounds).usual.prices.p18[0].cartWeekend === 20);
+check('a negative weekend cart price is refused', checkPlan({ ...flex, usual: { ...flex.usual, prices: { ...flex.usual.prices, p18: [{ ...cell(65, 85, 20), cartWeekend: -1 }, cell(40, 50, 15)] } } }, rounds) !== null);
 const closedRead = readPlan(compilePlan(closedMon, rounds), rounds);
 const reopened = { ...closedRead, different: closedRead.different.map(d => ({ ...d, closed: false })) };
 check('a reopened day sells at the usual prices, never $0', get(slots(compilePlan(reopened, rounds), '2030-06-10'), 'p18', '07:00')?.greenFeeCents === 6500, JSON.stringify(get(slots(compilePlan(reopened, rounds), '2030-06-10'), 'p18', '07:00')));
