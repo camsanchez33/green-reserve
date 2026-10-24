@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-23 21:52 UTC · branch `claude/activity-audit` · HEAD `09dc048` · working tree clean
+Generated 2026-10-24 01:09 UTC · branch `claude/youthful-keller-rvz1hm` · HEAD `4b6af6f` · working tree **16 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,8 +12,8 @@ Generated 2026-10-23 21:52 UTC · branch `claude/activity-audit` · HEAD `09dc04
 
 | commit | date | subject |
 |---|---|---|
-| `09dc048` | 2026-10-23 | Activity retirement: drop the dead nav key, mark A-09 retired |
-| `606bad0` | 2026-10-23 | Retire the admin Activity page (AW-12) |
+| `4b6af6f` | 2026-10-24 | contact-email-test: spacing |
+| `e53daa8` | 2026-10-24 | MAIL-1: agreements name admin@ instead of the Outlook inbox |
 | `d2b41f2` | 2026-10-23 | Regenerate the status board |
 | `d6efdc1` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
 | `85bb916` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
@@ -30,6 +30,28 @@ Generated 2026-10-23 21:52 UTC · branch `claude/activity-audit` · HEAD `09dc04
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
+### Uncommitted working tree (16 file(s))
+
+- `M  ADMIN_V5_SPEC.md`
+- `M  CLAUDE.md`
+- `M  REVISE_QUEUE.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `M  scripts/design-guard.baseline.json`
+- `M  scripts/isolation-test.ts`
+- `M  scripts/real-courses-db-test.ts`
+- `M  src/app/admin/activity/page.tsx`
+- `D  src/app/api/admin/activity/route.ts`
+- `M  src/app/api/admin/search/route.ts`
+- `M  src/app/api/admin/transactions/route.ts`
+- `M  src/components/admin/AdminSidebar.tsx`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -40,9 +62,7 @@ Generated 2026-10-23 21:52 UTC · branch `claude/activity-audit` · HEAD `09dc04
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-| item | shipped | age | commit | source |
-|---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 93d | `b88c8bf` | `RUN_QUEUE.md:2357` |
+Nothing awaiting review.
 
 ## Not started — the actual queue
 
@@ -50,7 +70,8 @@ This is the distinction a raw checkbox count gets wrong.
 2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
 3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
 4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+5. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2357`
+6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
@@ -109,48 +130,48 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 6d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-24 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-19 | 4d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 1d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 18d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 18d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 18d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 22d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 24d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `ARCHITECTURE.md` | 0 | 2026-09-29 | 24d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 24d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 24d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-19 | 4d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `ARCHITECTURE.md` | 0 | 2026-10-19 | 4d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-19 | 4d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-19 | 4d |
 
 ## Recent commits
 
-- `09dc048` 2026-10-23 — Activity retirement: drop the dead nav key, mark A-09 retired
-- `606bad0` 2026-10-23 — Retire the admin Activity page (AW-12)
+- `4b6af6f` 2026-10-24 — contact-email-test: spacing
+- `e53daa8` 2026-10-24 — MAIL-1: agreements name admin@ instead of the Outlook inbox
 - `d2b41f2` 2026-10-23 — Regenerate the status board
 - `d6efdc1` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
 - `85bb916` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
@@ -164,4 +185,4 @@ This is the distinction a raw checkbox count gets wrong.
 
 ---
 
-**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 7 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 0 awaiting review · 1 in flight · 6 not started · 7 revise pages open · 17 ideas · 7 parked.

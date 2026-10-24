@@ -9,6 +9,9 @@ const files = walk('src');
 const stray = files.filter(f => !f.endsWith('lib/contact.ts') && /thegreenreserve@outlook\.com|hello@greenreserve\.app|(support|admin|billing|noreply)@greenreserve\.app/.test(readFileSync(f, 'utf8')));
 check('no address is typed outside lib/contact.ts', stray.length === 0);
 if (stray.length) console.log('  ' + stray.join('\n  '));
+// 2026-10-24 (Cam): the agreements name admin@ too — no signed copy predates launch.
+const agreements = readdirSync('legal/documents').flatMap(d => readdirSync(join('legal/documents', d)).map(f => join('legal/documents', d, f)));
+check('no agreement names the old Outlook inbox or hello@', agreements.every(f => !/thegreenreserve@outlook\.com|hello@greenreserve\.app/.test(readFileSync(f, 'utf8'))));
 const e = readFileSync('src/lib/email.ts', 'utf8');
 const fn = (n: string) => { const i = e.indexOf(`export async function ${n}(`); const j = e.indexOf('\nexport ', i + 1); return e.slice(i, j < 0 ? undefined : j); };
 for (const n of ['sendTwoFactorCodeEmail', 'sendGolferOtpEmail', 'sendAdminTwoFactorCode', 'sendOperatorPasswordResetEmail', 'sendGolferPasswordResetEmail', 'sendOperatorVerifyEmail', 'sendInquirySigninCode', 'sendMemberMagicLink', 'sendOwnerDeviceApproval', 'sendOwnerSignInAlert'])

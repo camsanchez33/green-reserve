@@ -117,16 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-23 21:52 UTC</span><span>claude/activity-audit @ 09dc048</span>
-    <span>tree clean</span>
+    <span>2026-10-24 01:09 UTC</span><span>claude/youthful-keller-rvz1hm @ 4b6af6f</span>
+    <span>16 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
 <div class="lede">15 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">09dc048</span><span>Activity retirement: drop the dead nav key, mark A-09 retired</span></li>
-<li><span class="h">606bad0</span><span>Retire the admin Activity page (AW-12)</span></li>
+<li><span class="h">4b6af6f</span><span>contact-email-test: spacing</span></li>
+<li><span class="h">e53daa8</span><span>MAIL-1: agreements name admin@ instead of the Outlook inbox</span></li>
 <li><span class="h">d2b41f2</span><span>Regenerate the status board</span></li>
 <li><span class="h">d6efdc1</span><span>Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)</span></li>
 <li><span class="h">85bb916</span><span>The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again</span></li>
@@ -143,19 +143,25 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
-  <div class="tile t-warn"><span class="n">1</span><span class="l">Awaiting review</span></div>
+  <div class="tile t-warn"><span class="n">0</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">5</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">6</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
+<section><h2>Working tree right now</h2>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M  ADMIN_V5_SPEC.md</code></li><li><code>M  CLAUDE.md</code></li><li><code>M  REVISE_QUEUE.md</code></li><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>M  docs/CODEMAP.md</code></li><li><code>M  docs/codemap.json</code></li><li><code>M  scripts/design-guard.baseline.json</code></li><li><code>M  scripts/isolation-test.ts</code></li><li><code>M  scripts/real-courses-db-test.ts</code></li><li><code>M  src/app/admin/activity/page.tsx</code></li><li><code>D  src/app/api/admin/activity/route.ts</code></li><li><code>M  src/app/api/admin/search/route.ts</code></li><li><code>M  src/app/api/admin/transactions/route.ts</code></li><li><code>M  src/components/admin/AdminSidebar.tsx</code></li></ul>
+</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
 <div class="row"><span class="idx">2</span><span class="t">RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against the code).</span><span class="where">:56</span></div>
 <div class="row"><span class="idx">3</span><span class="t">LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed</span><span class="where">:235</span></div>
 <div class="row"><span class="idx">4</span><span class="t">CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf</span><span class="where">:338</span></div>
-<div class="row"><span class="idx">5</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2993</span></div>
+<div class="row"><span class="idx">5</span><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="where">:2357</span></div>
+<div class="row"><span class="idx">6</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2993</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">15 pages closed, 7 open. One page in flight at a time.</p>
@@ -177,7 +183,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">93d</span><span class="where">b88c8bf</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:49</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:56</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:235</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:338</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2357</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2993</span></li></ul>
@@ -188,47 +193,47 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-23 &middot; 0d</td></tr>
-<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 6d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-24 &middot; 0d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-19 &middot; 4d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 0d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 18d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 18d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-04 &middot; 18d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-01 &middot; 22d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 24d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-19 &middot; 4d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">09dc048</td><td class="num">2026-10-23</td><td>Activity retirement: drop the dead nav key, mark A-09 retired</td></tr>
-<tr><td class="num">606bad0</td><td class="num">2026-10-23</td><td>Retire the admin Activity page (AW-12)</td></tr>
+<tr><td class="num">4b6af6f</td><td class="num">2026-10-24</td><td>contact-email-test: spacing</td></tr>
+<tr><td class="num">e53daa8</td><td class="num">2026-10-24</td><td>MAIL-1: agreements name admin@ instead of the Outlook inbox</td></tr>
 <tr><td class="num">d2b41f2</td><td class="num">2026-10-23</td><td>Regenerate the status board</td></tr>
 <tr><td class="num">d6efdc1</td><td class="num">2026-10-23</td><td>Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)</td></tr>
 <tr><td class="num">85bb916</td><td class="num">2026-10-23</td><td>The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again</td></tr>

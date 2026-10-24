@@ -23,9 +23,13 @@ async function cleanup() {
   let rows: any[] | null = await saveSchedulePlan(c.id, { replaces: [], daysOfWeek: [0,1,2,3,4,5,6], intervalMinutes: 10, holes: 18, periods: [P('Morning', '07:00', '15:00', 65), P('Twilight', '15:00', '17:00', 40)] });
   ok('created two rows', rows!.length === 2);
   const today = new Date().toISOString().slice(0, 10); // the course runs on UTC
+  // Today's times take the weekend fee on Sat/Sun (P sets weekend = weekday + $20), so
+  // the expected prices follow the day the test runs — it used to fail every weekend.
+  const dow = new Date(`${today}T12:00:00Z`).getUTCDay();
+  const fee = (weekday: number) => (weekday + (dow === 0 || dow === 6 ? 20 : 0)) * 100;
   let tts = await prisma.teeTime.findMany({ where: { courseId: c.id, date: today }, orderBy: { time: 'asc' } });
   ok('slots 07:00..17:00 every 10 = 61', tts.length === 61, String(tts.length));
-  ok('15:00 is twilight $40', tts.find(t => t.time === '15:00')?.greenFeeCents === 4000 && tts.find(t => t.time === '14:50')?.greenFeeCents === 6500);
+  ok('15:00 is twilight $40', tts.find(t => t.time === '15:00')?.greenFeeCents === fee(40) && tts.find(t => t.time === '14:50')?.greenFeeCents === fee(65));
   ok('17:00 exists', !!tts.find(t => t.time === '17:00'));
   const ids = rows!.map((r: any) => r.id);
   const morning = rows!.find((r: any) => r.tierName === 'Morning') as any;
@@ -35,8 +39,8 @@ async function cleanup() {
   rows = await saveSchedulePlan(c.id, { replaces: ids, daysOfWeek: [0,1,2,3,4,5,6], intervalMinutes: 10, holes: 18, periods: [P('Morning', '07:00', '16:00', 70, morning.id), P('Late', '16:00', '17:00', 35)] });
   ok('still two rows, morning kept its id', rows!.length === 2 && rows!.some((r: any) => r.id === morning.id));
   tts = await prisma.teeTime.findMany({ where: { courseId: c.id, date: today } });
-  ok('15:30 booked kept old price', tts.find(t => t.time === '15:30')?.greenFeeCents === 4000);
-  ok('15:40 now morning $70, 16:00 late $35', tts.find(t => t.time === '15:40')?.greenFeeCents === 7000 && tts.find(t => t.time === '16:00')?.greenFeeCents === 3500);
+  ok('15:30 booked kept old price', tts.find(t => t.time === '15:30')?.greenFeeCents === fee(40));
+  ok('15:40 now morning $70, 16:00 late $35', tts.find(t => t.time === '15:40')?.greenFeeCents === fee(70) && tts.find(t => t.time === '16:00')?.greenFeeCents === fee(35));
   const ids2 = rows!.map((r: any) => r.id);
   rows = await saveSchedulePlan(c.id, { replaces: ids2, daysOfWeek: [0,1,2,3,4,5,6], intervalMinutes: 10, holes: 18, active: false, periods: [P('Morning', '07:00', '16:00', 70, ids2[0]), P('Late', '16:00', '17:00', 35, ids2[1])].map((p, i) => ({ ...p, id: rows![i].id, tierName: (rows![i] as any).tierName, startTime: (rows![i] as any).startTime, endTime: (rows![i] as any).endTime })) });
   ok('paused both', rows!.every((r: any) => !r.active));

@@ -1,28 +1,43 @@
 {
-  "generatedAt": "2026-10-23T21:52:01.397Z",
+  "generatedAt": "2026-10-24T01:09:16.194Z",
   "repo": {
-    "head": "09dc048",
-    "branch": "claude/activity-audit",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "head": "4b6af6f",
+    "branch": "claude/youthful-keller-rvz1hm",
+    "dirtyCount": 16,
+    "dirty": [
+      "M  ADMIN_V5_SPEC.md",
+      "M  CLAUDE.md",
+      "M  REVISE_QUEUE.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "M  scripts/design-guard.baseline.json",
+      "M  scripts/isolation-test.ts",
+      "M  scripts/real-courses-db-test.ts",
+      "M  src/app/admin/activity/page.tsx",
+      "D  src/app/api/admin/activity/route.ts",
+      "M  src/app/api/admin/search/route.ts",
+      "M  src/app/api/admin/transactions/route.ts",
+      "M  src/components/admin/AdminSidebar.tsx"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "09dc048",
-        "date": "2026-10-23T21:51:59+00:00",
-        "subject": "Activity retirement: drop the dead nav key, mark A-09 retired",
-        "ids": [
-          "A-09"
-        ],
+        "h": "4b6af6f",
+        "date": "2026-10-24T01:08:39+00:00",
+        "subject": "contact-email-test: spacing",
+        "ids": [],
         "matches": []
       },
       {
-        "h": "606bad0",
-        "date": "2026-10-23T21:45:55+00:00",
-        "subject": "Retire the admin Activity page (AW-12)",
+        "h": "e53daa8",
+        "date": "2026-10-24T01:05:41+00:00",
+        "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox",
         "ids": [],
         "matches": []
       },
@@ -121,9 +136,9 @@
   },
   "counts": {
     "runDone": 298,
-    "runAwaiting": 1,
+    "runAwaiting": 0,
     "runInFlight": 1,
-    "runNotStarted": 5,
+    "runNotStarted": 6,
     "reviseDone": 15,
     "reviseOpen": 7,
     "ideas": 17,
@@ -138,15 +153,7 @@
       ]
     }
   ],
-  "awaiting": [
-    {
-      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
-      "line": 2357,
-      "hash": "b88c8bf",
-      "shipDate": "2026-07-22",
-      "ageDays": 93
-    }
-  ],
+  "awaiting": [],
   "next": [
     {
       "title": "WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).",
@@ -166,6 +173,11 @@
     {
       "title": "CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (\"Golf",
       "line": 338,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
+      "line": 2357,
       "section": "Queue (run in this order)"
     },
     {
@@ -280,20 +292,14 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-23",
+      "lastTouched": "2026-10-24",
       "ageDays": 0
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-17",
-      "ageDays": 6
-    },
-    {
-      "file": "ADMIN_V5_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 0
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "HOMEPAGE_SPEC.md",
@@ -302,10 +308,10 @@
       "ageDays": 0
     },
     {
-      "file": "OPERATOR_REWORK_SPEC.md",
+      "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "AGREEMENT_SPEC.md",
@@ -332,6 +338,12 @@
       "ageDays": 1
     },
     {
+      "file": "OPERATOR_REWORK_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 1
+    },
+    {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -344,173 +356,173 @@
       "ageDays": 1
     },
     {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 18
-    },
-    {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 18
-    },
-    {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-04",
-      "ageDays": 18
-    },
-    {
-      "file": "UI_REVISE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-01",
-      "ageDays": 22
-    },
-    {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
+    },
+    {
+      "file": "REVIEW_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 24
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
+    },
+    {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
+    },
+    {
+      "file": "UI_REVISE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-19",
+      "ageDays": 4
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "09dc048",
-      "date": "2026-10-23",
-      "subject": "Activity retirement: drop the dead nav key, mark A-09 retired"
+      "h": "4b6af6f",
+      "date": "2026-10-24",
+      "subject": "contact-email-test: spacing"
     },
     {
-      "h": "606bad0",
-      "date": "2026-10-23",
-      "subject": "Retire the admin Activity page (AW-12)"
+      "h": "e53daa8",
+      "date": "2026-10-24",
+      "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox"
     },
     {
       "h": "d2b41f2",
