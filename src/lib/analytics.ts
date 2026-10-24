@@ -340,8 +340,9 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const shopOnRounds = collectedB.reduce((n, b) => n + b.shopTotalCents, 0);
   const walkUps = await prisma.shopSale.findMany({
     where: { courseId, status: { in: ['paid_cash', 'paid_card'] }, paidAt: { gte: new Date(teeMs(range.from, '00:00')), lt: new Date(teeMs(addDaysStr(range.to, 1), '00:00')) } },
-    select: { totalCents: true, taxCents: true },
+    select: { totalCents: true, taxCents: true, refundedCents: true },
   });
+  const walkUp = walkUpNet(walkUps);
 
   // ── 6. Customers ─────────────────────────────────────────────────────────
   // History is all-time up to the range end, so "returning" knows the past.
@@ -441,7 +442,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       beyond: {
         cartRounds, rounds: collectedB.length, cartPct: pct(cartRounds, collectedB.length),
         shopOnRoundsCents: shopOnRounds, shopPerRoundCents: roundsPlayed ? Math.round(shopOnRounds / roundsPlayed) : null,
-        walkUpSales: walkUps.length, walkUpCents: walkUps.reduce((n, w) => n + w.totalCents - w.taxCents, 0),
+        walkUpSales: walkUp.sales, walkUpCents: walkUp.cents,
       },
       // W2-8 (2): rate paid vs posted, by rate.
       rates: { rows: rateList, paidCents: ratePaid, postedCents: ratePosted, belowPostedCents: ratePosted - ratePaid, ofPostedPct: pct(ratePaid, ratePosted) },
@@ -531,4 +532,20 @@ export function headline(a: Analytics) {
     // AN-3 (Cam 2026-10-19): the top four are revenue, filled, rounds played and average per round.
     roundsPlayed: a.revenue.roundsPlayed, perRoundCents: a.revenue.perRoundCents,
   };
+}
+
+/**
+ * POS-3: walk-up shop sales net of refunds, before tax. A refund comes back
+ * tax included, so the pre-tax part kept is the sale's pre-tax amount times
+ * the share of the sale not refunded. A sale refunded in full counts as none.
+ */
+export function walkUpNet(sales: { totalCents: number; taxCents: number; refundedCents?: number }[]): { sales: number; cents: number } {
+  let n = 0, cents = 0;
+  for (const w of sales) {
+    const refunded = w.refundedCents ?? 0;
+    if (w.totalCents > 0 && refunded >= w.totalCents) continue;
+    n++;
+    cents += w.totalCents > 0 ? Math.round((w.totalCents - w.taxCents) * (w.totalCents - refunded) / w.totalCents) : 0;
+  }
+  return { sales: n, cents };
 }

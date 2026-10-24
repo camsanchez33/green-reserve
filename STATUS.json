@@ -1,33 +1,29 @@
 {
-  "generatedAt": "2026-10-24T03:26:22.511Z",
+  "generatedAt": "2026-10-24T03:33:42.739Z",
   "repo": {
-    "head": "6fd9158d",
+    "head": "f3faa4f2",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 17,
+    "dirtyCount": 6,
     "dirty": [
       "M OPERATOR_REWORK_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M src/app/api/cron/hourly/route.ts",
-      " M src/app/api/operator/shop-sales/quote/route.ts",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/app/api/shop-sale/[id]/route.ts",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/app/pay/shop/[id]/page.tsx",
-      " M src/lib/data-reset.ts",
-      " M src/lib/email.ts",
-      " M src/lib/shop-sales.ts",
-      " M src/lib/shop-tree.ts",
-      " M src/lib/staff-permissions.ts",
-      "?? prisma/migrations/20261024040000_pos3_register/",
-      "?? scripts/pos-register-db-test.ts"
+      " M scripts/pos-register-db-test.ts",
+      " M src/lib/analytics.ts",
+      " M src/lib/staff-permissions.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "f3faa4f2",
+        "date": "2026-10-24T03:26:24+00:00",
+        "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "6fd9158d",
         "date": "2026-10-23T23:19:31-04:00",
@@ -349,7 +345,7 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-23",
+      "lastTouched": "2026-10-24",
       "ageDays": 0
     },
     {
@@ -554,6 +550,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f3faa4f2",
+      "date": "2026-10-24",
+      "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds"
+    },
+    {
       "h": "6fd9158d",
       "date": "2026-10-23",
       "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)"
@@ -607,11 +608,6 @@
       "h": "3148eed2",
       "date": "2026-10-22",
       "subject": "Money: Needs you — declined cards with a pay link (DASH-C) (#198)"
-    },
-    {
-      "h": "3c88148d",
-      "date": "2026-10-22",
-      "subject": "Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)"
     }
   ]
 }

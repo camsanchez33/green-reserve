@@ -12515,7 +12515,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 535,
+      "lines": 552,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -12550,6 +12550,10 @@
         {
           "name": "RES_START",
           "kind": "const"
+        },
+        {
+          "name": "walkUpNet",
+          "kind": "fn"
         }
       ],
       "route": null,

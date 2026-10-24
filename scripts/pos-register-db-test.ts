@@ -8,6 +8,7 @@ import { stripe } from '../src/lib/stripe';
 import { createSale, quoteSale, refundSale, sendShopRefund, discountFor, spreadDiscount, reversePendingShopRefundTax } from '../src/lib/shop-sales';
 import { bySku } from '../src/lib/shop-tree';
 import { ALL_KEYS, PRESETS } from '../src/lib/staff-permissions';
+import { walkUpNet } from '../src/lib/analytics';
 const TAG = 'pos3reg';
 let failed = 0;
 const ok = (l: string, c: boolean, i: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || !i ? '' : ' — ' + (typeof i === 'string' ? i : JSON.stringify(i))}`); if (!c) failed++; };
@@ -70,6 +71,8 @@ async function cleanup() {
   ];
   ok('a scanned code finds its item', bySku(flat, ' 0123 ')?.id === 'a' && bySku(flat, 'polo-m')?.id === 'pm');
   ok('…never the parent of options, a hidden item, or nothing', bySku(flat, 'POLO') === null && bySku(flat, 'OLD') === null && bySku(flat, 'nope') === null);
+  const net = walkUpNet([{ totalCents: 4950, taxCents: 450, refundedCents: 4950 }, { totalCents: 1100, taxCents: 100, refundedCents: 550 }, { totalCents: 2200, taxCents: 200 }]);
+  ok('analytics: a fully refunded sale counts as nothing, a half refund as half', net.sales === 2 && net.cents === 500 + 2000, net);
   ok('discounts are a permission Front desk doesn’t get', ALL_KEYS.includes('shop.discount') && !PRESETS.find(p => p.key === 'front_desk')!.keys.includes('shop.discount'));
 
   await cleanup();

@@ -50,7 +50,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'sheet.golfer_contact', group: 'Tee sheet', label: 'See golfer email and phone', help: 'Shows contact details on the sheet and in bookings.' },
   { key: 'money.cancellations', group: 'Money', label: 'See cancellations', help: 'The list of cancelled bookings and any fees kept.' },
   { key: 'money.payments', group: 'Money', label: 'See payments', help: 'What was charged, per booking and in total.' },
-  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund a charge back to the golfer’s card.', requires: ['money.payments'], movesMoney: true },
+  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund a charge back to the golfer’s card, and refund pro shop sales.', requires: ['money.payments'], movesMoney: true },
   { key: 'money.charge_fee', group: 'Money', label: 'Charge a fee by hand', help: 'Charge a late or no-show fee to the card on file.', movesMoney: true },
   { key: 'money.payouts', group: 'Money', label: 'See payouts', help: 'What Stripe has paid out to the course.' },
   { key: 'members.view', group: 'Members', label: 'See members', help: 'The member list and who is paid up.' },
