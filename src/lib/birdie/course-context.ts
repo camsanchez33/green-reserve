@@ -4,6 +4,7 @@
 // touches the database and never sees another tenant. B1 has no writes.
 import { prisma } from '../prisma';
 import { centsToDollarsOr0 } from '../money';
+import { walkingSummary, walkingWords } from '../walking';
 
 export type OperatorCourseContext = {
   courseName: string;
@@ -12,7 +13,8 @@ export type OperatorCourseContext = {
   cancellationHours: number;
   lateCancellationFee: number;
   checkInWindowHours: number;
-  walkingAllowed: string;
+  /** CART-1: always | never | some — summed up from the running schedule rows. */
+  walking: string;
   publicAdvanceDays: number;
   memberAdvanceDays: number;
   hasMemberPricing: boolean;
@@ -27,16 +29,17 @@ export async function operatorCourseContext(courseId: string): Promise<OperatorC
     where: { id: courseId },
     select: {
       name: true, liveStatus: true, timezone: true, cancellationHours: true, lateCancellationFeeCents: true,
-      checkInWindowHours: true, walkingAllowed: true, publicAdvanceDays: true, memberAdvanceDays: true,
+      checkInWindowHours: true, publicAdvanceDays: true, memberAdvanceDays: true,
       hasMemberPricing: true, hasResidentPricing: true, stripeAccountId: true, stripeAccountActive: true,
       _count: { select: { membershipTiers: true } },
     },
   });
   if (!course) return null;
-  const [schedules, activeSchedules, products] = await Promise.all([
+  const [schedules, activeSchedules, products, walkRows] = await Promise.all([
     prisma.teeTimeSchedule.count({ where: { courseId } }),
     prisma.teeTimeSchedule.count({ where: { courseId, active: true } }),
     prisma.courseProduct.count({ where: { courseId, active: true } }),
+    prisma.teeTimeSchedule.findMany({ where: { courseId, active: true }, select: { walkingAllowed: true, walkingWeekend: true } }),
   ]);
   return {
     courseName: course.name,
@@ -45,7 +48,7 @@ export async function operatorCourseContext(courseId: string): Promise<OperatorC
     cancellationHours: course.cancellationHours,
     lateCancellationFee: centsToDollarsOr0(course.lateCancellationFeeCents),
     checkInWindowHours: course.checkInWindowHours,
-    walkingAllowed: course.walkingAllowed,
+    walking: walkingSummary(walkRows),
     publicAdvanceDays: course.publicAdvanceDays,
     memberAdvanceDays: course.memberAdvanceDays,
     hasMemberPricing: course.hasMemberPricing,
@@ -62,7 +65,7 @@ export function describeCourseContext(c: OperatorCourseContext): string {
     `Course: ${c.courseName} (status: ${c.liveStatus}; timezone ${c.timezone})`,
     `Cancellation policy: ${c.cancellationHours} hours before the tee time; late-cancellation fee $${c.lateCancellationFee}${c.lateCancellationFee === 0 ? ' (no fee — no card is collected at booking)' : ''}`,
     `Check-in window: golfers can self check in ${c.checkInWindowHours} hours before their time`,
-    `Walking: ${c.walkingAllowed}`,
+    `Walking: ${walkingWords(c.walking)} (set per round and time in Schedule → What it costs)`,
     `Booking windows: public ${c.publicAdvanceDays} days ahead, members ${c.memberAdvanceDays} days ahead`,
     `Member pricing: ${c.hasMemberPricing ? 'on' : 'off'}; resident pricing: ${c.hasResidentPricing ? 'on' : 'off'}; membership tiers: ${c.membershipTiers}`,
     `Stripe: ${c.stripeConnected ? 'connected' : 'NOT connected — payouts cannot start until it is'}`,

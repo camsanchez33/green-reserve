@@ -44,8 +44,8 @@ export function normalizeDbTeeTime(t: any, course?: RuleCourse) {
     // Cents at rest, dollars on the wire (the UI formats dollars).
     green_fee: centsToDollarsOr0(t.greenFeeCents),
     cart_fee: centsToDollarsOr0(t.cartFeeCents),
-    walking_allowed: walkingAllowedAt(rules, t),
-    cart_required: !walkingAllowedAt(rules, t),
+    walking_allowed: walkingAllowedAt(t),
+    cart_required: !walkingAllowedAt(t),
     min_players: rules.minPlayers,
     max_players: rules.maxPlayers,
     status,

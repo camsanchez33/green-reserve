@@ -147,7 +147,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [loadingInfo, setLoadingInfo] = useState(!initial);
   const [golfer, setGolfer]   = useState<GolferProfile | null>(null);
   const [confirmedData, setConfirmedData] = useState<ConfirmedData | null>(null);
-  // A required cart is the tee time's call (cart_required folds in the course rule and the round's own) — not the course's alone.
+  // A required cart is the tee time's call (cart_required: its price-table cell can't be walked, CART-1).
   const [cartSelected, setCartSelected] = useState(cartParam);
   const [rangeBallsSize, setRangeBallsSize] = useState<'' | 'small' | 'medium' | 'large'>('');
 

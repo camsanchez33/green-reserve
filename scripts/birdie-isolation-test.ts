@@ -40,7 +40,7 @@ check('history: junk input → empty', sanitizeHistory('nope').length === 0 && s
 // 2. the course facts name exactly one course and nothing personal
 const facts = describeCourseContext({
   courseName: 'Hollow Creek', liveStatus: 'live', timezone: 'America/New_York', cancellationHours: 24, lateCancellationFee: 10,
-  checkInWindowHours: 3, walkingAllowed: 'always', publicAdvanceDays: 7, memberAdvanceDays: 14, hasMemberPricing: true,
+  checkInWindowHours: 3, walking: 'always', publicAdvanceDays: 7, memberAdvanceDays: 14, hasMemberPricing: true,
   hasResidentPricing: false, stripeConnected: false, schedules: { total: 2, active: 1, products: 0 }, membershipTiers: 1,
 });
 check('facts: the course is named once', (facts.match(/Hollow Creek/g) || []).length === 1);
@@ -68,7 +68,7 @@ check('route: the cap is taken before the body is parsed', routeSrc.indexOf('che
 
 const other = describeCourseContext({
   courseName: 'Rival Links', liveStatus: 'live', timezone: 'America/Chicago', cancellationHours: 48, lateCancellationFee: 25,
-  checkInWindowHours: 2, walkingAllowed: 'never', publicAdvanceDays: 14, memberAdvanceDays: 30, hasMemberPricing: false,
+  checkInWindowHours: 2, walking: 'never', publicAdvanceDays: 14, memberAdvanceDays: 30, hasMemberPricing: false,
   hasResidentPricing: true, stripeConnected: true, schedules: { total: 9, active: 9, products: 3 }, membershipTiers: 0,
 });
 check('facts: one course per block — no leakage between two contexts', !facts.includes('Rival Links') && !other.includes('Hollow Creek'));

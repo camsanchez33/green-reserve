@@ -5101,7 +5101,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 355,
+      "lines": 356,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6812,7 +6812,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/route.ts",
-      "lines": 64,
+      "lines": 66,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7289,7 +7289,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1838,
+      "lines": 1839,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7821,7 +7821,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1498,
+      "lines": 1501,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7913,7 +7913,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 604,
+      "lines": 610,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -7945,7 +7945,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1199,
+      "lines": 1184,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7981,7 +7981,6 @@
         "@/lib/password",
         "@/lib/unsaved-guard",
         "@/lib/use-dashboard-access",
-        "@/lib/walking",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -9849,7 +9848,7 @@
     },
     {
       "path": "src/components/dashboard/RoundRulesCard.tsx",
-      "lines": 105,
+      "lines": 89,
       "purpose": "W2-6 slice 3 (Cam 2026-10-20):",
       "brain": [],
       "exports": [
@@ -9875,8 +9874,6 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
-        "@/lib/booking-rules",
-        "@/lib/walking",
         "react"
       ],
       "usedBy": [
@@ -12811,7 +12808,7 @@
     },
     {
       "path": "src/lib/birdie/course-context.ts",
-      "lines": 72,
+      "lines": 75,
       "purpose": "BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course.",
       "brain": [],
       "exports": [
@@ -12835,7 +12832,8 @@
       "guard": null,
       "imports": [
         "../money",
-        "../prisma"
+        "../prisma",
+        "../walking"
       ],
       "usedBy": [
         "src/app/api/birdie/chat/route.ts"
@@ -13243,16 +13241,12 @@
     },
     {
       "path": "src/lib/booking-rules.ts",
-      "lines": 84,
+      "lines": 67,
       "purpose": "W2-6 slice 3 (Cam 2026-10-20:",
       "brain": [],
       "exports": [
         {
           "name": "groupSizeError",
-          "kind": "fn"
-        },
-        {
-          "name": "isWalkingPolicy",
           "kind": "fn"
         },
         {
@@ -13276,16 +13270,8 @@
           "kind": "fn"
         },
         {
-          "name": "WALKING_POLICIES",
-          "kind": "const"
-        },
-        {
           "name": "walkingAllowedAt",
           "kind": "fn"
-        },
-        {
-          "name": "WalkingPolicy",
-          "kind": "type"
         }
       ],
       "route": null,
@@ -13299,7 +13285,6 @@
         "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/round-rules/route.ts",
-        "src/components/dashboard/RoundRulesCard.tsx",
         "src/lib/public-tee-times.ts"
       ]
     },
@@ -14619,7 +14604,7 @@
     },
     {
       "path": "src/lib/course-plan.ts",
-      "lines": 279,
+      "lines": 286,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -17633,7 +17618,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 228,
+      "lines": 231,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -17739,7 +17724,7 @@
     },
     {
       "path": "src/lib/normalize-course.ts",
-      "lines": 89,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17756,6 +17741,7 @@
       "imports": [
         "./cancel-policy",
         "./money",
+        "./walking",
         "@/lib/facilities"
       ],
       "usedBy": [
@@ -19082,7 +19068,7 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 358,
+      "lines": 365,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [
@@ -19171,7 +19157,7 @@
     },
     {
       "path": "src/lib/schedule-wire.ts",
-      "lines": 92,
+      "lines": 94,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20218,7 +20204,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 253,
+      "lines": 255,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20632,10 +20618,14 @@
     },
     {
       "path": "src/lib/walking.ts",
-      "lines": 11,
+      "lines": 23,
       "purpose": "Settings rework (Cam 2026-10-19):",
       "brain": [],
       "exports": [
+        {
+          "name": "walkingSummary",
+          "kind": "fn"
+        },
         {
           "name": "walkingWords",
           "kind": "fn"
@@ -20649,8 +20639,8 @@
       "imports": [],
       "usedBy": [
         "src/app/courses/[slug]/CourseBookingClient.tsx",
-        "src/app/dashboard/settings/page.tsx",
-        "src/components/dashboard/RoundRulesCard.tsx"
+        "src/lib/birdie/course-context.ts",
+        "src/lib/normalize-course.ts"
       ]
     },
     {
@@ -25464,6 +25454,14 @@
         {
           "name": "walkingAllowed",
           "type": "Boolean"
+        },
+        {
+          "name": "cartFeeWeekendCents",
+          "type": "Int?"
+        },
+        {
+          "name": "walkingWeekend",
+          "type": "Boolean?"
         },
         {
           "name": "active",

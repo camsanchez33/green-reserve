@@ -1,6 +1,7 @@
 import { policyFrom } from './cancel-policy';
 import { facilityLines } from '@/lib/facilities';
 import { centsToDollarsOr0 } from './money';
+import { walkingSummary } from './walking';
 /**
  * Maps a Prisma Course row (camelCase) onto the snake_case shape the golfer-facing
  * UI (CourseCard, /courses, /courses/[slug]) was built against. Used by every public
@@ -10,6 +11,7 @@ import { centsToDollarsOr0 } from './money';
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeDbCourse(c: any, startingGreenFee = 0) {
+  const walking = walkingSummary(Array.isArray(c.schedules) ? c.schedules.filter((r: { walkingAllowed?: unknown }) => typeof r?.walkingAllowed === 'boolean') : []);
   return {
     id: c.id,
     slug: c.slug,
@@ -29,10 +31,10 @@ export function normalizeDbCourse(c: any, startingGreenFee = 0) {
     amenities: Array.isArray(c.amenities) ? c.amenities.map((a: unknown) => String(a)) : [],
     // Settings rework (Cam 2026-10-19): everything the course ticked under Facilities, in golfers' words.
     facilities: facilityLines(c),
-    walking_allowed: c.walkingAllowed === 'always' || c.walkingAllowed === 'allowed',
-    cart_required: c.cartRequired ?? false,
-    // Settings rework (Cam 2026-10-19): what the course set under Booking rules, shown in About.
-    walking_policy: typeof c.walkingAllowed === 'string' ? c.walkingAllowed : 'always',
+    // CART-1 (Cam 2026-10-24): walking is set per price-table cell, so About sums up the running schedule rows.
+    walking_allowed: walking !== 'never',
+    cart_required: walking === 'never',
+    walking_policy: walking,
     walking_note: c.walkingNote ?? '',
     dress_code: Array.isArray(c.dresscode) ? c.dresscode.map((l: unknown) => String(l).trim()).filter(Boolean) : [],
     rating: c.rating ?? 4.5,

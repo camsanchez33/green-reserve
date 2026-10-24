@@ -298,7 +298,8 @@ export async function POST(req: NextRequest) {
   if (!teeTime || teeTime.courseId !== session.courseId) return NextResponse.json({ error: 'Tee time not found' }, { status: 404 });
   if (teeTime.date < todayIn(teeTime.course.timezone)) return NextResponse.json({ error: 'That date has passed.' }, { status: 409 });
 
-  const cart = cartSelected || teeTime.course.cartRequired;
+  // CART-1: a tee time that can't be walked charges a cart for everyone.
+  const cart = cartSelected || teeTime.walkingAllowed === false;
   const greenFeeTotal = teeTime.greenFeeCents * players;
   const cartFeeTotal = cart ? teeTime.cartFeeCents * players : 0;
   // No platform fee on a counter booking — nothing is collected online.

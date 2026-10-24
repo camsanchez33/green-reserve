@@ -100,13 +100,13 @@ export default function SchedulesPage() {
     setLoading(false);
   }, []);
   const loadWindows = useCallback(async () => {
-    const r = await dfetch<{ holes?: number; hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; memberAdvanceDays?: number; walkingAllowed?: string; cartRequired?: boolean; minPlayers?: number; maxPlayers?: number }>('/api/operator/settings');
+    const r = await dfetch<{ holes?: number; hasMemberPricing?: boolean; hasResidentPricing?: boolean; publicAdvanceDays?: number; memberAdvanceDays?: number; minPlayers?: number; maxPlayers?: number }>('/api/operator/settings');
     if (!r.ok || !r.data) { setWindowsError(r.ok ? 'Settings came back empty — refresh.' : r.error); return; }
     const c = r.data;
     setHasMember(!!c.hasMemberPricing); setHasResident(!!c.hasResidentPricing);
     if (typeof c.holes === 'number') setCourseHoles(c.holes);
     setWindows({ publicAdvanceDays: typeof c.publicAdvanceDays === 'number' ? c.publicAdvanceDays : null, memberAdvanceDays: typeof c.memberAdvanceDays === 'number' ? c.memberAdvanceDays : null });
-    setCourseRules({ walkingAllowed: c.walkingAllowed ?? 'always', cartRequired: !!c.cartRequired, minPlayers: c.minPlayers ?? 1, maxPlayers: c.maxPlayers ?? 4, publicAdvanceDays: c.publicAdvanceDays ?? 7 });
+    setCourseRules({ minPlayers: c.minPlayers ?? 1, maxPlayers: c.maxPlayers ?? 4, publicAdvanceDays: c.publicAdvanceDays ?? 7 });
     setWindowsError('');
   }, []);
   const loadProducts = useCallback(async () => {
@@ -145,7 +145,7 @@ export default function SchedulesPage() {
   const setDay = (i: number, patch: Partial<DayPlan>) => edit(p => i === 0 ? { ...p, usual: { ...p.usual, ...patch } } : { ...p, different: p.different.map((d, j) => j === i - 1 ? { ...d, ...patch } : d) });
   const defaultCell = (key: string): PriceCell => {
     const holes = rounds.find(r => r.key === key)?.holes ?? 18;
-    return { ...emptyCell(), weekday: holes <= 9 ? 30 : 55, weekend: holes <= 9 ? 35 : 65, cart: holes <= 9 ? 12 : 20 };
+    return { ...emptyCell(), weekday: holes <= 9 ? 30 : 55, weekend: holes <= 9 ? 35 : 65, cart: holes <= 9 ? 12 : 20, cartWeekend: holes <= 9 ? 12 : 20 };
   };
   function addDifferentDays() {
     edit(p => {
@@ -293,21 +293,34 @@ export default function SchedulesPage() {
         <input type="number" min={0} step="0.01" value={v ?? ''} placeholder={req ? '0' : '—'} disabled={!canEdit} onChange={e => set(e.target.value)} className={cellIn} />
       </label>
     );
-    const pair = (key: string, col: number, kind: 'green' | 'member' | 'resident') => {
+    // CART-1: walking per cell, weekday and weekend — off means a cart is required (and charged).
+    const walkPair = (key: string, col: number) => {
       const c = d.prices[key]?.[col];
       if (!c) return null;
-      const [a, b] = kind === 'green' ? ['weekday', 'weekend'] as const : kind === 'member' ? ['memberWeekday', 'memberWeekend'] as const : ['residentWeekday', 'residentWeekend'] as const;
-      const req = kind === 'green';
+      const box = (k: 'walk' | 'walkWeekend', other: 'walk' | 'walkWeekend', show: boolean, when: string) => show && (
+        <label className="inline-flex items-center gap-1.5 w-[5.5rem] text-[13px] text-ink">
+          <input type="checkbox" checked={(c[k] ?? c.walk) !== false} disabled={!canEdit} aria-label={`${labelOf(key)} ${names[col]} walking ${when}`}
+            onChange={e => setCell(i, key, col, { [k]: e.target.checked, ...(!(wd && we) ? { [other]: e.target.checked } : {}) })} className="w-4 h-4 accent-pine" />
+          {(c[k] ?? c.walk) !== false ? 'Yes' : 'Cart only'}
+        </label>
+      );
+      return <div className="flex gap-1.5">{box('walk', 'walkWeekend', wd, 'weekday')}{box('walkWeekend', 'walk', we, 'weekend')}</div>;
+    };
+    const pair = (key: string, col: number, kind: 'green' | 'cart' | 'member' | 'resident') => {
+      const c = d.prices[key]?.[col];
+      if (!c) return null;
+      const [a, b] = kind === 'green' ? ['weekday', 'weekend'] as const : kind === 'cart' ? ['cart', 'cartWeekend'] as const : kind === 'member' ? ['memberWeekday', 'memberWeekend'] as const : ['residentWeekday', 'residentWeekend'] as const;
+      const req = kind === 'green' || kind === 'cart';
       const parse = req ? num : optNum;
       return (
         <div className="flex gap-1.5">
           {wd && money(`${labelOf(key)} ${names[col]} ${kind} weekday`, c[a] as number | null, s => setCell(i, key, col, { [a]: parse(s), ...(!we ? { [b]: parse(s) } : {}) }), req)}
-          {we && money(`${labelOf(key)} ${names[col]} ${kind} weekend`, c[b] as number | null, s => setCell(i, key, col, { [b]: parse(s), ...(!wd ? { [a]: parse(s) } : {}) }), req)}
+          {we && money(`${labelOf(key)} ${names[col]} ${kind} weekend`, (c[b] ?? (kind === 'cart' ? c.cart : null)) as number | null, s => setCell(i, key, col, { [b]: parse(s), ...(!wd ? { [a]: parse(s) } : {}) }), req)}
         </div>
       );
     };
-    const subRows: { kind: 'green' | 'cart' | 'member' | 'resident'; label: string }[] = [
-      { kind: 'green', label: 'Green fee' }, { kind: 'cart', label: 'Cart' },
+    const subRows: { kind: 'green' | 'cart' | 'walk' | 'member' | 'resident'; label: string }[] = [
+      { kind: 'green', label: 'Green fee' }, { kind: 'cart', label: 'Cart, per rider' }, { kind: 'walk', label: 'Can walk' },
       ...(showMember ? [{ kind: 'member' as const, label: 'Members' }] : []),
       ...(showResident ? [{ kind: 'resident' as const, label: 'Residents' }] : []),
     ];
@@ -344,7 +357,7 @@ export default function SchedulesPage() {
                 {names.map((_, col) => (
                   <td key={col} className={'pr-4 py-1.5 align-middle ' + (k === 0 ? 'border-t border-line-soft' : '')}>
                     {!soldIn(r.key, col) ? (k === 0 ? <span className="text-ink-muted">not sold</span> : null)
-                      : sr.kind === 'cart' ? money(`${labelOf(r.key)} ${names[col]} cart`, d.prices[r.key]?.[col]?.cart ?? 0, s => setCell(i, r.key, col, { cart: num(s) }), true)
+                      : sr.kind === 'walk' ? walkPair(r.key, col)
                       : pair(r.key, col, sr.kind)}
                   </td>
                 ))}
@@ -442,13 +455,6 @@ export default function SchedulesPage() {
                         </div>
                       )}
                       {!r.on && <span className="text-[13px] text-ink-muted">Not sold</span>}
-                      {r.on && (
-                        <label className="flex items-center gap-2 text-[13.5px] text-ink">
-                          <input type="checkbox" checked={r.walk !== false} disabled={!canEdit} onChange={e => setRound(r.key, { walk: e.target.checked })} className="w-4 h-4 accent-pine" />
-                          Golfers can walk
-                          {r.walk === false && <span className="text-ink-muted">— a cart is required and charged</span>}
-                        </label>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -523,7 +529,7 @@ export default function SchedulesPage() {
             </Card>
 
             <div className="space-y-6">
-              {/* W2-6 slice 3: per-round booking rules (walking, group size, how far ahead). */}
+              {/* W2-6 slice 3: per-round booking rules (group size, how far ahead). */}
               {activeProducts.length > 0 && (() => {
                 const round = activeProducts.find(p => p.id === rulesView) ?? activeProducts[0];
                 return (
@@ -534,7 +540,7 @@ export default function SchedulesPage() {
                       </select>
                     )}
                     <RoundRulesCard key={round.id} productId={round.id} label={round.label} course={courseRules} canEdit={!pageAccess.isStaff}
-                      rules={{ walkingPolicy: round.walkingPolicy ?? null, minPlayers: round.minPlayers ?? null, maxPlayers: round.maxPlayers ?? null, publicAdvanceDays: round.publicAdvanceDays ?? null }}
+                      rules={{ minPlayers: round.minPlayers ?? null, maxPlayers: round.maxPlayers ?? null, publicAdvanceDays: round.publicAdvanceDays ?? null }}
                       onSaved={r => setProducts(ps => ps.map(p => p.id === round.id ? { ...p, ...r } : p))} />
                   </div>
                 );

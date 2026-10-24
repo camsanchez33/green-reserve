@@ -1299,7 +1299,10 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [players, setPlayers] = useState(Math.min(2, spots) || 1);
-  const [cart, setCart] = useState(slot.cartFee > 0);
+  // CART-1: a cart-only tee time charges the cart for everyone (the route forces it too).
+  const cartForced = slot.walkingAllowed === false;
+  const [cartPick, setCart] = useState(slot.cartFee > 0);
+  const cart = cartForced || cartPick;
   const [source, setSource] = useState<'walk_in' | 'phone'>('walk_in');
   // Cam 2026-10-01: "when one person gets checked in it's automatically
   // checking in other people — this has to be separate." No code path checks
@@ -1351,7 +1354,7 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
       </div>
       {slot.cartFee > 0 && (
         <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
-          <input type="checkbox" checked={cart} onChange={e => setCart(e.target.checked)} className="accent-pine" />Cart (${slot.cartFee} / player)
+          <input type="checkbox" checked={cart} disabled={cartForced} onChange={e => setCart(e.target.checked)} className="accent-pine" />Cart (${slot.cartFee} / player){cartForced ? ' — required on this time' : ''}
         </label>
       )}
       {source === 'walk_in' && (

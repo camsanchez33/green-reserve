@@ -50,6 +50,8 @@ export type ScheduleForSlots = {
   memberRateWeekdayCents: number | null; memberRateWeekendCents: number | null;
   residentRateWeekdayCents: number | null; residentRateWeekendCents: number | null;
   cartFeeCents: number; walkingAllowed: boolean; tierName: string; active?: boolean;
+  /** CART-1: weekend cart price and walking; null/absent = the weekday values. */
+  cartFeeWeekendCents?: number | null; walkingWeekend?: boolean | null;
 };
 export type DesiredSlot = {
   productId: string | null; time: string;
@@ -121,8 +123,8 @@ export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], pro
         greenFeeCents,
         memberRateCents: memberRateCents ?? null,
         residentRateCents: residentRateCents ?? null,
-        cartFeeCents: schedule.cartFeeCents,
-        walkingAllowed: schedule.walkingAllowed,
+        cartFeeCents: isWeekend ? schedule.cartFeeWeekendCents ?? schedule.cartFeeCents : schedule.cartFeeCents,
+        walkingAllowed: isWeekend ? schedule.walkingWeekend ?? schedule.walkingAllowed : schedule.walkingAllowed,
         tierName: schedule.tierName,
       });
       current += schedule.intervalMinutes;

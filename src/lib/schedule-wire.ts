@@ -20,6 +20,7 @@ const SCHEDULE_MONEY = {
   residentRateWeekday: 'residentRateWeekdayCents',
   residentRateWeekend: 'residentRateWeekendCents',
   cartFee:             'cartFeeCents',
+  cartFeeWeekend:      'cartFeeWeekendCents',
 } as const;
 
 /** NOT NULL in the schema — these must never become null on the way in. */
@@ -83,6 +84,7 @@ export function scheduleMoneyForCreate(body: Record<string, unknown>) {
     greenFeeWeekdayCents:     n(body.greenFeeWeekday),
     greenFeeWeekendCents:     n(body.greenFeeWeekend),
     cartFeeCents:             n(body.cartFee),
+    cartFeeWeekendCents:      o(body.cartFeeWeekend),
     memberRateWeekdayCents:   o(body.memberRateWeekday),
     memberRateWeekendCents:   o(body.memberRateWeekend),
     residentRateWeekdayCents: o(body.residentRateWeekday),
