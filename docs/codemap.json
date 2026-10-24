@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 547,
-    "routes": 261,
-    "libs": 181,
+    "files": 549,
+    "routes": 262,
+    "libs": 182,
     "models": 56,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5978,6 +5978,38 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/reader-rounds/route.ts",
+      "lines": 50,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/reader-rounds",
+      "kind": "api",
+      "methods": [
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/card-reader",
+        "@/lib/reader-rounds",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/regenerate-tee-times/route.ts",
       "lines": 32,
       "purpose": "",
@@ -8057,7 +8089,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 713,
+      "lines": 789,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -12472,6 +12504,7 @@
         "src/app/api/operator/nines/route.ts",
         "src/app/api/operator/photos/[id]/route.ts",
         "src/app/api/operator/photos/route.ts",
+        "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/sales-tax/route.ts",
@@ -13217,6 +13250,7 @@
         "src/lib/counter-pay.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
+        "src/lib/reader-rounds.ts",
         "src/lib/register.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -14006,7 +14040,7 @@
     },
     {
       "path": "src/lib/card-reader.ts",
-      "lines": 263,
+      "lines": 278,
       "purpose": "POS-3 R3 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -14015,7 +14049,15 @@
           "kind": "fn"
         },
         {
+          "name": "courseStripe",
+          "kind": "fn"
+        },
+        {
           "name": "listReaders",
+          "kind": "fn"
+        },
+        {
+          "name": "ownReader",
           "kind": "fn"
         },
         {
@@ -14043,11 +14085,19 @@
           "kind": "const"
         },
         {
+          "name": "simulateReaderTap",
+          "kind": "fn"
+        },
+        {
           "name": "simulateTap",
           "kind": "fn"
         },
         {
           "name": "startReaderPayment",
+          "kind": "fn"
+        },
+        {
+          "name": "stripeMessage",
           "kind": "fn"
         },
         {
@@ -14069,7 +14119,9 @@
       ],
       "usedBy": [
         "src/app/api/operator/card-readers/route.ts",
-        "src/app/api/operator/shop-sales/route.ts"
+        "src/app/api/operator/reader-rounds/route.ts",
+        "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/reader-rounds.ts"
       ]
     },
     {
@@ -14195,7 +14247,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 466,
+      "lines": 501,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14210,6 +14262,10 @@
         {
           "name": "performCheckIn",
           "kind": "fn"
+        },
+        {
+          "name": "READER_STALE_MS",
+          "kind": "const"
         }
       ],
       "route": null,
@@ -14223,6 +14279,7 @@
         "./booking-fees",
         "./email",
         "./prisma",
+        "./reader-rounds",
         "./residents",
         "./round-shop-tax",
         "./shop",
@@ -14231,7 +14288,9 @@
       "usedBy": [
         "src/app/api/admin/retry-charge/[bookingId]/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
-        "src/app/api/operator/bookings/route.ts"
+        "src/app/api/operator/bookings/route.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/reader-rounds.ts"
       ]
     },
     {
@@ -14400,7 +14459,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 150,
+      "lines": 162,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -14433,9 +14492,11 @@
       "imports": [
         "./access-fee",
         "./booking-events",
+        "./checkin-booking",
         "./claim-tee-time",
         "./course-time",
         "./prisma",
+        "./reader-rounds",
         "./round-shop-tax",
         "./stripe",
         "crypto"
@@ -17906,7 +17967,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 231,
+      "lines": 232,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -18686,6 +18747,7 @@
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/rate-limit.ts",
+        "src/lib/reader-rounds.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
         "src/lib/register.ts",
@@ -18927,6 +18989,55 @@
       ]
     },
     {
+      "path": "src/lib/reader-rounds.ts",
+      "lines": 221,
+      "purpose": "POS-3 R3b (Cam 2026-10-24, \"Ok go\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "cancelRoundOnReader",
+          "kind": "fn"
+        },
+        {
+          "name": "roundReaderStatus",
+          "kind": "fn"
+        },
+        {
+          "name": "RoundReaderStatus",
+          "kind": "type"
+        },
+        {
+          "name": "settleRoundReader",
+          "kind": "fn"
+        },
+        {
+          "name": "startRoundOnReader",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./card-reader",
+        "./checkin-booking",
+        "./prisma",
+        "./refund-booking",
+        "./round-shop-tax",
+        "./shop",
+        "./stripe",
+        "stripe"
+      ],
+      "usedBy": [
+        "src/app/api/operator/reader-rounds/route.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts"
+      ]
+    },
+    {
       "path": "src/lib/real-courses.ts",
       "lines": 22,
       "purpose": "TEST-2 (Cam 2026-10-22:",
@@ -19044,12 +19155,13 @@
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
         "src/lib/cancel-booking.ts",
-        "src/lib/no-show-fee.ts"
+        "src/lib/no-show-fee.ts",
+        "src/lib/reader-rounds.ts"
       ]
     },
     {
       "path": "src/lib/register.ts",
-      "lines": 101,
+      "lines": 103,
       "purpose": "POS-3 R2 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -19076,6 +19188,7 @@
         "./counter-pay",
         "./format",
         "./prisma",
+        "./shop",
         "./shop-sales"
       ],
       "usedBy": [
@@ -19182,7 +19295,8 @@
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/operator/sales-tax/route.ts",
         "src/lib/checkin-booking.ts",
-        "src/lib/counter-pay.ts"
+        "src/lib/counter-pay.ts",
+        "src/lib/reader-rounds.ts"
       ]
     },
     {
@@ -19679,6 +19793,7 @@
         "src/app/api/operator/photos/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/profile/route.ts",
+        "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/residents/route.ts",
@@ -20224,8 +20339,10 @@
         "src/lib/admin-course-page.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/operator-home.ts",
+        "src/lib/reader-rounds.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/register.ts",
         "src/lib/shop-catalog.ts",
         "src/lib/shop-sales.ts"
       ]
@@ -20494,6 +20611,7 @@
         "src/lib/event-payments.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
+        "src/lib/reader-rounds.ts",
         "src/lib/refund-booking.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sales-tax.ts",
@@ -21981,6 +22099,18 @@
           "type": "Int?"
         },
         {
+          "name": "readerStartedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "readerId",
+          "type": "String"
+        },
+        {
+          "name": "readerIntentId",
+          "type": "String"
+        },
+        {
           "name": "residentPlayers",
           "type": "Int"
         },
@@ -22012,6 +22142,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/reader-rounds.ts",
         "src/lib/refund-booking.ts",
         "src/lib/round-shop-tax.ts"
       ],
@@ -22068,6 +22199,7 @@
         "src/lib/no-show-fee.ts",
         "src/lib/operator-home.ts",
         "src/lib/operator-search.ts",
+        "src/lib/reader-rounds.ts",
         "src/lib/real-courses.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",

@@ -15,6 +15,7 @@ import { refundOnConnectedAccount } from './stripe';
 import { claimTeeTime, TeeTimeClaimError } from './claim-tee-time';
 import { todayIn } from './course-time';
 import { randomUUID } from 'crypto';
+import { READER_STALE_MS } from './checkin-booking';
 
 export type CounterResult =
   | { ok: true; amountCents: number; note: string | null }
@@ -29,10 +30,20 @@ export function counterDueCents(b: { totalAmount: number; accessFeeTotal: number
 export async function settleAtCounter(courseId: string, bookingId: string, opts: { actor: EventActor; actorName: string; checkedInPlayers?: number }): Promise<CounterResult> {
   const booking = await prisma.booking.findFirst({
     where: { id: bookingId, courseId },
-    select: { courseId: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
+    select: { readerStartedAt: true, courseId: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
       cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
   });
   if (!booking) return { ok: false, status: 404, error: 'Not found' };
+  // POS-3 R3b: on the card reader right now — cash would be a second payment. A claim
+  // left 10 minutes is settled from Stripe first; it may turn out paid.
+  if (booking.readerStartedAt) {
+    if (Date.now() - booking.readerStartedAt.getTime() <= READER_STALE_MS) return { ok: false, status: 409, error: 'This group is being paid on the card reader — finish or cancel it there first.' };
+    const { settleRoundReader } = await import('./reader-rounds');
+    await settleRoundReader(courseId, bookingId, opts.actor);
+    const after = await prisma.booking.findUnique({ where: { id: bookingId }, select: { readerStartedAt: true, paymentStatus: true } });
+    if (after?.readerStartedAt) return { ok: false, status: 409, error: 'This group is being paid on the card reader — finish or cancel it there first.' };
+    if (after?.paymentStatus === 'paid') return { ok: false, status: 409, error: 'This round was just paid on the card reader.' };
+  }
   const cip = opts.checkedInPlayers;
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1 || cip > booking.players)) return { ok: false, status: 400, error: 'Invalid headcount.' };
   if (booking.status === 'cancelled') return { ok: false, status: 409, error: 'This booking was cancelled.' };
@@ -50,7 +61,8 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   const settled = await prisma.$transaction(async tx => {
     // Only a booking still open to pay: two taps (sheet and register) settle it once.
     const done = await tx.booking.updateMany({
-      where: { id: bookingId, courseId, status: 'confirmed', paymentStatus: { not: 'paid' } },
+      // …and never while it is on the card reader (a claim taken since the check above).
+      where: { id: bookingId, courseId, status: 'confirmed', paymentStatus: { not: 'paid' }, readerStartedAt: null },
       data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}),
         // POS-1a: shop items are paid at the counter too; GreenReserve's shop fee is never collected in cash.
         shopFeeCents: 0 },

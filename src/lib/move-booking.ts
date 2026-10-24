@@ -116,7 +116,7 @@ export async function moveBooking(opts: {
         where: { id: opts.bookingId },
         select: {
           id: true, courseId: true, teeTimeId: true, players: true, status: true, checkedInAt: true, noShowAt: true,
-          paymentStatus: true, roundPaymentIntentId: true,
+          paymentStatus: true, roundPaymentIntentId: true, readerStartedAt: true,
           cartSelected: true, appliedRate: true, residentPlayers: true, residentRateCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
@@ -178,7 +178,8 @@ export async function moveBooking(opts: {
       // A round already paid (admin "collect payment" before check-in) keeps its
       // price: the charge is done, and repricing would leave the ledger and the
       // golfer's "due at check-in" disagreeing with what was taken.
-      const paid = checkedIn || b.paymentStatus === 'paid' || !!b.roundPaymentIntentId;
+      // POS-3 R3b: a group on the card reader is being charged the price the reader shows — keep it too.
+      const paid = checkedIn || b.paymentStatus === 'paid' || !!b.roundPaymentIntentId || !!b.readerStartedAt;
       const keep = opts.pricing === 'keep' || paid;
       const greenFeeTotal = keep ? Math.round(b.greenFeeTotal) : newGreen;
       const cartFeeTotal = keep ? Math.round(b.cartFeeTotal) : newCart;

@@ -117,15 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-24 13:19 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ a5d6c217</span>
-    <span>4 uncommitted</span>
+    <span>2026-10-24 14:05 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 84aa9710</span>
+    <span>6 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">25 runs have shipped that the queue doesn't know about</div>
+<div class="lede">26 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">a5d6c217</span><span>POS-3 R3a: Stripe card reader at the register (shop items), server-driven</span></li>
+<li><span class="h">84aa9710</span><span>POS-3 R3b: a group's round paid on the card reader</span></li>
+<li><span class="h">068ac2b6</span><span>POS-3 R3a: Stripe card reader at the register (shop items) (#209)</span></li>
 <li><span class="h">c8e0e662</span><span>FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)</span></li>
 <li><span class="h">9985445e</span><span>FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)</span></li>
 <li><span class="h">2e01ec99</span><span>POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)</span></li>
@@ -162,7 +163,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/card-reader-db-test.ts</code></li><li><code>M src/lib/card-reader.ts</code></li></ul>
+<ul class="plain"><li><code>M OPERATOR_REWORK_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/reader-rounds-db-test.ts</code></li><li><code>M src/lib/move-booking.ts</code></li><li><code>M src/lib/reader-rounds.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -242,7 +243,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 16d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">a5d6c217</td><td class="num">2026-10-24</td><td>POS-3 R3a: Stripe card reader at the register (shop items), server-driven</td></tr>
+<tr><td class="num">84aa9710</td><td class="num">2026-10-24</td><td>POS-3 R3b: a group's round paid on the card reader</td></tr>
+<tr><td class="num">068ac2b6</td><td class="num">2026-10-24</td><td>POS-3 R3a: Stripe card reader at the register (shop items) (#209)</td></tr>
 <tr><td class="num">c8e0e662</td><td class="num">2026-10-24</td><td>FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)</td></tr>
 <tr><td class="num">9985445e</td><td class="num">2026-10-24</td><td>FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)</td></tr>
 <tr><td class="num">2e01ec99</td><td class="num">2026-10-24</td><td>POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)</td></tr>
@@ -253,7 +255,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">592f05f4</td><td class="num">2026-10-24</td><td>schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday</td></tr>
 <tr><td class="num">4b6af6fe</td><td class="num">2026-10-24</td><td>contact-email-test: spacing</td></tr>
 <tr><td class="num">e53daa8e</td><td class="num">2026-10-24</td><td>MAIL-1: agreements name admin@ instead of the Outlook inbox</td></tr>
-<tr><td class="num">978a3da2</td><td class="num">2026-10-23</td><td>Retire the admin Activity page (AW-12) (#200)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

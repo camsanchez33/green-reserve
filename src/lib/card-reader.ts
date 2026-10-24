@@ -38,14 +38,14 @@ const view = (r: Stripe.Terminal.Reader): ReaderView => ({
 });
 const locationOf = (r: Stripe.Terminal.Reader) => (typeof r.location === 'string' ? r.location : r.location?.id ?? '');
 
-async function courseStripe(courseId: string) {
+export async function courseStripe(courseId: string) {
   const c = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true, address: true, city: true, state: true, zipCode: true, stripeAccountId: true, stripeAccountActive: true, terminalLocationId: true } });
   if (!c) return fail(404, 'Course not found.');
   if (!c.stripeAccountId || !c.stripeAccountActive) return fail(409, 'Connect Stripe on Money → Payouts before adding a card reader.');
   return { ok: true as const, value: { ...c, account: c.stripeAccountId } };
 }
 
-const stripeMessage = (err: unknown, fallback: string) => {
+export const stripeMessage = (err: unknown, fallback: string) => {
   if (!(err instanceof Stripe.errors.StripeError)) return fallback;
   if (err.code === 'terminal_reader_offline') return 'The card reader is offline — check it is on and connected to the internet, then try again.';
   if (err.code === 'terminal_reader_busy') return 'The card reader is busy with another payment — finish or cancel it on the reader, then try again.';
@@ -101,7 +101,7 @@ export async function registerReader(courseId: string, input: { code?: unknown; 
 }
 
 /** A reader of THIS course (its account and its location), or why not. */
-async function ownReader(account: string, locationId: string, readerId: string): Promise<Result<Stripe.Terminal.Reader>> {
+export async function ownReader(account: string, locationId: string, readerId: string): Promise<Result<Stripe.Terminal.Reader>> {
   if (!/^tmr_[A-Za-z0-9]+$/.test(readerId) || !locationId) return fail(404, 'Card reader not found — refresh and pick it again.');
   try {
     const r = await stripe.terminal.readers.retrieve(readerId, {}, { stripeAccount: account });
@@ -245,6 +245,21 @@ export async function cancelReaderPayment(courseId: string, saleId: string): Pro
     return { ok: true, value: { status: 'cancelled' } };
   } catch (err) {
     return fail(502, stripeMessage(err, 'Couldn’t stop the card reader — cancel it on the reader, then refresh.'));
+  }
+}
+
+/** Test mode only: present a test card to one of this course's readers (R3b: a round on the reader). */
+export async function simulateReaderTap(courseId: string, readerId: string, card: 'ok' | 'declined' = 'ok'): Promise<Result<null>> {
+  if (!terminalTestMode()) return fail(403, 'Only in test mode.');
+  const c = await courseStripe(courseId);
+  if (!c.ok) return c;
+  const r = await ownReader(c.value.account, c.value.terminalLocationId, readerId);
+  if (!r.ok) return r;
+  try {
+    await stripe.testHelpers.terminal.readers.presentPaymentMethod(readerId, card === 'declined' ? { card_present: { number: '4000000000000002' }, type: 'card_present' } : {}, { stripeAccount: c.value.account });
+    return { ok: true, value: null };
+  } catch (err) {
+    return fail(502, stripeMessage(err, 'The simulated reader didn’t take the tap.'));
   }
 }
 
