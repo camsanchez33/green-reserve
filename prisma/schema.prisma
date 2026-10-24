@@ -530,6 +530,10 @@ model Booking {
   stripeCustomerId           String            @default("")
   stripePaymentMethodId      String            @default("")
   stripePaymentIntentId      String            @default("")
+  /// FEE-AT-BOOKING: GreenReserve's fee collected when the golfer booked (net of
+  /// refunds), and its charge on the platform account. 0 / "" = not taken at booking.
+  feePaidCents               Int               @default(0)
+  feePaymentIntentId         String            @default("")
   cancellationFeeTotal       Int               @default(0)
   cancellationFeeChargeId    String            @default("")
   cancellationFeeChargedAt   DateTime?

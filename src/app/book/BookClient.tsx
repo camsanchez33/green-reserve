@@ -1,4 +1,5 @@
 'use client';
+import { FEE_AT_BOOKING_ON } from '@/lib/booking-fees';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, Suspense } from 'react';
 // SP-B: the /pure entry injects Stripe.js only when loadStripe() is called — the
@@ -347,8 +348,10 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
         <h1 className="text-[34px] font-serif leading-none text-ink mb-3">Confirm your tee time</h1>
         <p className="text-ink-soft text-sm mb-8">
-          {terms.cardNeeded
-            ? <>Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</>
+          {terms.cardAtBooking
+            ? FEE_AT_BOOKING_ON
+              ? <>Add your card to book at {course.name}. The booking fee is charged now; your round is paid when you check in.</>
+              : <>Save your card to lock in your tee time at {course.name} — you won&apos;t be charged today.</>
             : <>Reserve your tee time at {course.name} — no card needed. You pay when you check in.</>}
         </p>
 
@@ -436,7 +439,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
           </div>
 
           {/* SP-B: Stripe JS loads only when this course's policy needs a card. */}
-            <Elements stripe={terms.cardNeeded ? getStripePromise() : null}>
+            <Elements stripe={terms.cardAtBooking ? getStripePromise() : null}>
               <CheckoutForm
                 teeTimeId={teeTime.id}
                 players={players}
@@ -444,7 +447,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 cartSelected={withCart}
                 rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
                 accent={accent}
-                needsCard={terms.cardNeeded}
+                needsCard={terms.cardAtBooking}
                 courseName={course.name}
                 onConfirmed={setConfirmedData}
               />
@@ -457,7 +460,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             <p className="text-ink text-sm font-medium mb-1.5">Cancellation policy</p>
             <ul className="space-y-1">
               {terms.lines.map((l, i) => <li key={i} className="text-ink-soft text-xs leading-relaxed">{l}</li>)}
-              {terms.cardNeeded && (
+              {terms.cardAtBooking && (
                 <li className="text-ink-soft text-xs leading-relaxed">When a fee above is charged, or if you pay at the counter instead of checking in, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card too.</li>
               )}
             </ul>
@@ -671,7 +674,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
 
       {needsCard && <>
       <div className="pt-1 border-t border-line-soft" />
-      <StepHeading title="A card to hold your spot" note="Nothing is charged today." />
+      <StepHeading title="A card to hold your spot" note={FEE_AT_BOOKING_ON ? 'Only the booking fee is charged today.' : 'Nothing is charged today.'} />
       {walletRequest && agreed && (
         <>
           <PaymentRequestButtonElement options={{ paymentRequest: walletRequest, style: { paymentRequestButton: { type: 'book', theme: 'dark', height: '48px' } } }} />
@@ -685,7 +688,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
           <CardElement options={cardStyle} />
         </div>
-        <TrustNote className="mt-1.5">Nothing is charged now. The terms above say when your card can be.</TrustNote>
+        <TrustNote className="mt-1.5">{FEE_AT_BOOKING_ON ? 'Only the booking fee is charged now. The terms above say when else your card can be.' : 'Nothing is charged now. The terms above say when your card can be.'}</TrustNote>
       </div>
       </>}
 

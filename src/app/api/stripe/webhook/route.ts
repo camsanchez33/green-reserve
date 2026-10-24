@@ -60,6 +60,9 @@ export async function POST(req: NextRequest) {
             detail: `Refund recorded from Stripe (${r.reason ?? 'no reason given'})`,
           });
         }
+        // FEE-AT-BOOKING: a refund of the booking-time fee (ours, or from the Stripe dashboard)
+        // leaves the booking holding exactly what Stripe still has.
+        if (piOf(charge.payment_intent)) await prisma.booking.updateMany({ where: { id: booking.id, feePaymentIntentId: piOf(charge.payment_intent) }, data: { feePaidCents: Math.max(0, charge.amount - charge.amount_refunded) } });
         // Fully refunded round charge → the booking's paymentStatus says so.
         if (charge.refunded && piOf(charge.payment_intent) === booking.roundPaymentIntentId) {
           await prisma.booking.update({ where: { id: booking.id }, data: { paymentStatus: 'refunded' } });

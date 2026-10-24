@@ -8,6 +8,7 @@ import { bookingWindowHours, rescalePartyFees } from '@/lib/cancel-policy';
 import { teeTimeInstant } from '@/lib/booking-events';
 import { groupGreenFee, otherPerPlayerCents } from '@/lib/residents';
 import { rulesFor, groupSizeError } from '@/lib/booking-rules';
+import { refundBookingFee } from '@/lib/booking-fee';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
           status: true, cartSelected: true, rangeBallsTotal: true,
           greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
-          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true,
+          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, feePaidCents: true,
           teeTime: { select: { date: true, time: true, greenFeeCents: true, product: { select: { minPlayers: true, maxPlayers: true } } } },
           course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true, minPlayers: true, maxPlayers: true } },
         },
@@ -111,10 +112,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
         },
       });
 
-      return { players: newPlayers, greenFeeTotal, cartFeeTotal, accessFeeTotal, rangeBallsTotal: Math.round(booking.rangeBallsTotal), totalAmount };
+      // FEE-AT-BOOKING (Cam 2026-10-24): players taken off before the cutoff get their part of the booking fee back.
+      const teeAtNow = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
+      const beforeCutoff = !!teeAtNow && teeAtNow.getTime() - bookingWindowHours(booking, booking.course) * 3600_000 > Date.now();
+      const feeBack = beforeCutoff ? Math.max(0, booking.feePaidCents - accessFeeTotal) : 0;
+      return { players: newPlayers, greenFeeTotal, cartFeeTotal, accessFeeTotal, rangeBallsTotal: Math.round(booking.rangeBallsTotal), totalAmount, feeBack };
     }, { isolationLevel: 'Serializable' });
 
-    return NextResponse.json(result);
+    const { feeBack, ...view } = result;
+    if (feeBack > 0) {
+      const r = await refundBookingFee(bookingId, feeBack, `party lowered to ${result.players} before the cutoff`, 'golfer');
+      if (!r.ok) return NextResponse.json({ ...view, feeRefundError: 'The party was changed, but the booking fee for the players taken off couldn’t be refunded yet — GreenReserve will follow up.' });
+    }
+    return NextResponse.json(view);
   } catch (err) {
     const e = err as { code?: string; max?: number; msg?: string };
     if (e.code === 'INVALID') return NextResponse.json({ error: 'Invalid link' }, { status: 404 });

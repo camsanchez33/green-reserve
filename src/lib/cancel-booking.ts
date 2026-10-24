@@ -2,6 +2,7 @@ import { prisma } from './prisma';
 import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
 import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee';
+import { refundBookingFee } from './booking-fee';
 import { chargesOnLateCancel, holdsAtCutoff, bookingWindowHours } from './cancel-policy';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
@@ -273,7 +274,17 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   else if (feeAlreadyCharged && !waiveFee) await chargeAccessFeeSeparately(bookingId, { why: 'late_cancel', actor: 'system' });
   else await refundSeparateAccessFee(bookingId, 'booking cancelled', 'system');
 
+  // FEE-AT-BOOKING (Cam 2026-10-24): the fee taken when they booked is refunded
+  // on a cancel before the cutoff, or whenever the course calls it off or waives
+  // its fee; a late cancel or a no-show keeps it.
+  let bookingFeeRefundFailed = '';
+  if (booking.feePaidCents > 0) {
+    const keep = !waiveFee && !opts.courseCalledOff && (isLate || !!noShowCharge);
+    const r = keep ? null : await refundBookingFee(bookingId, 'all', opts.courseCalledOff ? `course called it off (${opts.courseCalledOff})` : waiveFee ? 'cancelled, fee waived' : 'cancelled before the cutoff');
+    if (r && !r.ok) bookingFeeRefundFailed = `GreenReserve's booking fee could not be refunded (${r.error}) — GreenReserve will follow up.`;
+  }
+
   // A kept no-show charge reads as a fee kept on every screen, as in the email.
   // noShowFeeKeptCents: the screens name WHICH fee was kept (a no-show charge is not a late fee).
-  return { success: true, feeCharged: feeAlreadyCharged || !!noShowCharge, noShowFeeKeptCents: noShowCharge?.amountCents ?? 0, roundRefunded, feeRefundFailed, lateFeeChargeFailed } as const;
+  return { success: true, feeCharged: feeAlreadyCharged || !!noShowCharge, noShowFeeKeptCents: noShowCharge?.amountCents ?? 0, roundRefunded, feeRefundFailed: feeRefundFailed || bookingFeeRefundFailed, lateFeeChargeFailed } as const;
 }
