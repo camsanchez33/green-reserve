@@ -1,38 +1,54 @@
 {
-  "generatedAt": "2026-10-24T01:30:00.053Z",
+  "generatedAt": "2026-10-24T01:59:41.128Z",
   "repo": {
-    "head": "1a32f6b2",
+    "head": "fbacc529",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 11,
+    "dirtyCount": 13,
     "dirty": [
-      "M  CLAUDE.md",
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "M  legal/documents/brand-license/2026-09.md",
-      "M  legal/documents/brand-license/2026-11.md",
-      "M  legal/documents/operator-agreement/2026-08.md",
-      "M  legal/documents/operator-agreement/2026-10.md",
-      "M  legal/documents/operator-agreement/2026-11.md",
-      "M  scripts/contact-email-test.ts",
-      "UU scripts/schedule-plan-db-test.ts"
+      "M OPERATOR_REWORK_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M scripts/events-db-test.ts",
+      " M src/app/api/operator/events/[id]/route.ts",
+      " M src/app/dashboard/events/page.tsx",
+      " M src/components/dashboard/events/EventDetail.tsx",
+      " M src/components/dashboard/events/EventMoney.tsx",
+      " M src/components/dashboard/events/EventSetup.tsx",
+      " M src/lib/course-events.ts",
+      " M src/lib/event-payments.ts",
+      "?? prisma/migrations/20261024020000_event_guarantee/"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "1a32f6b2",
-        "date": "2026-10-24T01:22:10+00:00",
-        "subject": "schedule-plan test: expect the weekend price when today is a weekend (it failed every Saturday and Sunday, main included)",
+        "h": "fbacc529",
+        "date": "2026-10-23T21:36:46-04:00",
+        "subject": "Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a90d492b",
-        "date": "2026-10-24T01:14:43+00:00",
-        "subject": "Events: say who pays the course (the organizer or each player); one sign-up link replaces texting every player",
+        "h": "592f05f4",
+        "date": "2026-10-24T01:13:34+00:00",
+        "subject": "schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4b6af6fe",
+        "date": "2026-10-24T01:08:39+00:00",
+        "subject": "contact-email-test: spacing",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e53daa8e",
+        "date": "2026-10-24T01:05:41+00:00",
+        "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox",
         "ids": [],
         "matches": []
       },
@@ -297,7 +313,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-23",
+      "lastTouched": "2026-10-24",
       "ageDays": 0
     },
     {
@@ -321,7 +337,7 @@
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-24",
+      "lastTouched": "2026-10-23",
       "ageDays": 0
     },
     {
@@ -520,14 +536,24 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "1a32f6b2",
-      "date": "2026-10-24",
-      "subject": "schedule-plan test: expect the weekend price when today is a weekend (it failed every Saturday and Sunday, main included)"
+      "h": "fbacc529",
+      "date": "2026-10-23",
+      "subject": "Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)"
     },
     {
-      "h": "a90d492b",
+      "h": "592f05f4",
       "date": "2026-10-24",
-      "subject": "Events: say who pays the course (the organizer or each player); one sign-up link replaces texting every player"
+      "subject": "schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday"
+    },
+    {
+      "h": "4b6af6fe",
+      "date": "2026-10-24",
+      "subject": "contact-email-test: spacing"
+    },
+    {
+      "h": "e53daa8e",
+      "date": "2026-10-24",
+      "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox"
     },
     {
       "h": "978a3da2",
@@ -568,16 +594,6 @@
       "h": "a5789298",
       "date": "2026-10-23",
       "subject": "Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no \"Birdie\" anywhere a course sees); a test for the pay-page fee line"
-    },
-    {
-      "h": "966741b9",
-      "date": "2026-10-22",
-      "subject": "Course dashboard search: find a golfer, booking or member from the menu (#195)"
-    },
-    {
-      "h": "dd3cfd14",
-      "date": "2026-10-23",
-      "subject": "Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit"
     }
   ]
 }

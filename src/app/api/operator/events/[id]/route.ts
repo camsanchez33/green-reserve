@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import {
-  updateEvent, cancelEvent, applyHold, unheldTimes, previewEvent, autoPairings, parsePlayers, isDate, EventError, type EventInput,
+  updateEvent, cancelEvent, setGuarantee, guaranteeDue, applyHold, unheldTimes, previewEvent, autoPairings, parsePlayers, isDate, EventError, type EventInput,
 } from '@/lib/course-events';
 import { sendEventPairingsEmail, isPlaceholderEmail } from '@/lib/email';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
@@ -82,6 +82,7 @@ async function load(courseId: string, id: string) {
     // Only players on the list count toward the money (not the waiting list, or a sign-up still paying).
     money: eventMoney({ ...event, entrants: event.entrants.filter(p => p.status === 'in').length }, event.payments),
     signup: { url: `${process.env.NEXT_PUBLIC_URL}/events/${id}`, questions: questionsOf(event.signupQuestions) },
+    guaranteeDue: guaranteeDue(event),
     feeOn: EVENT_FEE_ON,
     today: todayIn(course?.timezone),
     courseHoles: course?.holes ?? 18,
@@ -104,6 +105,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 type Body = EventInput & {
+  guaranteedPlayers?: unknown;
   groupKey?: string;
   action?: string; preview?: boolean;
   taskId?: string; label?: string; dueDate?: string | null; done?: boolean;
@@ -133,6 +135,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         const r = await updateEvent(courseId, id, body);
         if (!r) return bad('Event not found', 404);
         return NextResponse.json({ ...(await load(courseId, id)), hold: r.hold });
+      }
+      case 'guarantee': {
+        const r = await setGuarantee(courseId, id, body.guaranteedPlayers, g.session.email);
+        if (!r) return bad('Event not found', 404);
+        return NextResponse.json(await load(courseId, id));
       }
       case 'cancel': {
         const r = await cancelEvent(courseId, id);

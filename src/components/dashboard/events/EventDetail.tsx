@@ -26,9 +26,13 @@ export type EventFull = {
   signupOpen: boolean; signupPay: string; signupMaxGroup: number; signupQuestions: SignupQuestion[];
   /** Cam 2026-10-24: organizer | players; '' = made before the question (every tool shows). */
   payer: string;
+  /** Organizer events: the guaranteed headcount (Cam 2026-10-24). */
+  guaranteeDaysBefore: number | null; guaranteedPlayers: number | null; guaranteedAt: string | null;
 };
 export type EventData = {
   event: EventFull; today: string; courseHoles: number; money: Money; feeOn: boolean;
+  /** The day the guaranteed headcount is due; null = not asked for. */
+  guaranteeDue: string | null;
   signup: { url: string; questions: SignupQuestion[] };
   held: { id: string; time: string; round: string | null }[];
   toMove: { time: string; golfers: string }[]; blockedOther: number; unheld: string[];
@@ -224,6 +228,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
 
       <div className="print:hidden">
         <EventMoney eventId={e.id} live={live} pricePerPlayerCents={e.pricePerPlayerCents} money={data.money} payments={e.payments} canRefund={canRefund} reload={reload}
+          guarantee={e.payer === 'players' ? null : { due: data.guaranteeDue, players: e.guaranteedPlayers, at: e.guaranteedAt, today, onList: e.entrants.filter(p => p.status === 'in').length }}
           organizer={{ name: e.organizerName, email: e.organizerEmail, phone: e.organizerPhone }} />
       </div>
 

@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
+import { formatTeeDay } from '@/lib/format';
 
 export type EventRefund = { id: string; amountCents: number; status: string; reason: string; error: string; createdBy: string; createdAt: string };
 export type EventPayment = {
@@ -45,8 +46,11 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
   );
 }
 
-export default function EventMoney({ eventId, live, pricePerPlayerCents, organizer, money, payments, canRefund, reload }: {
-  eventId: string; live: boolean; pricePerPlayerCents: number;
+/** Organizer events: the number they guaranteed, and when it's due (Cam 2026-10-24). */
+export type Guarantee = { due: string | null; players: number | null; at: string | null; today: string; onList: number };
+
+export default function EventMoney({ eventId, live, pricePerPlayerCents, organizer, money, payments, canRefund, reload, guarantee }: {
+  eventId: string; live: boolean; pricePerPlayerCents: number; guarantee: Guarantee | null;
   organizer: { name: string; email: string; phone: string };
   money: Money; payments: EventPayment[]; canRefund: boolean; reload: () => Promise<void>;
 }) {
@@ -62,6 +66,9 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
   const [refund, setRefund] = useState<{ id: string; amount: string; reason: string; confirm: boolean } | null>(null);
   // W2-9c: players' own payments are folded under one line (a big outing has one per player).
   const [showPlayers, setShowPlayers] = useState(false);
+  const [guaranteeInput, setGuaranteeInput] = useState<string | null>(null);
+  const showGuarantee = !!guarantee && (guarantee.due != null || guarantee.players != null);
+  const pastDue = !!guarantee?.due && guarantee.players == null && guarantee.today > guarantee.due;
   const playerPays = payments.filter(p => p.playerId || p.kind === 'player');
   const playersPaid = playerPays.filter(p => p.status === 'paid').length;
   const playersWaiting = playerPays.filter(p => p.status === 'open' || p.status === 'paying').length;
@@ -84,6 +91,15 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
     return r.data ?? {};
   }
 
+  async function saveGuarantee(value: string) {
+    setBusy('guarantee'); setError(''); setNote('');
+    const r = await dfetch(`/api/operator/events/${eventId}`, { method: 'PATCH', body: JSON.stringify({ action: 'guarantee', guaranteedPlayers: value }) });
+    if (!r.ok) { setBusy(''); setError(r.error); return; }
+    await reload();
+    setBusy(''); setGuaranteeInput(null);
+    setNote(value ? `Guaranteed headcount saved: ${value}.` : 'Guaranteed headcount cleared.');
+  }
+
   async function copy(url: string, id: string) {
     try { await navigator.clipboard.writeText(url); setCopied(id); setTimeout(() => setCopied(''), 2000); }
     catch { setError('Couldn’t copy — select the link and copy it by hand.'); }
@@ -95,7 +111,7 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
         <h2 className="text-[15px] font-semibold text-ink">Money</h2>
         {live && (
           <div className="flex gap-2">
-            <button onClick={() => { setMode(mode === 'link' ? '' : 'link'); setMade(null); setError(''); }} className={SECONDARY} aria-expanded={mode === 'link'}>Send a pay link</button>
+            <button onClick={() => { setMode(mode === 'link' ? '' : 'link'); setMade(null); setError(''); setLink(l => ({ ...l, headcount: String(money.headcount || '') })); }} className={SECONDARY} aria-expanded={mode === 'link'}>Send a pay link</button>
             <button onClick={() => { setMode(mode === 'record' ? '' : 'record'); setError(''); }} className={SECONDARY} aria-expanded={mode === 'record'}>Record a payment</button>
           </div>
         )}
@@ -104,7 +120,7 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
       <div className="divide-y divide-line-soft text-[13.5px] max-w-lg">
         <div className="flex justify-between gap-3 py-1.5">
           <span className="text-ink">{pricePerPlayerCents ? `${usd(pricePerPlayerCents)} × ${money.headcount} player${money.headcount === 1 ? '' : 's'}` : 'Price per player not set'}
-            <span className="ml-2 text-[12.5px] text-ink-muted">{pricePerPlayerCents ? (money.headcountConfirmed ? 'headcount confirmed' : 'headcount not confirmed yet') : 'set it in Change details'}</span></span>
+            <span className="ml-2 text-[12.5px] text-ink-muted">{pricePerPlayerCents ? (money.headcountConfirmed ? 'headcount confirmed' : guarantee?.players != null ? 'the guarantee or the list, whichever is more' : 'headcount not confirmed yet') : 'set it in Change details'}</span></span>
           <span className="tabular-nums text-ink">{pricePerPlayerCents ? usd(money.totalCents) : '—'}</span>
         </div>
         <div className="flex justify-between gap-3 py-1.5"><span className="text-ink">Paid</span><span className="tabular-nums text-ink">{usd(money.paidCents)}</span></div>
@@ -112,6 +128,34 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
         {money.openCents > 0 && <div className="flex justify-between gap-3 py-1.5"><span className="text-ink">Sent, not paid yet</span><span className="tabular-nums text-ink-soft">{usd(money.openCents)}</span></div>}
         {pricePerPlayerCents > 0 && <div className="flex justify-between gap-3 py-1.5 font-semibold"><span className="text-ink">Still owed</span><span className="tabular-nums text-ink">{usd(money.owedCents)}</span></div>}
       </div>
+
+      {showGuarantee && guarantee && (
+        <div className={'mt-3 max-w-lg text-[13.5px] ' + (pastDue ? 'border-l-[3px] border-warn pl-3' : '')}>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-ink">Guaranteed headcount: {guarantee.players != null ? <span className="font-semibold tabular-nums">{guarantee.players}</span> : 'not given yet'}</span>
+            <span className="text-[12.5px] text-ink-muted">
+              {guarantee.players != null
+                ? [guarantee.at && `given ${day(guarantee.at)}`, `${guarantee.onList} on the list`].filter(Boolean).join(' · ')
+                : guarantee.due ? (pastDue ? `was due ${formatTeeDay(guarantee.due)}` : `due ${formatTeeDay(guarantee.due)}`) : ''}
+            </span>
+            {live && guaranteeInput === null && (
+              <button onClick={() => { setGuaranteeInput(guarantee.players != null ? String(guarantee.players) : ''); setError(''); }} className={LINK}>
+                {guarantee.players != null ? 'Change' : 'Record it'}
+              </button>
+            )}
+          </div>
+          {pastDue && <p className="text-[12.5px] text-ink-soft mt-1">Ask the organizer for their number. Until you have it, the bill counts the players on the list, or the number expected while the list is empty.</p>}
+          {guaranteeInput !== null && (
+            <form className="flex flex-wrap items-center gap-2 mt-2" onSubmit={e => { e.preventDefault(); saveGuarantee(guaranteeInput.trim()); }}>
+              <input type="number" min={1} max={1000} inputMode="numeric" required autoFocus aria-label="Guaranteed headcount" className={INPUT + ' w-24'}
+                value={guaranteeInput} onChange={e => setGuaranteeInput(e.target.value)} />
+              <button type="submit" disabled={!!busy} className={PRIMARY}>{busy === 'guarantee' ? 'Saving…' : 'Save'}</button>
+              {guarantee.players != null && <button type="button" disabled={!!busy} onClick={() => saveGuarantee('')} className={SECONDARY}>Clear it</button>}
+              <button type="button" onClick={() => setGuaranteeInput(null)} className={SECONDARY}>Close</button>
+            </form>
+          )}
+        </div>
+      )}
 
       {(error || note) && <p role={error ? 'alert' : 'status'} className={'mt-3 text-[13.5px] ' + (error ? 'text-bad' : 'text-ink')}>{error || note}</p>}
 
@@ -129,6 +173,9 @@ export default function EventMoney({ eventId, live, pricePerPlayerCents, organiz
                 <input type="number" min={1} max={1000} inputMode="numeric" required className={INPUT + ' w-32'} value={link.headcount}
                   onChange={e => setLink(l => ({ ...l, headcount: e.target.value, amount: balanceFor(e.target.value) || l.amount }))} /></label>
               {pricePerPlayerCents > 0 && <p className="text-[12.5px] text-ink-muted mt-1">{usd(pricePerPlayerCents)} × the headcount, less the {usd(money.keptCents)} already paid. Change the amount if you need to.</p>}
+              {guarantee?.players != null && Number(link.headcount) > 0 && Number(link.headcount) < guarantee.players && (
+                <p className="text-[12.5px] text-warn mt-1">That&apos;s fewer than the {guarantee.players} they guaranteed. You can still bill fewer if you choose.</p>
+              )}
             </div>
           )}
           <div className="grid sm:grid-cols-2 gap-3">

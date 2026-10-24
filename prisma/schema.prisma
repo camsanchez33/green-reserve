@@ -1472,6 +1472,14 @@ model CourseEvent {
   /// balance; players don't pay the course) or players (each pays on the sign-up
   /// page). '' = an event made before the question: every tool shows.
   payer               String              @default("")
+  /// Cam 2026-10-24: organizer events — the guaranteed headcount is due this
+  /// many days before the event (null = the course doesn't ask for one). The
+  /// balance bills the higher of the guarantee and the players on the list.
+  guaranteeDaysBefore Int?
+  /// The number the organizer guaranteed; null = not given yet.
+  guaranteedPlayers   Int?
+  guaranteedAt        DateTime?
+  guaranteedBy        String              @default("")
   /// W2-9d (Cam 2026-10-22): the public sign-up page, /events/[id]. Off until the course opens it.
   signupOpen          Boolean             @default(false)
   /// now = a spot is held 30 minutes while they pay; later = they sign up, the course collects after.

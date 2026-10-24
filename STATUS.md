@@ -4,16 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 01:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1a32f6b2` · working tree **11 dirty file(s)**
+Generated 2026-10-24 01:59 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `fbacc529` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 16 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 18 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `1a32f6b2` | 2026-10-24 | schedule-plan test: expect the weekend price when today is a weekend (it failed every Saturday and Sunday, main included) |
-| `a90d492b` | 2026-10-24 | Events: say who pays the course (the organizer or each player); one sign-up link replaces texting every player |
+| `fbacc529` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
+| `592f05f4` | 2026-10-24 | schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday |
+| `4b6af6fe` | 2026-10-24 | contact-email-test: spacing |
+| `e53daa8e` | 2026-10-24 | MAIL-1: agreements name admin@ instead of the Outlook inbox |
 | `978a3da2` | 2026-10-23 | Retire the admin Activity page (AW-12) (#200) |
 | `d2b41f27` | 2026-10-23 | Regenerate the status board |
 | `d6efdc1b` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
@@ -31,22 +33,24 @@ Generated 2026-10-24 01:30 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (13 file(s))
 
-- `M  CLAUDE.md`
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `M  legal/documents/brand-license/2026-09.md`
-- `M  legal/documents/brand-license/2026-11.md`
-- `M  legal/documents/operator-agreement/2026-08.md`
-- `M  legal/documents/operator-agreement/2026-10.md`
-- `M  legal/documents/operator-agreement/2026-11.md`
-- `M  scripts/contact-email-test.ts`
-- `UU scripts/schedule-plan-db-test.ts`
+- `M OPERATOR_REWORK_SPEC.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M prisma/schema.prisma`
+- `M scripts/events-db-test.ts`
+- `M src/app/api/operator/events/[id]/route.ts`
+- `M src/app/dashboard/events/page.tsx`
+- `M src/components/dashboard/events/EventDetail.tsx`
+- `M src/components/dashboard/events/EventMoney.tsx`
+- `M src/components/dashboard/events/EventSetup.tsx`
+- `M src/lib/course-events.ts`
+- `M src/lib/event-payments.ts`
+- `?? prisma/migrations/20261024020000_event_guarantee/`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -127,11 +131,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-23 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-24 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 6d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-24 | 0d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-23 | 0d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 1d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 1d |
@@ -167,8 +171,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `1a32f6b2` 2026-10-24 — schedule-plan test: expect the weekend price when today is a weekend (it failed every Saturday and Sunday, main included)
-- `a90d492b` 2026-10-24 — Events: say who pays the course (the organizer or each player); one sign-up link replaces texting every player
+- `fbacc529` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
+- `592f05f4` 2026-10-24 — schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday
+- `4b6af6fe` 2026-10-24 — contact-email-test: spacing
+- `e53daa8e` 2026-10-24 — MAIL-1: agreements name admin@ instead of the Outlook inbox
 - `978a3da2` 2026-10-23 — Retire the admin Activity page (AW-12) (#200)
 - `d2b41f27` 2026-10-23 — Regenerate the status board
 - `d6efdc1b` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
@@ -177,8 +183,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `3c88148d` 2026-10-22 — Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)
 - `946d4a54` 2026-10-23 — The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie
 - `a5789298` 2026-10-23 — Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line
-- `966741b9` 2026-10-22 — Course dashboard search: find a golfer, booking or member from the menu (#195)
-- `dd3cfd14` 2026-10-23 — Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit
 
 ---
 

@@ -117,16 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-24 01:30 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 1a32f6b2</span>
-    <span>11 uncommitted</span>
+    <span>2026-10-24 01:59 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ fbacc529</span>
+    <span>13 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">16 runs have shipped that the queue doesn't know about</div>
+<div class="lede">18 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">1a32f6b2</span><span>schedule-plan test: expect the weekend price when today is a weekend (it failed every Saturday and Sunday, main included)</span></li>
-<li><span class="h">a90d492b</span><span>Events: say who pays the course (the organizer or each player); one sign-up link replaces texting every player</span></li>
+<li><span class="h">fbacc529</span><span>Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)</span></li>
+<li><span class="h">592f05f4</span><span>schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday</span></li>
+<li><span class="h">4b6af6fe</span><span>contact-email-test: spacing</span></li>
+<li><span class="h">e53daa8e</span><span>MAIL-1: agreements name admin@ instead of the Outlook inbox</span></li>
 <li><span class="h">978a3da2</span><span>Retire the admin Activity page (AW-12) (#200)</span></li>
 <li><span class="h">d2b41f27</span><span>Regenerate the status board</span></li>
 <li><span class="h">d6efdc1b</span><span>Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)</span></li>
@@ -151,9 +153,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M  CLAUDE.md</code></li><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>M  legal/documents/brand-license/2026-09.md</code></li><li><code>M  legal/documents/brand-license/2026-11.md</code></li><li><code>M  legal/documents/operator-agreement/2026-08.md</code></li><li><code>M  legal/documents/operator-agreement/2026-10.md</code></li><li><code>M  legal/documents/operator-agreement/2026-11.md</code></li><li><code>M  scripts/contact-email-test.ts</code></li><li><code>UU scripts/schedule-plan-db-test.ts</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M OPERATOR_REWORK_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/events-db-test.ts</code></li><li><code>M src/app/api/operator/events/[id]/route.ts</code></li><li><code>M src/app/dashboard/events/page.tsx</code></li><li><code>M src/components/dashboard/events/EventDetail.tsx</code></li><li><code>M src/components/dashboard/events/EventMoney.tsx</code></li><li><code>M src/components/dashboard/events/EventSetup.tsx</code></li><li><code>M src/lib/course-events.ts</code></li><li><code>M src/lib/event-payments.ts</code></li><li><code>?? prisma/migrations/20261024020000_event_guarantee/</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -194,11 +196,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-23 &middot; 0d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-24 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 6d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-24 &middot; 0d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 0d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
 <tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 1d</td></tr>
@@ -233,8 +235,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 15d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">1a32f6b2</td><td class="num">2026-10-24</td><td>schedule-plan test: expect the weekend price when today is a weekend (it failed every Saturday and Sunday, main included)</td></tr>
-<tr><td class="num">a90d492b</td><td class="num">2026-10-24</td><td>Events: say who pays the course (the organizer or each player); one sign-up link replaces texting every player</td></tr>
+<tr><td class="num">fbacc529</td><td class="num">2026-10-23</td><td>Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)</td></tr>
+<tr><td class="num">592f05f4</td><td class="num">2026-10-24</td><td>schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday</td></tr>
+<tr><td class="num">4b6af6fe</td><td class="num">2026-10-24</td><td>contact-email-test: spacing</td></tr>
+<tr><td class="num">e53daa8e</td><td class="num">2026-10-24</td><td>MAIL-1: agreements name admin@ instead of the Outlook inbox</td></tr>
 <tr><td class="num">978a3da2</td><td class="num">2026-10-23</td><td>Retire the admin Activity page (AW-12) (#200)</td></tr>
 <tr><td class="num">d2b41f27</td><td class="num">2026-10-23</td><td>Regenerate the status board</td></tr>
 <tr><td class="num">d6efdc1b</td><td class="num">2026-10-23</td><td>Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)</td></tr>
@@ -243,8 +247,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">3c88148d</td><td class="num">2026-10-22</td><td>Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)</td></tr>
 <tr><td class="num">946d4a54</td><td class="num">2026-10-23</td><td>The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie</td></tr>
 <tr><td class="num">a5789298</td><td class="num">2026-10-23</td><td>Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no &quot;Birdie&quot; anywhere a course sees); a test for the pay-page fee line</td></tr>
-<tr><td class="num">966741b9</td><td class="num">2026-10-22</td><td>Course dashboard search: find a golfer, booking or member from the menu (#195)</td></tr>
-<tr><td class="num">dd3cfd14</td><td class="num">2026-10-23</td><td>Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

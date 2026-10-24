@@ -46,6 +46,35 @@ export function shotgunWindow(start: string, holes: number): { from: string; to:
   return { from: toTime(s - 60), to: toTime(s + (holes <= 9 ? 135 : 270)) };
 }
 
+/** The default checklist item a guarantee answers. */
+export const HEADCOUNT_TASK = 'Confirm the headcount';
+
+/** The day the organizer's guaranteed headcount is due; null = the course doesn't ask for one. */
+export const guaranteeDue = (e: { date: string; guaranteeDaysBefore: number | null }) =>
+  e.guaranteeDaysBefore != null ? addDaysStr(e.date, -e.guaranteeDaysBefore) : null;
+
+/**
+ * Record (or clear, with '') the number the organizer guaranteed. The course
+ * decides what to do with a late or lowered number — nothing is refused for
+ * the date. Ticks the "Confirm the headcount" item.
+ */
+export async function setGuarantee(courseId: string, id: string, value: unknown, actor: string) {
+  const event = await prisma.courseEvent.findFirst({ where: { id, courseId }, select: { id: true, status: true } });
+  if (!event) return null;
+  if (event.status !== 'planned') throw new EventError('This event was cancelled.');
+  if (value === '' || value == null) {
+    await prisma.courseEvent.update({ where: { id }, data: { guaranteedPlayers: null, guaranteedAt: null, guaranteedBy: '' } });
+    return { guaranteedPlayers: null };
+  }
+  const n = int(value, 1, 1000);
+  if (n === null) throw new EventError('The guaranteed headcount has to be a whole number from 1 to 1,000.');
+  await prisma.$transaction([
+    prisma.courseEvent.update({ where: { id }, data: { guaranteedPlayers: n, guaranteedAt: new Date(), guaranteedBy: actor } }),
+    prisma.courseEventTask.updateMany({ where: { eventId: id, label: HEADCOUNT_TASK, doneAt: null }, data: { doneAt: new Date(), doneBy: actor } }),
+  ]);
+  return { guaranteedPlayers: n };
+}
+
 /** The due date of a default task. */
 export const dueFor = (date: string, daysBefore: number) => addDaysStr(date, -daysBefore);
 
@@ -134,6 +163,8 @@ export type EventInput = {
   pricePerPlayer?: unknown; includes?: unknown; terms?: unknown; notes?: unknown;
   /** Cam 2026-10-24: organizer | players. */
   payer?: unknown;
+  /** Organizer events: the guaranteed headcount is due this many days before ('' = no deadline). */
+  guaranteeDaysBefore?: unknown;
 };
 
 export class EventError extends Error {}
@@ -195,12 +226,18 @@ export async function eventFields(courseId: string, input: EventInput, opts: { a
   // Cam 2026-10-24 (after how courses run outings): one organizer paying the course, or each player paying on the sign-up page.
   const payer = input.payer === 'organizer' || input.payer === 'players' ? input.payer : null;
   if (!payer) throw new EventError('Say who pays the course: the organizer, or each player.');
+  // Only an organizer guarantees a number; players who each pay their own entry don't.
+  let guaranteeDaysBefore: number | null = null;
+  if (payer === 'organizer' && input.guaranteeDaysBefore != null && input.guaranteeDaysBefore !== '') {
+    guaranteeDaysBefore = int(input.guaranteeDaysBefore, 1, 60);
+    if (guaranteeDaysBefore === null) throw new EventError('The headcount deadline has to be 1 to 60 days before the event.');
+  }
   return {
     data: {
       name, kind, date: input.date, format, startTime: input.startTime, holdFrom: window.from, holdTo: window.to, holdToCustom,
       productId, holes, groups, players, shareCourse, holdNineIds, keepOpen,
       organizerName: str(input.organizerName, 120), organizerEmail: email, organizerPhone: str(input.organizerPhone, 40),
-      pricePerPlayerCents: Math.round(price * 100), includes, payer,
+      pricePerPlayerCents: Math.round(price * 100), includes, payer, guaranteeDaysBefore,
       terms: String(input.terms ?? '').trim().slice(0, 4000), notes: String(input.notes ?? '').trim().slice(0, 4000),
     },
     teeTimesFound: found,
@@ -247,7 +284,12 @@ export async function createEvent(courseId: string, input: EventInput, actor: st
   const event = await prisma.courseEvent.create({
     data: {
       ...data, courseId, createdBy: actor,
-      tasks: { create: DEFAULT_TASKS.map((t, i) => { const due = dueFor(data.date, t.daysBefore); return { label: t.label, dueDate: due < today ? today : due, sortOrder: i }; }) },
+      tasks: { create: DEFAULT_TASKS.map((t, i) => {
+        // The headcount item is due when the organizer's guarantee is.
+        const days = t.label === HEADCOUNT_TASK && data.guaranteeDaysBefore != null ? data.guaranteeDaysBefore : t.daysBefore;
+        const due = dueFor(data.date, days);
+        return { label: t.label, dueDate: due < today ? today : due, sortOrder: i };
+      }) },
     },
   });
   const hold = await applyHold(event);
@@ -270,6 +312,10 @@ export async function updateEvent(courseId: string, id: string, input: EventInpu
     const shift = Math.round((Date.parse(data.date + 'T12:00:00Z') - Date.parse(existing.date + 'T12:00:00Z')) / 86_400_000);
     const tasks = await prisma.courseEventTask.findMany({ where: { eventId: id, dueDate: { not: null } }, select: { id: true, dueDate: true } });
     await prisma.$transaction(tasks.map(t => prisma.courseEventTask.update({ where: { id: t.id }, data: { dueDate: addDaysStr(t.dueDate!, shift) } })));
+  }
+  if (data.guaranteeDaysBefore != null && data.guaranteeDaysBefore !== existing.guaranteeDaysBefore) {
+    // A new deadline moves the headcount item with it (unless it's done).
+    await prisma.courseEventTask.updateMany({ where: { eventId: id, label: HEADCOUNT_TASK, doneAt: null }, data: { dueDate: dueFor(data.date, data.guaranteeDaysBefore) } });
   }
   if (moved) {
     await releaseHold(id, existing);

@@ -4,7 +4,8 @@
 // a time staff reopen leaves the event, and reopening a closed day keeps an
 // event's hold. Needs a database. Run: npx tsx scripts/events-db-test.ts
 import { PrismaClient } from '@prisma/client';
-import { createEvent, updateEvent, cancelEvent, applyHold, previewEvent, unheldTimes, EventError } from '../src/lib/course-events';
+import { createEvent, updateEvent, cancelEvent, applyHold, previewEvent, unheldTimes, setGuarantee, guaranteeDue, EventError } from '../src/lib/course-events';
+import { eventMoney } from '../src/lib/event-payments';
 import { generateTeeTimes } from '../src/lib/tee-sheet-engine';
 import { setTeeTimeBlocked } from '../src/lib/schedule-service';
 
@@ -133,6 +134,36 @@ async function main() {
   let refused = false;
   try { await updateEvent(courseId, event.id, input); } catch (e) { refused = e instanceof EventError; }
   check('a cancelled event cannot be changed', refused);
+
+  // Cam 2026-10-24: the organizer's guaranteed headcount, due N days before.
+  const gIn = { name: 'Bank Outing', kind: 'outing', date: later, format: 'tee_times', startTime: '14:00', groups: 2, payer: 'organizer', guaranteeDaysBefore: 10 };
+  const g = (await createEvent(courseId, gIn, 'x')).event;
+  check('a guarantee deadline is saved and its due day counted back', g.guaranteeDaysBefore === 10 && guaranteeDue(g) === '2031-05-24', String(guaranteeDue(g)));
+  const gTask = await prisma.courseEventTask.findFirstOrThrow({ where: { eventId: g.id, label: 'Confirm the headcount' } });
+  check('…and the headcount item is due that day', gTask.dueDate === '2031-05-24', String(gTask.dueDate));
+  await updateEvent(courseId, g.id, { ...gIn, guaranteeDaysBefore: 14 });
+  check('changing the deadline moves the headcount item', (await prisma.courseEventTask.findUniqueOrThrow({ where: { id: gTask.id } })).dueDate === '2031-05-20');
+  let badDays = false;
+  try { await updateEvent(courseId, g.id, { ...gIn, guaranteeDaysBefore: 0 }); } catch (e) { badDays = e instanceof EventError && /1 to 60/.test(e.message); }
+  check('a deadline outside 1 to 60 days is refused', badDays);
+  const pl = (await createEvent(courseId, { ...gIn, name: 'Open Day', payer: 'players' }, 'x')).event;
+  check('players who pay their own entry are never asked for a guarantee', pl.guaranteeDaysBefore === null);
+  let badN = false;
+  try { await setGuarantee(courseId, g.id, 0, 'x'); } catch (e) { badN = e instanceof EventError; }
+  check('a guarantee of 0 is refused', badN);
+  check('another course cannot record a guarantee', (await setGuarantee('nope', g.id, 40, 'x')) === null);
+  await setGuarantee(courseId, g.id, 40, 'staff@test.local');
+  const gAfter = await prisma.courseEvent.findUniqueOrThrow({ where: { id: g.id } });
+  check('recording the guarantee saves who and when', gAfter.guaranteedPlayers === 40 && gAfter.guaranteedBy === 'staff@test.local' && !!gAfter.guaranteedAt);
+  check('…and ticks the headcount item', !!(await prisma.courseEventTask.findUniqueOrThrow({ where: { id: gTask.id } })).doneAt);
+  const m = (entrants: number, extra: Record<string, unknown> = {}) => eventMoney({ pricePerPlayerCents: 10000, finalHeadcount: null, players: 50, entrants, payer: 'organizer', guaranteedPlayers: 40, ...extra }, []);
+  check('the bill is the guarantee when fewer are on the list', m(30).headcount === 40 && m(30).totalCents === 400000);
+  check('…and the list when more are on it', m(44).headcount === 44);
+  check('…the guarantee, not the estimate, when nobody is listed', m(0).headcount === 40);
+  check('a confirmed balance headcount wins', m(30, { finalHeadcount: 35 }).headcount === 35);
+  check('a guarantee left on an event players pay for is ignored', m(30, { payer: 'players' }).headcount === 30);
+  await setGuarantee(courseId, g.id, '', 'x');
+  check('the guarantee can be cleared', (await prisma.courseEvent.findUniqueOrThrow({ where: { id: g.id } })).guaranteedPlayers === null);
 
   // Set up at short notice: nothing on the checklist starts out overdue.
   const { todayIn } = await import('../src/lib/course-time');
