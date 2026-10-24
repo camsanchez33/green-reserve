@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 05:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2e01ec99` · working tree **21 dirty file(s)**
+Generated 2026-10-24 05:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `33e799e0` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 22 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 23 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `33e799e0` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) |
 | `2e01ec99` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
 | `ed10fa0c` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
 | `6fd9158d` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
@@ -37,31 +38,12 @@ Generated 2026-10-24 05:33 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (21 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M CLAUDE.md`
 - `M OPERATOR_REWORK_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M src/app/api/bookings/route.ts`
-- `M src/app/api/manage/[bookingId]/change-players/route.ts`
-- `M src/app/api/stripe/webhook/route.ts`
-- `M src/app/book/BookClient.tsx`
-- `M src/app/courses/[slug]/CourseBookingClient.tsx`
-- `M src/lib/access-fee.ts`
-- `M src/lib/booking-fees.ts`
-- `M src/lib/cancel-booking.ts`
-- `M src/lib/cancel-policy.ts`
-- `M src/lib/email.ts`
-- `M src/lib/operator-home.ts`
-- `M src/lib/receipt-charges.ts`
-- `M src/lib/shop.ts`
-- `?? prisma/migrations/20261024060000_fee_at_booking/`
-- `?? scripts/fee-at-booking-db-test.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -182,6 +164,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `33e799e0` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)
 - `2e01ec99` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
 - `ed10fa0c` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
 - `6fd9158d` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
@@ -193,7 +176,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `978a3da2` 2026-10-23 — Retire the admin Activity page (AW-12) (#200)
 - `d2b41f27` 2026-10-23 — Regenerate the status board
 - `d6efdc1b` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
-- `85bb9160` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
 
 ---
 
