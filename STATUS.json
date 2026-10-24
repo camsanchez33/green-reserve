@@ -1,23 +1,46 @@
 {
-  "generatedAt": "2026-10-24T01:05:40.572Z",
+  "generatedAt": "2026-10-24T01:09:16.194Z",
   "repo": {
-    "head": "e9a83ae",
+    "head": "4b6af6f",
     "branch": "claude/youthful-keller-rvz1hm",
-    "dirtyCount": 7,
+    "dirtyCount": 16,
     "dirty": [
-      "M CLAUDE.md",
-      " M legal/documents/brand-license/2026-09.md",
-      " M legal/documents/brand-license/2026-11.md",
-      " M legal/documents/operator-agreement/2026-08.md",
-      " M legal/documents/operator-agreement/2026-10.md",
-      " M legal/documents/operator-agreement/2026-11.md",
-      " M scripts/contact-email-test.ts"
+      "M  ADMIN_V5_SPEC.md",
+      "M  CLAUDE.md",
+      "M  REVISE_QUEUE.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  docs/CODEMAP.md",
+      "M  docs/codemap.json",
+      "M  scripts/design-guard.baseline.json",
+      "M  scripts/isolation-test.ts",
+      "M  scripts/real-courses-db-test.ts",
+      "M  src/app/admin/activity/page.tsx",
+      "D  src/app/api/admin/activity/route.ts",
+      "M  src/app/api/admin/search/route.ts",
+      "M  src/app/api/admin/transactions/route.ts",
+      "M  src/components/admin/AdminSidebar.tsx"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "4b6af6f",
+        "date": "2026-10-24T01:08:39+00:00",
+        "subject": "contact-email-test: spacing",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e53daa8",
+        "date": "2026-10-24T01:05:41+00:00",
+        "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d2b41f2",
         "date": "2026-10-23T19:16:02+00:00",
@@ -116,8 +139,8 @@
     "runAwaiting": 0,
     "runInFlight": 1,
     "runNotStarted": 6,
-    "reviseDone": 14,
-    "reviseOpen": 8,
+    "reviseDone": 15,
+    "reviseOpen": 7,
     "ideas": 17,
     "parked": 7
   },
@@ -226,7 +249,7 @@
     ]
   },
   "revise": {
-    "done": 14,
+    "done": 15,
     "open": [
       {
         "title": "A-03 /admin/inquiries/[id] — DETAIL — items 1-7 BUILT (item 1 cbbf1e0,",
@@ -241,11 +264,6 @@
       {
         "title": "A-08 /admin/messages — threads (Cam 2026-07-23: functionally fine, \"just needs to look a little better\" — visual notes go to the AESTHETIC PASS; only structural findings would reopen this)",
         "line": 555,
-        "state": "not-started"
-      },
-      {
-        "title": "A-09 /admin/activity — ledger + filters",
-        "line": 556,
         "state": "not-started"
       },
       {
@@ -274,7 +292,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-23",
+      "lastTouched": "2026-10-24",
       "ageDays": 0
     },
     {
@@ -497,6 +515,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4b6af6f",
+      "date": "2026-10-24",
+      "subject": "contact-email-test: spacing"
+    },
+    {
+      "h": "e53daa8",
+      "date": "2026-10-24",
+      "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox"
+    },
+    {
       "h": "d2b41f2",
       "date": "2026-10-23",
       "subject": "Regenerate the status board"
@@ -545,16 +573,6 @@
       "h": "e0bc004",
       "date": "2026-10-22",
       "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)"
-    },
-    {
-      "h": "4b621c0",
-      "date": "2026-10-22",
-      "subject": "Regenerate status board"
-    },
-    {
-      "h": "b4ba083",
-      "date": "2026-10-22",
-      "subject": "TEST-2: test courses stay out of platform numbers, Problems and public lists (#193)"
     }
   ]
 }

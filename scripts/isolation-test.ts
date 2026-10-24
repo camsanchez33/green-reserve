@@ -490,10 +490,6 @@ async function main() {
     checkStatus('Viewer cannot access transactions (financial PII) → 403', r.status, 403);
   }
   {
-    const r = await api('/api/admin/activity', { cookie: viewerCookie });
-    checkStatus('Viewer cannot access activity feed (financial PII) → 403', r.status, 403);
-  }
-  {
     const r = await api(`/api/admin/course-members?courseId=${data.courseA.id}`, { cookie: viewerCookie });
     checkStatus('Viewer cannot access course-members (golfer PII) → 403', r.status, 403);
   }

@@ -6,7 +6,7 @@ import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/
 import { roundChargedTotal, roundApplicationFeeCents } from '@/lib/shop';
 
 const PAGE_SIZE = 50;
-// MP-10: same shape as /api/admin/activity — two sources merged by date, each
+// MP-10: two sources merged by date, each
 // bounded to its newest `page × PAGE_SIZE` rows in the DB, search pushed into
 // the WHERE instead of filtering the whole course history in memory.
 const MAX_PAGE = 200;

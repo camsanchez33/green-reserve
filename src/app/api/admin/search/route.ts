@@ -129,7 +129,6 @@ export async function GET(req: NextRequest) {
     { id: 'nav:employees',   label: 'Team',          href: '/admin/employees',  manager: true },
     { id: 'nav:broadcasts',  label: 'Announcements', href: '/admin/announcements', support: true },
     { id: 'nav:system',      label: 'Systems',       href: '/admin/system',     manager: true },
-    { id: 'nav:activity',    label: 'Activity',      href: '/admin/activity',   always: true },
     { id: 'nav:profile',     label: 'My profile',    href: '/admin/profile',    always: true },
     { id: 'nav:create',      label: 'Build by hand', href: '/admin/create',     manager: true },
   ].filter(n => {
@@ -221,7 +220,7 @@ export async function GET(req: NextRequest) {
   const NAV_AREA: Record<string, AdminArea> = {
     '/admin/problems': 'problems', '/admin/goals': 'company', '/admin/inquiries': 'pipeline', '/admin/courses': 'courses',
     '/admin/groups': 'courses', '/admin/messages': 'messages', '/admin/revenue': 'money', '/admin/golfers': 'golfers',
-    '/admin/announcements': 'messages', '/admin/system': 'company', '/admin/employees': 'company', '/admin/activity': 'company', '/admin/create': 'pipeline',
+    '/admin/announcements': 'messages', '/admin/system': 'company', '/admin/employees': 'company', '/admin/create': 'pipeline',
   };
   const TYPE_AREA: Partial<Record<ResultItem['type'], AdminArea>> = {
     course: 'courses', group: 'courses', inquiry: 'pipeline', employee: 'company', golfer: 'golfers', guest: 'golfers', booking: 'golfers', thread: 'messages',
