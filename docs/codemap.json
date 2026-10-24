@@ -17967,7 +17967,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 231,
+      "lines": 232,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -18990,7 +18990,7 @@
     },
     {
       "path": "src/lib/reader-rounds.ts",
-      "lines": 215,
+      "lines": 221,
       "purpose": "POS-3 R3b (Cam 2026-10-24, \"Ok go\"):",
       "brain": [],
       "exports": [

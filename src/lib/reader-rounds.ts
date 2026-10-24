@@ -91,7 +91,13 @@ export async function startRoundOnReader(courseId: string, bookingId: string, re
     await release(bookingId, stamp); // no intent → nothing can be charged
     return fail(502, stripeMessage(err, 'Card payments are not working right now — try again, or take cash.'));
   }
-  await prisma.booking.updateMany({ where: { id: bookingId, readerStartedAt: stamp }, data: { readerIntentId: pi.id } });
+  const stored = await prisma.booking.updateMany({ where: { id: bookingId, readerStartedAt: stamp }, data: { readerIntentId: pi.id } });
+  if (!stored.count) {
+    // The claim ended meanwhile (cancelled while this was starting): never send an unclaimed payment to the reader.
+    await stripe.paymentIntents.cancel(pi.id, {}, { stripeAccount: c.value.account }).catch(() => {});
+    await prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: stamp }, data: { shopLockedAt: null } });
+    return fail(409, 'This was cancelled while it was starting — nothing was charged. Try again.');
+  }
   try {
     await stripe.terminal.readers.processPaymentIntent(readerId, { payment_intent: pi.id }, { stripeAccount: c.value.account, idempotencyKey: `reader-process-${pi.id}` });
   } catch (err) {

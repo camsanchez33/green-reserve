@@ -23,9 +23,11 @@ const refunds: { pi: string; amount?: number; appFee: boolean; account: string }
 type Act = { type: string; status: string; failure_message?: string; process_payment_intent: { payment_intent: string } };
 const readers = new Map<string, { id: string; location: string; account: string; status: string; device_type: string; action: Act | null }>();
 let cancelRefused = false;
+let onCreate: null | (() => Promise<void>) = null; // runs inside paymentIntents.create, once
 const s = stripe as unknown as Record<string, Record<string, unknown>>;
 s.paymentIntents.create = async (p: { amount: number; payment_method_types: string[]; application_fee_amount?: number; metadata: Record<string, string> }, o: { stripeAccount: string; idempotencyKey: string }) => {
   const found = [...intents.values()].find(x => x.key === o.idempotencyKey); if (found) return { ...found };
+  if (onCreate) { const f = onCreate; onCreate = null; await f(); }
   const pi: PI = { id: `pi_${intents.size + 1}`, amount: p.amount, status: 'requires_payment_method', account: o.stripeAccount, types: p.payment_method_types, fee: p.application_fee_amount, key: o.idempotencyKey, metadata: p.metadata, created: Math.floor(Date.now() / 1000) };
   intents.set(pi.id, pi); return { ...pi };
 };
@@ -188,6 +190,22 @@ async function cleanup() {
   const vcash = await settleAtCounter(c.id, v.id, { actor: STAFF, actorName: 't' });
   ok('…and one that turned out paid is recorded as paid by card, never also cash', !vcash.ok && (await get(v.id)).paymentStatus === 'paid' && !(await get(v.id)).paidOffline, vcash);
   readers.get('tmr_a')!.action = null;
+
+  // ── A move while on the reader keeps the price the reader shows ──
+  const m = await book(c.id, { access: 300 });
+  await startRoundOnReader(c.id, m.id, 'tmr_a', STAFF);
+  const dearer = await prisma.teeTime.create({ data: { courseId: c.id, date: today, time: '21:00', holes: 18, greenFeeCents: 9000, playersAvailable: 4 } });
+  const { moveBooking } = await import('../src/lib/move-booking');
+  const mv = await moveBooking({ bookingId: m.id, newTeeTimeId: dearer.id, courseId: c.id, pricing: 'new_slot', actor: STAFF });
+  ok('moving a group on the reader to a dearer time keeps the price on the reader', mv.ok && (await get(m.id)).totalAmount === 10300 && (await piOf(m.id)).amount === 10300, { mv, total: (await get(m.id)).totalAmount });
+  await cancelRoundOnReader(c.id, m.id, STAFF);
+
+  // ── Cancelled while it was starting: nothing unclaimed goes to the reader ──
+  const r2 = await book(c.id);
+  onCreate = async () => { await prisma.booking.update({ where: { id: r2.id }, data: { readerStartedAt: null } }); };
+  const raced = await startRoundOnReader(c.id, r2.id, 'tmr_a', STAFF);
+  const racedPi = [...intents.values()].find(x => x.metadata.bookingId === r2.id)!;
+  ok('a claim ended while starting: the new intent is cancelled and never sent to the reader', !raced.ok && racedPi.status === 'canceled' && readers.get('tmr_a')!.action === null && !(await get(r2.id)).shopLockedAt, raced);
 
   // ── Under 50¢ ──
   const tiny = await prisma.booking.create({ data: { teeTimeId: (await prisma.teeTime.create({ data: { courseId: c.id, date: today, time: '22:00', holes: 9, greenFeeCents: 40, playersAvailable: 4, playersBooked: 1 } })).id,
