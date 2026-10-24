@@ -42,7 +42,7 @@ export async function declinedCards(courseId: string, withAmounts: boolean, take
     prisma.booking.findMany({
       where, orderBy: { createdAt: 'desc' }, take,
       // POS-1a: what the retry will charge — the round plus any shop items on it.
-      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, teeTime: { select: { date: true, time: true } } },
+      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, accessFeeTotal: true, feePaidCents: true, teeTime: { select: { date: true, time: true } } },
     }),
     prisma.booking.count({ where }),
   ]);

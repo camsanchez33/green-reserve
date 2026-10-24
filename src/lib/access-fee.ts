@@ -80,10 +80,12 @@ export async function chargeAccessFeeSeparately(bookingId: string, opts: {
     where: { id: bookingId },
     select: {
       id: true, players: true, accessFeeTotal: true, paymentStatus: true, roundPaymentIntentId: true,
-      stripeCustomerId: true, stripePaymentMethodId: true, courseId: true,
+      stripeCustomerId: true, stripePaymentMethodId: true, courseId: true, feePaidCents: true,
     },
   });
   if (!b) return { ok: false, error: 'Booking not found' };
+  // FEE-AT-BOOKING: the fee was taken when they booked — never a second time.
+  if (b.feePaidCents > 0) return { ok: true, charged: false, reason: 'fee charged at booking' };
   // Counter bookings entered by staff carry no fee (accessFeeTotal 0).
   if (b.accessFeeTotal <= 0) return { ok: true, charged: false, reason: 'no GreenReserve fee on this booking' };
   // Review (HIGH): an admin "collect payment" can charge the round — fee

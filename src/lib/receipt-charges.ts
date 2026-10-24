@@ -17,7 +17,7 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
     select: {
       totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, roundChargedCents: true, paymentStatus: true, roundPaymentIntentId: true, paidOffline: true,
       cancellationFeeTotal: true, cancellationFeeChargeId: true, lateFeeTimingAtBooking: true,
-      status: true, noShowAt: true,
+      status: true, noShowAt: true, accessFeeTotal: true, feePaidCents: true, feePaymentIntentId: true,
     },
   });
   if (!b) return [];
@@ -28,6 +28,15 @@ export async function receiptCharges(bookingId: string): Promise<ReceiptCharge[]
   const refundedFor = (reasons: string[]) => refundEvents.find(e => reasons.includes(String((e.metadata as { reason?: string } | null)?.reason ?? '')));
 
   const out: ReceiptCharge[] = [];
+
+  // FEE-AT-BOOKING: GreenReserve's fee taken when they booked, and any part given back.
+  if (b.feePaymentIntentId) {
+    const charged = await prisma.bookingEvent.findFirst({ where: { bookingId, type: 'fee_charged', stripeId: b.feePaymentIntentId }, select: { amountCents: true } });
+    if (charged?.amountCents) out.push({ label: 'Booking fee, paid when you booked', amountCents: charged.amountCents, refunded: false });
+    for (const e of refundEvents.filter(e => String((e.metadata as { reason?: string } | null)?.reason ?? '').startsWith('booking_fee_refunded'))) {
+      if (e.amountCents) out.push({ label: 'Booking fee', amountCents: e.amountCents, refunded: true });
+    }
+  }
 
   // The round itself (green fees, cart, range balls and the booking fee in one charge).
   // A round refunded by an admin or from the Stripe dashboard keeps its PI and

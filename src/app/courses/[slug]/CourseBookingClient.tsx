@@ -704,7 +704,8 @@ export default function CourseDetailPage({
   const hasLateFee = (course.late_cancellation_fee ?? 0) > 0;
   // SP-B: a card is asked for only when the policy can charge one.
   const coursePolicy = course.cancel_policy ?? policyFrom({ cancellationHours: cancelHours, lateCancellationFeeCents: Math.round((course.late_cancellation_fee ?? 0) * 100) });
-  const cardNeeded = describePolicy(coursePolicy).cardNeeded;
+  // FEE-AT-BOOKING: with GreenReserve's fee charged at booking, every booking takes a card.
+  const cardNeeded = describePolicy(coursePolicy).cardAtBooking;
   // The trust line's fee, worded as describePolicy words it ("$20", "$5 per player").
   const lateFeeWords = `${policyMoney(coursePolicy.lateCancellationFeeCents)}${coursePolicy.lateFeeBasis === 'player' ? ' per player' : ''}`;
   // R-GOLF-009: the picked slot's free-cancellation cutoff has already passed (course clock).

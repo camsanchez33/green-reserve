@@ -7,6 +7,7 @@
 // Card at booking is derived, never stored: a card is asked for only when there
 // is something to charge it for — a late fee or a no-show fee (Cam 2026-10-05).
 // Client-safe: no Node or Prisma imports.
+import { ACCESS_FEE_CENTS, FEE_AT_BOOKING_ON } from './booking-fees';
 
 export type LateFeeTiming = 'hold_at_cutoff' | 'late_cancel' | 'late_cancel_or_no_show';
 export type FeeBasis = 'booking' | 'player';
@@ -51,6 +52,16 @@ export function policyFrom(c: Partial<Record<keyof CancelPolicy, unknown>>): Can
 /** A card is needed only when the policy can charge one. */
 export function cardRequired(p: CancelPolicy): boolean {
   return p.lateCancellationFeeCents > 0 || p.noShowFeeCents > 0;
+}
+
+/**
+ * FEE-AT-BOOKING: whether the booking page takes a card. With GreenReserve's
+ * fee charged at booking every online booking does; otherwise only when the
+ * course's policy can charge it (cardRequired, SP-B). The course's own "Card
+ * at booking" setting keeps meaning cardRequired.
+ */
+export function cardAtBooking(p: CancelPolicy, feeAtBooking: boolean = FEE_AT_BOOKING_ON): boolean {
+  return feeAtBooking || cardRequired(p);
 }
 
 /** Whether a no-show is charged under this policy (and so whether auto no-show can charge). */
@@ -207,7 +218,7 @@ export const policyMoney = money;
  * What the golfer reads, as short sentences. `headline` is one line for tight
  * spaces (the booking summary); `lines` is the full terms.
  */
-export function describePolicy(p: CancelPolicy): { headline: string; lines: string[]; cardNeeded: boolean } {
+export function describePolicy(p: CancelPolicy, feeAtBooking: boolean = FEE_AT_BOOKING_ON): { headline: string; lines: string[]; cardNeeded: boolean; cardAtBooking: boolean } {
   const lines: string[] = [];
   const card = cardRequired(p);
   const late = p.lateCancellationFeeCents > 0;
@@ -227,7 +238,12 @@ export function describePolicy(p: CancelPolicy): { headline: string; lines: stri
   if (chargesNoShow(p)) {
     lines.push('No-show charges are taken at the end of the day, so a late group checked in before then isn’t charged for a no-show.');
   }
-  if (card) {
+  // FEE-AT-BOOKING (Cam 2026-10-24). Draft wording — goes live only with the
+  // flag, after legal/LQ-2_FEE_COPY.md carries it.
+  if (feeAtBooking) {
+    lines.push(`GreenReserve’s booking fee of ${money(ACCESS_FEE_CENTS)} per player is charged to your card when you book. It’s refunded if you cancel at least ${hours(p.cancellationHours)} before your tee time, take players off before then, or the course cancels.`);
+    lines.push('Your round is paid when you check in.');
+  } else if (card) {
     lines.push('Your card is saved at booking. Nothing else is charged until you play.');
   } else {
     lines.push(`No card needed to book. Check in and pay online with the link in your confirmation email — we’ll send it again ${hours(p.checkInWindowHours)} before your round.`);
@@ -235,5 +251,5 @@ export function describePolicy(p: CancelPolicy): { headline: string; lines: stri
   const headline = late
     ? `Free cancellation until ${hours(p.cancellationHours)} before · then ${money(p.lateCancellationFeeCents)}${basis(p.lateFeeBasis)}`
     : card ? 'Free cancellation · card saved for no-shows' : 'Free cancellation · no card needed';
-  return { headline, lines, cardNeeded: card };
+  return { headline, lines, cardNeeded: card, cardAtBooking: cardAtBooking(p, feeAtBooking) };
 }

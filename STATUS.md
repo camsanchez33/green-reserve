@@ -4,15 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 04:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `324cbec4` · working tree **8 dirty file(s)**
+Generated 2026-10-24 05:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `33e799e0` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 22 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 23 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `324cbec4` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items |
+| `33e799e0` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) |
+| `2e01ec99` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
 | `ed10fa0c` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
 | `6fd9158d` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
 | `6d7bf2a5` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
@@ -37,19 +38,12 @@ Generated 2026-10-24 04:07 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/register-rounds-db-test.ts`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/lib/analytics.ts`
-- `M src/lib/register.ts`
-- `M src/lib/shop-sales.ts`
+- `M OPERATOR_REWORK_SPEC.md`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -170,7 +164,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `324cbec4` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items
+- `33e799e0` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)
+- `2e01ec99` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
 - `ed10fa0c` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
 - `6fd9158d` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
 - `6d7bf2a5` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
@@ -181,7 +176,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `978a3da2` 2026-10-23 — Retire the admin Activity page (AW-12) (#200)
 - `d2b41f27` 2026-10-23 — Regenerate the status board
 - `d6efdc1b` 2026-10-23 — Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)
-- `85bb9160` 2026-10-23 — The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again
 
 ---
 

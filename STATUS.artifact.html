@@ -117,15 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-24 04:07 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 324cbec4</span>
-    <span>8 uncommitted</span>
+    <span>2026-10-24 05:43 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 33e799e0</span>
+    <span>1 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">22 runs have shipped that the queue doesn't know about</div>
+<div class="lede">23 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">324cbec4</span><span>POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items</span></li>
+<li><span class="h">33e799e0</span><span>FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)</span></li>
+<li><span class="h">2e01ec99</span><span>POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)</span></li>
 <li><span class="h">ed10fa0c</span><span>POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)</span></li>
 <li><span class="h">6fd9158d</span><span>CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)</span></li>
 <li><span class="h">6d7bf2a5</span><span>Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)</span></li>
@@ -157,9 +158,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/register-rounds-db-test.ts</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/lib/analytics.ts</code></li><li><code>M src/lib/register.ts</code></li><li><code>M src/lib/shop-sales.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M OPERATOR_REWORK_SPEC.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -239,7 +240,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-07 &middot; 16d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">324cbec4</td><td class="num">2026-10-24</td><td>POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items</td></tr>
+<tr><td class="num">33e799e0</td><td class="num">2026-10-24</td><td>FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)</td></tr>
+<tr><td class="num">2e01ec99</td><td class="num">2026-10-24</td><td>POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)</td></tr>
 <tr><td class="num">ed10fa0c</td><td class="num">2026-10-23</td><td>POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)</td></tr>
 <tr><td class="num">6fd9158d</td><td class="num">2026-10-23</td><td>CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)</td></tr>
 <tr><td class="num">6d7bf2a5</td><td class="num">2026-10-23</td><td>Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)</td></tr>
@@ -250,7 +252,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">978a3da2</td><td class="num">2026-10-23</td><td>Retire the admin Activity page (AW-12) (#200)</td></tr>
 <tr><td class="num">d2b41f27</td><td class="num">2026-10-23</td><td>Regenerate the status board</td></tr>
 <tr><td class="num">d6efdc1b</td><td class="num">2026-10-23</td><td>Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)</td></tr>
-<tr><td class="num">85bb9160</td><td class="num">2026-10-23</td><td>The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

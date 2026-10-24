@@ -1,28 +1,28 @@
 {
-  "generatedAt": "2026-10-24T04:07:15.729Z",
+  "generatedAt": "2026-10-24T05:43:24.712Z",
   "repo": {
-    "head": "324cbec4",
+    "head": "33e799e0",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
+    "dirtyCount": 1,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/register-rounds-db-test.ts",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/lib/analytics.ts",
-      " M src/lib/register.ts",
-      " M src/lib/shop-sales.ts"
+      "M OPERATOR_REWORK_SPEC.md"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "324cbec4",
-        "date": "2026-10-24T03:54:59+00:00",
-        "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items",
+        "h": "33e799e0",
+        "date": "2026-10-24T05:33:30+00:00",
+        "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2e01ec99",
+        "date": "2026-10-24T00:15:19-04:00",
+        "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)",
         "ids": [],
         "matches": []
       },
@@ -559,9 +559,14 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "324cbec4",
+      "h": "33e799e0",
       "date": "2026-10-24",
-      "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items"
+      "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off)"
+    },
+    {
+      "h": "2e01ec99",
+      "date": "2026-10-24",
+      "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)"
     },
     {
       "h": "ed10fa0c",
@@ -612,11 +617,6 @@
       "h": "d6efdc1b",
       "date": "2026-10-23",
       "subject": "Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)"
-    },
-    {
-      "h": "85bb9160",
-      "date": "2026-10-23",
-      "subject": "The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again"
     }
   ]
 }

@@ -33,3 +33,21 @@ export const SHOP_FEE_LABEL = 'GreenReserve service fee (shop items)';
  */
 export const EVENT_FEE_ON = false;
 export const EVENT_FEE_LABEL = 'GreenReserve service fee';
+
+/**
+ * FEE-AT-BOOKING (Cam 2026-10-24: "Yes" — charge GreenReserve's $1.50/player
+ * when the golfer books online, so how they pay for the round never changes
+ * whether the fee is collected, and cash at the counter stops losing it).
+ * Every online booking then takes a card. Refunded when the golfer cancels
+ * before the course's cutoff, when the course calls it off (weather, closure,
+ * waived), and for players taken off the party before the cutoff; kept on a
+ * late cancel or a no-show. lib/booking-fee.ts owns it.
+ * OFF until Operator Agreement v2026-11 and legal/LQ-2_FEE_COPY.md say the fee
+ * is charged at booking (courses re-accept; golfer /terms updated).
+ */
+export const FEE_AT_BOOKING_ON = false;
+
+/** FEE-AT-BOOKING: how much of a booking's GreenReserve fee the booking-time charge already covers. Pure, client-safe. */
+export function feeCoveredCents(b: { accessFeeTotal: number; feePaidCents?: number | null }): number {
+  return Math.max(0, Math.min(Math.round(b.feePaidCents ?? 0), Math.round(b.accessFeeTotal)));
+}

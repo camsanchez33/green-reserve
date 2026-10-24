@@ -3,7 +3,9 @@ import { applyTierRates } from '@/lib/tier-rates';
 import { groupGreenFee } from '@/lib/residents';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
-import { describePolicy, policyFrom, cardRequired, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
+import { describePolicy, policyFrom, cardAtBooking, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
+import { FEE_AT_BOOKING_ON } from '@/lib/booking-fees';
+import { chargeBookingFee, releaseUnpaidBooking } from '@/lib/booking-fee';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars } from '@/lib/money';
@@ -176,7 +178,8 @@ export async function POST(req: NextRequest) {
   // timing, the no-show fee — and whether a card is asked for at all. All of it
   // is copied onto the booking so a later policy change never reaches it.
   const policy = policyFrom(teeTimeFull.course);
-  const needsCard = cardRequired(policy);
+  // FEE-AT-BOOKING: with GreenReserve's fee charged at booking, every online booking takes a card.
+  const needsCard = cardAtBooking(policy);
   const cancellationFeeTotal = lateFeeTotalCents(policy, players);
   const noShowFeeTotal = noShowFeeCents(policy, players);
 
@@ -277,6 +280,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Something went wrong processing your booking. Please try again.' }, { status: 500 });
   }
 
+  // FEE-AT-BOOKING (Cam 2026-10-24): GreenReserve's fee is charged now, to the card just saved.
+  // Declined → the tee time goes back and nothing was charged; the golfer tries another card.
+  if (FEE_AT_BOOKING_ON && accessFeeTotal > 0) {
+    const fee = await chargeBookingFee(claimed.id);
+    if (!fee.ok) {
+      await releaseUnpaidBooking(claimed.id);
+      return NextResponse.json({ error: `The booking fee couldn’t be charged: ${fee.error} Your tee time wasn’t booked — try another card.` }, { status: 402 });
+    }
+  }
+
   console.log(JSON.stringify({ ev: 'booking.created', bookingId: claimed.id, teeTimeId, players, totalCents, hasCard: !!savedPaymentMethodId }));
 
   // Send confirmation emails (fire-and-forget)
@@ -303,6 +316,7 @@ export async function POST(req: NextRequest) {
       bookingId: claimed.id,
       checkInToken: claimed.checkInToken || undefined,
       noCard: !savedPaymentMethodId,
+      feePaidAtBooking: FEE_AT_BOOKING_ON && accessFeeTotal > 0,
       policyLines: describePolicy(policy).lines,
       confirmationNote: teeTimeFull.course.confirmationNote,
     };

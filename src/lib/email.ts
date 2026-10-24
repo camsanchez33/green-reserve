@@ -108,6 +108,8 @@ export interface BookingEmailData {
   golferName: string; golferEmail: string; courseName: string; courseAddress: string; courseSlug?: string;
   date: string; time: string; players: number; holes: number; productLabel?: string | null;
   greenFeeTotal: number; cartFeeTotal: number; accessFeeTotal: number; totalAmount: number;
+  /** FEE-AT-BOOKING: GreenReserve's fee was charged when they booked (not at check-in). */
+  feePaidAtBooking?: boolean;
   bookingId: string; appliedRate: string;
   rangeBallsTotal?: number; cancellationFeeTotal?: number; cancellationHours?: number;
   checkInToken?: string;
@@ -145,7 +147,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
     <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Green Fee</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
     ${data.cartFeeTotal > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Cart Fee</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
     ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Range Balls</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${((data.rangeBallsTotal ?? 0) / 100).toFixed(2)}</td></tr>` : ''}
-    <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${serviceFeeLabel(data.players)}</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
+    <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${serviceFeeLabel(data.players)}${data.feePaidAtBooking ? ' — charged now' : ''}</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
   `;
 
   let intro: string;

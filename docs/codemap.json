@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 543,
+    "files": 544,
     "routes": 260,
-    "libs": 179,
+    "libs": 180,
     "models": 56,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3588,7 +3588,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 393,
+      "lines": 407,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3611,6 +3611,8 @@
       "guard": "public for POST",
       "imports": [
         "@/lib/auth",
+        "@/lib/booking-fee",
+        "@/lib/booking-fees",
         "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/cancel-policy",
@@ -4590,7 +4592,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/change-players/route.ts",
-      "lines": 134,
+      "lines": 144,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4609,6 +4611,7 @@
       "imports": [
         "@/lib/auth",
         "@/lib/booking-events",
+        "@/lib/booking-fee",
         "@/lib/booking-rules",
         "@/lib/cancel-policy",
         "@/lib/manage-access",
@@ -6983,7 +6986,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 134,
+      "lines": 137,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7035,7 +7038,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 722,
+      "lines": 725,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7316,7 +7319,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1839,
+      "lines": 1840,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11174,7 +11177,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 184,
+      "lines": 186,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -13141,6 +13144,7 @@
         "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/booking-fee.ts",
         "src/lib/booking-residents.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
@@ -13153,8 +13157,50 @@
       ]
     },
     {
+      "path": "src/lib/booking-fee.ts",
+      "lines": 122,
+      "purpose": "FEE-AT-BOOKING (Cam 2026-10-24:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "chargeBookingFee",
+          "kind": "fn"
+        },
+        {
+          "name": "feeCoveredCents",
+          "kind": "reexport"
+        },
+        {
+          "name": "refundBookingFee",
+          "kind": "fn"
+        },
+        {
+          "name": "releaseUnpaidBooking",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./booking-fees",
+        "./prisma",
+        "./refund-booking",
+        "./stripe",
+        "stripe"
+      ],
+      "usedBy": [
+        "src/app/api/bookings/route.ts",
+        "src/app/api/manage/[bookingId]/change-players/route.ts",
+        "src/lib/cancel-booking.ts"
+      ]
+    },
+    {
       "path": "src/lib/booking-fees.ts",
-      "lines": 36,
+      "lines": 54,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13173,6 +13219,14 @@
         {
           "name": "EVENT_FEE_ON",
           "kind": "const"
+        },
+        {
+          "name": "FEE_AT_BOOKING_ON",
+          "kind": "const"
+        },
+        {
+          "name": "feeCoveredCents",
+          "kind": "fn"
         },
         {
           "name": "hoursLabel",
@@ -13203,6 +13257,7 @@
       "imports": [],
       "usedBy": [
         "src/app/api/admin/system/route.ts",
+        "src/app/api/bookings/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/book/BookClient.tsx",
         "src/app/checkin/[bookingId]/page.tsx",
@@ -13212,6 +13267,8 @@
         "src/components/dashboard/ShopItemsForGroup.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/components/home/TeeSheetDemo.tsx",
+        "src/lib/booking-fee.ts",
+        "src/lib/cancel-policy.ts",
         "src/lib/email.ts",
         "src/lib/event-payments.ts",
         "src/lib/shop.ts"
@@ -13689,7 +13746,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 280,
+      "lines": 291,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13710,6 +13767,7 @@
       "imports": [
         "./access-fee",
         "./booking-events",
+        "./booking-fee",
         "./cancel-policy",
         "./email",
         "./no-show-fee",
@@ -13757,7 +13815,7 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 240,
+      "lines": 256,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
@@ -13780,6 +13838,10 @@
         {
           "name": "CancelPolicy",
           "kind": "type"
+        },
+        {
+          "name": "cardAtBooking",
+          "kind": "fn"
         },
         {
           "name": "cardRequired",
@@ -13855,7 +13917,9 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./booking-fees"
+      ],
       "usedBy": [
         "src/app/api/bookings/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
@@ -15665,7 +15729,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2179,
+      "lines": 2181,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -18450,6 +18514,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/booking-fee.ts",
         "src/lib/booking-residents.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
@@ -18764,7 +18829,7 @@
     },
     {
       "path": "src/lib/receipt-charges.ts",
-      "lines": 94,
+      "lines": 103,
       "purpose": "R-GOLF-010 — what was actually charged to (and refunded from) the golfer's card, for the receipt.",
       "brain": [],
       "exports": [
@@ -18840,6 +18905,7 @@
         "src/app/api/admin/refund/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/booking-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/no-show-fee.ts"
       ]
@@ -19915,7 +19981,7 @@
     },
     {
       "path": "src/lib/shop.ts",
-      "lines": 156,
+      "lines": 158,
       "purpose": "POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08):",
       "brain": [
         "pro-shop"
@@ -20272,6 +20338,7 @@
         "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/booking-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
@@ -21634,6 +21701,14 @@
           "type": "String"
         },
         {
+          "name": "feePaidCents",
+          "type": "Int"
+        },
+        {
+          "name": "feePaymentIntentId",
+          "type": "String"
+        },
+        {
           "name": "cancellationFeeTotal",
           "type": "Int"
         },
@@ -21785,6 +21860,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
+        "src/lib/booking-fee.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
@@ -21830,6 +21906,7 @@
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
+        "src/lib/booking-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
@@ -24916,6 +24993,7 @@
         "src/lib/access-fee.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
+        "src/lib/booking-fee.ts",
         "src/lib/course-timeline.ts",
         "src/lib/money-problems.ts",
         "src/lib/no-show-fee.ts",
