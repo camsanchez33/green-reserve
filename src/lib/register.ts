@@ -88,12 +88,20 @@ export async function ringUpCash(courseId: string, opts: {
     settled.push({ bookingId: id, name: await label(id), amountCents: r.amountCents });
   }
   if (!opts.lines.length && !settled.length) return { ok: false, status: 409, error: skipped.join(' ') || 'Nothing could be rung up.' };
-  const sale = await createSale({
-    courseId, lines: opts.lines, pay: 'cash', soldBy: opts.soldBy, discount: opts.discount, taxCalculationId: opts.taxCalculationId,
+  const saleInput = {
+    courseId, lines: opts.lines, pay: 'cash' as const, soldBy: opts.soldBy, discount: opts.discount, taxCalculationId: opts.taxCalculationId,
     // The cash covered what the screen showed; if a round dropped out, the change shown at the counter is what counts.
     cashTenderedCents: skipped.length ? undefined : opts.cashTenderedCents,
     rounds: settled, customerName: opts.customerName, customerPhone: opts.customerPhone, customerEmail: opts.customerEmail,
-  });
+  };
+  const saleFirst = createSale(saleInput);
+  // The rounds are already paid: never leave them without a sale because of the change figure. A cash-handed-over
+  // amount that doesn't cover the total is dropped (the sale is recorded without change) and said so.
+  let sale = await saleFirst;
+  if (!sale.ok && settled.length && opts.cashTenderedCents != null && opts.cashTenderedCents !== '') {
+    sale = await createSale({ ...saleInput, cashTenderedCents: undefined });
+    if (sale.ok) notes.push('The cash handed over was less than the total, so the sale was saved without the change figure.');
+  }
   if (!sale.ok) {
     // The rounds are paid (checked in at the counter) even though the items couldn't be recorded.
     console.error(JSON.stringify({ ev: 'register.items_after_rounds.fail', courseId, settled: settled.map(s => s.bookingId), error: sale.error }));

@@ -610,7 +610,9 @@ export default function ShopPage() {
                     {pay === 'reader' && <p className="text-[12.5px] text-ink-muted">The reader asks for the card. The money goes to your Stripe account.</p>}
                     {hasRounds && <p className="text-[12.5px] text-ink-muted">{pay === 'reader'
                       ? 'The group pays their round by card, booking fee included — the same as paying online — and is checked in when the card goes through.'
-                      : 'In cash, each group is checked in and marked paid at the counter on the tee sheet. One group on its own (no items) can go on the card reader. Discounts apply to shop items only.'}</p>}
+                      : 'In cash, each group is checked in and paid at the register — one receipt for the sale. One group on its own (no items) can go on the card reader. Discounts apply to shop items only.'}</p>}
+                    {/* CASH-1: a login with check-in but not counter payment can only use the reader, for one group at a time. */}
+                    {!payChoices.some(([k]) => k === pay) && <p className="text-[12.5px] text-bad" role="alert">{hasRounds && !canCash ? 'You can put one group on its own on the card reader. Taking cash needs “Mark paid at the counter” — ask the course owner.' : 'Pick how they pay.'}</p>}
                     {pay === 'cash' && ready && due > 0 && (
                       <div>
                         <span className="block text-[13px] font-medium text-ink mb-1.5">Cash handed over <span className="font-normal text-ink-muted">(optional)</span></span>
@@ -637,7 +639,7 @@ export default function ShopPage() {
                       </div>
                     )}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
-                    <button onClick={ringUp} disabled={busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
+                    <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
                       {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
                     </button>

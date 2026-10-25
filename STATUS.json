@@ -1,34 +1,28 @@
 {
-  "generatedAt": "2026-10-25T23:03:44.119Z",
+  "generatedAt": "2026-10-25T23:09:17.928Z",
   "repo": {
-    "head": "719895d0",
+    "head": "b08e856c",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 18,
+    "dirtyCount": 5,
     "dirty": [
-      "M CLAUDE.md",
-      " M OPERATOR_REWORK_SPEC.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/reader-rounds-db-test.ts",
-      " M scripts/tt-card-test.ts",
-      " M scripts/walk1-fixes-test.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/shop-sales/rounds/route.ts",
-      " M src/app/dashboard/page.tsx",
+      " M scripts/cash-at-counter-db-test.ts",
       " M src/app/dashboard/shop/page.tsx",
-      " M src/components/dashboard/RegisterClose.tsx",
-      " M src/components/home/TeeSheetDemo.tsx",
-      " M src/lib/booking-status.ts",
-      " M src/lib/counter-pay.ts",
-      " M src/lib/register-close.ts",
-      " M src/lib/register.ts",
-      "?? scripts/cash-at-counter-db-test.ts"
+      " M src/lib/register.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "b08e856c",
+        "date": "2026-10-25T23:03:47+00:00",
+        "subject": "CASH-1: no more \"paid at the counter\" — paid online, or rung up in store",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "719895d0",
         "date": "2026-10-25T01:42:31-04:00",
@@ -604,6 +598,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "b08e856c",
+      "date": "2026-10-25",
+      "subject": "CASH-1: no more \"paid at the counter\" — paid online, or rung up in store"
+    },
+    {
       "h": "719895d0",
       "date": "2026-10-25",
       "subject": "POS-3 R4: end-of-day close-out — count the drawer (#211)"
@@ -657,11 +656,6 @@
       "h": "592f05f4",
       "date": "2026-10-24",
       "subject": "schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday"
-    },
-    {
-      "h": "4b6af6fe",
-      "date": "2026-10-24",
-      "subject": "contact-email-test: spacing"
     }
   ]
 }

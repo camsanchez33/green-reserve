@@ -8120,7 +8120,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 804,
+      "lines": 806,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -19273,7 +19273,7 @@
     },
     {
       "path": "src/lib/register.ts",
-      "lines": 105,
+      "lines": 113,
       "purpose": "POS-3 R2 (Cam 2026-10-24:",
       "brain": [],
       "exports": [

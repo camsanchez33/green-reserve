@@ -54,9 +54,15 @@ async function cleanup() {
   const w2 = made.ok ? await ringUpCash(c.id, { lines: [], bookingIds: [made.id], walkIns: [], soldBy: 't', actor: STAFF }) : null;
   ok('the walk-in pays $100 in cash at the register', !!w2?.ok && w2.value.sale.totalCents === 10000);
 
+  // A cash-handed-over figure below the total never leaves a paid round without its sale.
+  const short = await prisma.booking.create({ data: { teeTimeId: tt.id, courseId: c.id, golferName: 'Short', golferEmail: `${TAG}+s@t.local`, players: 1,
+    greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 5000, status: 'confirmed', paymentStatus: 'manual' } });
+  const under = await ringUpCash(c.id, { lines: [], bookingIds: [short.id], walkIns: [], cashTenderedCents: 2000, soldBy: 't', actor: STAFF });
+  ok('a tender below the total: the sale is still recorded (no change figure), and staff are told', under.ok && under.value.sale.totalCents === 5000 && under.value.sale.cashTenderedCents === null && under.value.notes.some(n => /less than the total/.test(n)), under);
+
   // The close-out: register cash, counted once; nothing under "marked paid at the counter".
   const s = await daySummary(c.id);
-  ok('the close-out counts this cash once, as register cash sales', s.ok && s.value.cashSales.cents === 25000 && s.value.cashSales.roundsCents === 25000 && s.value.counterRounds.count === 0 && s.value.cashTakenCents === 25000, s.ok ? s.value : s);
+  ok('the close-out counts this cash once, as register cash sales', s.ok && s.value.cashSales.cents === 30000 && s.value.cashSales.roundsCents === 30000 && s.value.counterRounds.count === 0 && s.value.cashTakenCents === 30000, s.ok ? s.value : s);
 
   // No unrecorded path is left.
   const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');

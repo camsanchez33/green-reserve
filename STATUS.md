@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-25 23:03 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `719895d0` · working tree **18 dirty file(s)**
+Generated 2026-10-25 23:09 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b08e856c` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 27 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 28 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `b08e856c` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store |
 | `719895d0` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
 | `02782990` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
 | `068ac2b6` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
@@ -42,26 +43,13 @@ Generated 2026-10-25 23:03 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (18 file(s))
+### Uncommitted working tree (5 file(s))
 
-- `M CLAUDE.md`
-- `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/reader-rounds-db-test.ts`
-- `M scripts/tt-card-test.ts`
-- `M scripts/walk1-fixes-test.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/api/operator/shop-sales/rounds/route.ts`
-- `M src/app/dashboard/page.tsx`
+- `M scripts/cash-at-counter-db-test.ts`
 - `M src/app/dashboard/shop/page.tsx`
-- `M src/components/dashboard/RegisterClose.tsx`
-- `M src/components/home/TeeSheetDemo.tsx`
-- `M src/lib/booking-status.ts`
-- `M src/lib/counter-pay.ts`
-- `M src/lib/register-close.ts`
 - `M src/lib/register.ts`
-- `?? scripts/cash-at-counter-db-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -185,6 +173,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `b08e856c` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store
 - `719895d0` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
 - `02782990` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
 - `068ac2b6` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
@@ -196,7 +185,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `6d7bf2a5` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
 - `fbacc529` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
 - `592f05f4` 2026-10-24 — schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday
-- `4b6af6fe` 2026-10-24 — contact-email-test: spacing
 
 ---
 

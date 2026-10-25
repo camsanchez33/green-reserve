@@ -296,7 +296,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 112 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 610 |
 | `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1191 |
-| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 804 |
+| `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 806 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
 | `/dashboard/verify` | operator | token | page | `src/app/dashboard/verify/page.tsx` | 148 |
@@ -428,7 +428,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/problems.ts` | 3 | 61 | BRAIN-2a (Cam 2026-10-22): | `listProblems`, `openProblemCount`, `ProblemView`, `SNOOZE_DAYS` |
 | `src/lib/public-course.ts` | 3 | 31 | PERF-1: | `loadPublicCourse` |
 | `src/lib/reader-rounds.ts` | 3 | 221 | POS-3 R3b (Cam 2026-10-24, "Ok go"): | `cancelRoundOnReader`, `roundReaderStatus`, `RoundReaderStatus`, `settleRoundReader`, `startRoundOnReader` |
-| `src/lib/register.ts` | 3 | 105 | POS-3 R2 (Cam 2026-10-24: | `MAX_REGISTER_ROUNDS`, `registerRounds`, `ringUpCash` |
+| `src/lib/register.ts` | 3 | 113 | POS-3 R2 (Cam 2026-10-24: | `MAX_REGISTER_ROUNDS`, `registerRounds`, `ringUpCash` |
 | `src/lib/schedule-wire.ts` | 3 | 94 |  | `scheduleMoneyForCreate`, `scheduleMoneyFromWire`, `scheduleToWire`, `teeTimeToWire` |
 | `src/lib/sent-messages.ts` | 3 | 47 | BRAIN-1b (Cam 2026-10-22): | `logSent`, `SendMeta` |
 | `src/lib/shop-import.ts` | 3 | 133 | W2-7 (Cam 2026-10-20: | `ImportItem`, `ImportOption`, `ImportRow`, `MAX_IMPORT_ITEMS`, `MAX_OPTIONS`, `parseImport`, `parsePriceCents` |
