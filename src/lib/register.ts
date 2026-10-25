@@ -49,6 +49,8 @@ type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: st
 export async function ringUpCash(courseId: string, opts: {
   lines: unknown[]; discount?: DiscountInput; cashTenderedCents?: unknown; taxCalculationId?: string;
   bookingIds: string[]; walkIns: CounterBookingInput[];
+  /** CASH-1: a group where only some showed pays for those (bookingId → players who showed). */
+  headcounts?: Record<string, number>;
   soldBy: string; actor: EventActor; customerName?: string; customerPhone?: string; customerEmail?: string;
 }): Promise<Result<{ sale: SaleView; skipped: string[]; notes: string[] }> | { ok: false; status: number; error: string; settled: string[] }> {
   const bookingIds = [...new Set(opts.bookingIds.filter(x => typeof x === 'string' && x))];
@@ -75,12 +77,12 @@ export async function ringUpCash(courseId: string, opts: {
   };
   // Walk-ins: booked onto the sheet, then paid here like any group.
   for (const w of walkIns) {
-    const made = await createCounterBooking(courseId, { ...w, source: 'walk_in', paidNow: false }, opts.actor);
+    const made = await createCounterBooking(courseId, { ...w, source: w.source ?? 'walk_in' }, opts.actor);
     if (!made.ok) { skipped.push(`Walk-in ${String(w.golferName ?? '').trim() || ''}: ${made.error}`.trim()); continue; }
     bookingIds.push(made.id);
   }
   for (const id of bookingIds) {
-    const r = await settleAtCounter(courseId, id, { actor: opts.actor, actorName: opts.soldBy });
+    const r = await settleAtCounter(courseId, id, { actor: opts.actor, actorName: opts.soldBy, checkedInPlayers: opts.headcounts?.[id] });
     if (!r.ok) { skipped.push(`${await label(id)}: ${r.error}`); continue; }
     if (r.note) notes.push(r.note);
     settled.push({ bookingId: id, name: await label(id), amountCents: r.amountCents });

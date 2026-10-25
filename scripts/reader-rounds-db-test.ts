@@ -9,7 +9,7 @@ import { stripe } from '../src/lib/stripe';
 import { startRoundOnReader, roundReaderStatus, cancelRoundOnReader } from '../src/lib/reader-rounds';
 import { performCheckIn } from '../src/lib/checkin-booking';
 import { settleAtCounter } from '../src/lib/counter-pay';
-import { todayIn } from '../src/lib/course-time';
+import { todayIn, addDaysStr } from '../src/lib/course-time';
 const TAG = 'r3bround';
 let failed = 0;
 const ok = (l: string, c: boolean, i: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || !i ? '' : ' — ' + (typeof i === 'string' ? i : JSON.stringify(i))}`); if (!c) failed++; };
@@ -194,7 +194,8 @@ async function cleanup() {
   // ── A move while on the reader keeps the price the reader shows ──
   const m = await book(c.id, { access: 300 });
   await startRoundOnReader(c.id, m.id, 'tmr_a', STAFF);
-  const dearer = await prisma.teeTime.create({ data: { courseId: c.id, date: today, time: '21:00', holes: 18, greenFeeCents: 9000, playersAvailable: 4 } });
+  // Tomorrow, so the move never lands on a time already gone (a staff move may change the day).
+  const dearer = await prisma.teeTime.create({ data: { courseId: c.id, date: addDaysStr(today, 1), time: '09:00', holes: 18, greenFeeCents: 9000, playersAvailable: 4 } });
   const { moveBooking } = await import('../src/lib/move-booking');
   const mv = await moveBooking({ bookingId: m.id, newTeeTimeId: dearer.id, courseId: c.id, pricing: 'new_slot', actor: STAFF });
   ok('moving a group on the reader to a dearer time keeps the price on the reader', mv.ok && (await get(m.id)).totalAmount === 10300 && (await piOf(m.id)).amount === 10300, { mv, total: (await get(m.id)).totalAmount });

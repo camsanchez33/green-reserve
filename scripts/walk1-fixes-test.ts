@@ -13,8 +13,9 @@ const code = (p: string) => src(p).replace(/\/\/.*$/gm, '');
 
 const ops = code('src/app/api/operator/bookings/route.ts');
 // POS-3 R2: the counter payment lives in lib/counter-pay (the tee sheet and the register both call it).
-const paidOfflineRoute = ops.slice(ops.indexOf("if (action === 'paid_offline')"), ops.indexOf('const result = action'));
-const paidOffline = paidOfflineRoute.includes('settleAtCounter(') ? code('src/lib/counter-pay.ts') : paidOfflineRoute;
+// CASH-1: the tee sheet's cash is a register sale (ringUpCash), which settles the round through lib/counter-pay.
+const paidOfflineRoute = ops.slice(ops.indexOf("if (action === 'take_cash' || action === 'paid_offline')"), ops.indexOf('const result = action'));
+const paidOffline = paidOfflineRoute.includes('ringUpCash(') && code('src/lib/register.ts').includes('settleAtCounter(') ? code('src/lib/counter-pay.ts') : paidOfflineRoute;
 check('paid at the counter never charges the booking fee', paidOffline.length > 0 && !paidOffline.includes('chargeAccessFeeSeparately'));
 check('…and gives back a booking fee already taken separately, saying so if that fails', paidOffline.includes('refundSeparateAccessFee') && paidOffline.includes('refundNote'));
 check('the counter confirm no longer says the fee goes on their card', !src('src/app/dashboard/page.tsx').includes('booking fee is charged to their saved card'));

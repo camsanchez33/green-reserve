@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-25 05:28 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `02782990` · working tree **13 dirty file(s)**
+Generated 2026-10-25 23:03 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `719895d0` · working tree **18 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 26 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 27 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `719895d0` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
 | `02782990` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
 | `068ac2b6` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
 | `c8e0e662` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
@@ -41,21 +42,26 @@ Generated 2026-10-25 05:28 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (13 file(s))
+### Uncommitted working tree (18 file(s))
 
 - `M CLAUDE.md`
 - `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
+- `M scripts/reader-rounds-db-test.ts`
+- `M scripts/tt-card-test.ts`
+- `M scripts/walk1-fixes-test.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/shop-sales/rounds/route.ts`
+- `M src/app/dashboard/page.tsx`
 - `M src/app/dashboard/shop/page.tsx`
-- `M src/lib/data-reset.ts`
-- `M src/lib/staff-permissions.ts`
-- `?? prisma/migrations/20261025090000_register_close/`
-- `?? scripts/register-close-db-test.ts`
-- `?? src/app/api/operator/register-close/`
-- `?? src/components/dashboard/RegisterClose.tsx`
-- `?? src/lib/register-close.ts`
+- `M src/components/dashboard/RegisterClose.tsx`
+- `M src/components/home/TeeSheetDemo.tsx`
+- `M src/lib/booking-status.ts`
+- `M src/lib/counter-pay.ts`
+- `M src/lib/register-close.ts`
+- `M src/lib/register.ts`
+- `?? scripts/cash-at-counter-db-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -72,7 +78,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 94d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 95d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -139,17 +145,17 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-24 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 7d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-24 | 0d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 1d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 2d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 2d |
+| `CLAUDE.md` | 1 | 2026-10-25 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 8d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 0d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 2d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 2d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 2d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 2d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 2d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 2d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 3d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 3d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 3d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 3d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 3d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 3d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 17d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 17d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 17d |
@@ -179,6 +185,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `719895d0` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
 - `02782990` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
 - `068ac2b6` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
 - `c8e0e662` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
@@ -190,7 +197,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `fbacc529` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
 - `592f05f4` 2026-10-24 — schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday
 - `4b6af6fe` 2026-10-24 — contact-email-test: spacing
-- `e53daa8e` 2026-10-24 — MAIL-1: agreements name admin@ instead of the Outlook inbox
 
 ---
 

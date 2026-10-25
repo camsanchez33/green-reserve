@@ -1,29 +1,41 @@
 {
-  "generatedAt": "2026-10-25T05:28:45.265Z",
+  "generatedAt": "2026-10-25T23:03:44.119Z",
   "repo": {
-    "head": "02782990",
+    "head": "719895d0",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 13,
+    "dirtyCount": 18,
     "dirty": [
       "M CLAUDE.md",
       " M OPERATOR_REWORK_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
+      " M scripts/reader-rounds-db-test.ts",
+      " M scripts/tt-card-test.ts",
+      " M scripts/walk1-fixes-test.ts",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/shop-sales/rounds/route.ts",
+      " M src/app/dashboard/page.tsx",
       " M src/app/dashboard/shop/page.tsx",
-      " M src/lib/data-reset.ts",
-      " M src/lib/staff-permissions.ts",
-      "?? prisma/migrations/20261025090000_register_close/",
-      "?? scripts/register-close-db-test.ts",
-      "?? src/app/api/operator/register-close/",
-      "?? src/components/dashboard/RegisterClose.tsx",
-      "?? src/lib/register-close.ts"
+      " M src/components/dashboard/RegisterClose.tsx",
+      " M src/components/home/TeeSheetDemo.tsx",
+      " M src/lib/booking-status.ts",
+      " M src/lib/counter-pay.ts",
+      " M src/lib/register-close.ts",
+      " M src/lib/register.ts",
+      "?? scripts/cash-at-counter-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "719895d0",
+        "date": "2026-10-25T01:42:31-04:00",
+        "subject": "POS-3 R4: end-of-day close-out — count the drawer (#211)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "02782990",
         "date": "2026-10-24T10:13:45-04:00",
@@ -233,7 +245,7 @@
       "line": 2357,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 94
+      "ageDays": 95
     }
   ],
   "next": [
@@ -369,37 +381,25 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-24",
+      "lastTouched": "2026-10-25",
       "ageDays": 0
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
-      "ageDays": 7
+      "ageDays": 8
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-24",
+      "lastTouched": "2026-10-25",
       "ageDays": 0
     },
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 1
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 2
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
       "ageDays": 2
     },
     {
@@ -409,28 +409,40 @@
       "ageDays": 2
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 3
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 3
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -592,6 +604,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "719895d0",
+      "date": "2026-10-25",
+      "subject": "POS-3 R4: end-of-day close-out — count the drawer (#211)"
+    },
+    {
       "h": "02782990",
       "date": "2026-10-24",
       "subject": "POS-3 R3b: a group's round paid on the card reader (#210)"
@@ -645,11 +662,6 @@
       "h": "4b6af6fe",
       "date": "2026-10-24",
       "subject": "contact-email-test: spacing"
-    },
-    {
-      "h": "e53daa8e",
-      "date": "2026-10-24",
-      "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox"
     }
   ]
 }

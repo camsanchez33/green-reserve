@@ -340,12 +340,24 @@ export default function ShopPage() {
   const payChoices = ([['cash', 'Cash'], ['reader', 'Card reader'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const)
     .filter(([k]) => (k !== 'cash' || canCash) && (k !== 'reader' || readers.length > 0) && (!hasRounds || k === 'cash' || (k === 'reader' && oneRoundForReader)));
   useEffect(() => { if (hasRounds) setPay(p => (p === 'reader' && oneRoundForReader ? p : 'cash')); }, [hasRounds, oneRoundForReader]);
-  useEffect(() => { if (access.loaded && canCash) loadRounds(); }, [access.loaded, canCash, loadRounds]);
+  // Rounds: cash needs counter payment; the card reader needs check-in (CASH-1).
+  useEffect(() => { if (access.loaded && (canCash || canCheckin)) loadRounds(); }, [access.loaded, canCash, canCheckin, loadRounds]);
   const canWalkIn = access.can('sheet.walkin');
   const walkTime = roundsData?.open.find(t => t.teeTimeId === walkForm?.teeTimeId) ?? null;
   useEffect(() => { if (access.loaded && !canCash) setPay(p => (p === 'cash' ? (readers.length ? 'reader' : 'sms') : p)); }, [access.loaded, canCash, readers.length]);
   useEffect(() => { if (pay === 'reader' && !readers.length) setPay(canCash ? 'cash' : 'sms'); }, [pay, readers.length, canCash]);
   const readerName = (id: string) => readers.find(x => x.id === id)?.label ?? 'the card reader';
+  // CASH-1: the tee sheet's "Card reader" opens here with the group (?round=) picked for the reader.
+  const wantRound = useRef<string | null>(null);
+  useEffect(() => { wantRound.current = new URLSearchParams(window.location.search).get('round'); }, []);
+  useEffect(() => {
+    const id = wantRound.current;
+    if (!id || !roundsData || !readers.length) return;
+    wantRound.current = null;
+    setTab('rounds');
+    if (roundsData.owing.some(o => o.bookingId === id)) { setPicked([id]); setPay('reader'); }
+    else setError('That group isn’t waiting to pay today — check the tee sheet.');
+  }, [roundsData, readers.length]);
   const needContact = pay === 'sms' ? customer.phone.replace(/\D/g, '').length < 10 : pay === 'email' ? !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(customer.email.trim()) : false;
   const todayTotal = (sales ?? []).filter(s => isPaid(s) && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString()).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
   // Quick cash amounts: the exact total, then the next notes up.
@@ -369,7 +381,7 @@ export default function ShopPage() {
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
               <Card className="p-5">
-                {canCash && (
+                {(canCash || canCheckin) && (
                   <div className="flex gap-1 mb-4" role="tablist" aria-label="Ring up">
                     {([['items', 'Shop items'], ['rounds', 'Rounds today']] as const).map(([k, l]) => (
                       <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}

@@ -15,7 +15,8 @@ import { markNoShow, refundNoShowFee } from '@/lib/no-show-fee';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { formatTeeTime } from '@/lib/format';
-import { settleAtCounter, createCounterBooking } from '@/lib/counter-pay';
+import { createCounterBooking } from '@/lib/counter-pay';
+import { ringUpCash } from '@/lib/register';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
@@ -72,17 +73,18 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'paid_offline', 'send_pay_link', 'move', 'set_residents'];
+  // CASH-1: 'take_cash' (the old 'paid_offline' still arrives from open tabs — it is the same cash sale).
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
   // SP-A: each counter action is its own permission.
-  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', move: 'sheet.move', set_residents: 'sheet.counter_payment' };
+  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', take_cash: 'sheet.counter_payment', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', move: 'sheet.move', set_residents: 'sheet.counter_payment' };
   const deniedAction = requirePermission(session, NEEDS[action]);
   if (deniedAction) return deniedAction;
   // SP-A: cancelling WITHOUT the late fee refunds a hold already taken — its own permission.
@@ -210,11 +212,17 @@ export async function PATCH(req: NextRequest) {
     const notes = [r.ok ? null : `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.`, c.ok ? null : `The no-show fee could not be refunded (${c.error}) — refund it from Stripe.`].filter(Boolean);
     return NextResponse.json({ success: true, ...(notes.length ? { fee: notes.join(' ') } : {}) });
   }
-  if (action === 'paid_offline') {
-    // One place for a round paid at the counter (lib/counter-pay) — the register calls it too.
-    const r = await settleAtCounter(session.courseId, id, { actor: staff, actorName, checkedInPlayers: cip });
+  if (action === 'take_cash' || action === 'paid_offline') {
+    // CASH-1 (Cam 2026-10-25: "can't just be paid at counter — it's either paid online
+    // or rung up in store"): cash for a group is a register cash sale of its round —
+    // checked in, paid, one receipt, and the close-out counts it exactly.
+    const r = await ringUpCash(session.courseId, {
+      lines: [], bookingIds: [id], walkIns: [], headcounts: cip !== undefined ? { [id]: cip } : undefined,
+      cashTenderedCents, soldBy: session.email, actor: staff,
+    });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-    return NextResponse.json({ success: true, fee: r.note });
+    if (r.value.skipped.length) return NextResponse.json({ error: r.value.skipped.join(' ') }, { status: 409 });
+    return NextResponse.json({ success: true, saleId: r.value.sale.id, totalCents: r.value.sale.totalCents, cashTenderedCents: r.value.sale.cashTenderedCents, fee: r.value.notes.join(' ') || null });
   }
 
   const result = action === 'cancel'
@@ -245,9 +253,18 @@ export async function POST(req: NextRequest) {
   // One place for a counter booking (lib/counter-pay) — the register calls it too.
   const made = await createCounterBooking(session.courseId, {
     teeTimeId: String(body.teeTimeId ?? ''), golferName, golferEmail, golferPhone: String(body.golferPhone ?? ''),
-    players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in', paidNow: checkInNow,
+    players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in',
   }, { type: 'staff', id: session.staffId ?? session.operatorId });
   if (!made.ok) return NextResponse.json({ error: made.error }, { status: made.status });
+  // CASH-1: "paying cash now" — the booking is made, then its round is rung up in cash.
+  if (checkInNow) {
+    const cash = await ringUpCash(session.courseId, { lines: [], bookingIds: [made.id], walkIns: [], soldBy: session.email, actor: { type: 'staff', id: session.staffId ?? session.operatorId } });
+    if (!cash.ok || cash.value.skipped.length) {
+      const failed = !cash.ok ? cash.error : cash.value.skipped.join(' ');
+      return NextResponse.json({ success: true, bookingId: made.id, emailSent: null, cashError: `The group is booked, but the cash wasn’t recorded: ${failed} Take cash from their card on the tee sheet.` }, { status: 207 });
+    }
+    return NextResponse.json({ success: true, bookingId: made.id, emailSent: null, saleId: cash.value.sale.id, totalCents: cash.value.sale.totalCents });
+  }
   const { greenFeeTotal, cartFeeTotal, totalAmount } = made;
   const accessFeeTotal = 0;
   const claimed = { id: made.id, checkInToken: made.checkInToken };

@@ -11,7 +11,11 @@ import { todayIn, clockIn } from '@/lib/course-time';
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  for (const key of ['shop.sell', 'sheet.counter_payment'] as const) { const denied = requirePermission(session, key); if (denied) return denied; }
+  const deniedShop = requirePermission(session, 'shop.sell');
+  if (deniedShop) return deniedShop;
+  // Cash for a round is the counter-payment power; the card reader is check-in (CASH-1) — either may see who owes.
+  const deniedCash = requirePermission(session, 'sheet.counter_payment');
+  if (deniedCash && requirePermission(session, 'sheet.checkin')) return deniedCash;
   const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
   const date = todayIn(course?.timezone);
   return NextResponse.json({ date, ...(await registerRounds(session.courseId, date, clockIn(course?.timezone))) });
