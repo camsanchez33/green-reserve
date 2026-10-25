@@ -146,6 +146,12 @@ function DashboardPageInner() {
   type WxPlan = { from: string; to: string; wholeDay: boolean; startedBefore: string | null; groups: WxGroup[]; teeTimeIds: string[] };
   // SP-A: what this login may do on the sheet (owners: everything).
   const access = useDashboardAccess();
+  // CASH-1: a group can go to the card reader on the Pro shop page when the course has one.
+  const [hasReader, setHasReader] = useState(false);
+  useEffect(() => {
+    if (!access.loaded || !access.can('shop.sell')) return;
+    dfetch<{ readers: unknown[] }>('/api/operator/card-readers').then(r => { if (r.ok) setHasReader(r.data.readers.length > 0); });
+  }, [access.loaded]); // eslint-disable-line react-hooks/exhaustive-deps
   // W2-9: events with checklist items past due show on the sheet's "needs doing" bar.
   const [eventsDue, setEventsDue] = useState<{ id: string; name: string; tasksOverdue: number }[]>([]);
   const canEvents = access.loaded && access.can('events.manage');
@@ -242,9 +248,9 @@ function DashboardPageInner() {
     }
   }
 
-  async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'paid_offline') {
+  async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'take_cash') {
     let checkedInPlayers: number | undefined;
-    if (action === 'paid_offline') {
+    if (action === 'take_cash') {
       const n = askHeadcount(b);
       if (n === null) return;
       checkedInPlayers = n < b.players ? n : undefined;
@@ -254,14 +260,15 @@ function DashboardPageInner() {
       // POS-1a: shop items on the booking are collected at the counter too (no
       // GreenReserve shop fee on a counter payment, like the booking fee in cash).
       const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
-      if (!confirm(`Mark ${b.golferName} checked in — ${who} of ${b.players} players, paid $${(owed / 100).toFixed(2)} at the counter? No card will be charged.`)) return;
+      // CASH-1: a cash sale of the round, rung up like the register (receipt on the Pro shop page).
+      if (!confirm(`Take $${(owed / 100).toFixed(2)} cash from ${b.golferName} for ${who} of ${b.players} player${b.players === 1 ? '' : 's'}? They’re checked in, and the sale goes on today’s register.`)) return;
     }
     setRowBusy(b.id);
     try {
       const r = await dfetch<{ fee?: string | null }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action, ...(checkedInPlayers ? { checkedInPlayers } : {}) }) });
       if (!r.ok) { toast(r.error, 'warn'); return; }
       if (r.data?.fee) toast(r.data.fee, 'warn');
-      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `${b.golferName} checked in — paid at the counter.`, 'ok');
+      toast(action === 'no_show' ? `${b.golferName} marked as a no-show.` : action === 'still_coming' ? `${b.golferName} is still coming.` : `Cash taken — ${b.golferName} is checked in.`, 'ok');
       await loadTimes(selectedDate);
     } finally {
       setRowBusy(null);
@@ -609,9 +616,10 @@ function DashboardPageInner() {
         </p>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2" onClick={e => e.stopPropagation()}>
+          {/* CASH-1 (Cam 2026-10-25): paid online, or rung up in store — cash here, or the card reader. */}
           {b.status === 'confirmed' && b.paymentStatus === 'manual' && access.can('sheet.counter_payment') && (
-            <button onClick={() => bookingLifecycle(b, 'paid_offline')} disabled={rowBusy === b.id} className={primary + 'bg-pine hover:bg-pine-hover'}>
-              {rowBusy === b.id ? 'Saving…' : 'Check in · paid at counter'}
+            <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={primary + 'bg-pine hover:bg-pine-hover'}>
+              {rowBusy === b.id ? 'Saving…' : 'Take cash · check in'}
             </button>
           )}
           {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
@@ -619,6 +627,12 @@ function DashboardPageInner() {
               disabled={checkingInId === b.id} className={primary + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
               {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in'}
             </button>
+          )}
+          {b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment') && (
+            <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? 'Saving…' : 'Take cash'}</button>
+          )}
+          {b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasReader && selectedDate === today() && access.can('sheet.checkin') && access.can('shop.sell') && (
+            <Link href={`/dashboard/shop?round=${b.id}`} className={link}>Card reader</Link>
           )}
           {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && (
             <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={link}
@@ -1238,7 +1252,7 @@ function DashboardPageInner() {
               <h3 className="font-serif font-semibold text-ink text-[17px]">Walk-in — {fmtTime(walkInSlot.time)}</h3>
               <button onClick={() => setWalkInSlot(null)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <WalkInForm slot={walkInSlot} onSave={(msg) => { setWalkInSlot(null); toast(msg, 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
+            <WalkInForm slot={walkInSlot} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
           </div>
         </div>
       )}
@@ -1293,7 +1307,7 @@ export default function DashboardPage() {
 }
 
 /* ─── SD-5: Walk-in / phone booking form ───────────────────────────────── */
-function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: string) => void; onCancel: () => void }) {
+function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: string, tone?: 'ok' | 'warn') => void; onCancel: () => void }) {
   const spots = Math.max(0, slot.playersAvailable - slot.playersBooked);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -1317,13 +1331,14 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
 
   async function save() {
     setSaving(true); setErr('');
-    const r = await dfetch<{ emailSent: boolean | null }>('/api/operator/bookings', {
+    const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
       method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, checkInNow: source === 'walk_in' && checkInNow }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
+    if (r.data?.cashError) { onSave(r.data.cashError, 'warn'); return; }
     const sent = r.data?.emailSent;
-    onSave(`${name} added${source === 'walk_in' && checkInNow ? ' and checked in' : ''}${sent === true ? ' — confirmation emailed' : sent === false ? ' — the confirmation email did not send' : ''}.`);
+    onSave(`${name} added${source === 'walk_in' && checkInNow ? ' — cash taken, checked in' : ''}${sent === true ? ' — confirmation emailed' : sent === false ? ' — the confirmation email did not send' : ''}.`);
   }
 
   return (
@@ -1359,16 +1374,16 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
       )}
       {source === 'walk_in' && (
         <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
-          <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />They&apos;ve already paid at the counter — check this group in now
+          <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Paying cash now — take it and check this group in
         </label>
       )}
-      <div className="text-[12.5px] text-ink-muted">Pays at the counter: <b className="text-ink">${total.toFixed(2)}</b> — no card, no booking fee.</div>
+      <div className="text-[12.5px] text-ink-muted">Due: <b className="text-ink">${total.toFixed(2)}</b> — in cash, on the card reader or by pay link from their card on the sheet. No booking fee.</div>
       {err && <p className="text-sm text-bad">{err}</p>}
       <div className="flex gap-2 pt-1">
         <button onClick={onCancel} disabled={saving} className="flex-1 px-4 py-2.5 border border-line text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors">Cancel</button>
         <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0}
           className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors">
-          {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? 'Add + check in' : 'Add booking'}
+          {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? `Add + take $${total.toFixed(2)} cash` : 'Add booking'}
         </button>
       </div>
     </div>

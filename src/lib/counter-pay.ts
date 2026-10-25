@@ -103,12 +103,13 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
  * standard rates, paying at the counter (paymentStatus 'manual'). ONE place
  * for it — the tee sheet's walk-in form and (POS-3 R2) the register.
  * CART-1: a tee time that can't be walked charges a cart for everyone.
- * `paidNow` books it already checked in and paid at the counter (the sheet's
- * "check in now"); the register books it unpaid, then settleAtCounter.
+ * Always made unpaid (CASH-1): paying in cash is then a register sale of its
+ * round (lib/register ringUpCash → settleAtCounter), so every cash payment has
+ * a sale, a receipt and a place in the close-out.
  */
 export type CounterBookingInput = {
   teeTimeId: string; golferName: string; golferEmail?: string; golferPhone?: string;
-  players: number; cartSelected?: boolean; source?: 'walk_in' | 'phone'; paidNow?: boolean;
+  players: number; cartSelected?: boolean; source?: 'walk_in' | 'phone';
 };
 export async function createCounterBooking(courseId: string, input: CounterBookingInput, actor: EventActor):
   Promise<{ ok: true; id: string; checkInToken: string | null; greenFeeTotal: number; cartFeeTotal: number; totalAmount: number; teeTime: { date: string; time: string; holes: number }; course: { name: string; address: string | null; city: string | null; state: string | null; slug: string; cancellationHours: number; confirmationNote: string | null } }
@@ -129,7 +130,8 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
   const cartFeeTotal = cart ? teeTime.cartFeeCents * players : 0;
   // No platform fee on a counter booking — nothing is collected online.
   const totalAmount = greenFeeTotal + cartFeeTotal;
-  const paidNow = input.paidNow === true;
+  // CASH-1 (Cam 2026-10-25: "can't just be paid at counter"): a counter booking is
+  // always made unpaid; paying in cash is a register sale (lib/register ringUpCash).
   try {
     const claimed = await claimTeeTime({
       teeTimeId: teeTime.id, courseId,
@@ -137,11 +139,8 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       players, appliedRate: 'standard',
       greenFeeTotal, cartFeeTotal, cartSelected: cart, accessFeeTotal: 0, totalAmount,
       checkInToken: golferEmail ? randomUUID() : null,
-      paymentStatus: paidNow ? 'paid_offline' : 'manual',
-      status: paidNow ? 'completed' : 'confirmed',
-      checkedInAt: paidNow ? new Date() : null,
-      paidAt: paidNow ? new Date() : null,
-      paidOffline: paidNow,
+      paymentStatus: 'manual',
+      status: 'confirmed',
       source,
       cancellationHoursAtBooking: teeTime.course.cancellationHours,
     }, actor);

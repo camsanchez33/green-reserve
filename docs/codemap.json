@@ -5105,7 +5105,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 277,
+      "lines": 294,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5145,6 +5145,7 @@
         "@/lib/move-booking",
         "@/lib/no-show-fee",
         "@/lib/prisma",
+        "@/lib/register",
         "@/lib/session",
         "@/lib/staff-permissions",
         "@/lib/twilio",
@@ -6438,7 +6439,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/rounds/route.ts",
-      "lines": 19,
+      "lines": 23,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7949,7 +7950,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1501,
+      "lines": 1516,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8119,7 +8120,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 792,
+      "lines": 806,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10004,7 +10005,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 162,
+      "lines": 163,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -14522,7 +14523,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 162,
+      "lines": 161,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -19229,7 +19230,7 @@
     },
     {
       "path": "src/lib/register-close.ts",
-      "lines": 131,
+      "lines": 132,
       "purpose": "POS-3 R4 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -19272,7 +19273,7 @@
     },
     {
       "path": "src/lib/register.ts",
-      "lines": 103,
+      "lines": 113,
       "purpose": "POS-3 R2 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -19303,6 +19304,7 @@
         "./shop-sales"
       ],
       "usedBy": [
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts"
       ]

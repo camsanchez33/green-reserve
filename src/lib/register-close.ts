@@ -4,7 +4,8 @@
 //
 //   expected cash = starting cash
 //                 + cash rung up at the register that day (items and green fees: ShopSale paid_cash)
-//                 + groups marked paid at the counter on the tee sheet that day (paid_offline,
+//                 + groups marked paid at the counter on the tee sheet that day (paid_offline — since CASH-1
+//                   (2026-10-25) new cash goes through the register, so these are older records;
 //                   not settled through the register — those are already in the register's cash)
 //                 − cash handed back for refunds that day
 //

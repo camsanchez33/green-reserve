@@ -90,7 +90,7 @@ const toneOf = (g: Group): Tone => g.done ? 'ok' : 'warn';
 const slotTone = (r: Row): Tone | null => !r.groups.length ? null : r.groups.every(g => g.done) ? 'ok' : 'warn';
 /** getBookingStatus() labels, as the panel shows them. The demo course takes no
  *  card (the phone says so), so an online booking is "No Card Required". */
-const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at counter') : g.src === 'online' ? 'No Card Required' : 'Pay at counter';
+const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at the register') : g.src === 'online' ? 'No Card Required' : 'Pays in store';
 const seats = (r: Row) => r.blocked ? <i className={s.dim}>Blocked</i> : CAP - booked(r) <= 0 ? <span className={s.full}>Full</span> : <span className={s.dim}>{CAP - booked(r)} open</span>;
 const hourOf = (t: string) => Number(t.slice(0, 2));
 const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -174,8 +174,8 @@ function TeeSheet() {
               <div className={s.pnlAct}>
                 {!g.done && <button type="button" className={s.ci} onClick={() => {
                   setRow(panel.t, r => ({ ...r, groups: r.groups.map((x, i) => i === gi ? { ...x, done: true, isNew: false } : x) }));
-                  toast(g.src === 'online' ? `Checked in — charged ${money(roundTotal(d, g.n))}.` : `${g.name} checked in — paid at the counter.`);
-                }}>{g.src === 'online' ? 'Check in' : 'Check in · paid at counter'}</button>}
+                  toast(g.src === 'online' ? `Checked in — charged ${money(roundTotal(d, g.n))}.` : `Cash taken — ${g.name} is checked in.`);
+                }}>{g.src === 'online' ? 'Check in' : 'Take cash · check in'}</button>}
                 {!g.done && <button type="button" className={s.cx} onClick={() => {
                   setRow(panel.t, r => ({ ...r, groups: r.groups.filter((_, i) => i !== gi) }));
                   toast('Cancelled — no charge was made.');

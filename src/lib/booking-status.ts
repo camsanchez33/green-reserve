@@ -26,8 +26,8 @@ export interface BookingStatusInfo {
 
 export function getBookingStatus(status: string, paymentStatus: string): BookingStatusInfo {
   if (status === 'completed') {
-    // SD-5: paid at the counter — checked in, nothing collected online.
-    if (paymentStatus === 'paid_offline') return { label: 'Checked In · Paid at counter', tone: 'emerald' };
+    // SD-5 / CASH-1: paid in store — cash at the register (older records: marked paid at the counter).
+    if (paymentStatus === 'paid_offline') return { label: 'Checked In · Paid at the register', tone: 'emerald' };
     return { label: 'Checked In & Paid', tone: 'emerald' };
   }
 
@@ -41,7 +41,7 @@ export function getBookingStatus(status: string, paymentStatus: string): Booking
   // status === 'confirmed'
   // SD-5: entered at the counter (walk-in / phone) — pays there.
   if (paymentStatus === 'manual') {
-    return { label: 'Pay at counter', sublabel: 'Walk-in or phone booking — no card on file', tone: 'blue' };
+    return { label: 'Pays in store', sublabel: 'Walk-in or phone booking — cash, the card reader or a pay link', tone: 'blue' };
   }
   if (paymentStatus === 'no_payment_method') {
     return { label: 'No Card Required', sublabel: 'Pay at the course or via check-in link', tone: 'blue' };

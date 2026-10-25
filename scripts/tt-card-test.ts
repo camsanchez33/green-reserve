@@ -15,7 +15,7 @@ check('on a phone it is a full sheet from the bottom', /absolute inset-x-0 botto
 check('the slide respects reduced motion', /prefers-reduced-motion: no-preference[\s\S]*tt-card-up/.test(readFileSync('src/app/globals.css', 'utf8')));
 check('the price line is in the card', card.includes('a player{panelSlot.cartFee > 0'));
 check('each group shows what it owes, to logins that see payments', page.includes("access.can('money.payments') && <span className=\"shrink-0 text-[14px] font-semibold text-ink tabular-nums\">${(due / 100).toFixed(2)}"));
-for (const a of ["checkInBooking(b)", "bookingLifecycle(b, 'paid_offline')", "sendPayLink(b, 'sms')", "sendPayLink(b)", 'setMoveTarget(', "bookingLifecycle(b, 'still_coming')", "bookingLifecycle(b, 'no_show')", 'cancelGroup(b, false)', 'cancelGroup(b, true)', 'setResidents(b,', '<ShopItemsForGroup', 'setWalkInSlot(panelSlot)', 'toggleBlock(panelSlot)', 'deleteTime(panelSlot)']) {
+for (const a of ["checkInBooking(b)", "bookingLifecycle(b, 'take_cash')", "sendPayLink(b, 'sms')", "sendPayLink(b)", 'setMoveTarget(', "bookingLifecycle(b, 'still_coming')", "bookingLifecycle(b, 'no_show')", 'cancelGroup(b, false)', 'cancelGroup(b, true)', 'setResidents(b,', '<ShopItemsForGroup', 'setWalkInSlot(panelSlot)', 'toggleBlock(panelSlot)', 'deleteTime(panelSlot)']) {
   check(`the card keeps ${a}`, page.includes(a));
 }
 check('cancel sits last, apart from the other actions', /ml-auto flex items-center gap-x-4[\s\S]{0,700}Cancel booking/.test(page));

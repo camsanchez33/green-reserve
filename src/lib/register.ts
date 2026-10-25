@@ -49,6 +49,8 @@ type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: st
 export async function ringUpCash(courseId: string, opts: {
   lines: unknown[]; discount?: DiscountInput; cashTenderedCents?: unknown; taxCalculationId?: string;
   bookingIds: string[]; walkIns: CounterBookingInput[];
+  /** CASH-1: a group where only some showed pays for those (bookingId → players who showed). */
+  headcounts?: Record<string, number>;
   soldBy: string; actor: EventActor; customerName?: string; customerPhone?: string; customerEmail?: string;
 }): Promise<Result<{ sale: SaleView; skipped: string[]; notes: string[] }> | { ok: false; status: number; error: string; settled: string[] }> {
   const bookingIds = [...new Set(opts.bookingIds.filter(x => typeof x === 'string' && x))];
@@ -75,23 +77,31 @@ export async function ringUpCash(courseId: string, opts: {
   };
   // Walk-ins: booked onto the sheet, then paid here like any group.
   for (const w of walkIns) {
-    const made = await createCounterBooking(courseId, { ...w, source: 'walk_in', paidNow: false }, opts.actor);
+    const made = await createCounterBooking(courseId, { ...w, source: w.source ?? 'walk_in' }, opts.actor);
     if (!made.ok) { skipped.push(`Walk-in ${String(w.golferName ?? '').trim() || ''}: ${made.error}`.trim()); continue; }
     bookingIds.push(made.id);
   }
   for (const id of bookingIds) {
-    const r = await settleAtCounter(courseId, id, { actor: opts.actor, actorName: opts.soldBy });
+    const r = await settleAtCounter(courseId, id, { actor: opts.actor, actorName: opts.soldBy, checkedInPlayers: opts.headcounts?.[id] });
     if (!r.ok) { skipped.push(`${await label(id)}: ${r.error}`); continue; }
     if (r.note) notes.push(r.note);
     settled.push({ bookingId: id, name: await label(id), amountCents: r.amountCents });
   }
   if (!opts.lines.length && !settled.length) return { ok: false, status: 409, error: skipped.join(' ') || 'Nothing could be rung up.' };
-  const sale = await createSale({
-    courseId, lines: opts.lines, pay: 'cash', soldBy: opts.soldBy, discount: opts.discount, taxCalculationId: opts.taxCalculationId,
+  const saleInput = {
+    courseId, lines: opts.lines, pay: 'cash' as const, soldBy: opts.soldBy, discount: opts.discount, taxCalculationId: opts.taxCalculationId,
     // The cash covered what the screen showed; if a round dropped out, the change shown at the counter is what counts.
     cashTenderedCents: skipped.length ? undefined : opts.cashTenderedCents,
     rounds: settled, customerName: opts.customerName, customerPhone: opts.customerPhone, customerEmail: opts.customerEmail,
-  });
+  };
+  const saleFirst = createSale(saleInput);
+  // The rounds are already paid: never leave them without a sale because of the change figure. A cash-handed-over
+  // amount that doesn't cover the total is dropped (the sale is recorded without change) and said so.
+  let sale = await saleFirst;
+  if (!sale.ok && settled.length && opts.cashTenderedCents != null && opts.cashTenderedCents !== '' && /has to cover/.test(sale.error)) {
+    sale = await createSale({ ...saleInput, cashTenderedCents: undefined });
+    if (sale.ok) notes.push('The cash handed over was less than the total, so the sale was saved without the change figure.');
+  }
   if (!sale.ok) {
     // The rounds are paid (checked in at the counter) even though the items couldn't be recorded.
     console.error(JSON.stringify({ ev: 'register.items_after_rounds.fail', courseId, settled: settled.map(s => s.bookingId), error: sale.error }));
