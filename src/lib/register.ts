@@ -98,7 +98,7 @@ export async function ringUpCash(courseId: string, opts: {
   // The rounds are already paid: never leave them without a sale because of the change figure. A cash-handed-over
   // amount that doesn't cover the total is dropped (the sale is recorded without change) and said so.
   let sale = await saleFirst;
-  if (!sale.ok && settled.length && opts.cashTenderedCents != null && opts.cashTenderedCents !== '') {
+  if (!sale.ok && settled.length && opts.cashTenderedCents != null && opts.cashTenderedCents !== '' && /has to cover/.test(sale.error)) {
     sale = await createSale({ ...saleInput, cashTenderedCents: undefined });
     if (sale.ok) notes.push('The cash handed over was less than the total, so the sale was saved without the change figure.');
   }
