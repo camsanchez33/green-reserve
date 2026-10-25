@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 549,
-    "routes": 262,
-    "libs": 182,
-    "models": 56,
+    "files": 552,
+    "routes": 263,
+    "libs": 183,
+    "models": 57,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -6038,6 +6038,36 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/register-close/route.ts",
+      "lines": 33,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/register-close",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/register-close",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/request-changes/route.ts",
       "lines": 32,
       "purpose": "",
@@ -8089,7 +8119,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 789,
+      "lines": 792,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -8105,6 +8135,7 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/RegisterClose",
         "@/components/dashboard/StaffNotice",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -9972,6 +10003,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/RegisterClose.tsx",
+      "lines": 162,
+      "purpose": "POS-3 R4 (Cam 2026-10-24):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "RegisterClose",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/course-time",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/shop/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/RoundRulesCard.tsx",
       "lines": 89,
       "purpose": "W2-6 slice 3 (Cam 2026-10-20):",
@@ -10882,6 +10941,7 @@
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
+        "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
@@ -11162,6 +11222,7 @@
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
+        "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/SignAgreements.tsx",
@@ -11234,6 +11295,7 @@
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
@@ -13251,6 +13313,7 @@
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/reader-rounds.ts",
+        "src/lib/register-close.ts",
         "src/lib/register.ts",
         "src/lib/weather-cancel.ts"
       ]
@@ -14503,6 +14566,7 @@
       ],
       "usedBy": [
         "src/app/api/operator/bookings/route.ts",
+        "src/lib/register-close.ts",
         "src/lib/register.ts"
       ]
     },
@@ -15270,6 +15334,7 @@
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/app/g/[slug]/page.tsx",
+        "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
         "src/lib/admin-course-page.ts",
         "src/lib/admin-course-tabs.ts",
@@ -15289,6 +15354,7 @@
         "src/lib/operator-home.ts",
         "src/lib/operator-search.ts",
         "src/lib/public-tee-times.ts",
+        "src/lib/register-close.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -15717,6 +15783,7 @@
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
+        "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
@@ -15777,7 +15844,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 147,
+      "lines": 148,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -18750,6 +18817,7 @@
         "src/lib/reader-rounds.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/register-close.ts",
         "src/lib/register.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sales-tax.ts",
@@ -19157,6 +19225,49 @@
         "src/lib/cancel-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/reader-rounds.ts"
+      ]
+    },
+    {
+      "path": "src/lib/register-close.ts",
+      "lines": 131,
+      "purpose": "POS-3 R4 (Cam 2026-10-24:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "closeDay",
+          "kind": "fn"
+        },
+        {
+          "name": "CloseView",
+          "kind": "type"
+        },
+        {
+          "name": "daySummary",
+          "kind": "fn"
+        },
+        {
+          "name": "DaySummary",
+          "kind": "type"
+        },
+        {
+          "name": "recentCloses",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./counter-pay",
+        "./course-time",
+        "./prisma",
+        "./shop"
+      ],
+      "usedBy": [
+        "src/app/api/operator/register-close/route.ts"
       ]
     },
     {
@@ -19795,6 +19906,7 @@
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/register-close/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/round-rules/route.ts",
@@ -20342,6 +20454,7 @@
         "src/lib/reader-rounds.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/register-close.ts",
         "src/lib/register.ts",
         "src/lib/shop-catalog.ts",
         "src/lib/shop-sales.ts"
@@ -20371,7 +20484,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 140,
+      "lines": 142,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -22203,6 +22316,7 @@
         "src/lib/real-courses.ts",
         "src/lib/receipt-charges.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/register-close.ts",
         "src/lib/register.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sent-messages.ts",
@@ -22979,6 +23093,10 @@
         {
           "name": "shopSales",
           "type": "ShopSale[]"
+        },
+        {
+          "name": "registerCloses",
+          "type": "RegisterClose[]"
         }
       ],
       "writers": [
@@ -23094,6 +23212,7 @@
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/real-courses.ts",
+        "src/lib/register-close.ts",
         "src/lib/sales-tax.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
@@ -25306,6 +25425,78 @@
       "readers": []
     },
     {
+      "name": "RegisterClose",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "day",
+          "type": "String"
+        },
+        {
+          "name": "openingFloatCents",
+          "type": "Int"
+        },
+        {
+          "name": "cashSalesCents",
+          "type": "Int"
+        },
+        {
+          "name": "counterRoundsCents",
+          "type": "Int"
+        },
+        {
+          "name": "cashRefundsCents",
+          "type": "Int"
+        },
+        {
+          "name": "expectedCashCents",
+          "type": "Int"
+        },
+        {
+          "name": "countedCashCents",
+          "type": "Int"
+        },
+        {
+          "name": "differenceCents",
+          "type": "Int"
+        },
+        {
+          "name": "cardCents",
+          "type": "Int"
+        },
+        {
+          "name": "note",
+          "type": "String"
+        },
+        {
+          "name": "closedBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/data-reset.ts",
+        "src/lib/register-close.ts"
+      ],
+      "readers": [
+        "src/lib/register-close.ts"
+      ]
+    },
+    {
       "name": "SentMessage",
       "fields": [
         {
@@ -25577,6 +25768,7 @@
         "src/lib/analytics.ts",
         "src/lib/card-reader.ts",
         "src/lib/data-reset.ts",
+        "src/lib/register-close.ts",
         "src/lib/sales-tax.ts",
         "src/lib/shop-sales.ts"
       ]
@@ -25622,7 +25814,9 @@
         }
       ],
       "writers": [],
-      "readers": []
+      "readers": [
+        "src/lib/register-close.ts"
+      ]
     },
     {
       "name": "ShopSaleRefund",
@@ -25689,6 +25883,7 @@
       ],
       "readers": [
         "src/app/api/operator/shop-sales/route.ts",
+        "src/lib/register-close.ts",
         "src/lib/shop-sales.ts"
       ]
     },

@@ -1,16 +1,23 @@
 {
-  "generatedAt": "2026-10-24T14:05:22.561Z",
+  "generatedAt": "2026-10-25T05:28:45.265Z",
   "repo": {
-    "head": "84aa9710",
+    "head": "02782990",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 13,
     "dirty": [
-      "M OPERATOR_REWORK_SPEC.md",
+      "M CLAUDE.md",
+      " M OPERATOR_REWORK_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/reader-rounds-db-test.ts",
-      " M src/lib/move-booking.ts",
-      " M src/lib/reader-rounds.ts"
+      " M prisma/schema.prisma",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/lib/data-reset.ts",
+      " M src/lib/staff-permissions.ts",
+      "?? prisma/migrations/20261025090000_register_close/",
+      "?? scripts/register-close-db-test.ts",
+      "?? src/app/api/operator/register-close/",
+      "?? src/components/dashboard/RegisterClose.tsx",
+      "?? src/lib/register-close.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -18,9 +25,9 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "84aa9710",
-        "date": "2026-10-24T13:58:34+00:00",
-        "subject": "POS-3 R3b: a group's round paid on the card reader",
+        "h": "02782990",
+        "date": "2026-10-24T10:13:45-04:00",
+        "subject": "POS-3 R3b: a group's round paid on the card reader (#210)",
         "ids": [],
         "matches": []
       },
@@ -226,7 +233,7 @@
       "line": 2357,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 93
+      "ageDays": 94
     }
   ],
   "next": [
@@ -369,13 +376,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-17",
-      "ageDays": 6
-    },
-    {
-      "file": "ADMIN_V5_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 0
+      "ageDays": 7
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
@@ -384,210 +385,216 @@
       "ageDays": 0
     },
     {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 1
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 1
-    },
-    {
-      "file": "HOMEPAGE_SPEC.md",
+      "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
       "ageDays": 1
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 2
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 2
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
+      "ageDays": 2
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-07",
-      "ageDays": 16
+      "ageDays": 17
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "84aa9710",
+      "h": "02782990",
       "date": "2026-10-24",
-      "subject": "POS-3 R3b: a group's round paid on the card reader"
+      "subject": "POS-3 R3b: a group's round paid on the card reader (#210)"
     },
     {
       "h": "068ac2b6",
