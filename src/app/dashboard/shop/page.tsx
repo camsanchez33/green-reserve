@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
+import { RegisterClose } from '@/components/dashboard/RegisterClose';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
@@ -759,6 +760,8 @@ export default function ShopPage() {
                 </ul>
               )}
             </Card>
+            {/* POS-3 R4: count the drawer at the end of the day. */}
+            {access.can('shop.close') && <RegisterClose />}
           </div>
         )}
       </main>

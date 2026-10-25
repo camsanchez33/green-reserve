@@ -192,6 +192,7 @@ model Course {
   golferMessages             CourseMessage[]
   shopItems                  ShopItem[]
   shopSales                  ShopSale[]
+  registerCloses             RegisterClose[]
 
   @@index([operatorId])
   @@index([groupId])
@@ -1660,4 +1661,36 @@ model ShopSaleRefund {
 
   @@index([saleId])
   @@index([courseId, createdAt])
+}
+
+/// POS-3 R4 (Cam 2026-10-24, "end of day close-out"): the register counted at
+/// the end of a course day. Each count is a row — a recount adds one, the
+/// latest stands; nothing is edited. The figures are a snapshot of what the
+/// day's records said when it was counted (lib/register-close.ts).
+model RegisterClose {
+  id                String   @id @default(cuid())
+  courseId          String
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// The course-local day closed (YYYY-MM-DD).
+  day               String
+  /// Cash in the drawer when the day started.
+  openingFloatCents Int
+  /// Cash rung up at the register (items and green fees), paid_cash that day.
+  cashSalesCents    Int
+  /// Groups marked paid at the counter on the tee sheet that day (not through the register).
+  counterRoundsCents Int
+  /// Cash handed back for refunds that day.
+  cashRefundsCents  Int
+  /// openingFloat + cashSales + counterRounds − cashRefunds.
+  expectedCashCents Int
+  countedCashCents  Int
+  /// counted − expected: over (+) or short (−).
+  differenceCents   Int
+  /// For reference: card taken that day (walk-up sales by reader or pay link, rounds by card).
+  cardCents         Int
+  note              String   @default("")
+  closedBy          String   @default("")
+  createdAt         DateTime @default(now())
+
+  @@index([courseId, day])
 }

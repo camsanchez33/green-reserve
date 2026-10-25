@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-24 14:05 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `84aa9710` · working tree **6 dirty file(s)**
+Generated 2026-10-25 05:28 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `02782990` · working tree **13 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -12,7 +12,7 @@ Generated 2026-10-24 14:05 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 | commit | date | subject |
 |---|---|---|
-| `84aa9710` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader |
+| `02782990` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
 | `068ac2b6` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
 | `c8e0e662` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
 | `9985445e` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
@@ -41,14 +41,21 @@ Generated 2026-10-24 14:05 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (13 file(s))
 
+- `M CLAUDE.md`
 - `M OPERATOR_REWORK_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/reader-rounds-db-test.ts`
-- `M src/lib/move-booking.ts`
-- `M src/lib/reader-rounds.ts`
+- `M prisma/schema.prisma`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/lib/data-reset.ts`
+- `M src/lib/staff-permissions.ts`
+- `?? prisma/migrations/20261025090000_register_close/`
+- `?? scripts/register-close-db-test.ts`
+- `?? src/app/api/operator/register-close/`
+- `?? src/components/dashboard/RegisterClose.tsx`
+- `?? src/lib/register-close.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -65,7 +72,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 93d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 94d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -133,46 +140,46 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-24 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 6d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 7d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-24 | 0d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 1d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 1d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 16d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 16d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 16d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 16d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 1d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 2d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 2d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 2d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 2d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 2d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 2d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 2d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 17d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `ARCHITECTURE.md` | 0 | 2026-10-07 | 17d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 17d |
 
 ## Recent commits
 
-- `84aa9710` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader
+- `02782990` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
 - `068ac2b6` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
 - `c8e0e662` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
 - `9985445e` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
