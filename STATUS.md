@@ -4,55 +4,45 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-25 23:09 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `b08e856c` · working tree **5 dirty file(s)**
+Generated 2026-10-26 03:43 UTC · branch `claude/security-center` · HEAD `1adc552` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 28 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 29 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `b08e856c` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store |
-| `719895d0` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
-| `02782990` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
-| `068ac2b6` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
-| `c8e0e662` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
-| `9985445e` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
-| `2e01ec99` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
-| `ed10fa0c` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
-| `6fd9158d` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
-| `6d7bf2a5` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
-| `fbacc529` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
-| `592f05f4` | 2026-10-24 | schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday |
-| `4b6af6fe` | 2026-10-24 | contact-email-test: spacing |
-| `e53daa8e` | 2026-10-24 | MAIL-1: agreements name admin@ instead of the Outlook inbox |
-| `978a3da2` | 2026-10-23 | Retire the admin Activity page (AW-12) (#200) |
-| `d2b41f27` | 2026-10-23 | Regenerate the status board |
-| `d6efdc1b` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
-| `85bb9160` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
-| `3148eed2` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
-| `3c88148d` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
-| `946d4a54` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
-| `a5789298` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
-| `966741b9` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
-| `dd3cfd14` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
-| `e0bc004d` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
-| `4b621c06` | 2026-10-22 | Regenerate status board |
-| `04301cec` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
-| `2734cbdb` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
+| `1adc552` | 2026-10-26 | Security: patch Next.js, security headers, package scan in CI (SEC-1) |
+| `47e5fb0` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
+| `719895d` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
+| `0278299` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
+| `068ac2b` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
+| `c8e0e66` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
+| `9985445` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
+| `2e01ec9` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
+| `ed10fa0` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
+| `6fd9158` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
+| `6d7bf2a` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
+| `fbacc52` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
+| `592f05f` | 2026-10-24 | schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday |
+| `4b6af6f` | 2026-10-24 | contact-email-test: spacing |
+| `e53daa8` | 2026-10-24 | MAIL-1: agreements name admin@ instead of the Outlook inbox |
+| `978a3da` | 2026-10-23 | Retire the admin Activity page (AW-12) (#200) |
+| `d2b41f2` | 2026-10-23 | Regenerate the status board |
+| `d6efdc1` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
+| `85bb916` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
+| `3148eed` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
+| `3c88148` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
+| `946d4a5` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
+| `a578929` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
+| `966741b` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
+| `dd3cfd1` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
+| `e0bc004` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
+| `4b621c0` | 2026-10-22 | Regenerate status board |
+| `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
+| `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (5 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/cash-at-counter-db-test.ts`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/lib/register.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -66,7 +56,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 95d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 95d | `b88c8bf` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -133,58 +123,58 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-25 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-26 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 8d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 0d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 2d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 2d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 3d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 3d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 3d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 3d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 3d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 3d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 3d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-07 | 17d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `ARCHITECTURE.md` | 0 | 2026-10-07 | 17d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-07 | 17d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-07 | 17d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 20d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 20d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 21d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 24d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 26d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `ARCHITECTURE.md` | 0 | 2026-09-29 | 26d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 26d |
 
 ## Recent commits
 
-- `b08e856c` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store
-- `719895d0` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
-- `02782990` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
-- `068ac2b6` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
-- `c8e0e662` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
-- `9985445e` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
-- `2e01ec99` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
-- `ed10fa0c` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
-- `6fd9158d` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
-- `6d7bf2a5` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
-- `fbacc529` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
-- `592f05f4` 2026-10-24 — schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday
+- `1adc552` 2026-10-26 — Security: patch Next.js, security headers, package scan in CI (SEC-1)
+- `47e5fb0` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212)
+- `719895d` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
+- `0278299` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
+- `068ac2b` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
+- `c8e0e66` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
+- `9985445` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
+- `2e01ec9` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
+- `ed10fa0` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
+- `6fd9158` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
+- `6d7bf2a` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
+- `fbacc52` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
 
 ---
 

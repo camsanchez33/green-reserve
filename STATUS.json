@@ -1,212 +1,213 @@
 {
-  "generatedAt": "2026-10-25T23:09:17.928Z",
+  "generatedAt": "2026-10-26T03:43:09.890Z",
   "repo": {
-    "head": "b08e856c",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 5,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/cash-at-counter-db-test.ts",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/lib/register.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "head": "1adc552",
+    "branch": "claude/security-center",
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "b08e856c",
-        "date": "2026-10-25T23:03:47+00:00",
-        "subject": "CASH-1: no more \"paid at the counter\" — paid online, or rung up in store",
+        "h": "1adc552",
+        "date": "2026-10-26T03:43:04+00:00",
+        "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "719895d0",
+        "h": "47e5fb0",
+        "date": "2026-10-25T19:15:14-04:00",
+        "subject": "CASH-1: no more \"paid at the counter\" — paid online, or rung up in store (#212)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "719895d",
         "date": "2026-10-25T01:42:31-04:00",
         "subject": "POS-3 R4: end-of-day close-out — count the drawer (#211)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "02782990",
+        "h": "0278299",
         "date": "2026-10-24T10:13:45-04:00",
         "subject": "POS-3 R3b: a group's round paid on the card reader (#210)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "068ac2b6",
+        "h": "068ac2b",
         "date": "2026-10-24T09:28:40-04:00",
         "subject": "POS-3 R3a: Stripe card reader at the register (shop items) (#209)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "c8e0e662",
+        "h": "c8e0e66",
         "date": "2026-10-24T02:05:37-04:00",
         "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "9985445e",
+        "h": "9985445",
         "date": "2026-10-24T01:50:41-04:00",
         "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "2e01ec99",
+        "h": "2e01ec9",
         "date": "2026-10-24T00:15:19-04:00",
         "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "ed10fa0c",
+        "h": "ed10fa0",
         "date": "2026-10-23T23:42:05-04:00",
         "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "6fd9158d",
+        "h": "6fd9158",
         "date": "2026-10-23T23:19:31-04:00",
         "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "6d7bf2a5",
+        "h": "6d7bf2a",
         "date": "2026-10-23T22:07:29-04:00",
         "subject": "Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "fbacc529",
+        "h": "fbacc52",
         "date": "2026-10-23T21:36:46-04:00",
         "subject": "Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "592f05f4",
+        "h": "592f05f",
         "date": "2026-10-24T01:13:34+00:00",
         "subject": "schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday",
         "ids": [],
         "matches": []
       },
       {
-        "h": "4b6af6fe",
+        "h": "4b6af6f",
         "date": "2026-10-24T01:08:39+00:00",
         "subject": "contact-email-test: spacing",
         "ids": [],
         "matches": []
       },
       {
-        "h": "e53daa8e",
+        "h": "e53daa8",
         "date": "2026-10-24T01:05:41+00:00",
         "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox",
         "ids": [],
         "matches": []
       },
       {
-        "h": "978a3da2",
+        "h": "978a3da",
         "date": "2026-10-23T17:59:38-04:00",
         "subject": "Retire the admin Activity page (AW-12) (#200)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "d2b41f27",
+        "h": "d2b41f2",
         "date": "2026-10-23T19:16:02+00:00",
         "subject": "Regenerate the status board",
         "ids": [],
         "matches": []
       },
       {
-        "h": "d6efdc1b",
+        "h": "d6efdc1",
         "date": "2026-10-23T19:15:21+00:00",
         "subject": "Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "85bb9160",
+        "h": "85bb916",
         "date": "2026-10-23T19:12:51+00:00",
         "subject": "The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again",
         "ids": [],
         "matches": []
       },
       {
-        "h": "3148eed2",
+        "h": "3148eed",
         "date": "2026-10-22T22:56:06-04:00",
         "subject": "Money: Needs you — declined cards with a pay link (DASH-C) (#198)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "3c88148d",
+        "h": "3c88148",
         "date": "2026-10-22T22:37:59-04:00",
         "subject": "Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "946d4a54",
+        "h": "946d4a5",
         "date": "2026-10-23T02:35:12+00:00",
         "subject": "The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a5789298",
+        "h": "a578929",
         "date": "2026-10-23T02:33:17+00:00",
         "subject": "Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no \"Birdie\" anywhere a course sees); a test for the pay-page fee line",
         "ids": [],
         "matches": []
       },
       {
-        "h": "966741b9",
+        "h": "966741b",
         "date": "2026-10-22T22:24:25-04:00",
         "subject": "Course dashboard search: find a golfer, booking or member from the menu (#195)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "dd3cfd14",
+        "h": "dd3cfd1",
         "date": "2026-10-23T02:19:56+00:00",
         "subject": "Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit",
         "ids": [],
         "matches": []
       },
       {
-        "h": "e0bc004d",
+        "h": "e0bc004",
         "date": "2026-10-22T22:09:55-04:00",
         "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "4b621c06",
+        "h": "4b621c0",
         "date": "2026-10-22T22:44:23+00:00",
         "subject": "Regenerate status board",
         "ids": [],
         "matches": []
       },
       {
-        "h": "04301cec",
+        "h": "04301ce",
         "date": "2026-10-22T22:10:32+00:00",
         "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses",
         "ids": [],
         "matches": []
       },
       {
-        "h": "2734cbdb",
+        "h": "2734cbd",
         "date": "2026-10-22T22:04:58+00:00",
         "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later",
         "ids": [],
@@ -237,7 +238,7 @@
     {
       "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
       "line": 2357,
-      "hash": "b88c8bf3",
+      "hash": "b88c8bf",
       "shipDate": "2026-07-22",
       "ageDays": 95
     }
@@ -375,7 +376,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-25",
+      "lastTouched": "2026-10-26",
       "ageDays": 0
     },
     {
@@ -397,12 +398,6 @@
       "ageDays": 2
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 2
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -412,6 +407,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 3
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 3
     },
     {
@@ -439,223 +440,223 @@
       "ageDays": 3
     },
     {
-      "file": "ADMIN_MASTER_PLAN.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "ADMIN_REBUILD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "ADMIN_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "ADMIN_V3_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "ARCHITECTURE.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "CODEMAP_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "COURSES_SHEET_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "COURSE_LAYOUT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "DESIGN_SYSTEM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "FB2_COPY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "FB3_FEE_PLAN_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "GOLFER_EDGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "GOLFER_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "HARDENING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "INQUIRY_CALL_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "INQUIRY_FORM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "MANAGE_BOOKING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "PRIVATE_BILLING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "PRODUCTION_READINESS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
+      "lastTouched": "2026-10-05",
+      "ageDays": 20
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
-    },
-    {
-      "file": "SITE_DASHBOARD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
+      "lastTouched": "2026-10-05",
+      "ageDays": 20
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
+      "lastTouched": "2026-10-04",
+      "ageDays": 21
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-07",
-      "ageDays": 17
+      "lastTouched": "2026-10-01",
+      "ageDays": 24
+    },
+    {
+      "file": "ADMIN_MASTER_PLAN.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "ADMIN_REBUILD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "ADMIN_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "ARCHITECTURE.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "BACKUP_OPS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "CODEMAP_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "COURSES_SHEET_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "COURSE_LAYOUT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "DESIGN_SYSTEM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "FB2_COPY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "FB3_FEE_PLAN_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "GOLFER_EDGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "GOLFER_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "HARDENING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "INQUIRY_CALL_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "INQUIRY_FORM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "MANAGE_BOOKING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "PRIVATE_BILLING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "PRODUCTION_READINESS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
+    },
+    {
+      "file": "SITE_DASHBOARD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-09-29",
+      "ageDays": 26
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "b08e856c",
-      "date": "2026-10-25",
-      "subject": "CASH-1: no more \"paid at the counter\" — paid online, or rung up in store"
+      "h": "1adc552",
+      "date": "2026-10-26",
+      "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1)"
     },
     {
-      "h": "719895d0",
+      "h": "47e5fb0",
+      "date": "2026-10-25",
+      "subject": "CASH-1: no more \"paid at the counter\" — paid online, or rung up in store (#212)"
+    },
+    {
+      "h": "719895d",
       "date": "2026-10-25",
       "subject": "POS-3 R4: end-of-day close-out — count the drawer (#211)"
     },
     {
-      "h": "02782990",
+      "h": "0278299",
       "date": "2026-10-24",
       "subject": "POS-3 R3b: a group's round paid on the card reader (#210)"
     },
     {
-      "h": "068ac2b6",
+      "h": "068ac2b",
       "date": "2026-10-24",
       "subject": "POS-3 R3a: Stripe card reader at the register (shop items) (#209)"
     },
     {
-      "h": "c8e0e662",
+      "h": "c8e0e66",
       "date": "2026-10-24",
       "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)"
     },
     {
-      "h": "9985445e",
+      "h": "9985445",
       "date": "2026-10-24",
       "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)"
     },
     {
-      "h": "2e01ec99",
+      "h": "2e01ec9",
       "date": "2026-10-24",
       "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)"
     },
     {
-      "h": "ed10fa0c",
+      "h": "ed10fa0",
       "date": "2026-10-23",
       "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)"
     },
     {
-      "h": "6fd9158d",
+      "h": "6fd9158",
       "date": "2026-10-23",
       "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)"
     },
     {
-      "h": "6d7bf2a5",
+      "h": "6d7bf2a",
       "date": "2026-10-23",
       "subject": "Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)"
     },
     {
-      "h": "fbacc529",
+      "h": "fbacc52",
       "date": "2026-10-23",
       "subject": "Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)"
-    },
-    {
-      "h": "592f05f4",
-      "date": "2026-10-24",
-      "subject": "schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday"
     }
   ]
 }
