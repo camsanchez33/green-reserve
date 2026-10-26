@@ -117,24 +117,27 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-26 05:08 UTC</span><span>claude/security-page @ 38a67c8</span>
-    <span>tree clean</span>
+    <span>2026-10-26 05:58 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 76bbb43</span>
+    <span>29 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">38 runs have shipped that the queue doesn't know about</div>
+<div class="lede">41 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">76bbb43</span><span>perf-audit header: LCP is report-only on a local build</span></li>
+<li><span class="h">a75c138</span><span>Perf check on the PR build: LCP reported, not enforced; one warm-up load per page</span></li>
+<li><span class="h">a247189</span><span>perf seed refuses a non-local database</span></li>
+<li><span class="h">6f61833</span><span>status board + code map</span></li>
+<li><span class="h">ef437d1</span><span>perf seed: a no-fee course, so /book is audited on the no-card path</span></li>
+<li><span class="h">b5d26e2</span><span>Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build</span></li>
 <li><span class="h">04522eb</span><span>Money fixes from the review ledger + the money walk script (#223)</span></li>
-<li><span class="h">a9798ad</span><span>Status board</span></li>
-<li><span class="h">68add62</span><span>Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented</span></li>
-<li><span class="h">c8f23b2</span><span>Status board</span></li>
-<li><span class="h">ef92326</span><span>Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token</span></li>
-<li><span class="h">364ba02</span><span>Status board</span></li>
-<li><span class="h">2ee4129</span><span>Security page: CLAUDE.md, code map</span></li>
-<li><span class="h">b2e1f40</span><span>Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)</span></li>
+<li><span class="h">224b231</span><span>status board + code map</span></li>
+<li><span class="h">a8a925d</span><span>Late cancel racing the cron's hold charge: wait and replay instead of failing</span></li>
 <li><span class="h">a904586</span><span>Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)</span></li>
+<li><span class="h">6c9f307</span><span>Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival</span></li>
 <li><span class="h">2ff16fa</span><span>Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)</span></li>
+<li><span class="h">00d53d1</span><span>docs: money walk script for the register, cash and card reader</span></li>
 <li><span class="h">47e5fb0</span><span>CASH-1: no more &quot;paid at the counter&quot; — paid online, or rung up in store (#212)</span></li>
 <li><span class="h">719895d</span><span>POS-3 R4: end-of-day close-out — count the drawer (#211)</span></li>
 <li><span class="h">0278299</span><span>POS-3 R3b: a group's round paid on the card reader (#210)</span></li>
@@ -166,19 +169,25 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
-  <div class="tile t-warn"><span class="n">1</span><span class="l">Awaiting review</span></div>
+  <div class="tile t-warn"><span class="n">0</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
-  <div class="tile t-idle"><span class="n">5</span><span class="l">Not started</span></div>
+  <div class="tile t-idle"><span class="n">6</span><span class="l">Not started</span></div>
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
+<section><h2>Working tree right now</h2>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M  CLAUDE.md</code></li><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>M  docs/RUNBOOK.md</code></li><li><code>M  docs/SHIPPING.md</code></li><li><code>M  docs/codemap.json</code></li><li><code>A  prisma/migrations/20261026042944_sec3_security_events/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>M  scripts/admin-nav-test.ts</code></li><li><code>A  scripts/security-events-db-test.ts</code></li><li><code>A  src/app/admin/security/page.tsx</code></li><li><code>M  src/app/api/admin/login/route.ts</code></li><li><code>A  src/app/api/admin/security/route.ts</code></li><li><code>M  src/app/api/auth/2fa/verify/route.ts</code></li><li><code>M  src/app/api/auth/login/route.ts</code></li><li><code>M  src/app/api/cam/login/route.ts</code></li><li><code>M  src/app/api/cam/step-up/route.ts</code></li><li><code>M  src/app/api/golfer/auth/otp/verify/route.ts</code></li></ul>
+</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
 <div class="row"><span class="idx">2</span><span class="t">RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against the code).</span><span class="where">:56</span></div>
 <div class="row"><span class="idx">3</span><span class="t">LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed</span><span class="where">:235</span></div>
 <div class="row"><span class="idx">4</span><span class="t">CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf</span><span class="where">:338</span></div>
-<div class="row"><span class="idx">5</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2993</span></div>
+<div class="row"><span class="idx">5</span><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="where">:2357</span></div>
+<div class="row"><span class="idx">6</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2993</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">15 pages closed, 7 open. One page in flight at a time.</p>
@@ -200,7 +209,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">95d</span><span class="where">b88c8bf</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:49</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:56</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:235</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:338</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2357</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2993</span></li></ul>
@@ -212,7 +220,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-26 &middot; 0d</td></tr>
-<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-17 &middot; 8d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 0d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 2d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 3d</td></tr>
@@ -222,46 +230,46 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 3d</td></tr>
 <tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 3d</td></tr>
 <tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 3d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 20d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-05 &middot; 20d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-04 &middot; 21d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-01 &middot; 24d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">76bbb43</td><td class="num">2026-10-26</td><td>perf-audit header: LCP is report-only on a local build</td></tr>
+<tr><td class="num">a75c138</td><td class="num">2026-10-26</td><td>Perf check on the PR build: LCP reported, not enforced; one warm-up load per page</td></tr>
+<tr><td class="num">a247189</td><td class="num">2026-10-26</td><td>perf seed refuses a non-local database</td></tr>
+<tr><td class="num">6f61833</td><td class="num">2026-10-26</td><td>status board + code map</td></tr>
+<tr><td class="num">ef437d1</td><td class="num">2026-10-26</td><td>perf seed: a no-fee course, so /book is audited on the no-card path</td></tr>
+<tr><td class="num">b5d26e2</td><td class="num">2026-10-26</td><td>Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build</td></tr>
 <tr><td class="num">04522eb</td><td class="num">2026-10-26</td><td>Money fixes from the review ledger + the money walk script (#223)</td></tr>
-<tr><td class="num">a9798ad</td><td class="num">2026-10-26</td><td>Status board</td></tr>
-<tr><td class="num">68add62</td><td class="num">2026-10-26</td><td>Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented</td></tr>
-<tr><td class="num">c8f23b2</td><td class="num">2026-10-26</td><td>Status board</td></tr>
-<tr><td class="num">ef92326</td><td class="num">2026-10-26</td><td>Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token</td></tr>
-<tr><td class="num">364ba02</td><td class="num">2026-10-26</td><td>Status board</td></tr>
-<tr><td class="num">2ee4129</td><td class="num">2026-10-26</td><td>Security page: CLAUDE.md, code map</td></tr>
-<tr><td class="num">b2e1f40</td><td class="num">2026-10-26</td><td>Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)</td></tr>
+<tr><td class="num">224b231</td><td class="num">2026-10-26</td><td>status board + code map</td></tr>
+<tr><td class="num">a8a925d</td><td class="num">2026-10-26</td><td>Late cancel racing the cron's hold charge: wait and replay instead of failing</td></tr>
 <tr><td class="num">a904586</td><td class="num">2026-10-26</td><td>Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)</td></tr>
+<tr><td class="num">6c9f307</td><td class="num">2026-10-26</td><td>Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival</td></tr>
 <tr><td class="num">2ff16fa</td><td class="num">2026-10-25</td><td>Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)</td></tr>
-<tr><td class="num">47e5fb0</td><td class="num">2026-10-25</td><td>CASH-1: no more &quot;paid at the counter&quot; — paid online, or rung up in store (#212)</td></tr>
-<tr><td class="num">719895d</td><td class="num">2026-10-25</td><td>POS-3 R4: end-of-day close-out — count the drawer (#211)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

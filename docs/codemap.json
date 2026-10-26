@@ -5314,7 +5314,7 @@
     },
     {
       "path": "src/app/api/operator/conditions/route.ts",
-      "lines": 15,
+      "lines": 24,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6367,7 +6367,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 123,
+      "lines": 128,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8014,7 +8014,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1516,
+      "lines": 1517,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8138,7 +8138,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1191,
+      "lines": 1193,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17893,7 +17893,7 @@
     },
     {
       "path": "src/lib/member-session.ts",
-      "lines": 109,
+      "lines": 110,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20795,7 +20795,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 142,
+      "lines": 145,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [

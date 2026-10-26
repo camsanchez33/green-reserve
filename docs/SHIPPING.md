@@ -81,10 +81,13 @@ The CI check replays the migrations on its own throwaway Postgres (a service con
 
 ## Performance budgets (golfer-facing pages)
 
-Enforced by `.github/workflows/perf-audit.yml` on every PR. Run locally:
+Enforced by `.github/workflows/perf-audit.yml` on every PR, against THE PR'S OWN BUILD (R-GOLF-014, Cam 2026-10-26): CI applies the migrations to a throwaway Postgres, seeds one live course (`scripts/perf-seed.ts`, slug `perf-audit`, which also hands `/book` a real open tee time), runs `next build` + `next start`, and audits localhost. Run the same locally:
 ```bash
-AUDIT_BASE_URL=https://greenreserve.app node --experimental-strip-types scripts/perf-audit.ts   # Node 22+; NOT tsx (crashes: __name is not defined)
+npx prisma migrate deploy && npx tsx scripts/perf-seed.ts      # against a throwaway DATABASE_URL
+npx next build && npx next start -p 3000 &
+AUDIT_BASE_URL=http://localhost:3000 AUDIT_COURSE_SLUG=perf-audit node --experimental-strip-types scripts/perf-audit.ts   # Node 22+; NOT tsx (crashes: __name is not defined)
 ```
+On the PR build the score, TBT and CLS fail the check and LCP is printed only (Cam 2026-10-26): a bare `next start` box has no CDN or Brotli, so its LCP runs ~0.3s over production's and measures the hosting, not the PR. Each page also gets one unmeasured warm-up load there. LCP is judged against production: run the same script on demand with `AUDIT_BASE_URL=https://greenreserve.app AUDIT_COURSE_SLUG=<a live course>` (LCP enforced, no warm-up).
 
 | Metric | Budget |
 |--------|--------|

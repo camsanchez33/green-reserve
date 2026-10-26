@@ -1,5 +1,13 @@
 name: Performance audit
 
+# R-GOLF-014 (Cam 2026-10-26: "point it at the PR's own build"). This used to
+# audit production (greenreserve.app), so it could never catch a regression
+# before it merged, and its default course slug wasn't live. It now builds THIS
+# PR, starts it against a throwaway Postgres with one seeded live course
+# (scripts/perf-seed.ts), and audits that.
+# Score, TBT and CLS fail it; LCP is printed only (Cam 2026-10-26) — a bare
+# runner has no CDN, so its LCP measures hosting. LCP is judged on production.
+
 on:
   pull_request:
     branches: [main]
@@ -8,6 +16,28 @@ jobs:
   lighthouse:
     name: Lighthouse budget check
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: greenreserve
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Throwaway values for a throwaway database — no real secret belongs here.
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/greenreserve
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/greenreserve
+      JWT_SECRET: ci-only-not-a-real-secret-0123456789abcdef
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+
     steps:
       - uses: actions/checkout@v4
 
@@ -27,14 +57,33 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -y -q chromium-browser || sudo apt-get install -y -q chromium
 
+      - name: Database with one live course
+        run: |
+          npx prisma migrate deploy
+          npx tsx scripts/perf-seed.ts
+
+      - name: Build this PR
+        run: npx next build
+
+      - name: Start it
+        run: |
+          npx next start -p 3000 > next.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/api/health && exit 0
+            sleep 2
+          done
+          echo "::error::App did not answer /api/health within 60s"
+          cat next.log
+          exit 1
+
       - name: Run Lighthouse audit
         # Not tsx: its esbuild keepNames wraps Lighthouse's page functions in
         # __name(), which does not exist in the page ("__name is not defined").
         run: node --experimental-strip-types scripts/perf-audit.ts
         env:
-          # Override via GitHub repo variable AUDIT_BASE_URL to test a preview URL.
-          # Default is production — acceptable since Vercel deploys every branch anyway.
-          AUDIT_BASE_URL: ${{ vars.AUDIT_BASE_URL || 'https://greenreserve.app' }}
-          # A LIVE course's slug (repo variable). Unset = 'daisylinks', which is
-          # not live on production — the course row then times a not-found page.
-          AUDIT_COURSE_SLUG: ${{ vars.AUDIT_COURSE_SLUG || 'daisylinks' }}
+          AUDIT_BASE_URL: http://localhost:3000
+          AUDIT_COURSE_SLUG: perf-audit
+
+      - name: Server log
+        if: failure()
+        run: tail -200 next.log || true

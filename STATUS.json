@@ -1,15 +1,78 @@
 {
-  "generatedAt": "2026-10-26T05:08:18.205Z",
+  "generatedAt": "2026-10-26T05:58:58.836Z",
   "repo": {
-    "head": "38a67c8",
-    "branch": "claude/security-page",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "head": "76bbb43",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 29,
+    "dirty": [
+      "M  CLAUDE.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "M  docs/RUNBOOK.md",
+      "M  docs/SHIPPING.md",
+      "M  docs/codemap.json",
+      "A  prisma/migrations/20261026042944_sec3_security_events/migration.sql",
+      "M  prisma/schema.prisma",
+      "M  scripts/admin-nav-test.ts",
+      "A  scripts/security-events-db-test.ts",
+      "A  src/app/admin/security/page.tsx",
+      "M  src/app/api/admin/login/route.ts",
+      "A  src/app/api/admin/security/route.ts",
+      "M  src/app/api/auth/2fa/verify/route.ts",
+      "M  src/app/api/auth/login/route.ts",
+      "M  src/app/api/cam/login/route.ts",
+      "M  src/app/api/cam/step-up/route.ts",
+      "M  src/app/api/golfer/auth/otp/verify/route.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "76bbb43",
+        "date": "2026-10-26T05:25:15+00:00",
+        "subject": "perf-audit header: LCP is report-only on a local build",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a75c138",
+        "date": "2026-10-26T05:25:02+00:00",
+        "subject": "Perf check on the PR build: LCP reported, not enforced; one warm-up load per page",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a247189",
+        "date": "2026-10-26T05:05:54+00:00",
+        "subject": "perf seed refuses a non-local database",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6f61833",
+        "date": "2026-10-26T05:04:56+00:00",
+        "subject": "status board + code map",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "ef437d1",
+        "date": "2026-10-26T05:04:47+00:00",
+        "subject": "perf seed: a no-fee course, so /book is audited on the no-card path",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b5d26e2",
+        "date": "2026-10-26T05:04:47+00:00",
+        "subject": "Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "04522eb",
         "date": "2026-10-26T01:04:17-04:00",
@@ -18,51 +81,16 @@
         "matches": []
       },
       {
-        "h": "a9798ad",
-        "date": "2026-10-26T04:59:08+00:00",
-        "subject": "Status board",
+        "h": "224b231",
+        "date": "2026-10-26T04:45:35+00:00",
+        "subject": "status board + code map",
         "ids": [],
         "matches": []
       },
       {
-        "h": "68add62",
-        "date": "2026-10-26T04:59:07+00:00",
-        "subject": "Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "c8f23b2",
-        "date": "2026-10-26T04:54:46+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "ef92326",
-        "date": "2026-10-26T04:54:44+00:00",
-        "subject": "Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "364ba02",
-        "date": "2026-10-26T04:43:21+00:00",
-        "subject": "Status board",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "2ee4129",
-        "date": "2026-10-26T04:43:19+00:00",
-        "subject": "Security page: CLAUDE.md, code map",
-        "ids": [],
-        "matches": []
-      },
-      {
-        "h": "b2e1f40",
-        "date": "2026-10-26T04:38:53+00:00",
-        "subject": "Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)",
+        "h": "a8a925d",
+        "date": "2026-10-26T04:43:23+00:00",
+        "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing",
         "ids": [],
         "matches": []
       },
@@ -74,9 +102,23 @@
         "matches": []
       },
       {
+        "h": "6c9f307",
+        "date": "2026-10-26T04:37:29+00:00",
+        "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "2ff16fa",
         "date": "2026-10-25T23:57:09-04:00",
         "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "00d53d1",
+        "date": "2026-10-26T03:27:06+00:00",
+        "subject": "docs: money walk script for the register, cash and card reader",
         "ids": [],
         "matches": []
       },
@@ -280,9 +322,9 @@
   },
   "counts": {
     "runDone": 298,
-    "runAwaiting": 1,
+    "runAwaiting": 0,
     "runInFlight": 1,
-    "runNotStarted": 5,
+    "runNotStarted": 6,
     "reviseDone": 15,
     "reviseOpen": 7,
     "ideas": 17,
@@ -297,15 +339,7 @@
       ]
     }
   ],
-  "awaiting": [
-    {
-      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
-      "line": 2357,
-      "hash": "b88c8bf",
-      "shipDate": "2026-07-22",
-      "ageDays": 95
-    }
-  ],
+  "awaiting": [],
   "next": [
     {
       "title": "WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).",
@@ -325,6 +359,11 @@
     {
       "title": "CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (\"Golf",
       "line": 338,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
+      "line": 2357,
       "section": "Queue (run in this order)"
     },
     {
@@ -445,8 +484,8 @@
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-17",
-      "ageDays": 8
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
@@ -503,203 +542,208 @@
       "ageDays": 3
     },
     {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 20
-    },
-    {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 20
-    },
-    {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-04",
-      "ageDays": 21
-    },
-    {
-      "file": "UI_REVISE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-01",
-      "ageDays": 24
-    },
-    {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
+    },
+    {
+      "file": "REVIEW_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
+    },
+    {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
+    },
+    {
+      "file": "UI_REVISE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "76bbb43",
+      "date": "2026-10-26",
+      "subject": "perf-audit header: LCP is report-only on a local build"
+    },
+    {
+      "h": "a75c138",
+      "date": "2026-10-26",
+      "subject": "Perf check on the PR build: LCP reported, not enforced; one warm-up load per page"
+    },
+    {
+      "h": "a247189",
+      "date": "2026-10-26",
+      "subject": "perf seed refuses a non-local database"
+    },
+    {
+      "h": "6f61833",
+      "date": "2026-10-26",
+      "subject": "status board + code map"
+    },
+    {
+      "h": "ef437d1",
+      "date": "2026-10-26",
+      "subject": "perf seed: a no-fee course, so /book is audited on the no-card path"
+    },
+    {
+      "h": "b5d26e2",
+      "date": "2026-10-26",
+      "subject": "Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build"
+    },
     {
       "h": "04522eb",
       "date": "2026-10-26",
       "subject": "Money fixes from the review ledger + the money walk script (#223)"
     },
     {
-      "h": "a9798ad",
+      "h": "224b231",
       "date": "2026-10-26",
-      "subject": "Status board"
+      "subject": "status board + code map"
     },
     {
-      "h": "68add62",
+      "h": "a8a925d",
       "date": "2026-10-26",
-      "subject": "Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented"
-    },
-    {
-      "h": "c8f23b2",
-      "date": "2026-10-26",
-      "subject": "Status board"
-    },
-    {
-      "h": "ef92326",
-      "date": "2026-10-26",
-      "subject": "Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token"
-    },
-    {
-      "h": "364ba02",
-      "date": "2026-10-26",
-      "subject": "Status board"
-    },
-    {
-      "h": "2ee4129",
-      "date": "2026-10-26",
-      "subject": "Security page: CLAUDE.md, code map"
-    },
-    {
-      "h": "b2e1f40",
-      "date": "2026-10-26",
-      "subject": "Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)"
+      "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing"
     },
     {
       "h": "a904586",
@@ -707,19 +751,14 @@
       "subject": "Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)"
     },
     {
+      "h": "6c9f307",
+      "date": "2026-10-26",
+      "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival"
+    },
+    {
       "h": "2ff16fa",
       "date": "2026-10-25",
       "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)"
-    },
-    {
-      "h": "47e5fb0",
-      "date": "2026-10-25",
-      "subject": "CASH-1: no more \"paid at the counter\" — paid online, or rung up in store (#212)"
-    },
-    {
-      "h": "719895d",
-      "date": "2026-10-25",
-      "subject": "POS-3 R4: end-of-day close-out — count the drawer (#211)"
     }
   ]
 }

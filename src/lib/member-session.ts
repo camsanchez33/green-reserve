@@ -34,7 +34,8 @@ export async function verifyMemberMagicToken(token: string) {
   } catch { return null; }
 }
 
-// 90-day session token — stored in httpOnly cookie, scoped to courseId
+// 7-day session token — stored in httpOnly cookie, scoped to courseId. R-AUTH-009
+// (Cam 2026-10-26): 7 days absolute, the same as the cookie it rides in.
 export async function signMemberSessionToken(payload: {
   membershipId: string;
   courseId: string;
@@ -42,7 +43,7 @@ export async function signMemberSessionToken(payload: {
 }) {
   return new SignJWT({ ...payload, type: 'member_session' })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('90d')
+    .setExpirationTime('7d')
     .sign(secret);
 }
 

@@ -693,7 +693,7 @@ function DashboardPageInner() {
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
-      <OperatorSidebar active={tab} onAlertClick={() => { setAlertEmail(false); setShowConditions(true); }}/>
+      <OperatorSidebar active={tab} onAlertClick={access.can('sheet.course_alert') ? () => { setAlertEmail(false); setShowConditions(true); } : undefined}/>
 
       <main className="flex-1 md:overflow-y-auto pb-24 md:pb-0">
         {courseDraft && !courseArchived && (
@@ -783,7 +783,7 @@ function DashboardPageInner() {
         {conditions && (
           <div className="bg-warn/10 border-b border-warn/20 px-6 py-2 flex items-center gap-2 text-sm font-medium text-warn">
             <span>Course alert: {conditions}</span>
-            <button onClick={() => { setAlertEmail(false); setShowConditions(true); }} className="ml-auto underline text-xs">Update</button>
+            {access.can('sheet.course_alert') && <button onClick={() => { setAlertEmail(false); setShowConditions(true); }} className="ml-auto underline text-xs">Update</button>}
           </div>
         )}
 
@@ -1275,9 +1275,10 @@ function DashboardPageInner() {
               <button onClick={() => setShowConditions(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
             <p className="text-sm text-ink-soft mb-3">A short notice at the top of your booking page, like “Cart path only today” or “Back nine closed”. It stays up until you clear it. Leave blank to clear.</p>
-            <textarea value={conditionsInput} onChange={e=>setConditionsInput(e.target.value)} rows={3}
+            <textarea value={conditionsInput} onChange={e=>setConditionsInput(e.target.value)} rows={3} maxLength={280}
               placeholder="e.g. Cart paths only through Sunday"
-              className={iCls + ' w-full mb-3 resize-none'}/>
+              className={iCls + ' w-full mb-1 resize-none'}/>
+            <p className="text-[12px] text-ink-muted mb-3 text-right">{conditionsInput.length}/280</p>
             {access.can('sheet.message_golfers') && (
               <label className="flex items-start gap-2 mb-4 text-[13px] text-ink cursor-pointer">
                 <input type="checkbox" checked={alertEmail} onChange={e => setAlertEmail(e.target.checked)} disabled={!conditionsInput.trim()} className="mt-0.5 accent-pine"/>
