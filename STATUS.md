@@ -4,28 +4,53 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 20:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2e541f71` · working tree clean
+Generated 2026-10-26 20:49 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d2ad3498` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 42 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 67 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `c2f1007c` | 2026-10-26 | Bump actions/checkout from 4 to 7 (#215) |
+| `f0b52217` | 2026-10-26 | A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund |
+| `28e1481e` | 2026-10-26 | status board + code map |
 | `2e541f71` | 2026-10-26 | Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded |
 | `0197ea86` | 2026-10-26 | Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010) |
 | `355f6ca0` | 2026-10-26 | Bump the minor-and-patch group across 1 directory with 5 updates (#217) |
 | `68901693` | 2026-10-26 | Bump actions/upload-artifact from 4 to 7 (#216) |
 | `03bd9dcb` | 2026-10-26 | Bump actions/setup-node from 4 to 7 (#214) |
 | `e1ce6066` | 2026-10-26 | Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number >= 1 (R-BOOK-011) (#229) |
+| `0fd72cdd` | 2026-10-26 | status board + code map |
+| `58e0c789` | 2026-10-26 | test: type the schedule id (scheduleToWire returns unknown fields) |
+| `195f02a7` | 2026-10-26 | Schedule interval: refuse anything but a whole number of minutes >= 1 (create and update) |
+| `8ae40453` | 2026-10-26 | Check-in email: a failed send is retried (R-CRON-007); schedule update stores the checked interval (R-BOOK-011) |
 | `7de5d7a3` | 2026-10-26 | A declined cancellation hold is ledgered once (R-PAY-010) (#228) |
+| `9e10ae2f` | 2026-10-26 | status board + code map |
+| `5e59c031` | 2026-10-26 | Cutoff hold: a concurrent charge of the same key is not a decline |
+| `31dad15d` | 2026-10-26 | A declined cancellation hold is ledgered once (R-PAY-010) |
 | `35cdba79` | 2026-10-26 | Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227) |
+| `61de211b` | 2026-10-26 | status board + code map |
+| `22bff0bb` | 2026-10-26 | Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking |
+| `3344fa17` | 2026-10-26 | Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010) |
 | `b06da63e` | 2026-10-26 | /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226) |
+| `eb9b36f9` | 2026-10-26 | status board + code map |
+| `4474a823` | 2026-10-26 | /book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a) |
 | `09fd1b9d` | 2026-10-26 | Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224) |
+| `76bbb431` | 2026-10-26 | perf-audit header: LCP is report-only on a local build |
+| `a75c138f` | 2026-10-26 | Perf check on the PR build: LCP reported, not enforced; one warm-up load per page |
 | `9f74c0c1` | 2026-10-26 | Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225) |
+| `a247189b` | 2026-10-26 | perf seed refuses a non-local database |
+| `6f618338` | 2026-10-26 | status board + code map |
+| `ef437d10` | 2026-10-26 | perf seed: a no-fee course, so /book is audited on the no-card path |
+| `b5d26e20` | 2026-10-26 | Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build |
 | `04522eb0` | 2026-10-26 | Money fixes from the review ledger + the money walk script (#223) |
+| `224b231c` | 2026-10-26 | status board + code map |
+| `a8a925d4` | 2026-10-26 | Late cancel racing the cron's hold charge: wait and replay instead of failing |
 | `a904586f` | 2026-10-26 | Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222) |
+| `6c9f3077` | 2026-10-26 | Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival |
 | `2ff16fa2` | 2026-10-25 | Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213) |
+| `00d53d10` | 2026-10-26 | docs: money walk script for the register, cash and card reader |
 | `47e5fb0f` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
 | `719895d0` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
 | `02782990` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
@@ -176,18 +201,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `c2f1007c` 2026-10-26 — Bump actions/checkout from 4 to 7 (#215)
+- `f0b52217` 2026-10-26 — A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund
+- `28e1481e` 2026-10-26 — status board + code map
 - `2e541f71` 2026-10-26 — Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded
 - `0197ea86` 2026-10-26 — Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)
 - `355f6ca0` 2026-10-26 — Bump the minor-and-patch group across 1 directory with 5 updates (#217)
 - `68901693` 2026-10-26 — Bump actions/upload-artifact from 4 to 7 (#216)
 - `03bd9dcb` 2026-10-26 — Bump actions/setup-node from 4 to 7 (#214)
 - `e1ce6066` 2026-10-26 — Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number >= 1 (R-BOOK-011) (#229)
-- `7de5d7a3` 2026-10-26 — A declined cancellation hold is ledgered once (R-PAY-010) (#228)
-- `35cdba79` 2026-10-26 — Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)
-- `b06da63e` 2026-10-26 — /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)
-- `09fd1b9d` 2026-10-26 — Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)
-- `9f74c0c1` 2026-10-26 — Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)
-- `04522eb0` 2026-10-26 — Money fixes from the review ledger + the money walk script (#223)
+- `0fd72cdd` 2026-10-26 — status board + code map
+- `58e0c789` 2026-10-26 — test: type the schedule id (scheduleToWire returns unknown fields)
+- `195f02a7` 2026-10-26 — Schedule interval: refuse anything but a whole number of minutes >= 1 (create and update)
 
 ---
 
