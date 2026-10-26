@@ -1,30 +1,39 @@
 {
-  "generatedAt": "2026-10-26T04:56:37.941Z",
+  "generatedAt": "2026-10-26T05:04:55.449Z",
   "repo": {
-    "head": "224b231",
+    "head": "ef437d1",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 14,
+    "dirtyCount": 2,
     "dirty": [
-      "A  .github/dependabot.yml",
-      "A  .github/workflows/security.yml",
-      "M  CLAUDE.md",
-      "UU STATUS.artifact.html",
-      "UU STATUS.json",
-      "UU STATUS.md",
-      "M  next.config.ts",
-      "M  package-lock.json",
-      "M  package.json",
-      "A  scripts/security-headers-test.ts",
-      "A  scripts/sentry-privacy-test.ts",
-      "M  sentry.client.config.ts",
-      "A  sentry.privacy.ts",
-      "M  sentry.server.config.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "ef437d1",
+        "date": "2026-10-26T05:04:47+00:00",
+        "subject": "perf seed: a no-fee course, so /book is audited on the no-card path",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b5d26e2",
+        "date": "2026-10-26T05:04:47+00:00",
+        "subject": "Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "04522eb",
+        "date": "2026-10-26T01:04:17-04:00",
+        "subject": "Money fixes from the review ledger + the money walk script (#223)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "224b231",
         "date": "2026-10-26T04:45:35+00:00",
@@ -40,9 +49,23 @@
         "matches": []
       },
       {
+        "h": "a904586",
+        "date": "2026-10-26T00:38:41-04:00",
+        "subject": "Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "6c9f307",
         "date": "2026-10-26T04:37:29+00:00",
         "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2ff16fa",
+        "date": "2026-10-25T23:57:09-04:00",
+        "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)",
         "ids": [],
         "matches": []
       },
@@ -409,7 +432,7 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-25",
+      "lastTouched": "2026-10-26",
       "ageDays": 0
     },
     {
@@ -632,6 +655,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ef437d1",
+      "date": "2026-10-26",
+      "subject": "perf seed: a no-fee course, so /book is audited on the no-card path"
+    },
+    {
+      "h": "b5d26e2",
+      "date": "2026-10-26",
+      "subject": "Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build"
+    },
+    {
+      "h": "04522eb",
+      "date": "2026-10-26",
+      "subject": "Money fixes from the review ledger + the money walk script (#223)"
+    },
+    {
       "h": "224b231",
       "date": "2026-10-26",
       "subject": "status board + code map"
@@ -642,9 +680,19 @@
       "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing"
     },
     {
+      "h": "a904586",
+      "date": "2026-10-26",
+      "subject": "Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)"
+    },
+    {
       "h": "6c9f307",
       "date": "2026-10-26",
       "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival"
+    },
+    {
+      "h": "2ff16fa",
+      "date": "2026-10-25",
+      "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)"
     },
     {
       "h": "00d53d1",
@@ -665,31 +713,6 @@
       "h": "0278299",
       "date": "2026-10-24",
       "subject": "POS-3 R3b: a group's round paid on the card reader (#210)"
-    },
-    {
-      "h": "068ac2b",
-      "date": "2026-10-24",
-      "subject": "POS-3 R3a: Stripe card reader at the register (shop items) (#209)"
-    },
-    {
-      "h": "c8e0e66",
-      "date": "2026-10-24",
-      "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)"
-    },
-    {
-      "h": "9985445",
-      "date": "2026-10-24",
-      "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)"
-    },
-    {
-      "h": "2e01ec9",
-      "date": "2026-10-24",
-      "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)"
-    },
-    {
-      "h": "ed10fa0",
-      "date": "2026-10-23",
-      "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)"
     }
   ]
 }

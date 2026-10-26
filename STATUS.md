@@ -4,17 +4,22 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 04:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `224b231` · working tree **14 dirty file(s)**
+Generated 2026-10-26 05:04 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ef437d1` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 32 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 37 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ef437d1` | 2026-10-26 | perf seed: a no-fee course, so /book is audited on the no-card path |
+| `b5d26e2` | 2026-10-26 | Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build |
+| `04522eb` | 2026-10-26 | Money fixes from the review ledger + the money walk script (#223) |
 | `224b231` | 2026-10-26 | status board + code map |
 | `a8a925d` | 2026-10-26 | Late cancel racing the cron's hold charge: wait and replay instead of failing |
+| `a904586` | 2026-10-26 | Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222) |
 | `6c9f307` | 2026-10-26 | Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival |
+| `2ff16fa` | 2026-10-25 | Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213) |
 | `00d53d1` | 2026-10-26 | docs: money walk script for the register, cash and card reader |
 | `47e5fb0` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
 | `719895d` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
@@ -47,22 +52,10 @@ Generated 2026-10-26 04:56 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (14 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `A  .github/dependabot.yml`
-- `A  .github/workflows/security.yml`
-- `M  CLAUDE.md`
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `M  next.config.ts`
-- `M  package-lock.json`
-- `M  package.json`
-- `A  scripts/security-headers-test.ts`
-- `A  scripts/sentry-privacy-test.ts`
-- `M  sentry.client.config.ts`
-- `A  sentry.privacy.ts`
-- `M  sentry.server.config.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -145,7 +138,7 @@ Nothing awaiting review.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-25 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-26 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 5d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 0d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 2d |
@@ -185,18 +178,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `ef437d1` 2026-10-26 — perf seed: a no-fee course, so /book is audited on the no-card path
+- `b5d26e2` 2026-10-26 — Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build
+- `04522eb` 2026-10-26 — Money fixes from the review ledger + the money walk script (#223)
 - `224b231` 2026-10-26 — status board + code map
 - `a8a925d` 2026-10-26 — Late cancel racing the cron's hold charge: wait and replay instead of failing
+- `a904586` 2026-10-26 — Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)
 - `6c9f307` 2026-10-26 — Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival
+- `2ff16fa` 2026-10-25 — Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)
 - `00d53d1` 2026-10-26 — docs: money walk script for the register, cash and card reader
 - `47e5fb0` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212)
 - `719895d` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
 - `0278299` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
-- `068ac2b` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
-- `c8e0e66` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
-- `9985445` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
-- `2e01ec9` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
-- `ed10fa0` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
 
 ---
 

@@ -210,7 +210,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/bookings/shop` | operator | file | DELETE POST | `src/app/api/operator/bookings/shop/route.ts` | 52 |
 | `/api/operator/card-readers` | operator | file | DELETE GET POST | `src/app/api/operator/card-readers/route.ts` | 38 |
 | `/api/operator/change-password` | operator | file | POST | `src/app/api/operator/change-password/route.ts` | 40 |
-| `/api/operator/conditions` | operator | file | PATCH | `src/app/api/operator/conditions/route.ts` | 15 |
+| `/api/operator/conditions` | operator | file | PATCH | `src/app/api/operator/conditions/route.ts` | 24 |
 | `/api/operator/course-products` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/course-products/route.ts` | 122 |
 | `/api/operator/course-shape` | operator | file | POST | `src/app/api/operator/course-shape/route.ts` | 23 |
 | `/api/operator/courses` | operator | file | GET PATCH | `src/app/api/operator/courses/route.ts` | 109 |
@@ -243,7 +243,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/schedule` | operator | file | DELETE GET PATCH POST PUT | `src/app/api/operator/schedule/route.ts` | 96 |
 | `/api/operator/schedule/preview` | operator | file | POST | `src/app/api/operator/schedule/preview/route.ts` | 32 |
 | `/api/operator/search` | operator | file | GET | `src/app/api/operator/search/route.ts` | 16 |
-| `/api/operator/settings` | operator | file | GET PATCH | `src/app/api/operator/settings/route.ts` | 123 |
+| `/api/operator/settings` | operator | file | GET PATCH | `src/app/api/operator/settings/route.ts` | 128 |
 | `/api/operator/shop-items` | operator | NONE FOUND for POST/PATCH/DELETE | DELETE GET PATCH POST | `src/app/api/operator/shop-items/route.ts` | 91 |
 | `/api/operator/shop-items/read` | operator | file | POST | `src/app/api/operator/shop-items/read/route.ts` | 33 |
 | `/api/operator/shop-sales` | operator | file | GET PATCH POST | `src/app/api/operator/shop-sales/route.ts` | 250 |
@@ -279,7 +279,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 862 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1516 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1517 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 705 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -295,7 +295,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/payments` | operator | middleware | page | `src/app/dashboard/payments/page.tsx` | 18 |
 | `/dashboard/reset-password` | operator | entry | page | `src/app/dashboard/reset-password/page.tsx` | 112 |
 | `/dashboard/schedules` | operator | middleware | page | `src/app/dashboard/schedules/page.tsx` | 610 |
-| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1191 |
+| `/dashboard/settings` | operator | middleware | page | `src/app/dashboard/settings/page.tsx` | 1193 |
 | `/dashboard/shop` | operator | middleware | page | `src/app/dashboard/shop/page.tsx` | 806 |
 | `/dashboard/sign` | operator | middleware | page | `src/app/dashboard/sign/page.tsx` | 26 |
 | `/dashboard/tournaments` | operator | middleware | page | `src/app/dashboard/tournaments/page.tsx` | 5 |
@@ -352,10 +352,10 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/access-fee.ts` | 10 | 187 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/cron-log.ts` | 10 | 141 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/real-courses.ts` | 10 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
-| `src/lib/staff-permissions.ts` | 10 | 142 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
+| `src/lib/staff-permissions.ts` | 10 | 145 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
 | `src/lib/agreement-gate.ts` | 9 | 117 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement`, `latestOperatorAgreement` |
 | `src/lib/agreements.ts` | 9 | 134 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +2 more |
-| `src/lib/member-session.ts` | 9 | 109 |  | `getGolferMembership`, `getMemberSession`, `golferResident`, `residentOn`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
+| `src/lib/member-session.ts` | 9 | 110 |  | `getGolferMembership`, `getMemberSession`, `golferResident`, `residentOn`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
 | `src/lib/tee-sheet-engine.ts` | 9 | 255 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `ScheduleForSlots`, `slotKey` |
 | `src/lib/tee-time-utils.ts` | 9 | 41 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
 | `src/lib/admin-roles.ts` | 8 | 17 | Role lists, client-safe. | `MANAGER_PLUS`, `OWNER_ONLY`, `SUPPORT_PLUS`, `VIEWER_PLUS` |
