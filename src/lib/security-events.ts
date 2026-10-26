@@ -9,7 +9,7 @@
 // — never fire-and-forget) but any error is swallowed and logged. It never
 // stores a password, code or token — only the email typed, the IP and the browser.
 import { prisma } from './prisma';
-import { evidentiaryIp } from './rate-limit';
+import { evidentiaryIp, rateLimit } from './rate-limit';
 
 export type SecurityKind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device';
 export type SecuritySurface = 'admin' | 'owner' | 'course' | 'golfer' | 'member';
@@ -19,16 +19,24 @@ export const SECURITY_KEEP_DAYS = 90;
 export const BURST_PER_IP = 20;
 /** Failed attempts across all addresses in an hour that make a Problem (spread-out guessing). */
 export const BURST_TOTAL = 100;
+/** Rows one address can add in an hour (security audit: a flood must not grow the table without bound). Well above BURST_PER_IP. */
+export const MAX_EVENTS_PER_IP_HOUR = 200;
 
 const FAILED_KINDS: SecurityKind[] = ['signin_failed', 'locked_out', 'second_factor_failed', 'step_up_failed'];
 
 export async function securityEvent(req: Request | null, e: { kind: SecurityKind; surface: SecuritySurface; email?: string | null; accountId?: string | null; detail?: string }): Promise<void> {
   try {
+    const ip = req ? evidentiaryIp(req).slice(0, 64) : '';
+    // An address already throttled is recorded once per 10 minutes per door,
+    // not on every refused request; and no address adds more than
+    // MAX_EVENTS_PER_IP_HOUR rows an hour (the attack is already on record).
+    if (e.kind === 'rate_limited' && !(await rateLimit(`secev:rl:${e.surface}:${ip}`, 1, 600))) return;
+    if (ip && !(await rateLimit(`secev:ip:${ip}`, MAX_EVENTS_PER_IP_HOUR, 3600))) return;
     await prisma.securityEvent.create({
       data: {
         kind: e.kind,
         surface: e.surface,
-        ip: req ? evidentiaryIp(req).slice(0, 64) : '',
+        ip,
         userAgent: (req?.headers.get('user-agent') ?? '').slice(0, 300),
         email: String(e.email ?? '').trim().toLowerCase().slice(0, 200),
         accountId: e.accountId ?? null,

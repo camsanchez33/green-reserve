@@ -43,9 +43,9 @@ export async function securityChecklist(env: NodeJS.ProcessEnv = process.env, fe
     { key: 'sentry', label: 'Error reporting (Sentry)', ...(env.SENTRY_DSN || env.NEXT_PUBLIC_SENTRY_DSN
       ? { status: 'ok' as const, text: 'Errors on the site and in the API are reported, with nothing personal attached (sentry.privacy.ts).' }
       : { status: 'bad' as const, text: 'No Sentry DSN — errors happen silently. Add SENTRY_DSN and NEXT_PUBLIC_SENTRY_DSN in Vercel.' }) },
-    { key: 'sentry-read', label: 'Sentry errors shown here', ...(env.SENTRY_AUTH_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT
+    { key: 'sentry-read', label: 'Sentry errors shown here', ...(env.SENTRY_READ_TOKEN && env.SENTRY_ORG && env.SENTRY_PROJECT
       ? { status: 'ok' as const, text: 'A read-only token is set; the open errors are listed below.' }
-      : { status: 'warn' as const, text: 'Add a read-only SENTRY_AUTH_TOKEN (event:read, project:read) plus SENTRY_ORG and SENTRY_PROJECT in Vercel.' }) },
+      : { status: 'warn' as const, text: 'Add a read-only SENTRY_READ_TOKEN (event:read, project:read) plus SENTRY_ORG and SENTRY_PROJECT in Vercel.' }) },
     { key: 'owner-passkey', label: 'Owner sign-in: passkey', ...(passkeys > 0
       ? { status: 'ok' as const, text: `${passkeys} passkey${passkeys === 1 ? '' : 's'} registered — the strongest second factor.` }
       : { status: 'warn' as const, text: 'No passkey yet. Add one on My profile — it can’t be phished like a code.' }) },

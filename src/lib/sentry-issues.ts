@@ -1,6 +1,7 @@
 // SEC-3 (Cam 2026-10-26: "see what sentry is doing and what it comes back
 // with"): the open errors in Sentry, read with a READ-ONLY auth token
-// (SENTRY_AUTH_TOKEN, scopes event:read + project:read) so nobody has to open
+// (SENTRY_READ_TOKEN, scopes event:read + project:read — NOT SENTRY_AUTH_TOKEN,
+// which the build uses to upload source maps and has wider scopes) so nobody has to open
 // Sentry to know something is breaking. Server only — the token never reaches
 // a browser. Every failure is a plain sentence, never an empty list.
 
@@ -18,13 +19,13 @@ export function sentryApiBase(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 export async function openSentryIssues(env: NodeJS.ProcessEnv = process.env, fetchImpl: typeof fetch = fetch): Promise<SentryIssuesResult> {
-  const token = env.SENTRY_AUTH_TOKEN, org = env.SENTRY_ORG, project = env.SENTRY_PROJECT;
-  const missing = [!token && 'SENTRY_AUTH_TOKEN', !org && 'SENTRY_ORG', !project && 'SENTRY_PROJECT'].filter(Boolean);
+  const token = env.SENTRY_READ_TOKEN, org = env.SENTRY_ORG, project = env.SENTRY_PROJECT;
+  const missing = [!token && 'SENTRY_READ_TOKEN', !org && 'SENTRY_ORG', !project && 'SENTRY_PROJECT'].filter(Boolean);
   if (missing.length) return { ok: false, reason: 'not_set_up', message: `Add ${missing.join(', ')} in Vercel to see Sentry’s errors here (a read-only token: event:read and project:read).` };
   const url = `${sentryApiBase(env)}/api/0/projects/${encodeURIComponent(org!)}/${encodeURIComponent(project!)}/issues/?query=${encodeURIComponent('is:unresolved')}&statsPeriod=14d&sort=date&limit=25`;
   try {
     const res = await fetchImpl(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: AbortSignal.timeout(6000) });
-    if (res.status === 401 || res.status === 403) return { ok: false, reason: 'failed', message: 'Sentry refused the token — check SENTRY_AUTH_TOKEN has event:read and project:read, and hasn’t been revoked.' };
+    if (res.status === 401 || res.status === 403) return { ok: false, reason: 'failed', message: 'Sentry refused the token — check SENTRY_READ_TOKEN has event:read and project:read, and hasn’t been revoked.' };
     if (res.status === 404) return { ok: false, reason: 'failed', message: `Sentry has no project "${project}" in "${org}" — check SENTRY_ORG and SENTRY_PROJECT.` };
     if (!res.ok) return { ok: false, reason: 'failed', message: `Sentry answered ${res.status} — try again in a minute.` };
     const rows = await res.json() as Record<string, unknown>[];

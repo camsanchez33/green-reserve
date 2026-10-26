@@ -5,10 +5,22 @@ import { issueTwoFactorCode } from '@/lib/two-factor';
 import bcrypt from 'bcryptjs';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { securityEvent } from '@/lib/security-events';
+import { failUnknownLogin, unknownLoginLockedUntil } from '@/lib/login-guard';
 
-// SEC-3: an unknown email does the same bcrypt work as a real one (cost 12), so
-// the answer's timing doesn't say which emails have a course login.
-const DUMMY_HASH = '$2a$12$x9I/Ln7XwBr4.techzuhLufMEVbOz1lhUde8CTW8YVHD9pGubcv7u';
+// SEC-3 audit: an email with no usable login (none, or a staff login turned
+// off) answers, takes as long and locks exactly like a real one — so nothing
+// here says which emails have a course login (lib/login-guard).
+async function unknownLogin(req: NextRequest, email: string, password: string, accountId: string | undefined, detail: string) {
+  const locked = await unknownLoginLockedUntil('course', email);
+  if (locked) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'course', email, accountId, detail: `${detail}, while locked out` });
+    return lockoutResponse(locked);
+  }
+  const lock = await failUnknownLogin('course', email, password);
+  await securityEvent(req, { kind: lock ? 'locked_out' : 'signin_failed', surface: 'course', email, accountId, detail });
+  if (lock) return lockoutResponse(lock);
+  return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+}
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
@@ -68,10 +80,7 @@ export async function POST(req: NextRequest) {
   // Try staff account
   const staff = await prisma.courseStaff.findUnique({ where: { email } });
   if (staff) {
-    if (!staff.active) {
-      await securityEvent(req, { kind: 'signin_failed', surface: 'course', email, accountId: staff.id, detail: 'staff login turned off' });
-      return NextResponse.json({ error: 'Account disabled' }, { status: 401 });
-    }
+    if (!staff.active) return unknownLogin(req, email, password, staff.id, 'staff login turned off');
     if (staff.lockoutUntil && staff.lockoutUntil > new Date()) {
       await securityEvent(req, { kind: 'signin_failed', surface: 'course', email, accountId: staff.id, detail: 'staff login, while locked out' });
       return lockoutResponse(staff.lockoutUntil);
@@ -96,7 +105,5 @@ export async function POST(req: NextRequest) {
     return res;
   }
 
-  await bcrypt.compare(String(password), DUMMY_HASH);
-  await securityEvent(req, { kind: 'signin_failed', surface: 'course', email, detail: 'unknown account' });
-  return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+  return unknownLogin(req, email, password, undefined, 'unknown account');
 }

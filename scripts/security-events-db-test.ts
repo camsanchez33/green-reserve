@@ -10,6 +10,7 @@ import { prisma } from '../src/lib/prisma';
 import { securityEvent, securityFindings, purgeOldSecurityEvents, securityOverview, lockedAccountsNow, BURST_PER_IP } from '../src/lib/security-events';
 import { openSentryIssues, sentryApiBase } from '../src/lib/sentry-issues';
 import { securityChecklist } from '../src/lib/security-checklist';
+import { failUnknownLogin, unknownLoginLockedUntil, LOGIN_MAX_ATTEMPTS } from '../src/lib/login-guard';
 
 const TAG = 'secevtest';
 let failed = 0;
@@ -24,6 +25,7 @@ const req = (ip: string, ua = 'TestBrowser/1.0') => new Request('https://x.test/
 async function cleanup() {
   await prisma.securityEvent.deleteMany({ where: { OR: [{ email: { startsWith: TAG } }, { userAgent: { startsWith: TAG } }, { ip: { startsWith: '203.0.113.' } }] } });
   await prisma.adminUser.deleteMany({ where: { email: { startsWith: TAG } } });
+  await prisma.rateLimit.deleteMany({ where: { OR: [{ key: { contains: TAG } }, { key: { contains: '203.0.113.' } }] } });
 }
 const ev = (kind: string, surface: string, ip: string, at: Date, extra: Record<string, unknown> = {}) =>
   prisma.securityEvent.create({ data: { kind, surface, ip, email: `${TAG}@x.test`, userAgent: TAG, createdAt: at, ...extra } });
@@ -34,6 +36,24 @@ async function main() {
   const row = await prisma.securityEvent.findFirst({ where: { userAgent: `${TAG}-ua` } });
   check('an event is recorded with the platform’s IP, not the client-written leftmost one', row?.ip === '203.0.113.9', row);
   check('…the email is trimmed and lower-cased, the detail kept', row?.email === `${TAG}@x.test` && row?.detail === 'wrong password', row);
+
+  // Rate-limited is recorded once per 10 minutes per door and address, not per refused request.
+  for (let i = 0; i < 5; i++) await securityEvent(req('203.0.113.50', `${TAG}-rl`), { kind: 'rate_limited', surface: 'course', detail: 'sign-in' });
+  check('a throttled address is recorded once, not on every refused request', (await prisma.securityEvent.count({ where: { userAgent: `${TAG}-rl` } })) === 1);
+  // No address adds more than its hourly cap of rows.
+  await prisma.rateLimit.upsert({ where: { key: 'secev:ip:203.0.113.51' }, create: { key: 'secev:ip:203.0.113.51', count: 200, windowStart: new Date() }, update: { count: 200, windowStart: new Date() } });
+  await securityEvent(req('203.0.113.51', `${TAG}-cap`), { kind: 'signin_failed', surface: 'golfer' });
+  check('past its hourly cap an address adds no more rows', (await prisma.securityEvent.count({ where: { userAgent: `${TAG}-cap` } })) === 0);
+
+  // An unknown email locks exactly like a real account: 4 plain answers, then locked on the 5th, locked while it lasts.
+  const ghost = `${TAG}-ghost@x.test`;
+  const answers: (Date | null)[] = [];
+  for (let i = 0; i < LOGIN_MAX_ATTEMPTS; i++) answers.push(await failUnknownLogin('course', ghost, 'wrong'));
+  check('an unknown email gets the plain answer 4 times, then the lockout on the 5th — like a real account', answers.slice(0, 4).every(a => a === null) && answers[4] instanceof Date, answers);
+  const until = await unknownLoginLockedUntil('course', ghost);
+  check('…and stays locked for 15 minutes', !!until && Math.abs(until.getTime() - Date.now() - 15 * 60_000) < 5_000, until);
+  check('…and the next wrong password after it expires locks again (the count never resets on its own)', (await failUnknownLogin('course', ghost, 'wrong')) instanceof Date);
+  check('another door counts separately', (await unknownLoginLockedUntil('admin', ghost)) === null);
 
   // Findings
   for (let i = 0; i < BURST_PER_IP - 1; i++) await ev('signin_failed', 'course', '203.0.113.20', ago(10 + i));
@@ -69,9 +89,9 @@ async function main() {
   check('older than 90 days is deleted, newer is kept', left.length === 1 && left[0].ip === '203.0.113.41', left);
 
   // Sentry
-  const env = { SENTRY_AUTH_TOKEN: 't', SENTRY_ORG: 'gr', SENTRY_PROJECT: 'web' } as unknown as NodeJS.ProcessEnv;
+  const env = { SENTRY_READ_TOKEN: 't', SENTRY_ORG: 'gr', SENTRY_PROJECT: 'web' } as unknown as NodeJS.ProcessEnv;
   const notSet = await openSentryIssues({} as NodeJS.ProcessEnv);
-  check('no token: says exactly what to add', !notSet.ok && notSet.reason === 'not_set_up' && /SENTRY_AUTH_TOKEN/.test(notSet.message));
+  check('no token: says exactly what to add', !notSet.ok && notSet.reason === 'not_set_up' && /SENTRY_READ_TOKEN/.test(notSet.message));
   const reply = (status: number, body: unknown) => (async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
   const refused = await openSentryIssues(env, reply(401, {}));
   check('a refused token is a plain sentence', !refused.ok && /refused the token/.test(refused.message));
@@ -101,19 +121,24 @@ async function main() {
 
   // Every door records
   const doors: [string, RegExp[]][] = [
-    ['src/app/api/admin/login/route.ts', [/kind: 'rate_limited', surface: 'admin'/, /'unknown account'/, /kind: lockoutUntil \? 'locked_out' : 'signin_failed', surface: 'admin'/, /kind: 'signin_ok', surface: 'admin'/, /bcrypt\.compare\(String\(password\), DUMMY_HASH\)/]],
+    ['src/app/api/admin/login/route.ts', [/kind: 'rate_limited', surface: 'admin'/, /'unknown account'/, /kind: lockoutUntil \? 'locked_out' : 'signin_failed', surface: 'admin'/, /kind: 'signin_ok', surface: 'admin'/, /if \(!admin \|\| !admin\.active \|\| !admin\.passwordHash \|\| admin\.role === 'owner'\) \{[\s\S]*?failUnknownLogin\('admin'/]],
     ['src/app/api/cam/login/route.ts', [/kind: 'rate_limited', surface: 'owner'/, /kind: 'second_factor_failed', surface: 'owner'.*'passkey'/, /kind: 'new_device'/, /kind: 'signin_ok', surface: 'owner'/, /kind: lockoutUntil \? 'locked_out' : 'signin_failed', surface: 'owner'/]],
-    ['src/app/api/auth/login/route.ts', [/kind: 'rate_limited', surface: 'course'/, /'staff login, wrong password'/, /'owner login, wrong password'/, /bcrypt\.compare\(String\(password\), DUMMY_HASH\);\n\s*await securityEvent\(req, \{ kind: 'signin_failed', surface: 'course', email, detail: 'unknown account' \}\)/]],
+    ['src/app/api/auth/login/route.ts', [/kind: 'rate_limited', surface: 'course'/, /'staff login, wrong password'/, /'owner login, wrong password'/, /if \(!staff\.active\) return unknownLogin\(/, /return unknownLogin\(req, email, password, undefined, 'unknown account'\)/, /failUnknownLogin\('course'/]],
     ['src/app/api/auth/2fa/verify/route.ts', [/kind: 'second_factor_failed', surface: 'course'/, /kind: 'signin_ok', surface: 'course'/]],
     ['src/app/api/cam/step-up/route.ts', [/kind: 'step_up_failed'/]],
     ['src/app/api/golfer/auth/otp/verify/route.ts', [/kind: 'signin_failed', surface: 'golfer'/]],
-    ['src/app/api/member/[courseSlug]/verify/route.ts', [/kind: 'signin_failed', surface: 'member'/]],
+    ['src/app/api/member/[courseSlug]/verify/route.ts', [/kind: 'signin_failed', surface: 'member'/, /rateLimit\(`member-verify-ip:/]],
+    ['src/app/api/cam/login/route.ts', [/failUnknownLogin\('owner'/]],
   ];
   for (const [file, res] of doors) {
     const src = readFileSync(file, 'utf8');
     const missing = res.filter(r => !r.test(src));
     check(`${file} records its outcomes`, missing.length === 0, missing.map(String));
   }
+  const twofa = readFileSync('src/app/api/auth/2fa/verify/route.ts', 'utf8');
+  check('a wrong code is logged after the attempt counter moves, never before', twofa.indexOf("kind: 'second_factor_failed'") > twofa.indexOf('twoFactorAttempts: clearCode ? 0 : attempts'));
+  const adminLogin = readFileSync('src/app/api/admin/login/route.ts', 'utf8');
+  check('no answer at the employee door says an account exists or is turned off', !/Account not activated|Account disabled/.test(adminLogin + readFileSync('src/app/api/auth/login/route.ts', 'utf8')));
   const checks = readFileSync('src/lib/admin-checks.ts', 'utf8');
   check('the hourly check raises security Problems and purges old events', /securityFindings\(now\)/.test(checks) && /purgeOldSecurityEvents\(now\)/.test(checks));
   const route = readFileSync('src/app/api/admin/security/route.ts', 'utf8');

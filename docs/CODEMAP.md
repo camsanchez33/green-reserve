@@ -4,7 +4,7 @@
 > Everything below is derived from the working tree. If a line here is wrong,
 > the code is wrong or the generator is — fix one of those, not this file.
 
-557 source files · 265 routes · 186 libraries · 58 models
+558 source files · 265 routes · 187 libraries · 58 models
 
 ## Single sources of truth
 
@@ -111,7 +111,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/admin/goals` | admin | file | DELETE GET POST | `src/app/api/admin/goals/route.ts` | 61 |
 | `/api/admin/golfers` | admin | file | GET POST | `src/app/api/admin/golfers/route.ts` | 255 |
 | `/api/admin/inquiries` | admin | file | DELETE GET PATCH POST | `src/app/api/admin/inquiries/route.ts` | 1295 |
-| `/api/admin/login` | admin | entry | POST | `src/app/api/admin/login/route.ts` | 105 |
+| `/api/admin/login` | admin | entry | POST | `src/app/api/admin/login/route.ts` | 96 |
 | `/api/admin/logout` | admin | entry | POST | `src/app/api/admin/logout/route.ts` | 19 |
 | `/api/admin/messages` | admin | file | GET PATCH POST | `src/app/api/admin/messages/route.ts` | 221 |
 | `/api/admin/nav-badges` | admin | file | GET | `src/app/api/admin/nav-badges/route.ts` | 53 |
@@ -146,9 +146,9 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/alerts/unsubscribe/[token]` | public | public | GET | `src/app/api/alerts/unsubscribe/[token]/route.ts` | 53 |
 | `/api/auth/2fa/resend` | public | token | POST | `src/app/api/auth/2fa/resend/route.ts` | 32 |
 | `/api/auth/2fa/status` | public | token | GET | `src/app/api/auth/2fa/status/route.ts` | 29 |
-| `/api/auth/2fa/verify` | public | token | POST | `src/app/api/auth/2fa/verify/route.ts` | 75 |
+| `/api/auth/2fa/verify` | public | token | POST | `src/app/api/auth/2fa/verify/route.ts` | 76 |
 | `/api/auth/forgot-password` | public | entry | POST | `src/app/api/auth/forgot-password/route.ts` | 58 |
-| `/api/auth/login` | public | entry | POST | `src/app/api/auth/login/route.ts` | 103 |
+| `/api/auth/login` | public | entry | POST | `src/app/api/auth/login/route.ts` | 110 |
 | `/api/auth/logout` | public | entry | POST | `src/app/api/auth/logout/route.ts` | 8 |
 | `/api/auth/resend-verification` | operator | file | POST | `src/app/api/auth/resend-verification/route.ts` | 37 |
 | `/api/auth/reset-password` | public | entry | GET POST | `src/app/api/auth/reset-password/route.ts` | 81 |
@@ -161,7 +161,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/calcom/webhook` | public | public | POST | `src/app/api/calcom/webhook/route.ts` | 219 |
 | `/api/call/[token]` | public | public | GET | `src/app/api/call/[token]/route.ts` | 80 |
 | `/api/cam/device` | public | token | GET POST | `src/app/api/cam/device/route.ts` | 24 |
-| `/api/cam/login` | public | entry | POST | `src/app/api/cam/login/route.ts` | 308 |
+| `/api/cam/login` | public | entry | POST | `src/app/api/cam/login/route.ts` | 310 |
 | `/api/cam/step-up` | admin | file | GET POST | `src/app/api/cam/step-up/route.ts` | 81 |
 | `/api/checkin/[bookingId]` | public | token | GET POST | `src/app/api/checkin/[bookingId]/route.ts` | 113 |
 | `/api/courses` | public | public | GET | `src/app/api/courses/route.ts` | 45 |
@@ -199,7 +199,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/member/[courseSlug]/send-code` | member | entry | POST | `src/app/api/member/[courseSlug]/send-code/route.ts` | 66 |
 | `/api/member/[courseSlug]/session` | member | file | GET | `src/app/api/member/[courseSlug]/session/route.ts` | 80 |
 | `/api/member/[courseSlug]/tee-times` | member | file | GET | `src/app/api/member/[courseSlug]/tee-times/route.ts` | 114 |
-| `/api/member/[courseSlug]/verify` | member | token | GET | `src/app/api/member/[courseSlug]/verify/route.ts` | 61 |
+| `/api/member/[courseSlug]/verify` | member | token | GET | `src/app/api/member/[courseSlug]/verify/route.ts` | 67 |
 | `/api/membership/[id]` | public | token | GET POST | `src/app/api/membership/[id]/route.ts` | 158 |
 | `/api/operator/active-course` | operator | file | POST | `src/app/api/operator/active-course/route.ts` | 30 |
 | `/api/operator/agreement` | operator | file | GET POST | `src/app/api/operator/agreement/route.ts` | 38 |
@@ -324,12 +324,12 @@ Sorted by how many files import them, so the load-bearing ones are first.
 
 | file | used by | lines | purpose | exports |
 |---|---|---|---|---|
-| `src/lib/prisma.ts` | 230 | 15 |  | `prisma` |
+| `src/lib/prisma.ts` | 231 | 15 |  | `prisma` |
 | `src/lib/admin-session.ts` | 69 | 201 |  | `AdminSession`, `AdminSessionUnavailable`, `areaGate`, `MANAGER_PLUS`, `OWNER_ONLY`, `ownerGateError`, `requireOwner`, `requireRole` +7 more |
 | `src/lib/session.ts` | 60 | 120 |  | `ACTIVE_COURSE_COOKIE`, `can`, `requirePermission`, `resolveDashboardSession`, `ResolvedSession`, `STAFF_FORBIDDEN`, `touchStaffSeen` |
 | `src/lib/email.ts` | 56 | 2188 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +65 more |
+| `src/lib/rate-limit.ts` | 50 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 49 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
-| `src/lib/rate-limit.ts` | 48 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/course-time.ts` | 41 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/agreement-required.ts` | 30 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
@@ -358,7 +358,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/agreement-gate.ts` | 9 | 117 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement`, `latestOperatorAgreement` |
 | `src/lib/agreements.ts` | 9 | 134 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +2 more |
 | `src/lib/member-session.ts` | 9 | 109 |  | `getGolferMembership`, `getMemberSession`, `golferResident`, `residentOn`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
-| `src/lib/security-events.ts` | 9 | 115 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings`, `SecurityKind` +2 more |
+| `src/lib/security-events.ts` | 9 | 123 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
 | `src/lib/tee-sheet-engine.ts` | 9 | 255 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `ScheduleForSlots`, `slotKey` |
 | `src/lib/admin-roles.ts` | 8 | 17 | Role lists, client-safe. | `MANAGER_PLUS`, `OWNER_ONLY`, `SUPPORT_PLUS`, `VIEWER_PLUS` |
 | `src/lib/course-checkin.ts` | 8 | 106 | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. | `CHECKIN_AGENDA`, `CHECKIN_DUE_WINDOW_DAYS`, `CHECKIN_EVERY_DAYS`, `CHECKIN_FIRST_DAYS`, `CheckinAgendaItem`, `CheckinCallLike`, `CheckinCourseLike`, `checkInSignal` +8 more |
@@ -422,6 +422,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/event-hold.ts` | 3 | 36 | W2-9: | `heldBy`, `HoldEvent`, `ninesByProduct` |
 | `src/lib/go-live-preflight.ts` | 3 | 35 |  | `computeStripeGoLiveCheck`, `StripeGoLiveCheck` |
 | `src/lib/inquiry-needs.ts` | 3 | 39 | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column. | `NeedItem`, `stillNeed` |
+| `src/lib/login-guard.ts` | 3 | 42 | SEC-3 security audit (2026-10-26): | `failUnknownLogin`, `LOGIN_LOCKOUT_MS`, `LOGIN_MAX_ATTEMPTS`, `unknownLoginLockedUntil` |
 | `src/lib/member-csv.ts` | 3 | 101 | Members → Import a list: | `ImportProblem`, `ImportRow`, `MAX_IMPORT_ROWS`, `parseCsv`, `parseCsvLines`, `readMemberCsv`, `toYmd` |
 | `src/lib/monthly-review.ts` | 3 | 255 | BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07: | `allowedNumbers`, `buildFacts`, `claudeWriter`, `draftProblems`, `emailPendingReviews`, `isFullMonth`, `monthLabel`, `monthRange` +11 more |
 | `src/lib/normalize-course.ts` | 3 | 91 |  | `normalizeDbCourse` |
@@ -460,7 +461,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-signin.ts` | 2 | 124 | SD-11 — the "are you trying to sign in?" challenge that sits between the public sign-up form and a course that already exists. | `CODE_TTL_SECONDS`, `codeMatches`, `cookieOptions`, `generateCode`, `inertChallenge`, `macCode`, `MAX_CODE_ATTEMPTS`, `newChallengeId` +5 more |
 | `src/lib/operator-search.ts` | 2 | 58 | DASH-C search (the mockups' "Find a golfer, booking or member"): | `operatorSearch`, `SearchResult` |
 | `src/lib/security-checklist.ts` | 2 | 67 | SEC-3: | `Check`, `securityChecklist` |
-| `src/lib/sentry-issues.ts` | 2 | 47 | SEC-3 (Cam 2026-10-26: | `openSentryIssues`, `sentryApiBase`, `SentryIssue`, `SentryIssuesResult` |
+| `src/lib/sentry-issues.ts` | 2 | 48 | SEC-3 (Cam 2026-10-26: | `openSentryIssues`, `sentryApiBase`, `SentryIssue`, `SentryIssuesResult` |
 | `src/lib/settings-validation.ts` | 2 | 141 | SD-1. | `normalizeHttpUrl`, `SettingsValidation`, `validateSettingsPatch` |
 | `src/lib/sheet-token.ts` | 2 | 52 |  | `CLOSED_TO_SHEET`, `DETAILS_TOKEN_TTL_DAYS`, `gateSheetAccess`, `SheetGate` |
 | `src/lib/shop-tree.ts` | 2 | 44 | W2-7: | `bySku`, `FlatItem`, `matches`, `shopTree`, `stockOf`, `TreeItem` |
@@ -953,11 +954,11 @@ without opening anything.
 
 ### RateLimit
 
-3 fields · 0 writer(s) · 0 reader(s)
+3 fields · 1 writer(s) · 1 reader(s)
 
 - fields: `key`, `count`, `windowStart`
-- writers: **none** — nothing in `src/` writes this model
-- readers: **none**
+- writers: `src/lib/login-guard.ts`
+- readers: `src/lib/login-guard.ts`
 
 ### RegisterClose
 

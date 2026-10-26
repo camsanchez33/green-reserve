@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 557,
+    "files": 558,
     "routes": 265,
-    "libs": 186,
+    "libs": 187,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -2320,7 +2320,7 @@
     },
     {
       "path": "src/app/api/admin/login/route.ts",
-      "lines": 105,
+      "lines": 96,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2338,6 +2338,7 @@
       "guard": "entry",
       "imports": [
         "@/lib/admin-session",
+        "@/lib/login-guard",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/security-events",
@@ -3352,7 +3353,7 @@
     },
     {
       "path": "src/app/api/auth/2fa/verify/route.ts",
-      "lines": 75,
+      "lines": 76,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3408,7 +3409,7 @@
     },
     {
       "path": "src/app/api/auth/login/route.ts",
-      "lines": 103,
+      "lines": 110,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3426,6 +3427,7 @@
       "guard": "entry",
       "imports": [
         "@/lib/auth",
+        "@/lib/login-guard",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/security-events",
@@ -3806,7 +3808,7 @@
     },
     {
       "path": "src/app/api/cam/login/route.ts",
-      "lines": 308,
+      "lines": 310,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3825,6 +3827,7 @@
       "imports": [
         "@/lib/admin-session",
         "@/lib/email",
+        "@/lib/login-guard",
         "@/lib/owner-passkey",
         "@/lib/owner-session",
         "@/lib/owner-totp",
@@ -4903,7 +4906,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/verify/route.ts",
-      "lines": 61,
+      "lines": 67,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4922,6 +4925,7 @@
       "imports": [
         "@/lib/member-session",
         "@/lib/prisma",
+        "@/lib/rate-limit",
         "@/lib/security-events",
         "next/server"
       ],
@@ -17702,6 +17706,45 @@
       ]
     },
     {
+      "path": "src/lib/login-guard.ts",
+      "lines": 42,
+      "purpose": "SEC-3 security audit (2026-10-26):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "failUnknownLogin",
+          "kind": "fn"
+        },
+        {
+          "name": "LOGIN_LOCKOUT_MS",
+          "kind": "const"
+        },
+        {
+          "name": "LOGIN_MAX_ATTEMPTS",
+          "kind": "const"
+        },
+        {
+          "name": "unknownLoginLockedUntil",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./rate-limit",
+        "bcryptjs"
+      ],
+      "usedBy": [
+        "src/app/api/admin/login/route.ts",
+        "src/app/api/auth/login/route.ts",
+        "src/app/api/cam/login/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/manage-access.ts",
       "lines": 17,
       "purpose": "R-AUTH-003 / R-GOLF-003 (G13) — who may manage a booking from the golfer side.",
@@ -18868,6 +18911,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/login-guard.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/money-problems.ts",
@@ -19108,6 +19152,7 @@
         "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
+        "src/app/api/member/[courseSlug]/verify/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/agreement/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
@@ -19124,6 +19169,7 @@
         "src/app/api/shop-sale/[id]/route.ts",
         "src/lib/birdie/guardrails.ts",
         "src/lib/call-invite.ts",
+        "src/lib/login-guard.ts",
         "src/lib/security-events.ts"
       ]
     },
@@ -19849,7 +19895,7 @@
     },
     {
       "path": "src/lib/security-events.ts",
-      "lines": 115,
+      "lines": 123,
       "purpose": "SEC-3 (Cam 2026-10-26, \"security has to be insane\"; chose \"log events\" and \"email + Problems\"):",
       "brain": [],
       "exports": [
@@ -19864,6 +19910,10 @@
         {
           "name": "lockedAccountsNow",
           "kind": "fn"
+        },
+        {
+          "name": "MAX_EVENTS_PER_IP_HOUR",
+          "kind": "const"
         },
         {
           "name": "purgeOldSecurityEvents",
@@ -19960,7 +20010,7 @@
     },
     {
       "path": "src/lib/sentry-issues.ts",
-      "lines": 47,
+      "lines": 48,
       "purpose": "SEC-3 (Cam 2026-10-26:",
       "brain": [],
       "exports": [
@@ -25630,8 +25680,12 @@
           "type": "DateTime"
         }
       ],
-      "writers": [],
-      "readers": []
+      "writers": [
+        "src/lib/login-guard.ts"
+      ],
+      "readers": [
+        "src/lib/login-guard.ts"
+      ]
     },
     {
       "name": "RegisterClose",

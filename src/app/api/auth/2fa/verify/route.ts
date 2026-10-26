@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
 
   const valid = await bcrypt.compare(String(code), operator.twoFactorCode);
   if (!valid) {
-    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', email: operator.email, accountId: operator.id, detail: 'sign-in code' });
     const attempts = operator.twoFactorAttempts + 1;
     const clearCode = attempts >= MAX_2FA_ATTEMPTS;
     await prisma.courseOperator.update({
@@ -49,6 +48,8 @@ export async function POST(req: NextRequest) {
         ...(clearCode ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}),
       },
     });
+    // Logged after the attempt counter moves, never before it (security audit).
+    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', email: operator.email, accountId: operator.id, detail: 'sign-in code' });
     return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please sign in again to get a new code.' : 'Invalid or expired code.' }, { status: 400 });
   }
 

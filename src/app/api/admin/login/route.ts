@@ -4,10 +4,7 @@ import { signAdminToken, signAdminSetPasswordToken } from '@/lib/admin-session';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { securityEvent } from '@/lib/security-events';
-
-// SEC-3: same cost (12) as a real admin password — an unknown email takes as long
-// as a known one, so the timing doesn't say whose email has an account.
-const DUMMY_HASH = '$2a$12$x9I/Ln7XwBr4.techzuhLufMEVbOz1lhUde8CTW8YVHD9pGubcv7u';
+import { failUnknownLogin, unknownLoginLockedUntil } from '@/lib/login-guard';
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
@@ -31,9 +28,21 @@ export async function POST(req: NextRequest) {
   const email = String(rawEmail).trim().toLowerCase();
 
   const admin = await prisma.adminUser.findUnique({ where: { email } });
-  if (!admin || !admin.active) {
-    await bcrypt.compare(String(password), DUMMY_HASH);
-    await securityEvent(req, { kind: 'signin_failed', surface: 'admin', email, accountId: admin?.id, detail: admin ? 'account turned off' : 'unknown account' });
+  // SEC-3 audit: no usable employee account here — none, turned off, never
+  // activated, or the owner's (who signs in at /cam only, AW-1) — answers and
+  // locks exactly like a real one (lib/login-guard), so nothing here says
+  // whether the email exists. The owner's own lockout is never touched from
+  // this door, so nobody can lock the owner out of /cam by guessing here.
+  if (!admin || !admin.active || !admin.passwordHash || admin.role === 'owner') {
+    const detail = !admin ? 'unknown account' : !admin.active ? 'account turned off' : admin.role === 'owner' ? 'owner account at the employee door' : 'account never activated';
+    const locked = await unknownLoginLockedUntil('admin', email);
+    if (locked) {
+      await securityEvent(req, { kind: 'signin_failed', surface: 'admin', email, accountId: admin?.id, detail: `${detail}, while locked out` });
+      return lockoutResponse(locked);
+    }
+    const lock = await failUnknownLogin('admin', email, password);
+    await securityEvent(req, { kind: lock ? 'locked_out' : 'signin_failed', surface: 'admin', email, accountId: admin?.id, detail });
+    if (lock) return lockoutResponse(lock);
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
@@ -42,9 +51,6 @@ export async function POST(req: NextRequest) {
     return lockoutResponse(admin.lockoutUntil);
   }
 
-  if (!admin.passwordHash)
-    return NextResponse.json({ error: 'Account not activated — check your email for a set-password link' }, { status: 401 });
-
   const valid = await bcrypt.compare(password, admin.passwordHash);
   if (!valid) {
     const failedLoginAttempts = admin.failedLoginAttempts + 1;
@@ -52,21 +58,6 @@ export async function POST(req: NextRequest) {
     await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts, ...(lockoutUntil ? { lockoutUntil } : {}) } });
     await securityEvent(req, { kind: lockoutUntil ? 'locked_out' : 'signin_failed', surface: 'admin', email, accountId: admin.id, detail: 'wrong password' });
     if (lockoutUntil) return lockoutResponse(lockoutUntil);
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-  }
-
-  // ── Owner accounts do not sign in here ───────────────────────────────
-  // This door has no second factor, so an owner reaching it would receive a
-  // session indistinguishable from a 2FA-backed one. Reject AFTER the password
-  // check, never before: rejecting on email alone would turn this endpoint
-  // into an owner-account oracle. A wrong password still returns the generic
-  // 401 above, so the 403 only ever reaches someone who already holds the
-  // owner's password. Clear the failure counter first — the password was
-  // correct — but do not stamp lastLoginAt, since no login happened.
-  // AW-1 (Cam 2026-10-20): /admin is the employees' door and never mentions an
-  // owner — the owner's password here reads exactly like a wrong one.
-  if (admin.role === 'owner') {
-    await securityEvent(req, { kind: 'signin_failed', surface: 'admin', email, accountId: admin.id, detail: 'owner password at the employee door' });
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 

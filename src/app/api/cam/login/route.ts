@@ -14,7 +14,6 @@ import { requestContext, deviceTokenFromCookie, trustedDevice, startDeviceApprov
 // Every refusal before the password is proved reads the same as a wrong
 // password, so this route never confirms that an owner account exists.
 
-// Same cost (12) as real admin passwords, so an unknown email takes as long as a real one.
 /** Arm the authenticator-app step (the password was just proved). */
 async function setTotpPending(admin: { id: string; twoFactorCode: string | null; twoFactorCodeExpiry: Date | null }) {
   // Carry a still-live used step onto the pending marker (replay guard).
@@ -26,7 +25,6 @@ async function setTotpPending(admin: { id: string; twoFactorCode: string | null;
   });
 }
 
-const DUMMY_HASH = '$2a$12$x9I/Ln7XwBr4.techzuhLufMEVbOz1lhUde8CTW8YVHD9pGubcv7u';
 
 
 /** Signed in: the session, the cookie, and the alert email (a failed email never blocks the sign-in). */
@@ -40,6 +38,7 @@ async function signIn(req: Request, admin: { id: string; email: string; name: st
   return res;
 }
 import { securityEvent } from '@/lib/security-events';
+import { failUnknownLogin, unknownLoginLockedUntil } from '@/lib/login-guard';
 import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_PENDING, TOTP_USED_PREFIX, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
 
 const MAX_2FA_ATTEMPTS = 5;
@@ -79,10 +78,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Too many incorrect attempts. Please start over.' }, { status: 400 });
     }
     if (!(await verifyPasskeySignIn(admin.id, body.response))) {
-      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'passkey' });
       const attempts = admin.twoFactorAttempts + 1;
       const clear = attempts >= MAX_2FA_ATTEMPTS;
       await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorAttempts: clear ? 0 : attempts, ...(clear ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}) } });
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'passkey' });
       return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'That passkey didn’t check out — start over and try again, or use your authenticator app.' }, { status: 400 });
     }
     // The backup step is no longer needed: clear its pending marker — but keep a
@@ -159,13 +158,13 @@ export async function POST(req: NextRequest) {
         }
       }
       if (!ok) {
-        await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: method === 'recovery' ? 'recovery code' : 'authenticator code' });
         const attempts = admin.twoFactorAttempts + 1;
         const clear = attempts >= MAX_2FA_ATTEMPTS;
         await prisma.adminUser.update({
           where: { id: admin.id },
           data: { twoFactorAttempts: clear ? 0 : attempts, ...(clear ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}) },
         });
+        await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: method === 'recovery' ? 'recovery code' : 'authenticator code' });
         return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
       }
       await prisma.adminUser.update({ where: { id: admin.id }, data: { ...data, twoFactorAttempts: 0, lastLoginAt: new Date() } });
@@ -174,7 +173,6 @@ export async function POST(req: NextRequest) {
 
     const valid = await bcrypt.compare(String(code).trim(), admin.twoFactorCode);
     if (!valid) {
-      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'emailed code' });
       const attempts = admin.twoFactorAttempts + 1;
       const clearCode = attempts >= MAX_2FA_ATTEMPTS;
       await prisma.adminUser.update({
@@ -184,6 +182,7 @@ export async function POST(req: NextRequest) {
           ...(clearCode ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}),
         },
       });
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'emailed code' });
       return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
     }
 
@@ -208,22 +207,25 @@ export async function POST(req: NextRequest) {
   const email = String(rawEmail).trim().toLowerCase();
 
   const admin = await prisma.adminUser.findUnique({ where: { email } });
-  if (!admin || admin.role !== 'owner' || !admin.active) {
-    // Same work as a real check, so the answer's timing doesn't say whose email it is.
-    await bcrypt.compare(String(password), DUMMY_HASH);
-    await securityEvent(req, { kind: 'signin_failed', surface: 'owner', email, accountId: admin?.id, detail: !admin ? 'unknown account' : admin.role !== 'owner' ? 'employee account at the owner door' : 'account turned off' });
+  if (!admin || admin.role !== 'owner' || !admin.active || !admin.passwordHash) {
+    // SEC-3 audit: same work, same answer and the same lockout as the real
+    // owner (lib/login-guard), so nothing here says whose email it is — and an
+    // employee's own lockout is never touched from this door.
+    const detail = !admin ? 'unknown account' : admin.role !== 'owner' ? 'employee account at the owner door' : !admin.active ? 'account turned off' : 'account never activated';
+    const locked = await unknownLoginLockedUntil('owner', email);
+    if (locked) {
+      await securityEvent(req, { kind: 'signin_failed', surface: 'owner', email, accountId: admin?.id, detail: `${detail}, while locked out` });
+      return lockoutResponse(locked);
+    }
+    const lock = await failUnknownLogin('owner', email, String(password));
+    await securityEvent(req, { kind: lock ? 'locked_out' : 'signin_failed', surface: 'owner', email, accountId: admin?.id, detail });
+    if (lock) return lockoutResponse(lock);
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
   }
   if (admin.lockoutUntil && admin.lockoutUntil > new Date()) {
     await securityEvent(req, { kind: 'signin_failed', surface: 'owner', email, accountId: admin.id, detail: 'while locked out' });
     return lockoutResponse(admin.lockoutUntil);
   }
-
-  // Same guard as /api/admin/login:31 — bcrypt.compare throws on a null hash,
-  // so an owner row created but never activated would 500 instead of getting
-  // the actionable "not activated" message.
-  if (!admin.passwordHash)
-    return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
 
   const valid = await bcrypt.compare(String(password), admin.passwordHash);
   if (!valid) {
