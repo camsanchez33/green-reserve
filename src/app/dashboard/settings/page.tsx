@@ -59,7 +59,9 @@ const SECTION_ALIASES: Record<string, Section> = {
 const NO_SAVE_BUTTON: Section[] = ['Course layout', 'Pro shop', 'Staff', 'Your account'];
 // SP-A: the cancellation policy is the owner's alone — a staff login with
 // "Edit course settings" never sends these (the API refuses them too).
-const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes'];
+// Cam 2026-10-26: the time zone (every clock on the sheet) and the course type
+// (private turns off online booking) are the owner's too.
+const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'timezone', 'type'];
 
 // SD-8: Save used to PATCH the WHOLE form, so saving a dress-code chip also
 // re-sent every facility toggle and every price — two people editing different
@@ -658,8 +660,8 @@ function SettingsPageInner() {
               <SectionCard title="Contact">
                 <Field label="Phone"><FInput value={form.phone as string} onChange={v=>set('phone',v)} type="tel"/></Field>
                 <Field label="Website"><FInput value={form.website as string} onChange={v=>set('website',v)} placeholder="https://"/></Field>
-                <Field label="Course Type">
-                  <select value={form.type as string} onChange={e=>set('type',e.target.value)} className={iCls}>
+                <Field label="Course Type" hint={isStaffLogin ? 'Only the course owner can change this.' : undefined}>
+                  <select value={form.type as string} onChange={e=>set('type',e.target.value)} disabled={isStaffLogin} className={iCls}>
                     {/* A-04b: new selections are Public/Private only — a legacy
                         value (semi-private/resort/municipal) stays visible/
                         selected here rather than silently blanking out. */}
@@ -783,8 +785,8 @@ function SettingsPageInner() {
             <div className="space-y-5">
               <SectionCard title="When golfers can book">
                 {/* SD-3: the course's clock — every "today" on the sheet and in the crons reads it. */}
-                <Field label="Your time zone" hint="Your tee sheet's today, and the check-in and cancellation clocks, all run on this.">
-                  <select value={String(form.timezone ?? 'America/New_York')} onChange={e=>set('timezone',e.target.value)} className={iCls}>
+                <Field label="Your time zone" hint={isStaffLogin ? 'Only the course owner can change this.' : "Your tee sheet's today, and the check-in and cancellation clocks, all run on this."}>
+                  <select value={String(form.timezone ?? 'America/New_York')} onChange={e=>set('timezone',e.target.value)} disabled={isStaffLogin} className={iCls}>
                     {US_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label} — {z.id}</option>)}
                   </select>
                 </Field>

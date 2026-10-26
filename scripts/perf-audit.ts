@@ -22,15 +22,18 @@ const BASE = (process.env.AUDIT_BASE_URL || 'https://greenreserve.app').replace(
 
 // PERF-1: 'daisylinks' is not a live course on production, so for months the
 // "Course Page" row timed the not-found state (its CLS 0.181 was that page's).
-// Set the repo variable AUDIT_COURSE_SLUG to a real live course.
+// CI (R-GOLF-014) audits the PR's own build against scripts/perf-seed.ts's course.
 const COURSE = process.env.AUDIT_COURSE_SLUG || 'daisylinks';
+// A real open tee time from perf-seed; without one /book shows its error shell.
+const TEE_TIME = process.env.AUDIT_TEE_TIME_ID || 'dummy';
+const BOOK_DATE = process.env.AUDIT_DATE || '2026-07-10';
 
-// Pages to audit. /book shows an error-state shell with dummy params — fine for perf.
+// Pages to audit.
 const PAGES = [
   { name: 'Home', path: '/' },
   { name: 'For Courses', path: '/for-courses' },
   { name: 'Course Page', path: `/courses/${COURSE}` },
-  { name: 'Booking Flow', path: `/book?tee_time_id=dummy&course_slug=${COURSE}&date=2026-07-10&players=2` },
+  { name: 'Booking Flow', path: `/book?tee_time_id=${TEE_TIME}&course_slug=${COURSE}&date=${BOOK_DATE}&players=2` },
 ];
 
 // Budgets — must ALL pass

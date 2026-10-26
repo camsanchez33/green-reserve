@@ -42,6 +42,11 @@ export async function PATCH(req: NextRequest) {
   if (session.isStaff && OWNER_ONLY_FIELDS.some(k => k in body)) {
     return NextResponse.json({ error: 'The cancellation policy can only be changed from the course owner’s login.' }, { status: 403 });
   }
+  // Cam 2026-10-26: the time zone moves every clock on the sheet and in the crons;
+  // the course type can switch online booking off (private). The owner's alone.
+  if (session.isStaff && ('timezone' in body || 'type' in body)) {
+    return NextResponse.json({ error: 'The time zone and the course type can only be changed from the course owner’s login.' }, { status: 403 });
+  }
   // Whitelist what can be updated
   const allowed = [
     // SD-8: name/address/city/state/zipCode are NOT here. They are what

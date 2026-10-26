@@ -271,8 +271,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           </select>
         )}
         {/* SD-8b: Settings passes no onAlertClick, so this navigates (guarded). */}
-        <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
-          className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-ink transition-colors">Course alert</button>
+        {access.can('sheet.course_alert') && <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
+          className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-ink transition-colors">Course alert</button>}
         {slug && (
           <a href={'/courses/' + slug} target="_blank" rel="noopener" className="px-2.5 py-2 rounded-md text-ink-soft hover:bg-paper hover:text-ink transition-colors">Your booking page ↗</a>
         )}

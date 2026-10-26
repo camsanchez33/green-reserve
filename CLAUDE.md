@@ -166,7 +166,7 @@ Admin logins are permissioned per person by the owner on Team: the ROLE (viewer 
 | Admin owner (AW-1, Cam 2026-10-20) | `gr_owner` → an `OwnerSession` row | 4h absolute | None — signs in ONLY at `/cam`: password → an approved device (new devices approved from an emailed link) → second factor (AW-1b: a passkey once one is added on My profile — the authenticator app is required first and stays the backup; no email codes for an owner with a passkey; `src/lib/owner-passkey.ts`); every sign-in emailed; revocable ("Sign out everywhere"). `/admin` refuses the owner and never mentions it (`src/lib/owner-session.ts`) |
 | Operator/staff dashboard | `gr_operator` | 7 days sliding | Reissued when >50% elapsed |
 | Golfer | `gr_golfer` | 90 days sliding | Reissued when >50% elapsed |
-| Member (per-course) | `gr_member` | 90 days absolute | None |
+| Member (per-course) | `gr_member` | 7 days absolute (R-AUTH-009, Cam 2026-10-26) | None |
 
 Sliding renewal is implemented in `src/lib/auth.ts` → `getOperatorSession()` / `getGolferSession()`.
 Do NOT run `scripts/route-inventory.ts`: ARCHITECTURE.md's route tables were deleted on purpose (Cam 2026-09-16, they drifted from the code map) and that script would regenerate them. `docs/CODEMAP.md` (`node scripts/codemap.mjs`) is the route map.
