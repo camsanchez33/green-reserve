@@ -10,6 +10,7 @@
  * Budgets (fail = nonzero exit):
  *   Performance score ≥ 85
  *   LCP ≤ 2.5s  |  TBT ≤ 300ms  |  CLS ≤ 0.1
+ *   (on a localhost build LCP is reported, not enforced — see ENFORCE_LCP)
  *
  * Mobile emulation + simulated slow-4G throttling.
  */
@@ -36,7 +37,7 @@ const PAGES = [
   { name: 'Booking Flow', path: `/book?tee_time_id=${TEE_TIME}&course_slug=${COURSE}&date=${BOOK_DATE}&players=2` },
 ];
 
-// Budgets — must ALL pass
+// Budgets — must ALL pass (LCP only where ENFORCE_LCP)
 const BUDGETS = {
   performance: 85,   // score 0-100
   lcp: 2500,         // ms
