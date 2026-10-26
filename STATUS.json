@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-26T04:13:04.707Z",
+  "generatedAt": "2026-10-26T04:43:19.697Z",
   "repo": {
-    "head": "6b07f98",
-    "branch": "claude/sentry-11",
+    "head": "2ee4129",
+    "branch": "claude/security-page",
     "dirtyCount": 0,
     "dirty": [],
     "looksLikeRunInProgress": false
@@ -11,16 +11,23 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "6b07f98",
-        "date": "2026-10-26T04:12:55+00:00",
-        "subject": "Declare @babel/parser: the parse check and code map used it through Sentry 8",
+        "h": "2ee4129",
+        "date": "2026-10-26T04:43:19+00:00",
+        "subject": "Security page: CLAUDE.md, code map",
         "ids": [],
         "matches": []
       },
       {
-        "h": "b724620",
-        "date": "2026-10-26T04:12:23+00:00",
-        "subject": "Sentry 8 → 11 with nothing personal collected; zero package flaws; CI bar to high (SEC-2)",
+        "h": "b2e1f40",
+        "date": "2026-10-26T04:38:53+00:00",
+        "subject": "Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "a904586",
+        "date": "2026-10-26T00:38:41-04:00",
+        "subject": "Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)",
         "ids": [],
         "matches": []
       },
@@ -613,14 +620,19 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "6b07f98",
+      "h": "2ee4129",
       "date": "2026-10-26",
-      "subject": "Declare @babel/parser: the parse check and code map used it through Sentry 8"
+      "subject": "Security page: CLAUDE.md, code map"
     },
     {
-      "h": "b724620",
+      "h": "b2e1f40",
       "date": "2026-10-26",
-      "subject": "Sentry 8 → 11 with nothing personal collected; zero package flaws; CI bar to high (SEC-2)"
+      "subject": "Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)"
+    },
+    {
+      "h": "a904586",
+      "date": "2026-10-26",
+      "subject": "Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)"
     },
     {
       "h": "2ff16fa",
@@ -666,11 +678,6 @@
       "h": "ed10fa0",
       "date": "2026-10-23",
       "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)"
-    },
-    {
-      "h": "6fd9158",
-      "date": "2026-10-23",
-      "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)"
     }
   ]
 }

@@ -4,16 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 04:13 UTC · branch `claude/sentry-11` · HEAD `6b07f98` · working tree clean
+Generated 2026-10-26 04:43 UTC · branch `claude/security-page` · HEAD `2ee4129` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 31 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 32 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `6b07f98` | 2026-10-26 | Declare @babel/parser: the parse check and code map used it through Sentry 8 |
-| `b724620` | 2026-10-26 | Sentry 8 → 11 with nothing personal collected; zero package flaws; CI bar to high (SEC-2) |
+| `2ee4129` | 2026-10-26 | Security page: CLAUDE.md, code map |
+| `b2e1f40` | 2026-10-26 | Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) |
+| `a904586` | 2026-10-26 | Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222) |
 | `2ff16fa` | 2026-10-25 | Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213) |
 | `47e5fb0` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
 | `719895d` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
@@ -165,8 +166,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `6b07f98` 2026-10-26 — Declare @babel/parser: the parse check and code map used it through Sentry 8
-- `b724620` 2026-10-26 — Sentry 8 → 11 with nothing personal collected; zero package flaws; CI bar to high (SEC-2)
+- `2ee4129` 2026-10-26 — Security page: CLAUDE.md, code map
+- `b2e1f40` 2026-10-26 — Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)
+- `a904586` 2026-10-26 — Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)
 - `2ff16fa` 2026-10-25 — Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)
 - `47e5fb0` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212)
 - `719895d` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
@@ -176,7 +178,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `9985445` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
 - `2e01ec9` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
 - `ed10fa0` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
-- `6fd9158` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
 
 ---
 
