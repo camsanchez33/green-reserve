@@ -9,6 +9,9 @@ import { todayIn, addDaysStr } from '../src/lib/course-time';
 const SLUG = 'perf-audit';
 
 (async () => {
+  // Never against a real database: this makes a live public course.
+  const host = new URL(process.env.DATABASE_URL || 'postgresql://x@missing/x').hostname;
+  if (!['localhost', '127.0.0.1'].includes(host)) { console.error(`perf-seed: refusing to seed ${host} — local throwaway databases only`); process.exit(1); }
   const op = await prisma.courseOperator.upsert({
     where: { email: 'perf-audit@ci.local' },
     update: {},
