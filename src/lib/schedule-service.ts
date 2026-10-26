@@ -142,7 +142,8 @@ export async function updateSchedule(id: string, data: Record<string, unknown>, 
       daysOfWeek: next.daysOfWeek,
       startTime: next.startTime,
       endTime: next.endTime,
-      intervalMinutes: data.intervalMinutes !== undefined ? Number(data.intervalMinutes) : existing.intervalMinutes,
+      // R-BOOK-011: the checked value, never a raw 0 or negative (which saved a schedule that makes no times).
+      intervalMinutes: next.intervalMinutes,
       holes: nextHoles,
       // Only the money keys present in the body are converted; the rest keep
       // their existing cents values (Prisma leaves omitted fields alone).

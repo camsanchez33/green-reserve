@@ -31,6 +31,9 @@ Caveat: the skeptics agreed with 89 of 91. That is a high agreement rate, so eve
 | R-BOOK-009 blackout 500 · R-PAY-011 membership charged again after paid at the shop | R-BOOK-009, R-PAY-011 | already fixed before 2026-10-26 (checked in code: blackouts delete only rows with no bookings; membership pay re-checks under a row lock) |
 
 | R-PAY-010 declined cutoff hold leaves no record | R-PAY-010 | **partly fixed** (2026-10-26): `chargeCutoffHold` ledgers a declined hold once (`charge_failed`, "Cancellation hold: …"; Stripe replays the same error per key, so later runs add nothing) · test in `ledger-money-db-test.ts`. Deliberately NOT written to `checkInFailReason` (the tee sheet's "Retry with new card" would check the group in and charge the round a day early). **Left for the admin session:** a 'failed fee charges' predicate in `money-problems.ts` over `charge_failed`/`refund_failed` rows so admin Problems shows them |
+| R-CRON-007 check-in email marked sent before sending | R-CRON-007 | **fixed** (2026-10-26): `sendCheckInLinkOnce()` (lib/check-in-email) claims the dedup conditionally, sends, and puts the status back on a failed send so the next run retries; both crons use it (the daily one used to swallow the failure) · test `ledger-booking-db-test.ts` |
+| R-BOOK-011 schedule interval 0 hangs generation | R-BOOK-011 | the hang was already guarded (generator skips intervals < 1, `checkPeriods`); **fixed** the remaining gap (2026-10-26): a schedule update stored the raw value, so 0 saved a schedule that made no times — it now stores the checked one |
+| R-BOOK-017 min/max players · R-BOOK-019 booking at an offline course | R-BOOK-017, R-BOOK-019 | already fixed before 2026-10-26 (checked: `groupSizeError` in /api/bookings; the course must be active, live and not archived) |
 Also landed: #69 runs every `scripts/*-test.ts` in CI (Tests workflow) and repaired three stale tests.
 
 ## Fix first: S1 (money, security)

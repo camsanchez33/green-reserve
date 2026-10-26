@@ -4,7 +4,7 @@ import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { chargeCutoffHold } from '@/lib/cutoff-hold';
-import { sendCheckInAvailableEmail } from '@/lib/email';
+import { sendCheckInLinkOnce } from '@/lib/check-in-email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 
 /**
@@ -75,23 +75,12 @@ export const GET = cronRoute('cancellation-cutoff', async (req: NextRequest) => 
       }
     } else {
       // ── No fee policy: email only ────────────────────────────────────────────
+      // R-CRON-007: claimed, sent, and put back for the next run if the send fails
+      // (this used to swallow a failed send after marking the booking emailed).
       try {
-        await prisma.booking.update({
-          where: { id: booking.id },
-          data: { paymentStatus: 'awaiting_checkin' },
-        });
-
-        await sendCheckInAvailableEmail({
-          golferName: booking.golferName,
-          golferEmail: booking.golferEmail,
-          courseName: booking.course.name,
-          date: booking.teeTime.date,
-          time: booking.teeTime.time,
-          bookingId: booking.id,
-          checkInToken: booking.checkInToken,
-        }).catch(console.error);
-
-        emailedNoPolicy++;
+        const r = await sendCheckInLinkOnce(booking);
+        if (r === 'sent') emailedNoPolicy++;
+        else if (r === 'failed') failed++;
       } catch (err) {
         console.error(`No-policy cutoff email failed for booking ${booking.id}:`, err);
         failed++;

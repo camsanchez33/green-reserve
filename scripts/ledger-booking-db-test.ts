@@ -8,6 +8,7 @@ import { prisma } from '../src/lib/prisma';
 import { performCancellation } from '../src/lib/cancel-booking';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 import { stripe } from '../src/lib/stripe';
+import { sendCheckInLinkOnce } from '../src/lib/check-in-email';
 
 // Stripe stub: `duringCharge` runs while a charge is in flight.
 let n = 0;
@@ -75,6 +76,21 @@ async function cleanup() {
   ok('a late cancel beaten by a waived cancel mid-charge: refused', 'error' in lost && lost.status === 409, lost);
   ok('…its late fee is refunded, and the refund is on the ledger', refunds.length === before + 1 && ledger.length === 1, { refunds: refunds.length - before, ledger: ledger.length });
   ok('…and the booking says no fee kept', lb.status === 'cancelled' && !lb.cancellationFeeChargeId && lb.cancellationFeeTotal === 0, lb);
+
+  // R-CRON-007: the check-in email's dedup is claimed, and a failed send is put back.
+  // (No RESEND_API_KEY here, so every send fails — the path that matters.)
+  const noCard = await prisma.booking.create({ data: { teeTimeId: ft.id, courseId: fc.id, golferName: 'Pay Link', golferEmail: `${TAG}+link@t.local`, players: 1,
+    greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'no_payment_method', checkInToken: 'tok' } });
+  const withRels = await prisma.booking.findUniqueOrThrow({ where: { id: noCard.id }, include: { teeTime: true, course: true } });
+  const sent = await sendCheckInLinkOnce(withRels);
+  const afterFail = await prisma.booking.findUniqueOrThrow({ where: { id: noCard.id } });
+  ok('a check-in email that fails to send leaves the booking to be tried again', sent === 'failed' && afterFail.paymentStatus === 'no_payment_method', { sent, ps: afterFail.paymentStatus });
+  await prisma.booking.update({ where: { id: noCard.id }, data: { paymentStatus: 'awaiting_checkin' } });
+  const second = await sendCheckInLinkOnce(withRels); // the stale read still says no_payment_method
+  ok('…and a booking another run already claimed is not sent twice', second === 'taken');
+  const crons = ['src/app/api/cron/hourly/route.ts', 'src/app/api/cron/cancellation-cutoff/route.ts'].map(f => readFileSync(f, 'utf8'));
+  ok('…both crons send it only through sendCheckInLinkOnce', crons.every(c => c.includes('sendCheckInLinkOnce(booking)') && !c.includes("data: { paymentStatus: 'awaiting_checkin' }")));
+  ok('R-BOOK-011: a schedule update never stores a raw 0 or negative interval', readFileSync('src/lib/schedule-service.ts', 'utf8').includes('intervalMinutes: next.intervalMinutes,'));
 
   for (const f of ['src/app/api/operator/settings/route.ts', 'src/app/api/operator/courses/route.ts']) {
     const src = readFileSync(f, 'utf8');
