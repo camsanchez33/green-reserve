@@ -40,5 +40,8 @@ const perf = read('.github/workflows/perf-audit.yml');
 ok('the perf check builds and starts THIS PR and audits localhost', perf.includes('npx next build') && perf.includes('next start -p 3000') && perf.includes('AUDIT_BASE_URL: http://localhost:3000') && !/AUDIT_BASE_URL:.*greenreserve/.test(perf));
 ok('…against the seeded live course', perf.includes('npx tsx scripts/perf-seed.ts') && perf.includes('AUDIT_COURSE_SLUG: perf-audit') && read('scripts/perf-seed.ts').includes("liveStatus: 'live'"));
 
+const audit = read('scripts/perf-audit.ts');
+ok('…where LCP is reported, not enforced, on a local build (production still enforces it)', audit.includes('const ENFORCE_LCP') && audit.includes('lcp <= BUDGETS.lcp || !ENFORCE_LCP') && /ENFORCE_LCP = [^;]*!LOCAL/.test(audit));
+
 if (failed) { console.error(`${failed} failed`); process.exit(1); }
 console.log('owner-controls: all passed');

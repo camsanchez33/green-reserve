@@ -87,7 +87,7 @@ npx prisma migrate deploy && npx tsx scripts/perf-seed.ts      # against a throw
 npx next build && npx next start -p 3000 &
 AUDIT_BASE_URL=http://localhost:3000 AUDIT_COURSE_SLUG=perf-audit node --experimental-strip-types scripts/perf-audit.ts   # Node 22+; NOT tsx (crashes: __name is not defined)
 ```
-The same script still audits production on demand (`AUDIT_BASE_URL=https://greenreserve.app AUDIT_COURSE_SLUG=<a live course>`).
+On the PR build the score, TBT and CLS fail the check and LCP is printed only (Cam 2026-10-26): a bare `next start` box has no CDN or Brotli, so its LCP runs ~0.3s over production's and measures the hosting, not the PR. Each page also gets one unmeasured warm-up load there. LCP is judged against production: run the same script on demand with `AUDIT_BASE_URL=https://greenreserve.app AUDIT_COURSE_SLUG=<a live course>` (LCP enforced, no warm-up).
 
 | Metric | Budget |
 |--------|--------|

@@ -5,6 +5,8 @@ name: Performance audit
 # before it merged, and its default course slug wasn't live. It now builds THIS
 # PR, starts it against a throwaway Postgres with one seeded live course
 # (scripts/perf-seed.ts), and audits that.
+# Score, TBT and CLS fail it; LCP is printed only (Cam 2026-10-26) — a bare
+# runner has no CDN, so its LCP measures hosting. LCP is judged on production.
 
 on:
   pull_request:

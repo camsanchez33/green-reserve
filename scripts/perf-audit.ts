@@ -46,6 +46,14 @@ const BUDGETS = {
 
 // Median-of-N (PERF-4). AUDIT_RUNS overrides it for a quick local check.
 const RUNS = Math.max(1, Number(process.env.AUDIT_RUNS) || 3);
+const LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)\b/.test(BASE);
+// Warm a local build before timing it (default on for localhost; AUDIT_WARMUP=0 turns it off).
+const WARMUP = process.env.AUDIT_WARMUP ? process.env.AUDIT_WARMUP !== '0' : LOCAL;
+// R-GOLF-014 (Cam 2026-10-26: "score/TBT/CLS only"): a bare `next start` box has no
+// CDN, Brotli or edge image cache, so its LCP (~0.3s over production's) measures
+// the hosting, not the PR. On a local build LCP is printed, not enforced; it is
+// judged against production by running this against greenreserve.app.
+const ENFORCE_LCP = process.env.AUDIT_ENFORCE_LCP ? process.env.AUDIT_ENFORCE_LCP !== '0' : !LOCAL;
 
 async function auditPage(url: string, chrome: chromeLauncher.LaunchedChrome) {
   const result: RunnerResult | undefined = await lighthouse(url, {
@@ -107,6 +115,11 @@ async function main() {
       // judged on the MEDIAN of each metric — Lighthouse's own advice for CI.
       // One run swung Home's TBT from 443ms to 1798ms on identical code; the
       // budgets themselves are unchanged.
+      // R-GOLF-014: against a freshly started build (CI), the first load of a
+      // page compiles its server code and optimises its images on demand —
+      // production serves both warm from Vercel's cache. One unmeasured load
+      // first, so the runs time what golfers get, not a cold start.
+      if (WARMUP) { try { await auditPage(url, chrome); } catch { /* the measured runs report errors */ } }
       const runs: Awaited<ReturnType<typeof auditPage>>[] = [];
       for (let i = 0; i < RUNS; i++) {
         try {
@@ -135,7 +148,7 @@ async function main() {
 
       const checks = [
         { name: 'Performance', pass: perf >= BUDGETS.performance, display: `${perf}`, budget: `≥${BUDGETS.performance}` },
-        { name: 'LCP        ', pass: lcp <= BUDGETS.lcp,         display: `${(lcp / 1000).toFixed(2)}s`, budget: `≤${BUDGETS.lcp / 1000}s` },
+        { name: 'LCP        ', pass: lcp <= BUDGETS.lcp || !ENFORCE_LCP, display: `${(lcp / 1000).toFixed(2)}s`, budget: ENFORCE_LCP ? `≤${BUDGETS.lcp / 1000}s` : `≤${BUDGETS.lcp / 1000}s on production; reported only here` },
         { name: 'TBT        ', pass: tbt <= BUDGETS.tbt,         display: `${Math.round(tbt)}ms`,        budget: `≤${BUDGETS.tbt}ms` },
         { name: 'CLS        ', pass: cls <= BUDGETS.cls,         display: cls.toFixed(3),                 budget: `≤${BUDGETS.cls}` },
       ];
