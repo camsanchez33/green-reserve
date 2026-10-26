@@ -16,6 +16,7 @@ import { claimTeeTime, TeeTimeClaimError } from './claim-tee-time';
 import { todayIn } from './course-time';
 import { randomUUID } from 'crypto';
 import { READER_STALE_MS } from './checkin-booking';
+import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 
 export type CounterResult =
   | { ok: true; amountCents: number; note: string | null }
@@ -30,7 +31,7 @@ export function counterDueCents(b: { totalAmount: number; accessFeeTotal: number
 export async function settleAtCounter(courseId: string, bookingId: string, opts: { actor: EventActor; actorName: string; checkedInPlayers?: number }): Promise<CounterResult> {
   const booking = await prisma.booking.findFirst({
     where: { id: bookingId, courseId },
-    select: { readerStartedAt: true, courseId: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
+    select: { readerStartedAt: true, noShowAt: true, courseId: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
       cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
   });
   if (!booking) return { ok: false, status: 404, error: 'Not found' };
@@ -48,6 +49,7 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1 || cip > booking.players)) return { ok: false, status: 400, error: 'Invalid headcount.' };
   if (booking.status === 'cancelled') return { ok: false, status: 409, error: 'This booking was cancelled.' };
   if (booking.status === 'completed') return { ok: false, status: 409, error: 'Already checked in.' };
+  if (noShowClosed(booking)) return { ok: false, status: 409, error: NO_SHOW_CLOSED_ERROR };
   // Review (HIGH): a round already charged by card (an admin "collect
   // payment") is paid — marking it paid offline would hide that payment and
   // take the booking fee a second time.

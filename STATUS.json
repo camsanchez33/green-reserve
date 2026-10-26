@@ -1,33 +1,55 @@
 {
-  "generatedAt": "2026-10-26T04:13:04.707Z",
+  "generatedAt": "2026-10-26T04:56:37.941Z",
   "repo": {
-    "head": "6b07f98",
-    "branch": "claude/sentry-11",
-    "dirtyCount": 0,
-    "dirty": [],
+    "head": "224b231",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 14,
+    "dirty": [
+      "A  .github/dependabot.yml",
+      "A  .github/workflows/security.yml",
+      "M  CLAUDE.md",
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "M  next.config.ts",
+      "M  package-lock.json",
+      "M  package.json",
+      "A  scripts/security-headers-test.ts",
+      "A  scripts/sentry-privacy-test.ts",
+      "M  sentry.client.config.ts",
+      "A  sentry.privacy.ts",
+      "M  sentry.server.config.ts"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "6b07f98",
-        "date": "2026-10-26T04:12:55+00:00",
-        "subject": "Declare @babel/parser: the parse check and code map used it through Sentry 8",
+        "h": "224b231",
+        "date": "2026-10-26T04:45:35+00:00",
+        "subject": "status board + code map",
         "ids": [],
         "matches": []
       },
       {
-        "h": "b724620",
-        "date": "2026-10-26T04:12:23+00:00",
-        "subject": "Sentry 8 → 11 with nothing personal collected; zero package flaws; CI bar to high (SEC-2)",
+        "h": "a8a925d",
+        "date": "2026-10-26T04:43:23+00:00",
+        "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing",
         "ids": [],
         "matches": []
       },
       {
-        "h": "2ff16fa",
-        "date": "2026-10-25T23:57:09-04:00",
-        "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)",
+        "h": "6c9f307",
+        "date": "2026-10-26T04:37:29+00:00",
+        "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "00d53d1",
+        "date": "2026-10-26T03:27:06+00:00",
+        "subject": "docs: money walk script for the register, cash and card reader",
         "ids": [],
         "matches": []
       },
@@ -231,9 +253,9 @@
   },
   "counts": {
     "runDone": 298,
-    "runAwaiting": 1,
+    "runAwaiting": 0,
     "runInFlight": 1,
-    "runNotStarted": 5,
+    "runNotStarted": 6,
     "reviseDone": 15,
     "reviseOpen": 7,
     "ideas": 17,
@@ -248,15 +270,7 @@
       ]
     }
   ],
-  "awaiting": [
-    {
-      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
-      "line": 2357,
-      "hash": "b88c8bf",
-      "shipDate": "2026-07-22",
-      "ageDays": 95
-    }
-  ],
+  "awaiting": [],
   "next": [
     {
       "title": "WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).",
@@ -276,6 +290,11 @@
     {
       "title": "CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (\"Golf",
       "line": 338,
+      "section": "Queue (run in this order)"
+    },
+    {
+      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
+      "line": 2357,
       "section": "Queue (run in this order)"
     },
     {
@@ -390,14 +409,14 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-26",
+      "lastTouched": "2026-10-25",
       "ageDays": 0
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-17",
-      "ageDays": 8
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
@@ -454,178 +473,183 @@
       "ageDays": 3
     },
     {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 20
-    },
-    {
-      "file": "REVIEW_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-05",
-      "ageDays": 20
-    },
-    {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-04",
-      "ageDays": 21
-    },
-    {
-      "file": "UI_REVISE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-01",
-      "ageDays": 24
-    },
-    {
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
+    },
+    {
+      "file": "REVIEW_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-09-29",
-      "ageDays": 26
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
+    },
+    {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
+    },
+    {
+      "file": "UI_REVISE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-20",
+      "ageDays": 5
     }
   ],
   "bank": null,
   "recentCommits": [
     {
-      "h": "6b07f98",
+      "h": "224b231",
       "date": "2026-10-26",
-      "subject": "Declare @babel/parser: the parse check and code map used it through Sentry 8"
+      "subject": "status board + code map"
     },
     {
-      "h": "b724620",
+      "h": "a8a925d",
       "date": "2026-10-26",
-      "subject": "Sentry 8 → 11 with nothing personal collected; zero package flaws; CI bar to high (SEC-2)"
+      "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing"
     },
     {
-      "h": "2ff16fa",
-      "date": "2026-10-25",
-      "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)"
+      "h": "6c9f307",
+      "date": "2026-10-26",
+      "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival"
+    },
+    {
+      "h": "00d53d1",
+      "date": "2026-10-26",
+      "subject": "docs: money walk script for the register, cash and card reader"
     },
     {
       "h": "47e5fb0",
@@ -666,11 +690,6 @@
       "h": "ed10fa0",
       "date": "2026-10-23",
       "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)"
-    },
-    {
-      "h": "6fd9158",
-      "date": "2026-10-23",
-      "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)"
     }
   ]
 }
