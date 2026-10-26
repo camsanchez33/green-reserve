@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { ON_REAL_BOOKING, ON_REAL_COURSE } from './real-courses';
 
 // MP-8a. The two "money that should exist and does not" predicates, shared by
 // /api/admin/revenue (the Problems block and its badge count) and
@@ -39,4 +40,49 @@ export async function openDisputes() {
   ]);
   const closedIds = new Set(closed.map(c => c.stripeId.replace(/:closed$/, '')));
   return opened.filter(o => !closedIds.has(o.stripeId.replace(/:open$/, '')));
+}
+
+/** How far back a declined hold is looked for (its tee date bounds it anyway). */
+export const MONEY_EVENT_LOOKBACK_DAYS = 60;
+
+/**
+ * R-PAY-010 follow-up: money that moved wrong and nobody sees it.
+ *  - A failed refund: we owe a golfer money and Stripe refused to send it. Open
+ *    until a refund on that booking is recorded after it — ours, or one made in
+ *    the Stripe dashboard (the webhook records those as 'refund' / 'fee_refunded' / 'no_show_fee_refunded').
+ *  - A declined cancellation hold (lib/cutoff-hold): the course's late-cancel
+ *    protection is missing for that round. Open while the booking is still
+ *    confirmed with only a card on file and its date hasn't passed.
+ * Real courses only (TEST-2).
+ */
+export async function openMoneyEventProblems(now: Date, todayStr: string) {
+  const since = new Date(now.getTime() - MONEY_EVENT_LOOKBACK_DAYS * 86_400_000);
+  const booking = { select: { id: true, golferName: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true } } } } as const;
+  const [refundFailed, holdsDeclined] = await Promise.all([
+    prisma.paymentEvent.findMany({
+      // No age limit: the money is owed until a refund is recorded.
+      where: { kind: 'refund_failed', ...ON_REAL_BOOKING },
+      select: { id: true, bookingId: true, amountCents: true, detail: true, createdAt: true, booking },
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.paymentEvent.findMany({
+      where: {
+        kind: 'charge_failed', detail: { startsWith: 'Cancellation hold' }, createdAt: { gte: since },
+        booking: { status: 'confirmed', paymentStatus: 'card_on_file', teeTime: { date: { gte: todayStr } }, ...ON_REAL_COURSE },
+      },
+      select: { id: true, bookingId: true, amountCents: true, detail: true, createdAt: true, booking },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ]);
+  const later = refundFailed.length
+    ? await prisma.paymentEvent.findMany({
+        where: { bookingId: { in: refundFailed.map(r => r.bookingId) }, kind: { in: ['refund', 'fee_refunded', 'no_show_fee_refunded'] } },
+        select: { bookingId: true, createdAt: true },
+      })
+    : [];
+  const refundsOwed = refundFailed.filter(r => !later.some(l => l.bookingId === r.bookingId && l.createdAt > r.createdAt));
+  // One per booking: the hold is charged once per card, so only its first decline matters.
+  const seen = new Set<string>();
+  const declinedHolds = holdsDeclined.filter(h => !seen.has(h.bookingId) && (seen.add(h.bookingId), true));
+  return { refundsOwed, declinedHolds };
 }

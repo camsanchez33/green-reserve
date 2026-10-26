@@ -11,7 +11,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from './prisma';
 import { REAL_COURSE, ON_REAL_COURSE } from './real-courses';
 import { dayKey, platformHour } from './admin-day';
-import { FAILED_CHARGE_WHERE, openDisputes } from './money-problems';
+import { FAILED_CHARGE_WHERE, openDisputes, openMoneyEventProblems } from './money-problems';
 import { cronHealth, lastStripeWebhook } from './cron-log';
 import { todayMoney, todayOnboarding } from './admin-today';
 import { buildActionQueue } from './admin-action-queue';
@@ -32,7 +32,7 @@ export type Finding = { key: string; title: string; detail: string; href: string
 
 /** Everything urgent right now. Site errors go to Sentry (BRAIN-0), not here. */
 export async function urgentFindings(now = new Date()): Promise<Finding[]> {
-  const [failed, disputes, jobs, webhook, noStripe, onboarding, security] = await Promise.all([
+  const [failed, disputes, jobs, webhook, noStripe, onboarding, security, moneyEvents] = await Promise.all([
     prisma.booking.findMany({ where: { ...FAILED_CHARGE_WHERE, ...ON_REAL_COURSE }, select: { courseId: true, totalAmount: true, course: { select: { name: true } } } }),
     openDisputes(),
     cronHealth(CRONS, now),
@@ -41,6 +41,7 @@ export async function urgentFindings(now = new Date()): Promise<Finding[]> {
     todayOnboarding(now),
     // SEC-3 (Cam 2026-10-26: "email + Problems"): an attack becomes a Problem, emailed once.
     securityFindings(now),
+    openMoneyEventProblems(now, dayKey(now)),
   ]);
   const out: Finding[] = [];
   for (const f of security) out.push({ ...f, href: '/admin/security' });
@@ -55,6 +56,15 @@ export async function urgentFindings(now = new Date()): Promise<Finding[]> {
   }
   for (const d of disputes) {
     out.push({ key: `dispute:${d.id}`, title: `Chargeback opened — ${d.booking?.course.name ?? 'a course'}`, detail: `$${(d.amountCents / 100).toFixed(2)} from ${d.booking?.golferName ?? 'a golfer'}. Answer it in Stripe before the deadline.`, href: '/admin/revenue?tab=disputes', courseId: d.booking?.course.id ?? null });
+  }
+  const dollars = (c: number) => `$${(c / 100).toFixed(2)}`;
+  for (const r of moneyEvents.refundsOwed) {
+    const c = r.booking.course;
+    out.push({ key: `refundfail:${r.id}`, title: `Refund failed — ${c.name}`, detail: `${r.amountCents > 0 ? dollars(r.amountCents) + ' owed to' : 'Money owed to'} ${r.booking.golferName}. Refund it in Stripe; this clears once the refund is recorded.`, href: `/admin/courses/${c.id}?tab=timeline`, courseId: c.id });
+  }
+  for (const h of moneyEvents.declinedHolds) {
+    const c = h.booking.course;
+    out.push({ key: `holddeclined:${h.bookingId}`, title: `Cancellation hold declined — ${c.name}`, detail: `${dollars(h.amountCents)} for ${h.booking.golferName}'s round on ${h.booking.teeTime.date}. The round is charged in full at check-in; until then the course has no late-cancel fee for it.`, href: `/admin/courses/${c.id}?tab=timeline`, courseId: c.id });
   }
   for (const j of jobs.filter(j => j.status === 'bad')) {
     out.push({ key: `cron:${j.job}`, title: `Scheduled job failing — ${j.job}`, detail: j.note, href: '/admin/system' });

@@ -53,6 +53,7 @@ async function main() {
     ['src/lib/access-fee.ts', /courseId \? \{ courseId \} : ON_REAL_COURSE/],
     ['src/lib/admin-goals.ts', /REAL_COURSE/],
     ['src/lib/admin-checks.ts', /\.\.\.FAILED_CHARGE_WHERE, \.\.\.ON_REAL_COURSE/],
+    ['src/lib/money-problems.ts', /kind: 'refund_failed', \.\.\.ON_REAL_BOOKING \}[\s\S]*todayStr \} \}, \.\.\.ON_REAL_COURSE \}/],
     ['src/lib/admin-action-queue.ts', /\.\.\.FAILED_CHARGE_WHERE, \.\.\.ON_REAL_COURSE/],
     ['src/app/api/admin/nav-badges/route.ts', /ON_REAL_COURSE/],
     ['src/app/api/admin/revenue/route.ts', /const PAID = \{[^}]*\}, \.\.\.ON_REAL_COURSE \}/],

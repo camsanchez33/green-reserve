@@ -7151,7 +7151,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 138,
+      "lines": 152,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11738,7 +11738,7 @@
     },
     {
       "path": "src/lib/admin-checks.ts",
-      "lines": 229,
+      "lines": 239,
       "purpose": "AW-5 (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -17984,7 +17984,7 @@
     },
     {
       "path": "src/lib/money-problems.ts",
-      "lines": 43,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17997,7 +17997,15 @@
           "kind": "fn"
         },
         {
+          "name": "MONEY_EVENT_LOOKBACK_DAYS",
+          "kind": "const"
+        },
+        {
           "name": "openDisputes",
+          "kind": "fn"
+        },
+        {
+          "name": "openMoneyEventProblems",
           "kind": "fn"
         }
       ],
@@ -18007,7 +18015,8 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "./prisma"
+        "./prisma",
+        "./real-courses"
       ],
       "usedBy": [
         "src/app/api/admin/messages/route.ts",
@@ -18265,7 +18274,7 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 212,
+      "lines": 215,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
@@ -19348,7 +19357,8 @@
         "src/lib/admin-goals.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
-        "src/lib/agreement-required.ts"
+        "src/lib/agreement-required.ts",
+        "src/lib/money-problems.ts"
       ]
     },
     {

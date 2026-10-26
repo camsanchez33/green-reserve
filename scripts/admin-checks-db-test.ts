@@ -5,7 +5,8 @@
 // failed, and drops an AI summary carrying a number the facts don't.
 // Needs a database; emails and the model are stubbed. Run: npx tsx scripts/admin-checks-db-test.ts
 import { PrismaClient } from '@prisma/client';
-import { runUrgentChecks, runMorningDigest, digestSummary, digestFacts } from '../src/lib/admin-checks';
+import { runUrgentChecks, runMorningDigest, digestSummary, digestFacts, urgentFindings } from '../src/lib/admin-checks';
+import { dayKey } from '../src/lib/admin-day';
 
 const prisma = new PrismaClient();
 const TAG = 'adminchecktest';
@@ -15,6 +16,11 @@ const check = (label: string, ok: boolean, detail?: string) => { console.log(`${
 async function cleanup() {
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });
   await prisma.adminAlert.deleteMany({ where: { OR: [{ key: { in: courses.map(c => `nostripe:${c.id}`) } }, { key: { startsWith: 'digest:2031-' } }] } });
+  const ids = courses.map(c => c.id);
+  await prisma.paymentEvent.deleteMany({ where: { booking: { courseId: { in: ids } } } });
+  await prisma.bookingEvent.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
 }
@@ -84,6 +90,69 @@ async function main() {
   check('a summary using only given words is kept', (await digestSummary(facts, async () => 'One course still can’t take payments. The month is quiet so far.')).startsWith('One course'));
   check('no model, no summary', await digestSummary(facts, null) === '');
   check('a model failure is no summary, not a failed digest', await digestSummary(facts, async () => { throw new Error('x'); }) === '');
+
+  // R-PAY-010 follow-up: a failed refund and a declined cancellation hold are Problems.
+  const tomorrow = dayKey(new Date(Date.now() + 86_400_000));
+  const testCourse = await prisma.course.create({ data: {
+    name: `${TAG} Test Course`, slug: `${TAG}-t`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'CA', zipCode: '90210', holes: 18,
+    liveStatus: 'live', active: true, timezone: 'UTC', isTest: true, stripeAccountActive: true,
+  } });
+  const mkBooking = async (courseId: string) => {
+    const tt = await prisma.teeTime.create({ data: { courseId, date: tomorrow, time: '09:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 1, status: 'available' } });
+    return prisma.booking.create({ data: { teeTimeId: tt.id, courseId, golferName: 'Pat', golferEmail: `${TAG}+${courseId}@test.local`, players: 1,
+      greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'card_on_file' } });
+  };
+  const owed = await mkBooking(course.id);
+  const held = await mkBooking(course.id);
+  const testHeld = await mkBooking(testCourse.id);
+  const rf = await prisma.paymentEvent.create({ data: { bookingId: owed.id, kind: 'refund_failed', amountCents: 1000, detail: 'x' } });
+  for (const b of [held, testHeld]) await prisma.paymentEvent.create({ data: { bookingId: b.id, kind: 'charge_failed', amountCents: 1000, detail: 'Cancellation hold: card declined' } });
+  let keys = (await urgentFindings()).map(f => f.key);
+  check('a failed refund is a Problem', keys.includes(`refundfail:${rf.id}`), JSON.stringify(keys));
+  check('a declined cancellation hold is a Problem', keys.includes(`holddeclined:${held.id}`));
+  check('…but not at a test course', !keys.includes(`holddeclined:${testHeld.id}`));
+  const testOwed = await mkBooking(testCourse.id);
+  const oldRf = await prisma.paymentEvent.create({ data: { bookingId: held.id, kind: 'refund_failed', amountCents: 500, stripeId: 'pi_race_old', detail: 'x', createdAt: new Date(Date.now() - 200 * 86_400_000) } });
+  const testRf = await prisma.paymentEvent.create({ data: { bookingId: testOwed.id, kind: 'refund_failed', amountCents: 500, detail: 'x' } });
+  keys = (await urgentFindings()).map(f => f.key);
+  check('a failed refund stays a Problem however old, until a refund is recorded', keys.includes(`refundfail:${oldRf.id}`));
+  check('…and one at a test course is not a Problem', !keys.includes(`refundfail:${testRf.id}`));
+
+  // The race-path charge (on no booking field, named only by its refund_failed row),
+  // refunded in the Stripe dashboard: the webhook finds its booking and records it.
+  process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_admin_checks';
+  const { POST } = await import('../src/app/api/stripe/webhook/route');
+  const { stripe } = await import('../src/lib/stripe');
+  const evt = JSON.stringify({ id: 'evt_admchk', object: 'event', type: 'charge.refunded', data: { object: {
+    id: 'ch_race', object: 'charge', payment_intent: 'pi_race_old', amount: 500, amount_refunded: 500, refunded: true,
+    refunds: { object: 'list', data: [{ id: 're_race_old', object: 'refund', amount: 500, reason: 'requested_by_customer' }] } } } });
+  const sig = stripe.webhooks.generateTestHeaderString({ payload: evt, secret: process.env.STRIPE_WEBHOOK_SECRET });
+  const { NextRequest } = await import('next/server');
+  const res = await POST(new NextRequest('http://localhost/api/stripe/webhook', { method: 'POST', body: evt, headers: { 'stripe-signature': sig } }));
+  const recorded = await prisma.paymentEvent.findFirst({ where: { stripeId: 're_race_old' } });
+  check('a dashboard refund of a charge only its failed refund names is recorded on that booking', res.status === 200 && recorded?.bookingId === held.id && recorded?.kind === 'refund', JSON.stringify({ status: res.status, recorded }));
+  keys = (await urgentFindings()).map(f => f.key);
+  check('…and clears its Problem', !keys.includes(`refundfail:${oldRf.id}`));
+
+  // A no-show fee whose "still coming" refund failed, refunded by hand: recorded as a
+  // no-show fee refund, so the ledger no longer counts that charge as live.
+  const ns = await mkBooking(course.id);
+  await prisma.paymentEvent.create({ data: { bookingId: ns.id, kind: 'no_show_fee', amountCents: 2000, stripeId: 'pi_ns' } });
+  const nsRf = await prisma.paymentEvent.create({ data: { bookingId: ns.id, kind: 'refund_failed', amountCents: 2000, stripeId: 'pi_ns', detail: 'No-show fee refund failed: x' } });
+  const nsEvt = JSON.stringify({ id: 'evt_admchk_ns', object: 'event', type: 'charge.refunded', data: { object: {
+    id: 'ch_ns', object: 'charge', payment_intent: 'pi_ns', amount: 2000, amount_refunded: 2000, refunded: true,
+    refunds: { object: 'list', data: [{ id: 're_ns', object: 'refund', amount: 2000, reason: null }] } } } });
+  const nsRes = await POST(new NextRequest('http://localhost/api/stripe/webhook', { method: 'POST', body: nsEvt, headers: { 'stripe-signature': stripe.webhooks.generateTestHeaderString({ payload: nsEvt, secret: process.env.STRIPE_WEBHOOK_SECRET }) } }));
+  const nsRow = await prisma.paymentEvent.findFirst({ where: { stripeId: 're_ns' } });
+  const { liveNoShowCharge } = await import('../src/lib/no-show-fee');
+  check('a no-show fee refunded by hand after a failed refund is a no-show fee refund', nsRes.status === 200 && nsRow?.kind === 'no_show_fee_refunded' && !(await liveNoShowCharge(ns.id)), JSON.stringify(nsRow));
+  check('…and clears its Problem', !(await urgentFindings()).some(f => f.key === `refundfail:${nsRf.id}`));
+
+  await prisma.paymentEvent.create({ data: { bookingId: owed.id, kind: 'refund', amountCents: 1000, stripeId: 're_x', actor: 'stripe', createdAt: new Date(Date.now() + 1000) } });
+  await prisma.booking.update({ where: { id: held.id }, data: { paymentStatus: 'paid' } });
+  keys = (await urgentFindings()).map(f => f.key);
+  check('a refund recorded afterwards clears the failed refund', !keys.includes(`refundfail:${rf.id}`));
+  check('a hold clears once the round is paid', !keys.includes(`holddeclined:${held.id}`));
 
   await cleanup();
   await prisma.$disconnect();

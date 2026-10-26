@@ -4,14 +4,24 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 14:02 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `58e0c789` · working tree **2 dirty file(s)**
+Generated 2026-10-26 20:49 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `d2ad3498` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 57 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 67 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `c2f1007c` | 2026-10-26 | Bump actions/checkout from 4 to 7 (#215) |
+| `f0b52217` | 2026-10-26 | A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund |
+| `28e1481e` | 2026-10-26 | status board + code map |
+| `2e541f71` | 2026-10-26 | Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded |
+| `0197ea86` | 2026-10-26 | Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010) |
+| `355f6ca0` | 2026-10-26 | Bump the minor-and-patch group across 1 directory with 5 updates (#217) |
+| `68901693` | 2026-10-26 | Bump actions/upload-artifact from 4 to 7 (#216) |
+| `03bd9dcb` | 2026-10-26 | Bump actions/setup-node from 4 to 7 (#214) |
+| `e1ce6066` | 2026-10-26 | Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number >= 1 (R-BOOK-011) (#229) |
+| `0fd72cdd` | 2026-10-26 | status board + code map |
 | `58e0c789` | 2026-10-26 | test: type the schedule id (scheduleToWire returns unknown fields) |
 | `195f02a7` | 2026-10-26 | Schedule interval: refuse anything but a whole number of minutes >= 1 (create and update) |
 | `8ae40453` | 2026-10-26 | Check-in email: a failed send is retried (R-CRON-007); schedule update stores the checked interval (R-BOOK-011) |
@@ -72,14 +82,6 @@ Generated 2026-10-26 14:02 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
-
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -92,7 +94,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 95d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 96d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -199,18 +201,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `c2f1007c` 2026-10-26 — Bump actions/checkout from 4 to 7 (#215)
+- `f0b52217` 2026-10-26 — A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund
+- `28e1481e` 2026-10-26 — status board + code map
+- `2e541f71` 2026-10-26 — Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded
+- `0197ea86` 2026-10-26 — Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)
+- `355f6ca0` 2026-10-26 — Bump the minor-and-patch group across 1 directory with 5 updates (#217)
+- `68901693` 2026-10-26 — Bump actions/upload-artifact from 4 to 7 (#216)
+- `03bd9dcb` 2026-10-26 — Bump actions/setup-node from 4 to 7 (#214)
+- `e1ce6066` 2026-10-26 — Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number >= 1 (R-BOOK-011) (#229)
+- `0fd72cdd` 2026-10-26 — status board + code map
 - `58e0c789` 2026-10-26 — test: type the schedule id (scheduleToWire returns unknown fields)
 - `195f02a7` 2026-10-26 — Schedule interval: refuse anything but a whole number of minutes >= 1 (create and update)
-- `8ae40453` 2026-10-26 — Check-in email: a failed send is retried (R-CRON-007); schedule update stores the checked interval (R-BOOK-011)
-- `7de5d7a3` 2026-10-26 — A declined cancellation hold is ledgered once (R-PAY-010) (#228)
-- `9e10ae2f` 2026-10-26 — status board + code map
-- `5e59c031` 2026-10-26 — Cutoff hold: a concurrent charge of the same key is not a decline
-- `31dad15d` 2026-10-26 — A declined cancellation hold is ledgered once (R-PAY-010)
-- `35cdba79` 2026-10-26 — Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)
-- `61de211b` 2026-10-26 — status board + code map
-- `22bff0bb` 2026-10-26 — Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking
-- `3344fa17` 2026-10-26 — Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)
-- `b06da63e` 2026-10-26 — /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)
 
 ---
 

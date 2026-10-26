@@ -1,18 +1,85 @@
 {
-  "generatedAt": "2026-10-26T14:02:34.430Z",
+  "generatedAt": "2026-10-26T20:49:16.488Z",
   "repo": {
-    "head": "58e0c789",
+    "head": "d2ad3498",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 2,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
-    ],
+    "dirtyCount": 0,
+    "dirty": [],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "c2f1007c",
+        "date": "2026-10-26T16:47:51-04:00",
+        "subject": "Bump actions/checkout from 4 to 7 (#215)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f0b52217",
+        "date": "2026-10-26T20:47:36+00:00",
+        "subject": "A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "28e1481e",
+        "date": "2026-10-26T20:45:29+00:00",
+        "subject": "status board + code map",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2e541f71",
+        "date": "2026-10-26T20:43:40+00:00",
+        "subject": "Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0197ea86",
+        "date": "2026-10-26T20:35:12+00:00",
+        "subject": "Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "355f6ca0",
+        "date": "2026-10-26T16:28:44-04:00",
+        "subject": "Bump the minor-and-patch group across 1 directory with 5 updates (#217)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "68901693",
+        "date": "2026-10-26T16:28:41-04:00",
+        "subject": "Bump actions/upload-artifact from 4 to 7 (#216)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "03bd9dcb",
+        "date": "2026-10-26T16:28:38-04:00",
+        "subject": "Bump actions/setup-node from 4 to 7 (#214)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e1ce6066",
+        "date": "2026-10-26T10:09:57-04:00",
+        "subject": "Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number >= 1 (R-BOOK-011) (#229)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0fd72cdd",
+        "date": "2026-10-26T14:02:37+00:00",
+        "subject": "status board + code map",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "58e0c789",
         "date": "2026-10-26T14:01:47+00:00",
@@ -439,7 +506,7 @@
       "line": 2357,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 95
+      "ageDays": 96
     }
   ],
   "next": [
@@ -798,6 +865,56 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c2f1007c",
+      "date": "2026-10-26",
+      "subject": "Bump actions/checkout from 4 to 7 (#215)"
+    },
+    {
+      "h": "f0b52217",
+      "date": "2026-10-26",
+      "subject": "A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund"
+    },
+    {
+      "h": "28e1481e",
+      "date": "2026-10-26",
+      "subject": "status board + code map"
+    },
+    {
+      "h": "2e541f71",
+      "date": "2026-10-26",
+      "subject": "Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded"
+    },
+    {
+      "h": "0197ea86",
+      "date": "2026-10-26",
+      "subject": "Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)"
+    },
+    {
+      "h": "355f6ca0",
+      "date": "2026-10-26",
+      "subject": "Bump the minor-and-patch group across 1 directory with 5 updates (#217)"
+    },
+    {
+      "h": "68901693",
+      "date": "2026-10-26",
+      "subject": "Bump actions/upload-artifact from 4 to 7 (#216)"
+    },
+    {
+      "h": "03bd9dcb",
+      "date": "2026-10-26",
+      "subject": "Bump actions/setup-node from 4 to 7 (#214)"
+    },
+    {
+      "h": "e1ce6066",
+      "date": "2026-10-26",
+      "subject": "Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number >= 1 (R-BOOK-011) (#229)"
+    },
+    {
+      "h": "0fd72cdd",
+      "date": "2026-10-26",
+      "subject": "status board + code map"
+    },
+    {
       "h": "58e0c789",
       "date": "2026-10-26",
       "subject": "test: type the schedule id (scheduleToWire returns unknown fields)"
@@ -806,56 +923,6 @@
       "h": "195f02a7",
       "date": "2026-10-26",
       "subject": "Schedule interval: refuse anything but a whole number of minutes >= 1 (create and update)"
-    },
-    {
-      "h": "8ae40453",
-      "date": "2026-10-26",
-      "subject": "Check-in email: a failed send is retried (R-CRON-007); schedule update stores the checked interval (R-BOOK-011)"
-    },
-    {
-      "h": "7de5d7a3",
-      "date": "2026-10-26",
-      "subject": "A declined cancellation hold is ledgered once (R-PAY-010) (#228)"
-    },
-    {
-      "h": "9e10ae2f",
-      "date": "2026-10-26",
-      "subject": "status board + code map"
-    },
-    {
-      "h": "5e59c031",
-      "date": "2026-10-26",
-      "subject": "Cutoff hold: a concurrent charge of the same key is not a decline"
-    },
-    {
-      "h": "31dad15d",
-      "date": "2026-10-26",
-      "subject": "A declined cancellation hold is ledgered once (R-PAY-010)"
-    },
-    {
-      "h": "35cdba79",
-      "date": "2026-10-26",
-      "subject": "Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)"
-    },
-    {
-      "h": "61de211b",
-      "date": "2026-10-26",
-      "subject": "status board + code map"
-    },
-    {
-      "h": "22bff0bb",
-      "date": "2026-10-26",
-      "subject": "Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking"
-    },
-    {
-      "h": "3344fa17",
-      "date": "2026-10-26",
-      "subject": "Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)"
-    },
-    {
-      "h": "b06da63e",
-      "date": "2026-10-26",
-      "subject": "/book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)"
     }
   ]
 }
