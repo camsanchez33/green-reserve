@@ -5,7 +5,8 @@
 // failed, and drops an AI summary carrying a number the facts don't.
 // Needs a database; emails and the model are stubbed. Run: npx tsx scripts/admin-checks-db-test.ts
 import { PrismaClient } from '@prisma/client';
-import { runUrgentChecks, runMorningDigest, digestSummary, digestFacts } from '../src/lib/admin-checks';
+import { runUrgentChecks, runMorningDigest, digestSummary, digestFacts, urgentFindings } from '../src/lib/admin-checks';
+import { dayKey } from '../src/lib/admin-day';
 
 const prisma = new PrismaClient();
 const TAG = 'adminchecktest';
@@ -15,6 +16,10 @@ const check = (label: string, ok: boolean, detail?: string) => { console.log(`${
 async function cleanup() {
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });
   await prisma.adminAlert.deleteMany({ where: { OR: [{ key: { in: courses.map(c => `nostripe:${c.id}`) } }, { key: { startsWith: 'digest:2031-' } }] } });
+  const ids = courses.map(c => c.id);
+  await prisma.paymentEvent.deleteMany({ where: { booking: { courseId: { in: ids } } } });
+  await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: `${TAG}@test.local` } });
 }
@@ -84,6 +89,32 @@ async function main() {
   check('a summary using only given words is kept', (await digestSummary(facts, async () => 'One course still can’t take payments. The month is quiet so far.')).startsWith('One course'));
   check('no model, no summary', await digestSummary(facts, null) === '');
   check('a model failure is no summary, not a failed digest', await digestSummary(facts, async () => { throw new Error('x'); }) === '');
+
+  // R-PAY-010 follow-up: a failed refund and a declined cancellation hold are Problems.
+  const tomorrow = dayKey(new Date(Date.now() + 86_400_000));
+  const testCourse = await prisma.course.create({ data: {
+    name: `${TAG} Test Course`, slug: `${TAG}-t`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'CA', zipCode: '90210', holes: 18,
+    liveStatus: 'live', active: true, timezone: 'UTC', isTest: true, stripeAccountActive: true,
+  } });
+  const mkBooking = async (courseId: string) => {
+    const tt = await prisma.teeTime.create({ data: { courseId, date: tomorrow, time: '09:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 1, status: 'available' } });
+    return prisma.booking.create({ data: { teeTimeId: tt.id, courseId, golferName: 'Pat', golferEmail: `${TAG}+${courseId}@test.local`, players: 1,
+      greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'card_on_file' } });
+  };
+  const owed = await mkBooking(course.id);
+  const held = await mkBooking(course.id);
+  const testHeld = await mkBooking(testCourse.id);
+  const rf = await prisma.paymentEvent.create({ data: { bookingId: owed.id, kind: 'refund_failed', amountCents: 1000, detail: 'x' } });
+  for (const b of [held, testHeld]) await prisma.paymentEvent.create({ data: { bookingId: b.id, kind: 'charge_failed', amountCents: 1000, detail: 'Cancellation hold: card declined' } });
+  let keys = (await urgentFindings()).map(f => f.key);
+  check('a failed refund is a Problem', keys.includes(`refundfail:${rf.id}`), JSON.stringify(keys));
+  check('a declined cancellation hold is a Problem', keys.includes(`holddeclined:${held.id}`));
+  check('…but not at a test course', !keys.includes(`holddeclined:${testHeld.id}`));
+  await prisma.paymentEvent.create({ data: { bookingId: owed.id, kind: 'refund', amountCents: 1000, stripeId: 're_x', actor: 'stripe', createdAt: new Date(Date.now() + 1000) } });
+  await prisma.booking.update({ where: { id: held.id }, data: { paymentStatus: 'paid' } });
+  keys = (await urgentFindings()).map(f => f.key);
+  check('a refund recorded afterwards clears the failed refund', !keys.includes(`refundfail:${rf.id}`));
+  check('a hold clears once the round is paid', !keys.includes(`holddeclined:${held.id}`));
 
   await cleanup();
   await prisma.$disconnect();
