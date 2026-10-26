@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { ON_REAL_BOOKING } from './real-courses';
+import { ON_REAL_BOOKING, ON_REAL_COURSE } from './real-courses';
 
 // MP-8a. The two "money that should exist and does not" predicates, shared by
 // /api/admin/revenue (the Problems block and its badge count) and
@@ -42,7 +42,7 @@ export async function openDisputes() {
   return opened.filter(o => !closedIds.has(o.stripeId.replace(/:open$/, '')));
 }
 
-/** How far back a failed refund or a declined hold is still worth raising. */
+/** How far back a declined hold is looked for (its tee date bounds it anyway). */
 export const MONEY_EVENT_LOOKBACK_DAYS = 60;
 
 /**
@@ -60,14 +60,15 @@ export async function openMoneyEventProblems(now: Date, todayStr: string) {
   const booking = { select: { id: true, golferName: true, course: { select: { id: true, name: true } }, teeTime: { select: { date: true } } } } as const;
   const [refundFailed, holdsDeclined] = await Promise.all([
     prisma.paymentEvent.findMany({
-      where: { kind: 'refund_failed', createdAt: { gte: since }, ...ON_REAL_BOOKING },
+      // No age limit: the money is owed until a refund is recorded.
+      where: { kind: 'refund_failed', ...ON_REAL_BOOKING },
       select: { id: true, bookingId: true, amountCents: true, detail: true, createdAt: true, booking },
       orderBy: { createdAt: 'asc' },
     }),
     prisma.paymentEvent.findMany({
       where: {
         kind: 'charge_failed', detail: { startsWith: 'Cancellation hold' }, createdAt: { gte: since },
-        booking: { status: 'confirmed', paymentStatus: 'card_on_file', teeTime: { date: { gte: todayStr } }, course: { isTest: false } },
+        booking: { status: 'confirmed', paymentStatus: 'card_on_file', teeTime: { date: { gte: todayStr } }, ...ON_REAL_COURSE },
       },
       select: { id: true, bookingId: true, amountCents: true, detail: true, createdAt: true, booking },
       orderBy: { createdAt: 'asc' },

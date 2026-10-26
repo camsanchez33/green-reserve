@@ -7151,7 +7151,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 138,
+      "lines": 143,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17984,7 +17984,7 @@
     },
     {
       "path": "src/lib/money-problems.ts",
-      "lines": 88,
+      "lines": 89,
       "purpose": "",
       "brain": [],
       "exports": [

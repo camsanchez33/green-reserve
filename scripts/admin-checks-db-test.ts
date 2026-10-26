@@ -18,6 +18,7 @@ async function cleanup() {
   await prisma.adminAlert.deleteMany({ where: { OR: [{ key: { in: courses.map(c => `nostripe:${c.id}`) } }, { key: { startsWith: 'digest:2031-' } }] } });
   const ids = courses.map(c => c.id);
   await prisma.paymentEvent.deleteMany({ where: { booking: { courseId: { in: ids } } } });
+  await prisma.bookingEvent.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
@@ -110,6 +111,29 @@ async function main() {
   check('a failed refund is a Problem', keys.includes(`refundfail:${rf.id}`), JSON.stringify(keys));
   check('a declined cancellation hold is a Problem', keys.includes(`holddeclined:${held.id}`));
   check('…but not at a test course', !keys.includes(`holddeclined:${testHeld.id}`));
+  const testOwed = await mkBooking(testCourse.id);
+  const oldRf = await prisma.paymentEvent.create({ data: { bookingId: held.id, kind: 'refund_failed', amountCents: 500, stripeId: 'pi_race_old', detail: 'x', createdAt: new Date(Date.now() - 200 * 86_400_000) } });
+  const testRf = await prisma.paymentEvent.create({ data: { bookingId: testOwed.id, kind: 'refund_failed', amountCents: 500, detail: 'x' } });
+  keys = (await urgentFindings()).map(f => f.key);
+  check('a failed refund stays a Problem however old, until a refund is recorded', keys.includes(`refundfail:${oldRf.id}`));
+  check('…and one at a test course is not a Problem', !keys.includes(`refundfail:${testRf.id}`));
+
+  // The race-path charge (on no booking field, named only by its refund_failed row),
+  // refunded in the Stripe dashboard: the webhook finds its booking and records it.
+  process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_admin_checks';
+  const { POST } = await import('../src/app/api/stripe/webhook/route');
+  const { stripe } = await import('../src/lib/stripe');
+  const evt = JSON.stringify({ id: 'evt_admchk', object: 'event', type: 'charge.refunded', data: { object: {
+    id: 'ch_race', object: 'charge', payment_intent: 'pi_race_old', amount: 500, amount_refunded: 500, refunded: true,
+    refunds: { object: 'list', data: [{ id: 're_race_old', object: 'refund', amount: 500, reason: 'requested_by_customer' }] } } } });
+  const sig = stripe.webhooks.generateTestHeaderString({ payload: evt, secret: process.env.STRIPE_WEBHOOK_SECRET });
+  const { NextRequest } = await import('next/server');
+  const res = await POST(new NextRequest('http://localhost/api/stripe/webhook', { method: 'POST', body: evt, headers: { 'stripe-signature': sig } }));
+  const recorded = await prisma.paymentEvent.findFirst({ where: { stripeId: 're_race_old' } });
+  check('a dashboard refund of a charge only its failed refund names is recorded on that booking', res.status === 200 && recorded?.bookingId === held.id && recorded?.kind === 'refund', JSON.stringify({ status: res.status, recorded }));
+  keys = (await urgentFindings()).map(f => f.key);
+  check('…and clears its Problem', !keys.includes(`refundfail:${oldRf.id}`));
+
   await prisma.paymentEvent.create({ data: { bookingId: owed.id, kind: 'refund', amountCents: 1000, stripeId: 're_x', actor: 'stripe', createdAt: new Date(Date.now() + 1000) } });
   await prisma.booking.update({ where: { id: held.id }, data: { paymentStatus: 'paid' } });
   keys = (await urgentFindings()).map(f => f.key);

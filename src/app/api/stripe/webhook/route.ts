@@ -131,7 +131,12 @@ export async function POST(req: NextRequest) {
 async function bookingForPi(pi: string) {
   const b = await findBookingByStripeId(pi);
   if (b) return b;
-  const id = await bookingIdForFeeCharge(pi);
+  // A charge made on a booking that changed meanwhile, whose refund then failed
+  // (cutoff-hold, cancel-booking), is on no booking field — only its refund_failed
+  // row names it. Without this, refunding it in the Stripe dashboard records
+  // nothing and its admin Problem never clears.
+  const id = (await bookingIdForFeeCharge(pi))
+    ?? (pi ? (await prisma.paymentEvent.findFirst({ where: { stripeId: pi, kind: 'refund_failed' }, select: { bookingId: true } }))?.bookingId : null);
   return id ? { id, roundPaymentIntentId: '', cancellationFeeChargeId: '', totalAmount: 0, cancellationFeeTotal: 0 } : null;
 }
 
