@@ -26,6 +26,7 @@ import { ensureShopTax } from './round-shop-tax';
 import { roundChargeCents, roundApplicationFeeCents } from './shop';
 import { recordPaymentEvent } from './refund-booking';
 import type { EventActor } from './booking-events';
+import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -44,15 +45,16 @@ async function release(bookingId: string, stamp: Date) {
 export async function startRoundOnReader(courseId: string, bookingId: string, readerId: string, actor: EventActor): Promise<Result<RoundReaderStatus>> {
   const c = await courseStripe(courseId);
   if (!c.ok) return c;
-  let b = await prisma.booking.findFirst({ where: { id: bookingId, courseId }, select: { status: true, paymentStatus: true, readerStartedAt: true } });
+  let b = await prisma.booking.findFirst({ where: { id: bookingId, courseId }, select: { status: true, paymentStatus: true, readerStartedAt: true, noShowAt: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } } });
   if (!b) return fail(404, 'That group isn’t on your tee sheet — refresh and try again.');
   if (b.readerStartedAt && Date.now() - b.readerStartedAt.getTime() > READER_STALE) {
     await settleRoundReader(courseId, bookingId, actor);
-    b = await prisma.booking.findFirst({ where: { id: bookingId, courseId }, select: { status: true, paymentStatus: true, readerStartedAt: true } });
+    b = await prisma.booking.findFirst({ where: { id: bookingId, courseId }, select: { status: true, paymentStatus: true, readerStartedAt: true, noShowAt: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } } });
     if (!b) return fail(404, 'That group isn’t on your tee sheet — refresh and try again.');
   }
   if (b.readerStartedAt) return fail(409, 'This group is already on the card reader — wait for it, or cancel it.');
   if (b.status !== 'confirmed' || done(b.paymentStatus)) return fail(409, 'This group has already paid or checked in — refresh and try again.');
+  if (noShowClosed(b)) return fail(409, NO_SHOW_CLOSED_ERROR);
   const reader = await ownReader(c.value.account, c.value.terminalLocationId, readerId);
   if (!reader.ok) return reader;
 

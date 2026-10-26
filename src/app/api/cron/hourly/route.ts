@@ -2,15 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
-import { chargeOnConnectedAccount } from '@/lib/stripe';
-import { recordBookingEventSafe } from '@/lib/booking-events';
+import { chargeCutoffHold } from '@/lib/cutoff-hold';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
 import { markNoShow, dueAutoNoShows, chargeNoShow, dueNoShowCharges } from '@/lib/no-show-fee';
 import { cutoffWarningDue, checkInEmailDue } from '@/lib/cron-windows';
 import {
   sendCancellationWarningEmail,
-  sendCancellationFeeChargedEmail,
   sendCheckInAvailableEmail,
 } from '@/lib/email';
 import { retryMissingAgreementPdfs } from '@/lib/agreement-sign';
@@ -103,53 +101,13 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
       // ── Charge (cutoff passed) ──
       // SP-B: only "hold at the cutoff" bookings are charged here. Under "only if
       // they cancel late" the fee is charged by the cancellation itself.
+      // lib/cutoff-hold re-reads the booking and records only a charge on a
+      // booking that is still confirmed with a card on file.
       if (!holdsAtCutoff(booking)) continue;
-      if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) continue;
-      if (!booking.course.stripeAccountActive || !booking.course.stripeAccountId) continue;
-
       try {
-        const pi = await chargeOnConnectedAccount({
-          customerId: booking.stripeCustomerId,
-          paymentMethodId: booking.stripePaymentMethodId,
-          connectedAccountId: booking.course.stripeAccountId,
-          amountCents: Math.round(booking.cancellationFeeTotal),
-          applicationFeeCents: 0,
-          description: `Late-cancellation fee - ${booking.course.name} - booking ${booking.id}`,
-          idempotencyKey: `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`,
-        });
-
-        // EV-1: the card was charged above, so the hold is recorded with ONE
-        // plain update (no transaction that could time out after the money
-        // moved) and the fee_charged event is written after, best-effort. Both
-        // crons share an idempotency key, so the PaymentIntent id dedupes it.
-        {
-          await prisma.booking.update({
-            where: { id: booking.id },
-            data: {
-              paymentStatus: 'cancellation_fee_charged',
-              cancellationFeeChargeId: pi.id,
-              cancellationFeeChargedAt: new Date(),
-            },
-          });
-          await recordBookingEventSafe({
-            bookingId: booking.id, courseId: booking.courseId, type: 'fee_charged', actor: { type: 'cron' },
-            amountCents: Math.round(booking.cancellationFeeTotal), playerCount: booking.players,
-            teeTimeAt: new Date(teeMs), stripeId: pi.id, metadata: { reason: 'cutoff_hold' },
-          });
-        }
-
-        await sendCancellationFeeChargedEmail({
-          golferName: booking.golferName,
-          golferEmail: booking.golferEmail,
-          courseName: booking.course.name,
-          date: booking.teeTime.date,
-          time: booking.teeTime.time,
-          feeAmount: booking.cancellationFeeTotal,
-          bookingId: booking.id,
-          checkInToken: booking.checkInToken,
-        }).catch(console.error);
-
-        results.charged++;
+        const r = await chargeCutoffHold(booking.id, now);
+        if (r === 'charged') results.charged++;
+        else if (r === 'refund_failed') results.failed++;
       } catch (err) {
         console.error(`Charge failed for booking ${booking.id}:`, err);
         results.failed++;

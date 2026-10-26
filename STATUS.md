@@ -4,22 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 04:59 UTC · branch `claude/security-page` · HEAD `68add62` · working tree clean
+Generated 2026-10-26 04:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `224b231` · working tree **14 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 36 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 32 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `68add62` | 2026-10-26 | Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented |
-| `c8f23b2` | 2026-10-26 | Status board |
-| `ef92326` | 2026-10-26 | Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token |
-| `364ba02` | 2026-10-26 | Status board |
-| `2ee4129` | 2026-10-26 | Security page: CLAUDE.md, code map |
-| `b2e1f40` | 2026-10-26 | Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) |
-| `a904586` | 2026-10-26 | Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222) |
-| `2ff16fa` | 2026-10-25 | Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213) |
+| `224b231` | 2026-10-26 | status board + code map |
+| `a8a925d` | 2026-10-26 | Late cancel racing the cron's hold charge: wait and replay instead of failing |
+| `6c9f307` | 2026-10-26 | Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival |
+| `00d53d1` | 2026-10-26 | docs: money walk script for the register, cash and card reader |
 | `47e5fb0` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
 | `719895d` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
 | `0278299` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
@@ -51,6 +47,26 @@ Generated 2026-10-26 04:59 UTC · branch `claude/security-page` · HEAD `68add62
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
+### Uncommitted working tree (14 file(s))
+
+- `A  .github/dependabot.yml`
+- `A  .github/workflows/security.yml`
+- `M  CLAUDE.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  next.config.ts`
+- `M  package-lock.json`
+- `M  package.json`
+- `A  scripts/security-headers-test.ts`
+- `A  scripts/sentry-privacy-test.ts`
+- `M  sentry.client.config.ts`
+- `A  sentry.privacy.ts`
+- `M  sentry.server.config.ts`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
+
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -61,9 +77,7 @@ Generated 2026-10-26 04:59 UTC · branch `claude/security-page` · HEAD `68add62
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-| item | shipped | age | commit | source |
-|---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 95d | `b88c8bf` | `RUN_QUEUE.md:2357` |
+Nothing awaiting review.
 
 ## Not started — the actual queue
 
@@ -71,7 +85,8 @@ This is the distinction a raw checkbox count gets wrong.
 2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
 3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
 4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+5. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2357`
+6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
@@ -130,8 +145,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-26 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-17 | 8d |
+| `CLAUDE.md` | 1 | 2026-10-25 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 5d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 0d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 2d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 3d |
@@ -141,48 +156,48 @@ This is the distinction a raw checkbox count gets wrong.
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 3d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 3d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 3d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-05 | 20d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-05 | 20d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-04 | 21d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-01 | 24d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-09-29 | 26d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `ARCHITECTURE.md` | 0 | 2026-09-29 | 26d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `CODEMAP_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `GOLFER_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `HARDENING_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-09-29 | 26d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-09-29 | 26d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 5d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 5d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 5d |
 
 ## Recent commits
 
-- `68add62` 2026-10-26 — Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented
-- `c8f23b2` 2026-10-26 — Status board
-- `ef92326` 2026-10-26 — Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token
-- `364ba02` 2026-10-26 — Status board
-- `2ee4129` 2026-10-26 — Security page: CLAUDE.md, code map
-- `b2e1f40` 2026-10-26 — Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)
-- `a904586` 2026-10-26 — Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)
-- `2ff16fa` 2026-10-25 — Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)
+- `224b231` 2026-10-26 — status board + code map
+- `a8a925d` 2026-10-26 — Late cancel racing the cron's hold charge: wait and replay instead of failing
+- `6c9f307` 2026-10-26 — Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival
+- `00d53d1` 2026-10-26 — docs: money walk script for the register, cash and card reader
 - `47e5fb0` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212)
 - `719895d` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
 - `0278299` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
 - `068ac2b` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
+- `c8e0e66` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
+- `9985445` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
+- `2e01ec9` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
+- `ed10fa0` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
 
 ---
 
-**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 7 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 0 awaiting review · 1 in flight · 6 not started · 7 revise pages open · 17 ideas · 7 parked.

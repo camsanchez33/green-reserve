@@ -138,10 +138,10 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     else if (!booking.course.stripeAccountId || !booking.course.stripeAccountActive) lateFeeChargeFailed = 'the course’s Stripe account is not connected';
     else {
       try {
-        lateFee = await chargeOnConnectedAccount({
-          customerId: booking.stripeCustomerId,
-          paymentMethodId: booking.stripePaymentMethodId,
-          connectedAccountId: booking.course.stripeAccountId,
+        const charge = () => chargeOnConnectedAccount({
+          customerId: booking.stripeCustomerId as string,
+          paymentMethodId: booking.stripePaymentMethodId as string,
+          connectedAccountId: booking.course.stripeAccountId as string,
           amountCents: Math.round(booking.cancellationFeeTotal),
           applicationFeeCents: 0,
           description: `Late-cancellation fee - ${booking.course.name} - booking ${booking.id}`,
@@ -152,6 +152,16 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
             ? `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`
             : `latefee-${booking.id}-${booking.stripePaymentMethodId}`,
         });
+        // A cron charging this same hold right now makes Stripe answer "another
+        // in-progress request using this key". Wait and replay: Stripe then returns
+        // the cron's PaymentIntent, this cancel records it, and the cron sees it
+        // recorded (lib/cutoff-hold) instead of refunding a fee the golfer owes.
+        for (let attempt = 0; ; attempt++) {
+          try { lateFee = await charge(); break; } catch (err) {
+            if (attempt >= 2 || !/in[- ]progress/i.test(err instanceof Error ? err.message : '')) throw err;
+            await new Promise(r => setTimeout(r, 2000));
+          }
+        }
         feeAlreadyCharged = true;
       } catch (err) {
         lateFeeChargeFailed = err instanceof Error ? err.message : String(err);

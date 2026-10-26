@@ -7,6 +7,7 @@ import { refundSeparateAccessFee } from './access-fee';
 import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop';
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { groupGreenFee, otherPerPlayerCents } from './residents';
+import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 
 /**
  * Charging a round, and checking a golfer in, are two different things.
@@ -128,6 +129,7 @@ async function chargeBooking(
   if (!booking) return { error: 'Booking not found', status: 404 } as const;
   if (booking.status === 'cancelled') return { error: 'This booking was cancelled', status: 409 } as const;
   if (booking.status === 'completed') return { error: 'Already checked in', status: 409 } as const;
+  if (noShowClosed(booking)) return { error: NO_SHOW_CLOSED_ERROR, status: 409 } as const;
 
   // POS-3 R3b: the group is on the card reader. Nothing else charges it until
   // that is finished — two card payments for one round could both go through.

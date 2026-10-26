@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 558,
+    "files": 559,
     "routes": 265,
-    "libs": 187,
+    "libs": 188,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4011,7 +4011,7 @@
     },
     {
       "path": "src/app/api/cron/cancellation-cutoff/route.ts",
-      "lines": 145,
+      "lines": 104,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4028,13 +4028,12 @@
       "auth": "cron",
       "guard": "file",
       "imports": [
-        "@/lib/booking-events",
         "@/lib/cancel-policy",
         "@/lib/cron-auth",
         "@/lib/cron-log",
+        "@/lib/cutoff-hold",
         "@/lib/email",
         "@/lib/prisma",
-        "@/lib/stripe",
         "@/lib/tee-time-utils",
         "next/server"
       ],
@@ -4098,7 +4097,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 258,
+      "lines": 216,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4122,19 +4121,18 @@
         "@/lib/admin-checks",
         "@/lib/agreement-required",
         "@/lib/agreement-sign",
-        "@/lib/booking-events",
         "@/lib/call-invite",
         "@/lib/cancel-policy",
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/cron-windows",
+        "@/lib/cutoff-hold",
         "@/lib/email",
         "@/lib/no-show-fee",
         "@/lib/prisma",
         "@/lib/round-shop-tax",
         "@/lib/sales-tax",
         "@/lib/shop-sales",
-        "@/lib/stripe",
         "@/lib/tee-time-utils",
         "next/server"
       ],
@@ -4655,7 +4653,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/change-players/route.ts",
-      "lines": 144,
+      "lines": 152,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4677,6 +4675,7 @@
         "@/lib/booking-fee",
         "@/lib/booking-rules",
         "@/lib/cancel-policy",
+        "@/lib/course-time",
         "@/lib/manage-access",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -5170,7 +5169,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 294,
+      "lines": 298,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13371,8 +13370,6 @@
         "@prisma/client"
       ],
       "usedBy": [
-        "src/app/api/cron/cancellation-cutoff/route.ts",
-        "src/app/api/cron/hourly/route.ts",
         "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/access-fee.ts",
@@ -13382,6 +13379,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
         "src/lib/counter-pay.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/reader-rounds.ts",
@@ -13981,7 +13979,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 291,
+      "lines": 301,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14166,6 +14164,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/lib/cancel-booking.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/email.ts",
         "src/lib/move-booking.ts",
@@ -14382,7 +14381,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 501,
+      "lines": 503,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14413,6 +14412,7 @@
         "./booking-events",
         "./booking-fees",
         "./email",
+        "./no-show-fee",
         "./prisma",
         "./reader-rounds",
         "./residents",
@@ -14594,7 +14594,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 161,
+      "lines": 163,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -14630,6 +14630,7 @@
         "./checkin-booking",
         "./claim-tee-time",
         "./course-time",
+        "./no-show-fee",
         "./prisma",
         "./reader-rounds",
         "./round-shop-tax",
@@ -15391,6 +15392,7 @@
       "usedBy": [
         "src/app/api/birdie/chat/route.ts",
         "src/app/api/bookings/route.ts",
+        "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/blackouts/route.ts",
@@ -15816,6 +15818,44 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/cron/hourly/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/cutoff-hold.ts",
+      "lines": 103,
+      "purpose": "The cancellation-window hold (SP-B timing \"hold_at_cutoff\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "chargeCutoffHold",
+          "kind": "fn"
+        },
+        {
+          "name": "HOLD_STALE_MS",
+          "kind": "const"
+        },
+        {
+          "name": "HoldResult",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./cancel-policy",
+        "./email",
+        "./prisma",
+        "./refund-booking",
+        "./stripe",
+        "./tee-time-utils"
+      ],
+      "usedBy": [
+        "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/hourly/route.ts"
       ]
     },
@@ -16423,6 +16463,7 @@
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/event-signup.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
@@ -18193,7 +18234,7 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 195,
+      "lines": 212,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
@@ -18218,11 +18259,23 @@
           "kind": "fn"
         },
         {
+          "name": "NO_SHOW_CLOSED_ERROR",
+          "kind": "const"
+        },
+        {
+          "name": "noShowClosed",
+          "kind": "fn"
+        },
+        {
           "name": "NoShowResult",
           "kind": "type"
         },
         {
           "name": "refundNoShowFee",
+          "kind": "fn"
+        },
+        {
+          "name": "roundPaid",
           "kind": "fn"
         }
       ],
@@ -18246,6 +18299,9 @@
         "src/app/api/manage/[bookingId]/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/reader-rounds.ts",
         "src/lib/receipt-charges.ts"
       ]
     },
@@ -18903,6 +18959,7 @@
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
         "src/lib/cron-log.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/data-reset.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/event-payments.ts",
@@ -19175,7 +19232,7 @@
     },
     {
       "path": "src/lib/reader-rounds.ts",
-      "lines": 221,
+      "lines": 223,
       "purpose": "POS-3 R3b (Cam 2026-10-24, \"Ok go\"):",
       "brain": [],
       "exports": [
@@ -19209,6 +19266,7 @@
         "./booking-events",
         "./card-reader",
         "./checkin-booking",
+        "./no-show-fee",
         "./prisma",
         "./refund-booking",
         "./round-shop-tax",
@@ -19340,6 +19398,7 @@
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/reader-rounds.ts"
       ]
@@ -20958,8 +21017,6 @@
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
-        "src/app/api/cron/cancellation-cutoff/route.ts",
-        "src/app/api/cron/hourly/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
@@ -20972,6 +21029,7 @@
         "src/lib/card-reader.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/email.ts",
         "src/lib/event-payments.ts",
         "src/lib/no-show-fee.ts",
@@ -21182,6 +21240,7 @@
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/lib/analytics.ts",
         "src/lib/booking-events.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/no-show-fee.ts"
       ]
     },
@@ -22507,6 +22566,7 @@
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
         "src/lib/reader-rounds.ts",
@@ -22559,6 +22619,7 @@
         "src/lib/course-closure.ts",
         "src/lib/course-metrics.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/data-reset.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/frost-delay.ts",

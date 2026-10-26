@@ -3,9 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
-import { chargeOnConnectedAccount } from '@/lib/stripe';
-import { recordBookingEventSafe } from '@/lib/booking-events';
-import { sendCancellationFeeChargedEmail, sendCheckInAvailableEmail } from '@/lib/email';
+import { chargeCutoffHold } from '@/lib/cutoff-hold';
+import { sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 
 /**
@@ -62,54 +61,14 @@ export const GET = cronRoute('cancellation-cutoff', async (req: NextRequest) => 
     // booking is charged by its cancellation and just gets the check-in email.
     if (booking.cancellationFeeTotal > 0 && holdsAtCutoff(booking)) {
       // ── Fee policy: charge the card ─────────────────────────────────────────
-      if (!booking.stripeCustomerId || !booking.stripePaymentMethodId) { skippedNoCard++; continue; }
-      if (!booking.course.stripeAccountActive || !booking.course.stripeAccountId) { skippedNoConnectedAccount++; continue; }
-
+      // The same charge as the hourly cron (lib/cutoff-hold), re-read and
+      // recorded only on a booking still confirmed with a card on file.
       try {
-        console.log(JSON.stringify({ ev: 'cron.cancelfee.attempt', bookingId: booking.id, amountCents: Math.round(booking.cancellationFeeTotal) }));
-        const paymentIntent = await chargeOnConnectedAccount({
-          customerId: booking.stripeCustomerId,
-          paymentMethodId: booking.stripePaymentMethodId,
-          connectedAccountId: booking.course.stripeAccountId,
-          amountCents: Math.round(booking.cancellationFeeTotal),
-          applicationFeeCents: 0,
-          description: `Late-cancellation fee — ${booking.course.name} — booking ${booking.id}`,
-          idempotencyKey: `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`,
-        });
-        console.log(JSON.stringify({ ev: 'cron.cancelfee.ok', bookingId: booking.id, paymentIntentId: paymentIntent.id }));
-
-        // EV-1: the card was charged above, so the hold is recorded with ONE
-        // plain update (no transaction that could time out after the money
-        // moved) and the fee_charged event is written after, best-effort. Both
-        // crons share an idempotency key, so the PaymentIntent id dedupes it.
-        {
-          await prisma.booking.update({
-            where: { id: booking.id },
-            data: {
-              paymentStatus: 'cancellation_fee_charged',
-              cancellationFeeChargeId: paymentIntent.id,
-              cancellationFeeChargedAt: new Date(),
-            },
-          });
-          await recordBookingEventSafe({
-            bookingId: booking.id, courseId: booking.courseId, type: 'fee_charged', actor: { type: 'cron' },
-            amountCents: Math.round(booking.cancellationFeeTotal), playerCount: booking.players,
-            teeTimeAt: new Date(teeMs), stripeId: paymentIntent.id, metadata: { reason: 'cutoff_hold' },
-          });
-        }
-
-        await sendCancellationFeeChargedEmail({
-          golferName: booking.golferName,
-          golferEmail: booking.golferEmail,
-          courseName: booking.course.name,
-          date: booking.teeTime.date,
-          time: booking.teeTime.time,
-          feeAmount: booking.cancellationFeeTotal,
-          bookingId: booking.id,
-          checkInToken: booking.checkInToken,
-        }).catch(console.error);
-
-        charged++;
+        const r = await chargeCutoffHold(booking.id, now);
+        if (r === 'charged') charged++;
+        else if (r === 'no_card') skippedNoCard++;
+        else if (r === 'no_stripe') skippedNoConnectedAccount++;
+        else if (r === 'refund_failed') failed++;
       } catch (err) {
         console.error(JSON.stringify({ ev: 'cron.cancelfee.fail', bookingId: booking.id, error: err instanceof Error ? err.message : String(err) }));
         failed++;
