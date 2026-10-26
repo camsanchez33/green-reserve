@@ -134,6 +134,20 @@ async function main() {
   keys = (await urgentFindings()).map(f => f.key);
   check('…and clears its Problem', !keys.includes(`refundfail:${oldRf.id}`));
 
+  // A no-show fee whose "still coming" refund failed, refunded by hand: recorded as a
+  // no-show fee refund, so the ledger no longer counts that charge as live.
+  const ns = await mkBooking(course.id);
+  await prisma.paymentEvent.create({ data: { bookingId: ns.id, kind: 'no_show_fee', amountCents: 2000, stripeId: 'pi_ns' } });
+  const nsRf = await prisma.paymentEvent.create({ data: { bookingId: ns.id, kind: 'refund_failed', amountCents: 2000, stripeId: 'pi_ns', detail: 'No-show fee refund failed: x' } });
+  const nsEvt = JSON.stringify({ id: 'evt_admchk_ns', object: 'event', type: 'charge.refunded', data: { object: {
+    id: 'ch_ns', object: 'charge', payment_intent: 'pi_ns', amount: 2000, amount_refunded: 2000, refunded: true,
+    refunds: { object: 'list', data: [{ id: 're_ns', object: 'refund', amount: 2000, reason: null }] } } } });
+  const nsRes = await POST(new NextRequest('http://localhost/api/stripe/webhook', { method: 'POST', body: nsEvt, headers: { 'stripe-signature': stripe.webhooks.generateTestHeaderString({ payload: nsEvt, secret: process.env.STRIPE_WEBHOOK_SECRET }) } }));
+  const nsRow = await prisma.paymentEvent.findFirst({ where: { stripeId: 're_ns' } });
+  const { liveNoShowCharge } = await import('../src/lib/no-show-fee');
+  check('a no-show fee refunded by hand after a failed refund is a no-show fee refund', nsRes.status === 200 && nsRow?.kind === 'no_show_fee_refunded' && !(await liveNoShowCharge(ns.id)), JSON.stringify(nsRow));
+  check('…and clears its Problem', !(await urgentFindings()).some(f => f.key === `refundfail:${nsRf.id}`));
+
   await prisma.paymentEvent.create({ data: { bookingId: owed.id, kind: 'refund', amountCents: 1000, stripeId: 're_x', actor: 'stripe', createdAt: new Date(Date.now() + 1000) } });
   await prisma.booking.update({ where: { id: held.id }, data: { paymentStatus: 'paid' } });
   keys = (await urgentFindings()).map(f => f.key);

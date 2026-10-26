@@ -51,12 +51,21 @@ export async function POST(req: NextRequest) {
         // FB-3: a refund of GreenReserve's separately-charged fee is a
         // fee_refunded row, so admin revenue's separate-fee line stays true.
         const isFee = !!(await bookingIdForFeeCharge(piOf(charge.payment_intent)));
+        // A no-show fee whose "still coming" refund failed, refunded here by hand,
+        // is a no_show_fee_refunded row, so liveNoShowCharge sees it as given back.
+        // Only that case: our own successful refunds record themselves (no-show-fee.ts).
+        const pi = piOf(charge.payment_intent);
+        const [noShowFee, refundFailed] = !isFee && pi ? await Promise.all([
+          prisma.paymentEvent.findFirst({ where: { bookingId: booking.id, stripeId: pi, kind: 'no_show_fee' }, select: { id: true } }),
+          prisma.paymentEvent.findFirst({ where: { bookingId: booking.id, stripeId: pi, kind: 'refund_failed' }, select: { id: true } }),
+        ]) : [null, null];
+        const kind = isFee ? 'fee_refunded' : noShowFee && refundFailed ? 'no_show_fee_refunded' : 'refund';
         const refunds = charge.refunds?.data ?? [];
         for (const r of refunds) {
           const seen = await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } });
           if (seen) continue;
           await recordPaymentEvent({
-            bookingId: booking.id, kind: isFee ? 'fee_refunded' : 'refund', amountCents: r.amount, stripeId: r.id, actor: 'stripe',
+            bookingId: booking.id, kind, amountCents: r.amount, stripeId: r.id, actor: 'stripe',
             detail: `Refund recorded from Stripe (${r.reason ?? 'no reason given'})`,
           });
         }

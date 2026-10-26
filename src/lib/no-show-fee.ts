@@ -200,7 +200,10 @@ export async function refundNoShowFee(bookingId: string, actorName?: string): Pr
   if (!b?.course.stripeAccountId) return { ok: false, refunded: false, error: 'the course’s Stripe account is not connected' };
   try {
     const r = await stripe.refunds.create({ payment_intent: live.stripeId, metadata: { bookingId, kind: 'no_show_fee' } }, { stripeAccount: b.course.stripeAccountId, idempotencyKey: `noshowfee-refund-${bookingId}-${live.stripeId}` });
-    await recordPaymentEvent({ bookingId, kind: 'no_show_fee_refunded', amountCents: live.amountCents, stripeId: r.id, actor: 'operator', actorName, detail: 'No-show fee refunded (still coming)' });
+    // After a failed refund the webhook also records this refund (by its id) — once is enough.
+    if (!(await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } }))) {
+      await recordPaymentEvent({ bookingId, kind: 'no_show_fee_refunded', amountCents: live.amountCents, stripeId: r.id, actor: 'operator', actorName, detail: 'No-show fee refunded (still coming)' });
+    }
     await recordBookingEventSafe({ bookingId, courseId: b.courseId, type: 'fee_refunded', actor: { type: 'staff', id: actorName ?? null }, amountCents: live.amountCents, playerCount: b.players, teeTimeAt: null, stripeId: r.id, metadata: { reason: 'no_show_fee_refunded' } });
     return { ok: true, refunded: true };
   } catch (err) {

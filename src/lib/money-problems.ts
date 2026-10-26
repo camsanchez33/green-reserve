@@ -49,7 +49,7 @@ export const MONEY_EVENT_LOOKBACK_DAYS = 60;
  * R-PAY-010 follow-up: money that moved wrong and nobody sees it.
  *  - A failed refund: we owe a golfer money and Stripe refused to send it. Open
  *    until a refund on that booking is recorded after it — ours, or one made in
- *    the Stripe dashboard (the webhook records those as 'refund' / 'fee_refunded').
+ *    the Stripe dashboard (the webhook records those as 'refund' / 'fee_refunded' / 'no_show_fee_refunded').
  *  - A declined cancellation hold (lib/cutoff-hold): the course's late-cancel
  *    protection is missing for that round. Open while the booking is still
  *    confirmed with only a card on file and its date hasn't passed.
@@ -76,7 +76,7 @@ export async function openMoneyEventProblems(now: Date, todayStr: string) {
   ]);
   const later = refundFailed.length
     ? await prisma.paymentEvent.findMany({
-        where: { bookingId: { in: refundFailed.map(r => r.bookingId) }, kind: { in: ['refund', 'fee_refunded'] } },
+        where: { bookingId: { in: refundFailed.map(r => r.bookingId) }, kind: { in: ['refund', 'fee_refunded', 'no_show_fee_refunded'] } },
         select: { bookingId: true, createdAt: true },
       })
     : [];
