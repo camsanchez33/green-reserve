@@ -68,7 +68,7 @@ export const GET = cronRoute('cancellation-cutoff', async (req: NextRequest) => 
         if (r === 'charged') charged++;
         else if (r === 'no_card') skippedNoCard++;
         else if (r === 'no_stripe') skippedNoConnectedAccount++;
-        else if (r === 'refund_failed') failed++;
+        else if (r === 'refund_failed' || r === 'declined') failed++;
       } catch (err) {
         console.error(JSON.stringify({ ev: 'cron.cancelfee.fail', bookingId: booking.id, error: err instanceof Error ? err.message : String(err) }));
         failed++;

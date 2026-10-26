@@ -22,6 +22,7 @@ const STAFF = { type: 'staff' as const, id: null };
 // Stripe stub: every charge succeeds; `duringCharge` runs between the charge and its recording.
 let n = 0;
 let duringCharge: (() => Promise<void>) | null = null;
+let declineAll = false;
 const charges: { key?: string; amount: number }[] = [];
 const refunds: string[] = [];
 const s = stripe as unknown as Record<string, Record<string, unknown>>;
@@ -32,6 +33,7 @@ const inFlight = new Set<string>();
 s.paymentIntents.create = async (p: { amount: number }, o: { idempotencyKey?: string }) => {
   const key = o.idempotencyKey ?? `nokey-${n}`;
   if (inFlight.has(key)) throw new Error('There is currently another in-progress request using this idempotency key.');
+  if (declineAll) throw Object.assign(new Error('Your card was declined.'), { type: 'StripeCardError' });
   const seen = byKey.get(key); if (seen) return seen;
   inFlight.add(key);
   const pi = { id: `pi_${TAG}_${++n}`, amount: p.amount, status: 'succeeded' };
@@ -106,6 +108,17 @@ const hhmm = (d: Date) => d.toISOString().slice(11, 16);
   const cr = await cancelRun;
   const r1 = await prisma.booking.findUniqueOrThrow({ where: { id: racing.id } });
   ok('a late cancel racing the cron’s in-flight charge: one charge, kept, never refunded', refunds.length === before3 && (rr === 'charged' || rr === 'recorded_elsewhere') && r1.status === 'cancelled' && r1.paymentStatus === 'cancellation_fee_charged' && !!r1.cancellationFeeChargeId && r1.cancellationFeeTotal === 2000, { rr, cr, r1: { status: r1.status, ps: r1.paymentStatus, id: r1.cancellationFeeChargeId, fee: r1.cancellationFeeTotal } });
+
+  // R-PAY-010: a declined hold is ledgered, once.
+  const declined = await booking(t1.id, { stripePaymentMethodId: 'pm_declines' });
+  declineAll = true;
+  const d1 = await chargeCutoffHold(declined.id);
+  const d2 = await chargeCutoffHold(declined.id);
+  declineAll = false;
+  const dRows = await prisma.paymentEvent.count({ where: { bookingId: declined.id, kind: 'charge_failed' } });
+  const dB = await prisma.booking.findUniqueOrThrow({ where: { id: declined.id } });
+  ok('a declined hold is reported as declined and ledgered once, however many runs try it', d1 === 'declined' && d2 === 'declined' && dRows === 1, { d1, d2, dRows });
+  ok('…and the booking is left as it was (no check-in prompt a day early)', dB.status === 'confirmed' && dB.paymentStatus === 'card_on_file' && dB.checkInFailReason === '');
 
   const gone = await booking(t1.id, { status: 'cancelled' });
   const nCharges = charges.length;

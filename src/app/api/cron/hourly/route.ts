@@ -107,7 +107,7 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
       try {
         const r = await chargeCutoffHold(booking.id, now);
         if (r === 'charged') results.charged++;
-        else if (r === 'refund_failed') results.failed++;
+        else if (r === 'refund_failed' || r === 'declined') results.failed++;
       } catch (err) {
         console.error(`Charge failed for booking ${booking.id}:`, err);
         results.failed++;
