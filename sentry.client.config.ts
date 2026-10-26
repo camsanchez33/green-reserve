@@ -10,6 +10,8 @@
 // too (errors before the visitor's first click, key or scroll carry no replay). Browser
 // performance tracing is off — Lighthouse covers page speed; server tracing
 // (money paths at 100%) is untouched in sentry.server.config.ts.
+import { SENTRY_DATA_COLLECTION } from './sentry.privacy';
+
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 if (dsn && typeof window !== 'undefined') {
@@ -26,6 +28,7 @@ if (dsn && typeof window !== 'undefined') {
     import('@sentry/nextjs').then(Sentry => {
       Sentry.init({
         dsn,
+        dataCollection: SENTRY_DATA_COLLECTION,
         replaysOnErrorSampleRate: 1.0,
         replaysSessionSampleRate: 0.05,
         integrations: [Sentry.replayIntegration()],

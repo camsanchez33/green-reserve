@@ -1,0 +1,32 @@
+name: Security
+
+# SEC-1 (Cam 2026-10-26): a known critical flaw in a package the live site
+# ships fails the PR — Next.js sat on one unnoticed because nothing checked.
+# Runs on every PR, on main, and every morning so a flaw published overnight
+# shows up even when nobody pushes. Dev-only packages are left out: they never
+# reach the live site. SEC-2 raised the bar to high once Sentry 11 and the zod /
+# postcss overrides (package.json) left zero flaws.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 11 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Package flaws
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fail on a high or critical flaw in what the site ships
+        run: npm audit --omit=dev --audit-level=high
+      - name: List moderate ones too (does not fail)
+        if: always()
+        run: npm audit --omit=dev --audit-level=moderate || true

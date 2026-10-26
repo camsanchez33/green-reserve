@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 04:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a8a925d` · working tree **2 dirty file(s)**
+Generated 2026-10-26 04:56 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `224b231` · working tree **14 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 31 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 32 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `224b231` | 2026-10-26 | status board + code map |
 | `a8a925d` | 2026-10-26 | Late cancel racing the cron's hold charge: wait and replay instead of failing |
 | `6c9f307` | 2026-10-26 | Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival |
 | `00d53d1` | 2026-10-26 | docs: money walk script for the register, cash and card reader |
@@ -46,10 +47,22 @@ Generated 2026-10-26 04:45 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (14 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `A  .github/dependabot.yml`
+- `A  .github/workflows/security.yml`
+- `M  CLAUDE.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `M  next.config.ts`
+- `M  package-lock.json`
+- `M  package.json`
+- `A  scripts/security-headers-test.ts`
+- `A  scripts/sentry-privacy-test.ts`
+- `M  sentry.client.config.ts`
+- `A  sentry.privacy.ts`
+- `M  sentry.server.config.ts`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -172,6 +185,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `224b231` 2026-10-26 — status board + code map
 - `a8a925d` 2026-10-26 — Late cancel racing the cron's hold charge: wait and replay instead of failing
 - `6c9f307` 2026-10-26 — Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival
 - `00d53d1` 2026-10-26 — docs: money walk script for the register, cash and card reader
@@ -183,7 +197,6 @@ Nothing awaiting review.
 - `9985445` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
 - `2e01ec9` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
 - `ed10fa0` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
-- `6fd9158` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
 
 ---
 
