@@ -63,7 +63,7 @@ has exactly the keys on their row. Grouped as the Settings screen shows them:
 | Money | `money.cancellations` | See the Cancellations list | yes |
 | | `money.payments` | See Payments (what was charged, totals) | no |
 | | `money.refund` | Issue refunds | no |
-| | `money.charge_fee` | Charge a late or no-show fee by hand (Part B, `manual` timing) | no |
+| | ~~`money.charge_fee`~~ | Removed 2026-10-26 (R-AUTH-007, Cam): no hand-charge feature exists. Comes back with that feature | — |
 | | `money.payouts` | See payouts | no |
 | Members | `members.view` | See the member list | no |
 | | `members.edit` | Add / edit members, send dues reminders | no |

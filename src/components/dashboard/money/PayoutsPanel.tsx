@@ -9,8 +9,10 @@ import { ACCESS_FEE_PER_PLAYER } from '@/lib/booking-fees';
 import type { MoneyCourse } from './types';
 import { StatusDot } from '@/components/ui/StatusDot';
 
-export function PayoutsPanel({ course, stripeParam, onConnected }: {
+export function PayoutsPanel({ course, stripeParam, onConnected, canConnect }: {
   course: MoneyCourse;
+  /** R-AUTH-007: connecting Stripe is the owner's alone (STAFF_FORBIDDEN) — staff see who does it instead. */
+  canConnect: boolean;
   /** ?stripe=success|pending|refresh|error, set by the Stripe return URL. */
   stripeParam: string | null;
   onConnected: () => void;
@@ -73,10 +75,14 @@ export function PayoutsPanel({ course, stripeParam, onConnected }: {
           {course.stripeAccountActive ? <PayoutsTable /> : (
             <div className="space-y-3">
               <p className="text-[13.5px] text-ink">Connect your bank account through Stripe so card payments reach you. You&apos;ll need your business and bank details. GreenReserve can&apos;t take your course live until this is connected.</p>
-              <button onClick={connectStripe} disabled={connecting}
-                className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
-                {connecting ? <><Loader2 className="w-4 h-4 animate-spin"/>Connecting...</> : 'Connect with Stripe'}
-              </button>
+              {canConnect ? (
+                <button onClick={connectStripe} disabled={connecting}
+                  className="flex items-center justify-center gap-2 w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
+                  {connecting ? <><Loader2 className="w-4 h-4 animate-spin"/>Connecting...</> : 'Connect with Stripe'}
+                </button>
+              ) : (
+                <p className="text-[13.5px] text-ink">The course owner connects Stripe from their own login.</p>
+              )}
               {course.liveStatus !== 'live' && <p className="text-[12.5px] text-ink-muted">Course status: <span className="capitalize">{course.liveStatus || 'draft'}</span></p>}
             </div>
           )}
