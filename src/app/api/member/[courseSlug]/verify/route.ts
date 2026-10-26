@@ -17,7 +17,7 @@ export async function GET(
   // SEC-3 audit: this link check had no limit at all.
   if (!(await rateLimit(`member-verify-ip:${clientIp(req)}`, 30, 600))) {
     await securityEvent(req, { kind: 'rate_limited', surface: 'member', detail: 'sign-in link' });
-    return NextResponse.redirect(failUrl);
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_URL}/courses/${courseSlug}/member?error=busy`);
   }
 
   const payload = await verifyMemberMagicToken(token);

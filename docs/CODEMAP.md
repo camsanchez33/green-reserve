@@ -280,7 +280,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]` | public | public | page | `src/app/courses/[slug]/page.tsx` | 51 |
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
-| `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 862 |
+| `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 868 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1516 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 705 |
@@ -358,7 +358,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/agreement-gate.ts` | 9 | 117 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement`, `latestOperatorAgreement` |
 | `src/lib/agreements.ts` | 9 | 134 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +2 more |
 | `src/lib/member-session.ts` | 9 | 109 |  | `getGolferMembership`, `getMemberSession`, `golferResident`, `residentOn`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
-| `src/lib/security-events.ts` | 9 | 123 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
+| `src/lib/security-events.ts` | 9 | 129 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
 | `src/lib/tee-sheet-engine.ts` | 9 | 255 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `ScheduleForSlots`, `slotKey` |
 | `src/lib/admin-roles.ts` | 8 | 17 | Role lists, client-safe. | `MANAGER_PLUS`, `OWNER_ONLY`, `SUPPORT_PLUS`, `VIEWER_PLUS` |
 | `src/lib/course-checkin.ts` | 8 | 106 | COURSES_SHEET_SPEC CS-1 §2 — check-in calls with live courses. | `CHECKIN_AGENDA`, `CHECKIN_DUE_WINDOW_DAYS`, `CHECKIN_EVERY_DAYS`, `CHECKIN_FIRST_DAYS`, `CheckinAgendaItem`, `CheckinCallLike`, `CheckinCourseLike`, `checkInSignal` +8 more |
@@ -422,7 +422,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/event-hold.ts` | 3 | 36 | W2-9: | `heldBy`, `HoldEvent`, `ninesByProduct` |
 | `src/lib/go-live-preflight.ts` | 3 | 35 |  | `computeStripeGoLiveCheck`, `StripeGoLiveCheck` |
 | `src/lib/inquiry-needs.ts` | 3 | 39 | INQUIRY_CALL_SPEC IC-1 §3 — "Still need from them", the sheet's column. | `NeedItem`, `stillNeed` |
-| `src/lib/login-guard.ts` | 3 | 42 | SEC-3 security audit (2026-10-26): | `failUnknownLogin`, `LOGIN_LOCKOUT_MS`, `LOGIN_MAX_ATTEMPTS`, `unknownLoginLockedUntil` |
+| `src/lib/login-guard.ts` | 3 | 45 | SEC-3 security audit (2026-10-26): | `failUnknownLogin`, `LOGIN_LOCKOUT_MS`, `LOGIN_MAX_ATTEMPTS`, `unknownLoginLockedUntil` |
 | `src/lib/member-csv.ts` | 3 | 101 | Members → Import a list: | `ImportProblem`, `ImportRow`, `MAX_IMPORT_ROWS`, `parseCsv`, `parseCsvLines`, `readMemberCsv`, `toYmd` |
 | `src/lib/monthly-review.ts` | 3 | 255 | BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07: | `allowedNumbers`, `buildFacts`, `claudeWriter`, `draftProblems`, `emailPendingReviews`, `isFullMonth`, `monthLabel`, `monthRange` +11 more |
 | `src/lib/normalize-course.ts` | 3 | 91 |  | `normalizeDbCourse` |
@@ -954,10 +954,10 @@ without opening anything.
 
 ### RateLimit
 
-3 fields · 1 writer(s) · 1 reader(s)
+3 fields · 2 writer(s) · 1 reader(s)
 
 - fields: `key`, `count`, `windowStart`
-- writers: `src/lib/login-guard.ts`
+- writers: `src/lib/login-guard.ts`, `src/lib/security-events.ts`
 - readers: `src/lib/login-guard.ts`
 
 ### RegisterClose

@@ -7600,7 +7600,7 @@
     },
     {
       "path": "src/app/courses/[slug]/member/page.tsx",
-      "lines": 862,
+      "lines": 868,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17707,7 +17707,7 @@
     },
     {
       "path": "src/lib/login-guard.ts",
-      "lines": 42,
+      "lines": 45,
       "purpose": "SEC-3 security audit (2026-10-26):",
       "brain": [],
       "exports": [
@@ -19895,7 +19895,7 @@
     },
     {
       "path": "src/lib/security-events.ts",
-      "lines": 123,
+      "lines": 129,
       "purpose": "SEC-3 (Cam 2026-10-26, \"security has to be insane\"; chose \"log events\" and \"email + Problems\"):",
       "brain": [],
       "exports": [
@@ -25681,7 +25681,8 @@
         }
       ],
       "writers": [
-        "src/lib/login-guard.ts"
+        "src/lib/login-guard.ts",
+        "src/lib/security-events.ts"
       ],
       "readers": [
         "src/lib/login-guard.ts"

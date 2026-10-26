@@ -6,7 +6,8 @@
 // emailed once. Rows older than 90 days are deleted by that same check.
 //
 // Recording never blocks or fails a sign-in: it is awaited (CLAUDE.md gotcha 6
-// — never fire-and-forget) but any error is swallowed and logged. It never
+// — never fire-and-forget) but any error is swallowed and logged. It costs one
+// or two RateLimit upserts (the per-address cap) plus the INSERT per outcome. It never
 // stores a password, code or token — only the email typed, the IP and the browser.
 import { prisma } from './prisma';
 import { evidentiaryIp, rateLimit } from './rate-limit';
@@ -74,9 +75,14 @@ export async function securityFindings(now = new Date()): Promise<{ key: string;
   return out;
 }
 
-/** The hourly check's housekeeping: nothing older than 90 days is kept. */
+/** The hourly check's housekeeping: nothing older than 90 days is kept, nor
+ *  the unknown-email sign-in counters and event caps past their use (lib/login-guard). */
 export async function purgeOldSecurityEvents(now = new Date()): Promise<number> {
   const r = await prisma.securityEvent.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - SECURITY_KEEP_DAYS * 24 * HOUR) } } });
+  await prisma.rateLimit.deleteMany({ where: { OR: [
+    { key: { startsWith: 'login-unknown' }, windowStart: { lt: new Date(now.getTime() - 30 * 24 * HOUR) } },
+    { key: { startsWith: 'secev:' }, windowStart: { lt: new Date(now.getTime() - 2 * HOUR) } },
+  ] } });
   return r.count;
 }
 

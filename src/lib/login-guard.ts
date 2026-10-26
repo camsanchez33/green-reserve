@@ -17,9 +17,12 @@ const DUMMY_HASH = '$2a$12$x9I/Ln7XwBr4.techzuhLufMEVbOz1lhUde8CTW8YVHD9pGubcv7u
 /** Unknown-email failures are remembered this long — a real account's counter never expires on its own. */
 const UNKNOWN_MEMORY_SECONDS = 30 * 24 * 60 * 60;
 
+/** The typed email as a key part — capped, so an attacker can't write huge keys. */
+const keyEmail = (email: string) => email.slice(0, 200);
+
 /** The lock in force for an unknown email right now, or null. Checked before any password work, as for a real account. */
 export async function unknownLoginLockedUntil(door: string, email: string, now = new Date()): Promise<Date | null> {
-  const lock = await prisma.rateLimit.findUnique({ where: { key: `login-unknown-lock:${door}:${email}` } }).catch(() => null);
+  const lock = await prisma.rateLimit.findUnique({ where: { key: `login-unknown-lock:${door}:${keyEmail(email)}` } }).catch(() => null);
   if (!lock) return null;
   const until = new Date(lock.windowStart.getTime() + LOGIN_LOCKOUT_MS);
   return until > now ? until : null;
@@ -33,9 +36,9 @@ export async function unknownLoginLockedUntil(door: string, email: string, now =
  */
 export async function failUnknownLogin(door: string, email: string, password: string, now = new Date()): Promise<Date | null> {
   await bcrypt.compare(String(password), DUMMY_HASH);
-  const { used } = await rateLimitCount(`login-unknown:${door}:${email}`, LOGIN_MAX_ATTEMPTS, UNKNOWN_MEMORY_SECONDS);
+  const { used } = await rateLimitCount(`login-unknown:${door}:${keyEmail(email)}`, LOGIN_MAX_ATTEMPTS, UNKNOWN_MEMORY_SECONDS);
   if (used < LOGIN_MAX_ATTEMPTS) return null;
-  const key = `login-unknown-lock:${door}:${email}`;
+  const key = `login-unknown-lock:${door}:${keyEmail(email)}`;
   await prisma.rateLimit.upsert({ where: { key }, create: { key, count: 1, windowStart: now }, update: { count: 1, windowStart: now } }).catch(() => {});
   return new Date(now.getTime() + LOGIN_LOCKOUT_MS);
 }
