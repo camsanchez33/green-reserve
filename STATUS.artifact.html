@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-26 04:43 UTC</span><span>claude/security-page @ 2ee4129</span>
+    <span>2026-10-26 04:54 UTC</span><span>claude/security-page @ ef92326</span>
     <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">32 runs have shipped that the queue doesn't know about</div>
+<div class="lede">34 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">ef92326</span><span>Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token</span></li>
+<li><span class="h">364ba02</span><span>Status board</span></li>
 <li><span class="h">2ee4129</span><span>Security page: CLAUDE.md, code map</span></li>
 <li><span class="h">b2e1f40</span><span>Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)</span></li>
 <li><span class="h">a904586</span><span>Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)</span></li>
@@ -244,6 +246,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-09-29 &middot; 26d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">ef92326</td><td class="num">2026-10-26</td><td>Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token</td></tr>
+<tr><td class="num">364ba02</td><td class="num">2026-10-26</td><td>Status board</td></tr>
 <tr><td class="num">2ee4129</td><td class="num">2026-10-26</td><td>Security page: CLAUDE.md, code map</td></tr>
 <tr><td class="num">b2e1f40</td><td class="num">2026-10-26</td><td>Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3)</td></tr>
 <tr><td class="num">a904586</td><td class="num">2026-10-26</td><td>Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)</td></tr>
@@ -254,8 +258,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">068ac2b</td><td class="num">2026-10-24</td><td>POS-3 R3a: Stripe card reader at the register (shop items) (#209)</td></tr>
 <tr><td class="num">c8e0e66</td><td class="num">2026-10-24</td><td>FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)</td></tr>
 <tr><td class="num">9985445</td><td class="num">2026-10-24</td><td>FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)</td></tr>
-<tr><td class="num">2e01ec9</td><td class="num">2026-10-24</td><td>POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)</td></tr>
-<tr><td class="num">ed10fa0</td><td class="num">2026-10-23</td><td>POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

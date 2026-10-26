@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-26T04:43:19.697Z",
+  "generatedAt": "2026-10-26T04:54:45.130Z",
   "repo": {
-    "head": "2ee4129",
+    "head": "ef92326",
     "branch": "claude/security-page",
     "dirtyCount": 0,
     "dirty": [],
@@ -10,6 +10,20 @@
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "ef92326",
+        "date": "2026-10-26T04:54:44+00:00",
+        "subject": "Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "364ba02",
+        "date": "2026-10-26T04:43:21+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "2ee4129",
         "date": "2026-10-26T04:43:19+00:00",
@@ -620,6 +634,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ef92326",
+      "date": "2026-10-26",
+      "subject": "Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token"
+    },
+    {
+      "h": "364ba02",
+      "date": "2026-10-26",
+      "subject": "Status board"
+    },
+    {
       "h": "2ee4129",
       "date": "2026-10-26",
       "subject": "Security page: CLAUDE.md, code map"
@@ -668,16 +692,6 @@
       "h": "9985445",
       "date": "2026-10-24",
       "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)"
-    },
-    {
-      "h": "2e01ec9",
-      "date": "2026-10-24",
-      "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)"
-    },
-    {
-      "h": "ed10fa0",
-      "date": "2026-10-23",
-      "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)"
     }
   ]
 }
