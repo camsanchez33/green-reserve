@@ -148,6 +148,10 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [loadingInfo, setLoadingInfo] = useState(!initial);
   const [golfer, setGolfer]   = useState<GolferProfile | null>(null);
   const [confirmedData, setConfirmedData] = useState<ConfirmedData | null>(null);
+  // PERF (Cam 2026-10-26): Stripe.js costs ~600ms of main-thread time, so even at a
+  // card course it loads on the golfer's first touch of (or tab into) the booking
+  // form — before the agree box, so Apple Pay / Google Pay are ready when it is ticked.
+  const [stripeWanted, setStripeWanted] = useState(false);
   // A required cart is the tee time's call (cart_required: its price-table cell can't be walked, CART-1).
   const [cartSelected, setCartSelected] = useState(cartParam);
   const [rangeBallsSize, setRangeBallsSize] = useState<'' | 'small' | 'medium' | 'large'>('');
@@ -440,8 +444,10 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             </div>
           </div>
 
-          {/* SP-B: Stripe JS loads only when this course's policy needs a card. */}
-            <Elements stripe={terms.cardAtBooking ? getStripePromise() : null}>
+          {/* SP-B: Stripe JS loads only when this course's policy needs a card —
+              and then only once the golfer starts on the form (stripeWanted). */}
+          <div onPointerDown={() => setStripeWanted(true)} onFocusCapture={() => setStripeWanted(true)}>
+            <Elements stripe={terms.cardAtBooking && stripeWanted ? getStripePromise() : null}>
               <CheckoutForm
                 teeTimeId={teeTime.id}
                 players={players}
@@ -454,6 +460,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 onConfirmed={setConfirmedData}
               />
             </Elements>
+          </div>
 
 
           {/* SP-B: the course's cancellation terms, in the words describePolicy()
