@@ -12,7 +12,7 @@
     "@anthropic-ai/sdk": "^0.126.0",
     "@prisma/client": "^5.0.0",
     "@react-pdf/renderer": "^4.9.0",
-    "@sentry/nextjs": "^8.0.0",
+    "@sentry/nextjs": "^11.9.0",
     "@simplewebauthn/browser": "13.3.0",
     "@simplewebauthn/server": "13.3.3",
     "@stripe/react-stripe-js": "^2.8.0",
@@ -33,6 +33,7 @@
     "twilio": "^6.0.2"
   },
   "devDependencies": {
+    "@babel/parser": "^7.29.11",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
@@ -44,5 +45,14 @@
     "tailwindcss": "^4.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
+  },
+  "overrides": {
+    "@anthropic-ai/sdk": {
+      "zod": "^4.6.7"
+    },
+    "@vercel/cli-config": {
+      "zod": "^4.6.7"
+    },
+    "postcss": "^8.5.31"
   }
 }

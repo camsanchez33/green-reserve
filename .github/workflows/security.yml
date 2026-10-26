@@ -4,8 +4,8 @@ name: Security
 # ships fails the PR — Next.js sat on one unnoticed because nothing checked.
 # Runs on every PR, on main, and every morning so a flaw published overnight
 # shows up even when nobody pushes. Dev-only packages are left out: they never
-# reach the live site. The bar is critical for now; it rises to high once the
-# Sentry 8 → 11 upgrade clears the remaining high-severity build-time chain.
+# reach the live site. SEC-2 raised the bar to high once Sentry 11 and the zod /
+# postcss overrides (package.json) left zero flaws.
 on:
   pull_request:
   push:
@@ -25,8 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Fail on a critical flaw in what the site ships
-        run: npm audit --omit=dev --audit-level=critical
-      - name: List everything high and above (does not fail)
+      - name: Fail on a high or critical flaw in what the site ships
+        run: npm audit --omit=dev --audit-level=high
+      - name: List moderate ones too (does not fail)
         if: always()
-        run: npm audit --omit=dev --audit-level=high || true
+        run: npm audit --omit=dev --audit-level=moderate || true
