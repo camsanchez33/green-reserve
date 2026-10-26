@@ -119,6 +119,11 @@ const hhmm = (d: Date) => d.toISOString().slice(11, 16);
   const dB = await prisma.booking.findUniqueOrThrow({ where: { id: declined.id } });
   ok('a declined hold is reported as declined and ledgered once, however many runs try it', d1 === 'declined' && d2 === 'declined' && dRows === 1, { d1, d2, dRows });
   ok('…and the booking is left as it was (no check-in prompt a day early)', dB.status === 'confirmed' && dB.paymentStatus === 'card_on_file' && dB.checkInFailReason === '');
+  const busy = await booking(t1.id, { stripePaymentMethodId: 'pm_busy' });
+  inFlight.add(`cancelfee-${busy.id}-pm_busy`);
+  const b1 = await chargeCutoffHold(busy.id);
+  inFlight.delete(`cancelfee-${busy.id}-pm_busy`);
+  ok('the other cron charging the same hold at that moment is not a decline: nothing ledgered', b1 === 'not_due' && (await prisma.paymentEvent.count({ where: { bookingId: busy.id } })) === 0, b1);
 
   const gone = await booking(t1.id, { status: 'cancelled' });
   const nCharges = charges.length;

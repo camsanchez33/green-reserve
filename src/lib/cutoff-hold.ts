@@ -73,6 +73,9 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
     // the admin side's (money-problems.ts).
     const message = err instanceof Error ? err.message : String(err);
     console.error(JSON.stringify({ ev: 'cron.cancelfee.fail', bookingId, error: message }));
+    // Both crons run at 09:00: the other one charging this same key right now is
+    // not a decline — it records the hold itself.
+    if (/in[- ]progress/i.test(message)) return 'not_due';
     const seen = await prisma.paymentEvent.count({ where: { bookingId, kind: 'charge_failed', detail: { startsWith: 'Cancellation hold' } } });
     if (!seen) await recordPaymentEvent({ bookingId, kind: 'charge_failed', amountCents, actor: 'cron', detail: `Cancellation hold: ${message}` }).catch(() => {});
     return 'declined';
