@@ -20,6 +20,9 @@ const SLUG = 'perf-audit';
     create: {
       name: 'Perf Audit Golf Club', slug: SLUG, operatorId: op.id, address: '1 Fairway Rd', city: 'Montclair', state: 'NJ', zipCode: '07042',
       holes: 18, par: 72, type: 'public', timezone: 'America/New_York', active: true, liveStatus: 'live',
+      // No late or no-show fee, so no card at booking: /book is audited without Stripe.js,
+      // the path CLAUDE.md's "Stripe deferred until a card is needed" budget guards.
+      lateCancellationFeeCents: 0, noShowFeeCents: 0,
       description: 'An 18-hole public course used only by the CI performance audit.',
     },
   });
