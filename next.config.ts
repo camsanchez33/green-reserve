@@ -92,14 +92,14 @@ async function buildConfig() {
   const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN;
   if (!dsn) return nextConfig;
 
-  const { withSentryConfig } = await import('@sentry/nextjs');
+  const { withSentryConfig } = await import('@sentry/nextjs/config');
   return withSentryConfig(nextConfig, {
     org: process.env.SENTRY_ORG,
     project: process.env.SENTRY_PROJECT,
     silent: true,
     widenClientFileUpload: true,
-    hideSourceMaps: true,
-    disableLogger: true,
+    // v9+: source maps are hidden and deleted after upload by default (was hideSourceMaps).
+    bundleSizeOptimizations: { excludeDebugStatements: true },
   });
 }
 

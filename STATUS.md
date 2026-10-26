@@ -4,15 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 03:43 UTC · branch `claude/security-center` · HEAD `1adc552` · working tree clean
+Generated 2026-10-26 04:13 UTC · branch `claude/sentry-11` · HEAD `6b07f98` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 29 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 31 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `1adc552` | 2026-10-26 | Security: patch Next.js, security headers, package scan in CI (SEC-1) |
+| `6b07f98` | 2026-10-26 | Declare @babel/parser: the parse check and code map used it through Sentry 8 |
+| `b724620` | 2026-10-26 | Sentry 8 → 11 with nothing personal collected; zero package flaws; CI bar to high (SEC-2) |
+| `2ff16fa` | 2026-10-25 | Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213) |
 | `47e5fb0` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
 | `719895d` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
 | `0278299` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
@@ -163,7 +165,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
-- `1adc552` 2026-10-26 — Security: patch Next.js, security headers, package scan in CI (SEC-1)
+- `6b07f98` 2026-10-26 — Declare @babel/parser: the parse check and code map used it through Sentry 8
+- `b724620` 2026-10-26 — Sentry 8 → 11 with nothing personal collected; zero package flaws; CI bar to high (SEC-2)
+- `2ff16fa` 2026-10-25 — Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)
 - `47e5fb0` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212)
 - `719895d` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
 - `0278299` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
@@ -173,8 +177,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `2e01ec9` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
 - `ed10fa0` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
 - `6fd9158` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
-- `6d7bf2a` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
-- `fbacc52` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
 
 ---
 
