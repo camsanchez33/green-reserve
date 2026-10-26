@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 13:27 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `22bff0bb` · working tree **2 dirty file(s)**
+Generated 2026-10-26 13:41 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5e59c031` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 48 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 52 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `5e59c031` | 2026-10-26 | Cutoff hold: a concurrent charge of the same key is not a decline |
+| `31dad15d` | 2026-10-26 | A declined cancellation hold is ledgered once (R-PAY-010) |
+| `35cdba79` | 2026-10-26 | Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227) |
+| `61de211b` | 2026-10-26 | status board + code map |
 | `22bff0bb` | 2026-10-26 | Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking |
 | `3344fa17` | 2026-10-26 | Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010) |
 | `b06da63e` | 2026-10-26 | /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226) |
@@ -190,6 +194,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `5e59c031` 2026-10-26 — Cutoff hold: a concurrent charge of the same key is not a decline
+- `31dad15d` 2026-10-26 — A declined cancellation hold is ledgered once (R-PAY-010)
+- `35cdba79` 2026-10-26 — Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)
+- `61de211b` 2026-10-26 — status board + code map
 - `22bff0bb` 2026-10-26 — Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking
 - `3344fa17` 2026-10-26 — Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)
 - `b06da63e` 2026-10-26 — /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)
@@ -198,10 +206,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `09fd1b9d` 2026-10-26 — Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)
 - `76bbb431` 2026-10-26 — perf-audit header: LCP is report-only on a local build
 - `a75c138f` 2026-10-26 — Perf check on the PR build: LCP reported, not enforced; one warm-up load per page
-- `9f74c0c1` 2026-10-26 — Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)
-- `a247189b` 2026-10-26 — perf seed refuses a non-local database
-- `6f618338` 2026-10-26 — status board + code map
-- `ef437d10` 2026-10-26 — perf seed: a no-fee course, so /book is audited on the no-card path
 
 ---
 

@@ -30,6 +30,7 @@ Caveat: the skeptics agreed with 89 of 91. That is a high agreement rate, so eve
 | R-AUTH-010 / R-OPS-010 settings and course PATCH return the raw Course row | R-AUTH-010, R-OPS-010 | **fixed** (2026-10-26): both return `operatorSafe(courseToWire(updated))`, the GET's shape |
 | R-BOOK-009 blackout 500 · R-PAY-011 membership charged again after paid at the shop | R-BOOK-009, R-PAY-011 | already fixed before 2026-10-26 (checked in code: blackouts delete only rows with no bookings; membership pay re-checks under a row lock) |
 
+| R-PAY-010 declined cutoff hold leaves no record | R-PAY-010 | **partly fixed** (2026-10-26): `chargeCutoffHold` ledgers a declined hold once (`charge_failed`, "Cancellation hold: …"; Stripe replays the same error per key, so later runs add nothing) · test in `ledger-money-db-test.ts`. Deliberately NOT written to `checkInFailReason` (the tee sheet's "Retry with new card" would check the group in and charge the round a day early). **Left for the admin session:** a 'failed fee charges' predicate in `money-problems.ts` over `charge_failed`/`refund_failed` rows so admin Problems shows them |
 Also landed: #69 runs every `scripts/*-test.ts` in CI (Tests workflow) and repaired three stale tests.
 
 ## Fix first: S1 (money, security)

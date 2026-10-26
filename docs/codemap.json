@@ -15824,7 +15824,7 @@
     },
     {
       "path": "src/lib/cutoff-hold.ts",
-      "lines": 103,
+      "lines": 122,
       "purpose": "The cancellation-window hold (SP-B timing \"hold_at_cutoff\"):",
       "brain": [],
       "exports": [
@@ -25723,6 +25723,7 @@
         "src/lib/admin-today.ts",
         "src/lib/booking-fee.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/cutoff-hold.ts",
         "src/lib/money-problems.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"

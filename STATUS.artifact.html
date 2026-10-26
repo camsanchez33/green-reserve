@@ -117,14 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-26 13:27 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 22bff0bb</span>
+    <span>2026-10-26 13:41 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 5e59c031</span>
     <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">48 runs have shipped that the queue doesn't know about</div>
+<div class="lede">52 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">5e59c031</span><span>Cutoff hold: a concurrent charge of the same key is not a decline</span></li>
+<li><span class="h">31dad15d</span><span>A declined cancellation hold is ledgered once (R-PAY-010)</span></li>
+<li><span class="h">35cdba79</span><span>Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)</span></li>
+<li><span class="h">61de211b</span><span>status board + code map</span></li>
 <li><span class="h">22bff0bb</span><span>Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking</span></li>
 <li><span class="h">3344fa17</span><span>Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)</span></li>
 <li><span class="h">b06da63e</span><span>/book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)</span></li>
@@ -265,6 +269,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">5e59c031</td><td class="num">2026-10-26</td><td>Cutoff hold: a concurrent charge of the same key is not a decline</td></tr>
+<tr><td class="num">31dad15d</td><td class="num">2026-10-26</td><td>A declined cancellation hold is ledgered once (R-PAY-010)</td></tr>
+<tr><td class="num">35cdba79</td><td class="num">2026-10-26</td><td>Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)</td></tr>
+<tr><td class="num">61de211b</td><td class="num">2026-10-26</td><td>status board + code map</td></tr>
 <tr><td class="num">22bff0bb</td><td class="num">2026-10-26</td><td>Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking</td></tr>
 <tr><td class="num">3344fa17</td><td class="num">2026-10-26</td><td>Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)</td></tr>
 <tr><td class="num">b06da63e</td><td class="num">2026-10-26</td><td>/book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)</td></tr>
@@ -273,10 +281,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">09fd1b9d</td><td class="num">2026-10-26</td><td>Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)</td></tr>
 <tr><td class="num">76bbb431</td><td class="num">2026-10-26</td><td>perf-audit header: LCP is report-only on a local build</td></tr>
 <tr><td class="num">a75c138f</td><td class="num">2026-10-26</td><td>Perf check on the PR build: LCP reported, not enforced; one warm-up load per page</td></tr>
-<tr><td class="num">9f74c0c1</td><td class="num">2026-10-26</td><td>Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)</td></tr>
-<tr><td class="num">a247189b</td><td class="num">2026-10-26</td><td>perf seed refuses a non-local database</td></tr>
-<tr><td class="num">6f618338</td><td class="num">2026-10-26</td><td>status board + code map</td></tr>
-<tr><td class="num">ef437d10</td><td class="num">2026-10-26</td><td>perf seed: a no-fee course, so /book is audited on the no-card path</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

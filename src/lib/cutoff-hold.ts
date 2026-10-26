@@ -31,7 +31,8 @@ export type HoldResult =
   | 'no_stripe'
   | 'recorded_elsewhere' // the same PaymentIntent was recorded by a cancel or the other cron
   | 'refunded'         // the booking changed during the charge — the charge was given back
-  | 'refund_failed';
+  | 'refund_failed'
+  | 'declined';        // R-PAY-010: the charge failed — ledgered once (charge_failed)
 
 export async function chargeCutoffHold(bookingId: string, now: Date = new Date()): Promise<HoldResult> {
   const booking = await prisma.booking.findUnique({
@@ -52,15 +53,33 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
   const amountCents = Math.round(booking.cancellationFeeTotal);
   const account = booking.course.stripeAccountId;
   console.log(JSON.stringify({ ev: 'cron.cancelfee.attempt', bookingId, amountCents }));
-  const pi = await chargeOnConnectedAccount({
-    customerId: booking.stripeCustomerId,
-    paymentMethodId: booking.stripePaymentMethodId,
-    connectedAccountId: account,
-    amountCents,
-    applicationFeeCents: 0,
-    description: `Late-cancellation fee - ${booking.course.name} - booking ${booking.id}`,
-    idempotencyKey: `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`,
-  });
+  let pi: Awaited<ReturnType<typeof chargeOnConnectedAccount>>;
+  try {
+    pi = await chargeOnConnectedAccount({
+      customerId: booking.stripeCustomerId,
+      paymentMethodId: booking.stripePaymentMethodId,
+      connectedAccountId: account,
+      amountCents,
+      applicationFeeCents: 0,
+      description: `Late-cancellation fee - ${booking.course.name} - booking ${booking.id}`,
+      idempotencyKey: `cancelfee-${booking.id}-${booking.stripePaymentMethodId}`,
+    });
+  } catch (err) {
+    // R-PAY-010: a declined hold used to leave nothing behind. It is ledgered once
+    // (Stripe replays the same error for this key on every later run), so it shows
+    // on the golfer's payment timeline. Not written to checkInFailReason: on the
+    // tee sheet that offers "Retry with new card", which checks the group in and
+    // charges the whole round — a day early. Surfacing it in admin Problems is
+    // the admin side's (money-problems.ts).
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(JSON.stringify({ ev: 'cron.cancelfee.fail', bookingId, error: message }));
+    // Both crons run at 09:00: the other one charging this same key right now is
+    // not a decline — it records the hold itself.
+    if (/in[- ]progress/i.test(message)) return 'not_due';
+    const seen = await prisma.paymentEvent.count({ where: { bookingId, kind: 'charge_failed', detail: { startsWith: 'Cancellation hold' } } });
+    if (!seen) await recordPaymentEvent({ bookingId, kind: 'charge_failed', amountCents, actor: 'cron', detail: `Cancellation hold: ${message}` }).catch(() => {});
+    return 'declined';
+  }
 
   // EV-1: the money has moved, so this is ONE plain conditional update (no
   // transaction that could time out after the charge); the event is best-effort.
