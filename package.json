@@ -33,6 +33,7 @@
     "twilio": "^6.0.2"
   },
   "devDependencies": {
+    "@babel/parser": "^7.29.11",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
