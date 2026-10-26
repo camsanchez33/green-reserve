@@ -4,58 +4,62 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 13:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `4474a82` · working tree **2 dirty file(s)**
+Generated 2026-10-26 13:27 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `22bff0bb` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 44 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 48 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `4474a82` | 2026-10-26 | /book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a) |
-| `09fd1b9` | 2026-10-26 | Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224) |
-| `76bbb43` | 2026-10-26 | perf-audit header: LCP is report-only on a local build |
-| `a75c138` | 2026-10-26 | Perf check on the PR build: LCP reported, not enforced; one warm-up load per page |
-| `9f74c0c` | 2026-10-26 | Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225) |
-| `a247189` | 2026-10-26 | perf seed refuses a non-local database |
-| `6f61833` | 2026-10-26 | status board + code map |
-| `ef437d1` | 2026-10-26 | perf seed: a no-fee course, so /book is audited on the no-card path |
-| `b5d26e2` | 2026-10-26 | Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build |
-| `04522eb` | 2026-10-26 | Money fixes from the review ledger + the money walk script (#223) |
-| `224b231` | 2026-10-26 | status board + code map |
-| `a8a925d` | 2026-10-26 | Late cancel racing the cron's hold charge: wait and replay instead of failing |
-| `a904586` | 2026-10-26 | Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222) |
-| `6c9f307` | 2026-10-26 | Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival |
-| `2ff16fa` | 2026-10-25 | Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213) |
-| `00d53d1` | 2026-10-26 | docs: money walk script for the register, cash and card reader |
-| `47e5fb0` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
-| `719895d` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
-| `0278299` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
-| `068ac2b` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
-| `c8e0e66` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
-| `9985445` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
-| `2e01ec9` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
-| `ed10fa0` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
-| `6fd9158` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
-| `6d7bf2a` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
-| `fbacc52` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
-| `592f05f` | 2026-10-24 | schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday |
-| `4b6af6f` | 2026-10-24 | contact-email-test: spacing |
-| `e53daa8` | 2026-10-24 | MAIL-1: agreements name admin@ instead of the Outlook inbox |
-| `978a3da` | 2026-10-23 | Retire the admin Activity page (AW-12) (#200) |
-| `d2b41f2` | 2026-10-23 | Regenerate the status board |
-| `d6efdc1` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
-| `85bb916` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
-| `3148eed` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
-| `3c88148` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
-| `946d4a5` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
-| `a578929` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
-| `966741b` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
-| `dd3cfd1` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
-| `e0bc004` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
-| `4b621c0` | 2026-10-22 | Regenerate status board |
-| `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
-| `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
+| `22bff0bb` | 2026-10-26 | Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking |
+| `3344fa17` | 2026-10-26 | Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010) |
+| `b06da63e` | 2026-10-26 | /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226) |
+| `eb9b36f9` | 2026-10-26 | status board + code map |
+| `4474a823` | 2026-10-26 | /book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a) |
+| `09fd1b9d` | 2026-10-26 | Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224) |
+| `76bbb431` | 2026-10-26 | perf-audit header: LCP is report-only on a local build |
+| `a75c138f` | 2026-10-26 | Perf check on the PR build: LCP reported, not enforced; one warm-up load per page |
+| `9f74c0c1` | 2026-10-26 | Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225) |
+| `a247189b` | 2026-10-26 | perf seed refuses a non-local database |
+| `6f618338` | 2026-10-26 | status board + code map |
+| `ef437d10` | 2026-10-26 | perf seed: a no-fee course, so /book is audited on the no-card path |
+| `b5d26e20` | 2026-10-26 | Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build |
+| `04522eb0` | 2026-10-26 | Money fixes from the review ledger + the money walk script (#223) |
+| `224b231c` | 2026-10-26 | status board + code map |
+| `a8a925d4` | 2026-10-26 | Late cancel racing the cron's hold charge: wait and replay instead of failing |
+| `a904586f` | 2026-10-26 | Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222) |
+| `6c9f3077` | 2026-10-26 | Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival |
+| `2ff16fa2` | 2026-10-25 | Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213) |
+| `00d53d10` | 2026-10-26 | docs: money walk script for the register, cash and card reader |
+| `47e5fb0f` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
+| `719895d0` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
+| `02782990` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
+| `068ac2b6` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
+| `c8e0e662` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
+| `9985445e` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
+| `2e01ec99` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
+| `ed10fa0c` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
+| `6fd9158d` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
+| `6d7bf2a5` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
+| `fbacc529` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
+| `592f05f4` | 2026-10-24 | schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday |
+| `4b6af6fe` | 2026-10-24 | contact-email-test: spacing |
+| `e53daa8e` | 2026-10-24 | MAIL-1: agreements name admin@ instead of the Outlook inbox |
+| `978a3da2` | 2026-10-23 | Retire the admin Activity page (AW-12) (#200) |
+| `d2b41f27` | 2026-10-23 | Regenerate the status board |
+| `d6efdc1b` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
+| `85bb9160` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
+| `3148eed2` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
+| `3c88148d` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
+| `946d4a54` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
+| `a5789298` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
+| `966741b9` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
+| `dd3cfd14` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
+| `e0bc004d` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
+| `4b621c06` | 2026-10-22 | Regenerate status board |
+| `04301cec` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
+| `2734cbdb` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
@@ -77,7 +81,9 @@ these actually are first.
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-Nothing awaiting review.
+| item | shipped | age | commit | source |
+|---|---|---|---|---|
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 95d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
 
 ## Not started — the actual queue
 
@@ -85,8 +91,7 @@ Nothing awaiting review.
 2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
 3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
 4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2357`
-6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
 
 ## Waiting on you (not on a build)
 
@@ -185,19 +190,19 @@ Nothing awaiting review.
 
 ## Recent commits
 
-- `4474a82` 2026-10-26 — /book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a)
-- `09fd1b9` 2026-10-26 — Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)
-- `76bbb43` 2026-10-26 — perf-audit header: LCP is report-only on a local build
-- `a75c138` 2026-10-26 — Perf check on the PR build: LCP reported, not enforced; one warm-up load per page
-- `9f74c0c` 2026-10-26 — Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)
-- `a247189` 2026-10-26 — perf seed refuses a non-local database
-- `6f61833` 2026-10-26 — status board + code map
-- `ef437d1` 2026-10-26 — perf seed: a no-fee course, so /book is audited on the no-card path
-- `b5d26e2` 2026-10-26 — Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build
-- `04522eb` 2026-10-26 — Money fixes from the review ledger + the money walk script (#223)
-- `224b231` 2026-10-26 — status board + code map
-- `a8a925d` 2026-10-26 — Late cancel racing the cron's hold charge: wait and replay instead of failing
+- `22bff0bb` 2026-10-26 — Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking
+- `3344fa17` 2026-10-26 — Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)
+- `b06da63e` 2026-10-26 — /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)
+- `eb9b36f9` 2026-10-26 — status board + code map
+- `4474a823` 2026-10-26 — /book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a)
+- `09fd1b9d` 2026-10-26 — Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)
+- `76bbb431` 2026-10-26 — perf-audit header: LCP is report-only on a local build
+- `a75c138f` 2026-10-26 — Perf check on the PR build: LCP reported, not enforced; one warm-up load per page
+- `9f74c0c1` 2026-10-26 — Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)
+- `a247189b` 2026-10-26 — perf seed refuses a non-local database
+- `6f618338` 2026-10-26 — status board + code map
+- `ef437d10` 2026-10-26 — perf seed: a no-fee course, so /book is audited on the no-card path
 
 ---
 
-**Totals:** 298 done · 0 awaiting review · 1 in flight · 6 not started · 7 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 7 revise pages open · 17 ideas · 7 parked.

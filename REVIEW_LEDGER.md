@@ -24,6 +24,12 @@ Caveat: the skeptics agreed with 89 of 91. That is a high agreement rate, so eve
 | No-show fee on a round already paid (admin collect leaves it confirmed + paid) | follow-up 2026-10-26 | **fixed**: the midnight charge, auto no-show and the staff no_show action skip/refuse a paid round |
 | Cutoff hold charged from a stale snapshot | follow-up 2026-10-26 | **fixed**: both crons call `chargeCutoffHold()` (lib/cutoff-hold) — re-read, conditional record, refund if the booking changed during the charge; a cutoff missed by more than 24h past the tee time is not charged |
 
+| R-AUTH-005 course alert open to every staff login · R-AUTH-009 member session length · R-GOLF-014 perf gate on production | — | **fixed** #224 (Cam 2026-10-26): `sheet.course_alert` + 280-char cap; member session 7 days; perf audit runs on the PR's own build (LCP reported there, enforced on production) |
+| G13-a send-modified-email | — | **fixed** #226: rate limited (address + booking), send awaited, failure reported. Also #226: /book loads Stripe on the golfer's first touch of the form (fee-course TBT ~700ms → ~150ms) |
+| R-BOOK-002 two cancels at once free the seats twice | R-BOOK-002 | **fixed** (2026-10-26): the cancel's write is conditional on `confirmed`; only the winner frees seats · test `ledger-booking-db-test.ts` (old code: both succeed, slot goes to −2) |
+| R-AUTH-010 / R-OPS-010 settings and course PATCH return the raw Course row | R-AUTH-010, R-OPS-010 | **fixed** (2026-10-26): both return `operatorSafe(courseToWire(updated))`, the GET's shape |
+| R-BOOK-009 blackout 500 · R-PAY-011 membership charged again after paid at the shop | R-BOOK-009, R-PAY-011 | already fixed before 2026-10-26 (checked in code: blackouts delete only rows with no bookings; membership pay re-checks under a row lock) |
+
 Also landed: #69 runs every `scripts/*-test.ts` in CI (Tests workflow) and repaired three stale tests.
 
 ## Fix first: S1 (money, security)
