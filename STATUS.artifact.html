@@ -117,53 +117,29 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-26 20:49 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ d2ad3498</span>
-    <span>tree clean</span>
+    <span>2026-10-26 21:05 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ dbfb8d87</span>
+    <span>1 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">67 runs have shipped that the queue doesn't know about</div>
+<div class="lede">43 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">dbfb8d87</span><span>Staff switches: refunds says what it gates, no Stripe connect button for staff, 'Charge a fee by hand' removed (R-AUTH-007)</span></li>
+<li><span class="h">eb9b40b1</span><span>Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)</span></li>
 <li><span class="h">c2f1007c</span><span>Bump actions/checkout from 4 to 7 (#215)</span></li>
-<li><span class="h">f0b52217</span><span>A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund</span></li>
-<li><span class="h">28e1481e</span><span>status board + code map</span></li>
-<li><span class="h">2e541f71</span><span>Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded</span></li>
-<li><span class="h">0197ea86</span><span>Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)</span></li>
 <li><span class="h">355f6ca0</span><span>Bump the minor-and-patch group across 1 directory with 5 updates (#217)</span></li>
 <li><span class="h">68901693</span><span>Bump actions/upload-artifact from 4 to 7 (#216)</span></li>
 <li><span class="h">03bd9dcb</span><span>Bump actions/setup-node from 4 to 7 (#214)</span></li>
 <li><span class="h">e1ce6066</span><span>Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number &gt;= 1 (R-BOOK-011) (#229)</span></li>
-<li><span class="h">0fd72cdd</span><span>status board + code map</span></li>
-<li><span class="h">58e0c789</span><span>test: type the schedule id (scheduleToWire returns unknown fields)</span></li>
-<li><span class="h">195f02a7</span><span>Schedule interval: refuse anything but a whole number of minutes &gt;= 1 (create and update)</span></li>
-<li><span class="h">8ae40453</span><span>Check-in email: a failed send is retried (R-CRON-007); schedule update stores the checked interval (R-BOOK-011)</span></li>
 <li><span class="h">7de5d7a3</span><span>A declined cancellation hold is ledgered once (R-PAY-010) (#228)</span></li>
-<li><span class="h">9e10ae2f</span><span>status board + code map</span></li>
-<li><span class="h">5e59c031</span><span>Cutoff hold: a concurrent charge of the same key is not a decline</span></li>
-<li><span class="h">31dad15d</span><span>A declined cancellation hold is ledgered once (R-PAY-010)</span></li>
 <li><span class="h">35cdba79</span><span>Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)</span></li>
-<li><span class="h">61de211b</span><span>status board + code map</span></li>
-<li><span class="h">22bff0bb</span><span>Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking</span></li>
-<li><span class="h">3344fa17</span><span>Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)</span></li>
 <li><span class="h">b06da63e</span><span>/book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)</span></li>
-<li><span class="h">eb9b36f9</span><span>status board + code map</span></li>
-<li><span class="h">4474a823</span><span>/book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a)</span></li>
 <li><span class="h">09fd1b9d</span><span>Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)</span></li>
-<li><span class="h">76bbb431</span><span>perf-audit header: LCP is report-only on a local build</span></li>
-<li><span class="h">a75c138f</span><span>Perf check on the PR build: LCP reported, not enforced; one warm-up load per page</span></li>
 <li><span class="h">9f74c0c1</span><span>Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)</span></li>
-<li><span class="h">a247189b</span><span>perf seed refuses a non-local database</span></li>
-<li><span class="h">6f618338</span><span>status board + code map</span></li>
-<li><span class="h">ef437d10</span><span>perf seed: a no-fee course, so /book is audited on the no-card path</span></li>
-<li><span class="h">b5d26e20</span><span>Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build</span></li>
 <li><span class="h">04522eb0</span><span>Money fixes from the review ledger + the money walk script (#223)</span></li>
-<li><span class="h">224b231c</span><span>status board + code map</span></li>
-<li><span class="h">a8a925d4</span><span>Late cancel racing the cron's hold charge: wait and replay instead of failing</span></li>
 <li><span class="h">a904586f</span><span>Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)</span></li>
-<li><span class="h">6c9f3077</span><span>Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival</span></li>
 <li><span class="h">2ff16fa2</span><span>Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)</span></li>
-<li><span class="h">00d53d10</span><span>docs: money walk script for the register, cash and card reader</span></li>
 <li><span class="h">47e5fb0f</span><span>CASH-1: no more &quot;paid at the counter&quot; — paid online, or rung up in store (#212)</span></li>
 <li><span class="h">719895d0</span><span>POS-3 R4: end-of-day close-out — count the drawer (#211)</span></li>
 <li><span class="h">02782990</span><span>POS-3 R3b: a group's round paid on the card reader (#210)</span></li>
@@ -201,6 +177,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
+<section><h2>Working tree right now</h2>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M src/lib/staff-permissions.ts</code></li></ul>
+</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
@@ -243,6 +224,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-26 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 0d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 0d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 2d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 3d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 3d</td></tr>
@@ -275,22 +257,21 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 <tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">dbfb8d87</td><td class="num">2026-10-26</td><td>Staff switches: refunds says what it gates, no Stripe connect button for staff, 'Charge a fee by hand' removed (R-AUTH-007)</td></tr>
+<tr><td class="num">eb9b40b1</td><td class="num">2026-10-26</td><td>Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)</td></tr>
 <tr><td class="num">c2f1007c</td><td class="num">2026-10-26</td><td>Bump actions/checkout from 4 to 7 (#215)</td></tr>
-<tr><td class="num">f0b52217</td><td class="num">2026-10-26</td><td>A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund</td></tr>
-<tr><td class="num">28e1481e</td><td class="num">2026-10-26</td><td>status board + code map</td></tr>
-<tr><td class="num">2e541f71</td><td class="num">2026-10-26</td><td>Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded</td></tr>
-<tr><td class="num">0197ea86</td><td class="num">2026-10-26</td><td>Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)</td></tr>
 <tr><td class="num">355f6ca0</td><td class="num">2026-10-26</td><td>Bump the minor-and-patch group across 1 directory with 5 updates (#217)</td></tr>
 <tr><td class="num">68901693</td><td class="num">2026-10-26</td><td>Bump actions/upload-artifact from 4 to 7 (#216)</td></tr>
 <tr><td class="num">03bd9dcb</td><td class="num">2026-10-26</td><td>Bump actions/setup-node from 4 to 7 (#214)</td></tr>
 <tr><td class="num">e1ce6066</td><td class="num">2026-10-26</td><td>Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number &gt;= 1 (R-BOOK-011) (#229)</td></tr>
-<tr><td class="num">0fd72cdd</td><td class="num">2026-10-26</td><td>status board + code map</td></tr>
-<tr><td class="num">58e0c789</td><td class="num">2026-10-26</td><td>test: type the schedule id (scheduleToWire returns unknown fields)</td></tr>
-<tr><td class="num">195f02a7</td><td class="num">2026-10-26</td><td>Schedule interval: refuse anything but a whole number of minutes &gt;= 1 (create and update)</td></tr>
+<tr><td class="num">7de5d7a3</td><td class="num">2026-10-26</td><td>A declined cancellation hold is ledgered once (R-PAY-010) (#228)</td></tr>
+<tr><td class="num">35cdba79</td><td class="num">2026-10-26</td><td>Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)</td></tr>
+<tr><td class="num">b06da63e</td><td class="num">2026-10-26</td><td>/book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)</td></tr>
+<tr><td class="num">09fd1b9d</td><td class="num">2026-10-26</td><td>Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)</td></tr>
+<tr><td class="num">9f74c0c1</td><td class="num">2026-10-26</td><td>Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

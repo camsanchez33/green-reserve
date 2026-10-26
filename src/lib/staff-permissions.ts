@@ -53,7 +53,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'money.cancellations', group: 'Money', label: 'See cancellations', help: 'The list of cancelled bookings and any fees kept.' },
   { key: 'money.payments', group: 'Money', label: 'See payments', help: 'What was charged, per booking and in total.' },
   // R-AUTH-007: the two places staff can refund — event payments and pro shop sales (rounds are refunded by cancelling or "still coming").
-  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund event payments and pro shop sales back to the card.', requires: ['money.payments'], movesMoney: true },
+  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund event payments and pro shop sales.', requires: ['money.payments'], movesMoney: true },
   // 'Charge a fee by hand' (money.charge_fee) was removed (Cam 2026-10-26): no screen charges a fee by hand, so the
   // switch did nothing. A stored key is dropped by normalizePermissions. It comes back only with that feature.
   { key: 'money.payouts', group: 'Money', label: 'See payouts', help: 'What Stripe has paid out to the course.' },
