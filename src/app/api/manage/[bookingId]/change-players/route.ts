@@ -6,6 +6,7 @@ import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
 import { bookingWindowHours, rescalePartyFees } from '@/lib/cancel-policy';
 import { teeTimeInstant } from '@/lib/booking-events';
+import { isPastIn } from '@/lib/course-time';
 import { groupGreenFee, otherPerPlayerCents } from '@/lib/residents';
 import { rulesFor, groupSizeError } from '@/lib/booking-rules';
 import { refundBookingFee } from '@/lib/booking-fee';
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
           status: true, cartSelected: true, rangeBallsTotal: true,
           greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
-          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, feePaidCents: true,
+          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, feePaidCents: true, noShowAt: true,
           teeTime: { select: { date: true, time: true, greenFeeCents: true, product: { select: { minPlayers: true, maxPlayers: true } } } },
           course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true, minPlayers: true, maxPlayers: true } },
         },
@@ -46,6 +47,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
       const authorized = canManageBooking(booking, golferSession?.golferId, token);
       if (!authorized) throw Object.assign(new Error(), { code: 'INVALID' });
       if (booking.status !== 'confirmed') throw Object.assign(new Error(), { code: 'NOT_CONFIRMED' });
+      // G9 (review ledger): a group marked a no-show, or one whose time has
+      // passed, keeps the party its no-show fee was set on — dropping players
+      // before the midnight charge would cut the fee.
+      if (booking.noShowAt || isPastIn(booking.course.timezone, booking.teeTime.date, booking.teeTime.time)) throw Object.assign(new Error(), { code: 'STARTED' });
       if (booking.players === newPlayers) throw Object.assign(new Error(), { code: 'SAME' });
       // W2-6 slice 3: the course's (or the round's) group size holds on a change too.
       const sizeError = groupSizeError(rulesFor(booking.course, booking.teeTime.product), newPlayers);
@@ -62,9 +67,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
 
       const slot = await tx.teeTime.findUnique({
         where: { id: booking.teeTimeId },
-        select: { playersBooked: true, playersAvailable: true },
+        select: { playersBooked: true, playersAvailable: true, status: true },
       });
       if (!slot) throw Object.assign(new Error(), { code: 'NOT_FOUND' });
+      // R-BOOK-004: a blocked time sells no more seats, and stays blocked.
+      if (slot.status === 'blocked' && newPlayers > booking.players) throw Object.assign(new Error(), { code: 'FULL', max: booking.players });
 
       // Effective capacity: total - already booked (excluding this booking's own seats)
       const otherBooked = slot.playersBooked - booking.players;
@@ -108,7 +115,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
         where: { id: booking.teeTimeId },
         data: {
           playersBooked: newPlayersBooked,
-          status: newPlayersBooked >= slot.playersAvailable ? 'full' : 'available',
+          ...(slot.status !== 'blocked' ? { status: newPlayersBooked >= slot.playersAvailable ? 'full' : 'available' } : {}),
         },
       });
 
@@ -130,6 +137,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     if (e.code === 'INVALID') return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
     if (e.code === 'NOT_CONFIRMED') return NextResponse.json({ error: 'This booking cannot be modified' }, { status: 409 });
     if (e.code === 'PAID') return NextResponse.json({ error: 'This round has already been paid. Ask the course to change the party size.' }, { status: 409 });
+    if (e.code === 'STARTED') return NextResponse.json({ error: 'This tee time has started. Call the course to change the party size.' }, { status: 409 });
     if (e.code === 'CUTOFF') return NextResponse.json({ error: 'The free-change window for this booking has closed. Call the course to change the party size.' }, { status: 409 });
     if (e.code === 'SIZE') return NextResponse.json({ error: e.msg }, { status: 400 });
     if (e.code === 'SAME') return NextResponse.json({ error: 'Party size is already set to that' }, { status: 409 });

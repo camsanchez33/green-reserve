@@ -40,6 +40,23 @@ export async function liveNoShowCharge(bookingId: string): Promise<{ stripeId: s
   return last && last.kind === 'no_show_fee' ? { stripeId: last.stripeId, amountCents: last.amountCents } : null;
 }
 
+/**
+ * Review follow-up (2026-10-26): a round already paid (admin "Collect payment" leaves it
+ * confirmed and paid, not checked in) is never a no-show — the course has its money.
+ */
+export const roundPaid = (b: { paymentStatus: string }) => b.paymentStatus === 'paid';
+
+/**
+ * Late arrival (Cam 2026-10-26: "if it hits midnight and is marked no show by a
+ * course then the fee is charged and that is that"): once the course's midnight
+ * has passed on a group still flagged a no-show, the round is closed — no
+ * check-in, no paying it. Staff who flagged it in error clear it with "Still
+ * coming" (which refunds the no-show charges) and then check the group in.
+ */
+export const noShowClosed = (b: { noShowAt: Date | null; teeTime: { date: string }; course: { timezone: string | null } }, now: Date = new Date()) =>
+  !!b.noShowAt && todayIn(b.course.timezone, now) > b.teeTime.date;
+export const NO_SHOW_CLOSED_ERROR = 'This group was marked a no-show and its day has ended, so the round can’t be checked in or paid. If they did play, the course can clear the no-show with “Still coming” first.';
+
 /** Flag a booking as a no-show. Charges nothing — see chargeNoShow(), run at the course's midnight. */
 export async function markNoShow(bookingId: string, actor: EventActor, opts: { actorName?: string; auto?: boolean } = {}): Promise<void> {
   const booking = await prisma.booking.findUnique({
@@ -114,7 +131,7 @@ export async function chargeNoShow(bookingId: string): Promise<NoShowResult> {
 export async function dueNoShowCharges(now: Date): Promise<string[]> {
   const scanFrom = new Date(now.getTime() - 3 * 86_400_000).toISOString().slice(0, 10);
   const candidates = await prisma.booking.findMany({
-    where: { status: 'confirmed', noShowAt: { not: null }, checkedInAt: null, teeTime: { date: { gte: scanFrom } } },
+    where: { status: 'confirmed', noShowAt: { not: null }, checkedInAt: null, paymentStatus: { not: 'paid' }, teeTime: { date: { gte: scanFrom } } },
     select: { id: true, noShowAt: true, noShowFeeTotal: true, accessFeeTotal: true, feePaidCents: true, teeTime: { select: { date: true } }, course: { select: { timezone: true } } },
   });
   // FEE-AT-BOOKING: a fee paid when they booked leaves nothing of GreenReserve's to charge.
@@ -160,7 +177,7 @@ export async function dueAutoNoShows(now: Date): Promise<string[]> {
   const scanFrom = new Date(now.getTime() - 2 * 86_400_000).toISOString().slice(0, 10);
   const scanTo = new Date(now.getTime() + 86_400_000).toISOString().slice(0, 10);
   const candidates = await prisma.booking.findMany({
-    where: { status: 'confirmed', noShowAt: null, checkedInAt: null, autoNoShowMinutesAtBooking: { not: null }, teeTime: { date: { gte: scanFrom, lte: scanTo } } },
+    where: { status: 'confirmed', noShowAt: null, checkedInAt: null, paymentStatus: { not: 'paid' }, autoNoShowMinutesAtBooking: { not: null }, teeTime: { date: { gte: scanFrom, lte: scanTo } } },
     select: { id: true, autoNoShowMinutesAtBooking: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true } } },
   });
   if (!candidates.length) return [];

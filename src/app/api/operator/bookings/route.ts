@@ -11,7 +11,7 @@ import { setBookingResidents } from '@/lib/booking-residents';
 import { isPastIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { refundSeparateAccessFee } from '@/lib/access-fee';
-import { markNoShow, refundNoShowFee } from '@/lib/no-show-fee';
+import { markNoShow, refundNoShowFee, roundPaid } from '@/lib/no-show-fee';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { formatTeeTime } from '@/lib/format';
@@ -190,6 +190,7 @@ export async function PATCH(req: NextRequest) {
   }
   if (action === 'no_show') {
     if (booking.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be marked a no-show.' }, { status: 409 });
+    if (roundPaid(booking)) return NextResponse.json({ error: 'This round is already paid, so it can’t be a no-show. Check the group in instead.' }, { status: 409 });
     // Review: a no-show now costs the golfer the booking fee, so it can only be
     // recorded once the tee time has actually passed.
     if (!isPastIn(booking.course.timezone, booking.teeTime.date, booking.teeTime.time)) {
@@ -201,6 +202,9 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true, noShowAt: new Date().toISOString(), fee: 'Marked a no-show. Any no-show charge is taken at midnight if they still haven’t checked in — “Still coming” or checking them in before then cancels it.' });
   }
   if (action === 'still_coming') {
+    // G14 (review ledger): only a confirmed booking flagged a no-show has
+    // no-show charges to give back — never a cancelled one's kept fees.
+    if (booking.status !== 'confirmed' || !booking.noShowAt) return NextResponse.json({ error: 'This booking isn’t marked a no-show.' }, { status: 409 });
     await prisma.$transaction(async (tx) => {
       await tx.booking.update({ where: { id }, data: { noShowAt: null } });
       // Only a real reversal is an event — clearing a mark that was never set is not.

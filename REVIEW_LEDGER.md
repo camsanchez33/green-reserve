@@ -12,11 +12,17 @@ Caveat: the skeptics agreed with 89 of 91. That is a high agreement rate, so eve
 |---|---|---|
 | G1 no-show then cancel charged the late fee again | R-PAY-002, R-BOOK-003 | **fixed** #71 · test `cancel-after-noshow-test.ts` |
 | G2 "still coming" re-marked and re-charged by the hourly cron | R-CRON-001 | **fixed** #72 · test `still-coming-test.ts` |
-| G3 check-in of a no-show keeps the no-show fee | R-PAY-001, R-OPS-001 | waiting on Cam: should a late arrival who checks in get the no-show fee back? |
+| G3 check-in of a no-show keeps the no-show fee | R-PAY-001, R-OPS-001 | **decided** (Cam 2026-10-26: "if it hits midnight and is marked no show by a course then the fee is charged and that is that"): the fee is kept; once the course's midnight passes on a flagged group, check-in, cash and the card reader refuse it (`noShowClosed()`, lib/no-show-fee). A flag set in error is cleared with "Still coming", which refunds, then the group is checked in · test `ledger-money-db-test.ts` |
 | G4 cutoffs used the course's current window | R-CRON-002, R-GOLF-001, R-PAY-003 | **fixed** #74 · test `cutoff-window-test.ts` |
 | G5 golfer sign-in code crackable offline | R-AUTH-001 | **fixed** #73 · tests `golfer-otp-test.ts`, isolation single-use check |
-| G6 party-size change keeps old per-player fees | R-GOLF-002, R-PAY-007, R-BOOK-010 | waiting on Cam: needs one nullable column (fee basis copied onto the booking) |
+| G6 party-size change keeps old per-player fees | R-GOLF-002, R-PAY-007, R-BOOK-010 | fees now rescale (`rescalePartyFees`); left: it uses the course's CURRENT per-booking/per-player basis — needs the basis copied onto the booking (one nullable column). Explained to Cam 2026-10-26, waiting on now vs after launch |
 | G7 DST: tee times an hour off on clock-change Sundays | R-BOOK-001 | **fixed** #70 · DST cases in `course-time-test.ts` |
+
+| G9 party-size change after a no-show / a started tee time; reopened blocked slots | R-PAY-008, R-BOOK-007, R-BOOK-004 | **fixed** (money batch 2026-10-26): change-players refuses once noShowAt is set or the tee time has passed, keeps a blocked slot blocked and sells no seats into it · test `ledger-money-db-test.ts` |
+| G11 / G12 private-club member booking | R-BOOK-005, R-GOLF-004, R-BOOK-006, R-GOLF-005 | **deferred** (Cam 2026-10-26: "a big build involving private courses member portal … save this for a later build") |
+| G14 "still coming" with no state guard | R-OPS-002, R-PAY-005 | **fixed** (money batch 2026-10-26): 409 unless the booking is confirmed and flagged a no-show |
+| No-show fee on a round already paid (admin collect leaves it confirmed + paid) | follow-up 2026-10-26 | **fixed**: the midnight charge, auto no-show and the staff no_show action skip/refuse a paid round |
+| Cutoff hold charged from a stale snapshot | follow-up 2026-10-26 | **fixed**: both crons call `chargeCutoffHold()` (lib/cutoff-hold) — re-read, conditional record, refund if the booking changed during the charge; a cutoff missed by more than 24h past the tee time is not charged |
 
 Also landed: #69 runs every `scripts/*-test.ts` in CI (Tests workflow) and repaired three stale tests.
 
@@ -96,10 +102,10 @@ From the G13 review:
 
 ## Needs Cam
 
-- **G3 severity:** does a group that arrives after the auto no-show window keep the no-show fee when staff check them in? The code comment says no; one verifier read describePolicy as yes.
-- **Course alert permission:** R-AUTH-005 says any staff login, even Starter, can publish text on the public booking page; the OPS verifier refuted the same point because STAFF_POLICY_SPEC A1 leaves `conditions` open to staff on purpose. Keep it open, or gate it?
-- **R-AUTH-009:** the member cookie lives 7 days; CLAUDE.md says 90 days absolute. Which is intended?
-- **R-GOLF-014:** the Lighthouse check audits production (greenreserve.app), not the PR build, so it can never catch a PR regression. Point it at the PR build, or accept it as a production monitor?
+- ~~G3 severity~~ decided 2026-10-26 (see Progress).
+- **Course alert permission:** R-AUTH-005 says any staff login, even Starter, can publish text on the public booking page; the OPS verifier refuted the same point because STAFF_POLICY_SPEC A1 leaves `conditions` open to staff on purpose. Keep it open, or gate it? **Decided 2026-10-26: gate it behind a permission and cap its length.**
+- **R-AUTH-009:** the member cookie lives 7 days; CLAUDE.md says 90 days absolute. Which is intended? **Decided 2026-10-26: 7 days; CLAUDE.md's table is corrected.**
+- **R-GOLF-014:** the Lighthouse check audits production (greenreserve.app), not the PR build, so it can never catch a PR regression. Point it at the PR build, or accept it as a production monitor? **Decided 2026-10-26: audit the PR's own build.**
 
 ## All verified findings
 
