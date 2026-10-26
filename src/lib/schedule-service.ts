@@ -73,10 +73,24 @@ async function assertNoConflict(courseId: string, candidate: { id?: string | nul
   if (why) throw new ScheduleConflictError(why);
 }
 
+/**
+ * R-BOOK-011: minutes between tee times — a whole number of at least 1. The
+ * generator skips anything else, so a 0 or a negative used to save a schedule
+ * that made no times and said nothing. Absent = `fallback`. Thrown as
+ * ScheduleProductError because both schedule routes answer it with a 400.
+ */
+function checkedInterval(raw: unknown, fallback: number): number {
+  if (raw === undefined || raw === null || raw === '') return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) throw new ScheduleProductError('Set how many minutes apart tee times are.');
+  return n;
+}
+
 export async function createSchedule(courseId: string, body: Record<string, unknown>, opts: ScheduleScope = {}) {
+  const intervalMinutes = checkedInterval(body.intervalMinutes, 8);
   const product = await resolveProduct(courseId, body.productId);
   const daysOfWeek = (body.daysOfWeek as number[]) ?? [];
-  await assertNoConflict(courseId, { productId: product?.id ?? null, daysOfWeek, startTime: body.startTime as string, endTime: body.endTime as string, intervalMinutes: Number(body.intervalMinutes) || 8, active: true });
+  await assertNoConflict(courseId, { productId: product?.id ?? null, daysOfWeek, startTime: body.startTime as string, endTime: body.endTime as string, intervalMinutes, active: true });
   const schedule = await prisma.teeTimeSchedule.create({
     data: {
       courseId,
@@ -85,7 +99,7 @@ export async function createSchedule(courseId: string, body: Record<string, unkn
       daysOfWeek,
       startTime: body.startTime as string,
       endTime: body.endTime as string,
-      intervalMinutes: Number(body.intervalMinutes) || 8,
+      intervalMinutes,
       // A product-scoped schedule sells the product's round, whatever the form said.
       holes: product ? product.holes : (Number(body.holes) || 18),
       // The editor sends dollars; the columns are cents.
@@ -126,7 +140,7 @@ export async function updateSchedule(id: string, data: Record<string, unknown>, 
     daysOfWeek: (data.daysOfWeek as number[] | undefined) ?? existing.daysOfWeek,
     startTime: (data.startTime as string | undefined) ?? existing.startTime,
     endTime: (data.endTime as string | undefined) ?? existing.endTime,
-    intervalMinutes: data.intervalMinutes !== undefined ? (Number(data.intervalMinutes) || existing.intervalMinutes) : existing.intervalMinutes,
+    intervalMinutes: checkedInterval(data.intervalMinutes, existing.intervalMinutes),
   };
   await assertNoConflict(existing.courseId, { id: existing.id, productId: nextProductId, ...next });
   const nextHoles = nextProductId
@@ -142,7 +156,7 @@ export async function updateSchedule(id: string, data: Record<string, unknown>, 
       daysOfWeek: next.daysOfWeek,
       startTime: next.startTime,
       endTime: next.endTime,
-      intervalMinutes: data.intervalMinutes !== undefined ? Number(data.intervalMinutes) : existing.intervalMinutes,
+      intervalMinutes: next.intervalMinutes, // R-BOOK-011: checked above
       holes: nextHoles,
       // Only the money keys present in the body are converted; the rest keep
       // their existing cents values (Prisma leaves omitted fields alone).

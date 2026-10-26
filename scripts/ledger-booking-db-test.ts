@@ -8,6 +8,8 @@ import { prisma } from '../src/lib/prisma';
 import { performCancellation } from '../src/lib/cancel-booking';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 import { stripe } from '../src/lib/stripe';
+import { sendCheckInLinkOnce } from '../src/lib/check-in-email';
+import { createSchedule, updateSchedule } from '../src/lib/schedule-service';
 
 // Stripe stub: `duringCharge` runs while a charge is in flight.
 let n = 0;
@@ -32,6 +34,7 @@ async function cleanup() {
   await prisma.bookingEvent.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.teeTimeSchedule.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { id: { in: ids } } });
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
 }
@@ -75,6 +78,35 @@ async function cleanup() {
   ok('a late cancel beaten by a waived cancel mid-charge: refused', 'error' in lost && lost.status === 409, lost);
   ok('…its late fee is refunded, and the refund is on the ledger', refunds.length === before + 1 && ledger.length === 1, { refunds: refunds.length - before, ledger: ledger.length });
   ok('…and the booking says no fee kept', lb.status === 'cancelled' && !lb.cancellationFeeChargeId && lb.cancellationFeeTotal === 0, lb);
+
+  // R-CRON-007: the check-in email's dedup is claimed, and a failed send is put back.
+  // (No RESEND_API_KEY here, so every send fails — the path that matters.)
+  const noCard = await prisma.booking.create({ data: { teeTimeId: ft.id, courseId: fc.id, golferName: 'Pay Link', golferEmail: `${TAG}+link@t.local`, players: 1,
+    greenFeeTotal: 5000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 5150, status: 'confirmed', paymentStatus: 'no_payment_method', checkInToken: 'tok' } });
+  const withRels = await prisma.booking.findUniqueOrThrow({ where: { id: noCard.id }, include: { teeTime: true, course: true } });
+  const sent = await sendCheckInLinkOnce(withRels);
+  const afterFail = await prisma.booking.findUniqueOrThrow({ where: { id: noCard.id } });
+  ok('a check-in email that fails to send leaves the booking to be tried again', sent === 'failed' && afterFail.paymentStatus === 'no_payment_method', { sent, ps: afterFail.paymentStatus });
+  await prisma.booking.update({ where: { id: noCard.id }, data: { paymentStatus: 'awaiting_checkin' } });
+  const second = await sendCheckInLinkOnce(withRels); // the stale read still says no_payment_method
+  ok('…and a booking another run already claimed is not sent twice', second === 'taken');
+  const crons = ['src/app/api/cron/hourly/route.ts', 'src/app/api/cron/cancellation-cutoff/route.ts'].map(f => readFileSync(f, 'utf8'));
+  ok('…both crons send it only through sendCheckInLinkOnce', crons.every(c => c.includes('sendCheckInLinkOnce(booking)') && !c.includes("data: { paymentStatus: 'awaiting_checkin' }")));
+  // R-BOOK-011: an interval below 1 (or not a whole number) is refused, never saved.
+  const sch = await createSchedule(fc.id, { daysOfWeek: [1], startTime: '07:00', endTime: '08:00', intervalMinutes: 10, greenFeeWeekday: 50 });
+  const schId = String(sch.id); // scheduleToWire returns Record<string, unknown>
+  const refusals: string[] = [];
+  for (const bad of [-5, 0, 2.5]) {
+    try { await updateSchedule(schId, { intervalMinutes: bad }); refusals.push(`saved ${bad}`); }
+    catch (e) { refusals.push(/minutes apart/.test((e as Error).message) ? 'refused' : (e as Error).message); }
+  }
+  const schAfter = await prisma.teeTimeSchedule.findUniqueOrThrow({ where: { id: schId } });
+  ok('R-BOOK-011: a schedule update with −5, 0 or 2.5 minutes is refused, and the interval stays', refusals.every(r => r === 'refused') && schAfter.intervalMinutes === 10, { refusals, iv: schAfter.intervalMinutes });
+  let created = 'saved';
+  try { await createSchedule(fc.id, { daysOfWeek: [2], startTime: '07:00', endTime: '08:00', intervalMinutes: -5 }); } catch (e) { created = /minutes apart/.test((e as Error).message) ? 'refused' : (e as Error).message; }
+  ok('…and so is a new schedule with −5 minutes', created === 'refused', created);
+  await updateSchedule(schId, { intervalMinutes: 9 });
+  ok('…while a real interval still saves', (await prisma.teeTimeSchedule.findUniqueOrThrow({ where: { id: schId } })).intervalMinutes === 9);
 
   for (const f of ['src/app/api/operator/settings/route.ts', 'src/app/api/operator/courses/route.ts']) {
     const src = readFileSync(f, 'utf8');

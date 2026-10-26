@@ -3,14 +3,12 @@ import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { chargeCutoffHold } from '@/lib/cutoff-hold';
+import { sendCheckInLinkOnce } from '@/lib/check-in-email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
 import { markNoShow, dueAutoNoShows, chargeNoShow, dueNoShowCharges } from '@/lib/no-show-fee';
 import { cutoffWarningDue, checkInEmailDue } from '@/lib/cron-windows';
-import {
-  sendCancellationWarningEmail,
-  sendCheckInAvailableEmail,
-} from '@/lib/email';
+import { sendCancellationWarningEmail } from '@/lib/email';
 import { retryMissingAgreementPdfs } from '@/lib/agreement-sign';
 import { sendAgreementBumpNotices } from '@/lib/agreement-required';
 import { sendCallReminders } from '@/lib/call-invite';
@@ -134,21 +132,11 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
     const windowMins = booking.course.checkInWindowHours * 60;
     if (!checkInEmailDue(minsToTee, windowMins)) continue;
 
+    // R-CRON-007: claimed, sent, and put back for the next run if the send fails.
     try {
-      await prisma.booking.update({
-        where: { id: booking.id },
-        data: { paymentStatus: 'awaiting_checkin' },
-      });
-      await sendCheckInAvailableEmail({
-        golferName: booking.golferName,
-        golferEmail: booking.golferEmail,
-        courseName: booking.course.name,
-        date: booking.teeTime.date,
-        time: booking.teeTime.time,
-        bookingId: booking.id,
-        checkInToken: booking.checkInToken,
-      });
-      results.checkIns++;
+      const r = await sendCheckInLinkOnce(booking);
+      if (r === 'sent') results.checkIns++;
+      else if (r === 'failed') results.failed++;
     } catch (err) {
       console.error(`Check-in email failed for booking ${booking.id}:`, err);
       results.failed++;
