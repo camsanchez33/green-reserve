@@ -11,6 +11,7 @@ import { chargeCutoffHold } from '../src/lib/cutoff-hold';
 import { dueNoShowCharges, dueAutoNoShows, noShowClosed } from '../src/lib/no-show-fee';
 import { performCheckIn } from '../src/lib/checkin-booking';
 import { settleAtCounter } from '../src/lib/counter-pay';
+import { performCancellation } from '../src/lib/cancel-booking';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 
 const TAG = 'ledgermoney';
@@ -25,10 +26,18 @@ const charges: { key?: string; amount: number }[] = [];
 const refunds: string[] = [];
 const s = stripe as unknown as Record<string, Record<string, unknown>>;
 s.paymentMethods.create = async () => ({ id: `pm_clone_${++n}` });
+// Like Stripe: a key still in flight answers "in progress"; a finished key replays its PaymentIntent.
+const byKey = new Map<string, { id: string; amount: number; status: string }>();
+const inFlight = new Set<string>();
 s.paymentIntents.create = async (p: { amount: number }, o: { idempotencyKey?: string }) => {
+  const key = o.idempotencyKey ?? `nokey-${n}`;
+  if (inFlight.has(key)) throw new Error('There is currently another in-progress request using this idempotency key.');
+  const seen = byKey.get(key); if (seen) return seen;
+  inFlight.add(key);
   const pi = { id: `pi_${TAG}_${++n}`, amount: p.amount, status: 'succeeded' };
   charges.push({ key: o.idempotencyKey, amount: p.amount });
   if (duringCharge) { const f = duringCharge; duringCharge = null; await f(); }
+  inFlight.delete(key); byKey.set(key, pi);
   return pi;
 };
 s.refunds.create = async (p: { payment_intent: string; amount?: number }) => { refunds.push(p.payment_intent); return { id: `re_${++n}`, amount: p.amount ?? 1000 }; };
@@ -86,6 +95,17 @@ const hhmm = (d: Date) => d.toISOString().slice(11, 16);
   const checkedIn = await booking(t1.id);
   duringCharge = async () => { await prisma.booking.update({ where: { id: checkedIn.id }, data: { status: 'completed', paymentStatus: 'paid', checkedInAt: new Date() } }); };
   ok('a group checked in and paid while its hold was being charged: refunded', (await chargeCutoffHold(checkedIn.id)) === 'refunded');
+
+  // A golfer cancelling late WHILE the cron's charge is in flight: the cancel's own
+  // charge (same key) hears "in progress", waits, replays the cron's PaymentIntent.
+  const racing = await booking(t1.id);
+  let cancelRun: Promise<unknown> | null = null;
+  duringCharge = async () => { cancelRun = performCancellation(racing.id, { type: 'golfer' }); await new Promise(r => setTimeout(r, 300)); };
+  const before3 = refunds.length;
+  const rr = await chargeCutoffHold(racing.id);
+  const cr = await cancelRun;
+  const r1 = await prisma.booking.findUniqueOrThrow({ where: { id: racing.id } });
+  ok('a late cancel racing the cron’s in-flight charge: one charge, kept, never refunded', refunds.length === before3 && (rr === 'charged' || rr === 'recorded_elsewhere') && r1.status === 'cancelled' && r1.paymentStatus === 'cancellation_fee_charged' && !!r1.cancellationFeeChargeId && r1.cancellationFeeTotal === 2000, { rr, cr, r1: { status: r1.status, ps: r1.paymentStatus, id: r1.cancellationFeeChargeId, fee: r1.cancellationFeeTotal } });
 
   const gone = await booking(t1.id, { status: 'cancelled' });
   const nCharges = charges.length;
