@@ -47,7 +47,7 @@ const SECURITY_HEADERS = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // payment stays on for Apple Pay / Google Pay through Stripe's frame.
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), usb=(), interest-cohort=(), payment=(self "https://js.stripe.com")' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), usb=(), payment=(self "https://js.stripe.com")' },
   { key: 'Content-Security-Policy', value: ENFORCED_CSP },
   { key: 'Content-Security-Policy-Report-Only', value: reportOnlyCsp() },
 ];
