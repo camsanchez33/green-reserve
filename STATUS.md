@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 23:20 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `199951b0` · working tree clean
+Generated 2026-10-26 23:21 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `4f206e4c` · working tree **3 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 74 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 75 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `4f206e4c` | 2026-10-26 | status board + code map |
 | `199951b0` | 2026-10-26 | Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply |
 | `50991cf1` | 2026-10-26 | Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question |
 | `3fac48ef` | 2026-10-26 | /for-courses: one column, no price line, no FAQ; thanks screens keep the header and say one thing |
@@ -88,6 +89,15 @@ Generated 2026-10-26 23:20 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `2734cbdb` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (3 file(s))
+
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -208,6 +218,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4f206e4c` 2026-10-26 — status board + code map
 - `199951b0` 2026-10-26 — Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply
 - `50991cf1` 2026-10-26 — Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question
 - `3fac48ef` 2026-10-26 — /for-courses: one column, no price line, no FAQ; thanks screens keep the header and say one thing
@@ -219,7 +230,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `f0b52217` 2026-10-26 — A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund
 - `28e1481e` 2026-10-26 — status board + code map
 - `2e541f71` 2026-10-26 — Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded
-- `0197ea86` 2026-10-26 — Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)
 
 ---
 

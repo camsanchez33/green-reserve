@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-26 23:20 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 199951b0</span>
-    <span>tree clean</span>
+    <span>2026-10-26 23:21 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 4f206e4c</span>
+    <span>3 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">74 runs have shipped that the queue doesn't know about</div>
+<div class="lede">75 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">4f206e4c</span><span>status board + code map</span></li>
 <li><span class="h">199951b0</span><span>Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply</span></li>
 <li><span class="h">50991cf1</span><span>Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question</span></li>
 <li><span class="h">3fac48ef</span><span>/for-courses: one column, no price line, no FAQ; thanks screens keep the header and say one thing</span></li>
@@ -208,6 +209,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
+<section><h2>Working tree right now</h2>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li></ul>
+</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
@@ -286,6 +292,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">4f206e4c</td><td class="num">2026-10-26</td><td>status board + code map</td></tr>
 <tr><td class="num">199951b0</td><td class="num">2026-10-26</td><td>Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply</td></tr>
 <tr><td class="num">50991cf1</td><td class="num">2026-10-26</td><td>Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question</td></tr>
 <tr><td class="num">3fac48ef</td><td class="num">2026-10-26</td><td>/for-courses: one column, no price line, no FAQ; thanks screens keep the header and say one thing</td></tr>
@@ -297,7 +304,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">f0b52217</td><td class="num">2026-10-26</td><td>A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund</td></tr>
 <tr><td class="num">28e1481e</td><td class="num">2026-10-26</td><td>status board + code map</td></tr>
 <tr><td class="num">2e541f71</td><td class="num">2026-10-26</td><td>Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded</td></tr>
-<tr><td class="num">0197ea86</td><td class="num">2026-10-26</td><td>Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -1,15 +1,26 @@
 {
-  "generatedAt": "2026-10-26T23:20:54.755Z",
+  "generatedAt": "2026-10-26T23:21:15.142Z",
   "repo": {
-    "head": "199951b0",
+    "head": "4f206e4c",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
+    "dirtyCount": 3,
+    "dirty": [
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "4f206e4c",
+        "date": "2026-10-26T23:20:56+00:00",
+        "subject": "status board + code map",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "199951b0",
         "date": "2026-10-26T23:19:37+00:00",
@@ -914,6 +925,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4f206e4c",
+      "date": "2026-10-26",
+      "subject": "status board + code map"
+    },
+    {
       "h": "199951b0",
       "date": "2026-10-26",
       "subject": "Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply"
@@ -967,11 +983,6 @@
       "h": "2e541f71",
       "date": "2026-10-26",
       "subject": "Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded"
-    },
-    {
-      "h": "0197ea86",
-      "date": "2026-10-26",
-      "subject": "Admin Problems: a failed refund and a declined cancellation hold (R-PAY-010)"
     }
   ]
 }
