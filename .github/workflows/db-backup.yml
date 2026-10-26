@@ -43,7 +43,7 @@ jobs:
           echo "Backup size: $(du -sh greenreserve-db-${{ steps.date.outputs.DATE }}.dump.enc | cut -f1)"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: db-backup-${{ steps.date.outputs.DATE }}
           path: greenreserve-db-${{ steps.date.outputs.DATE }}.dump.enc
