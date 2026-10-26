@@ -43,6 +43,8 @@ export const WIPED_TABLES = [
   'MessageThread', 'Message', 'CourseMessage', 'Announcement', 'AnnouncementDismissal', 'AdminAlert', 'AdminAlertEvent',
   // sign-in throttles
   'RateLimit',
+  // SEC-3: sign-ins before launch are test traffic.
+  'SecurityEvent',
 ] as const;
 
 export type TableCounts = Record<string, number>;

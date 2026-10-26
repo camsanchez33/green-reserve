@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyMemberMagicToken, signMemberSessionToken } from '@/lib/member-session';
+import { securityEvent } from '@/lib/security-events';
 
 export async function GET(
   req: NextRequest,
@@ -14,7 +15,10 @@ export async function GET(
   if (!token) return NextResponse.redirect(failUrl);
 
   const payload = await verifyMemberMagicToken(token);
-  if (!payload) return NextResponse.redirect(failUrl);
+  if (!payload) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'member', detail: 'sign-in link invalid or expired' });
+    return NextResponse.redirect(failUrl);
+  }
 
   // Confirm token's courseId belongs to this slug
   const course = await prisma.course.findUnique({

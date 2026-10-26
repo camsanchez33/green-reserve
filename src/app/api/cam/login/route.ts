@@ -30,7 +30,8 @@ const DUMMY_HASH = '$2a$12$x9I/Ln7XwBr4.techzuhLufMEVbOz1lhUde8CTW8YVHD9pGubcv7u
 
 
 /** Signed in: the session, the cookie, and the alert email (a failed email never blocks the sign-in). */
-async function signIn(admin: { id: string; email: string; name: string }, deviceId: string, method: string) {
+async function signIn(req: Request, admin: { id: string; email: string; name: string }, deviceId: string, method: string) {
+  await securityEvent(req, { kind: 'signin_ok', surface: 'owner', email: admin.email, accountId: admin.id, detail: method });
   const ctx = await requestContext();
   const res = NextResponse.json({ success: true });
   await createOwnerSession(res, { adminId: admin.id, deviceId, method, ip: ctx.ip, userAgent: ctx.userAgent });
@@ -38,6 +39,7 @@ async function signIn(admin: { id: string; email: string; name: string }, device
   catch (err) { console.error(JSON.stringify({ ev: 'owner.signin_alert.fail', adminId: admin.id, error: err instanceof Error ? err.message : String(err) })); }
   return res;
 }
+import { securityEvent } from '@/lib/security-events';
 import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_PENDING, TOTP_USED_PREFIX, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
 
 const MAX_2FA_ATTEMPTS = 5;
@@ -60,7 +62,10 @@ export async function POST(req: NextRequest) {
   // ── Step 2a (AW-1b): a passkey ───────────────────────────────────────
   if (body.step === 'passkey') {
     const allowed = await rateLimit(`2fa:admin:${ip}`, 10, 300);
-    if (!allowed) return NextResponse.json({ error: 'Too many attempts, try again in a few minutes.' }, { status: 429 });
+    if (!allowed) {
+      await securityEvent(req, { kind: 'rate_limited', surface: 'owner', detail: 'second factor' });
+      return NextResponse.json({ error: 'Too many attempts, try again in a few minutes.' }, { status: 429 });
+    }
     const email = String(body.email ?? '').trim().toLowerCase();
     const admin = email ? await prisma.adminUser.findUnique({ where: { email } }) : null;
     const startOver = () => NextResponse.json({ error: 'No sign-in in progress — please start over.' }, { status: 400 });
@@ -74,6 +79,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Too many incorrect attempts. Please start over.' }, { status: 400 });
     }
     if (!(await verifyPasskeySignIn(admin.id, body.response))) {
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'passkey' });
       const attempts = admin.twoFactorAttempts + 1;
       const clear = attempts >= MAX_2FA_ATTEMPTS;
       await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorAttempts: clear ? 0 : attempts, ...(clear ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}) } });
@@ -86,13 +92,16 @@ export async function POST(req: NextRequest) {
       ...(carried ? { twoFactorCode: TOTP_USED_PREFIX + carried, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) } : { twoFactorCode: null, twoFactorCodeExpiry: null }),
       twoFactorAttempts: 0, lastLoginAt: new Date(),
     } });
-    return signIn(admin, device.id, 'passkey');
+    return signIn(req, admin, device.id, 'passkey');
   }
 
   // ── Step 2: verify 2FA code ──────────────────────────────────────────
   if (body.step === 'verify') {
     const allowed = await rateLimit(`2fa:admin:${ip}`, 10, 300);
-    if (!allowed) return NextResponse.json({ error: 'Too many attempts, try again in a few minutes.' }, { status: 429 });
+    if (!allowed) {
+      await securityEvent(req, { kind: 'rate_limited', surface: 'owner', detail: 'second factor' });
+      return NextResponse.json({ error: 'Too many attempts, try again in a few minutes.' }, { status: 429 });
+    }
 
     const { email: rawEmail, code } = body;
     if (!rawEmail || !code) return NextResponse.json({ error: 'email and code required' }, { status: 400 });
@@ -150,6 +159,7 @@ export async function POST(req: NextRequest) {
         }
       }
       if (!ok) {
+        await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: method === 'recovery' ? 'recovery code' : 'authenticator code' });
         const attempts = admin.twoFactorAttempts + 1;
         const clear = attempts >= MAX_2FA_ATTEMPTS;
         await prisma.adminUser.update({
@@ -159,11 +169,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
       }
       await prisma.adminUser.update({ where: { id: admin.id }, data: { ...data, twoFactorAttempts: 0, lastLoginAt: new Date() } });
-      return signIn(admin, device.id, method);
+      return signIn(req, admin, device.id, method);
     }
 
     const valid = await bcrypt.compare(String(code).trim(), admin.twoFactorCode);
     if (!valid) {
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'emailed code' });
       const attempts = admin.twoFactorAttempts + 1;
       const clearCode = attempts >= MAX_2FA_ATTEMPTS;
       await prisma.adminUser.update({
@@ -182,12 +193,15 @@ export async function POST(req: NextRequest) {
     });
 
     // The only path that has seen a second factor makes the owner session.
-    return signIn(admin, device.id, 'email');
+    return signIn(req, admin, device.id, 'email');
   }
 
   // ── Step 1: verify password, send 2FA code ───────────────────────────
   const allowed = await rateLimit(`login:admin:${ip}`, 20, 600);
-  if (!allowed) return NextResponse.json({ error: 'Too many attempts from your network, try again in a few minutes.' }, { status: 429 });
+  if (!allowed) {
+    await securityEvent(req, { kind: 'rate_limited', surface: 'owner', detail: 'sign-in' });
+    return NextResponse.json({ error: 'Too many attempts from your network, try again in a few minutes.' }, { status: 429 });
+  }
 
   const { email: rawEmail, password } = body;
   if (!rawEmail || !password) return NextResponse.json({ error: 'email and password required' }, { status: 400 });
@@ -197,9 +211,13 @@ export async function POST(req: NextRequest) {
   if (!admin || admin.role !== 'owner' || !admin.active) {
     // Same work as a real check, so the answer's timing doesn't say whose email it is.
     await bcrypt.compare(String(password), DUMMY_HASH);
+    await securityEvent(req, { kind: 'signin_failed', surface: 'owner', email, accountId: admin?.id, detail: !admin ? 'unknown account' : admin.role !== 'owner' ? 'employee account at the owner door' : 'account turned off' });
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
   }
-  if (admin.lockoutUntil && admin.lockoutUntil > new Date()) return lockoutResponse(admin.lockoutUntil);
+  if (admin.lockoutUntil && admin.lockoutUntil > new Date()) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'owner', email, accountId: admin.id, detail: 'while locked out' });
+    return lockoutResponse(admin.lockoutUntil);
+  }
 
   // Same guard as /api/admin/login:31 — bcrypt.compare throws on a null hash,
   // so an owner row created but never activated would 500 instead of getting
@@ -212,6 +230,7 @@ export async function POST(req: NextRequest) {
     const failedLoginAttempts = admin.failedLoginAttempts + 1;
     const lockoutUntil = failedLoginAttempts >= MAX_LOGIN_ATTEMPTS ? new Date(Date.now() + LOCKOUT_MS) : null;
     await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts, ...(lockoutUntil ? { lockoutUntil } : {}) } });
+    await securityEvent(req, { kind: lockoutUntil ? 'locked_out' : 'signin_failed', surface: 'owner', email, accountId: admin.id, detail: 'wrong password' });
     if (lockoutUntil) return lockoutResponse(lockoutUntil);
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
   }
@@ -224,6 +243,7 @@ export async function POST(req: NextRequest) {
   if (!(await trustedDevice(admin.id, rawDevice))) {
     const ctx = await requestContext();
     const { deviceToken, approvalToken } = await startDeviceApproval(admin.id, rawDevice, ctx);
+    await securityEvent(req, { kind: 'new_device', surface: 'owner', email, accountId: admin.id, detail: 'right password on a device not yet approved — approval emailed' });
     // Never built from the request's Host: the link carries the approval token.
     const origin = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
     let res: NextResponse;

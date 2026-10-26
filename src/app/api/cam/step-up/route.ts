@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner } from '@/lib/admin-session';
 import { rateLimit } from '@/lib/rate-limit';
 import { markStepUp } from '@/lib/owner-session';
+import { securityEvent } from '@/lib/security-events';
 import { hasPasskey, authenticationOptions, verifyPasskeySignIn } from '@/lib/owner-passkey';
 import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_USED_PREFIX, TOTP_PENDING, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
 
@@ -29,12 +30,16 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const g = await gate();
   if ('res' in g) return g.res;
-  if (!(await rateLimit(`cam:step-up:${g.sessionId}`, 6, 300))) return NextResponse.json({ error: 'Too many tries — wait a few minutes.' }, { status: 429 });
+  if (!(await rateLimit(`cam:step-up:${g.sessionId}`, 6, 300))) {
+    await securityEvent(req, { kind: 'rate_limited', surface: 'owner', accountId: g.session.adminId, detail: 'confirm it’s you' });
+    return NextResponse.json({ error: 'Too many tries — wait a few minutes.' }, { status: 429 });
+  }
   const body = await req.json().catch(() => ({})) as { response?: unknown; code?: unknown };
   const adminId = g.session.adminId;
 
   if (body.response && typeof body.response === 'object') {
     if (!(await verifyPasskeySignIn(adminId, body.response as Parameters<typeof verifyPasskeySignIn>[1]))) {
+      await securityEvent(req, { kind: 'step_up_failed', surface: 'owner', accountId: adminId, detail: 'passkey' });
       return NextResponse.json({ error: 'That passkey didn’t check out — try again, or use your authenticator code.' }, { status: 400 });
     }
   } else if (typeof body.code === 'string') {
@@ -43,7 +48,10 @@ export async function POST(req: NextRequest) {
     const raw = body.code.trim();
     if (looksLikeRecoveryCode(raw)) {
       const idx = await matchRecoveryCode(raw, admin.twoFactorRecoveryCodes);
-      if (idx < 0) return NextResponse.json({ error: 'That recovery code didn’t match.' }, { status: 400 });
+      if (idx < 0) {
+        await securityEvent(req, { kind: 'step_up_failed', surface: 'owner', accountId: adminId, detail: 'recovery code' });
+        return NextResponse.json({ error: 'That recovery code didn’t match.' }, { status: 400 });
+      }
       await prisma.adminUser.update({ where: { id: adminId }, data: { twoFactorRecoveryCodes: admin.twoFactorRecoveryCodes.filter((_, i) => i !== idx) } });
     } else {
       const step = totpMatchStep(raw, admin.twoFactorSecret);
@@ -54,7 +62,10 @@ export async function POST(req: NextRequest) {
       const usedLive = !live ? ''
         : admin.twoFactorCode!.startsWith(TOTP_USED_PREFIX) ? admin.twoFactorCode!.slice(TOTP_USED_PREFIX.length)
         : pending ? admin.twoFactorCode!.slice(TOTP_PENDING.length + 1) : '';
-      if (step === null || String(step) === usedLive) return NextResponse.json({ error: 'That code didn’t match — wait for the next one and try again.' }, { status: 400 });
+      if (step === null || String(step) === usedLive) {
+        await securityEvent(req, { kind: 'step_up_failed', surface: 'owner', accountId: adminId, detail: step === null ? 'authenticator code' : 'authenticator code already used' });
+        return NextResponse.json({ error: 'That code didn’t match — wait for the next one and try again.' }, { status: 400 });
+      }
       // Mark the step used so the same code can't confirm twice. A sign-in in
       // flight on another device keeps its pending marker, carrying this step.
       await prisma.adminUser.update({ where: { id: adminId }, data: pending
