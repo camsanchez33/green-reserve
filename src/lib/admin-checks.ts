@@ -17,6 +17,7 @@ import { todayMoney, todayOnboarding } from './admin-today';
 import { buildActionQueue } from './admin-action-queue';
 import { draftProblems } from './monthly-review';
 import { sendAdminUrgentAlert, sendAdminDigest } from './email';
+import { securityFindings, purgeOldSecurityEvents } from './security-events';
 import vercelConfig from '../../vercel.json';
 
 const CRONS = ((vercelConfig as { crons?: { path: string; schedule: string }[] }).crons ?? []);
@@ -31,15 +32,18 @@ export type Finding = { key: string; title: string; detail: string; href: string
 
 /** Everything urgent right now. Site errors go to Sentry (BRAIN-0), not here. */
 export async function urgentFindings(now = new Date()): Promise<Finding[]> {
-  const [failed, disputes, jobs, webhook, noStripe, onboarding] = await Promise.all([
+  const [failed, disputes, jobs, webhook, noStripe, onboarding, security] = await Promise.all([
     prisma.booking.findMany({ where: { ...FAILED_CHARGE_WHERE, ...ON_REAL_COURSE }, select: { courseId: true, totalAmount: true, course: { select: { name: true } } } }),
     openDisputes(),
     cronHealth(CRONS, now),
     lastStripeWebhook(),
     prisma.course.findMany({ where: { active: true, stripeAccountActive: false, archivedAt: null, ...REAL_COURSE }, select: { id: true, name: true } }),
     todayOnboarding(now),
+    // SEC-3 (Cam 2026-10-26: "email + Problems"): an attack becomes a Problem, emailed once.
+    securityFindings(now),
   ]);
   const out: Finding[] = [];
+  for (const f of security) out.push({ ...f, href: '/admin/security' });
 
   const byCourse = new Map<string, { name: string; n: number; cents: number }>();
   for (const b of failed) {
@@ -183,7 +187,9 @@ export async function runAdminChecks(now = new Date()) {
   let urgent: Awaited<ReturnType<typeof runUrgentChecks>> | { error: string };
   try { urgent = await runUrgentChecks(now); } catch (err) { console.error('Admin urgent checks failed:', err); urgent = { error: 'failed' }; }
   const digest = await runMorningDigest(now).catch(err => { console.error('Admin digest failed:', err); return 'failed' as const; });
-  return { urgent, digest };
+  // SEC-3: security events are kept 90 days.
+  const securityPurged = await purgeOldSecurityEvents(now).catch(err => { console.error('Security event purge failed:', err); return -1; });
+  return { urgent, digest, securityPurged };
 }
 
 /** Once a day, on the first run at or after DIGEST_HOUR_ET. The row is claimed before sending so two runs can't both send. */

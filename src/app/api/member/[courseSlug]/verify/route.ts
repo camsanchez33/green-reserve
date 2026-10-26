@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyMemberMagicToken, signMemberSessionToken } from '@/lib/member-session';
+import { securityEvent } from '@/lib/security-events';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 export async function GET(
   req: NextRequest,
@@ -12,9 +14,17 @@ export async function GET(
   const failUrl = `${process.env.NEXT_PUBLIC_URL}/courses/${courseSlug}/member?error=invalid`;
 
   if (!token) return NextResponse.redirect(failUrl);
+  // SEC-3 audit: this link check had no limit at all.
+  if (!(await rateLimit(`member-verify-ip:${clientIp(req)}`, 30, 600))) {
+    await securityEvent(req, { kind: 'rate_limited', surface: 'member', detail: 'sign-in link' });
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_URL}/courses/${courseSlug}/member?error=busy`);
+  }
 
   const payload = await verifyMemberMagicToken(token);
-  if (!payload) return NextResponse.redirect(failUrl);
+  if (!payload) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'member', detail: 'sign-in link invalid or expired' });
+    return NextResponse.redirect(failUrl);
+  }
 
   // Confirm token's courseId belongs to this slug
   const course = await prisma.course.findUnique({

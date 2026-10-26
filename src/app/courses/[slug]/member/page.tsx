@@ -210,6 +210,12 @@ function SignInPanel({
               That sign-in link has expired or is invalid. Request a new one below.
             </div>
           )}
+          {errorParam === 'busy' && (
+            <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 mb-4 text-sm text-warn">
+              <StatusDot status="warn" />
+              Too many sign-in attempts from your network. Wait a few minutes and open the link again.
+            </div>
+          )}
           {errorParam === 'inactive' && (
             <div className="flex items-start gap-2 bg-warn/5 border border-warn/20 rounded-md p-3 mb-4 text-sm text-warn">
               <StatusDot status="bad" />

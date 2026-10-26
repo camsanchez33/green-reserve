@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 05:04 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ef437d1` · working tree **2 dirty file(s)**
+Generated 2026-10-26 05:58 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `76bbb43` · working tree **29 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 37 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 41 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `76bbb43` | 2026-10-26 | perf-audit header: LCP is report-only on a local build |
+| `a75c138` | 2026-10-26 | Perf check on the PR build: LCP reported, not enforced; one warm-up load per page |
+| `a247189` | 2026-10-26 | perf seed refuses a non-local database |
+| `6f61833` | 2026-10-26 | status board + code map |
 | `ef437d1` | 2026-10-26 | perf seed: a no-fee course, so /book is audited on the no-card path |
 | `b5d26e2` | 2026-10-26 | Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build |
 | `04522eb` | 2026-10-26 | Money fixes from the review ledger + the money walk script (#223) |
@@ -52,13 +56,31 @@ Generated 2026-10-26 05:04 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (29 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `M  CLAUDE.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `M  docs/RUNBOOK.md`
+- `M  docs/SHIPPING.md`
+- `M  docs/codemap.json`
+- `A  prisma/migrations/20261026042944_sec3_security_events/migration.sql`
+- `M  prisma/schema.prisma`
+- `M  scripts/admin-nav-test.ts`
+- `A  scripts/security-events-db-test.ts`
+- `A  src/app/admin/security/page.tsx`
+- `M  src/app/api/admin/login/route.ts`
+- `A  src/app/api/admin/security/route.ts`
+- `M  src/app/api/auth/2fa/verify/route.ts`
+- `M  src/app/api/auth/login/route.ts`
+- `M  src/app/api/cam/login/route.ts`
+- `M  src/app/api/cam/step-up/route.ts`
+- `M  src/app/api/golfer/auth/otp/verify/route.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -178,6 +200,10 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `76bbb43` 2026-10-26 — perf-audit header: LCP is report-only on a local build
+- `a75c138` 2026-10-26 — Perf check on the PR build: LCP reported, not enforced; one warm-up load per page
+- `a247189` 2026-10-26 — perf seed refuses a non-local database
+- `6f61833` 2026-10-26 — status board + code map
 - `ef437d1` 2026-10-26 — perf seed: a no-fee course, so /book is audited on the no-card path
 - `b5d26e2` 2026-10-26 — Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build
 - `04522eb` 2026-10-26 — Money fixes from the review ledger + the money walk script (#223)
@@ -186,10 +212,6 @@ Nothing awaiting review.
 - `a904586` 2026-10-26 — Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)
 - `6c9f307` 2026-10-26 — Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival
 - `2ff16fa` 2026-10-25 — Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)
-- `00d53d1` 2026-10-26 — docs: money walk script for the register, cash and card reader
-- `47e5fb0` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212)
-- `719895d` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
-- `0278299` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
 
 ---
 

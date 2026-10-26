@@ -3,13 +3,17 @@ import { prisma } from '@/lib/prisma';
 import { signToken, verifyToken } from '@/lib/auth';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
+import { securityEvent } from '@/lib/security-events';
 
 const MAX_2FA_ATTEMPTS = 5;
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req);
   const allowed = await rateLimit(`2fa:op:${ip}`, 10, 300);
-  if (!allowed) return NextResponse.json({ error: 'Too many attempts, try again in a few minutes.' }, { status: 429 });
+  if (!allowed) {
+    await securityEvent(req, { kind: 'rate_limited', surface: 'course', detail: 'sign-in code' });
+    return NextResponse.json({ error: 'Too many attempts, try again in a few minutes.' }, { status: 429 });
+  }
 
   const pendingToken = req.cookies.get('gr_2fa_pending')?.value;
   if (!pendingToken) return NextResponse.json({ error: 'No pending login. Please sign in again.' }, { status: 401 });
@@ -44,6 +48,8 @@ export async function POST(req: NextRequest) {
         ...(clearCode ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}),
       },
     });
+    // Logged after the attempt counter moves, never before it (security audit).
+    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', email: operator.email, accountId: operator.id, detail: 'sign-in code' });
     return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please sign in again to get a new code.' : 'Invalid or expired code.' }, { status: 400 });
   }
 
@@ -56,6 +62,7 @@ export async function POST(req: NextRequest) {
     data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() },
   });
 
+  await securityEvent(req, { kind: 'signin_ok', surface: 'course', email: operator.email, accountId: operator.id, detail: 'owner' });
   const token = await signToken({ operatorId: operator.id, email: operator.email, sv: operator.sessionVersion });
   let redirect = '/dashboard';
   if (!operator.emailVerified) redirect = '/dashboard/verify';
