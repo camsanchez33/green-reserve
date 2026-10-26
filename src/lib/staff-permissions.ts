@@ -12,7 +12,7 @@ export type PermissionKey =
   | 'sheet.view' | 'sheet.checkin' | 'sheet.counter_payment' | 'sheet.walkin' | 'sheet.move' | 'sheet.no_show'
   | 'sheet.cancel' | 'sheet.waive_fee' | 'sheet.block' | 'sheet.edit_times' | 'sheet.delay_start'
   | 'sheet.weather_cancel' | 'sheet.golfer_contact' | 'sheet.message_golfers' | 'sheet.course_alert'
-  | 'money.cancellations' | 'money.payments' | 'money.refund' | 'money.charge_fee' | 'money.payouts'
+  | 'money.cancellations' | 'money.payments' | 'money.refund' | 'money.payouts'
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
   | 'analytics.view' | 'messages.use' | 'settings.edit'
@@ -52,8 +52,10 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'sheet.golfer_contact', group: 'Tee sheet', label: 'See golfer email and phone', help: 'Shows contact details on the sheet and in bookings.' },
   { key: 'money.cancellations', group: 'Money', label: 'See cancellations', help: 'The list of cancelled bookings and any fees kept.' },
   { key: 'money.payments', group: 'Money', label: 'See payments', help: 'What was charged, per booking and in total.' },
-  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund a charge back to the golfer’s card, and refund pro shop sales.', requires: ['money.payments'], movesMoney: true },
-  { key: 'money.charge_fee', group: 'Money', label: 'Charge a fee by hand', help: 'Charge a late or no-show fee to the card on file.', movesMoney: true },
+  // R-AUTH-007: the two places staff can refund — event payments and pro shop sales (rounds are refunded by cancelling or "still coming").
+  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund event payments and pro shop sales back to the card.', requires: ['money.payments'], movesMoney: true },
+  // 'Charge a fee by hand' (money.charge_fee) was removed (Cam 2026-10-26): no screen charges a fee by hand, so the
+  // switch did nothing. A stored key is dropped by normalizePermissions. It comes back only with that feature.
   { key: 'money.payouts', group: 'Money', label: 'See payouts', help: 'What Stripe has paid out to the course.' },
   { key: 'members.view', group: 'Members', label: 'See members', help: 'The member list and who is paid up.' },
   { key: 'members.edit', group: 'Members', label: 'Manage members', help: 'Add and edit members and send dues reminders.', requires: ['members.view'] },

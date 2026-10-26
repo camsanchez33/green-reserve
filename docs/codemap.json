@@ -10708,7 +10708,7 @@
     },
     {
       "path": "src/components/dashboard/money/PayoutsPanel.tsx",
-      "lines": 96,
+      "lines": 102,
       "purpose": "SD-8 — the Stripe card, moved here out of Settings.",
       "brain": [],
       "exports": [
@@ -20838,7 +20838,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 145,
+      "lines": 147,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [

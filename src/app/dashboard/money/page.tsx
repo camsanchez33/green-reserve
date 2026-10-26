@@ -270,7 +270,7 @@ function MoneyPageInner() {
           ) : active === 'cancellations' ? (
             <CancellationsPanel bookings={bookings} course={course}/>
           ) : (
-            <PayoutsPanel course={course} stripeParam={stripeParam} onConnected={loadCourse}/>
+            <PayoutsPanel course={course} stripeParam={stripeParam} onConnected={loadCourse} canConnect={!treatAsStaff}/>
           )}
         </div>
       </main>
