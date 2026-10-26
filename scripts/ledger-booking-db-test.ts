@@ -94,18 +94,19 @@ async function cleanup() {
   ok('…both crons send it only through sendCheckInLinkOnce', crons.every(c => c.includes('sendCheckInLinkOnce(booking)') && !c.includes("data: { paymentStatus: 'awaiting_checkin' }")));
   // R-BOOK-011: an interval below 1 (or not a whole number) is refused, never saved.
   const sch = await createSchedule(fc.id, { daysOfWeek: [1], startTime: '07:00', endTime: '08:00', intervalMinutes: 10, greenFeeWeekday: 50 });
+  const schId = String(sch.id); // scheduleToWire returns Record<string, unknown>
   const refusals: string[] = [];
   for (const bad of [-5, 0, 2.5]) {
-    try { await updateSchedule(sch.id, { intervalMinutes: bad }); refusals.push(`saved ${bad}`); }
+    try { await updateSchedule(schId, { intervalMinutes: bad }); refusals.push(`saved ${bad}`); }
     catch (e) { refusals.push(/minutes apart/.test((e as Error).message) ? 'refused' : (e as Error).message); }
   }
-  const schAfter = await prisma.teeTimeSchedule.findUniqueOrThrow({ where: { id: sch.id } });
+  const schAfter = await prisma.teeTimeSchedule.findUniqueOrThrow({ where: { id: schId } });
   ok('R-BOOK-011: a schedule update with −5, 0 or 2.5 minutes is refused, and the interval stays', refusals.every(r => r === 'refused') && schAfter.intervalMinutes === 10, { refusals, iv: schAfter.intervalMinutes });
   let created = 'saved';
   try { await createSchedule(fc.id, { daysOfWeek: [2], startTime: '07:00', endTime: '08:00', intervalMinutes: -5 }); } catch (e) { created = /minutes apart/.test((e as Error).message) ? 'refused' : (e as Error).message; }
   ok('…and so is a new schedule with −5 minutes', created === 'refused', created);
-  await updateSchedule(sch.id, { intervalMinutes: 9 });
-  ok('…while a real interval still saves', (await prisma.teeTimeSchedule.findUniqueOrThrow({ where: { id: sch.id } })).intervalMinutes === 9);
+  await updateSchedule(schId, { intervalMinutes: 9 });
+  ok('…while a real interval still saves', (await prisma.teeTimeSchedule.findUniqueOrThrow({ where: { id: schId } })).intervalMinutes === 9);
 
   for (const f of ['src/app/api/operator/settings/route.ts', 'src/app/api/operator/courses/route.ts']) {
     const src = readFileSync(f, 'utf8');
