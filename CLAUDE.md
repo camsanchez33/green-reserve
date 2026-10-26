@@ -222,6 +222,11 @@ After every run, `git status` — if dirty:
 
 First action of every run: commit any dirty doc files BEFORE reading the queue.
 
+## Security (SEC-1, Cam 2026-10-26: "security has to be insane")
+- Headers: `next.config.ts` sends HSTS, nosniff, `X-Frame-Options: DENY`, a trimmed Referrer-Policy, a Permissions-Policy (camera/mic/location off; payment only for us + Stripe) and an ENFORCED CSP of `frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests` on every path; `poweredByHeader: false`. Nothing of ours may be framed — a course's "Book" button is a link, never an iframe. The full CSP runs REPORT-ONLY and reports to Sentry's security endpoint (derived from the DSN); enforce it only after its reports are clean. A new third-party script, frame or API host must be added to it. `scripts/security-headers-test.ts` pins all of this.
+- Packages: `.github/workflows/security.yml` fails a PR on any CRITICAL flaw in production dependencies (`npm audit --omit=dev`) and runs daily; `.github/dependabot.yml` opens weekly update PRs. Next.js is pinned `^15.5.28` (past the 2026 Server Actions advisories). Known highs left: `@sentry/nextjs` 8 (needs 11) and `@vercel/blob`'s zod chain — the bar rises to high once Sentry is upgraded.
+- PHP2Shell (CVE-2026-109618/9, Oct 2026) does not apply: no PHP runs anywhere in GreenReserve.
+
 ## Environment variables
 
 All required in Vercel; the full list is in `docs/SHIPPING.md`, the secrets inventory in `docs/RUNBOOK.md`. Never paste values into chat, specs or the queue.
