@@ -5409,7 +5409,7 @@
     },
     {
       "path": "src/app/api/operator/courses/route.ts",
-      "lines": 109,
+      "lines": 111,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6368,7 +6368,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 128,
+      "lines": 130,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13980,7 +13980,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 301,
+      "lines": 328,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -22567,6 +22567,7 @@
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
+        "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/cutoff-hold.ts",
         "src/lib/data-reset.ts",

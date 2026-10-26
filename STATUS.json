@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-26T13:08:15.973Z",
+  "generatedAt": "2026-10-26T13:27:28.746Z",
   "repo": {
-    "head": "4474a82",
+    "head": "22bff0bb",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 2,
     "dirty": [
@@ -14,308 +14,336 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
-        "h": "4474a82",
+        "h": "22bff0bb",
+        "date": "2026-10-26T13:25:13+00:00",
+        "subject": "Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3344fa17",
+        "date": "2026-10-26T13:20:04+00:00",
+        "subject": "Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b06da63e",
+        "date": "2026-10-26T09:15:44-04:00",
+        "subject": "/book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "eb9b36f9",
+        "date": "2026-10-26T13:08:18+00:00",
+        "subject": "status board + code map",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4474a823",
         "date": "2026-10-26T12:54:45+00:00",
         "subject": "/book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "09fd1b9",
+        "h": "09fd1b9d",
         "date": "2026-10-26T02:06:18-04:00",
         "subject": "Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "76bbb43",
+        "h": "76bbb431",
         "date": "2026-10-26T05:25:15+00:00",
         "subject": "perf-audit header: LCP is report-only on a local build",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a75c138",
+        "h": "a75c138f",
         "date": "2026-10-26T05:25:02+00:00",
         "subject": "Perf check on the PR build: LCP reported, not enforced; one warm-up load per page",
         "ids": [],
         "matches": []
       },
       {
-        "h": "9f74c0c",
+        "h": "9f74c0c1",
         "date": "2026-10-26T01:15:19-04:00",
         "subject": "Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a247189",
+        "h": "a247189b",
         "date": "2026-10-26T05:05:54+00:00",
         "subject": "perf seed refuses a non-local database",
         "ids": [],
         "matches": []
       },
       {
-        "h": "6f61833",
+        "h": "6f618338",
         "date": "2026-10-26T05:04:56+00:00",
         "subject": "status board + code map",
         "ids": [],
         "matches": []
       },
       {
-        "h": "ef437d1",
+        "h": "ef437d10",
         "date": "2026-10-26T05:04:47+00:00",
         "subject": "perf seed: a no-fee course, so /book is audited on the no-card path",
         "ids": [],
         "matches": []
       },
       {
-        "h": "b5d26e2",
+        "h": "b5d26e20",
         "date": "2026-10-26T05:04:47+00:00",
         "subject": "Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build",
         "ids": [],
         "matches": []
       },
       {
-        "h": "04522eb",
+        "h": "04522eb0",
         "date": "2026-10-26T01:04:17-04:00",
         "subject": "Money fixes from the review ledger + the money walk script (#223)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "224b231",
+        "h": "224b231c",
         "date": "2026-10-26T04:45:35+00:00",
         "subject": "status board + code map",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a8a925d",
+        "h": "a8a925d4",
         "date": "2026-10-26T04:43:23+00:00",
         "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a904586",
+        "h": "a904586f",
         "date": "2026-10-26T00:38:41-04:00",
         "subject": "Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "6c9f307",
+        "h": "6c9f3077",
         "date": "2026-10-26T04:37:29+00:00",
         "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival",
         "ids": [],
         "matches": []
       },
       {
-        "h": "2ff16fa",
+        "h": "2ff16fa2",
         "date": "2026-10-25T23:57:09-04:00",
         "subject": "Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "00d53d1",
+        "h": "00d53d10",
         "date": "2026-10-26T03:27:06+00:00",
         "subject": "docs: money walk script for the register, cash and card reader",
         "ids": [],
         "matches": []
       },
       {
-        "h": "47e5fb0",
+        "h": "47e5fb0f",
         "date": "2026-10-25T19:15:14-04:00",
         "subject": "CASH-1: no more \"paid at the counter\" — paid online, or rung up in store (#212)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "719895d",
+        "h": "719895d0",
         "date": "2026-10-25T01:42:31-04:00",
         "subject": "POS-3 R4: end-of-day close-out — count the drawer (#211)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "0278299",
+        "h": "02782990",
         "date": "2026-10-24T10:13:45-04:00",
         "subject": "POS-3 R3b: a group's round paid on the card reader (#210)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "068ac2b",
+        "h": "068ac2b6",
         "date": "2026-10-24T09:28:40-04:00",
         "subject": "POS-3 R3a: Stripe card reader at the register (shop items) (#209)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "c8e0e66",
+        "h": "c8e0e662",
         "date": "2026-10-24T02:05:37-04:00",
         "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "9985445",
+        "h": "9985445e",
         "date": "2026-10-24T01:50:41-04:00",
         "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "2e01ec9",
+        "h": "2e01ec99",
         "date": "2026-10-24T00:15:19-04:00",
         "subject": "POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "ed10fa0",
+        "h": "ed10fa0c",
         "date": "2026-10-23T23:42:05-04:00",
         "subject": "POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "6fd9158",
+        "h": "6fd9158d",
         "date": "2026-10-23T23:19:31-04:00",
         "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "6d7bf2a",
+        "h": "6d7bf2a5",
         "date": "2026-10-23T22:07:29-04:00",
         "subject": "Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "fbacc52",
+        "h": "fbacc529",
         "date": "2026-10-23T21:36:46-04:00",
         "subject": "Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "592f05f",
+        "h": "592f05f4",
         "date": "2026-10-24T01:13:34+00:00",
         "subject": "schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday",
         "ids": [],
         "matches": []
       },
       {
-        "h": "4b6af6f",
+        "h": "4b6af6fe",
         "date": "2026-10-24T01:08:39+00:00",
         "subject": "contact-email-test: spacing",
         "ids": [],
         "matches": []
       },
       {
-        "h": "e53daa8",
+        "h": "e53daa8e",
         "date": "2026-10-24T01:05:41+00:00",
         "subject": "MAIL-1: agreements name admin@ instead of the Outlook inbox",
         "ids": [],
         "matches": []
       },
       {
-        "h": "978a3da",
+        "h": "978a3da2",
         "date": "2026-10-23T17:59:38-04:00",
         "subject": "Retire the admin Activity page (AW-12) (#200)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "d2b41f2",
+        "h": "d2b41f27",
         "date": "2026-10-23T19:16:02+00:00",
         "subject": "Regenerate the status board",
         "ids": [],
         "matches": []
       },
       {
-        "h": "d6efdc1",
+        "h": "d6efdc1b",
         "date": "2026-10-23T19:15:21+00:00",
         "subject": "Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "85bb916",
+        "h": "85bb9160",
         "date": "2026-10-23T19:12:51+00:00",
         "subject": "The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again",
         "ids": [],
         "matches": []
       },
       {
-        "h": "3148eed",
+        "h": "3148eed2",
         "date": "2026-10-22T22:56:06-04:00",
         "subject": "Money: Needs you — declined cards with a pay link (DASH-C) (#198)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "3c88148",
+        "h": "3c88148d",
         "date": "2026-10-22T22:37:59-04:00",
         "subject": "Course dashboard tabs: full width and one title style (DASH-C step 3) (#196)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "946d4a5",
+        "h": "946d4a54",
         "date": "2026-10-23T02:35:12+00:00",
         "subject": "The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie",
         "ids": [],
         "matches": []
       },
       {
-        "h": "a578929",
+        "h": "a5789298",
         "date": "2026-10-23T02:33:17+00:00",
         "subject": "Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no \"Birdie\" anywhere a course sees); a test for the pay-page fee line",
         "ids": [],
         "matches": []
       },
       {
-        "h": "966741b",
+        "h": "966741b9",
         "date": "2026-10-22T22:24:25-04:00",
         "subject": "Course dashboard search: find a golfer, booking or member from the menu (#195)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "dd3cfd1",
+        "h": "dd3cfd14",
         "date": "2026-10-23T02:19:56+00:00",
         "subject": "Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit",
         "ids": [],
         "matches": []
       },
       {
-        "h": "e0bc004",
+        "h": "e0bc004d",
         "date": "2026-10-22T22:09:55-04:00",
         "subject": "Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194)",
         "ids": [],
         "matches": []
       },
       {
-        "h": "4b621c0",
+        "h": "4b621c06",
         "date": "2026-10-22T22:44:23+00:00",
         "subject": "Regenerate status board",
         "ids": [],
         "matches": []
       },
       {
-        "h": "04301ce",
+        "h": "04301cec",
         "date": "2026-10-22T22:10:32+00:00",
         "subject": "W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses",
         "ids": [],
         "matches": []
       },
       {
-        "h": "2734cbd",
+        "h": "2734cbdb",
         "date": "2026-10-22T22:04:58+00:00",
         "subject": "W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later",
         "ids": [],
@@ -325,9 +353,9 @@
   },
   "counts": {
     "runDone": 298,
-    "runAwaiting": 0,
+    "runAwaiting": 1,
     "runInFlight": 1,
-    "runNotStarted": 6,
+    "runNotStarted": 5,
     "reviseDone": 15,
     "reviseOpen": 7,
     "ideas": 17,
@@ -342,7 +370,15 @@
       ]
     }
   ],
-  "awaiting": [],
+  "awaiting": [
+    {
+      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
+      "line": 2357,
+      "hash": "b88c8bf3",
+      "shipDate": "2026-07-22",
+      "ageDays": 95
+    }
+  ],
   "next": [
     {
       "title": "WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).",
@@ -362,11 +398,6 @@
     {
       "title": "CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (\"Golf",
       "line": 338,
-      "section": "Queue (run in this order)"
-    },
-    {
-      "title": "BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)",
-      "line": 2357,
       "section": "Queue (run in this order)"
     },
     {
@@ -704,64 +735,64 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "4474a82",
+      "h": "22bff0bb",
+      "date": "2026-10-26",
+      "subject": "Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking"
+    },
+    {
+      "h": "3344fa17",
+      "date": "2026-10-26",
+      "subject": "Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)"
+    },
+    {
+      "h": "b06da63e",
+      "date": "2026-10-26",
+      "subject": "/book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)"
+    },
+    {
+      "h": "eb9b36f9",
+      "date": "2026-10-26",
+      "subject": "status board + code map"
+    },
+    {
+      "h": "4474a823",
       "date": "2026-10-26",
       "subject": "/book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a)"
     },
     {
-      "h": "09fd1b9",
+      "h": "09fd1b9d",
       "date": "2026-10-26",
       "subject": "Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)"
     },
     {
-      "h": "76bbb43",
+      "h": "76bbb431",
       "date": "2026-10-26",
       "subject": "perf-audit header: LCP is report-only on a local build"
     },
     {
-      "h": "a75c138",
+      "h": "a75c138f",
       "date": "2026-10-26",
       "subject": "Perf check on the PR build: LCP reported, not enforced; one warm-up load per page"
     },
     {
-      "h": "9f74c0c",
+      "h": "9f74c0c1",
       "date": "2026-10-26",
       "subject": "Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225)"
     },
     {
-      "h": "a247189",
+      "h": "a247189b",
       "date": "2026-10-26",
       "subject": "perf seed refuses a non-local database"
     },
     {
-      "h": "6f61833",
+      "h": "6f618338",
       "date": "2026-10-26",
       "subject": "status board + code map"
     },
     {
-      "h": "ef437d1",
+      "h": "ef437d10",
       "date": "2026-10-26",
       "subject": "perf seed: a no-fee course, so /book is audited on the no-card path"
-    },
-    {
-      "h": "b5d26e2",
-      "date": "2026-10-26",
-      "subject": "Owner controls: course alert permission + cap, timezone/type owner-only, member session 7 days, perf check on the PR build"
-    },
-    {
-      "h": "04522eb",
-      "date": "2026-10-26",
-      "subject": "Money fixes from the review ledger + the money walk script (#223)"
-    },
-    {
-      "h": "224b231",
-      "date": "2026-10-26",
-      "subject": "status board + code map"
-    },
-    {
-      "h": "a8a925d",
-      "date": "2026-10-26",
-      "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing"
     }
   ]
 }
