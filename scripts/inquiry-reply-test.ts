@@ -23,9 +23,18 @@ const after = queueSignal(replied, now);
 ok('once we reply, it is waiting on them and not our move', after.waitingOn === 'them' && after.yourMove === false, after);
 ok('…and the next step moves on to Book a call', nextStep(replied, after, now)?.key === 'book_call', nextStep(replied, after, now));
 
-const quiet = { ...replied, events: [{ ...replied.events[0], createdAt: hoursAgo(4 * 24) }] };
+const quiet = { ...replied, createdAt: hoursAgo(5 * 24), events: [{ ...replied.events[0], createdAt: hoursAgo(4 * 24) }] };
 const stale = queueSignal(quiet, now);
 ok('4 days with no answer, it comes back to us', stale.yourMove === true && /no answer/.test(stale.reason), stale);
+
+const talked = { ...base, calls: [{ scheduledAt: hoursAgo(1), outcome: 'talked' }] };
+const talkedSig = queueSignal(talked, now);
+ok('a question answered on a call is not "New question — reply"', !talkedSig.reason.startsWith('New question') && nextStep(talked, talkedSig, now)?.key === 'send_sheet', { r: talkedSig.reason, step: nextStep(talked, talkedSig, now) });
+const skipped = { ...base, callSkippedReason: 'They asked for email only' };
+ok('…nor is one whose call was skipped (next step: send the sheet)', nextStep(skipped, queueSignal(skipped, now), now)?.key === 'send_sheet');
+const moved = { ...replied, status: 'in_review', events: [{ ...replied.events[0], createdAt: hoursAgo(10 * 24) }, { fromStatus: 'pending', toStatus: 'in_review', actorName: 'Moved by Cam', createdAt: hoursAgo(24) }] };
+const movedSig = queueSignal(moved, now);
+ok('a reply from an earlier stage does not anchor the new stage', movedSig.reason.startsWith('In review'), movedSig.reason);
 
 const route = readFileSync('src/app/api/admin/inquiries/route.ts', 'utf8');
 const r = route.slice(route.indexOf("if (action === 'reply')"), route.indexOf("if (action === 'add_note')"));

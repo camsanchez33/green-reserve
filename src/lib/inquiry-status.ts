@@ -435,14 +435,16 @@ export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSigna
 
     // Cam 2026-10-26 ("who would it be waiting on"): once we have replied, the
     // ball is with them until they go quiet for PENDING_STALL_DAYS.
-    const reply = lastEventStarting(evs, REPLY_EVENT_PREFIX);
-    if (reply) {
+    // Only a reply in this stage counts (as with resubmits); a talked call answers the question too.
+    const reply = lastEventStarting(evs.filter(e => new Date(e.createdAt).getTime() >= enteredAt.getTime()), REPLY_EVENT_PREFIX);
+    const talked = (inq.calls || []).some(c => c.outcome === 'talked');
+    if (reply && !talked) {
       const since = daysSince(new Date(reply.createdAt), now);
       return { waitingOn: 'them', yourMove: since > PENDING_STALL_DAYS, pressureDays: since - PENDING_STALL_DAYS,
         reason: since < 1 ? 'Replied today — waiting on them' : `Replied ${since}d ago — no answer yet` };
     }
     // A new question nobody has answered is our move from the moment it arrives.
-    if (status === 'pending') {
+    if (status === 'pending' && !reply && !talked) {
       return { waitingOn: 'us', yourMove: true, pressureDays: inStage,
         reason: inStage < 1 ? 'New question — reply' : `New question, unanswered for ${inStage}d` };
     }
@@ -450,7 +452,7 @@ export function queueSignal(inq: QueueInput, now: Date = new Date()): QueueSigna
     // in_review — ours to work through.
     return { waitingOn: 'us', yourMove: inStage > PENDING_STALL_DAYS,
       pressureDays: inStage - PENDING_STALL_DAYS,
-      reason: `In review for ${inStage}d` };
+      reason: `${status === 'pending' ? 'Open' : 'In review'} for ${inStage}d` };
   })();
 
   // A course that fills the form again is asking for attention, whatever

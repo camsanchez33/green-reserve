@@ -17228,7 +17228,7 @@
     },
     {
       "path": "src/lib/inquiry-action-queue.ts",
-      "lines": 105,
+      "lines": 107,
       "purpose": "The Overview action queue's inquiry rows.",
       "brain": [],
       "exports": [
@@ -17546,7 +17546,7 @@
     },
     {
       "path": "src/lib/inquiry-status.ts",
-      "lines": 499,
+      "lines": 501,
       "purpose": "Single source of truth for what every inquiry status means and which pipeline segment it belongs to.",
       "brain": [
         "inquiry-statuses",

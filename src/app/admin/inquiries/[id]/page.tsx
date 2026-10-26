@@ -7,7 +7,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import {
   STATUS_DOT_MAP, STATUS_LABEL, ACTIVE_STATUSES, stageEnteredAt, daysSince,
   INQUIRY_SOURCES, CLOSED_REASONS, RESUBMIT_ACTOR,
-  unreviewedResubmit, diffResubmit, decodeResubmit, queueSignal,
+  unreviewedResubmit, diffResubmit, decodeResubmit, queueSignal, REPLY_EVENT_PREFIX,
 } from '@/lib/inquiry-status';
 import { nextStep } from '@/lib/inquiry-board';
 import { adminFetch, type AdminFetchFailure } from '@/lib/admin-fetch';
@@ -1439,7 +1439,7 @@ function InquiryDetailInner() {
 
           {/* Lead tab — who they are, then what they told us. */}
           {activeTab === 'lead' && inq.email && !['lead', 'rejected', 'archived', 'live'].includes(inq.status) && (() => {
-            const lastReply = (inq.events || []).filter(e => e.actorName?.startsWith('Replied by email')).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+            const lastReply = (inq.events || []).filter(e => e.actorName?.startsWith(REPLY_EVENT_PREFIX)).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
             return (
               <div id="reply" className="max-w-3xl mb-8">
                 <h2 className="text-[15px] font-semibold text-ink mb-3">Reply</h2>

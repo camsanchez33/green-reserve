@@ -3,7 +3,7 @@
 // existing statuses, which stay as they are underneath: a card in "Setting up"
 // still knows whether the sheet is out, in, or the course is being built, and
 // says so in its next step. Client-safe: no database, no server imports.
-import { queueSignal, REPLY_EVENT_PREFIX, type QueueInput, type QueueSignal } from './inquiry-status';
+import { queueSignal, type QueueInput, type QueueSignal } from './inquiry-status';
 import { overdueCall, nextCall, isSameEasternDay, fmtCallClock } from './inquiry-call';
 import { computeOpenChanges, latestPageDecision, hasRequestedChangesThisRound } from './change-requests';
 
@@ -59,7 +59,7 @@ export function nextStep(inq: BoardInquiry, signal: QueueSignal = queueSignal(in
       const callDone = calls.some(c => c.outcome === 'talked');
       if (upcoming) return { key: 'prep_call', label: 'Get ready for the call', action: 'open' };
       // Cam 2026-10-26: a new question is answered first — then the call.
-      if (inq.status === 'pending' && !(inq.events ?? []).some(e => e.actorName?.startsWith(REPLY_EVENT_PREFIX))) return { key: 'reply', label: 'Reply', action: 'open' };
+      if (signal.reason.startsWith('New question') && !inq.callSkippedReason) return { key: 'reply', label: 'Reply', action: 'open' };
       if (!callDone && !inq.callSkippedReason) return { key: 'book_call', label: 'Book a call', action: 'open' };
       return { key: 'send_sheet', label: 'Send the setup sheet', action: 'open' };
     }
