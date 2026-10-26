@@ -156,7 +156,7 @@ type ActiveMemberSession = {
 };
 type GolferProfile = { firstName: string; lastName: string; email: string };
 
-type PreviewMode = { courseId: string; token: string } | null;
+type PreviewMode = { courseId: string; token: string; /** the admin's view-only look — no approve / request changes */ look?: boolean } | null;
 
 export default function CourseDetailPage({
   params,
@@ -743,7 +743,14 @@ export default function CourseDetailPage({
           </div>
         </div>
       )}
-      {previewMode && !course.is_live && (
+      {previewMode?.look && !course.is_live && (
+        <div className="bg-pine/10 border-b border-pine/20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 text-sm text-ink-soft">
+            Your look at this page before the course sees it — not live, booking is off. Send them the preview from the inquiry when it&apos;s right.
+          </div>
+        </div>
+      )}
+      {previewMode && !previewMode.look && !course.is_live && (
         <div className="bg-pine/10 border-b border-pine/20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3 text-sm flex-wrap">
             

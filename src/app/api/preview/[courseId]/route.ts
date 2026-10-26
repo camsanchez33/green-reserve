@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { normalizeDbCourse } from '@/lib/normalize-course';
-import { verifyPreviewToken } from '@/lib/preview-token';
+import { verifyViewToken } from '@/lib/preview-token';
 import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
 
 export async function GET(
@@ -12,7 +12,8 @@ export async function GET(
   const { courseId } = await params;
   const token = req.nextUrl.searchParams.get('token') ?? '';
 
-  const tokenCourseId = await verifyPreviewToken(token);
+  // The course's preview link or the admin's look (verifyViewToken); approving stays preview-only.
+  const tokenCourseId = (await verifyViewToken(token))?.courseId;
   if (!tokenCourseId || tokenCourseId !== courseId) {
     return NextResponse.json({ error: 'Invalid preview token' }, { status: 403 });
   }

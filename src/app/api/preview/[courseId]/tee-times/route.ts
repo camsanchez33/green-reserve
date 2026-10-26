@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { normalizeDbTeeTime } from '@/lib/public-tee-times';
-import { verifyPreviewToken } from '@/lib/preview-token';
+import { verifyViewToken } from '@/lib/preview-token';
 
 export async function GET(
   req: NextRequest,
@@ -12,7 +12,8 @@ export async function GET(
   const date = req.nextUrl.searchParams.get('date');
   if (!date) return NextResponse.json({ error: 'date param required' }, { status: 400 });
 
-  const tokenCourseId = await verifyPreviewToken(token);
+  // The course's preview link or the admin's look (verifyViewToken); approving stays preview-only.
+  const tokenCourseId = (await verifyViewToken(token))?.courseId;
   if (!tokenCourseId || tokenCourseId !== courseId) {
     return NextResponse.json({ error: 'Invalid preview token' }, { status: 403 });
   }

@@ -554,6 +554,24 @@ function InquiryDetailInner() {
     setProcessing(false);
   }
 
+  // Cam 2026-10-26: see the built page before the course does (view-only look link).
+  const [lookError, setLookError] = useState('');
+  async function lookAtPage() {
+    if (!inq?.builtCourseId) return;
+    setLookError('');
+    const tab = window.open('', '_blank'); // opened now, inside the click, so a pop-up blocker allows it
+    try {
+      const r = await fetch('/api/admin/course-look?courseId=' + encodeURIComponent(inq.builtCourseId));
+      const d = await r.json().catch(() => ({} as Record<string, unknown>));
+      if (r.ok && typeof d.url === 'string') { if (tab) tab.location.href = d.url; else window.location.href = d.url; return; }
+      tab?.close();
+      setLookError(String(d.error || 'Couldn’t open the page (' + r.status + '). Try again.'));
+    } catch {
+      tab?.close();
+      setLookError('Couldn’t reach the server — check your connection and try again.');
+    }
+  }
+
   async function sendPreview() {
     if (!inq?.builtCourseId) return;
     setSendingPreview(true);
@@ -912,6 +930,12 @@ function InquiryDetailInner() {
               {step && step.key !== 'snoozed' && step.key !== 'open' && (
                 <button onClick={runStep} disabled={processing || sendingPreview} className={btnP + ' !text-[13px] !px-3.5 !py-2'}>
                   {sendingPreview ? 'Sending…' : step.label}
+                </button>
+              )}
+              {inq.builtCourseId && inq.status === 'building' && (
+                <button onClick={lookAtPage}
+                  className="flex items-center gap-1.5 text-xs font-medium text-ink hover:text-pine bg-white border border-line hover:border-pine/30 px-3 py-2 rounded-md transition-colors">
+                  See the page <ArrowUpRight className="w-3.5 h-3.5" aria-hidden />
                 </button>
               )}
               {inq.status === 'live' && inq.builtCourseId && (
@@ -1386,6 +1410,12 @@ function InquiryDetailInner() {
           })()}
 
           {/* Inline action error */}
+          {lookError && (
+            <div role="alert" className="mt-3 bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 flex items-center justify-between gap-3">
+              <p className="text-bad text-xs leading-relaxed">{lookError}</p>
+              <button onClick={lookAtPage} className="text-xs font-medium text-bad underline shrink-0">Try again</button>
+            </div>
+          )}
           {actionError && (
             <div className="mt-3 bg-bad/5 border border-bad/20 rounded-md px-4 py-2.5 flex items-center justify-between gap-3">
               <p className="text-bad text-xs leading-relaxed">{actionError}</p>
