@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 04:35 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `00d53d1` · working tree **12 dirty file(s)**
+Generated 2026-10-26 04:45 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a8a925d` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 29 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 31 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `a8a925d` | 2026-10-26 | Late cancel racing the cron's hold charge: wait and replay instead of failing |
+| `6c9f307` | 2026-10-26 | Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival |
 | `00d53d1` | 2026-10-26 | docs: money walk script for the register, cash and card reader |
 | `47e5fb0` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
 | `719895d` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
@@ -44,23 +46,13 @@ Generated 2026-10-26 04:35 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (12 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/cron/cancellation-cutoff/route.ts`
-- `M src/app/api/cron/hourly/route.ts`
-- `M src/app/api/manage/[bookingId]/change-players/route.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/lib/checkin-booking.ts`
-- `M src/lib/counter-pay.ts`
-- `M src/lib/no-show-fee.ts`
-- `M src/lib/reader-rounds.ts`
-- `?? scripts/ledger-money-db-test.ts`
-- `?? src/lib/cutoff-hold.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -180,6 +172,8 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `a8a925d` 2026-10-26 — Late cancel racing the cron's hold charge: wait and replay instead of failing
+- `6c9f307` 2026-10-26 — Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival
 - `00d53d1` 2026-10-26 — docs: money walk script for the register, cash and card reader
 - `47e5fb0` 2026-10-25 — CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212)
 - `719895d` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
@@ -190,8 +184,6 @@ Nothing awaiting review.
 - `2e01ec9` 2026-10-24 — POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)
 - `ed10fa0` 2026-10-23 — POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)
 - `6fd9158` 2026-10-23 — CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)
-- `6d7bf2a` 2026-10-23 — Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)
-- `fbacc52` 2026-10-23 — Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)
 
 ---
 

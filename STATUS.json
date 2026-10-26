@@ -1,28 +1,32 @@
 {
-  "generatedAt": "2026-10-26T04:35:38.082Z",
+  "generatedAt": "2026-10-26T04:45:34.535Z",
   "repo": {
-    "head": "00d53d1",
+    "head": "a8a925d",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 12,
+    "dirtyCount": 2,
     "dirty": [
       "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M src/app/api/cron/cancellation-cutoff/route.ts",
-      " M src/app/api/cron/hourly/route.ts",
-      " M src/app/api/manage/[bookingId]/change-players/route.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/lib/checkin-booking.ts",
-      " M src/lib/counter-pay.ts",
-      " M src/lib/no-show-fee.ts",
-      " M src/lib/reader-rounds.ts",
-      "?? scripts/ledger-money-db-test.ts",
-      "?? src/lib/cutoff-hold.ts"
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "a8a925d",
+        "date": "2026-10-26T04:43:23+00:00",
+        "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6c9f307",
+        "date": "2026-10-26T04:37:29+00:00",
+        "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "00d53d1",
         "date": "2026-10-26T03:27:06+00:00",
@@ -609,6 +613,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "a8a925d",
+      "date": "2026-10-26",
+      "subject": "Late cancel racing the cron's hold charge: wait and replay instead of failing"
+    },
+    {
+      "h": "6c9f307",
+      "date": "2026-10-26",
+      "subject": "Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival"
+    },
+    {
       "h": "00d53d1",
       "date": "2026-10-26",
       "subject": "docs: money walk script for the register, cash and card reader"
@@ -657,16 +671,6 @@
       "h": "6fd9158",
       "date": "2026-10-23",
       "subject": "CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)"
-    },
-    {
-      "h": "6d7bf2a",
-      "date": "2026-10-23",
-      "subject": "Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)"
-    },
-    {
-      "h": "fbacc52",
-      "date": "2026-10-23",
-      "subject": "Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)"
     }
   ]
 }

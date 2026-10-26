@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-26 04:35 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 00d53d1</span>
-    <span>12 uncommitted</span>
+    <span>2026-10-26 04:45 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ a8a925d</span>
+    <span>2 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">29 runs have shipped that the queue doesn't know about</div>
+<div class="lede">31 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">a8a925d</span><span>Late cancel racing the cron's hold charge: wait and replay instead of failing</span></li>
+<li><span class="h">6c9f307</span><span>Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival</span></li>
 <li><span class="h">00d53d1</span><span>docs: money walk script for the register, cash and card reader</span></li>
 <li><span class="h">47e5fb0</span><span>CASH-1: no more &quot;paid at the counter&quot; — paid online, or rung up in store (#212)</span></li>
 <li><span class="h">719895d</span><span>POS-3 R4: end-of-day close-out — count the drawer (#211)</span></li>
@@ -164,9 +166,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/cron/cancellation-cutoff/route.ts</code></li><li><code>M src/app/api/cron/hourly/route.ts</code></li><li><code>M src/app/api/manage/[bookingId]/change-players/route.ts</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/lib/checkin-booking.ts</code></li><li><code>M src/lib/counter-pay.ts</code></li><li><code>M src/lib/no-show-fee.ts</code></li><li><code>M src/lib/reader-rounds.ts</code></li><li><code>?? scripts/ledger-money-db-test.ts</code></li><li><code>?? src/lib/cutoff-hold.ts</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -246,6 +248,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">a8a925d</td><td class="num">2026-10-26</td><td>Late cancel racing the cron's hold charge: wait and replay instead of failing</td></tr>
+<tr><td class="num">6c9f307</td><td class="num">2026-10-26</td><td>Money fixes from the review ledger: no-show party change, still coming, paid rounds, hold race, late arrival</td></tr>
 <tr><td class="num">00d53d1</td><td class="num">2026-10-26</td><td>docs: money walk script for the register, cash and card reader</td></tr>
 <tr><td class="num">47e5fb0</td><td class="num">2026-10-25</td><td>CASH-1: no more &quot;paid at the counter&quot; — paid online, or rung up in store (#212)</td></tr>
 <tr><td class="num">719895d</td><td class="num">2026-10-25</td><td>POS-3 R4: end-of-day close-out — count the drawer (#211)</td></tr>
@@ -256,8 +260,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">2e01ec9</td><td class="num">2026-10-24</td><td>POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206)</td></tr>
 <tr><td class="num">ed10fa0</td><td class="num">2026-10-23</td><td>POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205)</td></tr>
 <tr><td class="num">6fd9158</td><td class="num">2026-10-23</td><td>CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204)</td></tr>
-<tr><td class="num">6d7bf2a</td><td class="num">2026-10-23</td><td>Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203)</td></tr>
-<tr><td class="num">fbacc52</td><td class="num">2026-10-23</td><td>Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
