@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto';
 import { verifyOtpChallenge, otpCodeMatches, otpUsedKey } from '@/lib/golfer-otp';
 import { signGolferToken } from '@/lib/auth';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
+import { securityEvent } from '@/lib/security-events';
 
 // Verification is what makes guest-booking linkage safe — once an identifier
 // is proven (this endpoint), any guest bookings under that same email/phone
@@ -42,11 +43,15 @@ export async function POST(req: NextRequest) {
   const attemptsOk = await rateLimit(`golfer-otp-verify:${challenge.identifier}`, 5, 600);
   const ipOk = await rateLimit(`golfer-otp-verify-ip:${ip}`, 20, 600);
   if (!attemptsOk || !ipOk) {
+    await securityEvent(req, { kind: 'rate_limited', surface: 'golfer', email: challenge.type === 'email' ? challenge.identifier : '', detail: 'sign-in code' });
     return NextResponse.json({ error: 'Too many attempts. Request a new code.' }, { status: 429 });
   }
 
   const valid = otpCodeMatches(challenge, String(code).trim());
-  if (!valid) return NextResponse.json({ error: 'Incorrect code.' }, { status: 400 });
+  if (!valid) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'golfer', email: challenge.type === 'email' ? challenge.identifier : '', detail: challenge.type === 'email' ? 'wrong emailed code' : 'wrong texted code' });
+    return NextResponse.json({ error: 'Incorrect code.' }, { status: 400 });
+  }
   // Single use: a challenge + code seen once (a shared screen, a logged
   // request) cannot sign anyone in a second time inside its 10 minutes.
   if (!(await rateLimit(otpUsedKey(challenge.cid), 1, 600))) {

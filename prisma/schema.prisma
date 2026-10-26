@@ -1694,3 +1694,29 @@ model RegisterClose {
 
   @@index([courseId, day])
 }
+
+/// SEC-3 (Cam 2026-10-26, "security has to be insane"): one row per security
+/// outcome — a failed or successful sign-in, a lockout, a wrong second factor,
+/// a rate limit tripped, a new owner device — so Admin → Security can show
+/// patterns and the hourly check can flag an attack. Written by
+/// src/lib/security-events.ts only; kept 90 days. Never holds a password, code
+/// or token — only the email typed, the IP and the browser.
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  /// 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device'
+  kind      String
+  /// Which door: 'admin' (employees) | 'owner' (/cam) | 'course' (dashboard) | 'golfer' | 'member'
+  surface   String
+  ip        String   @default("")
+  userAgent String   @default("")
+  /// What was typed (lower-cased) — an unknown email is the interesting case.
+  email     String   @default("")
+  accountId String?
+  /// Plain words: 'wrong password', 'unknown account', 'passkey', ...
+  detail    String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([kind, createdAt])
+  @@index([ip, createdAt])
+}

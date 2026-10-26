@@ -8,7 +8,7 @@ import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 
-export type AdminNavKey = 'overview' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit';
+export type AdminNavKey = 'overview' | 'problems' | 'goals' | 'inquiries' | 'courses' | 'groups' | 'create' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
 export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessages = 0 }: {
   active: AdminNavKey;
@@ -110,6 +110,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0, unreadMessa
       { key: 'goals', label: 'Goals', href: '/admin/goals', minRole: SUPPORT_PLUS, area: 'company' },
       { key: 'employees', label: 'Team', href: '/admin/employees', minRole: MANAGER_PLUS, area: 'company' },
       { key: 'audit', label: 'Audit', href: '/admin/audit', minRole: OWNER_ONLY },
+      { key: 'security', label: 'Security', href: '/admin/security', minRole: OWNER_ONLY },
       { key: 'system', label: 'Systems', href: '/admin/system', minRole: MANAGER_PLUS, area: 'company' },
       { key: 'company', label: 'Company docs', href: '/admin/company-documents', minRole: OWNER_ONLY },
     ] },
@@ -224,6 +225,7 @@ function NavIcon({ k }: { k: AdminNavKey }) {
     goals: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /></>,
     employees: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5" /><path d="M16 4.5a3.5 3.5 0 010 7M18.5 14.8c1.6.9 2.7 2.7 3 5.2" /></>,
     audit: <><path d="M6 3h9l4 4v14H6z" /><path d="M9 12h7M9 16h5" /></>,
+    security: <><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z" /><path d="M9 12l2 2 4-4" /></>,
     system: <><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M8 20h8M12 16v4" /></>,
     company: <><path d="M4 21V8l8-5 8 5v13" /><path d="M9 21v-6h6v6" /></>,
   };

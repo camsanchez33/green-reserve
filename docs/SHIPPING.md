@@ -129,6 +129,13 @@ ANTHROPIC_API_KEY             # BIRDIE B1: the assistant's key (costs money; cap
 BIRDIE_ENABLED                # BIRDIE B1: 'true' switches the assistant on; anything else is off
 BLOB_READ_WRITE_TOKEN         # PUBLIC Blob store (photos, sheet uploads). Connect with the read-write token box ticked
 BLOB_PRIVATE_READ_WRITE_TOKEN # PRIVATE Blob store (contracts + signed agreement PDFs, lib/private-blob.ts). Prefix BLOB_PRIVATE, token box ticked
+CRON_SECRET                   # Vercel cron auth; jobs refuse to run without it (lib/cron-auth.ts)
+SENTRY_DSN                    # server error reporting (sentry.server.config.ts)
+NEXT_PUBLIC_SENTRY_DSN        # browser error reporting (same DSN)
+SENTRY_ORG                    # org slug: source-map upload + Admin → Security's error list
+SENTRY_PROJECT                # project slug: same two uses
+SENTRY_AUTH_TOKEN             # BUILD ONLY: source-map upload (withSentryConfig). Never read at runtime
+SENTRY_READ_TOKEN             # SEC-3: read-only (event:read, project:read) — Admin → Security lists Sentry's open errors
 ```
 
 
