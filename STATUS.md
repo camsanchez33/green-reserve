@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 04:54 UTC · branch `claude/security-page` · HEAD `ef92326` · working tree clean
+Generated 2026-10-26 04:59 UTC · branch `claude/security-page` · HEAD `68add62` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 34 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 36 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `68add62` | 2026-10-26 | Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented |
+| `c8f23b2` | 2026-10-26 | Status board |
 | `ef92326` | 2026-10-26 | Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token |
 | `364ba02` | 2026-10-26 | Status board |
 | `2ee4129` | 2026-10-26 | Security page: CLAUDE.md, code map |
@@ -168,6 +170,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `68add62` 2026-10-26 — Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented
+- `c8f23b2` 2026-10-26 — Status board
 - `ef92326` 2026-10-26 — Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token
 - `364ba02` 2026-10-26 — Status board
 - `2ee4129` 2026-10-26 — Security page: CLAUDE.md, code map
@@ -178,8 +182,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `719895d` 2026-10-25 — POS-3 R4: end-of-day close-out — count the drawer (#211)
 - `0278299` 2026-10-24 — POS-3 R3b: a group's round paid on the card reader (#210)
 - `068ac2b` 2026-10-24 — POS-3 R3a: Stripe card reader at the register (shop items) (#209)
-- `c8e0e66` 2026-10-24 — FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)
-- `9985445` 2026-10-24 — FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)
 
 ---
 

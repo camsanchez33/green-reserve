@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-26T04:54:45.130Z",
+  "generatedAt": "2026-10-26T04:59:07.416Z",
   "repo": {
-    "head": "ef92326",
+    "head": "68add62",
     "branch": "claude/security-page",
     "dirtyCount": 0,
     "dirty": [],
@@ -10,6 +10,20 @@
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "68add62",
+        "date": "2026-10-26T04:59:07+00:00",
+        "subject": "Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "c8f23b2",
+        "date": "2026-10-26T04:54:46+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ef92326",
         "date": "2026-10-26T04:54:44+00:00",
@@ -634,6 +648,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "68add62",
+      "date": "2026-10-26",
+      "subject": "Security review follow-ups: capped counter keys and their cleanup, an honest 'slow down' for members, Sentry env vars documented"
+    },
+    {
+      "h": "c8f23b2",
+      "date": "2026-10-26",
+      "subject": "Status board"
+    },
+    {
       "h": "ef92326",
       "date": "2026-10-26",
       "subject": "Security audit fixes: no account-existence answers, bounded event writes, log after the counter, separate Sentry read token"
@@ -682,16 +706,6 @@
       "h": "068ac2b",
       "date": "2026-10-24",
       "subject": "POS-3 R3a: Stripe card reader at the register (shop items) (#209)"
-    },
-    {
-      "h": "c8e0e66",
-      "date": "2026-10-24",
-      "subject": "FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208)"
-    },
-    {
-      "h": "9985445",
-      "date": "2026-10-24",
-      "subject": "FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207)"
     }
   ]
 }
