@@ -185,9 +185,12 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   const clearPhantomFee = !feeAlreadyCharged && booking.cancellationFeeTotal > 0;
 
   // EV-1: the cancel and its booking_cancelled event commit together.
-  await prisma.$transaction(async (tx) => {
-    await tx.booking.update({
-      where: { id: bookingId },
+  // R-BOOK-002: two cancels of one booking at once both passed the status check
+  // above and both freed its seats (overselling the slot). The write is now
+  // conditional: only the cancel that moves it off 'confirmed' frees seats.
+  const won = await prisma.$transaction(async (tx) => {
+    const moved = await tx.booking.updateMany({
+      where: { id: bookingId, status: 'confirmed' },
       data: {
         status: 'cancelled',
         cancelledAt: new Date(),
@@ -197,6 +200,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
         ...(lateFee ? { paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: lateFee.id, cancellationFeeChargedAt: new Date(), cancellationFeeApplies: true } : {}),
       },
     });
+    if (!moved.count) return false;
     await tx.teeTime.update({
       where: { id: booking.teeTimeId },
       data: { playersBooked: { decrement: booking.players }, status: keepSlotBlocked ? 'blocked' : 'available' },
@@ -207,7 +211,9 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
       metadata: { feeKept: feeAlreadyCharged, roundRefunded, ...(noShowCharge ? { noShowFeeKept: noShowCharge.amountCents } : {}), ...(opts.reason ? { reason: opts.reason } : {}), ...(opts.courseCalledOff ? { courseCalledOff: opts.courseCalledOff } : {}) },
     });
+    return true;
   });
+  if (!won) return { error: 'This booking was just cancelled or checked in from another screen — refresh to see it.', status: 409 } as const;
 
   // Find all unnotified alerts for this slot (specific-slot or criteria-based)
   const alerts = notifySlotAlerts ? await prisma.teeTimeAlert.findMany({

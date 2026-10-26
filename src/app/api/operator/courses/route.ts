@@ -92,7 +92,9 @@ export async function PATCH(req: NextRequest) {
       establishedYear: body.establishedYear !== undefined ? (body.establishedYear ? Number(body.establishedYear) : null) : course.establishedYear,
     },
   });
-  return NextResponse.json(updated);
+  // R-AUTH-010 / R-OPS-010: the same stripped shape as GET — never the raw row
+  // (adminNotes, stripeAccountId).
+  return NextResponse.json(operatorSafe(courseToWire(updated)));
 }
 
 // SD-8 review (MEDIUM): courseToWire spreads the whole Course row. Two columns
