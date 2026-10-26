@@ -117,7 +117,7 @@ export default function InquiryBoard<T extends BoardCardInquiry>({ inquiries, si
                           {firing === 'pending' ? 'Sending…' : firing === 'error' ? 'Try again' : step.label}
                         </button>
                       ) : (
-                        <Link href={href(inq)} className="text-[12.5px] font-medium text-white bg-pine hover:bg-pine-hover rounded-md px-2.5 py-1.5">{step.label}</Link>
+                        <Link href={step.key === 'reply' ? href(inq) + (href(inq).includes('?') ? '&' : '?') + 'reply=1' : href(inq)} className="text-[12.5px] font-medium text-white bg-pine hover:bg-pine-hover rounded-md px-2.5 py-1.5">{step.label}</Link>
                       )}
                     </div>
                   )}

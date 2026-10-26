@@ -5,9 +5,9 @@ import { calcomBookingUrl } from '@/lib/calcom';
 
 export const metadata: Metadata = {
   title: 'List Your Course Free',
-  description: 'Get your golf course on GreenReserve for free. No monthly fees, no commission on green fees. We build your online booking page — golfers pay $1.50/player on top of your price.',
+  description: 'Get your golf course on GreenReserve for free. No setup fee, no monthly fee, no commission on your green fees. We build your online booking page.',
   // Link previews carry this page's own title, not the homepage's.
-  ...previewFor('List Your Course Free | GreenReserve', 'Get your golf course on GreenReserve for free. No monthly fees, no commission on green fees. We build your online booking page — golfers pay $1.50/player on top of your price.'),
+  ...previewFor('List Your Course Free | GreenReserve', 'Get your golf course on GreenReserve for free. No setup fee, no monthly fee, no commission on your green fees. We build your online booking page.'),
 };
 
 export default function ForCoursesPage() {

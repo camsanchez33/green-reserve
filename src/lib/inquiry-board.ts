@@ -33,7 +33,7 @@ export function boardColumn(status: string): BoardColumn | null {
 export type StepKey =
   | 'log_call' | 'call_today' | 'review_resubmit' | 'snoozed' | 'prep_call' | 'book_call' | 'send_sheet'
   | 'resend_sheet' | 'build' | 'send_preview' | 'go_live' | 'make_changes' | 'send_updated_preview' | 'resend_preview'
-  | 'start_talking' | 'open';
+  | 'start_talking' | 'reply' | 'open';
 export type NextStep = { key: StepKey; label: string; action: 'open' | 'resend_sheet' | 'resend_preview' | 'start_talking' } | null;
 
 export type BoardInquiry = QueueInput & {
@@ -58,6 +58,8 @@ export function nextStep(inq: BoardInquiry, signal: QueueSignal = queueSignal(in
     case 'in_review': {
       const callDone = calls.some(c => c.outcome === 'talked');
       if (upcoming) return { key: 'prep_call', label: 'Get ready for the call', action: 'open' };
+      // Cam 2026-10-26: a new question is answered first — then the call.
+      if (signal.reason.startsWith('New question') && !inq.callSkippedReason) return { key: 'reply', label: 'Reply', action: 'open' };
       if (!callDone && !inq.callSkippedReason) return { key: 'book_call', label: 'Book a call', action: 'open' };
       return { key: 'send_sheet', label: 'Send the setup sheet', action: 'open' };
     }

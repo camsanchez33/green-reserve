@@ -78,6 +78,8 @@ export function buildInquiryQueueRows(inquiries: QueueInquiry[], now: Date = new
         doThis = 'Course is mid-build — finish it, then send dashboard access or go live.';
       } else if (inq.status === 'details_submitted') {
         doThis = 'Sheet’s back — review their answers and build the course.';
+      } else if (signal.reason.startsWith('New question')) {
+        doThis = 'Reply to their question from the inquiry.';
       } else if (inq.status === 'pending' || inq.status === 'in_review') {
         doThis = 'Review the inquiry and either request their details sheet or reject it.';
       }

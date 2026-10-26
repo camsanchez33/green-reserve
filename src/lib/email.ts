@@ -1031,6 +1031,8 @@ const escHtml = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/<
 const subj = (s: string) => String(s ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
 
 export async function sendInquiryNotification(data: {
+  /** Opens that inquiry (and its reply box) straight from the email. */
+  inquiryId?: string | null;
   contactName: string;
   contactTitle: string;
   email: string;
@@ -1045,29 +1047,54 @@ export async function sendInquiryNotification(data: {
   /** SC-2 §1: "invite not sent — <why>" when the call invite email failed; absent when it went. */
   inviteNote?: string | null;
 }) {
+  // Cam 2026-10-26 ("can look better"): the question first, who asked in one quiet
+  // line under it, and two ways in — Reply (the inquiry's reply box) or the inquiry.
+  const site = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const inquiryUrl = data.inquiryId ? `${site}/admin/inquiries/${encodeURIComponent(data.inquiryId)}` : `${site}/admin/inquiries`;
+  const who = [
+    escHtml(data.contactName) + (data.contactTitle ? `, ${escHtml(data.contactTitle)}` : ''),
+    [data.city, data.state].filter(Boolean).map(escHtml).join(', '),
+    data.phone ? escHtml(data.phone) : '',
+  ].filter(Boolean).join(' &middot; ');
+  const question = data.additionalNotes.trim();
   const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#141814;font-size:22px;font-weight:700;">New question from a course</h2>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:14px;">Sent from the Ask a question form. Reply to them by email; they also got a link to book a demo.</p>
-    <div style="background:#F6F4EC;border-radius:6px;padding:20px;margin-bottom:20px;">
-      <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#141814;">${escHtml(data.courseName)}</p>
-      <p style="margin:0 0 12px;color:#3F453E;font-size:14px;">${escHtml(data.city)}, ${escHtml(data.state)}${data.courseType ? ` · ${escHtml(data.courseType)}` : ''}</p>
-      ${data.currentBookingMethod ? `<p style="margin:0 0 12px;color:#3F453E;font-size:14px;">Current booking: ${escHtml(data.currentBookingMethod)}</p>` : ''}
-      <p style="margin:0 0 4px;color:#3F453E;font-size:14px;"><strong>Contact:</strong> ${escHtml(data.contactName)}${data.contactTitle ? ` — ${escHtml(data.contactTitle)}` : ''}</p>
-      <p style="margin:0 0 4px;color:#3F453E;font-size:14px;"><strong>Email:</strong> ${escHtml(data.email)}</p>
-      ${data.phone ? `<p style="margin:0 0 4px;color:#3F453E;font-size:14px;"><strong>Phone:</strong> ${escHtml(data.phone)}</p>` : ''}
-      ${data.greenFeeRange ? `<p style="margin:8px 0 0;color:#3F453E;font-size:14px;"><strong>Fee range:</strong> ${escHtml(data.greenFeeRange)}</p>` : ''}
-      ${data.additionalNotes ? `<p style="margin:8px 0 0;color:#3F453E;font-size:14px;white-space:pre-wrap;"><strong>Their question:</strong> ${escHtml(data.additionalNotes)}</p>` : ''}
-      ${data.inviteNote ? `<p style="margin:12px 0 0;color:#A3452F;font-size:13px;"><strong>Call invite not sent:</strong> ${escHtml(data.inviteNote)} — send it from the inquiry page.</p>` : ''}
-    </div>
-    <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">
-      Review in Admin →
-    </a>
+    <h1 style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">${escHtml(data.courseName)}</h1>
+    <p style="margin:0 0 16px;color:#141814;font-size:17px;line-height:1.55;white-space:pre-wrap;">${question ? escHtml(question) : '<span style="color:#6B706A;">No question written.</span>'}</p>
+    <p style="margin:0 0 24px;color:#6B706A;font-size:14px;">${who}<br><a href="mailto:${escHtml(data.email)}" style="color:#6B706A;">${escHtml(data.email)}</a></p>
+    ${data.inviteNote ? `<p style="margin:0 0 20px;color:#A3452F;font-size:13px;">The call-booking link didn&rsquo;t send (${escHtml(data.inviteNote)}). Send it from the inquiry.</p>` : ''}
+    <a href="${inquiryUrl}?reply=1" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Reply</a>
+    <a href="${inquiryUrl}" style="display:block;color:#173B2A;text-decoration:none;text-align:center;padding:8px;font-weight:600;font-size:14px;">Open inquiry</a>
   `, ADMIN_EMAIL);
 
-  await getResend().emails.send({ meta: { kind: 'inquiry_notification' },
+  await getResend().emails.send({ meta: { kind: 'inquiry_notification', inquiryId: data.inquiryId ?? null },
     from: FROM_ADMIN,
     to: ADMIN_EMAIL,
-    subject: `Question from ${data.courseName} — ${data.city}, ${data.state}`,
+    subject: subj(`${data.courseName} asked a question`),
+    html,
+  });
+}
+
+/**
+ * A reply to a course's question, written in the admin (Pipeline → the inquiry →
+ * Reply). Sent from admin@, so their answer lands in that inbox; the route logs a
+ * "Replied by email" event, which is what moves the inquiry to waiting on them.
+ */
+export async function sendInquiryReply(data: {
+  inquiryId: string; email: string; contactName: string; courseName: string;
+  body: string; question?: string | null; adminName: string;
+}) {
+  const paras = data.body.trim().split(/\n{2,}/).map(p =>
+    `<p style="margin:0 0 14px;color:#141814;font-size:15px;line-height:1.6;white-space:pre-wrap;">${escHtml(p.trim())}</p>`).join('');
+  const html = baseTemplate(`
+    <p style="margin:0 0 14px;color:#141814;font-size:15px;">Hi ${escHtml(firstName(data.contactName))},</p>
+    ${paras}
+    <p style="margin:18px 0 0;color:#141814;font-size:15px;">${escHtml(data.adminName)}<br><span style="color:#6B706A;">GreenReserve</span></p>
+    ${data.question?.trim() ? `<div style="margin:28px 0 0;padding:14px 0 0;border-top:1px solid #E3E4DE;color:#6B706A;font-size:13px;line-height:1.55;white-space:pre-wrap;">You asked: ${escHtml(data.question.trim())}</div>` : ''}
+  `, ADMIN_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'inquiry_reply', inquiryId: data.inquiryId },
+    from: FROM_ADMIN,
+    to: data.email,
+    subject: subj(`Re: your question about ${data.courseName}`),
     html,
   });
 }

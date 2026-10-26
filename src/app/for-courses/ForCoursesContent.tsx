@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import PlainHeader from '@/components/PlainHeader';
+import { Card } from '@/components/ui/Card';
 import { ArrowLeft } from 'lucide-react';
 import { calcomEmbedUrl } from '@/lib/calcom-url';
 import { ADMIN_EMAIL } from '@/lib/contact';
@@ -205,14 +206,25 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
     setSigninBusy(false);
   };
 
+  // Every screen of this page wears the same header (the thanks screens used to drop it).
+  const header = (
+    <PlainHeader right={
+      <a href="/demo" className="inline-flex items-center h-[42px] px-4 rounded-md bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold transition-colors">
+        Book a demo
+      </a>
+    } />
+  );
+
   // SPEC REVIEW (951433d): a built course used to land on the ordinary screen —
   // "Next is a 20-minute call — pick a time below", Calendly button and all —
   // while the email it triggered said there is nothing to set up and no call is
   // coming. Two opposite instructions, with the correct one as a footnote under
   // the wrong one's CTA. This screen replaces it rather than annotating it.
   if (submitted && alreadyBuilt) return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-6">
-      <div className="bg-white rounded-lg p-10 max-w-lg w-full border border-line">
+    <div className="min-h-screen bg-paper">
+      {header}
+      <div className="flex justify-center px-4 sm:px-6 pt-12 sm:pt-20 pb-16">
+      <Card className="p-8 sm:p-10 max-w-lg w-full">
 
         {signinStep === 'ask' && (
           <>
@@ -349,21 +361,23 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           </>
         )}
 
+      </Card>
       </div>
     </div>
   );
 
   if (submitted) return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-6">
-      <div className="bg-white rounded-lg p-10 max-w-lg w-full border border-line">
+    <div className="min-h-screen bg-paper">
+      {header}
+      <div className="flex justify-center px-4 sm:px-6 pt-12 sm:pt-20 pb-16">
+      <Card className="p-8 sm:p-10 max-w-lg w-full">
         
         {/* IF-1 §3: the next step is a call, not a wait. The booking link in
             the email arrives with CALL_SCHEDULING_SPEC SC-2; until then the
             button below is the way to pick a time. */}
-        <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-ink mb-2 text-center">Thanks — we&apos;ll reply by email.</h1>
-        <p className="text-ink-soft text-center mb-8 text-sm">
-          Your question about <span className="font-medium text-ink">{submittedName}</span> is with us, and we&apos;ll answer at <span className="font-medium text-ink">{submittedEmail}</span>.
-          If you&apos;d rather see GreenReserve working, book a demo below.
+        <h1 className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight text-ink mb-2 text-center">Thanks — we got your question.</h1>
+        <p className="text-ink text-center mb-8 text-[15px]">
+          We&apos;ll answer at <span className="font-medium">{submittedEmail}</span>.
         </p>
 
         {/* FB-1: this used to link a Calendly page that was never set up. Now
@@ -383,17 +397,7 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
         ) : (
           <p className="text-center text-sm text-ink-soft mb-3">The email has a link to book a demo.</p>
         )}
-        {/* Cam 2026-09-16: a course that already has a page can't be created
-            again — its details change in the dashboard. This line is shown to
-            EVERY submitter, not only to the ones whose course is already
-            built: the API answers identically either way on purpose, because a
-            success screen that only appeared for existing courses would turn a
-            public form into a "is this course on GreenReserve yet" lookup. The
-            operator who needs it reads it; nobody else learns anything. */}
-        <p className="text-center text-xs text-ink-soft mt-5 pt-5 border-t border-line">
-          Already have a GreenReserve page? Your course details change in one place —{' '}
-          <Link href="/dashboard/login" className="text-ink-soft underline hover:text-ink">sign in to your dashboard</Link>.
-        </p>
+      </Card>
       </div>
     </div>
   );
@@ -403,24 +407,19 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
       {/* FLOW-1 (Cam 2026-10-01): the homepage's header and type, not a pine
           band — the page a "Send an inquiry" click lands on should read as the
           same site. Logo top-left as on `/`; the demo stays one click away. */}
-      <PlainHeader right={
-        <a href="/demo" className="inline-flex items-center h-[42px] px-4 rounded-md bg-pine hover:bg-pine-hover text-white text-[15px] font-semibold transition-colors">
-          Book a demo
-        </a>
-      } />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12">
+      {header}
+      <div className="max-w-xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12">
         <Link href="/" className="inline-flex items-center gap-1.5 text-ink-muted hover:text-ink transition-colors text-sm">
           <ArrowLeft size={14} /> Back
         </Link>
         <h1 className="mt-6 text-ink text-[34px] sm:text-[46px] leading-[1.05] font-serif font-bold tracking-[-0.02em]">Ask a question</h1>
-        <p className="mt-3 text-ink-soft text-[17px] max-w-[40em]">Free to list. $0 / month. Golfers pay our $1.50 per player — added to their total, not taken from your green fee.</p>
+        {/* Cam 2026-10-26 ("way too much writing"): one line, no price. LQ-2's allowed sentence; naming
+            the $1.50 here would also need its Stripe-fee sentence — the reply and the call explain it. */}
+        <p className="mt-3 text-ink text-[17px]">Free to list. No setup fee, no monthly fee, no commission on your green fees.</p>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
-        <div className="lg:grid lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-14 lg:items-start">
-
-          {/* The form */}
-          <div ref={formRef} id="ask" className="space-y-8 lg:order-last scroll-mt-24">
+      <div className="max-w-xl mx-auto px-4 sm:px-6 pt-8 pb-16 sm:pb-24">
+          <div ref={formRef} id="ask" className="space-y-8 scroll-mt-24">
 
           {/* Honeypot — hidden from humans, read by bots. FB-1: it used to be
               labelled "Website" / name="_website", which browser autofill and
@@ -547,47 +546,6 @@ export default function ForCoursesContent({ calBookingUrl = null }: { calBooking
           </p>
           </div>
 
-          {/* The pitch — sticky beside the form on desktop */}
-          <aside className="mt-12 lg:mt-0 lg:order-first">
-            <div className="lg:sticky lg:top-10 space-y-6">
-              <p className="text-[13px] font-semibold text-ink">Why list with us</p>
-              <div className="bg-white rounded-lg shadow-card divide-y divide-line-soft">
-                {[
-                  { stat: '$1.50', label: "Per player, added to the golfer's total" },
-                  { stat: '0%', label: 'Commission on green fees' },
-                  { stat: '$0', label: 'Setup or monthly fee' },
-                ].map(({ stat, label }) => (
-                  <div key={stat} className="px-5 py-4">
-                    <div className="text-2xl font-serif font-semibold text-ink leading-none mb-1.5">{stat}</div>
-                    <div className="text-[12.5px] text-ink-muted">{label}</div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-ink-soft text-xs leading-relaxed">
-                You set your green fee; the golfer pays it plus our $1.50 per player in one card payment to your own Stripe account. Stripe&apos;s standard processing fee (currently 2.9% + 30¢ per payment) comes out of that payment, as with any card you take — GreenReserve charges you nothing on top of it. Our $1.50 per player is then passed to GreenReserve. That, plus 1% of each membership-dues payment collected through GreenReserve, is our only revenue: no setup fee, no monthly fee, no commission on your green fees.
-              </p>
-            </div>
-          </aside>
-
-        </div>
-      </div>
-      {/* Short FAQ */}
-      <div className="border-t border-line">
-        <div className="max-w-xl mx-auto px-4 py-10 pb-16">
-          <p className="text-[15px] font-semibold text-ink mb-5">Quick answers</p>
-          <div className="space-y-5">
-            {[
-              { q: 'What does it cost to list my course?', a: 'No setup fee and no monthly fee. Golfers pay $1.50 per player at checkout, on top of your price.' },
-              { q: 'Who pays the $1.50?', a: "The golfer, as a line on their checkout above your green fee. It's collected in the same card payment as your green fee and passed to GreenReserve, so your listed price isn't reduced. Stripe's normal processing fee applies to the payment as a whole, like any card you take today." },
-              { q: 'How does setup work?', a: 'We set up your booking page with you from your schedule, rates, photos and colors, bring your members over and train your staff, then run a test before you go live.' },
-            ].map(({ q, a }) => (
-              <div key={q}>
-                <p className="text-sm font-medium text-ink mb-1">{q}</p>
-                <p className="text-sm text-ink-soft leading-relaxed">{a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

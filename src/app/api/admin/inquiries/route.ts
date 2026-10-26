@@ -18,7 +18,8 @@ import { sendCallInvite, issueCallInvite } from '@/lib/call-invite';
 import { calcomBookingUrl, calcomEmbedUrl } from '@/lib/calcom';
 import { rateLimit } from '@/lib/rate-limit';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
-import { sendCallScheduledEmail, sendCallRecapEmail, sendCallFollowupEmail } from '@/lib/email';
+import { sendCallScheduledEmail, sendCallRecapEmail, sendCallFollowupEmail, sendInquiryReply } from '@/lib/email';
+import { REPLY_EVENT_PREFIX } from '@/lib/inquiry-status';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
@@ -522,6 +523,28 @@ async function handleAction(
   }
 
   // ── Add / replace admin note ───────────────────────────────────────
+  // Cam 2026-10-26 ("I should be able to start an email back"): reply to the
+  // course from the inquiry. Sent from admin@ (their answer lands in that inbox);
+  // logged only once it went, and that event is what tells the pipeline the ball
+  // is now with them (queueSignal).
+  if (action === 'reply') {
+    const body = String(payload?.body ?? '').replace(/\r\n/g, '\n').trim();
+    if (!body) return NextResponse.json({ error: 'Write a reply first.' }, { status: 400 });
+    if (body.length > 8000) return NextResponse.json({ error: 'That reply is too long — keep it under 8,000 characters.' }, { status: 400 });
+    if (!inquiry.email || !EMAIL_RE.test(inquiry.email)) return NextResponse.json({ error: 'This inquiry has no email address — add one with Edit contact first.' }, { status: 400 });
+    if (CLOSED.includes(inquiry.status)) return NextResponse.json({ error: `This inquiry is ${inquiry.status} — reopen it first.` }, { status: 409 });
+    try {
+      await sendInquiryReply({
+        inquiryId, email: inquiry.email, contactName: inquiry.firstName || inquiry.contactName,
+        courseName: inquiry.courseName, body, question: inquiry.additionalNotes, adminName,
+      });
+    } catch (err) {
+      return NextResponse.json({ error: `The email didn't send: ${err instanceof Error ? err.message : 'unknown error'}. Nothing was recorded — try again.` }, { status: 502 });
+    }
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `${REPLY_EVENT_PREFIX} by ${adminName}`);
+    return NextResponse.json({ success: true, sentTo: inquiry.email });
+  }
+
   if (action === 'add_note') {
     const note = String(payload?.note ?? '').trim();
     if (!note) return NextResponse.json({ error: 'Note is empty' }, { status: 400 });
