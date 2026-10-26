@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 559,
+    "files": 560,
     "routes": 265,
-    "libs": 188,
+    "libs": 189,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4011,7 +4011,7 @@
     },
     {
       "path": "src/app/api/cron/cancellation-cutoff/route.ts",
-      "lines": 104,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4029,10 +4029,10 @@
       "guard": "file",
       "imports": [
         "@/lib/cancel-policy",
+        "@/lib/check-in-email",
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/cutoff-hold",
-        "@/lib/email",
         "@/lib/prisma",
         "@/lib/tee-time-utils",
         "next/server"
@@ -4097,7 +4097,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 216,
+      "lines": 204,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4123,6 +4123,7 @@
         "@/lib/agreement-sign",
         "@/lib/call-invite",
         "@/lib/cancel-policy",
+        "@/lib/check-in-email",
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/cron-windows",
@@ -14381,6 +14382,35 @@
       ]
     },
     {
+      "path": "src/lib/check-in-email.ts",
+      "lines": 40,
+      "purpose": "The \"time to check in\" email with the golfer's pay link — for a course that takes no card, the golfer's only way to pay online.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CheckInEmailBooking",
+          "kind": "type"
+        },
+        {
+          "name": "sendCheckInLinkOnce",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./email",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/cron/cancellation-cutoff/route.ts",
+        "src/app/api/cron/hourly/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/checkin-booking.ts",
       "lines": 503,
       "purpose": "",
@@ -16432,7 +16462,6 @@
         "src/app/api/auth/reset-password/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/cam/login/route.ts",
-        "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/cron/hourly/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
@@ -16462,6 +16491,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/check-in-email.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
         "src/lib/cutoff-hold.ts",
@@ -18951,6 +18981,7 @@
         "src/lib/call-invite.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/card-reader.ts",
+        "src/lib/check-in-email.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
         "src/lib/counter-pay.ts",
@@ -19802,7 +19833,7 @@
     },
     {
       "path": "src/lib/schedule-service.ts",
-      "lines": 365,
+      "lines": 379,
       "purpose": "MP-5d.",
       "brain": [],
       "exports": [
@@ -22560,14 +22591,13 @@
         }
       ],
       "writers": [
-        "src/app/api/cron/cancellation-cutoff/route.ts",
-        "src/app/api/cron/hourly/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/check-in-email.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/cutoff-hold.ts",
         "src/lib/data-reset.ts",

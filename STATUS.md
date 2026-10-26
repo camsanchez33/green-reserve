@@ -4,14 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 13:41 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5e59c031` · working tree **2 dirty file(s)**
+Generated 2026-10-26 14:02 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `58e0c789` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 52 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 57 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `58e0c789` | 2026-10-26 | test: type the schedule id (scheduleToWire returns unknown fields) |
+| `195f02a7` | 2026-10-26 | Schedule interval: refuse anything but a whole number of minutes >= 1 (create and update) |
+| `8ae40453` | 2026-10-26 | Check-in email: a failed send is retried (R-CRON-007); schedule update stores the checked interval (R-BOOK-011) |
+| `7de5d7a3` | 2026-10-26 | A declined cancellation hold is ledgered once (R-PAY-010) (#228) |
+| `9e10ae2f` | 2026-10-26 | status board + code map |
 | `5e59c031` | 2026-10-26 | Cutoff hold: a concurrent charge of the same key is not a decline |
 | `31dad15d` | 2026-10-26 | A declined cancellation hold is ledgered once (R-PAY-010) |
 | `35cdba79` | 2026-10-26 | Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227) |
@@ -194,6 +199,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `58e0c789` 2026-10-26 — test: type the schedule id (scheduleToWire returns unknown fields)
+- `195f02a7` 2026-10-26 — Schedule interval: refuse anything but a whole number of minutes >= 1 (create and update)
+- `8ae40453` 2026-10-26 — Check-in email: a failed send is retried (R-CRON-007); schedule update stores the checked interval (R-BOOK-011)
+- `7de5d7a3` 2026-10-26 — A declined cancellation hold is ledgered once (R-PAY-010) (#228)
+- `9e10ae2f` 2026-10-26 — status board + code map
 - `5e59c031` 2026-10-26 — Cutoff hold: a concurrent charge of the same key is not a decline
 - `31dad15d` 2026-10-26 — A declined cancellation hold is ledgered once (R-PAY-010)
 - `35cdba79` 2026-10-26 — Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227)
@@ -201,11 +211,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `22bff0bb` 2026-10-26 — Losing cancel refunds a late fee it charged, on the record; a waived hold refund is reflected on the booking
 - `3344fa17` 2026-10-26 — Two cancels at once free a booking's seats once (R-BOOK-002); settings/course PATCH never return the raw Course row (R-AUTH-010)
 - `b06da63e` 2026-10-26 — /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226)
-- `eb9b36f9` 2026-10-26 — status board + code map
-- `4474a823` 2026-10-26 — /book loads Stripe on the golfer's first touch of the form; modified-booking email rate limited (G13-a)
-- `09fd1b9d` 2026-10-26 — Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224)
-- `76bbb431` 2026-10-26 — perf-audit header: LCP is report-only on a local build
-- `a75c138f` 2026-10-26 — Perf check on the PR build: LCP reported, not enforced; one warm-up load per page
 
 ---
 
