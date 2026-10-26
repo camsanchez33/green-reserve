@@ -4717,7 +4717,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
-      "lines": 51,
+      "lines": 62,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4738,6 +4738,7 @@
         "@/lib/email",
         "@/lib/manage-access",
         "@/lib/prisma",
+        "@/lib/rate-limit",
         "next/server"
       ],
       "usedBy": []
@@ -7201,7 +7202,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 727,
+      "lines": 734,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -19208,6 +19209,7 @@
         "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/manage/[bookingId]/route.ts",
+        "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
         "src/app/api/membership/[id]/route.ts",
