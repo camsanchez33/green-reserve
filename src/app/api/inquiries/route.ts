@@ -261,6 +261,7 @@ export async function POST(req: NextRequest) {
   // the function is frozen once it returns, and these sends died with it.
   const emailData = { firstName, contactName, email, courseName, callUrl: inviteUrlForEmails };
   after(inviteDelivery.then(invite => sendInquiryNotification({
+    inquiryId: inquiry.id,
     contactName,
     contactTitle,
     email,

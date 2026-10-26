@@ -24,6 +24,7 @@ import { formatDate as fmtDate } from '@/lib/format';
 import { Modal as ModalShell, ModalActions } from '@/components/ui/Modal';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Card } from '@/components/ui/Card';
+import { ADMIN_EMAIL } from '@/lib/contact';
 import { INPUT } from '@/components/ui/field';
 import { MoveToTalkingDialog } from '@/components/admin/LeadDialogs';
 import { stepUpFetch } from '@/lib/step-up-client';
@@ -334,6 +335,11 @@ function InquiryDetailInner() {
   const [contactEdits, setContactEdits] = useState<Record<string, string>>({});
   const [stageOverride, setStageOverride] = useState('');
   const [noteText, setNoteText] = useState('');
+  // Cam 2026-10-26: reply to the course from here (sent from admin@ by the route's 'reply').
+  const [replyText, setReplyText] = useState('');
+  const [replySending, setReplySending] = useState(false);
+  const [replyResult, setReplyResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const replyRef = useRef<HTMLTextAreaElement>(null);
   const [approveResult, setApproveResult] = useState<ApproveResult | null>(null);
   const [actionError, setActionError] = useState('');
   const [sendingPreview, setSendingPreview] = useState(false);
@@ -379,6 +385,9 @@ function InquiryDetailInner() {
   // every action would yank the founder off whatever tab he opened.
   const tabInitialised = useRef(false);
   const pickTab = (t: TabKey) => { tabInitialised.current = true; setActiveTab(t); };
+  useEffect(() => {
+    if (inq && searchParams.get('reply') === '1') replyRef.current?.focus();
+  }, [inq?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const H = useCallback(() => ({ 'Content-Type': 'application/json' }), []);
 
@@ -394,7 +403,7 @@ function InquiryDetailInner() {
       setStageOverride(res.data.status);
       if (!tabInitialised.current) {
         tabInitialised.current = true;
-        setActiveTab(defaultTabFor(res.data.status));
+        setActiveTab(searchParams.get('reply') === '1' ? 'lead' : defaultTabFor(res.data.status));
       }
       setLoadError(null);
     } finally {
@@ -493,6 +502,24 @@ function InquiryDetailInner() {
       }
     } catch (e) { setActionError('Error: ' + e); }
     setProcessing(false);
+  }
+
+  async function sendReply() {
+    setReplySending(true); setReplyResult(null);
+    try {
+      const r = await fetch('/api/admin/inquiries', { method: 'PATCH', headers: H(), body: JSON.stringify({ id: params.id, action: 'reply', body: replyText }) });
+      const d = await r.json().catch(() => ({} as Record<string, unknown>));
+      if (r.ok) {
+        setReplyText('');
+        setReplyResult({ ok: true, text: 'Sent to ' + String(d.sentTo || inq?.email || 'them') + '. Their answer comes to ' + ADMIN_EMAIL + '.' });
+        await loadInquiry();
+      } else {
+        setReplyResult({ ok: false, text: String(d.error || 'The reply didn’t send (' + r.status + '). Try again.') });
+      }
+    } catch {
+      setReplyResult({ ok: false, text: 'Couldn’t reach the server — check your connection and send again. Your reply is still here.' });
+    }
+    setReplySending(false);
   }
 
   async function addressChange(category: string) {
@@ -815,6 +842,7 @@ function InquiryDetailInner() {
       case 'go_live': setPendingAction('go_live'); return;
       case 'review_resubmit': document.getElementById('resubmit')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
       case 'start_talking': setMoveOpen(true); return;
+      case 'reply': pickTab('lead'); setTimeout(() => { replyRef.current?.focus(); document.getElementById('reply')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 0); return;
     }
   };
 
@@ -1410,6 +1438,46 @@ function InquiryDetailInner() {
         <div className="flex-1 px-10 py-8">
 
           {/* Lead tab — who they are, then what they told us. */}
+          {activeTab === 'lead' && inq.email && !['lead', 'rejected', 'archived', 'live'].includes(inq.status) && (() => {
+            const lastReply = (inq.events || []).filter(e => e.actorName?.startsWith('Replied by email')).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+            return (
+              <div id="reply" className="max-w-3xl mb-8">
+                <h2 className="text-[15px] font-semibold text-ink mb-3">Reply</h2>
+                <Card className="p-4">
+                  {inq.additionalNotes && (
+                    <p className="text-[14px] text-ink whitespace-pre-wrap pb-3 mb-3 border-b border-line-soft">{inq.additionalNotes}</p>
+                  )}
+                  <textarea
+                    ref={replyRef}
+                    value={replyText}
+                    onChange={e => { setReplyText(e.target.value); if (replyResult?.ok) setReplyResult(null); }}
+                    placeholder={'Write to ' + ((inq.contactName || '').trim().split(/\s+/)[0] || 'them') + '…'}
+                    rows={6}
+                    maxLength={8000}
+                    aria-label="Reply"
+                    className={`${INPUT} w-full resize-y`}
+                  />
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={sendReply}
+                      disabled={!replyText.trim() || replySending}
+                      className="px-4 py-2 bg-pine hover:bg-pine-hover disabled:opacity-40 text-white text-[13px] font-medium rounded-md transition-colors"
+                    >
+                      {replySending ? 'Sending…' : 'Send reply'}
+                    </button>
+                    <span className="text-[13px] text-ink-muted">To {inq.email}, from {ADMIN_EMAIL}</span>
+                  </div>
+                  {replyResult && (
+                    <div className="mt-3"><StatusDot status={replyResult.ok ? 'ok' : 'bad'} label={replyResult.text} /></div>
+                  )}
+                  {lastReply && !replyResult && (
+                    <p className="mt-3 text-[13px] text-ink-muted">Last replied {new Date(lastReply.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}{lastReply.actorName?.includes(' by ') ? ' by ' + lastReply.actorName.split(' by ').pop() : ''}.</p>
+                  )}
+                </Card>
+              </div>
+            );
+          })()}
+
           {activeTab === 'lead' && (
             <div className="max-w-3xl">
               <div className="flex items-center justify-between mb-4">
@@ -1488,7 +1556,7 @@ function InquiryDetailInner() {
             if (pricing) rows.push(['Has', pricing.charAt(0).toUpperCase() + pricing.slice(1)]);
             if (inq.lookingFor?.length) rows.push(['Looking for', inq.lookingFor.join(', ')]);
             if (inq.pricingNotes) rows.push(['Pricing notes', inq.pricingNotes]);
-            if (inq.additionalNotes) rows.push(['Notes', inq.additionalNotes]);
+            if (inq.additionalNotes) rows.push(['Their question', inq.additionalNotes]);
             for (const [k, v] of needs) rows.push([NEEDS_LABELS[k] || k, fmtNeedValue(v, NEEDS_VALUES)]);
             return (
               <div className="max-w-3xl mt-7">

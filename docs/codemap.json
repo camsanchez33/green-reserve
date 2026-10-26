@@ -877,7 +877,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2254,
+      "lines": 2322,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -904,6 +904,7 @@
         "@/lib/admin-fetch",
         "@/lib/call-answers",
         "@/lib/change-requests",
+        "@/lib/contact",
         "@/lib/format",
         "@/lib/inquiry-board",
         "@/lib/inquiry-call",
@@ -2262,7 +2263,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1295,
+      "lines": 1318,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4514,7 +4515,7 @@
     },
     {
       "path": "src/app/api/inquiries/route.ts",
-      "lines": 297,
+      "lines": 298,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8372,7 +8373,7 @@
     },
     {
       "path": "src/app/for-courses/ForCoursesContent.tsx",
-      "lines": 595,
+      "lines": 553,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8388,6 +8389,7 @@
       "guard": null,
       "imports": [
         "@/components/PlainHeader",
+        "@/components/ui/Card",
         "@/lib/calcom-url",
         "@/lib/contact",
         "lucide-react",
@@ -10997,6 +10999,7 @@
         "src/app/dashboard/shop/page.tsx",
         "src/app/events/[id]/SignupForm.tsx",
         "src/app/events/[id]/page.tsx",
+        "src/app/for-courses/ForCoursesContent.tsx",
         "src/app/g/[slug]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
@@ -14599,6 +14602,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/admin/inquiries/[id]/page.tsx",
         "src/app/api/admin/resend-staff-setup/route.ts",
         "src/app/api/inquiries/route.ts",
         "src/app/api/inquiries/upload/route.ts",
@@ -16136,7 +16140,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2188,
+      "lines": 2215,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16318,6 +16322,10 @@
         },
         {
           "name": "sendInquiryNotification",
+          "kind": "fn"
+        },
+        {
+          "name": "sendInquiryReply",
           "kind": "fn"
         },
         {
@@ -17254,7 +17262,7 @@
     },
     {
       "path": "src/lib/inquiry-board.ts",
-      "lines": 83,
+      "lines": 85,
       "purpose": "AW-6a (Cam 2026-10-21):",
       "brain": [],
       "exports": [
@@ -17538,7 +17546,7 @@
     },
     {
       "path": "src/lib/inquiry-status.ts",
-      "lines": 480,
+      "lines": 499,
       "purpose": "Single source of truth for what every inquiry status means and which pipeline segment it belongs to.",
       "brain": [
         "inquiry-statuses",
@@ -17620,6 +17628,10 @@
         {
           "name": "QueueSignal",
           "kind": "type"
+        },
+        {
+          "name": "REPLY_EVENT_PREFIX",
+          "kind": "const"
         },
         {
           "name": "RESUBMIT_ACTOR",
