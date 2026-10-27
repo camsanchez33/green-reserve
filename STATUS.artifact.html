@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-27 19:33 UTC</span><span>claude/practical-lovelace-xiu4u5 @ 1444186</span>
-    <span>2 uncommitted</span>
+    <span>2026-10-27 19:40 UTC</span><span>claude/practical-lovelace-xiu4u5 @ 2750cbc</span>
+    <span>8 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">14 runs have shipped that the queue doesn't know about</div>
+<div class="lede">16 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">2750cbc</span><span>Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played</span></li>
+<li><span class="h">89ad92b</span><span>Regenerate the code map and status board</span></li>
 <li><span class="h">1444186</span><span>Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute</span></li>
 <li><span class="h">1763e28</span><span>Regenerate the code map and status board</span></li>
 <li><span class="h">98c16cf</span><span>DENSE-2: pin the loading branch's payout tiles</span></li>
@@ -149,9 +151,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/components/dashboard/money/CancellationsPanel.tsx</code></li><li><code>M src/components/dashboard/money/types.ts</code></li><li><code>?? scripts/cancel-fee-reason-test.ts</code></li><li><code>?? src/lib/cancel-fee-reason.ts</code></li><li><code>?? src/lib/no-fee-labels.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -233,6 +235,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">2750cbc</td><td class="num">2026-10-27</td><td>Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played</td></tr>
+<tr><td class="num">89ad92b</td><td class="num">2026-10-27</td><td>Regenerate the code map and status board</td></tr>
 <tr><td class="num">1444186</td><td class="num">2026-10-27</td><td>Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute</td></tr>
 <tr><td class="num">1763e28</td><td class="num">2026-10-27</td><td>Regenerate the code map and status board</td></tr>
 <tr><td class="num">98c16cf</td><td class="num">2026-10-27</td><td>DENSE-2: pin the loading branch's payout tiles</td></tr>
@@ -243,8 +247,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">531516a</td><td class="num">2026-10-27</td><td>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)</td></tr>
 <tr><td class="num">6edc9aa</td><td class="num">2026-10-27</td><td>DENSE-4b review notes: the strip is a labelled group; no money request before the day loads</td></tr>
 <tr><td class="num">8d07854</td><td class="num">2026-10-27</td><td>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet</td></tr>
-<tr><td class="num">92087fc</td><td class="num">2026-10-27</td><td>DENSE-4: the tee sheet is seat rows (#241)</td></tr>
-<tr><td class="num">6eced45</td><td class="num">2026-10-27</td><td>Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

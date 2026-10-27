@@ -17,6 +17,7 @@ import { normalizePhone } from '@/lib/golfer-otp';
 import { formatTeeTime } from '@/lib/format';
 import { createCounterBooking } from '@/lib/counter-pay';
 import { ringUpCash } from '@/lib/register';
+import { noFeeReason } from '@/lib/cancel-fee-reason';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
@@ -50,6 +51,8 @@ export async function GET(req: NextRequest) {
       rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true,
       cancellationFeeTotal: true, cancellationFeeChargedAt: true, cancelledAt: true,
       checkedInAt: true, noShowAt: true, paymentStatus: true, status: true, createdAt: true,
+      // Server-side only, for noFeeReason — stripped before the response (never ship card ids).
+      cancellationHoursAtBooking: true, stripePaymentMethodId: true, source: true,
       teeTime: { select: { date: true, time: true, holes: true } },
     },
     orderBy: { createdAt: 'desc' },
@@ -59,8 +62,17 @@ export async function GET(req: NextRequest) {
   // SP-A: contact details only with "See golfer email and phone"; payment
   // amounts only with "See payments" (the late fee stays — it IS the cancellation).
   const contact = can(session, 'sheet.golfer_contact');
-  return NextResponse.json(bookings.map(b => ({
+  // Cancellations say why no fee was kept (lib/cancel-fee-reason).
+  const noFee = bookings.filter(b => b.status === 'cancelled' && b.paymentStatus !== 'cancellation_fee_charged');
+  const [course, failed] = noFee.length ? await Promise.all([
+    prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true, cancellationHours: true } }),
+    prisma.paymentEvent.findMany({ where: { bookingId: { in: noFee.map(b => b.id) }, kind: 'charge_failed', detail: { startsWith: 'Late-cancellation fee' } }, select: { bookingId: true } }),
+  ]) : [null, []];
+  const failedIds = new Set(failed.map(f => f.bookingId));
+  return NextResponse.json(bookings.map(({ stripePaymentMethodId: _pm, cancellationHoursAtBooking: _h, source: _s, ...b }, i) => ({
     ...b,
+    ...(course && b.status === 'cancelled' && b.paymentStatus !== 'cancellation_fee_charged'
+      ? { noFeeReason: noFeeReason(bookings[i], course, failedIds.has(b.id)) } : {}),
     ...(contact ? {} : { golferEmail: '', golferPhone: '' }),
     ...(seesPayments ? {} : { greenFeeTotal: 0, cartFeeTotal: 0, rangeBallsTotal: 0, accessFeeTotal: 0, totalAmount: 0 }),
   })));

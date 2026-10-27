@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDot } from '@/components/ui/StatusDot';
 import type { MoneyBooking, MoneyCourse } from './types';
+import { NO_FEE_LABEL } from '@/lib/no-fee-labels';
 import { formatStamp as fmtStamp, formatTeeTime as fmtTime, formatTeeDay as fmtDate } from '@/lib/format';
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -66,7 +67,7 @@ export function CancellationsPanel({ bookings, course }: { bookings: MoneyBookin
                     <div className="text-ink-soft">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}{b.cancelledAt ? <> · cancelled {fmtStamp(b.cancelledAt)}{ahead ? ` (${ahead})` : ''}</> : null}</div>
                   </div>
                   <span className="inline-flex items-center gap-1.5 text-ink sm:justify-end">
-                    <StatusDot status={fee ? 'warn' : 'neutral'} />{fee ? `${usd(b.cancellationFeeTotal)} fee kept` : 'No fee'}
+                    <StatusDot status={fee ? 'warn' : b.noFeeReason === 'charge_failed' ? 'bad' : 'neutral'} />{fee ? `${usd(b.cancellationFeeTotal)} fee kept` : b.noFeeReason ? NO_FEE_LABEL[b.noFeeReason] : 'No fee'}
                   </span>
                 </li>
               );

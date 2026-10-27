@@ -1,18 +1,38 @@
 {
-  "generatedAt": "2026-10-27T19:33:22.905Z",
+  "generatedAt": "2026-10-27T19:40:53.435Z",
   "repo": {
-    "head": "1444186",
+    "head": "2750cbc",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 2,
+    "dirtyCount": 8,
     "dirty": [
       "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      " M docs/codemap.json",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/components/dashboard/money/CancellationsPanel.tsx",
+      " M src/components/dashboard/money/types.ts",
+      "?? scripts/cancel-fee-reason-test.ts",
+      "?? src/lib/cancel-fee-reason.ts",
+      "?? src/lib/no-fee-labels.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "2750cbc",
+        "date": "2026-10-27T19:38:27+00:00",
+        "subject": "Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "89ad92b",
+        "date": "2026-10-27T19:33:27+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "1444186",
         "date": "2026-10-27T19:33:03+00:00",
@@ -505,6 +525,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "2750cbc",
+      "date": "2026-10-27",
+      "subject": "Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played"
+    },
+    {
+      "h": "89ad92b",
+      "date": "2026-10-27",
+      "subject": "Regenerate the code map and status board"
+    },
+    {
       "h": "1444186",
       "date": "2026-10-27",
       "subject": "Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute"
@@ -553,16 +583,6 @@
       "h": "8d07854",
       "date": "2026-10-27",
       "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet"
-    },
-    {
-      "h": "92087fc",
-      "date": "2026-10-27",
-      "subject": "DENSE-4: the tee sheet is seat rows (#241)"
-    },
-    {
-      "h": "6eced45",
-      "date": "2026-10-27",
-      "subject": "Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)"
     }
   ]
 }

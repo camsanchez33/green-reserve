@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 573,
+    "files": 575,
     "routes": 269,
-    "libs": 195,
+    "libs": 197,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5207,7 +5207,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 298,
+      "lines": 312,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5238,6 +5238,7 @@
         "@/lib/booking-events",
         "@/lib/booking-residents",
         "@/lib/cancel-booking",
+        "@/lib/cancel-fee-reason",
         "@/lib/checkin-booking",
         "@/lib/counter-pay",
         "@/lib/course-time",
@@ -6496,7 +6497,7 @@
     },
     {
       "path": "src/app/api/operator/sheet-money/route.ts",
-      "lines": 27,
+      "lines": 31,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10804,7 +10805,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 80,
+      "lines": 81,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10822,6 +10823,7 @@
         "./types",
         "@/components/ui/StatusDot",
         "@/lib/format",
+        "@/lib/no-fee-labels",
         "next/link",
         "react"
       ],
@@ -10963,7 +10965,7 @@
     },
     {
       "path": "src/components/dashboard/money/types.ts",
-      "lines": 18,
+      "lines": 20,
       "purpose": "SD-8 — one booking shape for all three Money tabs.",
       "brain": [],
       "exports": [
@@ -13639,6 +13641,7 @@
         "src/lib/booking-fee.ts",
         "src/lib/booking-residents.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/cancel-fee-reason.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
         "src/lib/counter-pay.ts",
@@ -14310,6 +14313,39 @@
       ]
     },
     {
+      "path": "src/lib/cancel-fee-reason.ts",
+      "lines": 24,
+      "purpose": "Cam 2026-10-27 (\"how is that no fee — looks within 24 hours to me\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "NO_FEE_LABEL",
+          "kind": "reexport"
+        },
+        {
+          "name": "noFeeReason",
+          "kind": "fn"
+        },
+        {
+          "name": "NoFeeReason",
+          "kind": "reexport"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./cancel-policy",
+        "./no-fee-labels"
+      ],
+      "usedBy": [
+        "src/app/api/operator/bookings/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/cancel-policy.ts",
       "lines": 256,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
@@ -14427,6 +14463,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/lib/cancel-booking.ts",
+        "src/lib/cancel-fee-reason.ts",
         "src/lib/cutoff-hold.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/email.ts",
@@ -18582,6 +18619,32 @@
         "src/app/api/operator/bookings/route.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/frost-delay.ts"
+      ]
+    },
+    {
+      "path": "src/lib/no-fee-labels.ts",
+      "lines": 12,
+      "purpose": "Client-safe half of lib/cancel-fee-reason (no prisma):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "NO_FEE_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "NoFeeReason",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/money/CancellationsPanel.tsx",
+        "src/lib/cancel-fee-reason.ts"
       ]
     },
     {
@@ -24019,6 +24082,7 @@
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/blackouts/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
@@ -26271,6 +26335,7 @@
       "readers": [
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/admin-home.ts",
