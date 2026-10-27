@@ -4,73 +4,11 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 03:51 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `cb1c8c2` · working tree **3 dirty file(s)**
+Generated 2026-10-27 03:51 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `8dec328` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 48 commit(s) since then are not mentioned anywhere in it:
-
-| commit | date | subject |
-|---|---|---|
-| `13634fe` | 2026-10-26 | An emailed sign-in code confirms the owner's email (no separate verify link) (#236) |
-| `23e81ff` | 2026-10-26 | Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235) |
-| `4960a76` | 2026-10-26 | Setup sheet: recap screen + email, honest cancellation wording, clearer days, uniform cards, resume where you left off (#234) |
-| `4d8194b` | 2026-10-26 | See a built course's page before sending the preview (#233) |
-| `356403f` | 2026-10-26 | Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232) |
-| `ee9402b` | 2026-10-26 | Staff switches do what they say (R-AUTH-007) (#231) |
-| `eb9b40b` | 2026-10-26 | Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230) |
-| `c2f1007` | 2026-10-26 | Bump actions/checkout from 4 to 7 (#215) |
-| `355f6ca` | 2026-10-26 | Bump the minor-and-patch group across 1 directory with 5 updates (#217) |
-| `6890169` | 2026-10-26 | Bump actions/upload-artifact from 4 to 7 (#216) |
-| `03bd9dc` | 2026-10-26 | Bump actions/setup-node from 4 to 7 (#214) |
-| `e1ce606` | 2026-10-26 | Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number >= 1 (R-BOOK-011) (#229) |
-| `7de5d7a` | 2026-10-26 | A declined cancellation hold is ledgered once (R-PAY-010) (#228) |
-| `35cdba7` | 2026-10-26 | Two cancels at once free a booking's seats once; settings PATCH never returns the raw Course row (#227) |
-| `b06da63` | 2026-10-26 | /book: Stripe loads on the golfer's first touch of the form; modified-booking email rate limited (#226) |
-| `09fd1b9` | 2026-10-26 | Owner controls: course alert permission, owner-only time zone and type, member session 7 days, perf check on the PR build (#224) |
-| `9f74c0c` | 2026-10-26 | Admin → Security: sign-in log, attack alerts, Sentry errors, protections checklist (SEC-3) (#225) |
-| `04522eb` | 2026-10-26 | Money fixes from the review ledger + the money walk script (#223) |
-| `a904586` | 2026-10-26 | Sentry 8 → 11, nothing personal collected, zero package flaws (SEC-2) (#222) |
-| `2ff16fa` | 2026-10-25 | Security: patch Next.js, security headers, package scan in CI (SEC-1) (#213) |
-| `47e5fb0` | 2026-10-25 | CASH-1: no more "paid at the counter" — paid online, or rung up in store (#212) |
-| `719895d` | 2026-10-25 | POS-3 R4: end-of-day close-out — count the drawer (#211) |
-| `0278299` | 2026-10-24 | POS-3 R3b: a group's round paid on the card reader (#210) |
-| `068ac2b` | 2026-10-24 | POS-3 R3a: Stripe card reader at the register (shop items) (#209) |
-| `c8e0e66` | 2026-10-24 | FEE-AT-BOOKING-2: pre-flip checklist (flag still off) (#208) |
-| `9985445` | 2026-10-24 | FEE-AT-BOOKING: charge GreenReserve's $1.50/player when the golfer books (built off) (#207) |
-| `2e01ec9` | 2026-10-24 | POS-3 R2: green fees at the register — today's groups and walk-ins paid in cash with shop items (#206) |
-| `ed10fa0` | 2026-10-23 | POS-3 R1: the register — scan, custom amounts, discounts, cash change, receipts, refunds (#205) |
-| `6fd9158` | 2026-10-23 | CART-1: walking and cart prices in the Schedule price table (weekday/weekend) (#204) |
-| `6d7bf2a` | 2026-10-23 | Events: guaranteed headcount for organizer events — due N days before, bill the higher of the guarantee or the list (#203) |
-| `fbacc52` | 2026-10-23 | Events: who pays the course (organizer or each player); one sign-up link replaces texting every player (#202) |
-| `592f05f` | 2026-10-24 | schedule-plan-db-test: expect the weekend fee on a Saturday or Sunday |
-| `4b6af6f` | 2026-10-24 | contact-email-test: spacing |
-| `e53daa8` | 2026-10-24 | MAIL-1: agreements name admin@ instead of the Outlook inbox |
-| `978a3da` | 2026-10-23 | Retire the admin Activity page (AW-12) (#200) |
-| `d2b41f2` | 2026-10-23 | Regenerate the status board |
-| `d6efdc1` | 2026-10-23 | Accepting the agreement succeeds for a course built by hand (the timeline line is history, not the record) |
-| `85bb916` | 2026-10-23 | The Operator Agreement prompt reads the signed rows, so a course built by hand that signed isn't asked again |
-| `3148eed` | 2026-10-22 | Money: Needs you — declined cards with a pay link (DASH-C) (#198) |
-| `3c88148` | 2026-10-22 | Course dashboard tabs: full width and one title style (DASH-C step 3) (#196) |
-| `946d4a5` | 2026-10-23 | The tucked assistant tab says Assistant; a test that the widget never shows the word Birdie |
-| `a578929` | 2026-10-23 | Screenshots review: the assistant shot uses the real pay-link card and only what its tee-sheet tool sees; the assistant is renamed in the product (Cam: no "Birdie" anywhere a course sees); a test for the pay-page fee line |
-| `966741b` | 2026-10-22 | Course dashboard search: find a golfer, booking or member from the menu (#195) |
-| `dd3cfd1` | 2026-10-23 | Product screenshots: three feature rows on the homepage, shots on /teesheet, seed + capture scripts; no $0.00 fee line on the pay page; sign-up card says when there's no player limit |
-| `e0bc004` | 2026-10-22 | Course dashboard Home (DASH-C step 2): today, Needs you, money, coming up (#194) |
-| `4b621c0` | 2026-10-22 | Regenerate status board |
-| `04301ce` | 2026-10-22 | W2-9d review: lapsing holds only through the session's course; void sign-up links say why; public page only for live courses |
-| `2734cbd` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
-
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (3 file(s))
-
-- `M CLAUDE.md`
-- `M DENSE_UI_SPEC.md`
-- `M RUN_QUEUE.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
 ## In flight
 
@@ -151,7 +89,7 @@ Nothing awaiting review.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-26 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-27 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-21 | 5d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 0d |
@@ -192,6 +130,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `8dec328` 2026-10-27 — queue/spec update
 - `cb1c8c2` 2026-10-27 — queue/spec update
 - `13634fe` 2026-10-26 — An emailed sign-in code confirms the owner's email (no separate verify link) (#236)
 - `23e81ff` 2026-10-26 — Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)
@@ -203,7 +142,6 @@ Nothing awaiting review.
 - `c2f1007` 2026-10-26 — Bump actions/checkout from 4 to 7 (#215)
 - `355f6ca` 2026-10-26 — Bump the minor-and-patch group across 1 directory with 5 updates (#217)
 - `6890169` 2026-10-26 — Bump actions/upload-artifact from 4 to 7 (#216)
-- `03bd9dc` 2026-10-26 — Bump actions/setup-node from 4 to 7 (#214)
 
 ---
 
