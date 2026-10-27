@@ -10,6 +10,7 @@ import { prisma } from '../src/lib/prisma';
 import { signPendingTwoFactorToken } from '../src/lib/auth';
 import { readStoredCode } from '../src/lib/two-factor';
 import { POST } from '../src/app/api/auth/2fa/verify/route';
+import { POST as verifyLink } from '../src/app/api/auth/verify/route';
 
 const TAG = 'codeconfirmstest';
 let failed = 0;
@@ -56,8 +57,13 @@ async function signIn(n: string, prefix: string, extra: Record<string, unknown> 
   const legacy = await signIn('legacy', '');
   ok('a code stored before this change still works, and changes nothing about the email', legacy.res.status === 200 && legacy.body.redirect === '/dashboard/verify' && !legacy.row.emailVerified, legacy.body);
 
+  const linkOp = await prisma.courseOperator.create({ data: { name: 'Jordan Tester', email: `${TAG}+link@t.local`, password: 'x', emailVerified: false, onboardingStep: 2, verificationToken: `${TAG}-link` } });
+  await verifyLink(new NextRequest('http://localhost/api/auth/verify', { method: 'POST', body: JSON.stringify({ token: `${TAG}-link` }), headers: { 'content-type': 'application/json' } }));
+  const linkRow = await prisma.courseOperator.findUniqueOrThrow({ where: { id: linkOp.id } });
+  ok('the confirm-email link confirms without moving an owner back in onboarding', linkRow.emailVerified && linkRow.onboardingStep === 2);
+
   const lib = readFileSync('src/lib/two-factor.ts', 'utf8');
-  ok('sending a code stores the channel it went on, and an SMS that falls back to email says email', lib.includes('twoFactorCode: `${method}:${hashedCode}`') && lib.includes('twoFactorCode: `email:${hashedCode}`'));
+  ok('sending a code stores the channel it went on, and an SMS that falls back to email sends a fresh code marked email', lib.includes('twoFactorCode: `${method}:${hashedCode}`') && lib.includes('twoFactorCode: `email:${await bcrypt.hash(emailCode, 10)}`'));
 
   await cleanup();
   await prisma.$disconnect();

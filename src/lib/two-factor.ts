@@ -40,8 +40,11 @@ export async function issueTwoFactorCode(operator: CourseOperator, methodOverrid
     } catch (smsErr) {
       console.error('[2fa] SMS failed, falling back to email:', smsErr);
       actualMethod = 'email';
-      await prisma.courseOperator.update({ where: { id: operator.id }, data: { twoFactorCode: `email:${hashedCode}` } });
-      await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code });
+      // A fresh code for the email: the SMS may have landed despite the error, and a
+      // code that also sits on the phone must not count as proof of the inbox.
+      const emailCode = randomInt(100000, 1000000).toString();
+      await prisma.courseOperator.update({ where: { id: operator.id }, data: { twoFactorCode: `email:${await bcrypt.hash(emailCode, 10)}` } });
+      await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code: emailCode });
     }
   } else {
     console.log('[2fa] sending via email to:', operator.email);
