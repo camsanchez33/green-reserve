@@ -699,7 +699,11 @@ function DashboardPageInner() {
         {courseDraft && !courseArchived && (
           <div className="bg-pine/5 border-b border-pine/20 px-6 py-3">
             <div className="flex items-center gap-2 text-sm text-ink-soft flex-wrap">
-                            <span>Your course isn&apos;t live yet &mdash; golfers can&apos;t book until you approve the page.</span>
+                            <span>{pageApprovalStatus === 'approved'
+                              ? 'You approved your page. We’ll check everything and take your course live.'
+                              : pageApprovalStatus === 'changes_requested'
+                                ? 'We’re making your changes and will send your page back for you to approve.'
+                                : 'Your course isn’t live yet. Golfers can book once you approve your page.'}</span>
               <div className="flex items-center gap-2 ml-auto">
                 {pageApprovalStatus === 'approved' ? (
                   <span className="text-xs text-ink font-medium inline-flex items-center gap-1.5"><span className="w-[5px] h-[5px] rounded-full bg-ok" aria-hidden="true"/>You approved this page</span>

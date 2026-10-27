@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-27 03:35 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ cf089541</span>
-    <span>tree clean</span>
+    <span>2026-10-27 04:13 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 352be06d</span>
+    <span>1 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">89 runs have shipped that the queue doesn't know about</div>
+<div class="lede">91 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-22. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">352be06d</span><span>Onboarding walks the owner through their booking page part by part; Finish setting up on Home</span></li>
+<li><span class="h">db165892</span><span>Regenerate code map and status board</span></li>
 <li><span class="h">ca6666d2</span><span>SMS fallback emails a fresh code; test the confirm link keeps onboarding progress</span></li>
 <li><span class="h">05bd3437</span><span>An emailed sign-in code confirms the owner's email: no separate verify link after it</span></li>
 <li><span class="h">23e81ffe</span><span>Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)</span></li>
@@ -223,6 +225,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
+<section><h2>Working tree right now</h2>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>UU docs/CODEMAP.md</code></li></ul>
+</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:49</span></div>
@@ -301,6 +308,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 6d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">352be06d</td><td class="num">2026-10-27</td><td>Onboarding walks the owner through their booking page part by part; Finish setting up on Home</td></tr>
+<tr><td class="num">db165892</td><td class="num">2026-10-27</td><td>Regenerate code map and status board</td></tr>
 <tr><td class="num">ca6666d2</td><td class="num">2026-10-27</td><td>SMS fallback emails a fresh code; test the confirm link keeps onboarding progress</td></tr>
 <tr><td class="num">05bd3437</td><td class="num">2026-10-27</td><td>An emailed sign-in code confirms the owner's email: no separate verify link after it</td></tr>
 <tr><td class="num">23e81ffe</td><td class="num">2026-10-26</td><td>Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)</td></tr>
@@ -311,8 +320,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">ae6e20f5</td><td class="num">2026-10-27</td><td>Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once</td></tr>
 <tr><td class="num">4d8194b5</td><td class="num">2026-10-26</td><td>See a built course's page before sending the preview (#233)</td></tr>
 <tr><td class="num">5afb4b9e</td><td class="num">2026-10-27</td><td>Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step</td></tr>
-<tr><td class="num">2cc1e08f</td><td class="num">2026-10-27</td><td>See the page: one tab per click (button waits while it opens)</td></tr>
-<tr><td class="num">e5682ce1</td><td class="num">2026-10-26</td><td>Admin can see a built course's page before sending the preview (view-only look link)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

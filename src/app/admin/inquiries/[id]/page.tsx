@@ -337,6 +337,8 @@ function InquiryDetailInner() {
   const [noteText, setNoteText] = useState('');
   // Cam 2026-10-26: reply to the course from here (sent from admin@ by the route's 'reply').
   const [replyText, setReplyText] = useState('');
+  // Cam 2026-10-27: once the question is answered the box folds away; the conversation goes on in the course's Messages.
+  const [replyOpen, setReplyOpen] = useState(false);
   const [replySending, setReplySending] = useState(false);
   const [replyResult, setReplyResult] = useState<{ ok: boolean; text: string } | null>(null);
   const replyRef = useRef<HTMLTextAreaElement>(null);
@@ -511,6 +513,7 @@ function InquiryDetailInner() {
       const d = await r.json().catch(() => ({} as Record<string, unknown>));
       if (r.ok) {
         setReplyText('');
+        setReplyOpen(false);
         setReplyResult({ ok: true, text: 'Sent to ' + String(d.sentTo || inq?.email || 'them') + '. Their answer comes to ' + ADMIN_EMAIL + '.' });
         await loadInquiry();
       } else {
@@ -1473,6 +1476,22 @@ function InquiryDetailInner() {
           {/* Lead tab — who they are, then what they told us. */}
           {activeTab === 'lead' && inq.email && !['lead', 'rejected', 'archived', 'live'].includes(inq.status) && (() => {
             const lastReply = (inq.events || []).filter(e => e.actorName?.startsWith(REPLY_EVENT_PREFIX)).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+            const repliedLine = lastReply ? `Answered ${new Date(lastReply.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}${lastReply.actorName?.includes(' by ') ? ' by ' + lastReply.actorName.split(' by ').pop() : ''}.` : '';
+            if (lastReply && !replyOpen) return (
+              <div id="reply" className="max-w-3xl mb-8">
+                <Card className="p-4">
+                  {inq.additionalNotes && <p className="text-[14px] text-ink whitespace-pre-wrap pb-3 mb-3 border-b border-line-soft">{inq.additionalNotes}</p>}
+                  {replyResult
+                    ? <StatusDot status={replyResult.ok ? 'ok' : 'bad'} label={replyResult.text} />
+                    : <p className="text-[13px] text-ink-muted">{repliedLine}</p>}
+                  <p className="mt-2 text-[13px] text-ink">
+                    {inq.builtCourseId
+                      ? <a href={`/admin/courses/${inq.builtCourseId}?tab=contact`} className="text-pine font-medium hover:underline">Keep talking in Messages on the course page</a>
+                      : <button onClick={() => { setReplyOpen(true); setReplyResult(null); }} className="text-pine font-medium hover:underline">Write again</button>}
+                  </p>
+                </Card>
+              </div>
+            );
             return (
               <div id="reply" className="max-w-3xl mb-8">
                 <h2 className="text-[15px] font-semibold text-ink mb-3">Reply</h2>

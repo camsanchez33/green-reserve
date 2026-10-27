@@ -128,9 +128,8 @@
     "lucide": 1
   },
   "src/app/dashboard/onboarding/page.tsx": {
-    "card": 4,
-    "input": 1,
-    "lucide": 2
+    "card": 3,
+    "lucide": 1
   },
   "src/app/dashboard/page.tsx": {
     "input": 4,
@@ -268,6 +267,9 @@
   "src/components/dashboard/money/PayoutsPanel.tsx": {
     "card": 2,
     "lucide": 1
+  },
+  "src/components/dashboard/onboarding/PageReviewStep.tsx": {
+    "lucide": 2
   },
   "src/components/ui/Card.tsx": {
     "card": 1

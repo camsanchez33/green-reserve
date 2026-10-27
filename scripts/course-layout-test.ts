@@ -24,7 +24,7 @@ check('staff see the layout read-only', page.includes('readOnly={isStaffLogin}')
 check('unticking a round deactivates, never deletes', !tab.includes("'/api/operator/course-products', 'DELETE'"));
 check('golfer page loads tees and nines', pub.includes('teeSets:') && pub.includes('nines:'));
 check('golfer page shows The tees', booking.includes('The tees'));
-check('tee item waits for the count', page.includes('teeSetCount === 0'));
+check('tee item waits for the count', page.includes('photos.length : null, teeSetCount,') && readFileSync('src/lib/setup-missing.ts', 'utf8').includes('if (f.teeSetCount === 0)'));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');
