@@ -249,7 +249,8 @@ export interface OrphanSweepItem {
 // individually via forceDeleteOrphan below for an explicit owner override.
 export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Promise<OrphanSweepItem[]> {
   const [allCourses, linkedInquiries] = await Promise.all([
-    prisma.course.findMany({ select: { id: true, name: true, archivedAt: true, adminNotes: true, operatorId: true, createdAt: true } }),
+    // Cam 2026-10-27: built by hand (Admin → Create course) means no inquiry on purpose — never swept.
+    prisma.course.findMany({ where: { builtByHand: false }, select: { id: true, name: true, archivedAt: true, adminNotes: true, operatorId: true, createdAt: true } }),
     prisma.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { id: true, courseName: true, status: true, builtCourseId: true } }),
   ]);
 
@@ -337,7 +338,7 @@ export async function sweepOrphanCourses(adminName: string, dryRun: boolean): Pr
 // still individually reachable for forceDeleteOrphan below.
 export async function listAcknowledgedOrphans(): Promise<{ id: string; name: string; archivedAt: string }[]> {
   const [allCourses, linkedInquiries] = await Promise.all([
-    prisma.course.findMany({ where: { archivedAt: { not: null } }, select: { id: true, name: true, archivedAt: true, adminNotes: true } }),
+    prisma.course.findMany({ where: { archivedAt: { not: null }, builtByHand: false }, select: { id: true, name: true, archivedAt: true, adminNotes: true } }),
     prisma.courseInquiry.findMany({ where: { builtCourseId: { not: null } }, select: { builtCourseId: true } }),
   ]);
   const linkedCourseIds = new Set(linkedInquiries.map(i => i.builtCourseId as string));
@@ -383,8 +384,9 @@ export interface ForceDeleteResult {
 // real inquiry link is refused unconditionally — the doctrine's protection
 // for real courses is untouched by this.
 export async function forceDeleteOrphan(courseId: string, confirmName: string, adminName: string): Promise<ForceDeleteResult> {
-  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true, name: true, operatorId: true } });
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true, name: true, operatorId: true, builtByHand: true } });
   if (!course) return { ok: false, error: 'Course not found' };
+  if (course.builtByHand) return { ok: false, error: 'This course was built by hand — it has no inquiry on purpose and is not an orphan. Archive instead.' };
 
   const linked = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
   if (linked) return { ok: false, error: 'This course has a linked inquiry — it is not an orphan, the doctrine protects it. Archive instead.' };

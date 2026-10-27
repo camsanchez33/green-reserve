@@ -53,6 +53,10 @@ async function createCourse(req: NextRequest) {
     }
     const contactEmail = String(rawContactEmail).trim().toLowerCase();
 
+    // Cam 2026-10-27: a course made here without an inquiry is marked built by hand,
+    // so it never reads as an orphan and the orphan sweep leaves it alone.
+    const fromInquiry = inquiryId ? !!(await prisma.courseInquiry.findUnique({ where: { id: String(inquiryId) }, select: { id: true } })) : false;
+
     const existing = await prisma.courseOperator.findUnique({ where: { email: contactEmail } });
     if (existing) return NextResponse.json({ error: 'An operator with this email already exists' }, { status: 409 });
 
@@ -109,6 +113,7 @@ async function createCourse(req: NextRequest) {
             hasResidentPricing: hasResidentPricing || (courseType === 'municipal' && !!seedResidentWeekday),
             memberAdvanceDays: seedMemberAdvanceDays ? Number(seedMemberAdvanceDays) : 14,
             active: false,
+            builtByHand: !fromInquiry,
           },
         },
       },
@@ -118,7 +123,7 @@ async function createCourse(req: NextRequest) {
     const courseId = operator.course?.[0]?.id ?? null;
 
     // If this was created from an inquiry, mark it
-    if (inquiryId && courseId) {
+    if (fromInquiry && courseId) {
       await prisma.courseInquiry.update({
         where: { id: String(inquiryId) },
         data: { builtCourseId: courseId, status: 'building' },

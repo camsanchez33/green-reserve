@@ -139,6 +139,9 @@ model Course {
   /// A pipeline course records it as an inquiry event instead (lib/approval-state.ts).
   pageDecision               String?
   pageDecidedAt              DateTime?
+  /// Cam 2026-10-27: made with Admin -> Create course and no inquiry. Such a course
+  /// has no inquiry on purpose, so it is never "orphaned" and the orphan sweep skips it.
+  builtByHand                Boolean               @default(false)
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
   confirmationNote           String?
