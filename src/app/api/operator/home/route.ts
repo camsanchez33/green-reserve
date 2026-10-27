@@ -9,6 +9,6 @@ export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   { const denied = requirePermission(session, 'sheet.view'); if (denied) return denied; }
-  const home = await operatorHome(session.courseId, { money: can(session, 'money.payments'), messages: can(session, 'messages.use') });
+  const home = await operatorHome(session.courseId, { money: can(session, 'money.payments'), messages: can(session, 'messages.use'), setup: can(session, 'settings.edit') });
   return NextResponse.json(home, { headers: { 'Cache-Control': 'no-store' } });
 }

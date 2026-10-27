@@ -1,20 +1,43 @@
 {
-  "generatedAt": "2026-10-27T04:12:25.068Z",
+  "generatedAt": "2026-10-27T13:58:38.976Z",
   "repo": {
-    "head": "a34dd7e",
+    "head": "8f95ae7",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 4,
+    "dirtyCount": 23,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/analytics/page.tsx"
+      "UU STATUS.artifact.html",
+      "UU STATUS.json",
+      "UU STATUS.md",
+      "UU docs/CODEMAP.md",
+      "UU docs/codemap.json",
+      "M  scripts/course-layout-test.ts",
+      "M  scripts/design-guard.baseline.json",
+      "M  scripts/inquiry-reply-test.ts",
+      "M  scripts/onboarding-review-step-test.ts",
+      "A  scripts/page-review-db-test.ts",
+      "M  scripts/settings-sections-test.ts",
+      "M  src/app/admin/inquiries/[id]/page.tsx",
+      "M  src/app/api/operator/home/route.ts",
+      "A  src/app/api/operator/page-review/route.ts",
+      "M  src/app/dashboard/home/page.tsx",
+      "M  src/app/dashboard/onboarding/page.tsx",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/app/dashboard/settings/page.tsx",
+      "A  src/components/dashboard/ImageUpload.tsx",
+      "A  src/components/dashboard/onboarding/PageReviewStep.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T03:51:21+00:00",
     "unrecorded": [
+      {
+        "h": "8f95ae7",
+        "date": "2026-10-27T04:12:33+00:00",
+        "subject": "DENSE-1: headline numbers keep their value in the accessible name; status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "a34dd7e",
         "date": "2026-10-27T04:10:58+00:00",
@@ -423,6 +446,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "8f95ae7",
+      "date": "2026-10-27",
+      "subject": "DENSE-1: headline numbers keep their value in the accessible name; status board"
+    },
+    {
       "h": "a34dd7e",
       "date": "2026-10-27",
       "subject": "DENSE-1 review fixes"
@@ -476,11 +504,6 @@
       "h": "ee9402b",
       "date": "2026-10-26",
       "subject": "Staff switches do what they say (R-AUTH-007) (#231)"
-    },
-    {
-      "h": "eb9b40b",
-      "date": "2026-10-26",
-      "subject": "Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)"
     }
   ]
 }

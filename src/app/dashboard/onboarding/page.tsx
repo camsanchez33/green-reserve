@@ -2,10 +2,10 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Loader2, ExternalLink } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import SignAgreements from '@/components/dashboard/SignAgreements';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { CHANGE_CATEGORIES } from '@/lib/change-requests';
+import { PageReviewStep } from '@/components/dashboard/onboarding/PageReviewStep';
 
 // AG-2: the single agreement checkbox became its own step — legal name,
 // signer, and each document read to the end before it can be ticked.
@@ -14,7 +14,6 @@ import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 // setup sheet, and still editable in Settings.
 const STEPS = ['Review your page', 'Sign', 'Connect payments', 'Go live'];
 
-const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
 function OnboardingInner() {
   const router = useRouter();
@@ -23,13 +22,6 @@ function OnboardingInner() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageStatus, setPageStatus] = useState<'none' | 'approved' | 'changes_requested'>('none');
-  const [opened, setOpened] = useState(false);
-  const [opening, setOpening] = useState(false);
-  const [blockedUrl, setBlockedUrl] = useState('');
-  const [openError, setOpenError] = useState('');
-  const [asking, setAsking] = useState(false);
-  const [changeCats, setChangeCats] = useState<Set<string>>(new Set());
-  const [changeNote, setChangeNote] = useState('');
   const [stripeActive, setStripeActive] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [stripeBanner, setStripeBanner] = useState('');
@@ -37,7 +29,6 @@ function OnboardingInner() {
   // agreements are signed; both load before the page decides.
   const [profileStep, setProfileStep] = useState<number | null>(null);
   const [signedAll, setSignedAll] = useState<boolean | null>(null);
-  const [saveError, setSaveError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [finishError, setFinishError] = useState('');
 
@@ -76,51 +67,11 @@ function OnboardingInner() {
     setLoading(false);
   }, [profileStep, signedAll]);
 
-  // Opens the course's own preview (the same link as the dashboard's "View your page").
-  // The tab opens inside the click so a pop-up blocker allows it.
-  const openPage = async () => {
-    setOpenError(''); setBlockedUrl(''); setOpening(true);
-    const tab = window.open('', '_blank');
-    try {
-      const r = await fetch('/api/operator/preview-link');
-      const d = await r.json().catch(() => ({} as Record<string, unknown>));
-      if (r.ok && typeof d.url === 'string') { // Pop-up blocked: show the link here rather than leaving onboarding.
-        if (tab) tab.location.href = d.url; else setBlockedUrl(d.url); setOpened(true); return; }
-      tab?.close(); setOpenError(String(d.error || `Couldn’t open your page (${r.status}) — try again.`));
-    } catch { tab?.close(); setOpenError('Couldn’t reach the server — check your connection and try again.'); }
-    finally { setOpening(false); }
-  };
-
   // Step 1 done → step 2 (the endpoint bumps onboardingStep, so a reload resumes at Sign).
   const advance = async () => {
     const r = await fetch('/api/operator/profile', { method: 'PATCH' });
     if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error || `Could not save your progress (${r.status}).`); }
     setStep(signedAll ? 3 : 2);
-  };
-
-  const decide = async (decision: 'approve' | 'changes' | 'later') => {
-    setSaving(true); setSaveError('');
-    try {
-      if (decision === 'approve') {
-        const r = await fetch('/api/operator/approve-page', { method: 'POST' });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(d.error || `Could not record your approval (${r.status}).`);
-        setPageStatus('approved');
-      } else if (decision === 'changes') {
-        if (changeCats.size === 0) throw new Error('Pick what needs changing.');
-        // The note rides on the first category only, so the admin thread doesn't repeat it per category.
-        const items = [...changeCats].map((category, i) => ({ category, detail: i === 0 ? changeNote : '' }));
-        const r = await fetch('/api/operator/request-changes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(d.error || `Could not send your changes (${r.status}).`);
-        setPageStatus('changes_requested');
-      }
-      await advance();
-    } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Something went wrong — try again.');
-    } finally {
-      setSaving(false);
-    }
   };
 
   const connectStripe = async () => {
@@ -199,74 +150,8 @@ function OnboardingInner() {
           ))}
         </div>
 
-        {/* Step 1 — Review your page (Cam 2026-10-27) */}
-        {step === 1 && (
-          <div className="bg-white rounded-lg shadow-card p-6">
-            <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-2">Review your booking page</h2>
-            <p className="text-sm text-ink mb-5">This is what golfers will see. Check your prices, tee times, photos and policies, then approve it or tell us what to change. Booking is off until you go live.</p>
-
-            <button onClick={openPage} disabled={opening}
-              className="w-full flex items-center justify-center gap-2 bg-white border border-line hover:border-pine/40 text-ink py-3 rounded-md font-medium text-[13px] transition-colors">
-              {opening ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden /> : <>Open your page <ExternalLink className="w-3.5 h-3.5" aria-hidden /></>}
-            </button>
-            {blockedUrl && <p className="text-sm text-ink mt-2">Your browser blocked the new tab. <a href={blockedUrl} target="_blank" rel="noopener noreferrer" className="text-pine underline">Open your page here</a>.</p>}
-            {openError && <p role="alert" className="text-sm text-bad mt-2">{openError}</p>}
-
-            {pageStatus !== 'none' ? (
-              <div className="mt-5">
-                <StatusDot status={pageStatus === 'approved' ? 'ok' : 'warn'} label={pageStatus === 'approved' ? 'You approved this page.' : 'You asked for changes — we’ll email you when they’re made.'} />
-              </div>
-            ) : asking ? (
-              <div className="mt-5 space-y-3">
-                <p className="text-[13px] font-semibold text-ink">What needs changing?</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {CHANGE_CATEGORIES.map(c => (
-                    <label key={c.key} className="flex items-center gap-2 text-sm text-ink cursor-pointer">
-                      <input type="checkbox" className="accent-pine" checked={changeCats.has(c.key)}
-                        onChange={() => setChangeCats(prev => { const n = new Set(prev); if (n.has(c.key)) n.delete(c.key); else n.add(c.key); return n; })} />
-                      {c.label}
-                    </label>
-                  ))}
-                </div>
-                <textarea value={changeNote} onChange={e => setChangeNote(e.target.value)} rows={3} maxLength={1000}
-                  placeholder="Tell us what to change" className={iCls + ' resize-none'} />
-              </div>
-            ) : null}
-
-            {saveError && <p role="alert" className="text-sm text-bad mt-4">{saveError}</p>}
-
-            {pageStatus !== 'none' ? (
-              <button onClick={() => decide('later')} disabled={saving}
-                className="w-full mt-5 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
-                {saving ? 'Saving…' : 'Continue'}
-              </button>
-            ) : asking ? (
-              <div className="mt-5 flex gap-2">
-                <button onClick={() => { setAsking(false); setSaveError(''); }} disabled={saving}
-                  className="px-4 py-3 rounded-md border border-line text-ink text-[13px] font-medium hover:border-pine/40 disabled:opacity-50 transition-colors">Back</button>
-                <button onClick={() => decide('changes')} disabled={saving}
-                  className="flex-1 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
-                  {saving ? 'Sending…' : 'Send my changes'}
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="mt-5 grid grid-cols-2 gap-2">
-                  <button onClick={() => { setAsking(true); setSaveError(''); }} disabled={saving}
-                    className="py-3 rounded-md border border-line text-ink text-[13px] font-medium hover:border-pine/40 disabled:opacity-50 transition-colors">Something needs changing</button>
-                  <button onClick={() => decide('approve')} disabled={saving || !opened}
-                    title={opened ? undefined : 'Open your page first'}
-                    className="bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
-                    {saving ? 'Saving…' : 'Looks good — approve it'}
-                  </button>
-                </div>
-                {!opened && <p className="text-xs text-ink-soft mt-2 text-center">Open your page first to approve it.</p>}
-                <button onClick={() => decide('later')} disabled={saving}
-                  className="w-full mt-3 text-[13px] text-ink-muted hover:text-ink transition-colors">I&apos;ll review it later</button>
-              </>
-            )}
-          </div>
-        )}
+        {/* Step 1 — Review your page, part by part (Cam 2026-10-27) */}
+        {step === 1 && <PageReviewStep status={pageStatus} onStatus={setPageStatus} onAdvance={advance} />}
         {/* Step 2 — Sign (AG-2) */}
         {step === 2 && (
           <div className="bg-white rounded-lg shadow-card p-6">

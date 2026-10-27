@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 564,
-    "routes": 266,
-    "libs": 192,
+    "files": 569,
+    "routes": 267,
+    "libs": 194,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -877,7 +877,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2355,
+      "lines": 2374,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5961,6 +5961,31 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/page-review/route.ts",
+      "lines": 16,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/page-review",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/page-review",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/photos/[id]/route.ts",
       "lines": 27,
       "purpose": "",
@@ -7822,7 +7847,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 209,
+      "lines": 219,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -7840,10 +7865,13 @@
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/money/PayoutsTable",
+        "@/components/dashboard/settings/FinishSetup",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
+        "@/lib/setup-missing",
         "@/lib/use-dashboard-access",
         "next/link",
+        "next/navigation",
         "react"
       ],
       "usedBy": []
@@ -8003,7 +8031,7 @@
     },
     {
       "path": "src/app/dashboard/onboarding/page.tsx",
-      "lines": 356,
+      "lines": 241,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8019,8 +8047,8 @@
       "guard": "NONE FOUND",
       "imports": [
         "@/components/dashboard/SignAgreements",
+        "@/components/dashboard/onboarding/PageReviewStep",
         "@/components/ui/StatusDot",
-        "@/lib/change-requests",
         "lucide-react",
         "next/image",
         "next/navigation",
@@ -8051,7 +8079,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1517,
+      "lines": 1521,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8175,7 +8203,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1193,
+      "lines": 1134,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8194,6 +8222,7 @@
         "@/components/dashboard/CardReaderCard",
         "@/components/dashboard/CourseLayoutTab",
         "@/components/dashboard/CoursePreview",
+        "@/components/dashboard/ImageUpload",
         "@/components/dashboard/SalesTaxCard",
         "@/components/dashboard/ShopCatalog",
         "@/components/dashboard/StaffNotice",
@@ -8210,6 +8239,7 @@
         "@/lib/facilities",
         "@/lib/image-resize",
         "@/lib/password",
+        "@/lib/setup-missing",
         "@/lib/unsaved-guard",
         "@/lib/use-dashboard-access",
         "lucide-react",
@@ -10021,6 +10051,31 @@
       ]
     },
     {
+      "path": "src/components/dashboard/ImageUpload.tsx",
+      "lines": 62,
+      "purpose": "The course's logo or course photo:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ImageUpload",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/image-resize",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx",
+        "src/components/dashboard/onboarding/PageReviewStep.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/LoadError.tsx",
       "lines": 16,
       "purpose": "SD-10.",
@@ -10845,6 +10900,36 @@
       ]
     },
     {
+      "path": "src/components/dashboard/onboarding/PageReviewStep.tsx",
+      "lines": 257,
+      "purpose": "Onboarding step 1 (Cam 2026-10-27):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PageReviewStep",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/ImageUpload",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/image-resize",
+        "@/lib/page-review",
+        "lucide-react",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/onboarding/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/settings/FinishSetup.tsx",
       "lines": 54,
       "purpose": "Settings rework (Cam 2026-10-19:",
@@ -10870,6 +10955,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/settings/page.tsx"
       ]
     },
@@ -11060,6 +11146,7 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
+        "src/components/dashboard/onboarding/PageReviewStep.tsx",
         "src/components/dashboard/settings/FinishSetup.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
@@ -11347,6 +11434,7 @@
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/onboarding/PageReviewStep.tsx",
         "src/components/dashboard/settings/FinishSetup.tsx"
       ]
     },
@@ -11415,7 +11503,8 @@
         "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/events/EventSignup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
-        "src/components/dashboard/members/ResidentsCard.tsx"
+        "src/components/dashboard/members/ResidentsCard.tsx",
+        "src/components/dashboard/onboarding/PageReviewStep.tsx"
       ]
     },
     {
@@ -14238,6 +14327,7 @@
         "src/lib/email.ts",
         "src/lib/move-booking.ts",
         "src/lib/normalize-course.ts",
+        "src/lib/page-review.ts",
         "src/lib/receipt-charges.ts"
       ]
     },
@@ -14440,7 +14530,6 @@
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
-        "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/lib/approval-state.ts",
         "src/lib/inquiry-action-queue.ts",
@@ -16912,7 +17001,8 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx",
-        "src/lib/normalize-course.ts"
+        "src/lib/normalize-course.ts",
+        "src/lib/page-review.ts"
       ]
     },
     {
@@ -17285,7 +17375,9 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx",
-        "src/app/for-courses/details/page.tsx"
+        "src/app/for-courses/details/page.tsx",
+        "src/components/dashboard/ImageUpload.tsx",
+        "src/components/dashboard/onboarding/PageReviewStep.tsx"
       ]
     },
     {
@@ -18449,7 +18541,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 132,
+      "lines": 138,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -18484,6 +18576,7 @@
         "./course-time",
         "./email",
         "./prisma",
+        "./setup-missing",
         "./shop"
       ],
       "usedBy": [
@@ -18801,6 +18894,50 @@
         "src/app/api/admin/two-factor/route.ts",
         "src/app/api/cam/login/route.ts",
         "src/app/api/cam/step-up/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/page-review.ts",
+      "lines": 102,
+      "purpose": "Cam 2026-10-27 (onboarding walk):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "pageReview",
+          "kind": "fn"
+        },
+        {
+          "name": "PageReview",
+          "kind": "type"
+        },
+        {
+          "name": "ReviewPart",
+          "kind": "type"
+        },
+        {
+          "name": "ReviewPartKey",
+          "kind": "type"
+        },
+        {
+          "name": "ReviewRow",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./cancel-policy",
+        "./facilities",
+        "./prisma",
+        "./setup-missing",
+        "./walking"
+      ],
+      "usedBy": [
+        "src/app/api/operator/page-review/route.ts",
+        "src/components/dashboard/onboarding/PageReviewStep.tsx"
       ]
     },
     {
@@ -19139,6 +19276,7 @@
         "src/lib/operator-setup.ts",
         "src/lib/owner-passkey.ts",
         "src/lib/owner-session.ts",
+        "src/lib/page-review.ts",
         "src/lib/problems.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
@@ -20374,6 +20512,7 @@
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
+        "src/app/api/operator/page-review/route.ts",
         "src/app/api/operator/photos/[id]/route.ts",
         "src/app/api/operator/photos/route.ts",
         "src/app/api/operator/preview-link/route.ts",
@@ -20435,6 +20574,46 @@
       "usedBy": [
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/settings/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/setup-missing.ts",
+      "lines": 42,
+      "purpose": "What is still missing from a course's booking page, each with the Settings section that fixes it.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MissingItem",
+          "kind": "type"
+        },
+        {
+          "name": "MissingKey",
+          "kind": "type"
+        },
+        {
+          "name": "missingSetup",
+          "kind": "fn"
+        },
+        {
+          "name": "settingsHref",
+          "kind": "fn"
+        },
+        {
+          "name": "SetupFacts",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/settings/page.tsx",
+        "src/lib/operator-home.ts",
+        "src/lib/page-review.ts"
       ]
     },
     {
@@ -21775,7 +21954,8 @@
       "usedBy": [
         "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/lib/birdie/course-context.ts",
-        "src/lib/normalize-course.ts"
+        "src/lib/normalize-course.ts",
+        "src/lib/page-review.ts"
       ]
     },
     {
@@ -23728,6 +23908,7 @@
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts",
         "src/lib/operator-search.ts",
+        "src/lib/page-review.ts",
         "src/lib/problems.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",

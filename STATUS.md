@@ -4,25 +4,42 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 04:12 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `a34dd7e` · working tree **4 dirty file(s)**
+Generated 2026-10-27 13:58 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `8f95ae7` · working tree **23 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 2 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 3 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `8f95ae7` | 2026-10-27 | DENSE-1: headline numbers keep their value in the accessible name; status board |
 | `a34dd7e` | 2026-10-27 | DENSE-1 review fixes |
 | `fe585cd` | 2026-10-27 | DENSE-1: Analytics — lots of data, almost no sentences |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (23 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/analytics/page.tsx`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `M  scripts/course-layout-test.ts`
+- `M  scripts/design-guard.baseline.json`
+- `M  scripts/inquiry-reply-test.ts`
+- `M  scripts/onboarding-review-step-test.ts`
+- `A  scripts/page-review-db-test.ts`
+- `M  scripts/settings-sections-test.ts`
+- `M  src/app/admin/inquiries/[id]/page.tsx`
+- `M  src/app/api/operator/home/route.ts`
+- `A  src/app/api/operator/page-review/route.ts`
+- `M  src/app/dashboard/home/page.tsx`
+- `M  src/app/dashboard/onboarding/page.tsx`
+- `M  src/app/dashboard/page.tsx`
+- `M  src/app/dashboard/settings/page.tsx`
+- `A  src/components/dashboard/ImageUpload.tsx`
+- `A  src/components/dashboard/onboarding/PageReviewStep.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -147,6 +164,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `8f95ae7` 2026-10-27 — DENSE-1: headline numbers keep their value in the accessible name; status board
 - `a34dd7e` 2026-10-27 — DENSE-1 review fixes
 - `fe585cd` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences
 - `79316a1` 2026-10-27 — queue/spec update
@@ -158,7 +176,6 @@ Nothing awaiting review.
 - `4d8194b` 2026-10-26 — See a built course's page before sending the preview (#233)
 - `356403f` 2026-10-26 — Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)
 - `ee9402b` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
-- `eb9b40b` 2026-10-26 — Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)
 
 ---
 
