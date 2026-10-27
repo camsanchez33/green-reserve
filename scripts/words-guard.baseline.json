@@ -36,7 +36,7 @@
   "src/app/admin/set-password/page.tsx": 72,
   "src/app/admin/system/page.tsx": 790,
   "src/app/dashboard/2fa/page.tsx": 136,
-  "src/app/dashboard/analytics/page.tsx": 621,
+  "src/app/dashboard/analytics/page.tsx": 620,
   "src/app/dashboard/cancellations/page.tsx": 0,
   "src/app/dashboard/events/page.tsx": 70,
   "src/app/dashboard/forgot-password/page.tsx": 54,

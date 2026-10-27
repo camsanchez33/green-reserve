@@ -1,15 +1,35 @@
 {
-  "generatedAt": "2026-10-27T03:51:29.384Z",
+  "generatedAt": "2026-10-27T04:12:25.068Z",
   "repo": {
-    "head": "8dec328",
+    "head": "a34dd7e",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 4,
+    "dirty": [
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/dashboard/analytics/page.tsx"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T03:51:21+00:00",
-    "unrecorded": []
+    "unrecorded": [
+      {
+        "h": "a34dd7e",
+        "date": "2026-10-27T04:10:58+00:00",
+        "subject": "DENSE-1 review fixes",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fe585cd",
+        "date": "2026-10-27T04:03:19+00:00",
+        "subject": "DENSE-1: Analytics — lots of data, almost no sentences",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 298,
@@ -403,6 +423,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "a34dd7e",
+      "date": "2026-10-27",
+      "subject": "DENSE-1 review fixes"
+    },
+    {
+      "h": "fe585cd",
+      "date": "2026-10-27",
+      "subject": "DENSE-1: Analytics — lots of data, almost no sentences"
+    },
+    {
+      "h": "79316a1",
+      "date": "2026-10-27",
+      "subject": "queue/spec update"
+    },
+    {
       "h": "8dec328",
       "date": "2026-10-27",
       "subject": "queue/spec update"
@@ -446,21 +481,6 @@
       "h": "eb9b40b",
       "date": "2026-10-26",
       "subject": "Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)"
-    },
-    {
-      "h": "c2f1007",
-      "date": "2026-10-26",
-      "subject": "Bump actions/checkout from 4 to 7 (#215)"
-    },
-    {
-      "h": "355f6ca",
-      "date": "2026-10-26",
-      "subject": "Bump the minor-and-patch group across 1 directory with 5 updates (#217)"
-    },
-    {
-      "h": "6890169",
-      "date": "2026-10-26",
-      "subject": "Bump actions/upload-artifact from 4 to 7 (#216)"
     }
   ]
 }

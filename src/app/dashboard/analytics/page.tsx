@@ -318,7 +318,8 @@ function Headline({ d, metric, setMetric }: { d: Data; metric: Metric; setMetric
           <div key={x.key} className={'min-w-0 px-5 py-4 ' + (i ? 'border-l border-line-soft ' : '') + (metric === x.key ? 'bg-paper/70 shadow-[inset_0_-2px_0_var(--color-pine)]' : 'hover:bg-paper/40')}>
             <div className="text-[13.5px] font-semibold text-ink"><Term k={x.term}>{x.label}</Term></div>
             {/* The number is the control: picking it plots it below. */}
-            <button type="button" role="tab" aria-selected={metric === x.key} aria-label={`Plot ${x.label.toLowerCase()}`} onClick={() => setMetric(x.key)} className="block w-full text-left">
+            <button type="button" role="tab" aria-selected={metric === x.key} onClick={() => setMetric(x.key)} className="block w-full text-left">
+              <span className="sr-only">{x.label}: </span>
               <span className="block mt-1.5 text-[30px] leading-none font-semibold text-ink tabular-nums">{values[x.key].value}</span>
               <span className="block mt-2 text-[12.5px] tabular-nums">{values[x.key].delta}</span>
             </button>

@@ -117,10 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-27 03:51 UTC</span><span>claude/practical-lovelace-xiu4u5 @ 8dec328</span>
-    <span>tree clean</span>
+    <span>2026-10-27 04:12 UTC</span><span>claude/practical-lovelace-xiu4u5 @ a34dd7e</span>
+    <span>4 uncommitted</span>
   </div>
 </header>
+<div class="alarm">
+<div class="lede">2 runs have shipped that the queue doesn't know about</div>
+<p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
+<ul>
+<li><span class="h">a34dd7e</span><span>DENSE-1 review fixes</span></li>
+<li><span class="h">fe585cd</span><span>DENSE-1: Analytics — lots of data, almost no sentences</span></li>
+</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">0</span><span class="l">Awaiting review</span></div>
@@ -129,6 +136,11 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
+<section><h2>Working tree right now</h2>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li></ul>
+</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">DENSE — Cam 2026-10-27: &quot;too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin&quot;. Lots of data, almost no sentences. Plan, princip</span><span class="where">:47</span></div>
@@ -209,6 +221,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">a34dd7e</td><td class="num">2026-10-27</td><td>DENSE-1 review fixes</td></tr>
+<tr><td class="num">fe585cd</td><td class="num">2026-10-27</td><td>DENSE-1: Analytics — lots of data, almost no sentences</td></tr>
+<tr><td class="num">79316a1</td><td class="num">2026-10-27</td><td>queue/spec update</td></tr>
 <tr><td class="num">8dec328</td><td class="num">2026-10-27</td><td>queue/spec update</td></tr>
 <tr><td class="num">cb1c8c2</td><td class="num">2026-10-27</td><td>queue/spec update</td></tr>
 <tr><td class="num">13634fe</td><td class="num">2026-10-26</td><td>An emailed sign-in code confirms the owner's email (no separate verify link) (#236)</td></tr>
@@ -218,9 +233,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">356403f</td><td class="num">2026-10-26</td><td>Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)</td></tr>
 <tr><td class="num">ee9402b</td><td class="num">2026-10-26</td><td>Staff switches do what they say (R-AUTH-007) (#231)</td></tr>
 <tr><td class="num">eb9b40b</td><td class="num">2026-10-26</td><td>Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)</td></tr>
-<tr><td class="num">c2f1007</td><td class="num">2026-10-26</td><td>Bump actions/checkout from 4 to 7 (#215)</td></tr>
-<tr><td class="num">355f6ca</td><td class="num">2026-10-26</td><td>Bump the minor-and-patch group across 1 directory with 5 updates (#217)</td></tr>
-<tr><td class="num">6890169</td><td class="num">2026-10-26</td><td>Bump actions/upload-artifact from 4 to 7 (#216)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -7712,7 +7712,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 780,
+      "lines": 786,
       "purpose": "DENSE-1 (DENSE_UI_SPEC.md, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -12820,7 +12820,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 42,
+      "lines": 43,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [

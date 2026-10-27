@@ -4,11 +4,28 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 03:51 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `8dec328` · working tree clean
+Generated 2026-10-27 04:12 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `a34dd7e` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
+`RUN_QUEUE.md` was last committed **2026-10-27**. 2 commit(s) since then are not mentioned anywhere in it:
+
+| commit | date | subject |
+|---|---|---|
+| `a34dd7e` | 2026-10-27 | DENSE-1 review fixes |
+| `fe585cd` | 2026-10-27 | DENSE-1: Analytics — lots of data, almost no sentences |
+
+**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (4 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/words-guard.baseline.json`
+- `M src/app/dashboard/analytics/page.tsx`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -130,6 +147,9 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `a34dd7e` 2026-10-27 — DENSE-1 review fixes
+- `fe585cd` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences
+- `79316a1` 2026-10-27 — queue/spec update
 - `8dec328` 2026-10-27 — queue/spec update
 - `cb1c8c2` 2026-10-27 — queue/spec update
 - `13634fe` 2026-10-26 — An emailed sign-in code confirms the owner's email (no separate verify link) (#236)
@@ -139,9 +159,6 @@ Nothing awaiting review.
 - `356403f` 2026-10-26 — Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)
 - `ee9402b` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
 - `eb9b40b` 2026-10-26 — Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)
-- `c2f1007` 2026-10-26 — Bump actions/checkout from 4 to 7 (#215)
-- `355f6ca` 2026-10-26 — Bump the minor-and-patch group across 1 directory with 5 updates (#217)
-- `6890169` 2026-10-26 — Bump actions/upload-artifact from 4 to 7 (#216)
 
 ---
 

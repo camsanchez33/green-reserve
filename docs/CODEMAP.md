@@ -284,7 +284,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 868 |
 | `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1517 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
-| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 780 |
+| `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 786 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/events` | operator | middleware | page | `src/app/dashboard/events/page.tsx` | 176 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 63 |
@@ -480,7 +480,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-course-page.ts` | 1 | 59 | AW-7 (Cam 2026-10-21): | `courseMoney`, `courseWeeks`, `FailedChargeRow` |
 | `src/lib/admin-home.ts` | 1 | 130 | ADMIN-C (Cam 2026-10-22, mockup C "Clean hub"): | `homeCourseStats`, `HomeCourseStats`, `homeOverview`, `homeToday` |
 | `src/lib/agreement-pdf.tsx` | 1 | 129 | AGREEMENT_SPEC AG-2 §2 — the signed-agreement PDF. | `AgreementPdf`, `markdownBlocks`, `renderAgreementPdf`, `SignatureBlock` |
-| `src/lib/analytics-terms.ts` | 1 | 42 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS` |
+| `src/lib/analytics-terms.ts` | 1 | 43 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS` |
 | `src/lib/birdie/course-context.ts` | 1 | 75 | BIRDIE_AI_SPEC B1 — read-only awareness of THE OPERATOR'S OWN course. | `describeCourseContext`, `operatorCourseContext`, `OperatorCourseContext` |
 | `src/lib/birdie/knowledge-operator.ts` | 1 | 64 | BIRDIE_AI_SPEC B1 — the operator knowledge pack. | `DASHBOARD_PAGES`, `DashboardPage`, `OPERATOR_KNOWLEDGE` |
 | `src/lib/birdie/proposals.ts` | 1 | 451 | BIRDIE_AI_SPEC B4b (Cam 2026-10-05) — propose-and-confirm CHANGES. | `isProposeTool`, `ProposalCard`, `ProposalOutcome`, `PROPOSE_TOOLS`, `runProposeTool` |
