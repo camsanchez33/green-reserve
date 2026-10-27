@@ -24,7 +24,9 @@ const cx = readFileSync('src/components/dashboard/money/CancellationsPanel.tsx',
 const pay = readFileSync('src/components/dashboard/money/PaymentsPanel.tsx', 'utf8');
 check('title says what it is, not "Money"', page.includes('>Payments and payouts</h1>') && !page.includes("'Stripe connected'"));
 check('Stripe dashboard is a button for owners, not a status line', page.includes('Open your Stripe dashboard') && page.includes('!treatAsStaff'));
-check('overview line: paid this week, not paid yet, next payout', ['Paid in the last 7 days', 'Not paid yet', 'Next payout'].every(x => page.includes(x)));
+// DENSE-2 (Cam 2026-10-27): the overview line became the Sales view — today against last week, next payout, not paid yet.
+const sales = readFileSync('src/components/dashboard/money/SalesPanel.tsx', 'utf8');
+check('overview line: today, not paid yet, next payout', ['>Today<', 'Not paid yet', 'Next payout'].every(x => sales.includes(x)) && page.includes('<SalesPanel'));
 check('Refresh is an icon', page.includes('aria-label="Refresh"') && page.includes('↻'));
 check('cancellation policy is not edited here', !cx.includes('savePolicy') && cx.includes('/dashboard/settings?section=Prices+%26+fees'));
 check('no upcoming-bookings list on Money', !cx.includes('Upcoming bookings'));

@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 570,
-    "routes": 268,
+    "files": 572,
+    "routes": 269,
     "libs": 194,
     "models": 58,
     "orphans": 10,
@@ -5847,6 +5847,34 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/money/sales/route.ts",
+      "lines": 62,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/money/sales",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/analytics",
+        "@/lib/course-time",
+        "@/lib/prisma",
+        "@/lib/register-close",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/monthly-reviews/route.ts",
       "lines": 29,
       "purpose": "",
@@ -8027,7 +8055,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 288,
+      "lines": 291,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -8048,6 +8076,7 @@
         "@/components/dashboard/money/PaymentsPanel",
         "@/components/dashboard/money/PayoutsPanel",
         "@/components/dashboard/money/PayoutsTable",
+        "@/components/dashboard/money/SalesPanel",
         "@/components/dashboard/money/types",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -10026,7 +10055,8 @@
         "react"
       ],
       "usedBy": [
-        "src/app/dashboard/analytics/page.tsx"
+        "src/app/dashboard/analytics/page.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx"
       ]
     },
     {
@@ -10135,6 +10165,7 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
@@ -10902,6 +10933,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/money/SalesPanel.tsx",
+      "lines": 230,
+      "purpose": "DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "SalesPanel",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/DateRangeButton",
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/lib/dashboard-fetch",
+        "@/lib/register-close",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/money/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/money/types.ts",
       "lines": 18,
       "purpose": "SD-8 — one booking shape for all three Money tabs.",
@@ -11175,6 +11234,7 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/onboarding/PageReviewStep.tsx",
         "src/components/dashboard/settings/FinishSetup.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
@@ -12962,7 +13022,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 559,
+      "lines": 569,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -13018,6 +13078,7 @@
       "usedBy": [
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/sheet-money/route.ts",
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
@@ -15633,6 +15694,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/tee-times/route.ts",
@@ -16138,6 +16200,7 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
@@ -19225,6 +19288,7 @@
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -19787,7 +19851,9 @@
         "./shop"
       ],
       "usedBy": [
-        "src/app/api/operator/register-close/route.ts"
+        "src/app/api/operator/money/sales/route.ts",
+        "src/app/api/operator/register-close/route.ts",
+        "src/components/dashboard/money/SalesPanel.tsx"
       ]
     },
     {
@@ -20554,6 +20620,7 @@
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -23921,6 +23988,7 @@
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",

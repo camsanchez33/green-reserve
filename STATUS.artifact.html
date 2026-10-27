@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-27 18:56 UTC</span><span>claude/practical-lovelace-xiu4u5 @ 92087fc</span>
-    <span>7 uncommitted</span>
+    <span>2026-10-27 19:14 UTC</span><span>claude/practical-lovelace-xiu4u5 @ 531516a</span>
+    <span>9 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">2 runs have shipped that the queue doesn't know about</div>
+<div class="lede">3 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">531516a</span><span>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)</span></li>
 <li><span class="h">92087fc</span><span>DENSE-4: the tee sheet is seat rows (#241)</span></li>
 <li><span class="h">6eced45</span><span>Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)</span></li>
 </ul></div>
@@ -139,7 +140,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/teesheet-1-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/components/home/TeeSheetDemo.tsx</code></li><li><code>?? src/app/api/operator/sheet-money/</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/money-rework-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/money/page.tsx</code></li><li><code>M src/components/dashboard/money/PaymentsPanel.tsx</code></li><li><code>M src/lib/analytics.ts</code></li><li><code>?? src/app/api/operator/money/sales/</code></li><li><code>?? src/components/dashboard/money/SalesPanel.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -221,6 +222,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">531516a</td><td class="num">2026-10-27</td><td>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)</td></tr>
 <tr><td class="num">92087fc</td><td class="num">2026-10-27</td><td>DENSE-4: the tee sheet is seat rows (#241)</td></tr>
 <tr><td class="num">6eced45</td><td class="num">2026-10-27</td><td>Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)</td></tr>
 <tr><td class="num">18082d8</td><td class="num">2026-10-27</td><td>DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)</td></tr>
@@ -232,7 +234,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">4d8194b</td><td class="num">2026-10-26</td><td>See a built course's page before sending the preview (#233)</td></tr>
 <tr><td class="num">356403f</td><td class="num">2026-10-26</td><td>Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)</td></tr>
 <tr><td class="num">ee9402b</td><td class="num">2026-10-26</td><td>Staff switches do what they say (R-AUTH-007) (#231)</td></tr>
-<tr><td class="num">eb9b40b</td><td class="num">2026-10-26</td><td>Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

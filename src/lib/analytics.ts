@@ -166,6 +166,14 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   }
   for (const b of pastLive) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
   for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += share(b); r.rounds += b.checkedInPlayers ?? b.players; } }
+  // DENSE-2: the same collected course share, by the tee time's weekday and hour (Money's sales charts).
+  const collectedByDow = Array.from({ length: 7 }, () => 0);
+  const collectedByHour = new Map<number, number>();
+  for (const b of collectedB) {
+    collectedByDow[dowOf(b.date)] += share(b);
+    const h = Number(b.time.slice(0, 2));
+    collectedByHour.set(h, (collectedByHour.get(h) ?? 0) + share(b));
+  }
 
   // ── 2. Utilization ───────────────────────────────────────────────────────
   const forSale = L.teeTimes.filter(t => t.status !== 'blocked');
@@ -448,6 +456,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       },
       // W2-8 (2): rate paid vs posted, by rate.
       rates: { rows: rateList, paidCents: ratePaid, postedCents: ratePosted, belowPostedCents: ratePosted - ratePaid, ofPostedPct: pct(ratePaid, ratePosted) },
+      byDow: collectedByDow.map((cents, i) => ({ dow: DOW[i], collectedCents: cents })),
+      byHour: [...collectedByHour.entries()].sort((x, y) => x[0] - y[0]).map(([hour, cents]) => ({ hour, collectedCents: cents })),
       greenCents: greenCollected, cartCents: cartCollected, lateFeesKeptCents: lateFeesKept, holdsHeldCents: holdsHeld, greenReserveFeesCents: grFees,
       pipeline: {
         upcomingBookings: upcomingB.length,

@@ -108,7 +108,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
           {visibleDays.length < days.length && (
             <button onClick={() => setShowAll(true)} className="w-full py-2.5 text-[13px] font-medium text-pine hover:underline">Show older days ({days.length - visibleDays.length} more)</button>
           )}
-          <p className="text-[12.5px] text-ink-muted">Your latest 200 bookings. Amounts are your course’s share: green fees, carts and range balls; GreenReserve’s booking fee is the golfer’s and isn’t included. Totals for any dates are on Analytics.</p>
+          <p className="text-[12.5px] text-ink-muted">Latest 200 bookings · your course’s share, before GreenReserve’s booking fee</p>
         </div>
       )}
     </>

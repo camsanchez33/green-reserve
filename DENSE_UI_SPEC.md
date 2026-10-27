@@ -119,7 +119,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   first review exists. Unused fields to surface: `revenue.perAvailableTeeTimeCents`,
   `utilization.byDay`, `utilization.blockedTimes`. Sparklines need per-period series
   → small addition in `computeAnalytics` (new code, server-side, no money logic).
-- [ ] **DENSE-2 Money** (`dashboard/money/*`, ~15 → ≤ 3). Sales tab first:
+- [x] **DENSE-2 Money** (BUILT 2026-10-27: Sales view on top — today vs same weekday last week, sales by day / weekday / hour, summary, how golfers paid, cash drawer; title stays "Payments and payouts" per money-rework-test) (`dashboard/money/*`, ~15 → ≤ 3). Sales tab first:
   Stripe "Today" cumulative line vs same weekday last week + next payout + not paid
   yet; Toast's sales by day / day of week / time of day; Sales summary table (green
   fees, carts, range, shop on rounds, register sales, late/no-show fees, refunds, net;

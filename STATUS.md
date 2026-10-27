@@ -4,28 +4,31 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 18:56 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `92087fc` · working tree **7 dirty file(s)**
+Generated 2026-10-27 19:14 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `531516a` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 2 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 3 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `531516a` | 2026-10-27 | DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242) |
 | `92087fc` | 2026-10-27 | DENSE-4: the tee sheet is seat rows (#241) |
 | `6eced45` | 2026-10-27 | Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (9 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/teesheet-1-test.ts`
+- `M scripts/money-rework-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/home/TeeSheetDemo.tsx`
-- `?? src/app/api/operator/sheet-money/`
+- `M src/app/dashboard/money/page.tsx`
+- `M src/components/dashboard/money/PaymentsPanel.tsx`
+- `M src/lib/analytics.ts`
+- `?? src/app/api/operator/money/sales/`
+- `?? src/components/dashboard/money/SalesPanel.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -150,6 +153,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `531516a` 2026-10-27 — DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)
 - `92087fc` 2026-10-27 — DENSE-4: the tee sheet is seat rows (#241)
 - `6eced45` 2026-10-27 — Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)
 - `18082d8` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)
@@ -161,7 +165,6 @@ Nothing awaiting review.
 - `4d8194b` 2026-10-26 — See a built course's page before sending the preview (#233)
 - `356403f` 2026-10-26 — Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)
 - `ee9402b` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
-- `eb9b40b` 2026-10-26 — Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)
 
 ---
 
