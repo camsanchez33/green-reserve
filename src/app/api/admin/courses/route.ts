@@ -192,7 +192,8 @@ export async function GET(req: NextRequest) {
         createdAt: c.createdAt,
         bookings30d,
         bookingsPrev30d: bookingsPrior30d,
-        hasLinkedInquiry: linkedCourseIds.has(c.id),
+        // A course built by hand has no inquiry on purpose — never an orphan.
+        hasLinkedInquiry: linkedCourseIds.has(c.id) || c.builtByHand,
       }),
     };
   });
