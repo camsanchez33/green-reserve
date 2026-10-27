@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 03:35 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `cf089541` · working tree clean
+Generated 2026-10-27 04:13 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `352be06d` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 89 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 91 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `352be06d` | 2026-10-27 | Onboarding walks the owner through their booking page part by part; Finish setting up on Home |
+| `db165892` | 2026-10-27 | Regenerate code map and status board |
 | `ca6666d2` | 2026-10-27 | SMS fallback emails a fresh code; test the confirm link keeps onboarding progress |
 | `05bd3437` | 2026-10-27 | An emailed sign-in code confirms the owner's email: no separate verify link after it |
 | `23e81ffe` | 2026-10-26 | Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235) |
@@ -103,6 +105,13 @@ Generated 2026-10-27 03:35 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `2734cbdb` | 2026-10-22 | W2-9d: event sign-up page — groups up to 4, course questions, waiting list, pay now with a 30-minute hold or pay later |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (1 file(s))
+
+- `UU docs/CODEMAP.md`
+
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -223,6 +232,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `352be06d` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home
+- `db165892` 2026-10-27 — Regenerate code map and status board
 - `ca6666d2` 2026-10-27 — SMS fallback emails a fresh code; test the confirm link keeps onboarding progress
 - `05bd3437` 2026-10-27 — An emailed sign-in code confirms the owner's email: no separate verify link after it
 - `23e81ffe` 2026-10-26 — Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)
@@ -233,8 +244,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ae6e20f5` 2026-10-27 — Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once
 - `4d8194b5` 2026-10-26 — See a built course's page before sending the preview (#233)
 - `5afb4b9e` 2026-10-27 — Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step
-- `2cc1e08f` 2026-10-27 — See the page: one tab per click (button waits while it opens)
-- `e5682ce1` 2026-10-26 — Admin can see a built course's page before sending the preview (view-only look link)
 
 ---
 

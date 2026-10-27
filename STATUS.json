@@ -1,15 +1,31 @@
 {
-  "generatedAt": "2026-10-27T03:35:25.050Z",
+  "generatedAt": "2026-10-27T04:13:55.312Z",
   "repo": {
-    "head": "cf089541",
+    "head": "352be06d",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
+    "dirtyCount": 1,
+    "dirty": [
+      "UU docs/CODEMAP.md"
+    ],
     "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
+      {
+        "h": "352be06d",
+        "date": "2026-10-27T04:08:27+00:00",
+        "subject": "Onboarding walks the owner through their booking page part by part; Finish setting up on Home",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "db165892",
+        "date": "2026-10-27T03:35:35+00:00",
+        "subject": "Regenerate code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ca6666d2",
         "date": "2026-10-27T03:34:25+00:00",
@@ -1019,6 +1035,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "352be06d",
+      "date": "2026-10-27",
+      "subject": "Onboarding walks the owner through their booking page part by part; Finish setting up on Home"
+    },
+    {
+      "h": "db165892",
+      "date": "2026-10-27",
+      "subject": "Regenerate code map and status board"
+    },
+    {
       "h": "ca6666d2",
       "date": "2026-10-27",
       "subject": "SMS fallback emails a fresh code; test the confirm link keeps onboarding progress"
@@ -1067,16 +1093,6 @@
       "h": "5afb4b9e",
       "date": "2026-10-27",
       "subject": "Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step"
-    },
-    {
-      "h": "2cc1e08f",
-      "date": "2026-10-27",
-      "subject": "See the page: one tab per click (button waits while it opens)"
-    },
-    {
-      "h": "e5682ce1",
-      "date": "2026-10-26",
-      "subject": "Admin can see a built course's page before sending the preview (view-only look link)"
     }
   ]
 }
