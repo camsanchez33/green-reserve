@@ -46,5 +46,10 @@ const alert = email.slice(email.indexOf('export async function sendInquiryNotifi
 ok('the new-question alert opens that inquiry and its reply box', alert.includes('/admin/inquiries/${encodeURIComponent(data.inquiryId)}') && alert.includes('?reply=1'));
 ok('…and its caller passes the inquiry id', readFileSync('src/app/api/inquiries/route.ts', 'utf8').includes('inquiryId: inquiry.id,'));
 
+// Cam 2026-10-27: once answered, the box folds away and the conversation goes on in the course's Messages.
+const inqPage = readFileSync('src/app/admin/inquiries/[id]/page.tsx', 'utf8');
+ok('an answered question folds the reply box away', inqPage.includes('if (lastReply && !replyOpen) return (') && inqPage.includes('setReplyOpen(false);'));
+ok('…and points at Messages on the built course', inqPage.includes('href={`/admin/courses/${inq.builtCourseId}?tab=contact`}'));
+
 if (failed) { console.error(`${failed} failed`); process.exit(1); }
 console.log('inquiry-reply: all passed');

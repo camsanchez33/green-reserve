@@ -16,7 +16,7 @@ check('old Staff & account link resolves', page.includes(`'Staff & account': 'St
 check('Money links to the new section name', cx.includes('/dashboard/settings?section=Prices+%26+fees'));
 check('status strip is gone', !page.includes('staff account{staffCount'));
 check('"Getting paid moved" note is gone', !page.includes('Getting paid moved'));
-check('gallery item waits for the photo list', page.includes('photosLoaded && photos.length === 0'));
+check('gallery item waits for the photo list', page.includes('galleryCount: photosLoaded ? photos.length : null') && readFileSync('src/lib/setup-missing.ts', 'utf8').includes('if (f.galleryCount === 0)'));
 check('Your account forms are hidden from staff logins', page.includes('{!isStaffLogin && <SectionCard title="Two-step sign-in">'));
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }

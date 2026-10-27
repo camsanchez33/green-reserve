@@ -11,6 +11,9 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import type { PayoutsData } from '@/components/dashboard/money/PayoutsTable';
+import { useRouter } from 'next/navigation';
+import { FinishSetup } from '@/components/dashboard/settings/FinishSetup';
+import { settingsHref, type MissingItem } from '@/lib/setup-missing';
 
 type Group = { id: string; name: string; players: number; paymentStatus: string; checkedIn: boolean };
 type Home = {
@@ -24,6 +27,7 @@ type Home = {
   late: { id: string; name: string; time: string }[];
   unreadMessages: number;
   comingUp: { time: string; open: number; groups: Group[] }[];
+  setupMissing: MissingItem[];
 };
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -43,6 +47,7 @@ function diff(now: number, then: number, unit = '') {
 }
 
 export default function DashboardHome() {
+  const router = useRouter();
   const access = useDashboardAccess();
   const seesPayouts = access.can('money.payouts');
   const [home, setHome] = useState<Home | null>(null);
@@ -91,6 +96,11 @@ export default function DashboardHome() {
           </div>
 
           {error && <LoadError message={`Couldn't load today — ${error}`} onRetry={load} />}
+
+          {/* Cam 2026-10-27: what's still missing from the booking page, each linking to its Settings section. */}
+          {home && home.setupMissing.length > 0 && (
+            <div className="-mb-3"><FinishSetup items={home.setupMissing.map(i => ({ ...i, onClick: () => router.push(settingsHref(i.section)) }))} /></div>
+          )}
 
           {home && (
             <div className="flex flex-wrap gap-8">

@@ -24,6 +24,8 @@ import { facilityLines, RANGE_TYPES, FOOD_TYPES, TOURNAMENT_FREQ, type FacilityF
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { FinishSetup, type SetupItem } from '@/components/dashboard/settings/FinishSetup';
+import { missingSetup } from '@/lib/setup-missing';
+import { ImageUpload } from '@/components/dashboard/ImageUpload';
 import { WhoPaysWhat } from '@/components/dashboard/settings/WhoPaysWhat';
 
 type Course = Record<string, unknown>;
@@ -158,60 +160,6 @@ function Toggle({ label, checked, onChange }: { label:string; checked:boolean; o
   );
 }
 
-function ImageUpload({ label, kind, value, onUploaded, hint }: { label: string; kind: 'logo' | 'hero'; value: string; onUploaded: (url: string) => void; hint: string }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-
-  async function handleFile(file: File | null) {
-    if (!file) return;
-    setBusy(true); setErr('');
-    const fd = new FormData();
-    fd.append('file', await downscaleImage(file));
-    fd.append('kind', kind);
-    try {
-      const res = await fetch('/api/operator/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (res.ok) onUploaded(data.url);
-      else setErr(data.error || 'Upload failed');
-    } catch { setErr('Upload failed — try again.'); }
-    setBusy(false);
-  }
-
-  async function remove() {
-    setBusy(true); setErr('');
-    try {
-      const res = await fetch(`/api/operator/upload?kind=${kind}`, { method: 'DELETE' });
-      if (res.ok) onUploaded('');
-      else setErr('Could not remove the image — try again.');
-    } catch { setErr('Could not remove the image — try again.'); }
-    setBusy(false);
-  }
-
-  return (
-    <div>
-      <label className="block text-[13px] font-semibold text-ink mb-1.5">{label}</label>
-      <div className="flex items-center gap-4">
-        {value ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={value} alt="" className={kind === 'logo' ? 'h-14 w-14 object-contain bg-paper rounded-md p-1 border border-line' : 'h-14 w-24 object-cover rounded-md border border-line'}/>
-        ) : (
-          <div className="h-14 w-24 rounded-md bg-paper border border-dashed border-line flex items-center justify-center text-ink-faint">
-            
-          </div>
-        )}
-        <div className="flex flex-col gap-1.5">
-          <label className="cursor-pointer inline-flex px-3 py-1.5 rounded-md bg-paper border border-line hover:border-line-strong text-xs font-medium text-ink-soft w-fit transition-colors">
-            {busy ? 'Working…' : value ? 'Replace' : 'Upload image'}
-            <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={busy} onChange={e => handleFile(e.target.files?.[0] ?? null)}/>
-          </label>
-          {value && <button onClick={remove} disabled={busy} className="text-xs text-ink-faint hover:text-bad text-left transition-colors">Remove</button>}
-        </div>
-      </div>
-      <p className="text-xs text-ink-soft mt-1.5">{hint}</p>
-      {err && <p className="text-xs text-bad mt-1">{err}</p>}
-    </div>
-  );
-}
 
 function SettingsPageInner() {
   const searchParams = useSearchParams();
@@ -508,16 +456,9 @@ function SettingsPageInner() {
   });
 
   const goTo = (sec: Section) => { setActive(sec); document.querySelector('main')?.scrollTo({ top: 0 }); window.scrollTo({ top: 0 }); };
-  const missing = (v: unknown) => !String(v ?? '').trim();
-  const setupItems: SetupItem[] = [
-    missing(form.logoUrl) && { key: 'logo', title: 'Add your logo', why: 'It sits beside your name on your booking page and every email.', action: 'Add logo', onClick: () => goTo('Your course') },
-    missing(form.heroImageUrl) && { key: 'hero', title: 'Add a course photo', why: 'The wide banner at the top of your booking page.', action: 'Add photo', onClick: () => goTo('Your course') },
-    missing(form.description) && { key: 'description', title: 'Describe your course', why: 'A few sentences golfers read before they book.', action: 'Write it', onClick: () => goTo('Your course') },
-    missing(form.phone) && { key: 'phone', title: 'Add your phone number', why: 'Golfers call it with questions about their booking.', action: 'Add phone', onClick: () => goTo('Your course') },
-    photosLoaded && photos.length === 0 && { key: 'gallery', title: 'Add gallery photos', why: 'Up to 8 photos in the Photos section of your booking page.', action: 'Add photos', onClick: () => goTo('Your course') },
-    teeSetCount === 0 && { key: 'teesets', title: 'Add your tees', why: 'Golfers see each tee’s yardage, rating and slope on your booking page.', action: 'Add tees', onClick: () => goTo('Course layout') },
-    (!form.holes || !form.par) && { key: 'holes', title: 'Say how many holes and the par', why: 'Shown at the top of your booking page.', action: 'Set it', onClick: () => goTo('Course layout') },
-  ].filter((i): i is SetupItem => !!i);
+  const setupItems: SetupItem[] = missingSetup({
+    ...form, galleryCount: photosLoaded ? photos.length : null, teeSetCount,
+  }).map(i => ({ ...i, onClick: () => goTo(i.section as Section) }));
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
