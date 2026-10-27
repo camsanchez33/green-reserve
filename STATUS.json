@@ -1,24 +1,33 @@
 {
-  "generatedAt": "2026-10-27T19:40:53.435Z",
+  "generatedAt": "2026-10-27T19:47:05.498Z",
   "repo": {
-    "head": "2750cbc",
+    "head": "e29c686",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 8,
+    "dirtyCount": 10,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
+      " M scripts/cancel-fee-reason-test.ts",
+      " M scripts/words-guard.baseline.json",
       " M src/app/api/operator/bookings/route.ts",
       " M src/components/dashboard/money/CancellationsPanel.tsx",
       " M src/components/dashboard/money/types.ts",
-      "?? scripts/cancel-fee-reason-test.ts",
-      "?? src/lib/cancel-fee-reason.ts",
-      "?? src/lib/no-fee-labels.ts"
+      " M src/lib/cancel-booking.ts",
+      " M src/lib/cancel-fee-reason.ts",
+      " M src/lib/no-fee-labels.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "e29c686",
+        "date": "2026-10-27T19:40:54+00:00",
+        "subject": "Money → Cancellations says why no fee was kept",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "2750cbc",
         "date": "2026-10-27T19:38:27+00:00",
@@ -525,6 +534,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e29c686",
+      "date": "2026-10-27",
+      "subject": "Money → Cancellations says why no fee was kept"
+    },
+    {
       "h": "2750cbc",
       "date": "2026-10-27",
       "subject": "Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played"
@@ -578,11 +592,6 @@
       "h": "6edc9aa",
       "date": "2026-10-27",
       "subject": "DENSE-4b review notes: the strip is a labelled group; no money request before the day loads"
-    },
-    {
-      "h": "8d07854",
-      "date": "2026-10-27",
-      "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet"
     }
   ]
 }

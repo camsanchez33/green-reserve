@@ -7,6 +7,8 @@ export type MoneyBooking = {
   paymentStatus: string; status: string; appliedRate?: string; createdAt: string; noShowAt?: string | null;
   /** A cancellation that kept no fee: why (lib/cancel-fee-reason). */
   noFeeReason?: import('@/lib/no-fee-labels').NoFeeReason;
+  /** A cancellation whose no-show charge was kept (it never sets cancellation_fee_charged). */
+  noShowFeeKeptCents?: number;
   teeTime: { date: string; time: string; holes: number };
 };
 

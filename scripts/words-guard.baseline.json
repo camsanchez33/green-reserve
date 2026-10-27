@@ -99,7 +99,7 @@
   "src/components/dashboard/events/EventSignup.tsx": 285,
   "src/components/dashboard/members/ImportMembers.tsx": 181,
   "src/components/dashboard/members/ResidentsCard.tsx": 169,
-  "src/components/dashboard/money/CancellationsPanel.tsx": 58,
+  "src/components/dashboard/money/CancellationsPanel.tsx": 61,
   "src/components/dashboard/money/PaymentsPanel.tsx": 79,
   "src/components/dashboard/money/PayoutsPanel.tsx": 181,
   "src/components/dashboard/money/PayoutsTable.tsx": 64,

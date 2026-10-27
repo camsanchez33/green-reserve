@@ -1,23 +1,28 @@
 // Cam 2026-10-27 ("how is that no fee — looks within 24 hours to me"): a cancelled
-// booking that kept no fee says WHY on Money → Cancellations. The policy is copied
-// onto each booking (SP-B), so the course's current fee is not the booking's; this
-// reads the same fields performCancellation() (lib/cancel-booking.ts) decides on.
+// booking that kept no fee says WHY on Money → Cancellations. performCancellation()
+// (lib/cancel-booking.ts) zeroes cancellationFeeTotal when the fee isn't kept, so this
+// reads what the cancel RECORDED: its booking_cancelled event (feeAtBooking, waived,
+// courseCalledOff, noShowFeeKept) and a failed late-fee charge (PaymentEvent
+// charge_failed, detail "Late-cancellation fee: …"). No record → null ("No fee").
 import { bookingWindowHours } from './cancel-policy';
 import { teeTimeInstant } from './booking-events';
-
 import type { NoFeeReason } from './no-fee-labels';
 export { NO_FEE_LABEL, type NoFeeReason } from './no-fee-labels';
 
+export type CancelRecord = { feeAtBooking?: number; waived?: boolean; courseCalledOff?: unknown; noShowFeeKept?: number };
+
 export function noFeeReason(
-  b: { cancelledAt: Date | null; cancellationFeeTotal: number; cancellationHoursAtBooking: number | null; stripePaymentMethodId: string; source: string; teeTime: { date: string; time: string } },
+  b: { cancelledAt: Date | null; cancellationHoursAtBooking: number | null; source: string; teeTime: { date: string; time: string } },
   course: { timezone: string | null; cancellationHours: number },
-  chargeFailed: boolean,
-): NoFeeReason {
+  rec: CancelRecord | null,
+  failedDetail: string | null,
+): NoFeeReason | null {
+  if (rec?.courseCalledOff) return 'called_off';
+  if (rec?.waived) return 'waived';
+  if (failedDetail) return /no card on file/i.test(failedDetail) ? 'no_card' : 'charge_failed';
   const teeAt = teeTimeInstant(course.timezone, b.teeTime.date, b.teeTime.time);
-  const late = !!teeAt && !!b.cancelledAt && teeAt.getTime() - bookingWindowHours(b, course) * 3600_000 <= b.cancelledAt.getTime();
-  if (!late) return 'in_time';
-  if (b.cancellationFeeTotal <= 0) return b.source === 'online' ? 'no_fee' : 'counter';
-  if (!b.stripePaymentMethodId) return 'no_card';
-  if (chargeFailed) return 'charge_failed';
-  return 'waived';
+  if (!teeAt || !b.cancelledAt) return null;
+  if (teeAt.getTime() - bookingWindowHours(b, course) * 3600_000 > b.cancelledAt.getTime()) return 'in_time';
+  if (rec?.feeAtBooking === 0) return b.source === 'online' ? 'no_fee' : 'counter';
+  return null;
 }

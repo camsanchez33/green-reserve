@@ -209,7 +209,9 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       bookingId, courseId: booking.courseId, type: 'booking_cancelled', actor,
       amountCents: feeAlreadyCharged ? booking.cancellationFeeTotal : 0, playerCount: booking.players,
       teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time),
-      metadata: { feeKept: feeAlreadyCharged, roundRefunded, ...(noShowCharge ? { noShowFeeKept: noShowCharge.amountCents } : {}), ...(opts.reason ? { reason: opts.reason } : {}), ...(opts.courseCalledOff ? { courseCalledOff: opts.courseCalledOff } : {}) },
+      // waived / feeAtBooking: Money → Cancellations says why no fee was kept (lib/cancel-fee-reason) —
+      // the fee column is zeroed above when it isn't kept, so the event is the only record of it.
+      metadata: { feeKept: feeAlreadyCharged, roundRefunded, feeAtBooking: booking.cancellationFeeTotal, ...(waiveFee ? { waived: true } : {}), ...(noShowCharge ? { noShowFeeKept: noShowCharge.amountCents } : {}), ...(opts.reason ? { reason: opts.reason } : {}), ...(opts.courseCalledOff ? { courseCalledOff: opts.courseCalledOff } : {}) },
     });
     return true;
   });

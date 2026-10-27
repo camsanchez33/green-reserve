@@ -5207,7 +5207,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 312,
+      "lines": 319,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10965,7 +10965,7 @@
     },
     {
       "path": "src/components/dashboard/money/types.ts",
-      "lines": 20,
+      "lines": 22,
       "purpose": "SD-8 — one booking shape for all three Money tabs.",
       "brain": [],
       "exports": [
@@ -14245,7 +14245,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 328,
+      "lines": 330,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14314,10 +14314,14 @@
     },
     {
       "path": "src/lib/cancel-fee-reason.ts",
-      "lines": 24,
+      "lines": 29,
       "purpose": "Cam 2026-10-27 (\"how is that no fee — looks within 24 hours to me\"):",
       "brain": [],
       "exports": [
+        {
+          "name": "CancelRecord",
+          "kind": "type"
+        },
         {
           "name": "NO_FEE_LABEL",
           "kind": "reexport"
@@ -18623,7 +18627,7 @@
     },
     {
       "path": "src/lib/no-fee-labels.ts",
-      "lines": 12,
+      "lines": 13,
       "purpose": "Client-safe half of lib/cancel-fee-reason (no prisma):",
       "brain": [],
       "exports": [
@@ -23295,6 +23299,7 @@
         "src/lib/data-reset.ts"
       ],
       "readers": [
+        "src/app/api/operator/bookings/route.ts",
         "src/lib/analytics.ts",
         "src/lib/course-timeline.ts",
         "src/lib/data-reset.ts",

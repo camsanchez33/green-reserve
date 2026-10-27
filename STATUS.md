@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 19:40 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `2750cbc` · working tree **8 dirty file(s)**
+Generated 2026-10-27 19:47 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `e29c686` · working tree **10 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 16 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 17 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e29c686` | 2026-10-27 | Money → Cancellations says why no fee was kept |
 | `2750cbc` | 2026-10-27 | Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played |
 | `89ad92b` | 2026-10-27 | Regenerate the code map and status board |
 | `1444186` | 2026-10-27 | Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute |
@@ -31,16 +32,18 @@ Generated 2026-10-27 19:40 UTC · branch `claude/practical-lovelace-xiu4u5` · H
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (10 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M scripts/cancel-fee-reason-test.ts`
+- `M scripts/words-guard.baseline.json`
 - `M src/app/api/operator/bookings/route.ts`
 - `M src/components/dashboard/money/CancellationsPanel.tsx`
 - `M src/components/dashboard/money/types.ts`
-- `?? scripts/cancel-fee-reason-test.ts`
-- `?? src/lib/cancel-fee-reason.ts`
-- `?? src/lib/no-fee-labels.ts`
+- `M src/lib/cancel-booking.ts`
+- `M src/lib/cancel-fee-reason.ts`
+- `M src/lib/no-fee-labels.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -165,6 +168,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `e29c686` 2026-10-27 — Money → Cancellations says why no fee was kept
 - `2750cbc` 2026-10-27 — Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played
 - `89ad92b` 2026-10-27 — Regenerate the code map and status board
 - `1444186` 2026-10-27 — Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute
@@ -176,7 +180,6 @@ Nothing awaiting review.
 - `3c692b1` 2026-10-27 — DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer
 - `531516a` 2026-10-27 — DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)
 - `6edc9aa` 2026-10-27 — DENSE-4b review notes: the strip is a labelled group; no money request before the day loads
-- `8d07854` 2026-10-27 — DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet
 
 ---
 
