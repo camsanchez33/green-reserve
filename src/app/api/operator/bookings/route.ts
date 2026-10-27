@@ -257,7 +257,7 @@ export async function POST(req: NextRequest) {
   // One place for a counter booking (lib/counter-pay) — the register calls it too.
   const made = await createCounterBooking(session.courseId, {
     teeTimeId: String(body.teeTimeId ?? ''), golferName, golferEmail, golferPhone: String(body.golferPhone ?? ''),
-    players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in',
+    players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in', late: body.late === true,
   }, { type: 'staff', id: session.staffId ?? session.operatorId });
   if (!made.ok) return NextResponse.json({ error: made.error }, { status: made.status });
   // CASH-1: "paying cash now" — the booking is made, then its round is rung up in cash.

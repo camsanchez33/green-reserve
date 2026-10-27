@@ -33,8 +33,10 @@ const late = src('src/lib/late-add.ts'), claim = src('src/lib/claim-tee-time.ts'
 check('the late-add rule is 20 minutes, in one place', late.includes('LATE_ADD_MINUTES = 20') && late.includes('m(time) + LATE_ADD_MINUTES < m(clock)'));
 check('every booking path refuses a time 20 minutes gone (claimTeeTime)', claim.includes("throw new TeeTimeClaimError('PAST')") && claim.includes('LATE_ADD_MINUTES * 60_000 < Date.now()'));
 check('the three callers map PAST to a message', ['src/app/api/bookings/route.ts', 'src/lib/counter-pay.ts', 'src/app/api/admin/tee-sheet/route.ts'].every(f => src(f).includes("'PAST'")));
-check('today\'s gone times move to a collapsed Past tee times section (not while searching)', page.includes('isGone={selectedDate === today() && !q ? (t => lateForAdding(t.time, nowHM))') && rows.includes('Past tee times · {gone.length}') && rows.includes('useState(false)') && rows.includes('aria-expanded={showGone}'));
-check('the panel offers no walk-in on a gone time', page.includes("selectedDate === today() && !lateForAdding(panelSlot.time, nowHM)))") && page.includes('Closed to new players {LATE_ADD_MINUTES} min after tee time'));
+check('today\'s gone times move to a collapsed Past tee times section (not while searching)', page.includes('isGone={selectedDate === today() && !q ? (t => lateForAdding(t.time, nowHM))') && rows.includes('Past tee times · {gone.length}') && rows.includes('useState(false)') && rows.includes('aria-expanded={goneOpen}'));
+check('a gone time offers only "a walk-in who already played", sent as late', page.includes("selectedDate === today() && !lateForAdding(panelSlot.time, nowHM)))") && page.includes('Add a walk-in who already played') && page.includes("...(late ? { late: true } : {})"));
+check('only a staff walk-in marked late skips the cut-off', src('src/lib/counter-pay.ts').includes("{ allowLate: input.late === true && source === 'walk_in' && actor.type === 'staff' }") && claim.includes('if (!opts.allowLate && teeAt'));
+check('the sheet re-reads the clock every minute', page.includes('setInterval(() => setClockTick(t => t + 1), 60_000)'));
 const demo = src('src/components/home/TeeSheetDemo.tsx');
 check('the homepage demo mirrors: players and checked in, no rate, key above', demo.includes('Players <b>') && demo.includes('Checked in <b>') && !demo.includes('{HOLES} holes'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

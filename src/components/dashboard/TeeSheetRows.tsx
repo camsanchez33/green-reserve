@@ -68,6 +68,8 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
   const [showGone, setShowGone] = useState(false);
   const gone = isGone ? allSlots.filter(isGone) : [];
   const slots = isGone ? allSlots.filter(s => !isGone(s)) : allSlots;
+  // A late chip or search can pick a gone time — open the section so its row shows.
+  const goneOpen = showGone || (!!selectedId && gone.some(s => s.id === selectedId));
 
   // A row that could take the dragged group. The route re-checks everything.
   const takes = (s: BoardSlot) => !!dragging && s.id !== dragging.fromId && s.status !== 'blocked' && !isPast(s)
@@ -162,11 +164,11 @@ export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId
       {slots.length > 0 ? rows(slots, 'Tee times', true) : gone.length > 0 && <p className="py-6 text-center text-[13.5px] text-ink-muted">No more tee times today</p>}
       {gone.length > 0 && (
         <div className="mt-4 pt-3 border-t border-line">
-          <button type="button" aria-expanded={showGone} onClick={() => setShowGone(v => !v)}
+          <button type="button" aria-expanded={goneOpen} onClick={() => setShowGone(!goneOpen)}
             className="w-full flex items-center justify-between px-1 py-1.5 text-[13px] font-semibold text-ink-soft hover:text-ink">
-            <span>Past tee times · {gone.length}</span><span aria-hidden="true">{showGone ? '▴' : '▾'}</span>
+            <span>Past tee times · {gone.length}</span><span aria-hidden="true">{goneOpen ? '▴' : '▾'}</span>
           </button>
-          {showGone && <div className="mt-2">{rows(gone, 'Past tee times', false)}</div>}
+          {goneOpen && <div className="mt-2">{rows(gone, 'Past tee times', false)}</div>}
         </div>
       )}
     </div>

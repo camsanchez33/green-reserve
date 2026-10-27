@@ -23,7 +23,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
 import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
 import TeeSheetRows, { type BoardGroup } from '@/components/dashboard/TeeSheetRows';
-import { lateForAdding, LATE_ADD_MINUTES } from '@/lib/late-add';
+import { lateForAdding } from '@/lib/late-add';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { timesTooClose } from '@/lib/tee-time-fit';
@@ -174,6 +174,7 @@ function DashboardPageInner() {
   const [wxErr, setWxErr] = useState('');
   const [wxResult, setWxResult] = useState<{ cancelled: number; blocked: number; feeRefundsFailed: number; calls: FrostCall[] } | null>(null);
   const [walkInSlot, setWalkInSlot] = useState<TeeTime | null>(null);
+  const [walkInLate, setWalkInLate] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   const [cardModalReason, setCardModalReason] = useState('');
@@ -564,6 +565,9 @@ function DashboardPageInner() {
     toast(conditionsInput.trim() ? 'Course alert saved — golfers see it on your page.' : 'Course alert cleared.', 'ok');
   }
 
+  // Re-read the clock every minute so the Now line moves and gone times drop to the bottom on their own.
+  const [, setClockTick] = useState(0);
+  useEffect(() => { const i = setInterval(() => setClockTick(t => t + 1), 60_000); return () => clearInterval(i); }, []);
   const nowHM = clockIn(courseTz); // SD-3: the course's clock, not the browser's
   // B-8: a group is late when its tee time went off 10+ minutes ago today and
   // nobody in it is checked in. Read straight off the sheet already loaded.
@@ -1059,10 +1063,11 @@ function DashboardPageInner() {
               <div className="px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-line-soft flex flex-wrap items-center gap-2">
                 {/* Cam 2026-10-27: nobody new joins a time LATE_ADD_MINUTES after it went off (claimTeeTime refuses it too). */}
                 {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (selectedDate > today() || (selectedDate === today() && !lateForAdding(panelSlot.time, nowHM))) && (
-                  <button onClick={() => setWalkInSlot(panelSlot)} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add a walk-in or phone booking</button>
+                  <button onClick={() => { setWalkInLate(false); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add a walk-in or phone booking</button>
                 )}
-                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (selectedDate < today() || (selectedDate === today() && lateForAdding(panelSlot.time, nowHM))) && (
-                  <span className="text-[12.5px] text-ink-muted">Closed to new players {LATE_ADD_MINUTES} min after tee time</span>
+                {/* …except a walk-in staff forgot to put on the sheet (Cam 2026-10-27), today only. */}
+                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && selectedDate === today() && lateForAdding(panelSlot.time, nowHM) && (
+                  <button onClick={() => { setWalkInLate(true); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper">Add a walk-in who already played</button>
                 )}
                 {access.can('sheet.block') && !panelSlot.event && (
                   <button onClick={() => toggleBlock(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">
@@ -1281,10 +1286,10 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif font-semibold text-ink text-[17px]">Walk-in — {fmtTime(walkInSlot.time)}</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">{walkInLate ? 'Already played' : 'Walk-in'} — {fmtTime(walkInSlot.time)}</h3>
               <button onClick={() => setWalkInSlot(null)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <WalkInForm slot={walkInSlot} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
+            <WalkInForm slot={walkInSlot} late={walkInLate} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
           </div>
         </div>
       )}
@@ -1340,7 +1345,7 @@ export default function DashboardPage() {
 }
 
 /* ─── SD-5: Walk-in / phone booking form ───────────────────────────────── */
-function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: string, tone?: 'ok' | 'warn') => void; onCancel: () => void }) {
+function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boolean; onSave: (msg: string, tone?: 'ok' | 'warn') => void; onCancel: () => void }) {
   const spots = Math.max(0, slot.playersAvailable - slot.playersBooked);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -1365,7 +1370,7 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
   async function save() {
     setSaving(true); setErr('');
     const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
-      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, checkInNow: source === 'walk_in' && checkInNow }),
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
@@ -1376,7 +1381,7 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-1 bg-paper border border-line rounded-md p-1">
+      <div className={'flex gap-1 bg-paper border border-line rounded-md p-1' + (late ? ' hidden' : '')}>
         {([['walk_in', 'Walk-in'], ['phone', 'Phone booking']] as const).map(([k, label]) => (
           <button key={k} type="button" onClick={() => setSource(k)}
             className={'flex-1 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ' + (source === k ? 'bg-white text-ink border border-line' : 'text-ink-muted hover:text-ink')}>{label}</button>

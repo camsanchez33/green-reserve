@@ -31,6 +31,9 @@ export class TeeTimeClaimError extends Error {
 export async function claimTeeTime(
   data: Prisma.BookingUncheckedCreateInput,
   actor: EventActor,
+  // Staff recording a walk-in who already played (Cam 2026-10-27: "let staff add forgotten
+  // walk-ins after") — only the tee sheet's own "already played" button sets it.
+  opts: { allowLate?: boolean } = {},
 ): Promise<{ id: string; checkInToken: string | null }> {
   const teeTimeId = String(data.teeTimeId);
   const players = Number(data.players);
@@ -46,7 +49,7 @@ export async function claimTeeTime(
         if (!teeTime) throw new TeeTimeClaimError('NOT_FOUND');
         if (teeTime.status === 'blocked') throw new TeeTimeClaimError('BLOCKED');
         const teeAt = teeTimeInstant(teeTime.course.timezone, teeTime.date, teeTime.time);
-        if (teeAt && teeAt.getTime() + LATE_ADD_MINUTES * 60_000 < Date.now()) throw new TeeTimeClaimError('PAST');
+        if (!opts.allowLate && teeAt && teeAt.getTime() + LATE_ADD_MINUTES * 60_000 < Date.now()) throw new TeeTimeClaimError('PAST');
 
         const spotsLeft = teeTime.playersAvailable - teeTime.playersBooked;
         // Belt and braces (security review): a non-positive count must never
