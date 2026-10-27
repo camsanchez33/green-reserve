@@ -4,15 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 00:16 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ae6e20f5` · working tree **2 dirty file(s)**
+Generated 2026-10-27 03:10 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ea268e48` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 81 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 85 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ea268e48` | 2026-10-27 | Onboarding review step: honest to-do line, blocked pop-up link, note once; setup mode only on a setup token |
+| `aa33dd6d` | 2026-10-27 | Onboarding: review your page is step 1; set-your-password review fixes |
+| `e2cc0a6a` | 2026-10-27 | Course owners are never emailed a password: one 'Set your password' link (7 days, single use) that confirms the email and signs them in |
 | `ae6e20f5` | 2026-10-27 | Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once |
+| `4d8194b5` | 2026-10-26 | See a built course's page before sending the preview (#233) |
 | `5afb4b9e` | 2026-10-27 | Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step |
 | `2cc1e08f` | 2026-10-27 | See the page: one tab per click (button waits while it opens) |
 | `e5682ce1` | 2026-10-26 | Admin can see a built course's page before sending the preview (view-only look link) |
@@ -184,7 +188,7 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-26 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 5d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 6d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 1d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 3d |
@@ -195,35 +199,39 @@ This is the distinction a raw checkbox count gets wrong.
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 4d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 4d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 4d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 5d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 5d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 5d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 5d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 6d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 6d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 6d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 6d |
 
 ## Recent commits
 
+- `ea268e48` 2026-10-27 — Onboarding review step: honest to-do line, blocked pop-up link, note once; setup mode only on a setup token
+- `aa33dd6d` 2026-10-27 — Onboarding: review your page is step 1; set-your-password review fixes
+- `e2cc0a6a` 2026-10-27 — Course owners are never emailed a password: one 'Set your password' link (7 days, single use) that confirms the email and signs them in
 - `ae6e20f5` 2026-10-27 — Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once
+- `4d8194b5` 2026-10-26 — See a built course's page before sending the preview (#233)
 - `5afb4b9e` 2026-10-27 — Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step
 - `2cc1e08f` 2026-10-27 — See the page: one tab per click (button waits while it opens)
 - `e5682ce1` 2026-10-26 — Admin can see a built course's page before sending the preview (view-only look link)
@@ -231,10 +239,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `4f206e4c` 2026-10-26 — status board + code map
 - `199951b0` 2026-10-26 — Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply
 - `50991cf1` 2026-10-26 — Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question
-- `3fac48ef` 2026-10-26 — /for-courses: one column, no price line, no FAQ; thanks screens keep the header and say one thing
-- `ee9402b3` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
-- `d186b39b` 2026-10-26 — Refunds switch: drop 'back to the card' (shop refunds can be cash); status board + code map
-- `dbfb8d87` 2026-10-26 — Staff switches: refunds says what it gates, no Stripe connect button for staff, 'Charge a fee by hand' removed (R-AUTH-007)
 
 ---
 
