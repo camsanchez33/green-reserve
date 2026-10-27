@@ -3,9 +3,11 @@ import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { computeAnalytics } from '@/lib/analytics';
 
 // DENSE-4b (Cam 2026-10-27, "yes to all four numbers"): the money half of the
-// tee sheet's day strip — Paid and Not paid yet for one day, the SAME figures
-// Home and Analytics show (computeAnalytics: collected course share; outstanding
-// = tee times that have passed without payment, no-shows included). Players and
+// tee sheet's day strip — Paid and Not paid yet for one day, from computeAnalytics
+// (collected course share). Not paid yet is EVERY live group on the day not yet paid —
+// outstanding (time passed, no-shows included) + upcoming — because on a sheet staff
+// read it as "still to collect" (Cam 2026-10-27: "if 0 of 3 have checked in then how
+// have none of them not paid"); lateGroups is the outstanding part. Players and
 // checked in come from the sheet's own bookings. Money needs money.payments, as
 // on Home; the page only asks when the login has it.
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -21,6 +23,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     date,
     paidCents: a.revenue.collectedCents, paidGroups: a.revenue.beyond.rounds,
-    outstandingCents: a.revenue.outstandingCents, outstandingGroups: a.revenue.outstandingBookings,
+    outstandingCents: a.revenue.outstandingCents + a.revenue.upcomingCents,
+    outstandingGroups: a.revenue.outstandingBookings + a.revenue.pipeline.upcomingBookings,
+    lateGroups: a.revenue.outstandingBookings,
   }, { headers: { 'Cache-Control': 'no-store' } });
 }

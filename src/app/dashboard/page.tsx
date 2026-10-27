@@ -367,12 +367,12 @@ function DashboardPageInner() {
   const livePlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status !== 'cancelled').reduce((n, b) => n + b.players, 0) ?? 0), 0);
   const spotsOffered = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
   const checkedInPlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').reduce((n, b) => n + (b.checkedInPlayers ?? b.players), 0) ?? 0), 0);
-  const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number } | null>(null);
+  const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number } | null>(null);
   const canSeeMoney = access.can('money.payments');
   useEffect(() => {
     if (!canSeeMoney || teeTimes.length === 0) { setDayMoney(null); return; }
     let live = true;
-    dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
+    dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
       .then(r => { if (live) setDayMoney(r.ok ? r.data : null); });
     return () => { live = false; };
   }, [canSeeMoney, selectedDate, teeTimes]);
@@ -904,7 +904,7 @@ function DashboardPageInner() {
                   <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[18px] font-semibold text-ink tabular-nums">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div></div>
                   {dayMoney && dayMoney.date === selectedDate && (<>
                     <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[18px] font-semibold text-ink tabular-nums">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}</span></div></div>
-                    <Link href="/dashboard/money?tab=payments&show=unpaid" className="px-4 py-2.5 min-w-[9rem] hover:bg-paper/60"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[18px] font-semibold tabular-nums ' + (dayMoney.outstandingCents > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}</span></div></Link>
+                    <Link href="/dashboard/money?tab=payments&show=unpaid" className="px-4 py-2.5 min-w-[9rem] hover:bg-paper/60"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[18px] font-semibold tabular-nums ' + (dayMoney.lateGroups > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}</span>{dayMoney.lateGroups > 0 && <span className="text-[13px] font-normal text-warn"> · {dayMoney.lateGroups} past</span>}</div></Link>
                   </>)}
                 </div>
               )}
@@ -1402,7 +1402,7 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
         </div>
       </div>
       <div>
-        <label className="block text-[13px] font-semibold text-ink mb-1">Email <span className="font-normal text-ink-muted">(optional — sends a confirmation with a check-in link)</span></label>
+        <label className="block text-[13px] font-semibold text-ink mb-1">Email <span className="font-normal text-ink-muted">{late ? '(optional)' : '(optional — sends a confirmation with a check-in link)'}</span></label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inp} />
       </div>
       {slot.cartFee > 0 && (

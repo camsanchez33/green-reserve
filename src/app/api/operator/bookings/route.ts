@@ -275,7 +275,9 @@ export async function POST(req: NextRequest) {
   const teeTime = { ...made.teeTime, course: made.course };
 
   let emailSent: boolean | null = null;
-  if (golferEmail && !checkInNow) {
+  // A walk-in who already played gets no confirmation (it would offer free cancellation
+  // for a finished round); staff send the pay link from the card if they still owe.
+  if (golferEmail && !checkInNow && body.late !== true) {
     try {
       await sendBookingConfirmation({
         golferName, golferEmail, courseName: teeTime.course.name,

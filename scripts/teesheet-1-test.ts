@@ -11,6 +11,8 @@ const src = (p: string) => readFileSync(p, 'utf8');
 const page = src('src/app/dashboard/page.tsx');
 // DENSE-4b (Cam 2026-10-27, "yes to all four numbers"): the day strip replaced the header sentence.
 check('the day strip shows players, checked in, and paid / not paid yet only with money.payments', page.includes('{livePlayers}<span') && page.includes('{checkedInPlayers}<span') && page.includes("access.can('money.payments')") && page.includes('/api/operator/sheet-money?date='));
+check('the strip\'s Not paid yet is every unpaid group on the day, with how many are past their time', src('src/app/api/operator/sheet-money/route.ts').includes('a.revenue.outstandingCents + a.revenue.upcomingCents') && page.includes('{dayMoney.lateGroups} past'));
+check('a walk-in who already played gets no booking confirmation', src('src/app/api/operator/bookings/route.ts').includes('if (golferEmail && !checkInNow && body.late !== true)'));
 check('the strip\'s money route needs money.payments', src('src/app/api/operator/sheet-money/route.ts').includes("requirePermission(session, 'money.payments')"));
 check('the rate is no longer in the header', !page.includes('commonRate'));
 check('the time panel always shows its rate', page.includes("holes · ${panelSlot.greenFee.toFixed(2)} a player"));
