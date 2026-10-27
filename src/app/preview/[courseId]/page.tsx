@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
-import { verifyPreviewToken } from '@/lib/preview-token';
+import { verifyViewToken } from '@/lib/preview-token';
 import CourseDetailPage from '@/app/courses/[slug]/CourseBookingClient';
 
 export const metadata: Metadata = {
@@ -22,8 +22,9 @@ export default async function PreviewPage({
     return <PreviewError message="No preview token provided." />;
   }
 
-  const tokenCourseId = await verifyPreviewToken(token);
-  if (!tokenCourseId || tokenCourseId !== courseId) {
+  const view = await verifyViewToken(token);
+  const tokenCourseId = view?.courseId;
+  if (!view || tokenCourseId !== courseId) {
     return <PreviewError message="This preview link is invalid or has expired." />;
   }
 
@@ -36,7 +37,8 @@ export default async function PreviewPage({
   }
 
   const resolvedParams = Promise.resolve({ slug: course.slug });
-  const previewMode = { courseId, token };
+  // look: the admin's view-only token — no approve / request-changes (CourseBookingClient hides them).
+  const previewMode = { courseId, token, look: view.look };
 
   return (
     <Suspense>

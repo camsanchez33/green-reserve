@@ -4,18 +4,21 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-26 23:21 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `4f206e4c` · working tree **3 dirty file(s)**
+Generated 2026-10-27 00:01 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2cc1e08f` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 75 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 78 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `2cc1e08f` | 2026-10-27 | See the page: one tab per click (button waits while it opens) |
+| `e5682ce1` | 2026-10-26 | Admin can see a built course's page before sending the preview (view-only look link) |
 | `4f206e4c` | 2026-10-26 | status board + code map |
 | `199951b0` | 2026-10-26 | Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply |
 | `50991cf1` | 2026-10-26 | Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question |
 | `3fac48ef` | 2026-10-26 | /for-courses: one column, no price line, no FAQ; thanks screens keep the header and say one thing |
+| `ee9402b3` | 2026-10-26 | Staff switches do what they say (R-AUTH-007) (#231) |
 | `d186b39b` | 2026-10-26 | Refunds switch: drop 'back to the card' (shop refunds can be cash); status board + code map |
 | `dbfb8d87` | 2026-10-26 | Staff switches: refunds says what it gates, no Stripe connect button for staff, 'Charge a fee by hand' removed (R-AUTH-007) |
 | `eb9b40b1` | 2026-10-26 | Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230) |
@@ -90,11 +93,10 @@ Generated 2026-10-26 23:21 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (3 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
 
 Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
 these actually are first.
@@ -218,18 +220,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `2cc1e08f` 2026-10-27 — See the page: one tab per click (button waits while it opens)
+- `e5682ce1` 2026-10-26 — Admin can see a built course's page before sending the preview (view-only look link)
 - `4f206e4c` 2026-10-26 — status board + code map
 - `199951b0` 2026-10-26 — Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply
 - `50991cf1` 2026-10-26 — Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question
 - `3fac48ef` 2026-10-26 — /for-courses: one column, no price line, no FAQ; thanks screens keep the header and say one thing
+- `ee9402b3` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
 - `d186b39b` 2026-10-26 — Refunds switch: drop 'back to the card' (shop refunds can be cash); status board + code map
 - `dbfb8d87` 2026-10-26 — Staff switches: refunds says what it gates, no Stripe connect button for staff, 'Charge a fee by hand' removed (R-AUTH-007)
 - `eb9b40b1` 2026-10-26 — Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)
 - `3ef0e1ea` 2026-10-26 — status board + code map
 - `c2f1007c` 2026-10-26 — Bump actions/checkout from 4 to 7 (#215)
-- `f0b52217` 2026-10-26 — A no-show fee refunded by hand after a failed refund is recorded as a no-show fee refund
-- `28e1481e` 2026-10-26 — status board + code map
-- `2e541f71` 2026-10-26 — Failed refunds stay a Problem until refunded; a dashboard refund of a race-path charge is recorded
 
 ---
 

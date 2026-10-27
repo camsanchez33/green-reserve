@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 560,
-    "routes": 265,
+    "files": 561,
+    "routes": 266,
     "libs": 189,
     "models": 58,
     "orphans": 10,
@@ -877,7 +877,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2322,
+      "lines": 2354,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1819,6 +1819,33 @@
         "@/lib/course-timeline",
         "@/lib/prisma",
         "@prisma/client",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/admin/course-look/route.ts",
+      "lines": 23,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/admin/course-look",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "admin",
+      "guard": "file",
+      "imports": [
+        "@/lib/admin-areas",
+        "@/lib/admin-session",
+        "@/lib/preview-token",
+        "@/lib/prisma",
         "next/server"
       ],
       "usedBy": []
@@ -7008,7 +7035,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/route.ts",
-      "lines": 66,
+      "lines": 67,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7036,7 +7063,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/tee-times/route.ts",
-      "lines": 37,
+      "lines": 38,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7485,7 +7512,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1840,
+      "lines": 1847,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8762,7 +8789,7 @@
     },
     {
       "path": "src/app/preview/[courseId]/page.tsx",
-      "lines": 58,
+      "lines": 60,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11546,6 +11573,7 @@
       "usedBy": [
         "src/app/admin/employees/page.tsx",
         "src/app/admin/layout.tsx",
+        "src/app/api/admin/course-look/route.ts",
         "src/app/api/admin/employees/route.ts",
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/search/route.ts",
@@ -12313,6 +12341,7 @@
         "src/app/api/admin/course-documents/upload/route.ts",
         "src/app/api/admin/course-feed/route.ts",
         "src/app/api/admin/course-groups/route.ts",
+        "src/app/api/admin/course-look/route.ts",
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-reminders/route.ts",
@@ -18773,16 +18802,24 @@
     },
     {
       "path": "src/lib/preview-token.ts",
-      "lines": 25,
+      "lines": 49,
       "purpose": "",
       "brain": [],
       "exports": [
+        {
+          "name": "signLookToken",
+          "kind": "fn"
+        },
         {
           "name": "signPreviewToken",
           "kind": "fn"
         },
         {
           "name": "verifyPreviewToken",
+          "kind": "fn"
+        },
+        {
+          "name": "verifyViewToken",
           "kind": "fn"
         }
       ],
@@ -18795,6 +18832,7 @@
         "jose"
       ],
       "usedBy": [
+        "src/app/api/admin/course-look/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/request-changes/route.ts",
@@ -18835,6 +18873,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-groups/route.ts",
+        "src/app/api/admin/course-look/route.ts",
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-settings/route.ts",
@@ -23495,6 +23534,7 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/course-groups/route.ts",
+        "src/app/api/admin/course-look/route.ts",
         "src/app/api/admin/course-payouts/route.ts",
         "src/app/api/admin/course-settings/route.ts",
         "src/app/api/admin/courses/route.ts",
