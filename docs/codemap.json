@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 569,
-    "routes": 267,
+    "files": 570,
+    "routes": 268,
     "libs": 194,
     "models": 58,
     "orphans": 10,
@@ -6467,6 +6467,31 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/sheet-money/route.ts",
+      "lines": 27,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/sheet-money",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/analytics",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/shop-items/read/route.ts",
       "lines": 33,
       "purpose": "",
@@ -8086,7 +8111,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1522,
+      "lines": 1543,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12993,6 +13018,7 @@
       "usedBy": [
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/sheet-money/route.ts",
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
         "src/lib/monthly-review.ts",
@@ -20547,6 +20573,7 @@
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/search/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/sheet-money/route.ts",
         "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/quote/route.ts",
