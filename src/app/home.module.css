@@ -88,14 +88,15 @@
 .rwSel { box-shadow: 0 0 0 2px rgba(23,59,42,.5); }
 .rwNow { display: flex; align-items: center; gap: 6px; margin: 2px 0 4px; font-size: 10.5px; font-weight: 600; color: #9A5B13; }
 .rwNow::after { content: ''; flex: 1; border-top: 2px solid #9A5B13; }
-.kOk, .kWarn, .kIn { display: inline-block; width: 11px; height: 11px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.12); }
+.kOk, .kWarn, .kBad, .kIn, .kMem { display: inline-block; width: 11px; height: 11px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.12); }
 .kOk { border-left: 3px solid #3D7A55; }
 .kWarn { border-left: 3px solid #9A5B13; }
+.kBad { border-left: 3px solid #A3452F; }
 .kIn { background: #E6EFE8; box-shadow: none; }
-.dOk, .dWarn, .dBad { display: inline-block; flex: 0 0 auto; width: 5px; height: 5px; border-radius: 50%; }
+.kMem { background: #F1EEE4; box-shadow: none; }
+.dOk, .dWarn { display: inline-block; flex: 0 0 auto; width: 5px; height: 5px; border-radius: 50%; }
 .dOk { background: #3D7A55; }
 .dWarn { background: #9A5B13; }
-.dBad { background: #A3452F; }
 .lg { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 10px; font-size: 11.5px; color: #4A4F49; }
 .lg span { display: inline-flex; align-items: center; gap: 6px; }
 .pnl { position: absolute; top: 0; right: 0; bottom: 0; width: min(300px, 80%); z-index: 3; background: #fff; box-shadow: 0 0 0 1px rgba(20,24,20,.08), 0 1px 2px rgba(20,24,20,.05); padding: 14px 14px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
@@ -114,7 +115,6 @@
 .pnlSlot { display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
 .pnl .ci, .pnl .wk { width: auto; padding: 5px 9px; }
 .cx { font: inherit; font-size: 12px; font-weight: 600; color: #A3452F; background: none; border: 0; padding: 5px 4px; cursor: pointer; }
-.full { color: #A3452F; font-weight: 500; }
 .ci, .wk { font: inherit; font-size: 12.5px; font-weight: 600; width: 72px; padding: 5px 0; border-radius: 6px; cursor: pointer; }
 .ci { color: #fff; background: var(--forest); border: 0; }
 .ci:hover { background: #0F2C1F; }

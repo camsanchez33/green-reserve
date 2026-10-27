@@ -102,7 +102,8 @@ function TeeSheet() {
   const nextUp = d.today ? d.rows.find(r => !r.blocked && r.t > NOW)?.t : undefined;
   const step = (by: number) => update(x => ({ ...x, day: Math.max(0, Math.min(x.days.length - 1, x.day + by)), sel: null, step: 'pick', toast: '', open: null }));
   const toast = (msg: string) => { update(x => ({ ...x, toast: msg })); };
-  const nowAt = d.today ? rows.findIndex(r => r.t >= NOW) : -1;
+  // isPast on the real sheet is time <= now.
+  const nowAt = d.today ? rows.findIndex(r => r.t > NOW) : -1;
   const panel = st.open ? d.rows.find(r => r.t === st.open) ?? null : null;
   const setRow = (t: string, fn: (r: Row) => Row) => update(x => ({ ...x, days: x.days.map((dd, di) => di !== x.day ? dd : { ...dd, rows: dd.rows.map(r => r.t !== t ? r : fn(r)) }) }));
 
@@ -128,9 +129,9 @@ function TeeSheet() {
       </div>
       <div className={s.bd}>
         {/* The key sits above the sheet, as on the real one. */}
-        <div className={s.lg}><span><i className={s.kOk} />Paid</span><span><i className={s.kWarn} />Owes</span><span><i className={s.kIn} />Checked in</span></div>
+        <div className={s.lg}><span><i className={s.kOk} />Paid</span><span><i className={s.kWarn} />Owes</span><span><i className={s.kBad} />Declined or no-show</span><span><i className={s.kIn} />Checked in</span><span><i className={s.kMem} />Member or resident</span></div>
         {rows.map((r, i) => {
-          const past = d.today && r.t < NOW && !r.blocked;
+          const past = d.today && r.t <= NOW;
           const newHour = i === 0 || hourOf(rows[i - 1].t) !== hourOf(r.t);
           return (
             <div key={r.t}>

@@ -101,7 +101,7 @@ export default function TeeSheetRows({ slots, isPast, nextUpId, selectedId, canM
               style={grid}
               className={'grid items-center gap-[3px] rounded-md cursor-pointer '
                 + (over === s.id ? 'ring-2 ring-pine ' : selectedId === s.id ? 'ring-2 ring-pine/50 ' : target ? 'ring-1 ring-pine/30 ' : '')
-                + (dragging && !target && s.id !== dragging.fromId ? 'opacity-40 ' : past && !blocked ? 'opacity-55 ' : '')}>
+                + (dragging && !target && s.id !== dragging.fromId ? 'opacity-40 ' : past ? 'opacity-55 ' : '')}>
               {/* The time is the row's button for keyboard and screen readers; groups stay siblings. */}
               <button type="button"
                 aria-label={`${formatTeeTime(s.time)}${next ? ', next up' : ''}${blocked ? ', blocked' : `, ${s.playersBooked} of ${s.playersAvailable} booked`}. Open`}
