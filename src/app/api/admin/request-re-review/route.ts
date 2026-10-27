@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { encodeRequestReReview } from '@/lib/change-requests';
 import { withAudit } from '@/lib/admin-audit';
+import { recordCoursePageDecision } from '@/lib/approval-state';
 
 // Admin-initiated reopen of the review loop (RUN_QUEUE "approval propagates
 // + gates previews", item 2b) — for when admin made edits after approval
@@ -21,7 +22,13 @@ async function requestReReview(req: NextRequest) {
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
 
   const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId } });
-  if (!inquiry) return NextResponse.json({ error: 'No linked inquiry for this course' }, { status: 409 });
+  if (!inquiry) {
+    // Built without an inquiry: the decision lives on the course (lib/approval-state).
+    const course = await prisma.course.findUnique({ where: { id: courseId }, select: { id: true } });
+    if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
+    await recordCoursePageDecision(courseId, null);
+    return NextResponse.json({ ok: true });
+  }
 
   await prisma.inquiryStatusEvent.create({
     data: {

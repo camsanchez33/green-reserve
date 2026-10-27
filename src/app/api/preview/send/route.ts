@@ -4,7 +4,7 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/
 import { signPreviewToken } from '@/lib/preview-token';
 import { sendDashboardSetupEmail, sendPageReadyInDashboardEmail } from '@/lib/email';
 import { issueSetupLink, hasSetUp, SETUP_LINK_DAYS } from '@/lib/operator-setup';
-import { getApprovalState } from '@/lib/approval-state';
+import { getApprovalState, recordCoursePageDecision } from '@/lib/approval-state';
 import { withAudit } from '@/lib/admin-audit';
 
 // RUN_QUEUE "Send Preview = one combined send", reworked Cam 2026-10-27: no
@@ -116,6 +116,9 @@ async function sendPreview(req: NextRequest) {
           actorName: `Preview sent by ${session.name}`,
         },
       });
+    } else {
+      // A new preview starts a new round, as the "Preview sent" event does for a pipeline course.
+      await recordCoursePageDecision(rawCourseId, null);
     }
 
     // The setup link is never returned — only the email carries it.

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { normalizeDbCourse } from '@/lib/normalize-course';
 import { verifyViewToken } from '@/lib/preview-token';
+import { coursePageDecision } from '@/lib/approval-state';
 import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
 
 export async function GET(
@@ -53,6 +54,8 @@ export async function GET(
     });
     if (latest?.actorName === 'Course approved their page') pageApprovalStatus = 'approved';
     else if (isChangesRequestedEvent(latest?.actorName)) pageApprovalStatus = 'changes_requested';
+  } else {
+    pageApprovalStatus = coursePageDecision(dbCourse.pageDecision); // built without an inquiry
   }
 
   return NextResponse.json({
