@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-27T00:01:42.610Z",
+  "generatedAt": "2026-10-27T00:16:53.692Z",
   "repo": {
-    "head": "2cc1e08f",
+    "head": "ae6e20f5",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 2,
     "dirty": [
@@ -14,6 +14,20 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
+        "h": "ae6e20f5",
+        "date": "2026-10-27T00:15:42+00:00",
+        "subject": "Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5afb4b9e",
+        "date": "2026-10-27T00:10:57+00:00",
+        "subject": "Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "2cc1e08f",
         "date": "2026-10-27T00:01:30+00:00",
         "subject": "See the page: one tab per click (button waits while it opens)",
@@ -24,6 +38,13 @@
         "h": "e5682ce1",
         "date": "2026-10-26T23:56:21+00:00",
         "subject": "Admin can see a built course's page before sending the preview (view-only look link)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "356403fd",
+        "date": "2026-10-26T19:28:25-04:00",
+        "subject": "Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)",
         "ids": [],
         "matches": []
       },
@@ -945,6 +966,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ae6e20f5",
+      "date": "2026-10-27",
+      "subject": "Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once"
+    },
+    {
+      "h": "5afb4b9e",
+      "date": "2026-10-27",
+      "subject": "Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step"
+    },
+    {
       "h": "2cc1e08f",
       "date": "2026-10-27",
       "subject": "See the page: one tab per click (button waits while it opens)"
@@ -953,6 +984,11 @@
       "h": "e5682ce1",
       "date": "2026-10-26",
       "subject": "Admin can see a built course's page before sending the preview (view-only look link)"
+    },
+    {
+      "h": "356403fd",
+      "date": "2026-10-26",
+      "subject": "Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)"
     },
     {
       "h": "4f206e4c",
@@ -988,21 +1024,6 @@
       "h": "dbfb8d87",
       "date": "2026-10-26",
       "subject": "Staff switches: refunds says what it gates, no Stripe connect button for staff, 'Charge a fee by hand' removed (R-AUTH-007)"
-    },
-    {
-      "h": "eb9b40b1",
-      "date": "2026-10-26",
-      "subject": "Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)"
-    },
-    {
-      "h": "3ef0e1ea",
-      "date": "2026-10-26",
-      "subject": "status board + code map"
-    },
-    {
-      "h": "c2f1007c",
-      "date": "2026-10-26",
-      "subject": "Bump actions/checkout from 4 to 7 (#215)"
     }
   ]
 }

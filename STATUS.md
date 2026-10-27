@@ -4,16 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 00:01 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2cc1e08f` · working tree **2 dirty file(s)**
+Generated 2026-10-27 00:16 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ae6e20f5` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 78 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 81 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ae6e20f5` | 2026-10-27 | Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once |
+| `5afb4b9e` | 2026-10-27 | Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step |
 | `2cc1e08f` | 2026-10-27 | See the page: one tab per click (button waits while it opens) |
 | `e5682ce1` | 2026-10-26 | Admin can see a built course's page before sending the preview (view-only look link) |
+| `356403fd` | 2026-10-26 | Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232) |
 | `4f206e4c` | 2026-10-26 | status board + code map |
 | `199951b0` | 2026-10-26 | Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply |
 | `50991cf1` | 2026-10-26 | Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question |
@@ -220,8 +223,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `ae6e20f5` 2026-10-27 — Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once
+- `5afb4b9e` 2026-10-27 — Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step
 - `2cc1e08f` 2026-10-27 — See the page: one tab per click (button waits while it opens)
 - `e5682ce1` 2026-10-26 — Admin can see a built course's page before sending the preview (view-only look link)
+- `356403fd` 2026-10-26 — Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)
 - `4f206e4c` 2026-10-26 — status board + code map
 - `199951b0` 2026-10-26 — Reply step: not after a talked or skipped call; a reply only counts in its own stage; Needs you says reply
 - `50991cf1` 2026-10-26 — Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question
@@ -229,9 +235,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `ee9402b3` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
 - `d186b39b` 2026-10-26 — Refunds switch: drop 'back to the card' (shop refunds can be cash); status board + code map
 - `dbfb8d87` 2026-10-26 — Staff switches: refunds says what it gates, no Stripe connect button for staff, 'Charge a fee by hand' removed (R-AUTH-007)
-- `eb9b40b1` 2026-10-26 — Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)
-- `3ef0e1ea` 2026-10-26 — status board + code map
-- `c2f1007c` 2026-10-26 — Bump actions/checkout from 4 to 7 (#215)
 
 ---
 
