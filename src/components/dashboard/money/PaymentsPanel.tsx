@@ -108,7 +108,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
           {visibleDays.length < days.length && (
             <button onClick={() => setShowAll(true)} className="w-full py-2.5 text-[13px] font-medium text-pine hover:underline">Show older days ({days.length - visibleDays.length} more)</button>
           )}
-          <p className="text-[12.5px] text-ink-muted">Latest 200 bookings · your course’s share, GreenReserve’s booking fee not included</p>
+          <p className="text-[12.5px] text-ink-muted">Latest 200 bookings · your course’s share, without GreenReserve’s booking fee</p>
         </div>
       )}
     </>
