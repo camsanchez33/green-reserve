@@ -1432,7 +1432,7 @@ export async function sendCourseApprovedNotification(data: { courseName: string;
 
 // Sent the moment a course actually goes live (mark_live), not at account
 // creation — this is the "now that golfers can book, here's how to run the
-// place" orientation, distinct from sendOperatorWelcomeEmail's initial login.
+// place" orientation, distinct from sendDashboardSetupEmail's set-your-password link.
 export async function sendCourseLiveOrientationEmail(data: {
   operatorName: string;
   operatorEmail: string;

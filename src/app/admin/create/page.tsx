@@ -310,7 +310,7 @@ function WizardContent() {
                 <div>
                   <div className="font-serif font-semibold text-ink text-lg">Course created!</div>
                   <div className={'text-xs mt-0.5 ' + (result.emailSent ? 'text-ok' : 'text-bad')}>
-                    {result.emailSent ? `Set-your-password email sent${result.sentTo ? ' to ' + result.sentTo : ''}` : `The set-your-password email didn\u2019t send (${result.emailError || 'unknown error'}). Use Send dashboard access on the course to try again.`}
+                    {result.emailSent ? `Set-your-password email sent${result.sentTo ? ' to ' + result.sentTo : ''}` : `The set-your-password email didn\u2019t send (${result.emailError || 'unknown error'}). Use Send preview on the course page to send it again.`}
                   </div>
                 </div>
               </div>
@@ -726,7 +726,7 @@ function WizardContent() {
                   </div>
                 )}
                 <div className="bg-pine/5 border border-pine/20 rounded-md px-4 py-3 text-xs text-pine">
-                  A welcome email with a temporary password and setup link will be sent to <strong>{op.contactEmail}</strong>.
+                  A “Set your password” email will be sent to <strong>{op.contactEmail}</strong>.
                 </div>
               </Card>
               {createError && (

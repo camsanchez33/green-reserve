@@ -831,7 +831,7 @@ export function useCourseDetail() {
         method: 'POST', headers: H(), body: JSON.stringify({ courseId }),
       });
       const d = await r.json().catch(() => ({}));
-      setPreviewMsg(r.ok ? `Preview + dashboard access sent to ${detail.course.operator.email}` : ('Error: ' + (d.error || `Failed (${r.status})`)));
+      setPreviewMsg(r.ok ? `Preview sent to ${detail.course.operator.email}` : ('Error: ' + (d.error || `Failed (${r.status})`)));
       if (r.ok) loadDetail();
     } catch {
       setPreviewMsg('Error: network — nothing was sent. Try again.');

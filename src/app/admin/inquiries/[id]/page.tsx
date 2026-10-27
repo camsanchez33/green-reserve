@@ -2237,7 +2237,7 @@ function InquiryDetailInner() {
           return (
             <ModalShell title="Send dashboard access?" onClose={close}>
               <p className="text-sm text-ink-soft">
-                Emails <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> a temporary password and login link to their operator dashboard, so they can start reviewing/editing their course before it's live.
+                Emails <strong>{inq.contactName}</strong> at <strong>{inq.email}</strong> a single-use “Set your password” link (good for 7 days) to their operator dashboard. If they already sign in, they get a note that their page is in the dashboard and their sign-in is not touched.
               </p>
               <ModalActions working={working} onCancel={close} onConfirm={() => fire(() => action('send_dashboard_access'))} confirmLabel="Send Access" disabled={processing}/>
             </ModalShell>
@@ -2251,7 +2251,7 @@ function InquiryDetailInner() {
               </p>
               <ul className="text-sm text-ink-soft list-disc pl-5 mb-3 space-y-1">
                 <li>A link to preview their built course page, so they can approve it or request changes before going live</li>
-                <li>Dashboard login access (a fresh temporary password) so they can explore their Getting Started checklist</li>
+                <li>A “Set your password” link if they haven’t signed in yet; otherwise nothing about their sign-in changes</li>
               </ul>
               <ModalActions working={working} onCancel={close} onConfirm={() => fire(sendPreview)} confirmLabel="Send Preview" disabled={sendingPreview}/>
             </ModalShell>
@@ -2265,7 +2265,7 @@ function InquiryDetailInner() {
                 No setup sheet was submitted — this builds a draft course for <strong>{inq.courseName}</strong> from the inquiry answers alone. It immediately:
               </p>
               <ul className="text-sm text-ink-soft list-disc pl-5 mb-3 space-y-1">
-                <li>Emails a welcome message + temporary password to <strong>{inq.email}</strong></li>
+                <li>Emails a “Set your password” link to <strong>{inq.email}</strong></li>
                 <li>Attempts to create a Stripe Connect account for the course</li>
               </ul>
               <label className="block"><span className="block text-[13px] font-semibold text-bad mb-1">Type BUILD to confirm</span>

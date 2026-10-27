@@ -73,7 +73,10 @@ export async function POST(req: NextRequest) {
   // that same inbox (the link is the same factor as the emailed code); an owner who
   // gets codes by text signs in normally, so the link never skips their phone.
   const isSetup = setup === true;
-  const signIn = isSetup && !operator.lastLoginAt && !(operator.twoFactorMethod === 'sms' && operator.phone);
+  // Signs in only on a token minted as a setup link (7 days) — a forgot-password
+  // token (1 hour) sent back with setup: true sets the password and nothing more.
+  const setupToken = operator.resetTokenExpiry.getTime() - Date.now() > 60 * 60 * 1000;
+  const signIn = isSetup && setupToken && !operator.lastLoginAt && !(operator.twoFactorMethod === 'sms' && operator.phone);
   const hashed = await bcrypt.hash(password, 12);
   // Conditional on the token still being there, so two submits of one link can't both land.
   const { count } = await prisma.courseOperator.updateMany({

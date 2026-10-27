@@ -3520,7 +3520,7 @@
     },
     {
       "path": "src/app/api/auth/reset-password/route.ts",
-      "lines": 104,
+      "lines": 107,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7999,7 +7999,7 @@
     },
     {
       "path": "src/app/dashboard/onboarding/page.tsx",
-      "lines": 316,
+      "lines": 345,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8016,6 +8016,7 @@
       "imports": [
         "@/components/dashboard/SignAgreements",
         "@/components/ui/StatusDot",
+        "@/lib/change-requests",
         "lucide-react",
         "next/image",
         "next/navigation",
@@ -14410,6 +14411,7 @@
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/lib/approval-state.ts",
         "src/lib/inquiry-action-queue.ts",

@@ -138,7 +138,7 @@ export function CourseDialogs() {
             </p>
             <ul className="text-sm text-ink-soft list-disc pl-5 mb-4 space-y-1">
               <li>A link to preview their built course page</li>
-              <li>Dashboard login access (a fresh temporary password)</li>
+              <li>A “Set your password” link if they haven’t signed in yet; otherwise nothing about their sign-in changes</li>
             </ul>
             <div className="flex gap-3">
               <button onClick={() => setShowPreviewConfirm(false)} className="flex-1 border border-line text-ink-soft py-2.5 rounded-md text-[12.5px] font-medium hover:border-line-strong transition-colors">Cancel</button>

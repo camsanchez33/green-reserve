@@ -51,6 +51,13 @@ async function cleanup() {
   const backBody = await (await post({ token: tokenOf(await issueSetupLink(returning.id)), password: PW, setup: true })).json();
   ok('…and a setup-style link never signs them in by itself', backBody.signedIn === false, backBody);
 
+  // A forgot-password token (1 hour) sent back with setup: true sets the password, never a session.
+  const forgot = await mk('forgot');
+  await prisma.courseOperator.update({ where: { id: forgot.id }, data: { resetToken: 'f'.repeat(64), resetTokenExpiry: new Date(Date.now() + 3_600_000) } });
+  const forgotRes = await post({ token: 'f'.repeat(64), password: PW, setup: true });
+  const forgotBody = await forgotRes.json();
+  ok('a forgot-password link with setup: true sets the password but does not sign in', forgotBody.success === true && forgotBody.signedIn === false && !(forgotRes.headers.get('set-cookie') ?? '').includes('gr_operator='), forgotBody);
+
   // No owner password is emailed or returned anywhere.
   const email = readFileSync('src/lib/email.ts', 'utf8');
   ok('no email carries a temporary password', !/Temporary Password|tempPassword/.test(email));

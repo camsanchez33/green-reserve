@@ -130,7 +130,7 @@
   "src/app/dashboard/onboarding/page.tsx": {
     "card": 4,
     "input": 1,
-    "lucide": 3
+    "lucide": 2
   },
   "src/app/dashboard/page.tsx": {
     "input": 4,
