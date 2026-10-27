@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { sheetRecap, SHEET_NEXT_STEPS } from './setup-sheet-recap';
 import { serviceFeeLabel, hoursLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { afterCutoffLine, policyMoney } from '@/lib/cancel-policy';
 import { membershipFeeCents } from '@/lib/stripe';
@@ -1229,97 +1230,33 @@ export async function sendDetailsSheetConfirmationEmail(data: {
   firstName: string; contactName: string; email: string; courseName: string;
   details: Record<string, unknown>;
 }) {
-  const DETAIL_LABELS: Record<string, string> = {
-    holes: 'Holes', par: 'Par', seasonOpen: 'Season opens', seasonClose: 'Season closes',
-    firstTeeTime: 'First tee', lastTeeTime: 'Last tee', intervalMinutes: 'Interval (min)',
-    greenFeeWeekday: 'Weekday green fee', greenFeeWeekend: 'Weekend green fee', cartFee: 'Cart fee',
-    twilightFee: 'Twilight fee', walkingAllowed: 'Walking allowed',
-    residentWeekday: 'Resident WD fee', residentWeekend: 'Resident WE fee', residentVerification: 'Residency verification',
-    starterTierName: 'Membership tier', starterTierFee: 'Tier fee',
-    memberAdvanceDays: 'Member advance booking', protectedTimes: 'Protected tee times',
-    publicGreenFee: 'Public green fee', publicWindow: 'Public booking window',
-    memberRate: 'Member rate', outingsVolume: 'Outings frequency',
-    cancellationHours: 'Cancellation window (hrs)', lateFee: 'Late cancel fee',
-    facilities: 'Facilities', restaurantType: 'Restaurant type',
-    website: 'Website', description: 'Description', additionalNotes: 'Notes',
-  };
-  const skipKeys = new Set(['schedule','daysOpen','daysOfWeek','photos','facilitiesNotes','teeSets','memberships',
-    'greenFeeWeekday','greenFeeWeekend','firstTeeTime','lastTeeTime','intervalMinutes','cartFee',
-    'starterTierName','starterTierFee']);
-  const d = data.details;
-  const sch = d.schedule as Record<string, unknown> | undefined;
-  const wdFee = (d.greenFeeWeekday ?? sch?.greenFeeWeekday) as string | undefined;
-  const weFee = (d.greenFeeWeekend ?? sch?.greenFeeWeekend) as string | undefined;
-  const firstTee = (d.firstTeeTime ?? sch?.startTime) as string | undefined;
-  const lastTee = (d.lastTeeTime ?? sch?.endTime) as string | undefined;
-  const intervalMin = (d.intervalMinutes ?? sch?.intervalMinutes) as string | undefined;
-  const cartFee = (d.cartFee ?? sch?.cartFee) as string | undefined;
-
-  const teeRow = (firstTee || wdFee) ? `
+  // Cam 2026-10-26: "send a recap email of what you submitted and what's happening
+  // next". The same plain-words recap and next steps as the done screen
+  // (lib/setup-sheet-recap) — it used to print raw field names ("WD $52 / WE $68",
+  // "Interval (min)") and missed memberships entered in the current format.
+  const rows = sheetRecap(data.details).map(r => `
     <tr>
-      <td style="padding:5px 0;color:#6B706A;font-size:13px;width:48%;vertical-align:top;">Tee times</td>
-      <td style="padding:5px 0;color:#141814;font-size:13px;">${firstTee || ''}–${lastTee || ''} every ${intervalMin || '?'} min</td>
-    </tr>
-    <tr>
-      <td style="padding:5px 0;color:#6B706A;font-size:13px;">Green fees</td>
-      <td style="padding:5px 0;color:#141814;font-size:13px;">WD $${wdFee || '—'} / WE $${weFee || '—'}${cartFee ? ` · Cart $${cartFee}` : ''}</td>
-    </tr>
-  ` : '';
-
-  type TeeSetRow = { name?: string; yardage?: string; par?: string; rating?: string; slope?: string; };
-  type TierRow = { name?: string; fee?: string; includes?: string; perRound?: string; perRoundFee?: string; };
-  const teeSetsRow = Array.isArray(d.teeSets) && (d.teeSets as TeeSetRow[]).some(t => t.name) ? `
-    <tr>
-      <td style="padding:5px 0;color:#6B706A;font-size:13px;vertical-align:top;">Tee sets</td>
-      <td style="padding:5px 0;color:#141814;font-size:13px;">${(d.teeSets as TeeSetRow[]).filter(t => t.name).map(t => `${t.name}${t.yardage ? ' · ' + t.yardage + ' yds' : ''}${t.par ? ' · par ' + t.par : ''}`).join('<br>')}</td>
-    </tr>
-  ` : '';
-
-  const membershipsRow = Array.isArray(d.memberships) && (d.memberships as TierRow[]).some(m => m.name) ? `
-    <tr>
-      <td style="padding:5px 0;color:#6B706A;font-size:13px;vertical-align:top;">Memberships</td>
-      <td style="padding:5px 0;color:#141814;font-size:13px;">${(d.memberships as TierRow[]).filter(m => m.name).map(m => `${m.name}${m.fee ? ' · $' + m.fee + '/yr' : ''}`).join('<br>')}</td>
-    </tr>
-  ` : '';
-
-  const photosRow = Array.isArray(d.photos) && (d.photos as string[]).length > 0 ? `
-    <tr>
-      <td style="padding:5px 0;color:#6B706A;font-size:13px;">Photos</td>
-      <td style="padding:5px 0;color:#141814;font-size:13px;">${(d.photos as string[]).length} photo${(d.photos as string[]).length !== 1 ? 's' : ''} uploaded</td>
-    </tr>
-  ` : '';
-
-  const restRows = Object.entries(d)
-    .filter(([k, v]) => !skipKeys.has(k) && v !== '' && v !== null && !(Array.isArray(v) && v.length === 0) && typeof v !== 'object')
-    .map(([k, v]) => `
-    <tr>
-      <td style="padding:5px 0;color:#6B706A;font-size:13px;width:48%;vertical-align:top;">${escHtml(DETAIL_LABELS[k] || k)}</td>
-      <td style="padding:5px 0;color:#141814;font-size:13px;">${escHtml(Array.isArray(v) ? (v as string[]).join(', ') : String(v))}</td>
+      <td style="padding:7px 12px 7px 0;color:#6B706A;font-size:13px;width:34%;vertical-align:top;border-top:1px solid #E3E4DE;">${escHtml(r.label)}</td>
+      <td style="padding:7px 0;color:#141814;font-size:14px;vertical-align:top;border-top:1px solid #E3E4DE;">${escHtml(r.value)}</td>
     </tr>`).join('');
-
+  const steps = SHEET_NEXT_STEPS.map((t, i) => `
+    <tr>
+      <td style="padding:6px 12px 6px 0;width:26px;vertical-align:top;"><div style="width:22px;height:22px;border-radius:11px;background:#173B2A;color:#fff;font-size:12px;font-weight:600;line-height:22px;text-align:center;">${i + 1}</div></td>
+      <td style="padding:7px 0;color:#141814;font-size:14px;line-height:1.5;">${escHtml(t)}</td>
+    </tr>`).join('');
   const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">We got your details, ${escHtml(data.firstName)}.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Here's everything you submitted for <strong>${escHtml(data.courseName)}</strong>.
-      If anything looks wrong, just reply to this email and we'll fix it.
-    </p>
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:18px 20px;margin-bottom:24px;">
-      <p style="margin:0 0 12px;color:#141814;font-size:13px;font-weight:700;">What you submitted</p>
-      <table width="100%" cellpadding="0" cellspacing="0">
-        ${teeRow}${teeSetsRow}${membershipsRow}${restRows}${photosRow}
-      </table>
-    </div>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:14px;">
-      We'll review your sheet and follow up within 1–2 business days with next steps.
-    </p>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>.
-    </p>
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your setup sheet is in, ${escHtml(firstName(data.firstName || data.contactName))}.</h1>
+    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Thanks for the details for <strong>${escHtml(data.courseName)}</strong>. Here&rsquo;s what happens next, and a copy of what you sent us.</p>
+    <p style="margin:0 0 8px;color:#141814;font-size:15px;font-weight:700;">What happens next</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;">${steps}</table>
+    ${rows ? `<p style="margin:0 0 8px;color:#141814;font-size:15px;font-weight:700;">What you sent us</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">${rows}</table>` : ''}
+    <p style="margin:0;color:#3F453E;font-size:14px;">Something wrong? Reply to this email and we&rsquo;ll fix it before we build.</p>
   `, ADMIN_EMAIL);
   await getResend().emails.send({ meta: { kind: 'details_sheet_confirmation_email' },
     from: FROM_ADMIN,
     to: data.email,
-    subject: `We got your setup sheet — ${data.courseName}`,
+    subject: subj(`Your setup sheet is in — ${data.courseName}`),
     html,
   });
 }

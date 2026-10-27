@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 561,
+    "files": 562,
     "routes": 266,
-    "libs": 189,
+    "libs": 190,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -8454,7 +8454,7 @@
     },
     {
       "path": "src/app/for-courses/details/page.tsx",
-      "lines": 1946,
+      "lines": 1996,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8470,7 +8470,9 @@
       "guard": "token",
       "imports": [
         "@/components/PlainHeader",
+        "@/components/ui/Card",
         "@/lib/image-resize",
+        "@/lib/setup-sheet-recap",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -11027,6 +11029,7 @@
         "src/app/events/[id]/SignupForm.tsx",
         "src/app/events/[id]/page.tsx",
         "src/app/for-courses/ForCoursesContent.tsx",
+        "src/app/for-courses/details/page.tsx",
         "src/app/g/[slug]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
@@ -16169,7 +16172,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2215,
+      "lines": 2152,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16476,6 +16479,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./setup-sheet-recap",
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
         "@/lib/contact",
@@ -20366,6 +20370,36 @@
       "usedBy": [
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/settings/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/setup-sheet-recap.ts",
+      "lines": 110,
+      "purpose": "Cam 2026-10-26 (onboarding walk):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "RecapRow",
+          "kind": "type"
+        },
+        {
+          "name": "SHEET_NEXT_STEPS",
+          "kind": "const"
+        },
+        {
+          "name": "sheetRecap",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/for-courses/details/page.tsx",
+        "src/lib/email.ts"
       ]
     },
     {
