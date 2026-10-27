@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 563,
+    "files": 564,
     "routes": 266,
-    "libs": 191,
+    "libs": 192,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -7712,8 +7712,8 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 705,
-      "purpose": "AN-3 (Cam 2026-10-19, after AN-2):",
+      "lines": 780,
+      "purpose": "DENSE-1 (DENSE_UI_SPEC.md, Cam 2026-10-27:",
       "brain": [],
       "exports": [
         {
@@ -7734,8 +7734,11 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/analytics",
+        "@/lib/analytics-terms",
         "@/lib/birdie/ask",
         "@/lib/dashboard-fetch",
+        "@/lib/staff-permissions",
+        "@/lib/use-dashboard-access",
         "lucide-react",
         "next/link",
         "react"
@@ -12816,8 +12819,33 @@
       ]
     },
     {
+      "path": "src/lib/analytics-terms.ts",
+      "lines": 42,
+      "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "TermKey",
+          "kind": "type"
+        },
+        {
+          "name": "TERMS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/analytics/page.tsx"
+      ]
+    },
+    {
       "path": "src/lib/analytics.ts",
-      "lines": 557,
+      "lines": 559,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -21029,6 +21057,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/staff/route.ts",
+        "src/app/dashboard/analytics/page.tsx",
         "src/components/dashboard/StaffNotice.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/lib/birdie/tools.ts",
@@ -21658,6 +21687,7 @@
         "react"
       ],
       "usedBy": [
+        "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",

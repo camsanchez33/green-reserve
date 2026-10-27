@@ -22,8 +22,9 @@ describe the page, no definitions under numbers, no paragraphs under fields.
 P2. **A number is: label (≤3 words) · value · comparison.** The comparison is a
 delta against a stated period ("+12% vs last Sat") or a count that gives it scale
 ("14 groups"). Its definition lives behind the label (dotted underline → tooltip /
-tap), sourced from the definitions block at the top of `src/lib/analytics.ts` — never
-rewritten in the component.
+tap), from one terms file per area (`src/lib/analytics-terms.ts` for Analytics, kept
+in step with the definitions block at the top of `src/lib/analytics.ts`) — never a
+sentence under the number.
 
 P3. **Every number opens its rows.** A number is a link to the filtered list behind
 it (Stripe). "Not paid yet $1,120" opens Money → Payments at `?show=unpaid`. A number
@@ -111,7 +112,8 @@ stay with the overseer.
   "vs previous"; one large chart whose metric is picked by clicking the four headline
   numbers (Revenue, Tee sheet filled, Rounds played, Per round); eight small cards with
   sparklines (no-show rate, late cancels, returning golfers, new golfers, rounds with a
-  cart, shop per round, below posted rate, empty spots $). Then the existing tabs with
+  cart, booked ahead, open spots — a COUNT: the page never shows a dollar total for
+unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the existing tabs with
   every Section `why=` and tile `explain=` moved behind the label (P2). "What to look
   at" becomes one-line rows with their button (P5). Monthly review: one line until the
   first review exists. Unused fields to surface: `revenue.perAvailableTeeTimeCents`,
