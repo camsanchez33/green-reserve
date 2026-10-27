@@ -5,6 +5,17 @@ import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
 import type { CourseOperator } from '@prisma/client';
 
+// The stored code carries the channel it actually went out on ('email:<hash>' /
+// 'sms:<hash>'), so the verify step knows whether a right code also proves the
+// inbox (Cam 2026-10-27: an owner who signs in with an emailed code is not sent
+// back to "confirm your email"). A stored value with neither prefix is unknown.
+export type CodeChannel = 'email' | 'sms' | null;
+export function readStoredCode(stored: string): { channel: CodeChannel; hash: string } {
+  if (stored.startsWith('email:')) return { channel: 'email', hash: stored.slice(6) };
+  if (stored.startsWith('sms:')) return { channel: 'sms', hash: stored.slice(4) };
+  return { channel: null, hash: stored };
+}
+
 // Generates a fresh 6-digit code, stores its hash on the operator, and sends it
 // via the requested channel — falling back to email if SMS was requested but no
 // phone number is on file. Shared by login (initial send) and the resend endpoint.
@@ -17,7 +28,7 @@ export async function issueTwoFactorCode(operator: CourseOperator, methodOverrid
   const hashedCode = await bcrypt.hash(code, 10);
   await prisma.courseOperator.update({
     where: { id: operator.id },
-    data: { twoFactorCode: hashedCode, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000) },
+    data: { twoFactorCode: `${method}:${hashedCode}`, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000) },
   });
 
   let actualMethod = method;
@@ -29,6 +40,7 @@ export async function issueTwoFactorCode(operator: CourseOperator, methodOverrid
     } catch (smsErr) {
       console.error('[2fa] SMS failed, falling back to email:', smsErr);
       actualMethod = 'email';
+      await prisma.courseOperator.update({ where: { id: operator.id }, data: { twoFactorCode: `email:${hashedCode}` } });
       await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code });
     }
   } else {

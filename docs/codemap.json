@@ -3383,7 +3383,7 @@
     },
     {
       "path": "src/app/api/auth/2fa/verify/route.ts",
-      "lines": 76,
+      "lines": 84,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3404,6 +3404,7 @@
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/security-events",
+        "@/lib/two-factor",
         "bcryptjs",
         "next/server"
       ],
@@ -21562,12 +21563,20 @@
     },
     {
       "path": "src/lib/two-factor.ts",
-      "lines": 41,
+      "lines": 53,
       "purpose": "",
       "brain": [],
       "exports": [
         {
+          "name": "CodeChannel",
+          "kind": "type"
+        },
+        {
           "name": "issueTwoFactorCode",
+          "kind": "fn"
+        },
+        {
+          "name": "readStoredCode",
           "kind": "fn"
         }
       ],
@@ -21586,6 +21595,7 @@
       ],
       "usedBy": [
         "src/app/api/auth/2fa/resend/route.ts",
+        "src/app/api/auth/2fa/verify/route.ts",
         "src/app/api/auth/login/route.ts"
       ]
     },

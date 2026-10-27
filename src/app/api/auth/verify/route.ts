@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     // It was left in place after verifying, so it stayed valid forever and was
     // never rotated — a long-lived credential sitting in an email, in server
     // logs, and in anything that had ever read the operator row.
-    data: { emailVerified: true, onboardingStep: 1, verificationToken: null },
+    data: { emailVerified: true, onboardingStep: Math.max(operator.onboardingStep, 1), verificationToken: null },
   });
 
   return NextResponse.json({ success: true });
