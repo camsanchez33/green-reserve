@@ -1,23 +1,117 @@
 {
-  "generatedAt": "2026-10-27T18:56:18.696Z",
+  "generatedAt": "2026-10-27T19:47:05.498Z",
   "repo": {
-    "head": "92087fc",
+    "head": "e29c686",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 7,
+    "dirtyCount": 10,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/teesheet-1-test.ts",
+      " M scripts/cancel-fee-reason-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/page.tsx",
-      " M src/components/home/TeeSheetDemo.tsx",
-      "?? src/app/api/operator/sheet-money/"
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/components/dashboard/money/CancellationsPanel.tsx",
+      " M src/components/dashboard/money/types.ts",
+      " M src/lib/cancel-booking.ts",
+      " M src/lib/cancel-fee-reason.ts",
+      " M src/lib/no-fee-labels.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "e29c686",
+        "date": "2026-10-27T19:40:54+00:00",
+        "subject": "Money → Cancellations says why no fee was kept",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2750cbc",
+        "date": "2026-10-27T19:38:27+00:00",
+        "subject": "Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "89ad92b",
+        "date": "2026-10-27T19:33:27+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1444186",
+        "date": "2026-10-27T19:33:03+00:00",
+        "subject": "Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1763e28",
+        "date": "2026-10-27T19:28:07+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "98c16cf",
+        "date": "2026-10-27T19:25:54+00:00",
+        "subject": "DENSE-2: pin the loading branch's payout tiles",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "23965db",
+        "date": "2026-10-27T19:24:27+00:00",
+        "subject": "Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1a83267",
+        "date": "2026-10-27T19:22:55+00:00",
+        "subject": "DENSE-2: payments footer wording",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "71e527c",
+        "date": "2026-10-27T19:22:45+00:00",
+        "subject": "DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3c692b1",
+        "date": "2026-10-27T19:14:18+00:00",
+        "subject": "DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "531516a",
+        "date": "2026-10-27T15:05:11-04:00",
+        "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6edc9aa",
+        "date": "2026-10-27T18:58:49+00:00",
+        "subject": "DENSE-4b review notes: the strip is a labelled group; no money request before the day loads",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "8d07854",
+        "date": "2026-10-27T18:56:19+00:00",
+        "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "92087fc",
         "date": "2026-10-27T14:55:40-04:00",
@@ -29,6 +123,20 @@
         "h": "6eced45",
         "date": "2026-10-27T13:51:38-04:00",
         "subject": "Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "569a2da",
+        "date": "2026-10-27T17:51:37+00:00",
+        "subject": "DENSE-4 review notes: demo legend mirrors the real one, same now cut-off, past blocked rows fade, dead demo CSS gone",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "851a246",
+        "date": "2026-10-27T17:47:04+00:00",
+        "subject": "DENSE-4: the tee sheet is seat rows",
         "ids": [],
         "matches": []
       }
@@ -426,64 +534,64 @@
   "bank": null,
   "recentCommits": [
     {
-      "h": "92087fc",
+      "h": "e29c686",
       "date": "2026-10-27",
-      "subject": "DENSE-4: the tee sheet is seat rows (#241)"
+      "subject": "Money → Cancellations says why no fee was kept"
     },
     {
-      "h": "6eced45",
+      "h": "2750cbc",
       "date": "2026-10-27",
-      "subject": "Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)"
+      "subject": "Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played"
     },
     {
-      "h": "18082d8",
+      "h": "89ad92b",
       "date": "2026-10-27",
-      "subject": "DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)"
+      "subject": "Regenerate the code map and status board"
     },
     {
-      "h": "c155fec",
+      "h": "1444186",
       "date": "2026-10-27",
-      "subject": "Page decision for courses built without an inquiry lives on the course (#239)"
+      "subject": "Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute"
     },
     {
-      "h": "c5210ef",
+      "h": "1763e28",
       "date": "2026-10-27",
-      "subject": "Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)"
+      "subject": "Regenerate the code map and status board"
     },
     {
-      "h": "13634fe",
-      "date": "2026-10-26",
-      "subject": "An emailed sign-in code confirms the owner's email (no separate verify link) (#236)"
+      "h": "98c16cf",
+      "date": "2026-10-27",
+      "subject": "DENSE-2: pin the loading branch's payout tiles"
     },
     {
-      "h": "23e81ff",
-      "date": "2026-10-26",
-      "subject": "Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)"
+      "h": "23965db",
+      "date": "2026-10-27",
+      "subject": "Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them"
     },
     {
-      "h": "4960a76",
-      "date": "2026-10-26",
-      "subject": "Setup sheet: recap screen + email, honest cancellation wording, clearer days, uniform cards, resume where you left off (#234)"
+      "h": "1a83267",
+      "date": "2026-10-27",
+      "subject": "DENSE-2: payments footer wording"
     },
     {
-      "h": "4d8194b",
-      "date": "2026-10-26",
-      "subject": "See a built course's page before sending the preview (#233)"
+      "h": "71e527c",
+      "date": "2026-10-27",
+      "subject": "DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load"
     },
     {
-      "h": "356403f",
-      "date": "2026-10-26",
-      "subject": "Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)"
+      "h": "3c692b1",
+      "date": "2026-10-27",
+      "subject": "DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer"
     },
     {
-      "h": "ee9402b",
-      "date": "2026-10-26",
-      "subject": "Staff switches do what they say (R-AUTH-007) (#231)"
+      "h": "531516a",
+      "date": "2026-10-27",
+      "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)"
     },
     {
-      "h": "eb9b40b",
-      "date": "2026-10-26",
-      "subject": "Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)"
+      "h": "6edc9aa",
+      "date": "2026-10-27",
+      "subject": "DENSE-4b review notes: the strip is a labelled group; no money request before the day loads"
     }
   ]
 }

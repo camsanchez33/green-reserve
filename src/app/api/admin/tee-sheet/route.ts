@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
-import { claimTeeTime, TeeTimeClaimError } from '@/lib/claim-tee-time';
+import { claimTeeTime, TeeTimeClaimError, LATE_ADD_MESSAGE } from '@/lib/claim-tee-time';
 import { performCancellation } from '@/lib/cancel-booking';
 import { COMPLETED_BOOKING_STATUSES } from '@/lib/course-metrics';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
@@ -120,6 +120,7 @@ export async function POST(req: NextRequest) {
       if (err.code === 'FULL' || err.code === 'CONFLICT') return NextResponse.json({ error: 'That time just filled up.' }, { status: 409 });
       if (err.code === 'SPOTS') return NextResponse.json({ error: `Only ${err.spotsLeft} spot${err.spotsLeft === 1 ? '' : 's'} left.` }, { status: 409 });
       if (err.code === 'BLOCKED') return NextResponse.json({ error: 'This tee time is blocked.' }, { status: 409 });
+      if (err.code === 'PAST') return NextResponse.json({ error: LATE_ADD_MESSAGE }, { status: 409 });
     }
     console.error('Admin manual booking error:', err);
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 });

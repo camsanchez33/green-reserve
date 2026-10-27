@@ -23,6 +23,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
 import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
 import TeeSheetRows, { type BoardGroup } from '@/components/dashboard/TeeSheetRows';
+import { lateForAdding } from '@/lib/late-add';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { timesTooClose } from '@/lib/tee-time-fit';
@@ -173,6 +174,7 @@ function DashboardPageInner() {
   const [wxErr, setWxErr] = useState('');
   const [wxResult, setWxResult] = useState<{ cancelled: number; blocked: number; feeRefundsFailed: number; calls: FrostCall[] } | null>(null);
   const [walkInSlot, setWalkInSlot] = useState<TeeTime | null>(null);
+  const [walkInLate, setWalkInLate] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
   const [cardModalReason, setCardModalReason] = useState('');
@@ -365,12 +367,12 @@ function DashboardPageInner() {
   const livePlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status !== 'cancelled').reduce((n, b) => n + b.players, 0) ?? 0), 0);
   const spotsOffered = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
   const checkedInPlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').reduce((n, b) => n + (b.checkedInPlayers ?? b.players), 0) ?? 0), 0);
-  const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number } | null>(null);
+  const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number } | null>(null);
   const canSeeMoney = access.can('money.payments');
   useEffect(() => {
     if (!canSeeMoney || teeTimes.length === 0) { setDayMoney(null); return; }
     let live = true;
-    dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
+    dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
       .then(r => { if (live) setDayMoney(r.ok ? r.data : null); });
     return () => { live = false; };
   }, [canSeeMoney, selectedDate, teeTimes]);
@@ -563,6 +565,9 @@ function DashboardPageInner() {
     toast(conditionsInput.trim() ? 'Course alert saved — golfers see it on your page.' : 'Course alert cleared.', 'ok');
   }
 
+  // Re-read the clock every minute so the Now line moves and gone times drop to the bottom on their own.
+  const [, setClockTick] = useState(0);
+  useEffect(() => { const i = setInterval(() => setClockTick(t => t + 1), 60_000); return () => clearInterval(i); }, []);
   const nowHM = clockIn(courseTz); // SD-3: the course's clock, not the browser's
   // B-8: a group is late when its tee time went off 10+ minutes ago today and
   // nobody in it is checked in. Read straight off the sheet already loaded.
@@ -899,7 +904,7 @@ function DashboardPageInner() {
                   <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[18px] font-semibold text-ink tabular-nums">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div></div>
                   {dayMoney && dayMoney.date === selectedDate && (<>
                     <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[18px] font-semibold text-ink tabular-nums">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}</span></div></div>
-                    <Link href="/dashboard/money?tab=payments&show=unpaid" className="px-4 py-2.5 min-w-[9rem] hover:bg-paper/60"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[18px] font-semibold tabular-nums ' + (dayMoney.outstandingCents > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}</span></div></Link>
+                    <Link href="/dashboard/money?tab=payments&show=unpaid" className="px-4 py-2.5 min-w-[9rem] hover:bg-paper/60"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[18px] font-semibold tabular-nums ' + (dayMoney.lateGroups > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}</span>{dayMoney.lateGroups > 0 && <span className="text-[13px] font-normal text-warn"> · {dayMoney.lateGroups} past</span>}</div></Link>
                   </>)}
                 </div>
               )}
@@ -988,6 +993,7 @@ function DashboardPageInner() {
                   <TeeSheetRows
                     slots={visibleTimes}
                     isPast={t => selectedDate < today() || (selectedDate === today() && t.time <= nowHM)}
+                    isGone={selectedDate === today() && !q ? (t => lateForAdding(t.time, nowHM)) : undefined}
                     nextUpId={nextUpId}
                     selectedId={panelId}
                     canMove={access.can('sheet.move')}
@@ -1055,8 +1061,13 @@ function DashboardPageInner() {
               </div>
 
               <div className="px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-line-soft flex flex-wrap items-center gap-2">
-                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (
-                  <button onClick={() => setWalkInSlot(panelSlot)} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add a walk-in or phone booking</button>
+                {/* Cam 2026-10-27: nobody new joins a time LATE_ADD_MINUTES after it went off (claimTeeTime refuses it too). */}
+                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (selectedDate > today() || (selectedDate === today() && !lateForAdding(panelSlot.time, nowHM))) && (
+                  <button onClick={() => { setWalkInLate(false); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add a walk-in or phone booking</button>
+                )}
+                {/* …except a walk-in staff forgot to put on the sheet (Cam 2026-10-27), today only. */}
+                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && selectedDate === today() && lateForAdding(panelSlot.time, nowHM) && (
+                  <button onClick={() => { setWalkInLate(true); setWalkInSlot(panelSlot); }} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper">Add a walk-in who already played</button>
                 )}
                 {access.can('sheet.block') && !panelSlot.event && (
                   <button onClick={() => toggleBlock(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">
@@ -1275,10 +1286,10 @@ function DashboardPageInner() {
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white border border-line w-full sm:max-w-sm rounded-t-lg sm:rounded-lg p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif font-semibold text-ink text-[17px]">Walk-in — {fmtTime(walkInSlot.time)}</h3>
+              <h3 className="font-serif font-semibold text-ink text-[17px]">{walkInLate ? 'Already played' : 'Walk-in'} — {fmtTime(walkInSlot.time)}</h3>
               <button onClick={() => setWalkInSlot(null)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <WalkInForm slot={walkInSlot} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
+            <WalkInForm slot={walkInSlot} late={walkInLate} onSave={(msg, tone) => { setWalkInSlot(null); toast(msg, tone ?? 'ok'); loadTimes(selectedDate); }} onCancel={() => setWalkInSlot(null)} />
           </div>
         </div>
       )}
@@ -1334,7 +1345,7 @@ export default function DashboardPage() {
 }
 
 /* ─── SD-5: Walk-in / phone booking form ───────────────────────────────── */
-function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: string, tone?: 'ok' | 'warn') => void; onCancel: () => void }) {
+function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boolean; onSave: (msg: string, tone?: 'ok' | 'warn') => void; onCancel: () => void }) {
   const spots = Math.max(0, slot.playersAvailable - slot.playersBooked);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -1359,7 +1370,7 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
   async function save() {
     setSaving(true); setErr('');
     const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
-      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, checkInNow: source === 'walk_in' && checkInNow }),
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
@@ -1370,7 +1381,7 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-1 bg-paper border border-line rounded-md p-1">
+      <div className={'flex gap-1 bg-paper border border-line rounded-md p-1' + (late ? ' hidden' : '')}>
         {([['walk_in', 'Walk-in'], ['phone', 'Phone booking']] as const).map(([k, label]) => (
           <button key={k} type="button" onClick={() => setSource(k)}
             className={'flex-1 py-1.5 rounded-md text-[12.5px] font-medium transition-colors ' + (source === k ? 'bg-white text-ink border border-line' : 'text-ink-muted hover:text-ink')}>{label}</button>
@@ -1391,7 +1402,7 @@ function WalkInForm({ slot, onSave, onCancel }: { slot: TeeTime; onSave: (msg: s
         </div>
       </div>
       <div>
-        <label className="block text-[13px] font-semibold text-ink mb-1">Email <span className="font-normal text-ink-muted">(optional — sends a confirmation with a check-in link)</span></label>
+        <label className="block text-[13px] font-semibold text-ink mb-1">Email <span className="font-normal text-ink-muted">{late ? '(optional)' : '(optional — sends a confirmation with a check-in link)'}</span></label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inp} />
       </div>
       {slot.cartFee > 0 && (

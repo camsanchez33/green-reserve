@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDot } from '@/components/ui/StatusDot';
 import type { MoneyBooking, MoneyCourse } from './types';
+import { NO_FEE_LABEL } from '@/lib/no-fee-labels';
 import { formatStamp as fmtStamp, formatTeeTime as fmtTime, formatTeeDay as fmtDate } from '@/lib/format';
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -26,7 +27,7 @@ export function CancellationsPanel({ bookings, course }: { bookings: MoneyBookin
   const [feesOnly, setFeesOnly] = useState(false);
   const cancelled = bookings.filter(b => b.status === 'cancelled')
     .sort((a, b) => (b.cancelledAt ?? b.createdAt).localeCompare(a.cancelledAt ?? a.createdAt));
-  const withFee = cancelled.filter(b => b.paymentStatus === 'cancellation_fee_charged');
+  const withFee = cancelled.filter(b => b.paymentStatus === 'cancellation_fee_charged' || !!b.noShowFeeKeptCents);
   const rows = feesOnly ? withFee : cancelled;
 
   return (
@@ -57,7 +58,7 @@ export function CancellationsPanel({ bookings, course }: { bookings: MoneyBookin
           </div>
           <ul className="divide-y divide-line-soft">
             {rows.map(b => {
-              const fee = b.paymentStatus === 'cancellation_fee_charged';
+              const fee = b.paymentStatus === 'cancellation_fee_charged' || !!b.noShowFeeKeptCents;
               const ahead = hoursAhead(b);
               return (
                 <li key={b.id} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-3 text-[13.5px]">
@@ -66,7 +67,7 @@ export function CancellationsPanel({ bookings, course }: { bookings: MoneyBookin
                     <div className="text-ink-soft">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}{b.cancelledAt ? <> · cancelled {fmtStamp(b.cancelledAt)}{ahead ? ` (${ahead})` : ''}</> : null}</div>
                   </div>
                   <span className="inline-flex items-center gap-1.5 text-ink sm:justify-end">
-                    <StatusDot status={fee ? 'warn' : 'neutral'} />{fee ? `${usd(b.cancellationFeeTotal)} fee kept` : 'No fee'}
+                    <StatusDot status={fee ? 'warn' : b.noFeeReason === 'charge_failed' ? 'bad' : 'neutral'} />{fee ? (b.noShowFeeKeptCents ? `${usd(b.noShowFeeKeptCents)} no-show fee kept` : `${usd(b.cancellationFeeTotal)} fee kept`) : b.noFeeReason ? NO_FEE_LABEL[b.noFeeReason] : 'No fee'}
                   </span>
                 </li>
               );

@@ -119,7 +119,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   first review exists. Unused fields to surface: `revenue.perAvailableTeeTimeCents`,
   `utilization.byDay`, `utilization.blockedTimes`. Sparklines need per-period series
   → small addition in `computeAnalytics` (new code, server-side, no money logic).
-- [ ] **DENSE-2 Money** (`dashboard/money/*`, ~15 → ≤ 3). Sales tab first:
+- [x] **DENSE-2 Money** (BUILT 2026-10-27: Sales view on top — today vs same weekday last week, sales by day / weekday / hour, summary, how golfers paid, cash drawer; title stays "Payments and payouts" per money-rework-test) (`dashboard/money/*`, ~15 → ≤ 3). Sales tab first:
   Stripe "Today" cumulative line vs same weekday last week + next payout + not paid
   yet; Toast's sales by day / day of week / time of day; Sales summary table (green
   fees, carts, range, shop on rounds, register sales, late/no-show fees, refunds, net;
@@ -143,6 +143,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   a per-course golfer summary keyed like analytics' "customer"; tenant-scoped; money
   shown only with `money.payments`). Drag, panel actions, Next up, pay links
   unchanged. Homepage demo mirrors it in the same PR. Phone: one day, same rows.
+- [x] **DENSE-4c Past tee times out of the way** (BUILT 2026-10-27, Cam: "after like 20 minutes the tee time should be sent down where they can still access it but it isnt in the way"): today's times 20 min after they went off (`LATE_ADD_MINUTES`, `lib/late-add.ts`) sit in a collapsed "Past tee times · N" section under the live rows; the next time is first. `claimTeeTime()` refuses new bookings on them (`PAST`), so every path agrees; staff can still record a forgotten walk-in there with "Add a walk-in who already played" (today only, walk-ins only — `late` → `allowLate`). Search shows every time in order; a late chip opens the section.
 - [ ] **DENSE-5 Members** (~15–20 → ≤ 4). Table with sortable columns (tier, dues
   status, rounds this season, last round, spend), sparkline of rounds per member;
   header strip: active · dues unpaid ($) · renewing in 30 days (ask D2). Wizard hints

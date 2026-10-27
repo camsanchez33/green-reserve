@@ -44,8 +44,11 @@ const movable = (g: BoardGroup) => (g.status === 'confirmed' && !g.noShowAt) || 
 const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
 const price = (v?: number) => v == null ? '' : `$${Number.isInteger(v) ? v : v.toFixed(2)}`;
 
-export default function TeeSheetRows({ slots, isPast, nextUpId, selectedId, canMove, canMoveCheckedIn, onMove, onSelect }: {
+export default function TeeSheetRows({ slots: allSlots, isPast, isGone, nextUpId, selectedId, canMove, canMoveCheckedIn, onMove, onSelect }: {
   slots: BoardSlot[];
+  /** Cam 2026-10-27: today's times this long gone (claim-tee-time LATE_ADD_MINUTES) drop to a
+   *  "Past tee times" section at the bottom — still openable for late check-ins, out of the way. */
+  isGone?: (s: BoardSlot) => boolean;
   /** The time has already gone off (course clock). */
   isPast: (s: BoardSlot) => boolean;
   nextUpId: string | null;
@@ -62,21 +65,27 @@ export default function TeeSheetRows({ slots, isPast, nextUpId, selectedId, canM
 }) {
   const [dragging, setDragging] = useState<{ group: BoardGroup; fromId: string } | null>(null);
   const [over, setOver] = useState<string | null>(null);
+  const [showGone, setShowGone] = useState(false);
+  const gone = isGone ? allSlots.filter(isGone) : [];
+  const slots = isGone ? allSlots.filter(s => !isGone(s)) : allSlots;
+  // A late chip or search can pick a gone time — open the section so its row shows.
+  const goneOpen = showGone || (!!selectedId && gone.some(s => s.id === selectedId));
 
   // A row that could take the dragged group. The route re-checks everything.
   const takes = (s: BoardSlot) => !!dragging && s.id !== dragging.fromId && s.status !== 'blocked' && !isPast(s)
     && s.playersAvailable - s.playersBooked >= dragging.group.players;
 
   // Every row has the same seat columns (the biggest time's), so seats line up down the sheet.
-  const cols = Math.max(4, ...slots.map(s => s.playersAvailable));
+  const cols = Math.max(4, ...allSlots.map(s => s.playersAvailable));
   const grid: React.CSSProperties = { gridTemplateColumns: `3.75rem 2.75rem repeat(${cols}, minmax(0, 1fr))` };
   const nowIndex = slots.findIndex(s => !isPast(s));
   const showNow = nowIndex > 0;
 
+  const rows = (list: BoardSlot[], label: string, withNow: boolean) => {
   let lastHour = -1;
   return (
-    <div role="list" aria-label="Tee times" className="space-y-[3px]">
-      {slots.map((s, i) => {
+    <div role="list" aria-label={label} className="space-y-[3px]">
+      {list.map((s, i) => {
         const h = Number(s.time.slice(0, 2));
         const newHour = h !== lastHour; lastHour = h;
         const past = isPast(s);
@@ -88,7 +97,7 @@ export default function TeeSheetRows({ slots, isPast, nextUpId, selectedId, canM
         return (
           <div key={s.id} role="listitem">
             {newHour && <div className={'px-1 text-[12px] font-semibold text-ink-muted ' + (i ? 'pt-2.5 pb-1' : 'pb-1')}>{hourLabel(h)}</div>}
-            {showNow && i === nowIndex && (
+            {withNow && showNow && i === nowIndex && (
               <div className="flex items-center gap-2 py-0.5" aria-hidden="true">
                 <span className="text-[11px] font-semibold text-warn">Now</span><span className="flex-1 border-t-2 border-warn" />
               </div>
@@ -146,6 +155,22 @@ export default function TeeSheetRows({ slots, isPast, nextUpId, selectedId, canM
           </div>
         );
       })}
+    </div>
+  );
+  };
+
+  return (
+    <div>
+      {slots.length > 0 ? rows(slots, 'Tee times', true) : gone.length > 0 && <p className="py-6 text-center text-[13.5px] text-ink-muted">No more tee times today</p>}
+      {gone.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-line">
+          <button type="button" aria-expanded={goneOpen} onClick={() => setShowGone(!goneOpen)}
+            className="w-full flex items-center justify-between px-1 py-1.5 text-[13px] font-semibold text-ink-soft hover:text-ink">
+            <span>Past tee times · {gone.length}</span><span aria-hidden="true">{goneOpen ? '▴' : '▾'}</span>
+          </button>
+          {goneOpen && <div className="mt-2">{rows(gone, 'Past tee times', false)}</div>}
+        </div>
+      )}
     </div>
   );
 }

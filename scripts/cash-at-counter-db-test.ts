@@ -8,6 +8,7 @@ import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { ringUpCash } from '../src/lib/register';
 import { createCounterBooking } from '../src/lib/counter-pay';
+import { LATE_ADD_MESSAGE } from '../src/lib/late-add';
 import { daySummary } from '../src/lib/register-close';
 import { getBookingStatus } from '../src/lib/booking-status';
 import { todayIn } from '../src/lib/course-time';
@@ -38,6 +39,24 @@ async function cleanup() {
   const w = made.ok ? await prisma.booking.findUniqueOrThrow({ where: { id: made.id } }) : null;
   ok('a counter booking is never made already paid', made.ok && w?.paymentStatus === 'manual' && w.status === 'confirmed' && !w.paidOffline, w);
   ok('…its status says how it can be paid', getBookingStatus('confirmed', 'manual').label === 'Pays in store');
+
+  // Cam 2026-10-27: nobody new joins a time LATE_ADD_MINUTES (20) after it went off — except
+  // a walk-in staff forgot to put on the sheet, recorded with the "already played" button (late).
+  const ago = (min: number) => { const d = new Date(Date.now() - min * 60_000); return d.toISOString().slice(11, 16); };
+  if (new Date().getUTCHours() >= 1) {
+    const gone = await prisma.teeTime.create({ data: { courseId: c.id, date: today, time: ago(25), holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4 } });
+    const soon = await prisma.teeTime.create({ data: { courseId: c.id, date: today, time: ago(10), holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4 } });
+    const refused = await createCounterBooking(c.id, { teeTimeId: gone.id, golferName: 'Too Late', players: 1 }, STAFF);
+    ok('a time 25 min gone takes no new booking', !refused.ok && refused.status === 409 && refused.error === LATE_ADD_MESSAGE, refused);
+    const grace = await createCounterBooking(c.id, { teeTimeId: soon.id, golferName: 'Running Late', players: 1 }, STAFF);
+    ok('…a time 10 min gone still does', grace.ok, grace);
+    const forgot = await createCounterBooking(c.id, { teeTimeId: gone.id, golferName: 'Forgot Them', players: 1, late: true }, STAFF);
+    ok('…staff can record a walk-in who already played', forgot.ok, forgot);
+    const phone = await createCounterBooking(c.id, { teeTimeId: gone.id, golferName: 'Phone Late', players: 1, source: 'phone', late: true }, STAFF);
+    ok('…but not a phone booking', !phone.ok && phone.status === 409, phone);
+    const golfer = await createCounterBooking(c.id, { teeTimeId: gone.id, golferName: 'Not Staff', players: 1, late: true }, { type: 'golfer', id: null });
+    ok('…and only staff', !golfer.ok && golfer.status === 409, golfer);
+  } else console.log('SKIP  late-add checks (within an hour of UTC midnight)');
 
   // An online group of four where three showed, paid in cash from the tee sheet.
   await prisma.teeTime.update({ where: { id: tt.id }, data: { playersAvailable: 8 } });

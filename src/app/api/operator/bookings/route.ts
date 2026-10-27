@@ -17,6 +17,7 @@ import { normalizePhone } from '@/lib/golfer-otp';
 import { formatTeeTime } from '@/lib/format';
 import { createCounterBooking } from '@/lib/counter-pay';
 import { ringUpCash } from '@/lib/register';
+import { noFeeReason, type CancelRecord } from '@/lib/cancel-fee-reason';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
@@ -50,6 +51,8 @@ export async function GET(req: NextRequest) {
       rangeBallsTotal: true, accessFeeTotal: true, totalAmount: true,
       cancellationFeeTotal: true, cancellationFeeChargedAt: true, cancelledAt: true,
       checkedInAt: true, noShowAt: true, paymentStatus: true, status: true, createdAt: true,
+      // Server-side only, for noFeeReason — stripped before the response.
+      cancellationHoursAtBooking: true, source: true,
       teeTime: { select: { date: true, time: true, holes: true } },
     },
     orderBy: { createdAt: 'desc' },
@@ -59,11 +62,27 @@ export async function GET(req: NextRequest) {
   // SP-A: contact details only with "See golfer email and phone"; payment
   // amounts only with "See payments" (the late fee stays — it IS the cancellation).
   const contact = can(session, 'sheet.golfer_contact');
-  return NextResponse.json(bookings.map(b => ({
+  // Cancellations say why no fee was kept, from what the cancel recorded (lib/cancel-fee-reason).
+  const noFee = bookings.filter(b => b.status === 'cancelled' && b.paymentStatus !== 'cancellation_fee_charged');
+  const [course, failed, cancelEvents] = noFee.length ? await Promise.all([
+    prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true, cancellationHours: true } }),
+    prisma.paymentEvent.findMany({ where: { bookingId: { in: noFee.map(b => b.id) }, kind: 'charge_failed', detail: { startsWith: 'Late-cancellation fee' } }, select: { bookingId: true, detail: true } }),
+    prisma.bookingEvent.findMany({ where: { bookingId: { in: noFee.map(b => b.id) }, type: 'booking_cancelled' }, select: { bookingId: true, metadata: true } }),
+  ]) : [null, [], []];
+  const failedDetail = new Map(failed.map(f => [f.bookingId, f.detail]));
+  const record = new Map(cancelEvents.map(e => [e.bookingId, (e.metadata ?? {}) as CancelRecord]));
+  return NextResponse.json(bookings.map(({ cancellationHoursAtBooking: _h, source: _s, ...b }, i) => {
+    const rec = record.get(b.id) ?? null;
+    const why = course && b.status === 'cancelled' && b.paymentStatus !== 'cancellation_fee_charged'
+      ? (rec?.noShowFeeKept ? { noShowFeeKeptCents: rec.noShowFeeKept } : { noFeeReason: noFeeReason(bookings[i], course, rec, failedDetail.get(b.id) ?? null) ?? undefined })
+      : {};
+    return {
     ...b,
+    ...why,
     ...(contact ? {} : { golferEmail: '', golferPhone: '' }),
     ...(seesPayments ? {} : { greenFeeTotal: 0, cartFeeTotal: 0, rangeBallsTotal: 0, accessFeeTotal: 0, totalAmount: 0 }),
-  })));
+    };
+  }));
 }
 
 // Lets the operator cancel a booking on a golfer's behalf (e.g. a phone-call
@@ -257,7 +276,7 @@ export async function POST(req: NextRequest) {
   // One place for a counter booking (lib/counter-pay) — the register calls it too.
   const made = await createCounterBooking(session.courseId, {
     teeTimeId: String(body.teeTimeId ?? ''), golferName, golferEmail, golferPhone: String(body.golferPhone ?? ''),
-    players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in',
+    players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in', late: body.late === true,
   }, { type: 'staff', id: session.staffId ?? session.operatorId });
   if (!made.ok) return NextResponse.json({ error: made.error }, { status: made.status });
   // CASH-1: "paying cash now" — the booking is made, then its round is rung up in cash.
@@ -275,7 +294,9 @@ export async function POST(req: NextRequest) {
   const teeTime = { ...made.teeTime, course: made.course };
 
   let emailSent: boolean | null = null;
-  if (golferEmail && !checkInNow) {
+  // A walk-in who already played gets no confirmation (it would offer free cancellation
+  // for a finished round); staff send the pay link from the card if they still owe.
+  if (golferEmail && !checkInNow && body.late !== true) {
     try {
       await sendBookingConfirmation({
         golferName, golferEmail, courseName: teeTime.course.name,
