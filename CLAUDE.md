@@ -282,6 +282,8 @@ but carries no styling — it is only a hook. Never re-add a second palette, fon
 set there. Self-contained public pages that skip the Nav (/for-courses, setup sheet,
 /call) use `<PlainHeader>` (src/components/PlainHeader.tsx) — logo top-left like `/`.
 
+DENSE (Cam 2026-10-27, `DENSE_UI_SPEC.md`): on `/dashboard/*` and `/admin/*`, lots of data and almost no sentences — a number is label · value · comparison with its definition behind the label, warnings are one line + the button that fixes it, settings are label + control + preview, at most one sentence per page; `scripts/words-guard.mjs` ratchets prose down. It reverses SHEET-2's board: the tee sheet becomes seat rows (one row per time, four seat cells) as DENSE-4 lands. AN-1 still holds until Cam approves each number page by page. Rolling out one page per PR.
+
 ### Shared tokens (Tailwind v4, `globals.css` `@theme {}`)
 - `paper` (#FAFAF7), `card` (#FFFFFF), `ink` (#141814), `ink-soft`, `ink-muted` (#6B706A), `ink-faint`, `line` (#E3E4DE), `line-soft`, `line-strong`
 - `pine` (#173B2A) / `pine-hover` (#0F2C1F, darker); `ok` (#3D7A55), `bad` (#A3452F), `warn` (#9A5B13), `dot-neutral`

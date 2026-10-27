@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
   if (!Number.isFinite(span) || span > MAX_DAYS) return NextResponse.json({ error: `Pick a range of ${MAX_DAYS} days or fewer.` }, { status: 400 });
 
   const current = await computeAnalytics(session.courseId, range);
-  const compare = sp.get('compare') === '1'
-    ? { range: previousRange(range), headline: headline(await computeAnalytics(session.courseId, previousRange(range))) }
-    : null;
+  // DENSE-1: the previous period's series too, for the dashed line under the chart.
+  const before = sp.get('compare') === '1' ? await computeAnalytics(session.courseId, previousRange(range)) : null;
+  const compare = before ? { range: before.range, headline: headline(before), series: before.revenue.series } : null;
   return NextResponse.json({ ...current, headline: headline(current), compare }, { headers: { 'Cache-Control': 'no-store' } });
 }

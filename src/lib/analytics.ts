@@ -159,12 +159,13 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
 
   const byWeek = daysBetween(range.from, range.to) > 45;
   const bucketOf = (date: string) => (byWeek ? weekOf(date) : date);
-  const series = new Map<string, { expected: number; collected: number }>();
+  // DENSE-1: rounds and spots per bucket too, so the chart can plot all four headline numbers.
+  const series = new Map<string, { expected: number; collected: number; rounds: number; sale: number; booked: number }>();
   for (let d = range.from; d <= range.to && d <= today; d = addDaysStr(d, 1)) {
-    const k = bucketOf(d); if (!series.has(k)) series.set(k, { expected: 0, collected: 0 });
+    const k = bucketOf(d); if (!series.has(k)) series.set(k, { expected: 0, collected: 0, rounds: 0, sale: 0, booked: 0 });
   }
   for (const b of pastLive) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
-  for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) r.collected += share(b); }
+  for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += share(b); r.rounds += b.checkedInPlayers ?? b.players; } }
 
   // ── 2. Utilization ───────────────────────────────────────────────────────
   const forSale = L.teeTimes.filter(t => t.status !== 'blocked');
@@ -189,6 +190,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       const r = map.get(k)!; r.sale += t.playersAvailable; r.booked += booked;
     }
     byDow[w].sale += t.playersAvailable; byDow[w].booked += booked;
+    { const sr = series.get(bucketOf(t.date)); if (sr) { sr.sale += t.playersAvailable; sr.booked += booked; } }
     if (teeMs(t.date, t.time) < nowMs) {
       const e = heatEarned.get(`${w}-${h}`) ?? { spots: 0, cents: 0 };
       e.spots += t.playersAvailable; e.cents += collectedByTeeTime.get(t.id) ?? 0;
@@ -456,7 +458,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       roundsPlayed, perRoundCents: roundsPlayed ? Math.round(collected / roundsPlayed) : null,
       perAvailableTeeTimeCents: pastSlotsForSale ? Math.round(collected / pastSlotsForSale) : null,
       bucket: byWeek ? 'week' as const : 'day' as const,
-      series: [...series.entries()].map(([key, v]) => ({ key, expectedCents: v.expected, collectedCents: v.collected, gapCents: v.expected - v.collected, gapPct: pct(v.expected - v.collected, v.expected) })),
+      series: [...series.entries()].map(([key, v]) => ({ key, expectedCents: v.expected, collectedCents: v.collected, gapCents: v.expected - v.collected, gapPct: pct(v.expected - v.collected, v.expected), rounds: v.rounds, perRoundCents: v.rounds ? Math.round(v.collected / v.rounds) : null, fillPct: pct(v.booked, v.sale) })),
     },
     utilization: {
       spotsForSale: sale, spotsBooked: bookedSpots, fillPct: pct(bookedSpots, sale),
