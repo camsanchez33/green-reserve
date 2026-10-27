@@ -8140,7 +8140,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1549,
+      "lines": 1554,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10489,7 +10489,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 175,
+      "lines": 177,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -14744,7 +14744,7 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 100,
+      "lines": 103,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14897,7 +14897,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 164,
+      "lines": 166,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [

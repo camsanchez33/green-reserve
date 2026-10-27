@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-27T19:28:01.247Z",
+  "generatedAt": "2026-10-27T19:33:22.905Z",
   "repo": {
-    "head": "98c16cf",
+    "head": "1444186",
     "branch": "claude/practical-lovelace-xiu4u5",
     "dirtyCount": 2,
     "dirty": [
@@ -13,6 +13,20 @@
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "1444186",
+        "date": "2026-10-27T19:33:03+00:00",
+        "subject": "Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1763e28",
+        "date": "2026-10-27T19:28:07+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "98c16cf",
         "date": "2026-10-27T19:25:54+00:00",
@@ -491,6 +505,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "1444186",
+      "date": "2026-10-27",
+      "subject": "Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute"
+    },
+    {
+      "h": "1763e28",
+      "date": "2026-10-27",
+      "subject": "Regenerate the code map and status board"
+    },
+    {
       "h": "98c16cf",
       "date": "2026-10-27",
       "subject": "DENSE-2: pin the loading branch's payout tiles"
@@ -539,16 +563,6 @@
       "h": "6eced45",
       "date": "2026-10-27",
       "subject": "Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)"
-    },
-    {
-      "h": "569a2da",
-      "date": "2026-10-27",
-      "subject": "DENSE-4 review notes: demo legend mirrors the real one, same now cut-off, past blocked rows fade, dead demo CSS gone"
-    },
-    {
-      "h": "851a246",
-      "date": "2026-10-27",
-      "subject": "DENSE-4: the tee sheet is seat rows"
     }
   ]
 }

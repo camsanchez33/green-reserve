@@ -285,7 +285,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/courses/[slug]/account` | golfer | **NONE FOUND** | page | `src/app/courses/[slug]/account/page.tsx` | 11 |
 | `/courses/[slug]/account/accept-invite` | golfer | entry | page | `src/app/courses/[slug]/account/accept-invite/page.tsx` | 144 |
 | `/courses/[slug]/member` | member | **NONE FOUND** | page | `src/app/courses/[slug]/member/page.tsx` | 868 |
-| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1549 |
+| `/dashboard` | operator | middleware | page | `src/app/dashboard/page.tsx` | 1554 |
 | `/dashboard/2fa` | operator | entry | page | `src/app/dashboard/2fa/page.tsx` | 110 |
 | `/dashboard/analytics` | operator | middleware | page | `src/app/dashboard/analytics/page.tsx` | 786 |
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
@@ -421,8 +421,8 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-action-queue.ts` | 3 | 116 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
 | `src/lib/booking-fee.ts` | 3 | 123 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
 | `src/lib/booking-mode.ts` | 3 | 20 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
-| `src/lib/claim-tee-time.ts` | 3 | 100 |  | `claimTeeTime`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
-| `src/lib/counter-pay.ts` | 3 | 164 | A group pays for its round at the counter (cash, or the course's own card machine): | `CounterBookingInput`, `counterDueCents`, `CounterResult`, `createCounterBooking`, `settleAtCounter` |
+| `src/lib/claim-tee-time.ts` | 3 | 103 |  | `claimTeeTime`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
+| `src/lib/counter-pay.ts` | 3 | 166 | A group pays for its round at the counter (cash, or the course's own card machine): | `CounterBookingInput`, `counterDueCents`, `CounterResult`, `createCounterBooking`, `settleAtCounter` |
 | `src/lib/course-setup.ts` | 3 | 52 | COURSES_SHEET_SPEC CS-1 §1 — the five setup steps a built course goes through before it is live. | `SETUP_STEPS`, `SetupCourseLike`, `setupProgress`, `SetupProgress`, `SetupStep`, `SetupStepKey` |
 | `src/lib/course-wire.ts` | 3 | 57 |  | `COURSE_MONEY_WIRE_FIELDS`, `courseMoneyFromWire`, `courseToWire` |
 | `src/lib/dashboard-visits.ts` | 3 | 45 | Tracks which operator dashboard tabs a device has visited — used to derive "Look around your dashboard" / "Check your tee sheet schedule" in the Getting Started checklist (V13). | `CORE_TABS`, `getVisitedTabs`, `isIntroSeen`, `LOOK_AROUND_THRESHOLD`, `markIntroSeen`, `recordTabVisit` |
@@ -597,7 +597,7 @@ Sorted the same way.
 | `src/components/dashboard/ShopCatalog.tsx` | 1 | 374 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `ShopCatalog` |
 | `src/components/dashboard/ShopItemsForGroup.tsx` | 1 | 150 | POS-1a (PLATFORM_ROADMAP_SPEC §4, Cam 2026-10-08): | `default (ShopItemsForGroup)`, `ShopLine` |
 | `src/components/dashboard/StaffPermissions.tsx` | 1 | 243 | SP-A (STAFF_POLICY_SPEC A6): | `StaffPermissions` |
-| `src/components/dashboard/TeeSheetRows.tsx` | 1 | 175 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `groupTone` |
+| `src/components/dashboard/TeeSheetRows.tsx` | 1 | 177 | DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27: | `BoardGroup`, `BoardSlot`, `default (TeeSheetRows)`, `groupTone` |
 | `src/components/Footer.tsx` | 1 | 79 |  | `default (Footer)` |
 | `src/components/home/TeeSheetDemo.tsx` | 1 | 321 | HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07: | `LaptopDemo` |
 | `src/components/MainOffset.tsx` | 1 | 32 |  | `default (MainOffset)` |
