@@ -368,7 +368,7 @@ function DashboardPageInner() {
   const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number } | null>(null);
   const canSeeMoney = access.can('money.payments');
   useEffect(() => {
-    if (!canSeeMoney) { setDayMoney(null); return; }
+    if (!canSeeMoney || teeTimes.length === 0) { setDayMoney(null); return; }
     let live = true;
     dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
       .then(r => { if (live) setDayMoney(r.ok ? r.data : null); });
@@ -894,7 +894,7 @@ function DashboardPageInner() {
 
               {/* DENSE-4b: the day strip — players, checked in, and (money.payments) paid / not paid yet. */}
               {teeTimes.length > 0 && (
-                <div className={CARD + ' grid grid-cols-2 sm:flex sm:flex-wrap mb-4 divide-line-soft sm:divide-x'} aria-label="The day">
+                <div className={CARD + ' grid grid-cols-2 sm:flex sm:flex-wrap mb-4 divide-line-soft sm:divide-x'} role="group" aria-label="The day">
                   <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[18px] font-semibold text-ink tabular-nums">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div></div>
                   <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[18px] font-semibold text-ink tabular-nums">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div></div>
                   {dayMoney && dayMoney.date === selectedDate && (<>
