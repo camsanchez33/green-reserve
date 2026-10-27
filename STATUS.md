@@ -4,34 +4,36 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 19:14 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `531516a` · working tree **9 dirty file(s)**
+Generated 2026-10-27 19:28 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `98c16cf` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 3 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 12 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `98c16cf` | 2026-10-27 | DENSE-2: pin the loading branch's payout tiles |
+| `23965db` | 2026-10-27 | Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them |
+| `1a83267` | 2026-10-27 | DENSE-2: payments footer wording |
+| `71e527c` | 2026-10-27 | DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load |
+| `3c692b1` | 2026-10-27 | DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer |
 | `531516a` | 2026-10-27 | DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242) |
+| `6edc9aa` | 2026-10-27 | DENSE-4b review notes: the strip is a labelled group; no money request before the day loads |
+| `8d07854` | 2026-10-27 | DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet |
 | `92087fc` | 2026-10-27 | DENSE-4: the tee sheet is seat rows (#241) |
 | `6eced45` | 2026-10-27 | Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240) |
+| `569a2da` | 2026-10-27 | DENSE-4 review notes: demo legend mirrors the real one, same now cut-off, past blocked rows fade, dead demo CSS gone |
+| `851a246` | 2026-10-27 | DENSE-4: the tee sheet is seat rows |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (2 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/money-rework-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/money/page.tsx`
-- `M src/components/dashboard/money/PaymentsPanel.tsx`
-- `M src/lib/analytics.ts`
-- `?? src/app/api/operator/money/sales/`
-- `?? src/components/dashboard/money/SalesPanel.tsx`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -153,18 +155,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `98c16cf` 2026-10-27 — DENSE-2: pin the loading branch's payout tiles
+- `23965db` 2026-10-27 — Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them
+- `1a83267` 2026-10-27 — DENSE-2: payments footer wording
+- `71e527c` 2026-10-27 — DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load
+- `3c692b1` 2026-10-27 — DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer
 - `531516a` 2026-10-27 — DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)
+- `6edc9aa` 2026-10-27 — DENSE-4b review notes: the strip is a labelled group; no money request before the day loads
+- `8d07854` 2026-10-27 — DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet
 - `92087fc` 2026-10-27 — DENSE-4: the tee sheet is seat rows (#241)
 - `6eced45` 2026-10-27 — Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)
-- `18082d8` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)
-- `c155fec` 2026-10-27 — Page decision for courses built without an inquiry lives on the course (#239)
-- `c5210ef` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)
-- `13634fe` 2026-10-26 — An emailed sign-in code confirms the owner's email (no separate verify link) (#236)
-- `23e81ff` 2026-10-26 — Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)
-- `4960a76` 2026-10-26 — Setup sheet: recap screen + email, honest cancellation wording, clearer days, uniform cards, resume where you left off (#234)
-- `4d8194b` 2026-10-26 — See a built course's page before sending the preview (#233)
-- `356403f` 2026-10-26 — Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)
-- `ee9402b` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
+- `569a2da` 2026-10-27 — DENSE-4 review notes: demo legend mirrors the real one, same now cut-off, past blocked rows fade, dead demo CSS gone
+- `851a246` 2026-10-27 — DENSE-4: the tee sheet is seat rows
 
 ---
 

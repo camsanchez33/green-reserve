@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 572,
+    "files": 573,
     "routes": 269,
-    "libs": 194,
+    "libs": 195,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3063,7 +3063,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 128,
+      "lines": 129,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3682,7 +3682,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 407,
+      "lines": 408,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8140,7 +8140,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1543,
+      "lines": 1549,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8173,6 +8173,7 @@
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/late-add",
         "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
@@ -10488,7 +10489,7 @@
     },
     {
       "path": "src/components/dashboard/TeeSheetRows.tsx",
-      "lines": 152,
+      "lines": 175,
       "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -10934,7 +10935,7 @@
     },
     {
       "path": "src/components/dashboard/money/SalesPanel.tsx",
-      "lines": 230,
+      "lines": 240,
       "purpose": "DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today):",
       "brain": [],
       "exports": [
@@ -14743,13 +14744,21 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 93,
+      "lines": 100,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "claimTeeTime",
           "kind": "fn"
+        },
+        {
+          "name": "LATE_ADD_MESSAGE",
+          "kind": "reexport"
+        },
+        {
+          "name": "LATE_ADD_MINUTES",
+          "kind": "reexport"
         },
         {
           "name": "TeeTimeClaimError",
@@ -14763,6 +14772,7 @@
       "guard": null,
       "imports": [
         "./booking-events",
+        "./late-add",
         "./prisma",
         "@prisma/client"
       ],
@@ -14887,7 +14897,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 163,
+      "lines": 164,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -17968,6 +17978,36 @@
         "src/lib/course-feed.ts",
         "src/lib/inquiry-action-queue.ts",
         "src/lib/inquiry-board.ts"
+      ]
+    },
+    {
+      "path": "src/lib/late-add.ts",
+      "lines": 13,
+      "purpose": "Cam 2026-10-27:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "LATE_ADD_MESSAGE",
+          "kind": "const"
+        },
+        {
+          "name": "LATE_ADD_MINUTES",
+          "kind": "const"
+        },
+        {
+          "name": "lateForAdding",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
+        "src/lib/claim-tee-time.ts"
       ]
     },
     {
