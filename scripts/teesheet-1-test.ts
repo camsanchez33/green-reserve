@@ -16,12 +16,13 @@ check('Find golfer sits in the sheet bar with a refresh icon', page.includes('id
 check('no Refresh text button in the header', !/>\s*Refresh\s*</.test(page));
 check('mark no-show is reachable from the time panel', page.includes("bookingLifecycle(b, 'no_show')") && page.includes("late && access.can('sheet.no_show') && (\n            <button onClick={() => bookingLifecycle(b, 'no_show')"));
 check('still coming (a late group) is reachable and clears it from the late list', page.includes('setStillComing(prev => new Set(prev).add(b.id))') && page.includes('!stillComing.has(b.id) && !b.noShowAt'));
-check('the key swatches match the square washes', page.includes('bg-ok/[0.08] border-l-[3px] border-ok') && !page.includes('bg-ok/25'));
+// DENSE-4 (Cam 2026-10-27): seat rows replaced the board — the key shows the money edge and the checked-in / member fills the rows use.
+check('the key swatches match the seat cells', page.includes('border-l-[3px] border-ok" />Paid') && page.includes('bg-ok/[0.12]" />Checked in') && page.includes('bg-[#F1EEE4]" />Member or resident'));
 check('late groups use the course clock', page.includes("Number(nowHM.slice(0, 2)) * 60"));
-check('late groups and the color key live in the bar under the date', page.includes('past their time, not checked in') && page.includes('Booked, not paid yet</span>'));
-const board = src('src/components/dashboard/TeeSheetBoard.tsx');
-check('squares take a color wash, not just the edge', /ok: 'border-l-\[3px\] border-ok !bg-ok/.test(board));
-check('the key is gone from under the board', !board.includes('TONE_LABEL[t]} />)'));
+check('late groups and the color key live in the bar under the date', page.includes('not checked in`') && page.includes('/>Owes</span>'));
+const rows = src('src/components/dashboard/TeeSheetRows.tsx');
+check('a group cell carries its money edge and a checked-in fill', rows.includes("ok: 'border-l-ok'") && rows.includes("g.status === 'completed' ? 'bg-ok/[0.12] '"));
+check('no key or helper sentence under the rows', !rows.includes('Tap a time to'));
 check('the calendar opens left-aligned, inside the screen', src('src/components/ui/MonthPicker.tsx').includes('absolute left-0 top-full') && src('src/components/ui/MonthPicker.tsx').includes('max-w-[calc(100vw-32px)]'));
 check('an agreement announcement clears once nothing is left to sign', src('src/app/api/operator/announcements/route.ts').includes('/agreement/i.test(newest.title)') && src('src/app/api/operator/announcements/route.ts').includes('st.total > 0 && st.documents.every(d => !d.needsSigning)'));
 check('the announcement banner uses the attention style', src('src/components/AnnouncementBanner.tsx').includes('border-l-[3px] border-l-warn'));

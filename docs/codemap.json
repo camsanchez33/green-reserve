@@ -8084,7 +8084,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1521,
+      "lines": 1522,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8105,7 +8105,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/MoveGroupModal",
         "@/components/dashboard/ShopItemsForGroup",
-        "@/components/dashboard/TeeSheetBoard",
+        "@/components/dashboard/TeeSheetRows",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
         "@/components/ui/MonthPicker",
@@ -10429,9 +10429,9 @@
       "usedBy": []
     },
     {
-      "path": "src/components/dashboard/TeeSheetBoard.tsx",
-      "lines": 165,
-      "purpose": "SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07:",
+      "path": "src/components/dashboard/TeeSheetRows.tsx",
+      "lines": 152,
+      "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
         {
@@ -10443,7 +10443,7 @@
           "kind": "type"
         },
         {
-          "name": "default (TeeSheetBoard)",
+          "name": "default (TeeSheetRows)",
           "kind": "component"
         },
         {
@@ -10457,8 +10457,6 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "@/components/ui/Card",
-        "@/components/ui/StatusDot",
         "@/lib/format",
         "react"
       ],
@@ -11143,7 +11141,6 @@
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
-        "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
@@ -11429,7 +11426,6 @@
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -17170,7 +17166,7 @@
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/TeeSheetRows.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",

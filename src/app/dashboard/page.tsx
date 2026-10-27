@@ -22,7 +22,7 @@ import { INPUT_COMPACT } from '@/components/ui/field';
 import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
 import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
-import TeeSheetBoard, { type BoardGroup } from '@/components/dashboard/TeeSheetBoard';
+import TeeSheetRows, { type BoardGroup } from '@/components/dashboard/TeeSheetRows';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { timesTooClose } from '@/lib/tee-time-fit';
@@ -927,17 +927,17 @@ function DashboardPageInner() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 border-b border-line text-[12.5px]">
                   {lateGroups.length > 0 ? (
                     <div className="flex flex-wrap items-center gap-2 min-w-0">
-                      <StatusDot status="warn" label={`${lateGroups.length} group${lateGroups.length === 1 ? '' : 's'} past their time, not checked in:`} />
+                      <StatusDot status="warn" label={`${lateGroups.length} not checked in`} />
                       {lateGroups.slice(0, 4).map(({ tt, b, ago }) => (
                         <button key={b.id} type="button" onClick={() => setPanelId(tt.id)}
                           className="rounded-md bg-warn/[0.08] px-2 py-1 text-ink hover:bg-warn/15 transition-colors">
-                          {fmtTime(tt.time)} {b.golferName} · {ago < 60 ? `${ago} min` : `${Math.floor(ago / 60)} h${ago % 60 ? ` ${ago % 60} min` : ''}`} ago
+                          {fmtTime(tt.time)} {b.golferName} · {ago < 60 ? `${ago}m` : `${Math.floor(ago / 60)}h`}
                         </button>
                       ))}
                       {lateGroups.length > 4 && <span className="text-ink-muted">+{lateGroups.length - 4} more</span>}
                     </div>
                   ) : (
-                    <span className="text-ink-soft">{selectedDate === today() ? (eventsDue.length ? 'No groups running late.' : 'Nothing needs attention right now.') : 'Tap a time to see its groups.'}</span>
+                    <span className="text-ink-soft">{selectedDate === today() ? 'All on time' : ''}</span>
                   )}
                   {eventsDue.map(ev => (
                     <Link key={ev.id} href={`/dashboard/events?id=${ev.id}`} className="inline-flex items-center gap-1.5 text-ink hover:underline">
@@ -945,9 +945,11 @@ function DashboardPageInner() {
                     </Link>
                   ))}
                   <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-soft">
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/[0.08] border-l-[3px] border-ok" />Paid</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-warn/[0.09] border-l-[3px] border-warn" />Booked, not paid yet</span>
-                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-bad/[0.08] border-l-[3px] border-bad" />Needs attention</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_rgba(20,24,20,0.12)] border-l-[3px] border-ok" />Paid</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_rgba(20,24,20,0.12)] border-l-[3px] border-warn" />Owes</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-white shadow-[0_0_0_1px_rgba(20,24,20,0.12)] border-l-[3px] border-bad" />Declined or no-show</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-ok/[0.12]" />Checked in</span>
+                    <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="w-3 h-3 rounded-sm bg-[#F1EEE4]" />Member or resident</span>
                   </div>
                 </div>
               {loading ? (
@@ -956,14 +958,13 @@ function DashboardPageInner() {
                 </div>
               ) : sheetError ? null : teeTimes.length === 0 ? (
                 <div className="text-center py-16">
-                  <p className="font-medium text-ink mb-1">No tee times for this date</p>
-                  <p className="text-sm text-ink-soft mb-4">Add times manually or check your schedule covers this day</p>
+                  <p className="font-medium text-ink mb-4">No tee times this day</p>
                   {access.can('sheet.edit_times') && <button onClick={() => setShowAddModal(true)} className="bg-pine hover:bg-pine-hover text-white px-5 py-2.5 rounded-md text-[12.5px] font-medium transition-colors">Add tee time</button>}
                 </div>
               ) : (
                 <div className="bg-paper/70 p-3 sm:p-4 rounded-b-lg">
                   {q && visibleTimes.length === 0 && <p className="text-center py-6 text-ink-muted text-sm">No bookings match &quot;{search}&quot; on this date.</p>}
-                  <TeeSheetBoard
+                  <TeeSheetRows
                     slots={visibleTimes}
                     isPast={t => selectedDate < today() || (selectedDate === today() && t.time <= nowHM)}
                     nextUpId={nextUpId}

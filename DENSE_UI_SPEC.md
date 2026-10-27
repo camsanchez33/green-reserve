@@ -107,7 +107,7 @@ stay with the overseer.
 
 ### Course dashboard
 
-- [ ] **DENSE-1 Analytics** (`dashboard/analytics/page.tsx`, ~60+ sentences →
+- [x] **DENSE-1 Analytics** (MERGED #237) (`dashboard/analytics/page.tsx`, ~60+ sentences →
   ≤ 8). Lands `words-guard.mjs`. Top: period switcher (Today · 7D · 4W · 3M · 12M) +
   "vs previous"; one large chart whose metric is picked by clicking the four headline
   numbers (Revenue, Tee sheet filled, Rounds played, Per round); eight small cards with
@@ -135,7 +135,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   pace alerts); Next up with checked-in state (`comingUp[].groups[].checkedIn` is
   returned and unused) and a short golfer history; Paid today mix + next payout. AN-1
   exception already covers Home. Golfer history tags = new code (see DENSE-4).
-- [ ] **DENSE-4 Tee sheet: seat rows** (`dashboard/page.tsx`, `TeeSheetBoard.tsx`
+- [x] **DENSE-4 Tee sheet: seat rows** (BUILT 2026-10-27, one day per screen; the next day side by side on desktop and the day strip / golfer card follow as DENSE-4b, each asked of Cam per D2) (`dashboard/page.tsx`, `TeeSheetBoard.tsx`
   → `TeeSheetRows.tsx`, `TeeSheetDemo.tsx`; ~15–20 → ≤ 6, modals keep only what a
   wrong click costs). D1 layout; day strip across the top only if Cam says yes to each
   number (D2: players · checked in · paid · owed · fill by hour — ask); golfer card in

@@ -4,39 +4,26 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 17:36 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `dce4bb0` · working tree **17 dirty file(s)**
+Generated 2026-10-27 17:47 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `18082d8` · working tree **12 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 3 commit(s) since then are not mentioned anywhere in it:
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-| commit | date | subject |
-|---|---|---|
-| `8f95ae7` | 2026-10-27 | DENSE-1: headline numbers keep their value in the accessible name; status board |
-| `a34dd7e` | 2026-10-27 | DENSE-1 review fixes |
-| `fe585cd` | 2026-10-27 | DENSE-1: Analytics — lots of data, almost no sentences |
+### Uncommitted working tree (12 file(s))
 
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (17 file(s))
-
-- `UU STATUS.artifact.html`
-- `UU STATUS.json`
-- `UU STATUS.md`
-- `UU docs/CODEMAP.md`
-- `M  docs/codemap.json`
-- `A  prisma/migrations/20261027050000_course_page_decision/migration.sql`
-- `M  prisma/schema.prisma`
-- `A  scripts/course-page-decision-db-test.ts`
-- `M  src/app/api/admin/courses/route.ts`
-- `M  src/app/api/admin/request-re-review/route.ts`
-- `M  src/app/api/operator/approve-page/route.ts`
-- `M  src/app/api/operator/courses/route.ts`
-- `M  src/app/api/preview/[courseId]/approve/route.ts`
-- `M  src/app/api/preview/[courseId]/route.ts`
-- `M  src/app/api/preview/send/route.ts`
-- `M  src/lib/approval-state.ts`
-- `M  src/lib/submit-change-request.ts`
+- `M CLAUDE.md`
+- `M DENSE_UI_SPEC.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/board-tone-test.ts`
+- `M scripts/teesheet-1-test.ts`
+- `M scripts/words-guard.baseline.json`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/home.module.css`
+- `D src/components/dashboard/TeeSheetBoard.tsx`
+- `M src/components/home/TeeSheetDemo.tsx`
+- `?? src/components/dashboard/TeeSheetRows.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -161,18 +148,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `18082d8` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)
+- `c155fec` 2026-10-27 — Page decision for courses built without an inquiry lives on the course (#239)
 - `c5210ef` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)
-- `8f95ae7` 2026-10-27 — DENSE-1: headline numbers keep their value in the accessible name; status board
-- `a34dd7e` 2026-10-27 — DENSE-1 review fixes
-- `fe585cd` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences
-- `79316a1` 2026-10-27 — queue/spec update
-- `8dec328` 2026-10-27 — queue/spec update
-- `cb1c8c2` 2026-10-27 — queue/spec update
 - `13634fe` 2026-10-26 — An emailed sign-in code confirms the owner's email (no separate verify link) (#236)
 - `23e81ff` 2026-10-26 — Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)
 - `4960a76` 2026-10-26 — Setup sheet: recap screen + email, honest cancellation wording, clearer days, uniform cards, resume where you left off (#234)
 - `4d8194b` 2026-10-26 — See a built course's page before sending the preview (#233)
 - `356403f` 2026-10-26 — Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)
+- `ee9402b` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
+- `eb9b40b` 2026-10-26 — Admin Problems: failed refunds and declined cancellation holds (R-PAY-010) (#230)
+- `c2f1007` 2026-10-26 — Bump actions/checkout from 4 to 7 (#215)
+- `355f6ca` 2026-10-26 — Bump the minor-and-patch group across 1 directory with 5 updates (#217)
 
 ---
 

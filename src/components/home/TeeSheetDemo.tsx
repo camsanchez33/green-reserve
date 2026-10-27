@@ -3,9 +3,9 @@
 // the homepage's working demo — the operator tee sheet on a laptop and the
 // golfer's booking page on a phone, both reading ONE module-level store, so a
 // time booked on the phone lands on the sheet. Every label, status word and
-// button copies the real product: the sheet is the board (SHEET-2,
-// components/dashboard/TeeSheetBoard.tsx: one row per hour, a square per time,
-// the money edge, "Next up", the legend) and its side panel (groupRow() in
+// button copies the real product: the sheet is seat rows (DENSE-4,
+// components/dashboard/TeeSheetRows.tsx: one row per time, price, a cell per
+// seat, the money edge, checked-in fill, the now line, the legend) and its side panel (groupRow() in
 // src/app/dashboard/page.tsx: the same status words and buttons),
 // the phone from courses/[slug]/CourseBookingClient.tsx and book/BookClient.tsx.
 // CLAUDE.md: change one, check the other.
@@ -83,15 +83,13 @@ const ACCENTS = [
 ];
 const TABS = ['Tee sheet', 'Analytics', 'Schedule', 'Members', 'Money', 'Messages', 'Settings'];
 
-/* ── the operator tee sheet: the board (TeeSheetBoard.tsx) and its panel ──── */
+/* ── the operator tee sheet: seat rows (TeeSheetRows.tsx) and its panel ──── */
 type Tone = 'ok' | 'warn';
-/** groupTone() in TeeSheetBoard: paid = checked in. */
+/** groupTone() in TeeSheetRows: paid = checked in. */
 const toneOf = (g: Group): Tone => g.done ? 'ok' : 'warn';
-const slotTone = (r: Row): Tone | null => !r.groups.length ? null : r.groups.every(g => g.done) ? 'ok' : 'warn';
 /** getBookingStatus() labels, as the panel shows them. The demo course takes no
  *  card (the phone says so), so an online booking is "No Card Required". */
 const statusOf = (g: Group) => g.done ? (g.src === 'online' ? 'Checked In & Paid' : 'Checked In · Paid at the register') : g.src === 'online' ? 'No Card Required' : 'Pays in store';
-const seats = (r: Row) => r.blocked ? <i className={s.dim}>Blocked</i> : CAP - booked(r) <= 0 ? <span className={s.full}>Full</span> : <span className={s.dim}>{CAP - booked(r)} open</span>;
 const hourOf = (t: string) => Number(t.slice(0, 2));
 const hourLabel = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
 
@@ -104,8 +102,7 @@ function TeeSheet() {
   const nextUp = d.today ? d.rows.find(r => !r.blocked && r.t > NOW)?.t : undefined;
   const step = (by: number) => update(x => ({ ...x, day: Math.max(0, Math.min(x.days.length - 1, x.day + by)), sel: null, step: 'pick', toast: '', open: null }));
   const toast = (msg: string) => { update(x => ({ ...x, toast: msg })); };
-  const hours = [...new Set(rows.map(r => hourOf(r.t)))];
-  const perHour = Math.max(1, ...hours.map(h => rows.filter(r => hourOf(r.t) === h).length));
+  const nowAt = d.today ? rows.findIndex(r => r.t >= NOW) : -1;
   const panel = st.open ? d.rows.find(r => r.t === st.open) ?? null : null;
   const setRow = (t: string, fn: (r: Row) => Row) => update(x => ({ ...x, days: x.days.map((dd, di) => di !== x.day ? dd : { ...dd, rows: dd.rows.map(r => r.t !== t ? r : fn(r)) }) }));
 
@@ -130,29 +127,32 @@ function TeeSheet() {
         {!d.today && <button type="button" className={s.todayLink} onClick={() => step(-st.day)}>Today</button>}
       </div>
       <div className={s.bd}>
-        {/* The key sits above the sheet, as on the real board (Cam 2026-10-19). */}
-        <div className={s.lg}><span><i className={s.dOk} />Paid</span><span><i className={s.dWarn} />Booked, not paid yet</span><span><i className={s.dBad} />Needs attention</span></div>
-        {hours.map(h => (
-          <div key={h} className={s.bdRow}>
-            <b className={s.bdHr}>{hourLabel(h)}</b>
-            <div className={s.bdGrid} style={{ '--cols': perHour } as React.CSSProperties}>
-              {rows.filter(r => hourOf(r.t) === h).map(r => {
-                const tone = slotTone(r);
-                const past = d.today && r.t < NOW && !r.blocked;
-                return (
-                  <button key={r.t} type="button" aria-label={`${fmt(r.t)}. Open`} onClick={() => update(x => ({ ...x, open: r.t, toast: '' }))}
-                    className={[s.sq, r.blocked ? s.sqBlocked : '', tone === 'ok' ? s.eOk : tone === 'warn' ? s.eWarn : '', past ? s.sqPast : '', r.t === nextUp ? s.sqNext : '', st.open === r.t ? s.sqSel : '', r.groups.some(g => g.isNew) ? s.sqNew : ''].join(' ')}>
-                    <span className={s.sqTop}><b>{fmt(r.t)}</b>{r.t === nextUp && <em>Next up</em>}</span>
-                    <span className={s.sqGs}>{r.groups.map((g, i) => (
-                      <span key={`${g.name}-${i}`} className={s.sqG}><i className={toneOf(g) === 'ok' ? s.dOk : s.dWarn} /><span>{g.name}</span><small>{g.n}</small></span>
-                    ))}</span>
-                    <span className={s.sqFoot}><span className={s.dim}>{r.blocked ? '' : `${booked(r)} of ${CAP}`}</span>{seats(r)}</span>
-                  </button>
-                );
-              })}
+        {/* The key sits above the sheet, as on the real one. */}
+        <div className={s.lg}><span><i className={s.kOk} />Paid</span><span><i className={s.kWarn} />Owes</span><span><i className={s.kIn} />Checked in</span></div>
+        {rows.map((r, i) => {
+          const past = d.today && r.t < NOW && !r.blocked;
+          const newHour = i === 0 || hourOf(rows[i - 1].t) !== hourOf(r.t);
+          return (
+            <div key={r.t}>
+              {newHour && <div className={s.rwHr}>{hourLabel(hourOf(r.t))}</div>}
+              {i === nowAt && nowAt > 0 && <div className={s.rwNow} aria-hidden="true">Now</div>}
+              <button type="button" aria-label={`${fmt(r.t)}${r.t === nextUp ? ', next up' : ''}. Open`} onClick={() => update(x => ({ ...x, open: r.t, toast: '' }))}
+                className={[s.rw, past ? s.rwPast : '', r.t === nextUp ? s.rwNext : '', st.open === r.t ? s.rwSel : ''].join(' ')}>
+                <span className={s.rwT}>{fmt(r.t).replace(/ (AM|PM)$/, '')}</span>
+                <span className={s.rwP}>{r.blocked ? '' : `$${d.rate}`}</span>
+                {r.blocked ? <span className={s.rwBlocked}>Blocked</span> : <>
+                  {r.groups.map((g, gi) => (
+                    <span key={`${g.name}-${gi}`} style={{ gridColumn: `span ${Math.min(g.n, CAP)}` }}
+                      className={[s.seat, toneOf(g) === 'ok' ? s.seatPaid : '', g.done ? s.seatIn : '', g.isNew ? s.seatNew : ''].join(' ')}>
+                      <span>{g.name}</span>{g.n > 1 && <small>+{g.n - 1}</small>}
+                    </span>
+                  ))}
+                  {Array.from({ length: Math.max(0, CAP - booked(r)) }, (_, k) => <span key={k} className={s.seatOpen} />)}
+                </>}
+              </button>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {!rows.length && <p className={s.dim}>No golfer matches “{st.find}”.</p>}
       </div>
 
