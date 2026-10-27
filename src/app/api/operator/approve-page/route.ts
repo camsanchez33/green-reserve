@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { sendCourseApprovedNotification } from '@/lib/email';
 import { latestPageDecision } from '@/lib/change-requests';
+import { recordCoursePageDecision } from '@/lib/approval-state';
 
 // Approval is advisory, not automatic — going live stays an admin action.
 export async function POST() {
@@ -30,8 +31,15 @@ export async function POST() {
   // the pipeline) has nowhere durable to record this — say so instead of
   // returning { ok: true } while quietly doing nothing, which used to make
   // the checklist step flip to done and then silently revert on reload.
+  // Cam 2026-10-27: a course built without an inquiry (Admin → Create course)
+  // records it on the course instead of failing with "no linked inquiry".
   if (!inquiry) {
-    return NextResponse.json({ error: 'This course has no linked inquiry — approval can’t be recorded. Contact GreenReserve support.' }, { status: 409 });
+    const c = await prisma.course.findUnique({ where: { id: course.id }, select: { pageDecision: true } });
+    if (c?.pageDecision === 'approved') return NextResponse.json({ ok: true });
+    await recordCoursePageDecision(course.id, 'approved');
+    after(sendCourseApprovedNotification({ courseName: course.name, contactName: course.name })
+      .catch(err => console.error('Course-approved notification email failed:', err)));
+    return NextResponse.json({ ok: true });
   }
 
   // Idempotent: a second (or sixth) click while already approved must not

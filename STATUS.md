@@ -4,7 +4,7 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 13:58 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `8f95ae7` · working tree **23 dirty file(s)**
+Generated 2026-10-27 17:36 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `dce4bb0` · working tree **17 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
@@ -18,28 +18,25 @@ Generated 2026-10-27 13:58 UTC · branch `claude/practical-lovelace-xiu4u5` · H
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (23 file(s))
+### Uncommitted working tree (17 file(s))
 
 - `UU STATUS.artifact.html`
 - `UU STATUS.json`
 - `UU STATUS.md`
 - `UU docs/CODEMAP.md`
-- `UU docs/codemap.json`
-- `M  scripts/course-layout-test.ts`
-- `M  scripts/design-guard.baseline.json`
-- `M  scripts/inquiry-reply-test.ts`
-- `M  scripts/onboarding-review-step-test.ts`
-- `A  scripts/page-review-db-test.ts`
-- `M  scripts/settings-sections-test.ts`
-- `M  src/app/admin/inquiries/[id]/page.tsx`
-- `M  src/app/api/operator/home/route.ts`
-- `A  src/app/api/operator/page-review/route.ts`
-- `M  src/app/dashboard/home/page.tsx`
-- `M  src/app/dashboard/onboarding/page.tsx`
-- `M  src/app/dashboard/page.tsx`
-- `M  src/app/dashboard/settings/page.tsx`
-- `A  src/components/dashboard/ImageUpload.tsx`
-- `A  src/components/dashboard/onboarding/PageReviewStep.tsx`
+- `M  docs/codemap.json`
+- `A  prisma/migrations/20261027050000_course_page_decision/migration.sql`
+- `M  prisma/schema.prisma`
+- `A  scripts/course-page-decision-db-test.ts`
+- `M  src/app/api/admin/courses/route.ts`
+- `M  src/app/api/admin/request-re-review/route.ts`
+- `M  src/app/api/operator/approve-page/route.ts`
+- `M  src/app/api/operator/courses/route.ts`
+- `M  src/app/api/preview/[courseId]/approve/route.ts`
+- `M  src/app/api/preview/[courseId]/route.ts`
+- `M  src/app/api/preview/send/route.ts`
+- `M  src/lib/approval-state.ts`
+- `M  src/lib/submit-change-request.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -164,6 +161,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `c5210ef` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)
 - `8f95ae7` 2026-10-27 — DENSE-1: headline numbers keep their value in the accessible name; status board
 - `a34dd7e` 2026-10-27 — DENSE-1 review fixes
 - `fe585cd` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences
@@ -175,7 +173,6 @@ Nothing awaiting review.
 - `4960a76` 2026-10-26 — Setup sheet: recap screen + email, honest cancellation wording, clearer days, uniform cards, resume where you left off (#234)
 - `4d8194b` 2026-10-26 — See a built course's page before sending the preview (#233)
 - `356403f` 2026-10-26 — Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)
-- `ee9402b` 2026-10-26 — Staff switches do what they say (R-AUTH-007) (#231)
 
 ---
 

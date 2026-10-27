@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, VIEWER_PLUS, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
-import { getApprovalState } from '@/lib/approval-state';
+import { getApprovalState, coursePageDecision } from '@/lib/approval-state';
 import { latestPageDecision } from '@/lib/change-requests';
 import { COMPLETED_BOOKING_STATUSES, computeCourseHealth } from '@/lib/course-metrics';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
@@ -164,7 +164,8 @@ export async function GET(req: NextRequest) {
   const result = courses.map(c => {
     const bookings30d = bookingMap.get(c.id)?.count ?? 0;
     const bookingsPrior30d = priorBookingMap.get(c.id) ?? 0;
-    const approvalStatus = approvalByCourseId.get(c.id) ?? 'none';
+    // A draft built without an inquiry keeps its decision on the course (lib/approval-state).
+    const approvalStatus = approvalByCourseId.get(c.id) ?? (c.active ? 'none' : coursePageDecision(c.pageDecision));
     const linked = linkedByCourseId.get(c.id);
     return {
       ...c,

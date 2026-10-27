@@ -1963,7 +1963,7 @@
     },
     {
       "path": "src/app/api/admin/courses/route.ts",
-      "lines": 246,
+      "lines": 247,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2687,7 +2687,7 @@
     },
     {
       "path": "src/app/api/admin/request-re-review/route.ts",
-      "lines": 41,
+      "lines": 48,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2706,6 +2706,7 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
+        "@/lib/approval-state",
         "@/lib/change-requests",
         "@/lib/prisma",
         "next/server"
@@ -5138,7 +5139,7 @@
     },
     {
       "path": "src/app/api/operator/approve-page/route.ts",
-      "lines": 65,
+      "lines": 73,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5155,6 +5156,7 @@
       "auth": "operator",
       "guard": "file",
       "imports": [
+        "@/lib/approval-state",
         "@/lib/change-requests",
         "@/lib/email",
         "@/lib/prisma",
@@ -5442,7 +5444,7 @@
     },
     {
       "path": "src/app/api/operator/courses/route.ts",
-      "lines": 111,
+      "lines": 114,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5469,6 +5471,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/approval-state",
         "@/lib/change-requests",
         "@/lib/course-wire",
         "@/lib/prisma",
@@ -7010,7 +7013,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/approve/route.ts",
-      "lines": 70,
+      "lines": 77,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7027,6 +7030,7 @@
       "auth": "public",
       "guard": "token",
       "imports": [
+        "@/lib/approval-state",
         "@/lib/change-requests",
         "@/lib/email",
         "@/lib/preview-token",
@@ -7064,7 +7068,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/route.ts",
-      "lines": 67,
+      "lines": 70,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7081,6 +7085,7 @@
       "auth": "public",
       "guard": "token",
       "imports": [
+        "@/lib/approval-state",
         "@/lib/change-requests",
         "@/lib/money",
         "@/lib/normalize-course",
@@ -7118,7 +7123,7 @@
     },
     {
       "path": "src/app/api/preview/send/route.ts",
-      "lines": 130,
+      "lines": 133,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13063,7 +13068,7 @@
     },
     {
       "path": "src/lib/approval-state.ts",
-      "lines": 41,
+      "lines": 61,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13072,7 +13077,15 @@
           "kind": "type"
         },
         {
+          "name": "coursePageDecision",
+          "kind": "fn"
+        },
+        {
           "name": "getApprovalState",
+          "kind": "fn"
+        },
+        {
+          "name": "recordCoursePageDecision",
           "kind": "fn"
         }
       ],
@@ -13089,8 +13102,14 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/admin/courses/route.ts",
+        "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
-        "src/app/api/preview/send/route.ts"
+        "src/app/api/operator/approve-page/route.ts",
+        "src/app/api/operator/courses/route.ts",
+        "src/app/api/preview/[courseId]/approve/route.ts",
+        "src/app/api/preview/[courseId]/route.ts",
+        "src/app/api/preview/send/route.ts",
+        "src/lib/submit-change-request.ts"
       ]
     },
     {
@@ -21416,7 +21435,7 @@
     },
     {
       "path": "src/lib/submit-change-request.ts",
-      "lines": 88,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21435,6 +21454,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/lib/approval-state",
         "@/lib/change-requests",
         "@/lib/contact",
         "@/lib/email",
@@ -23618,6 +23638,14 @@
           "type": "String"
         },
         {
+          "name": "pageDecision",
+          "type": "String?"
+        },
+        {
+          "name": "pageDecidedAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "confirmationNote",
           "type": "String?"
         },
@@ -23813,6 +23841,7 @@
         "src/app/api/operator/upload/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/agreement-sign.ts",
+        "src/lib/approval-state.ts",
         "src/lib/card-reader.ts",
         "src/lib/lifecycle.ts",
         "src/lib/sales-tax.ts"
@@ -23831,6 +23860,7 @@
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/admin/messages/route.ts",
+        "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
@@ -23892,6 +23922,7 @@
         "src/lib/agreement-sign.ts",
         "src/lib/analytics.ts",
         "src/lib/announcement-audience.ts",
+        "src/lib/approval-state.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/card-reader.ts",

@@ -20,7 +20,12 @@ export interface ApprovalState {
 // through this — same brain either way, just avoiding a redundant query.
 export async function getApprovalState(courseId: string): Promise<ApprovalState> {
   const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
-  if (!inquiry) return { status: 'none', approvedAt: null, sendPreviewGated: false, inquiryId: null };
+  if (!inquiry) {
+    // Built with Admin → Create course: the decision lives on the course (Cam 2026-10-27).
+    const c = await prisma.course.findUnique({ where: { id: courseId }, select: { pageDecision: true, pageDecidedAt: true } });
+    const status = coursePageDecision(c?.pageDecision);
+    return { status, approvedAt: status === 'approved' ? c?.pageDecidedAt ?? null : null, sendPreviewGated: status === 'approved', inquiryId: null };
+  }
 
   const events = await prisma.inquiryStatusEvent.findMany({
     where: { inquiryId: inquiry.id },
@@ -37,4 +42,19 @@ export async function getApprovalState(courseId: string): Promise<ApprovalState>
     sendPreviewGated: isSendPreviewGated(events),
     inquiryId: inquiry.id,
   };
+}
+
+/** A course column value as a decision; anything else is 'none'. */
+export function coursePageDecision(v: string | null | undefined): ApprovalState['status'] {
+  return v === 'approved' || v === 'changes_requested' ? v : 'none';
+}
+
+/**
+ * Records the owner's decision for a course with NO inquiry (Cam 2026-10-27:
+ * "do the column and fix it" — approval used to fail with "no linked inquiry"
+ * for courses built with Admin → Create course). Null reopens the review.
+ * Pipeline courses keep recording it as an inquiry event; never call this for one.
+ */
+export async function recordCoursePageDecision(courseId: string, decision: 'approved' | 'changes_requested' | null) {
+  await prisma.course.update({ where: { id: courseId }, data: { pageDecision: decision, pageDecidedAt: decision ? new Date() : null } });
 }

@@ -1,30 +1,27 @@
 {
-  "generatedAt": "2026-10-27T13:58:38.976Z",
+  "generatedAt": "2026-10-27T17:36:35.543Z",
   "repo": {
-    "head": "8f95ae7",
+    "head": "dce4bb0",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 23,
+    "dirtyCount": 17,
     "dirty": [
       "UU STATUS.artifact.html",
       "UU STATUS.json",
       "UU STATUS.md",
       "UU docs/CODEMAP.md",
-      "UU docs/codemap.json",
-      "M  scripts/course-layout-test.ts",
-      "M  scripts/design-guard.baseline.json",
-      "M  scripts/inquiry-reply-test.ts",
-      "M  scripts/onboarding-review-step-test.ts",
-      "A  scripts/page-review-db-test.ts",
-      "M  scripts/settings-sections-test.ts",
-      "M  src/app/admin/inquiries/[id]/page.tsx",
-      "M  src/app/api/operator/home/route.ts",
-      "A  src/app/api/operator/page-review/route.ts",
-      "M  src/app/dashboard/home/page.tsx",
-      "M  src/app/dashboard/onboarding/page.tsx",
-      "M  src/app/dashboard/page.tsx",
-      "M  src/app/dashboard/settings/page.tsx",
-      "A  src/components/dashboard/ImageUpload.tsx",
-      "A  src/components/dashboard/onboarding/PageReviewStep.tsx"
+      "M  docs/codemap.json",
+      "A  prisma/migrations/20261027050000_course_page_decision/migration.sql",
+      "M  prisma/schema.prisma",
+      "A  scripts/course-page-decision-db-test.ts",
+      "M  src/app/api/admin/courses/route.ts",
+      "M  src/app/api/admin/request-re-review/route.ts",
+      "M  src/app/api/operator/approve-page/route.ts",
+      "M  src/app/api/operator/courses/route.ts",
+      "M  src/app/api/preview/[courseId]/approve/route.ts",
+      "M  src/app/api/preview/[courseId]/route.ts",
+      "M  src/app/api/preview/send/route.ts",
+      "M  src/lib/approval-state.ts",
+      "M  src/lib/submit-change-request.ts"
     ],
     "looksLikeRunInProgress": true
   },
@@ -446,6 +443,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c5210ef",
+      "date": "2026-10-27",
+      "subject": "Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)"
+    },
+    {
       "h": "8f95ae7",
       "date": "2026-10-27",
       "subject": "DENSE-1: headline numbers keep their value in the accessible name; status board"
@@ -499,11 +501,6 @@
       "h": "356403f",
       "date": "2026-10-26",
       "subject": "Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move (#232)"
-    },
-    {
-      "h": "ee9402b",
-      "date": "2026-10-26",
-      "subject": "Staff switches do what they say (R-AUTH-007) (#231)"
     }
   ]
 }

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { courseToWire } from '@/lib/course-wire';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { normalizeHttpUrl, validateSettingsPatch } from '@/lib/settings-validation';
+import { coursePageDecision } from '@/lib/approval-state';
 import { CHANGES_REQUESTED_PREFIX, LEGACY_CHANGES_REQUESTED_MARKER, isChangesRequestedEvent } from '@/lib/change-requests';
 
 // Never cache — the dashboard's live/draft banner reads this and must
@@ -34,6 +35,8 @@ export async function GET() {
       });
       if (latest?.actorName === 'Course approved their page') pageApprovalStatus = 'approved';
       else if (isChangesRequestedEvent(latest?.actorName)) pageApprovalStatus = 'changes_requested';
+    } else {
+      pageApprovalStatus = coursePageDecision(course.pageDecision); // built without an inquiry
     }
   }
 

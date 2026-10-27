@@ -134,6 +134,11 @@ model Course {
   establishedYear            Int?
   logoUrl                    String                @default("")
   heroImageUrl               String                @default("")
+  /// Cam 2026-10-27: the owner's decision on their booking page for a course with NO
+  /// inquiry (built with Admin -> Create course). 'approved' | 'changes_requested' | null.
+  /// A pipeline course records it as an inquiry event instead (lib/approval-state.ts).
+  pageDecision               String?
+  pageDecidedAt              DateTime?
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
   confirmationNote           String?
