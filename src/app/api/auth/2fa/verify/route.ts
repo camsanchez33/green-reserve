@@ -4,6 +4,7 @@ import { signToken, verifyToken } from '@/lib/auth';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { securityEvent } from '@/lib/security-events';
+import { readStoredCode } from '@/lib/two-factor';
 
 const MAX_2FA_ATTEMPTS = 5;
 
@@ -37,7 +38,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many incorrect attempts. Please sign in again to get a new code.' }, { status: 400 });
   }
 
-  const valid = await bcrypt.compare(String(code), operator.twoFactorCode);
+  const stored = readStoredCode(operator.twoFactorCode);
+  const valid = await bcrypt.compare(String(code), stored.hash);
   if (!valid) {
     const attempts = operator.twoFactorAttempts + 1;
     const clearCode = attempts >= MAX_2FA_ATTEMPTS;
@@ -53,19 +55,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please sign in again to get a new code.' : 'Invalid or expired code.' }, { status: 400 });
   }
 
+  const confirmsEmail = stored.channel === 'email' && !operator.emailVerified;
   // MP-3: stamp the login here, not at the password step — an operator who
   // never completes 2FA has not logged in. This is the column A-07's
   // "operator last login" health signal needed; it rendered "—" for every
   // course because CourseOperator had no such field until now.
   await prisma.courseOperator.update({
     where: { id: operator.id },
-    data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() },
+    data: {
+      twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date(),
+      // A right code that went by email proves the inbox, so no "confirm your email" link after it.
+      // A texted code does not — that owner still confirms by link.
+      ...(confirmsEmail ? { emailVerified: true, verificationToken: null, onboardingStep: Math.max(operator.onboardingStep, 1) } : {}),
+    },
   });
 
-  await securityEvent(req, { kind: 'signin_ok', surface: 'course', email: operator.email, accountId: operator.id, detail: 'owner' });
+  await securityEvent(req, { kind: 'signin_ok', surface: 'course', email: operator.email, accountId: operator.id, detail: confirmsEmail ? 'owner, email confirmed by sign-in code' : 'owner' });
   const token = await signToken({ operatorId: operator.id, email: operator.email, sv: operator.sessionVersion });
   let redirect = '/dashboard';
-  if (!operator.emailVerified) redirect = '/dashboard/verify';
+  if (!operator.emailVerified && !confirmsEmail) redirect = '/dashboard/verify';
   else if (operator.onboardingStep < 3) redirect = '/dashboard/onboarding';
 
   const res = NextResponse.json({ success: true, redirect });
