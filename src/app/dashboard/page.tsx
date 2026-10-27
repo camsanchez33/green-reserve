@@ -23,6 +23,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import MoveGroupModal from '@/components/dashboard/MoveGroupModal';
 import { cancelConfirmText, cancelResultText, type CancelResult } from '@/lib/cancel-confirm';
 import TeeSheetRows, { type BoardGroup } from '@/components/dashboard/TeeSheetRows';
+import { lateForAdding, LATE_ADD_MINUTES } from '@/lib/late-add';
 import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { timesTooClose } from '@/lib/tee-time-fit';
@@ -988,6 +989,7 @@ function DashboardPageInner() {
                   <TeeSheetRows
                     slots={visibleTimes}
                     isPast={t => selectedDate < today() || (selectedDate === today() && t.time <= nowHM)}
+                    isGone={selectedDate === today() && !q ? (t => lateForAdding(t.time, nowHM)) : undefined}
                     nextUpId={nextUpId}
                     selectedId={panelId}
                     canMove={access.can('sheet.move')}
@@ -1055,8 +1057,12 @@ function DashboardPageInner() {
               </div>
 
               <div className="px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-line-soft flex flex-wrap items-center gap-2">
-                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (
+                {/* Cam 2026-10-27: nobody new joins a time LATE_ADD_MINUTES after it went off (claimTeeTime refuses it too). */}
+                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (selectedDate > today() || (selectedDate === today() && !lateForAdding(panelSlot.time, nowHM))) && (
                   <button onClick={() => setWalkInSlot(panelSlot)} className="px-3.5 min-h-[36px] rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium">Add a walk-in or phone booking</button>
+                )}
+                {panelSlot.status !== 'blocked' && open > 0 && access.can('sheet.walkin') && (selectedDate < today() || (selectedDate === today() && lateForAdding(panelSlot.time, nowHM))) && (
+                  <span className="text-[12.5px] text-ink-muted">Closed to new players {LATE_ADD_MINUTES} min after tee time</span>
                 )}
                 {access.can('sheet.block') && !panelSlot.event && (
                   <button onClick={() => toggleBlock(panelSlot)} disabled={slotBusy === panelSlot.id} className="px-3.5 min-h-[36px] rounded-md border border-line text-[13px] font-medium text-ink hover:bg-paper disabled:opacity-50">

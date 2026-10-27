@@ -268,6 +268,7 @@ export async function POST(req: NextRequest) {
     if (err instanceof TeeTimeClaimError) {
       if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
       if (err.code === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
+      if (err.code === 'PAST')      return NextResponse.json({ error: 'This tee time has already gone off.' }, { status: 409 });
       if (err.code === 'FULL' || err.code === 'CONFLICT') {
         return NextResponse.json({ error: 'That time just filled up. Please refresh and try again.' }, { status: 409 });
       }

@@ -28,6 +28,13 @@ check('no key or helper sentence under the rows', !rows.includes('Tap a time to'
 check('the calendar opens left-aligned, inside the screen', src('src/components/ui/MonthPicker.tsx').includes('absolute left-0 top-full') && src('src/components/ui/MonthPicker.tsx').includes('max-w-[calc(100vw-32px)]'));
 check('an agreement announcement clears once nothing is left to sign', src('src/app/api/operator/announcements/route.ts').includes('/agreement/i.test(newest.title)') && src('src/app/api/operator/announcements/route.ts').includes('st.total > 0 && st.documents.every(d => !d.needsSigning)'));
 check('the announcement banner uses the attention style', src('src/components/AnnouncementBanner.tsx').includes('border-l-[3px] border-l-warn'));
+// Cam 2026-10-27: a time LATE_ADD_MINUTES (20) after it went off drops to "Past tee times" at the bottom, and nobody new joins it.
+const late = src('src/lib/late-add.ts'), claim = src('src/lib/claim-tee-time.ts');
+check('the late-add rule is 20 minutes, in one place', late.includes('LATE_ADD_MINUTES = 20') && late.includes('m(time) + LATE_ADD_MINUTES < m(clock)'));
+check('every booking path refuses a time 20 minutes gone (claimTeeTime)', claim.includes("throw new TeeTimeClaimError('PAST')") && claim.includes('LATE_ADD_MINUTES * 60_000 < Date.now()'));
+check('the three callers map PAST to a message', ['src/app/api/bookings/route.ts', 'src/lib/counter-pay.ts', 'src/app/api/admin/tee-sheet/route.ts'].every(f => src(f).includes("'PAST'")));
+check('today\'s gone times move to a collapsed Past tee times section (not while searching)', page.includes('isGone={selectedDate === today() && !q ? (t => lateForAdding(t.time, nowHM))') && rows.includes('Past tee times · {gone.length}') && rows.includes('useState(false)') && rows.includes('aria-expanded={showGone}'));
+check('the panel offers no walk-in on a gone time', page.includes("selectedDate === today() && !lateForAdding(panelSlot.time, nowHM)))") && page.includes('Closed to new players {LATE_ADD_MINUTES} min after tee time'));
 const demo = src('src/components/home/TeeSheetDemo.tsx');
 check('the homepage demo mirrors: players and checked in, no rate, key above', demo.includes('Players <b>') && demo.includes('Checked in <b>') && !demo.includes('{HOLES} holes'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);

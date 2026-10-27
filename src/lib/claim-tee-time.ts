@@ -2,9 +2,14 @@ import { prisma } from './prisma';
 import type { Prisma } from '@prisma/client';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 
+// Cam 2026-10-27: nobody new joins a tee time more than LATE_ADD_MINUTES after it went
+// off (late groups already booked can still be checked in; they just can't be added to).
+import { LATE_ADD_MINUTES } from './late-add';
+export { LATE_ADD_MINUTES, LATE_ADD_MESSAGE } from './late-add';
+
 export class TeeTimeClaimError extends Error {
   constructor(
-    public readonly code: 'NOT_FOUND' | 'BLOCKED' | 'FULL' | 'SPOTS' | 'CONFLICT',
+    public readonly code: 'NOT_FOUND' | 'BLOCKED' | 'FULL' | 'SPOTS' | 'CONFLICT' | 'PAST',
     public readonly spotsLeft?: number
   ) {
     super(code);
@@ -40,6 +45,8 @@ export async function claimTeeTime(
 
         if (!teeTime) throw new TeeTimeClaimError('NOT_FOUND');
         if (teeTime.status === 'blocked') throw new TeeTimeClaimError('BLOCKED');
+        const teeAt = teeTimeInstant(teeTime.course.timezone, teeTime.date, teeTime.time);
+        if (teeAt && teeAt.getTime() + LATE_ADD_MINUTES * 60_000 < Date.now()) throw new TeeTimeClaimError('PAST');
 
         const spotsLeft = teeTime.playersAvailable - teeTime.playersBooked;
         // Belt and braces (security review): a non-positive count must never
