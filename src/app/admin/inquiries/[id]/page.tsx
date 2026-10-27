@@ -556,20 +556,22 @@ function InquiryDetailInner() {
 
   // Cam 2026-10-26: see the built page before the course does (view-only look link).
   const [lookError, setLookError] = useState('');
+  const [looking, setLooking] = useState(false);
   async function lookAtPage() {
-    if (!inq?.builtCourseId) return;
-    setLookError('');
+    if (!inq?.builtCourseId || looking) return;
+    setLookError(''); setLooking(true);
     const tab = window.open('', '_blank'); // opened now, inside the click, so a pop-up blocker allows it
     try {
       const r = await fetch('/api/admin/course-look?courseId=' + encodeURIComponent(inq.builtCourseId));
       const d = await r.json().catch(() => ({} as Record<string, unknown>));
-      if (r.ok && typeof d.url === 'string') { if (tab) tab.location.href = d.url; else window.location.href = d.url; return; }
+      if (r.ok && typeof d.url === 'string') { if (tab) tab.location.href = d.url; else window.location.href = d.url; setLooking(false); return; }
       tab?.close();
       setLookError(String(d.error || 'Couldn’t open the page (' + r.status + '). Try again.'));
     } catch {
       tab?.close();
       setLookError('Couldn’t reach the server — check your connection and try again.');
     }
+    setLooking(false);
   }
 
   async function sendPreview() {
@@ -933,9 +935,9 @@ function InquiryDetailInner() {
                 </button>
               )}
               {inq.builtCourseId && inq.status === 'building' && (
-                <button onClick={lookAtPage}
-                  className="flex items-center gap-1.5 text-xs font-medium text-ink hover:text-pine bg-white border border-line hover:border-pine/30 px-3 py-2 rounded-md transition-colors">
-                  See the page <ArrowUpRight className="w-3.5 h-3.5" aria-hidden />
+                <button onClick={lookAtPage} disabled={looking}
+                  className="flex items-center gap-1.5 text-xs font-medium text-ink hover:text-pine bg-white border border-line hover:border-pine/30 px-3 py-2 rounded-md transition-colors disabled:opacity-50">
+                  {looking ? 'Opening…' : 'See the page'} <ArrowUpRight className="w-3.5 h-3.5" aria-hidden />
                 </button>
               )}
               {inq.status === 'live' && inq.builtCourseId && (
