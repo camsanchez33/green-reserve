@@ -25,6 +25,7 @@ GreenReserve is an OpenTable-style golf tee sheet platform. Golf courses list fo
 confirmed → (check-in) → completed
 confirmed → (cancel before window) → cancelled (no charge)
 confirmed → (cancel after window) → cancelled (fee charged, non-refundable)
+confirmed → (tee time has gone off) → NO cancel (Cam 2026-10-27): check in, or no-show (charged at midnight); only the course calling it off or staff with sheet.waive_fee removing a booking made by mistake (no fee) — performCancellation() refuses the rest
 confirmed → (cutoff passes, hourly cron) → hold fee charged, still confirmed; refunded at check-in   [timing hold_at_cutoff only]
 confirmed → (late cancel, timing late_cancel / late_cancel_or_no_show) → cancelled, late fee + GreenReserve fee charged then
 confirmed → (no-show: staff, or auto N min after tee time) → noShowAt set, no-show fee + GreenReserve fee charged; "still coming" refunds both

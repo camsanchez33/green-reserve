@@ -81,6 +81,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     status: booking.status,
     paymentStatus: booking.paymentStatus,
     windowOpen,
+    // Cam 2026-10-27: after the tee time a booking can't be cancelled (performCancellation refuses).
+    teedOff: Date.now() >= teeMs,
     // R-GOLF-008: what the manage page needs to word a cancel truthfully.
     lateFeeTiming: booking.lateFeeTimingAtBooking ?? null,
     hasCard: !!booking.stripeCustomerId && !!booking.stripePaymentMethodId,

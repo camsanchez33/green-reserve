@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 19:47 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `e29c686` · working tree **10 dirty file(s)**
+Generated 2026-10-27 20:02 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `a7c5734` · working tree **10 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 17 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 19 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e8e2a2e` | 2026-10-27 | DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243) |
+| `068e626` | 2026-10-27 | Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column |
 | `e29c686` | 2026-10-27 | Money → Cancellations says why no fee was kept |
 | `2750cbc` | 2026-10-27 | Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played |
 | `89ad92b` | 2026-10-27 | Regenerate the code map and status board |
@@ -34,16 +36,16 @@ Generated 2026-10-27 19:47 UTC · branch `claude/practical-lovelace-xiu4u5` · H
 
 ### Uncommitted working tree (10 file(s))
 
+- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/cancel-fee-reason-test.ts`
+- `M scripts/cancel-after-noshow-test.ts`
+- `M scripts/noshow-eod-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/components/dashboard/money/CancellationsPanel.tsx`
-- `M src/components/dashboard/money/types.ts`
+- `M src/app/api/manage/[bookingId]/route.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/manage/[bookingId]/page.tsx`
 - `M src/lib/cancel-booking.ts`
-- `M src/lib/cancel-fee-reason.ts`
-- `M src/lib/no-fee-labels.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -168,6 +170,8 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `e8e2a2e` 2026-10-27 — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)
+- `068e626` 2026-10-27 — Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column
 - `e29c686` 2026-10-27 — Money → Cancellations says why no fee was kept
 - `2750cbc` 2026-10-27 — Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played
 - `89ad92b` 2026-10-27 — Regenerate the code map and status board
@@ -178,8 +182,6 @@ Nothing awaiting review.
 - `1a83267` 2026-10-27 — DENSE-2: payments footer wording
 - `71e527c` 2026-10-27 — DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load
 - `3c692b1` 2026-10-27 — DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer
-- `531516a` 2026-10-27 — DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)
-- `6edc9aa` 2026-10-27 — DENSE-4b review notes: the strip is a labelled group; no money request before the day loads
 
 ---
 

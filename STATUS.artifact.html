@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-27 19:47 UTC</span><span>claude/practical-lovelace-xiu4u5 @ e29c686</span>
+    <span>2026-10-27 20:02 UTC</span><span>claude/practical-lovelace-xiu4u5 @ a7c5734</span>
     <span>10 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">17 runs have shipped that the queue doesn't know about</div>
+<div class="lede">19 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">e8e2a2e</span><span>DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)</span></li>
+<li><span class="h">068e626</span><span>Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column</span></li>
 <li><span class="h">e29c686</span><span>Money → Cancellations says why no fee was kept</span></li>
 <li><span class="h">2750cbc</span><span>Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played</span></li>
 <li><span class="h">89ad92b</span><span>Regenerate the code map and status board</span></li>
@@ -154,7 +156,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/cancel-fee-reason-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/components/dashboard/money/CancellationsPanel.tsx</code></li><li><code>M src/components/dashboard/money/types.ts</code></li><li><code>M src/lib/cancel-booking.ts</code></li><li><code>M src/lib/cancel-fee-reason.ts</code></li><li><code>M src/lib/no-fee-labels.ts</code></li></ul>
+<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/cancel-after-noshow-test.ts</code></li><li><code>M scripts/noshow-eod-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/manage/[bookingId]/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/manage/[bookingId]/page.tsx</code></li><li><code>M src/lib/cancel-booking.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -236,6 +238,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">e8e2a2e</td><td class="num">2026-10-27</td><td>DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)</td></tr>
+<tr><td class="num">068e626</td><td class="num">2026-10-27</td><td>Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column</td></tr>
 <tr><td class="num">e29c686</td><td class="num">2026-10-27</td><td>Money → Cancellations says why no fee was kept</td></tr>
 <tr><td class="num">2750cbc</td><td class="num">2026-10-27</td><td>Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played</td></tr>
 <tr><td class="num">89ad92b</td><td class="num">2026-10-27</td><td>Regenerate the code map and status board</td></tr>
@@ -246,8 +250,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">1a83267</td><td class="num">2026-10-27</td><td>DENSE-2: payments footer wording</td></tr>
 <tr><td class="num">71e527c</td><td class="num">2026-10-27</td><td>DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load</td></tr>
 <tr><td class="num">3c692b1</td><td class="num">2026-10-27</td><td>DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer</td></tr>
-<tr><td class="num">531516a</td><td class="num">2026-10-27</td><td>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)</td></tr>
-<tr><td class="num">6edc9aa</td><td class="num">2026-10-27</td><td>DENSE-4b review notes: the strip is a labelled group; no money request before the day loads</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

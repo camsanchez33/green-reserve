@@ -43,6 +43,17 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   if (!booking) return { error: 'Booking not found', status: 404 } as const;
   if (booking.status === 'cancelled') return { error: 'Already cancelled', status: 409 } as const;
   if (booking.status === 'completed') return { error: 'This round was already checked in and paid for — nothing to cancel', status: 409 } as const;
+  // Cam 2026-10-27: "if its after the time then they cant cancel … their no show fee if they
+  // have one and then all the no shows get charged at midnight". Once the tee time has gone
+  // off the group checks in or is a no-show. Only the course calling it off (weather,
+  // closure) or staff removing a booking made by mistake (waiveFee, sheet.waive_fee) takes
+  // it off the sheet after that — neither keeps a fee.
+  const teeStart = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
+  if (teeStart && teeStart.getTime() <= Date.now() && !waiveFee && !opts.courseCalledOff) {
+    return { error: actor.type === 'golfer'
+      ? 'This tee time has already gone off, so it can’t be cancelled. Contact the course.'
+      : 'This tee time has already gone off — mark the group a no-show instead.', status: 409 } as const;
+  }
 
   // MP-1b B1 — a round can now be PAID while still 'confirmed'.
   // collectPayment() (MP-1 fix-now #5) charges without checking anyone in, so a

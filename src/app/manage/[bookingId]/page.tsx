@@ -35,6 +35,7 @@ type BookingInfo = {
   status: string;
   paymentStatus: string;
   windowOpen: boolean;
+  teedOff?: boolean;
   lateFeeTiming?: string | null;
   hasCard?: boolean;
   noShowKept?: boolean;
@@ -526,13 +527,15 @@ function ManagePageInner() {
                   onClick={() => { setSelectedPlayers(info.players); setView('change-players'); }}
                 />
               )}
-              <ActionCard
-                tone="bad"
-                icon={<XCircle size={16} />}
-                title="Cancel"
-                subtitle={cancelSubtitle}
-                onClick={() => setView('cancel-confirm')}
-              />
+              {!info.teedOff && (
+                <ActionCard
+                  tone="bad"
+                  icon={<XCircle size={16} />}
+                  title="Cancel"
+                  subtitle={cancelSubtitle}
+                  onClick={() => setView('cancel-confirm')}
+                />
+              )}
             </div>
           )}
 

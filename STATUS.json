@@ -1,26 +1,40 @@
 {
-  "generatedAt": "2026-10-27T19:47:05.498Z",
+  "generatedAt": "2026-10-27T20:02:29.857Z",
   "repo": {
-    "head": "e29c686",
+    "head": "a7c5734",
     "branch": "claude/practical-lovelace-xiu4u5",
     "dirtyCount": 10,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/cancel-fee-reason-test.ts",
+      " M scripts/cancel-after-noshow-test.ts",
+      " M scripts/noshow-eod-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/components/dashboard/money/CancellationsPanel.tsx",
-      " M src/components/dashboard/money/types.ts",
-      " M src/lib/cancel-booking.ts",
-      " M src/lib/cancel-fee-reason.ts",
-      " M src/lib/no-fee-labels.ts"
+      " M src/app/api/manage/[bookingId]/route.ts",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/manage/[bookingId]/page.tsx",
+      " M src/lib/cancel-booking.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "e8e2a2e",
+        "date": "2026-10-27T15:54:22-04:00",
+        "subject": "DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "068e626",
+        "date": "2026-10-27T19:47:06+00:00",
+        "subject": "Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "e29c686",
         "date": "2026-10-27T19:40:54+00:00",
@@ -534,6 +548,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e8e2a2e",
+      "date": "2026-10-27",
+      "subject": "DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)"
+    },
+    {
+      "h": "068e626",
+      "date": "2026-10-27",
+      "subject": "Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column"
+    },
+    {
       "h": "e29c686",
       "date": "2026-10-27",
       "subject": "Money → Cancellations says why no fee was kept"
@@ -582,16 +606,6 @@
       "h": "3c692b1",
       "date": "2026-10-27",
       "subject": "DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer"
-    },
-    {
-      "h": "531516a",
-      "date": "2026-10-27",
-      "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)"
-    },
-    {
-      "h": "6edc9aa",
-      "date": "2026-10-27",
-      "subject": "DENSE-4b review notes: the strip is a labelled group; no money request before the day loads"
     }
   ]
 }

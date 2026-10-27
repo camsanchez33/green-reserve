@@ -4723,7 +4723,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 91,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8141,7 +8141,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1554,
+      "lines": 1560,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8676,7 +8676,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 573,
+      "lines": 576,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14245,7 +14245,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 330,
+      "lines": 341,
       "purpose": "",
       "brain": [],
       "exports": [
