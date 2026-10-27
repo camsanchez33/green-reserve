@@ -51,7 +51,7 @@ export function prose(src, file = 'x.tsx') {
     for (let p = node.parent; p; p = p.parent) {
       if (ts.isImportDeclaration(p) || ts.isExportDeclaration(p)) return true;
       if (ts.isJsxAttribute(p)) return NOT_PROSE_ATTR.test(p.name.getText(sf));
-      if (ts.isCallExpression(p) && /^(fetch|dfetch|require|get|set|has|includes|startsWith|endsWith|split|replace|join|getItem|setItem|push|querySelector|addEventListener|useSearchParams|URLSearchParams|toLocaleDateString|toLocaleString|localeCompare)$/.test(p.expression.getText(sf).split('.').pop())) return true;
+      if (ts.isCallExpression(p) && /^(fetch|dfetch|require|get|set|has|includes|startsWith|endsWith|split|replace|join|getItem|setItem|querySelector|addEventListener|useSearchParams|URLSearchParams|toLocaleDateString|toLocaleString|localeCompare)$/.test(p.expression.getText(sf).split('.').pop())) return true;
       if (ts.isElementAccessExpression(p) || ts.isPropertyAssignment(p) && p.name === node) return true;
       // An assistant question (Ask q=… / ask: …) is sent to the assistant, never shown.
       if (ts.isPropertyAssignment(p) && NOT_PROSE_ATTR.test(p.name.getText(sf))) return true;

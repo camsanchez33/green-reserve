@@ -40,5 +40,9 @@ const terms = readFileSync('src/lib/analytics-terms.ts', 'utf8');
 check('tile wording matches the numbers', terms.includes('of bookings whose tee time has passed') && terms.includes('counting past visits'));
 check('sign-in is a full page load, so no cached course survives', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("window.location.assign(data.redirect || '/dashboard')"));
 check('“kept from before” says booked, not played', terms.includes('from the period before who booked with you again') && page.includes('term="keptFromBefore"'));
+// DENSE-1 review: the dashed "period before" only in day mode (weekly buckets don't line up),
+// and the no-show-fee action only for the owner (the cancellation policy is owner-only).
+check('the period before is compared day by day only', page.includes("d.revenue.bucket === 'day' ? (d.compare?.series ?? []) : []"));
+check('no-show fee action is the owner’s only', page.includes("go: isOwner ? { label: 'No-show fee'") && page.includes('access.loaded && !access.isStaff'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

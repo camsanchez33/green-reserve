@@ -59,6 +59,7 @@ function Term({ k, children, className = '' }: { k: TermKey; children: React.Rea
   return (
     <span className="relative inline-block group">
       <button type="button" aria-describedby={id} onClick={() => setOpen(o => !o)} onBlur={() => setOpen(false)}
+        onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); (e.currentTarget as HTMLElement).blur(); } }}
         className={'text-left underline decoration-dotted decoration-line-strong underline-offset-4 hover:decoration-ink-muted ' + className}>{children}</button>
       <span role="tooltip" id={id}
         className={(open ? 'block ' : 'hidden ') + 'group-hover:block group-focus-within:block absolute left-0 top-full mt-1.5 z-20 w-64 rounded-md bg-ink text-white text-[12.5px] font-normal leading-snug px-3 py-2 shadow-card'}>{TERMS[k]}</span>
@@ -70,7 +71,7 @@ function Term({ k, children, className = '' }: { k: TermKey; children: React.Rea
 function changeOf(now: number | null | undefined, prev: number | null | undefined, unit: 'pct' | 'pts' | 'usd' | 'num'): { n: number; up: boolean; text: string } | null {
   if (now == null || prev == null) return null;
   const diff = now - prev;
-  if (unit === 'pct' && prev === 0) return null;
+  if (unit === 'pct' && prev === 0) return now === 0 ? { n: 0, up: false, text: 'same' } : { n: 1, up: now > 0, text: 'from 0' };
   const n = unit === 'pct' ? Math.abs(Math.round((diff / prev) * 100)) : unit === 'num' ? Math.abs(Math.round(diff * 10) / 10) : Math.abs(Math.round(diff));
   if (n === 0) return { n: 0, up: false, text: 'same' };
   const text = unit === 'pts' ? `${n} pt${n === 1 ? '' : 's'}` : unit === 'usd' ? usd2(n) : unit === 'num' ? String(n) : `${n}%`;
@@ -173,7 +174,7 @@ function summary(d: Data): string {
 type Note = { tone: 'ok' | 'warn' | 'bad' | 'neutral'; text: string; go?: { label: string; href?: string; tab?: Tab }; ask: string };
 
 /** "What to look at": one line of numbers this page already shows, and the button that acts on it. */
-function insights(d: Data, can: (k: PermissionKey) => boolean): Note[] {
+function insights(d: Data, can: (k: PermissionKey) => boolean, isOwner: boolean): Note[] {
   const out: Note[] = [];
   if (d.behavior.bookings === 0 && d.revenue.collectedCents === 0) return [];
   const qd = quietestDay(d); const bd = busiestDay(d);
@@ -188,7 +189,8 @@ function insights(d: Data, can: (k: PermissionKey) => boolean): Note[] {
     out.push({
       tone: 'bad',
       text: `${plural(d.noShows.count, 'no-show')} · ${pctS(d.noShows.ratePct)} of bookings${repeat ? ` · more than once: ${repeat}` : ''}`,
-      go: can('settings.edit') ? { label: 'No-show fee', href: '/dashboard/settings?section=Prices+%26+fees' } : undefined,
+      // The cancellation policy is the owner's alone (settings route OWNER_ONLY_FIELDS).
+      go: isOwner ? { label: 'No-show fee', href: '/dashboard/settings?section=Prices+%26+fees' } : undefined,
       ask: 'Who didn’t show up in these dates, and would a no-show fee help?',
     });
   }
@@ -294,7 +296,9 @@ function Headline({ d, metric, setMetric }: { d: Data; metric: Metric; setMetric
     perRound: { value: usd2(d.revenue.perRoundCents), delta: <Delta now={d.headline.perRoundCents} prev={prev?.perRoundCents} unit="usd" /> },
   };
   const cur = d.revenue.series;
-  const before = d.compare?.series ?? [];
+  // Weekly buckets are calendar weeks, and the period before starts on a different
+  // weekday, so its partial weeks fall at the other end: compare day by day only.
+  const before = d.revenue.bucket === 'day' ? (d.compare?.series ?? []) : [];
   const pts = cur.map(r => pointOf(r, metric));
   const prevPts = before.map(r => pointOf(r, metric));
   const unpaid = metric === 'revenue' ? cur.map(r => Math.max(0, r.expectedCents - r.collectedCents)) : cur.map(() => 0);
@@ -311,12 +315,13 @@ function Headline({ d, metric, setMetric }: { d: Data; metric: Metric; setMetric
     <Card className="overflow-hidden">
       <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-line-soft" role="tablist" aria-label="Plot">
         {METRICS.map((x, i) => (
-          <div key={x.key} role="tab" aria-selected={metric === x.key} tabIndex={0}
-            onClick={() => setMetric(x.key)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMetric(x.key); } }}
-            className={'min-w-0 px-5 py-4 cursor-pointer text-left ' + (i ? 'border-l border-line-soft ' : '') + (metric === x.key ? 'bg-paper/70 shadow-[inset_0_-2px_0_var(--color-pine)]' : 'hover:bg-paper/40')}>
+          <div key={x.key} className={'min-w-0 px-5 py-4 ' + (i ? 'border-l border-line-soft ' : '') + (metric === x.key ? 'bg-paper/70 shadow-[inset_0_-2px_0_var(--color-pine)]' : 'hover:bg-paper/40')}>
             <div className="text-[13.5px] font-semibold text-ink"><Term k={x.term}>{x.label}</Term></div>
-            <div className="mt-1.5 text-[30px] leading-none font-semibold text-ink tabular-nums">{values[x.key].value}</div>
-            <div className="mt-2 text-[12.5px] tabular-nums">{values[x.key].delta}</div>
+            {/* The number is the control: picking it plots it below. */}
+            <button type="button" role="tab" aria-selected={metric === x.key} aria-label={`Plot ${x.label.toLowerCase()}`} onClick={() => setMetric(x.key)} className="block w-full text-left">
+              <span className="block mt-1.5 text-[30px] leading-none font-semibold text-ink tabular-nums">{values[x.key].value}</span>
+              <span className="block mt-2 text-[12.5px] tabular-nums">{values[x.key].delta}</span>
+            </button>
           </div>
         ))}
       </div>
@@ -324,7 +329,7 @@ function Headline({ d, metric, setMetric }: { d: Data; metric: Metric; setMetric
         <div className="flex flex-wrap items-center justify-between gap-3 mb-2 text-[12.5px] text-ink-soft">
           <span className="flex flex-wrap gap-4">
             <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm bg-pine inline-block" />{m.label}</span>
-            {metric === 'revenue' && <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm bg-line-strong inline-block" />Played, not paid</span>}
+            {metric === 'revenue' && <span className="inline-flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm bg-line-strong inline-block" /><Term k="revenueChart">Played, not paid</Term></span>}
             {line && <span className="inline-flex items-center gap-1.5"><i className="w-3.5 border-t-2 border-dashed border-[#9AA89E] inline-block" />Period before</span>}
           </span>
           <span className="flex gap-4">
@@ -711,7 +716,7 @@ function AnalyticsInner() {
     </div>
   );
 
-  const notes = d ? insights(d, access.can) : [];
+  const notes = d ? insights(d, access.can, access.loaded && !access.isStaff) : [];
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
