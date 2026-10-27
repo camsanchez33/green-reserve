@@ -540,6 +540,8 @@ function DetailsForm() {
       if (!draft.firstTeeTime || !draft.lastTeeTime) return 'Enter your first and last tee times.';
     }
     if (id === 'cancellation' && !draft.cancellationPolicy) return 'Choose Yes or No to continue.';
+    // A Yes with no fee builds a course with no fee at all (no card, no hold) — say so instead.
+    if (id === 'cancellation' && draft.cancellationPolicy === 'yes' && !(Number(draft.lateFee) > 0)) return 'Enter your late cancellation fee — or choose “No — cancel anytime free”.';
     if (id === 'fees') {
       if (!filled(draft.greenFeeWeekday)) return 'Please enter weekday green fee.';
       if (!filled(draft.greenFeeWeekend)) return 'Please enter weekend green fee.';
@@ -613,8 +615,10 @@ function DetailsForm() {
   // the server's _lastSection (saved with the answers) wins, so another device or browser
   // reopens at the same step; this browser's own memory is the fallback.
   const stepKey = `gr-sheet-step:${token}`;
+  const resumed = useRef(false);
   useEffect(() => {
-    if (loading || sections.length === 0) return;
+    if (loading || sections.length === 0 || resumed.current) return;
+    resumed.current = true; // once, on open — not again when "Show skipped sections" changes the list
     const fromServer = resumeSection ? sections.findIndex(sec => sec.id === resumeSection) : -1;
     if (fromServer > 0) { setActiveIdx(fromServer); return; }
     try {

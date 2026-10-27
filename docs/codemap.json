@@ -8454,7 +8454,7 @@
     },
     {
       "path": "src/app/for-courses/details/page.tsx",
-      "lines": 1992,
+      "lines": 1996,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20374,7 +20374,7 @@
     },
     {
       "path": "src/lib/setup-sheet-recap.ts",
-      "lines": 103,
+      "lines": 110,
       "purpose": "Cam 2026-10-26 (onboarding walk):",
       "brain": [],
       "exports": [

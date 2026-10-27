@@ -39,8 +39,13 @@ export function sheetRecap(details: Record<string, unknown>): RecapRow[] {
 
   const holes = str(d.holes);
   add('Course', [holes && `${holes} holes`, str(d.par) && `par ${str(d.par)}`].filter(Boolean).join(', '));
-  const open = Number(str(d.seasonOpen)), close = Number(str(d.seasonClose));
-  add('Season', open >= 1 && open <= 12 && close >= 1 && close <= 12 ? `${MONTHS[open - 1]} to ${MONTHS[close - 1]}` : 'Year-round');
+  // The sheet saves month NAMES ('April'); older data may hold 1–12.
+  const month = (v: unknown) => { const t = str(v); const i = MONTHS.findIndex(m => m.toLowerCase() === t.toLowerCase()); return i >= 0 ? i + 1 : Number(t); };
+  const open = month(d.seasonOpen), close = month(d.seasonClose);
+  const ok = (n: number) => n >= 1 && n <= 12;
+  if (ok(open) && ok(close)) add('Season', `${MONTHS[open - 1]} to ${MONTHS[close - 1]}`);
+  else if (ok(open) || ok(close)) add('Season', ok(open) ? `Opens in ${MONTHS[open - 1]}` : `Closes in ${MONTHS[close - 1]}`);
+  else add('Season', 'Year-round');
 
   const days = Array.isArray(d.daysOpen) ? (d.daysOpen as unknown[]).map(Number).filter(n => n >= 0 && n <= 6).sort((a, b) => a - b) : [];
   const first = d.firstTeeTime ?? sch.startTime, last = d.lastTeeTime ?? sch.endTime;
@@ -59,7 +64,9 @@ export function sheetRecap(details: Record<string, unknown>): RecapRow[] {
   add('Extras', [cart && `${cart} cart per player`, twi && `${twi} twilight`].filter(Boolean).join(', '));
   const walk = str(d.walkingAllowed);
   if (walk) add('Walking', walk === 'yes' ? 'Allowed any time' : walk === 'weekdays' ? 'Weekdays only' : walk === 'no' ? 'Cart required' : walk);
-  if (holes === '18' && str(d.nineHoleSupport) === 'yes') {
+  if (holes === '9') {
+    if (str(d.nineReplay) === 'yes') add('Replays', ['Second nine bookable', money(d.nineReplayFee)].filter(Boolean).join(', '));
+  } else if (str(d.nineHoleSupport) === 'yes') {
     const which = { front: 'Front nine', back: 'Back nine', both: 'Either nine' }[str(d.nineHoleWhich)] ?? '';
     add('9 holes', [which, money(d.nineHoleFee)].filter(Boolean).join(', '));
   }
