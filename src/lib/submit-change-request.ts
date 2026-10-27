@@ -1,4 +1,5 @@
 import { after } from 'next/server';
+import { recordCoursePageDecision } from '@/lib/approval-state';
 import { prisma } from '@/lib/prisma';
 import { sendMessageNotificationEmail } from '@/lib/email';
 import { CATEGORY_LABEL, CHANGE_CATEGORIES, encodeChangesRequested, type ChangeItem } from '@/lib/change-requests';
@@ -54,6 +55,8 @@ export async function submitChangeRequest(courseId: string, cleanItems: ChangeIt
     },
   });
 
+  // Built without an inquiry: the decision lives on the course (lib/approval-state).
+  if (!inquiry) await recordCoursePageDecision(courseId, 'changes_requested');
   if (inquiry) {
     await prisma.inquiryStatusEvent.create({
       data: {

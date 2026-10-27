@@ -4,15 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 04:13 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `352be06d` · working tree **1 dirty file(s)**
+Generated 2026-10-27 14:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a8cbcc80` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 91 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 94 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `a8cbcc80` | 2026-10-27 | Page decision for courses built without an inquiry lives on the course |
+| `c5210ef2` | 2026-10-27 | Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238) |
 | `352be06d` | 2026-10-27 | Onboarding walks the owner through their booking page part by part; Finish setting up on Home |
+| `13634fec` | 2026-10-26 | An emailed sign-in code confirms the owner's email (no separate verify link) (#236) |
 | `db165892` | 2026-10-27 | Regenerate code map and status board |
 | `ca6666d2` | 2026-10-27 | SMS fallback emails a fresh code; test the confirm link keeps onboarding progress |
 | `05bd3437` | 2026-10-27 | An emailed sign-in code confirms the owner's email: no separate verify link after it |
@@ -106,13 +109,6 @@ Generated 2026-10-27 04:13 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (1 file(s))
-
-- `UU docs/CODEMAP.md`
-
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
-
 ## In flight
 
 - **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
@@ -192,7 +188,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-26 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-26 | 1d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 6d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 0d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 1d |
@@ -232,7 +228,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `a8cbcc80` 2026-10-27 — Page decision for courses built without an inquiry lives on the course
+- `c5210ef2` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)
 - `352be06d` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home
+- `13634fec` 2026-10-26 — An emailed sign-in code confirms the owner's email (no separate verify link) (#236)
 - `db165892` 2026-10-27 — Regenerate code map and status board
 - `ca6666d2` 2026-10-27 — SMS fallback emails a fresh code; test the confirm link keeps onboarding progress
 - `05bd3437` 2026-10-27 — An emailed sign-in code confirms the owner's email: no separate verify link after it
@@ -241,9 +240,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `aa33dd6d` 2026-10-27 — Onboarding: review your page is step 1; set-your-password review fixes
 - `e2cc0a6a` 2026-10-27 — Course owners are never emailed a password: one 'Set your password' link (7 days, single use) that confirms the email and signs them in
 - `4960a76e` 2026-10-26 — Setup sheet: recap screen + email, honest cancellation wording, clearer days, uniform cards, resume where you left off (#234)
-- `ae6e20f5` 2026-10-27 — Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once
-- `4d8194b5` 2026-10-26 — See a built course's page before sending the preview (#233)
-- `5afb4b9e` 2026-10-27 — Setup sheet: done screen + recap email of what was sent and what happens next; cancellation wording matches the hold; days open reads every day; uniform cards; $0 placeholders; reopens at the last step
 
 ---
 
