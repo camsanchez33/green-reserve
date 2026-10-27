@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 14:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a8cbcc80` · working tree clean
+Generated 2026-10-27 17:44 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `581de703` · working tree **16 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-22**. 94 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-22**. 97 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `581de703` | 2026-10-27 | Courses built by hand are marked, never Orphaned or swept; resend sign-in code is rate-limited |
+| `c155fec9` | 2026-10-27 | Page decision for courses built without an inquiry lives on the course (#239) |
+| `df85fcbb` | 2026-10-27 | Regenerate status board |
 | `a8cbcc80` | 2026-10-27 | Page decision for courses built without an inquiry lives on the course |
 | `c5210ef2` | 2026-10-27 | Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238) |
 | `352be06d` | 2026-10-27 | Onboarding walks the owner through their booking page part by part; Finish setting up on Home |
@@ -109,9 +112,31 @@ Generated 2026-10-27 14:07 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
+### Uncommitted working tree (16 file(s))
+
+- `M  .github/workflows/typecheck.yml`
+- `M  CLAUDE.md`
+- `A  DENSE_UI_SPEC.md`
+- `M  RUN_QUEUE.md`
+- `M  STATUS.artifact.html`
+- `M  STATUS.json`
+- `M  STATUS.md`
+- `UU docs/CODEMAP.md`
+- `M  docs/codemap.json`
+- `M  scripts/analytics-3-test.ts`
+- `A  scripts/words-guard.baseline.json`
+- `A  scripts/words-guard.mjs`
+- `M  src/app/api/operator/analytics/route.ts`
+- `M  src/app/dashboard/analytics/page.tsx`
+- `A  src/lib/analytics-terms.ts`
+- `M  src/lib/analytics.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+
 ## In flight
 
-- **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:47`
+- **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:48`
   - PARTIALLY BUILT — shipped: BI-1 #92, ACT-1 #93, ACT-2 #94, MSG-1 v1 #95, SHEET-2 #97–99, POS-1a #106. Now: POS-1b. After launch: OUT-1, FB-1, PWA-1.
 
 ## Built but not signed off
@@ -121,24 +146,25 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 96d | `b88c8bf3` | `RUN_QUEUE.md:2357` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 97d | `b88c8bf3` | `RUN_QUEUE.md:2358` |
 
 ## Not started — the actual queue
 
-1. WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone). — `RUN_QUEUE.md:49`
-2. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:56`
-3. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:235`
-4. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:338`
-5. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2993`
+1. DENSE — Cam 2026-10-27: "too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin". Lots of data, almost no sent — `RUN_QUEUE.md:47`
+2. WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone). — `RUN_QUEUE.md:50`
+3. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:57`
+4. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:236`
+5. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:339`
+6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2994`
 
 ## Waiting on you (not on a build)
 
-- CAM: live walks before launch (code merged — `RUN_QUEUE.md:49`
-- Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th — `RUN_QUEUE.md:56`
-- Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) — `RUN_QUEUE.md:235`
-- CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf course name") to the demo event, so homepage demo inquiries arrive  — `RUN_QUEUE.md:338`
-- CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c — `RUN_QUEUE.md:2357`
-- CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars — `RUN_QUEUE.md:2993`
+- CAM: live walks before launch (code merged — `RUN_QUEUE.md:50`
+- Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th — `RUN_QUEUE.md:57`
+- Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) — `RUN_QUEUE.md:236`
+- CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf course name") to the demo event, so homepage demo inquiries arrive  — `RUN_QUEUE.md:339`
+- CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c — `RUN_QUEUE.md:2358`
+- CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars — `RUN_QUEUE.md:2994`
 
 ## Revise campaign (page-by-page pass)
 
@@ -188,6 +214,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
+| `DENSE_UI_SPEC.md` | 1 |  | nulld |
 | `CLAUDE.md` | 1 | 2026-10-26 | 1d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 6d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 0d |
@@ -228,6 +255,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `581de703` 2026-10-27 — Courses built by hand are marked, never Orphaned or swept; resend sign-in code is rate-limited
+- `c155fec9` 2026-10-27 — Page decision for courses built without an inquiry lives on the course (#239)
+- `df85fcbb` 2026-10-27 — Regenerate status board
 - `a8cbcc80` 2026-10-27 — Page decision for courses built without an inquiry lives on the course
 - `c5210ef2` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)
 - `352be06d` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home
@@ -237,10 +267,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `05bd3437` 2026-10-27 — An emailed sign-in code confirms the owner's email: no separate verify link after it
 - `23e81ffe` 2026-10-26 — Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)
 - `ea268e48` 2026-10-27 — Onboarding review step: honest to-do line, blocked pop-up link, note once; setup mode only on a setup token
-- `aa33dd6d` 2026-10-27 — Onboarding: review your page is step 1; set-your-password review fixes
-- `e2cc0a6a` 2026-10-27 — Course owners are never emailed a password: one 'Set your password' link (7 days, single use) that confirms the email and signs them in
-- `4960a76e` 2026-10-26 — Setup sheet: recap screen + email, honest cancellation wording, clearer days, uniform cards, resume where you left off (#234)
 
 ---
 
-**Totals:** 298 done · 1 awaiting review · 1 in flight · 5 not started · 7 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 1 awaiting review · 1 in flight · 6 not started · 7 revise pages open · 17 ideas · 7 parked.

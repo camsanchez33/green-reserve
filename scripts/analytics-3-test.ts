@@ -20,11 +20,12 @@ const page = readFileSync('src/app/dashboard/analytics/page.tsx', 'utf8');
 check('the title is Analytics', page.includes('leading-none text-ink">Analytics</h1>') && !page.includes('How your course is doing'));
 check('one date button, no preset strip', page.includes('<DateRangeButton') && !page.includes("'Pick dates'"));
 check('opens on the last 7 days', page.includes("{ days: '7' }"));
-check('the golf-standard four', ['label="Revenue"', 'label="Tee sheet filled"', 'label="Rounds played"', 'label="Average per round"'].every(s => page.includes(s)) && !page.includes('label="Money collected"') && !page.includes('label="Empty spots"'));
+// DENSE-1: the four now sit in METRICS (label: '…') and pick what the chart plots.
+check('the golf-standard four', ["label: 'Revenue'", "label: 'Tee sheet filled'", "label: 'Rounds played'", "label: 'Average per round'"].every(s => page.includes(s)) && !page.includes('Money collected') && !page.includes("'Empty spots'"));
 check('no dollar total for unsold spots on the page', !page.includes('d.unfilled.lostCents'));
 check('Ask Birdie offered, only when Birdie is on', page.includes('useBirdieReady()') && page.includes('askBirdie(q)'));
 check('five tabs', page.includes("['booking', 'How they book']") && page.includes("['revenue', 'Revenue']"));
-check('golfers tab says where the data comes from', page.includes('tells golfers this'));
+check('golfers tab says where the data comes from', page.includes('From bookings at your course') && page.includes('href="/privacy"'));
 const route = readFileSync('src/app/api/operator/analytics/route.ts', 'utf8');
 check('the route takes days=N', route.includes("sp.get('days')"));
 const bar = readFileSync('src/components/OperatorSidebar.tsx', 'utf8');
@@ -34,8 +35,14 @@ const w = readFileSync('src/components/birdie/BirdieWidget.tsx', 'utf8');
 check('Birdie fills the question but does not send it', /setInput\(q\.slice\(0, \d+\)\)/.test(w) && !/onAsk[\s\S]{0,400}ask\(q/.test(w));
 check('no unsold-spot dollar figure reaches Birdie or the monthly review', !readFileSync('src/lib/monthly-review.ts', 'utf8').includes('unsoldTeeTimeLossDollars') && !readFileSync('src/lib/monthly-review.ts', 'utf8').includes('lostDollars: dollars(h.lostCents)') && !readFileSync('src/lib/birdie/tools.ts', 'utf8').includes('lostToEmptySpots'));
 check('a new sign-in forgets the last course’s top bar', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("sessionStorage.removeItem('gr:op-identity')"));
-check('tile wording matches the numbers', page.includes('of bookings whose tee time has passed') && page.includes('counting past visits'));
+// DENSE-1: definitions moved behind the labels, into lib/analytics-terms.ts.
+const terms = readFileSync('src/lib/analytics-terms.ts', 'utf8');
+check('tile wording matches the numbers', terms.includes('of bookings whose tee time has passed') && terms.includes('counting past visits'));
 check('sign-in is a full page load, so no cached course survives', readFileSync('src/app/dashboard/login/page.tsx', 'utf8').includes("window.location.assign(data.redirect || '/dashboard')"));
-check('“kept from before” says booked, not played', page.includes('from the period before booked with you again'));
+check('“kept from before” says booked, not played', terms.includes('from the period before who booked with you again') && page.includes('term="keptFromBefore"'));
+// DENSE-1 review: the dashed "period before" only in day mode (weekly buckets don't line up),
+// and the no-show-fee action only for the owner (the cancellation policy is owner-only).
+check('the period before is compared day by day only', page.includes("d.revenue.bucket === 'day' ? (d.compare?.series ?? []) : []"));
+check('no-show fee action is the owner’s only', page.includes("go: isOwner ? { label: 'No-show fee'") && page.includes('access.loaded && !access.isStaff'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

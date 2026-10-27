@@ -44,6 +44,7 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 
 ## Queue (run in this order)
 
+- [ ] DENSE — Cam 2026-10-27: "too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin". Lots of data, almost no sentences. Plan, principles and decisions in `DENSE_UI_SPEC.md` (mockups: https://claude.ai/artifact/AxeBeYmHHbzcSCPr5P3xhv). One PR per page, in order: DENSE-1 Analytics (+ words-guard) → DENSE-2 Money → DENSE-3 Home → DENSE-4 Tee sheet seat rows (reverses SHEET-2's board; homepage demo too) → DENSE-5..10 rest of the dashboard → DENSE-11..16 admin. AN-1: any number added to an operational tab is asked of Cam page by page (D2).
 - [ ] ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 Birdie acts on the tee sheet → POS-1 pro shop → MSG-1 messaging → OUT-1 outings + invoices → FB-1 food & beverage → PWA-1. Parked: employee scheduling, maintenance spend, native app per course.
   PARTIALLY BUILT — shipped: BI-1 #92, ACT-1 #93, ACT-2 #94, MSG-1 v1 #95, SHEET-2 #97–99, POS-1a #106. Now: POS-1b. After launch: OUT-1, FB-1, PWA-1.
 - [ ] WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).

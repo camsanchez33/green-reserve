@@ -31,3 +31,8 @@ jobs:
       # surfaces — use the shared components (see the script header).
       - name: Design-system guard
         run: node scripts/design-guard.mjs
+
+      # DENSE (DENSE_UI_SPEC P9): dashboard and admin pages may lose prose, never
+      # gain it — see the script header.
+      - name: Words guard
+        run: node scripts/words-guard.mjs
