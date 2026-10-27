@@ -42,6 +42,7 @@ check('an unconnected course is told to connect Stripe, not that nothing is on i
 const salesRoute = readFileSync('src/app/api/operator/money/sales/route.ts', 'utf8');
 check('the sales route needs money.payments', salesRoute.includes("requirePermission(session, 'money.payments')"));
 check('the drawer count is read only with shop.close', salesRoute.includes("can(session, 'shop.close') ? recentCloses(") && salesRoute.split('recentCloses(').length === 2);
-check('next payout and not paid yet show even while sales load or fail', sales.indexOf('if (!data)') > sales.indexOf('const side ='));
+const loading = sales.slice(sales.indexOf('if (!data) return'), sales.indexOf('const s = data;'));
+check('next payout and not paid yet show even while sales load or fail', sales.includes('const side =') && loading.includes('{side}') && loading.includes('LoadError'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
