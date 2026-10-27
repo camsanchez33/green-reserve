@@ -32,8 +32,8 @@ interface FeesData {
 }
 interface OpData { contactName: string; contactEmail: string; contactPhone: string; }
 interface Result {
-  slug: string; tempPassword: string; setupLink: string; courseId: string | null;
-  emailSent: boolean; emailError?: string; notesItems?: string[];
+  slug: string; sentTo?: string; courseId: string | null;
+  emailSent: boolean; emailError?: string | null; notesItems?: string[];
   seedScheduleCreated?: boolean; seedTierCreated?: boolean;
 }
 
@@ -293,8 +293,6 @@ function WizardContent() {
   const copyRows: [string, string][] = result
     ? [
         ['Booking page', 'greenreserve.app/courses/' + result.slug],
-        ['Temp password', result.tempPassword],
-        ['Setup link', result.setupLink],
       ]
     : [];
 
@@ -312,7 +310,7 @@ function WizardContent() {
                 <div>
                   <div className="font-serif font-semibold text-ink text-lg">Course created!</div>
                   <div className={'text-xs mt-0.5 ' + (result.emailSent ? 'text-ok' : 'text-bad')}>
-                    {result.emailSent ? 'Welcome email sent to operator' : 'Email failed — share credentials manually'}
+                    {result.emailSent ? `Set-your-password email sent${result.sentTo ? ' to ' + result.sentTo : ''}` : `The set-your-password email didn\u2019t send (${result.emailError || 'unknown error'}). Use Send dashboard access on the course to try again.`}
                   </div>
                 </div>
               </div>

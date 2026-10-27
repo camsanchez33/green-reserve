@@ -1,29 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { randomBytes } from 'crypto';
-import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { signPreviewToken } from '@/lib/preview-token';
-import { sendPreviewWithDashboardAccessEmail } from '@/lib/email';
+import { sendDashboardSetupEmail, sendPageReadyInDashboardEmail } from '@/lib/email';
+import { issueSetupLink, hasSetUp, SETUP_LINK_DAYS } from '@/lib/operator-setup';
 import { getApprovalState } from '@/lib/approval-state';
 import { withAudit } from '@/lib/admin-audit';
 
-// RUN_QUEUE "Send Preview = one combined send": pressing Send Preview sends
-// ONE email with both the page preview AND dashboard login access.
+// RUN_QUEUE "Send Preview = one combined send", reworked Cam 2026-10-27: no
+// password is ever emailed. An owner still setting up gets the one "set your
+// password" email (lib/operator-setup) — their dashboard then walks them to the
+// page to review and approve. An owner who already signs in gets a note that the
+// page is ready in their dashboard; their sign-in is NOT touched (this route used
+// to reset the password on every send, locking out owners who had chosen theirs).
 // "approval propagates + gates previews": once approved (this round),
 // sending another preview is blocked here — not just hidden client-side —
 // until a change request or an explicit "Request re-review" reopens it
 // (src/lib/change-requests.ts scopeToCurrentRound is the single anchor).
+/** Email the owner about their page. Returns an error message, or null when it went. */
+async function tellOwner(op: { id: string; name: string; email: string; lastLoginAt: Date | null; emailVerified: boolean }, courseName: string): Promise<string | null> {
+  try {
+    if (hasSetUp(op)) await sendPageReadyInDashboardEmail({ operatorName: op.name, operatorEmail: op.email, courseName });
+    else await sendDashboardSetupEmail({ operatorName: op.name, operatorEmail: op.email, courseName, setupUrl: await issueSetupLink(op.id), pageReady: true, linkDays: SETUP_LINK_DAYS });
+    return null;
+  } catch (err) {
+    console.error('Preview email failed:', err);
+    return `The preview email did not send (${err instanceof Error ? err.message : 'unknown error'}). Their sign-in is unchanged. Try again.`;
+  }
+}
+
 async function sendPreview(req: NextRequest) {
   const session = await resolveAdminSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const noArea = areaGate(session, 'pipeline');
   if (noArea) return noArea;
-  // MP-2b: this route ROTATES AN OPERATOR'S PASSWORD. It was gated on "any admin
-  // session", so a viewer-role employee could POST an arbitrary courseId, lock
-  // that operator out of their own dashboard, and read the new password out of
-  // the response. Every sibling route that rotates an operator password is
-  // MANAGER_PLUS; this one was the exception.
+  // MP-2b: this route mints an owner's sign-in (setup) link and emails it, so it
+  // stays MANAGER_PLUS like every sibling that touches an owner's sign-in.
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const { inquiryId, courseId: rawCourseId } = await req.json() as {
@@ -52,26 +64,8 @@ async function sendPreview(req: NextRequest) {
     const token = await signPreviewToken(courseId);
     const previewUrl = `${base}/preview/${courseId}?token=${token}`;
 
-    const tempPassword = randomBytes(8).toString('hex');
-    const hashed = await bcrypt.hash(tempPassword, 12);
-    const verificationToken = randomBytes(32).toString('hex');
-    const setupLink = `${base}/dashboard/verify?token=${verificationToken}`;
-
-    // Review fix: the password used to be rotated BEFORE the send, so a failed
-    // email left the operator's working password dead and nothing delivered.
-    // Send first; rotate only once the email carrying the new one has gone.
-    try {
-      await sendPreviewWithDashboardAccessEmail({
-        contactName: inquiry.contactName,
-        contactEmail: inquiry.email,
-        courseName: inquiry.courseName,
-        previewUrl, tempPassword, setupLink,
-      });
-    } catch (err) {
-      console.error('Preview email failed:', err);
-      return NextResponse.json({ error: `The preview email did not send (${err instanceof Error ? err.message : 'unknown error'}). Nothing was changed — the operator's password still works. Try again.` }, { status: 502 });
-    }
-    await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
+    const sendErr = await tellOwner(course.operator, inquiry.courseName);
+    if (sendErr) return NextResponse.json({ error: sendErr }, { status: 502 });
 
     await prisma.inquiryStatusEvent.create({
       data: {
@@ -83,7 +77,7 @@ async function sendPreview(req: NextRequest) {
       },
     });
 
-    // tempPassword/setupLink deliberately NOT returned — the email carries them.
+    // The setup link is never returned — only the email carries it.
     return NextResponse.json({ ok: true, previewUrl });
   }
 
@@ -108,26 +102,8 @@ async function sendPreview(req: NextRequest) {
     const token = await signPreviewToken(rawCourseId);
     const previewUrl = `${base}/preview/${rawCourseId}?token=${token}`;
 
-    const tempPassword = randomBytes(8).toString('hex');
-    const hashed = await bcrypt.hash(tempPassword, 12);
-    const verificationToken = randomBytes(32).toString('hex');
-    const setupLink = `${base}/dashboard/verify?token=${verificationToken}`;
-
-    // Review fix: the password used to be rotated BEFORE the send, so a failed
-    // email left the operator's working password dead and nothing delivered.
-    // Send first; rotate only once the email carrying the new one has gone.
-    try {
-      await sendPreviewWithDashboardAccessEmail({
-        contactName: operator.name,
-        contactEmail: operator.email,
-        courseName: course.name,
-        previewUrl, tempPassword, setupLink,
-      });
-    } catch (err) {
-      console.error('Preview email failed:', err);
-      return NextResponse.json({ error: `The preview email did not send (${err instanceof Error ? err.message : 'unknown error'}). Nothing was changed — the operator's password still works. Try again.` }, { status: 502 });
-    }
-    await prisma.courseOperator.update({ where: { id: operator.id }, data: { password: hashed, verificationToken } });
+    const sendErr = await tellOwner(operator, course.name);
+    if (sendErr) return NextResponse.json({ error: sendErr }, { status: 502 });
 
     const linkedInquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: rawCourseId } });
     if (linkedInquiry) {
@@ -142,7 +118,7 @@ async function sendPreview(req: NextRequest) {
       });
     }
 
-    // tempPassword/setupLink deliberately NOT returned — the email carries them.
+    // The setup link is never returned — only the email carries it.
     return NextResponse.json({ ok: true, previewUrl });
   }
 

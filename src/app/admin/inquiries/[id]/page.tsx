@@ -51,7 +51,7 @@ interface Inquiry {
   events: InquiryStatusEvent[];
 }
 interface ApproveResult {
-  tempPassword?: string; setupLink?: string; detailsLink?: string;
+  detailsLink?: string; sentTo?: string; alreadySetUp?: boolean;
   emailSent?: boolean; emailError?: string;
 }
 
@@ -1385,16 +1385,17 @@ function InquiryDetailInner() {
           {/* Approve result */}
           {approveResult && (() => {
             const isDetails = !!approveResult.detailsLink;
-            const rows: [string, string][] = isDetails
-              ? [['Setup sheet link', approveResult.detailsLink as string]]
-              : [['Temp password', approveResult.tempPassword || ''], ['Setup link', approveResult.setupLink || '']];
+            // Cam 2026-10-27: a course owner's sign-in is never shown or copied here — it is
+            // only ever a "set your password" link in their email (lib/operator-setup).
+            const rows: [string, string][] = isDetails ? [['Setup sheet link', approveResult.detailsLink as string]] : [];
             const failed = approveResult.emailSent === false;
+            const to = approveResult.sentTo ? ' to ' + approveResult.sentTo : '';
             return (
               <div className={'mt-4 rounded-md px-4 py-3 ' + (failed ? 'bg-bad/5 border border-bad/20' : 'bg-ok/5 border border-ok/20')}>
                 <div className={'text-xs font-medium mb-2 ' + (failed ? 'text-bad' : 'text-ok')}>
                   {failed
-                    ? 'Email failed (' + (approveResult.emailError || 'unknown') + '). Share manually:'
-                    : (isDetails ? 'Setup sheet sent.' : 'Course built, welcome email sent.')}
+                    ? (isDetails ? 'Email failed (' + (approveResult.emailError || 'unknown') + '). Share manually:' : 'The set-your-password email didn\u2019t send (' + (approveResult.emailError || 'unknown') + '). Use Send dashboard access to try again.')
+                    : (isDetails ? 'Setup sheet sent.' : approveResult.alreadySetUp ? 'They already sign in — emailed them that their page is ready in their dashboard' + to + '.' : 'Set-your-password email sent' + to + '.')}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {rows.filter(([, v]) => v).map(([label, val]) => (

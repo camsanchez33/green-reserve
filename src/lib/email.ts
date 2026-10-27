@@ -550,55 +550,6 @@ export async function sendReminderEmail(data: {
   await getResend().emails.send({ meta: { kind: 'reminder_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Tomorrow: ${data.time} at ${data.courseName}`, html });
 }
 
-export async function sendOperatorWelcomeEmail(data: {
-  operatorName: string;
-  operatorEmail: string;
-  courseName: string;
-  tempPassword: string;
-  setupLink: string;
-}) {
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 14px;border-radius:6px;">✓ You're approved</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Welcome to GreenReserve, ${data.operatorName}.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      <strong>${data.courseName}</strong> has been approved and your dashboard is ready to set up.
-      It takes about 5 minutes to go live.
-    </p>
-
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:24px;margin-bottom:24px;">
-      <p style="margin:0 0 4px;color:#6B706A;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Login Email</p>
-      <p style="margin:0 0 16px;color:#141814;font-size:15px;font-weight:600;">${data.operatorEmail}</p>
-      <p style="margin:0 0 4px;color:#6B706A;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Temporary Password</p>
-      <p style="margin:0;color:#141814;font-size:18px;font-weight:700;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #E3E4DE;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
-    </div>
-
-    <p style="margin:0 0 16px;color:#3F453E;font-size:14px;">When you log in for the first time you'll be walked through:</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-      ${['Set your permanent password','Connect your bank via Stripe (for payouts)','Set your tee time schedule and pricing','Go live — golfers can start booking'].map((step, i) => `
-      <tr>
-        <td style="padding:8px 0;border-bottom:1px solid #E3E4DE;">
-          <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#173B2A;color:#fff;border-radius:50%;font-size:11px;font-weight:600;margin-right:10px;">${i + 1}</span>
-          <span style="color:#3F453E;font-size:14px;">${step}</span>
-        </td>
-      </tr>`).join('')}
-    </table>
-
-    <a href="${data.setupLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Set Up My Dashboard &rarr;
-    </a>
-
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-
-  await getResend().emails.send({ meta: { kind: 'operator_welcome_email' },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: `You're approved — set up ${data.courseName} on GreenReserve`,
-    html,
-  });
-}
 
 export async function sendOperatorPasswordResetEmail(data: {
   operatorName: string;
@@ -728,6 +679,60 @@ export async function sendGolferPasswordResetEmail(data: {
 
 // Fired right after a correct password when the operator has 2FA enabled —
 // gates issuing the real session cookie until this code is verified.
+/**
+ * Cam 2026-10-27: the ONE "your dashboard is ready" email a course owner gets —
+ * from the build, a resend, early dashboard access or the preview. No password in
+ * it: a single-use link (lib/operator-setup, SETUP_LINK_DAYS) to choose their own,
+ * after which the Getting Started list walks them through reviewing and approving
+ * their booking page, the operator agreement and Stripe.
+ */
+export async function sendDashboardSetupEmail(data: {
+  operatorName: string; operatorEmail: string; courseName: string; setupUrl: string;
+  /** The booking page is built and ready for them to review. */
+  pageReady: boolean; linkDays: number;
+}) {
+  const steps = [
+    data.pageReady ? 'Review your booking page, and approve it or tell us what to change.' : 'Look over your booking page as we finish it.',
+    'Sign the operator agreement.',
+    'Connect Stripe so payments reach your bank.',
+  ];
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${data.pageReady ? 'Your booking page is ready for a look' : 'Your dashboard is ready'}, ${escHtml(firstName(data.operatorName))}.</h1>
+    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Set your password to get into the GreenReserve dashboard for <strong>${escHtml(data.courseName)}</strong>.</p>
+    <a href="${data.setupUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:15px;border-radius:6px;font-weight:600;font-size:16px;margin-bottom:24px;">Set your password</a>
+    <p style="margin:0 0 8px;color:#141814;font-size:15px;font-weight:700;">Then your dashboard walks you through</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px;">${steps.map((t, i) => `
+      <tr>
+        <td style="padding:6px 12px 6px 0;width:26px;vertical-align:top;"><div style="width:22px;height:22px;border-radius:11px;background:#173B2A;color:#fff;font-size:12px;font-weight:600;line-height:22px;text-align:center;">${i + 1}</div></td>
+        <td style="padding:7px 0;color:#141814;font-size:14px;line-height:1.5;">${escHtml(t)}</td>
+      </tr>`).join('')}
+    </table>
+    <p style="margin:0;color:#6B706A;font-size:13px;">The link works once and expires in ${data.linkDays} days. If it has expired, use &ldquo;Forgot password&rdquo; on the sign-in page with ${escHtml(data.operatorEmail)}.</p>
+  `, ADMIN_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'operator_setup_email' },
+    from: FROM_ADMIN,
+    to: data.operatorEmail,
+    subject: subj(data.pageReady ? `Your ${data.courseName} booking page is ready for a look` : `Set up your ${data.courseName} dashboard`),
+    html,
+  });
+}
+
+/** An owner who already signs in: the (updated) page is waiting in their dashboard. Their sign-in is never touched. */
+export async function sendPageReadyInDashboardEmail(data: { operatorName: string; operatorEmail: string; courseName: string }) {
+  const site = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your booking page is ready for a look, ${escHtml(firstName(data.operatorName))}.</h1>
+    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">We&rsquo;ve updated the booking page for <strong>${escHtml(data.courseName)}</strong>. Sign in to review it, then approve it or tell us what to change.</p>
+    <a href="${site}/dashboard" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:15px;border-radius:6px;font-weight:600;font-size:16px;">Review it in your dashboard</a>
+  `, ADMIN_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'operator_page_ready_email' },
+    from: FROM_ADMIN,
+    to: data.operatorEmail,
+    subject: subj(`Your ${data.courseName} booking page is ready for a look`),
+    html,
+  });
+}
+
 export async function sendPreviewEmail(data: {
   contactName: string;
   contactEmail: string;
@@ -765,88 +770,9 @@ export async function sendPreviewEmail(data: {
 // Send Preview now delivers the page preview AND dashboard login access in
 // one email, so a course never has to wait on a second message to start
 // exploring their dashboard. Admin-initiated only, never automatic.
-export async function sendPreviewWithDashboardAccessEmail(data: {
-  contactName: string;
-  contactEmail: string;
-  courseName: string;
-  previewUrl: string;
-  tempPassword: string;
-  setupLink: string;
-}) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your page is ready for a look</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.contactName)} &mdash; we've finished building your GreenReserve page for <strong>${data.courseName}</strong>.
-      Take a look and let us know if anything needs adjusting before we go live. We've also set you up with early
-      access to your dashboard below.
-    </p>
-    <a href="${data.previewUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:600;font-size:16px;margin-bottom:20px;">
-      Preview Your Page &rarr;
-    </a>
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#6B706A;font-size:13px;">Booking is disabled on this preview link &mdash; it's only for you to review the layout and information. Reply to this email with any changes and we'll get them in quickly.</p>
-    </div>
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:24px;margin-bottom:24px;">
-      <p style="margin:0 0 12px;color:#141814;font-size:15px;font-weight:600;">Your dashboard is ready too</p>
-      <p style="margin:0 0 4px;color:#6B706A;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Login Email</p>
-      <p style="margin:0 0 16px;color:#141814;font-size:15px;font-weight:600;">${data.contactEmail}</p>
-      <p style="margin:0 0 4px;color:#6B706A;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Temporary Password</p>
-      <p style="margin:0;color:#141814;font-size:18px;font-weight:700;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #E3E4DE;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
-    </div>
-    <a href="${data.setupLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:600;font-size:16px;margin-bottom:16px;">
-      Log In To My Dashboard &rarr;
-    </a>
-    <p style="margin:0 0 20px;color:#6B706A;font-size:13px;">Log in and your Getting Started checklist will walk you through everything, including payments setup. Nothing is live yet — golfers can't book until you approve the page.</p>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'preview_with_dashboard_access_email' },
-    from: FROM_ADMIN,
-    to: data.contactEmail,
-    replyTo: ADMIN_EMAIL,
-    subject: `Preview + dashboard access: Your GreenReserve page for ${data.courseName}`,
-    html,
-  });
-}
 
 // Sent during Building stage when admin clicks "Send dashboard access" —
 // gives early dashboard access before the course goes live.
-export async function sendDashboardAccessEmail(data: {
-  operatorName: string;
-  operatorEmail: string;
-  courseName: string;
-  tempPassword: string;
-  setupLink: string;
-}) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your dashboard is ready to explore</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.operatorName)} &mdash; while we put the finishing touches on your GreenReserve page for <strong>${data.courseName}</strong>,
-      here&rsquo;s early access to your dashboard. Take a look around &mdash; this is where you&rsquo;ll manage tee times,
-      bookings, and check-ins. <strong>Nothing is live yet.</strong>
-    </p>
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:24px;margin-bottom:24px;">
-      <p style="margin:0 0 4px;color:#6B706A;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Login Email</p>
-      <p style="margin:0 0 16px;color:#141814;font-size:15px;font-weight:600;">${data.operatorEmail}</p>
-      <p style="margin:0 0 4px;color:#6B706A;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Temporary Password</p>
-      <p style="margin:0;color:#141814;font-size:18px;font-weight:700;font-family:monospace;letter-spacing:0.1em;background:#fff;border:1px solid #E3E4DE;border-radius:8px;padding:10px 14px;display:inline-block;">${data.tempPassword}</p>
-    </div>
-    <a href="${data.setupLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:600;font-size:16px;margin-bottom:16px;">
-      Set Up My Dashboard &rarr;
-    </a>
-    <p style="margin:0 0 20px;color:#6B706A;font-size:13px;">When you log in, your Getting Started checklist will walk you through everything, including payments setup.</p>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'dashboard_access_email' },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: `Early dashboard access — ${data.courseName} on GreenReserve`,
-    html,
-  });
-}
 
 // Sent when going live and the operator already has dashboard access —
 // shorter "you're live" framing instead of the full orientation email.
