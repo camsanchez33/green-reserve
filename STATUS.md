@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 20:02 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `a7c5734` · working tree **10 dirty file(s)**
+Generated 2026-10-27 20:08 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `86147c9` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 19 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 21 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `86147c9` | 2026-10-27 | Manage page: after the tee time the banner says the booking can't be cancelled |
+| `4425bd2` | 2026-10-27 | No cancelling after the tee time — the group checks in or is a no-show (charged at midnight) |
 | `e8e2a2e` | 2026-10-27 | DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243) |
 | `068e626` | 2026-10-27 | Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column |
 | `e29c686` | 2026-10-27 | Money → Cancellations says why no fee was kept |
@@ -34,21 +36,13 @@ Generated 2026-10-27 20:02 UTC · branch `claude/practical-lovelace-xiu4u5` · H
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (10 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/cancel-after-noshow-test.ts`
-- `M scripts/noshow-eod-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/api/manage/[bookingId]/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/app/manage/[bookingId]/page.tsx`
-- `M src/lib/cancel-booking.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -170,6 +164,8 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `86147c9` 2026-10-27 — Manage page: after the tee time the banner says the booking can't be cancelled
+- `4425bd2` 2026-10-27 — No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)
 - `e8e2a2e` 2026-10-27 — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)
 - `068e626` 2026-10-27 — Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column
 - `e29c686` 2026-10-27 — Money → Cancellations says why no fee was kept
@@ -180,8 +176,6 @@ Nothing awaiting review.
 - `98c16cf` 2026-10-27 — DENSE-2: pin the loading branch's payout tiles
 - `23965db` 2026-10-27 — Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them
 - `1a83267` 2026-10-27 — DENSE-2: payments footer wording
-- `71e527c` 2026-10-27 — DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load
-- `3c692b1` 2026-10-27 — DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer
 
 ---
 

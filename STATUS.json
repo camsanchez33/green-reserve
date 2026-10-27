@@ -1,26 +1,32 @@
 {
-  "generatedAt": "2026-10-27T20:02:29.857Z",
+  "generatedAt": "2026-10-27T20:08:13.386Z",
   "repo": {
-    "head": "a7c5734",
+    "head": "86147c9",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 10,
+    "dirtyCount": 2,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/cancel-after-noshow-test.ts",
-      " M scripts/noshow-eod-test.ts",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/api/manage/[bookingId]/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/manage/[bookingId]/page.tsx",
-      " M src/lib/cancel-booking.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "86147c9",
+        "date": "2026-10-27T20:06:55+00:00",
+        "subject": "Manage page: after the tee time the banner says the booking can't be cancelled",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4425bd2",
+        "date": "2026-10-27T20:02:30+00:00",
+        "subject": "No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "e8e2a2e",
         "date": "2026-10-27T15:54:22-04:00",
@@ -548,6 +554,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "86147c9",
+      "date": "2026-10-27",
+      "subject": "Manage page: after the tee time the banner says the booking can't be cancelled"
+    },
+    {
+      "h": "4425bd2",
+      "date": "2026-10-27",
+      "subject": "No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)"
+    },
+    {
       "h": "e8e2a2e",
       "date": "2026-10-27",
       "subject": "DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)"
@@ -596,16 +612,6 @@
       "h": "1a83267",
       "date": "2026-10-27",
       "subject": "DENSE-2: payments footer wording"
-    },
-    {
-      "h": "71e527c",
-      "date": "2026-10-27",
-      "subject": "DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load"
-    },
-    {
-      "h": "3c692b1",
-      "date": "2026-10-27",
-      "subject": "DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer"
     }
   ]
 }

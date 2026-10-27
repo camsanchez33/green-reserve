@@ -8676,7 +8676,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 576,
+      "lines": 577,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14245,7 +14245,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 341,
+      "lines": 343,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14351,7 +14351,7 @@
     },
     {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 256,
+      "lines": 262,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
