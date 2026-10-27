@@ -99,7 +99,100 @@ Each item is one PR. "Words" is the budget for P9 (set from the PR's own
 before/after count; the number here is the target). Open questions go to Cam in the
 PR, per D2.
 
-(Filled from the page inventory — see below.)
+Prose counts are from the 2026-10-27 inventory (sentences rendered by the page,
+modals included). "New code" flags anything that is not a re-presentation of data a
+route already returns — it needs its own design note in the PR, and money/auth parts
+stay with the overseer.
+
+### Course dashboard
+
+- [ ] **DENSE-1 Analytics** (`dashboard/analytics/page.tsx`, ~60+ sentences →
+  ≤ 8). Lands `words-guard.mjs`. Top: period switcher (Today · 7D · 4W · 3M · 12M) +
+  "vs previous"; one large chart whose metric is picked by clicking the four headline
+  numbers (Revenue, Tee sheet filled, Rounds played, Per round); eight small cards with
+  sparklines (no-show rate, late cancels, returning golfers, new golfers, rounds with a
+  cart, shop per round, below posted rate, empty spots $). Then the existing tabs with
+  every Section `why=` and tile `explain=` moved behind the label (P2). "What to look
+  at" becomes one-line rows with their button (P5). Monthly review: one line until the
+  first review exists. Unused fields to surface: `revenue.perAvailableTeeTimeCents`,
+  `utilization.byDay`, `utilization.blockedTimes`. Sparklines need per-period series
+  → small addition in `computeAnalytics` (new code, server-side, no money logic).
+- [ ] **DENSE-2 Money** (`dashboard/money/*`, ~15 → ≤ 3). Sales tab first:
+  Stripe "Today" cumulative line vs same weekday last week + next payout + not paid
+  yet; Toast's sales by day / day of week / time of day; Sales summary table (green
+  fees, carts, range, shop on rounds, register sales, late/no-show fees, refunds, net;
+  tax and golfers' booking fee listed as not in sales); Cash drawer (last
+  `RegisterClose`: expected, counted, over/short); How golfers paid (card online,
+  reader, cash, pay link); Declined cards. Payments rows show the split already in
+  `MoneyBooking` (green/cart/range) on expand. The 4-sentence fee card → one line +
+  link. New code: the intraday cumulative series and payment-method split (read-only
+  aggregation; overseer — it is money).
+- [ ] **DENSE-3 Home** (`dashboard/home`, ~4 → ≤ 2). KPI strip with sparklines vs
+  same weekday; "Today by tee time" fill grid with the now marker; Next 14 days pace
+  (booked vs usual-by-now — already `pace` in analytics); Needs you (existing three +
+  pace alerts); Next up with checked-in state (`comingUp[].groups[].checkedIn` is
+  returned and unused) and a short golfer history; Paid today mix + next payout. AN-1
+  exception already covers Home. Golfer history tags = new code (see DENSE-4).
+- [ ] **DENSE-4 Tee sheet: seat rows** (`dashboard/page.tsx`, `TeeSheetBoard.tsx`
+  → `TeeSheetRows.tsx`, `TeeSheetDemo.tsx`; ~15–20 → ≤ 6, modals keep only what a
+  wrong click costs). D1 layout; day strip across the top only if Cam says yes to each
+  number (D2: players · checked in · paid · owed · fill by hour — ask); golfer card in
+  the TT-CARD panel: rounds · spend · no-shows · last here at this course (new code:
+  a per-course golfer summary keyed like analytics' "customer"; tenant-scoped; money
+  shown only with `money.payments`). Drag, panel actions, Next up, pay links
+  unchanged. Homepage demo mirrors it in the same PR. Phone: one day, same rows.
+- [ ] **DENSE-5 Members** (~15–20 → ≤ 4). Table with sortable columns (tier, dues
+  status, rounds this season, last round, spend), sparkline of rounds per member;
+  header strip: active · dues unpaid ($) · renewing in 30 days (ask D2). Wizard hints
+  cut to labels; the 1% dues line stays (fee wording, LQ-2).
+- [ ] **DENSE-6 Schedule** (~12–15 → ≤ 3). Labels over sentences; the price table
+  already is the right shape. Save preview keeps its warnings as one line each.
+- [ ] **DENSE-7 Pro shop** (~12 → ≤ 3). Register stays task-first; add today's
+  sales strip (sales · items · cash · card) and top items (Square) — ask D2.
+  Close-out table unchanged, sentences → labels.
+- [ ] **DENSE-8 Events** (~20–25 → ≤ 6). List as a table (date, kind, entrants of
+  players, money owed, tasks); detail's Money block as label/value rows.
+- [ ] **DENSE-9 Messages** (2 → 1). Minor: the reply-time line stays as the one
+  sentence.
+- [ ] **DENSE-10 Settings** (~85 incl. 35 permission helps → ≤ 25). P7 across the
+  eight sections; live preview stays the explainer; helper lines only where money or
+  sign-in is at stake (no-show/late fee timing, card at booking, time zone, 2FA);
+  permission `help` sentences move behind each row's label. Fee and policy wording
+  that is legal (describePolicy, LQ-2) is untouched.
+
+### Admin
+
+- [ ] **DENSE-11 Admin Home** (~3 → ≤ 1). KPI strip with sparklines (green fees
+  booked through GreenReserve, GreenReserve fees, online bookings, live courses, card
+  success rate); fees per day stacked collected vs not collected (paid at the
+  counter); courses table worst first with an 8-week sparkline per row; Needs you;
+  Pipeline as a funnel with median inquiry→live days; golfer numbers (new, booked
+  again, at 2+ courses, avg group). New code: card success rate, green fees booked,
+  golfers at 2+ courses, funnel timings (read-only aggregates; spread
+  `REAL_COURSE`/TEST-2 into every one).
+- [ ] **DENSE-12 Admin Money** (`admin/revenue`, ~25 → ≤ 6). Overview gets the
+  Stripe "Today" line and the Toast trio; tables keep their columns; each explanatory
+  paragraph → one line + the action. Owner-only blocks unchanged in access.
+- [ ] **DENSE-13 Admin Courses + course detail** (~15 → ≤ 4). Courses table gains
+  a sparkline column and fill %; course detail's Bookings and Money tab summaries stop
+  being sentences that carry numbers — they become KPI strips (players, online share,
+  last booking, 30-day change; fees this month vs last, failed charges).
+- [ ] **DENSE-14 Pipeline + inquiry detail** (~30 → ≤ 10). Board unchanged; header
+  count line becomes a funnel strip (leads · active · needs you · calls this week ·
+  live) with median days in stage. Inquiry detail: modal and tab paragraphs → one line
+  each; the "different email" warning stays (it prevents a wrong apply).
+- [ ] **DENSE-15 Problems, Golfers, Messages, Announcements** (~12 → ≤ 4). Golfers
+  record view gets the golfer card numbers (rounds, spend, no-shows, courses played);
+  Messages shows `totalUnread` and median reply time; Announcements shows reach and
+  dismissal rate.
+- [ ] **DENSE-16 Goals, Team, Audit, Systems, Security, Groups, Company docs**
+  (~35 → ≤ 10). Systems: status table (job · last run · result · next) instead of
+  prose cards; Security: the 24h/30d sentence becomes a KPI strip; Groups shows the
+  resident-list count; role/area descriptions move behind the label.
+
+Per D2, every item above that adds a number to an OPERATIONAL tab (tee sheet, shop
+register, members list, events, pipeline board) lists those numbers in its PR and
+waits for Cam on each.
 
 ## 5. The words test
 
