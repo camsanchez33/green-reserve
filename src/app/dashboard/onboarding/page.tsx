@@ -24,6 +24,8 @@ function OnboardingInner() {
   const [loading, setLoading] = useState(true);
   const [pageStatus, setPageStatus] = useState<'none' | 'approved' | 'changes_requested'>('none');
   const [opened, setOpened] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [blockedUrl, setBlockedUrl] = useState('');
   const [openError, setOpenError] = useState('');
   const [asking, setAsking] = useState(false);
   const [changeCats, setChangeCats] = useState<Set<string>>(new Set());
@@ -77,14 +79,16 @@ function OnboardingInner() {
   // Opens the course's own preview (the same link as the dashboard's "View your page").
   // The tab opens inside the click so a pop-up blocker allows it.
   const openPage = async () => {
-    setOpenError('');
+    setOpenError(''); setBlockedUrl(''); setOpening(true);
     const tab = window.open('', '_blank');
     try {
       const r = await fetch('/api/operator/preview-link');
       const d = await r.json().catch(() => ({} as Record<string, unknown>));
-      if (r.ok && typeof d.url === 'string') { if (tab) tab.location.href = d.url; else window.location.href = d.url; setOpened(true); return; }
+      if (r.ok && typeof d.url === 'string') { // Pop-up blocked: show the link here rather than leaving onboarding.
+        if (tab) tab.location.href = d.url; else setBlockedUrl(d.url); setOpened(true); return; }
       tab?.close(); setOpenError(String(d.error || `Couldn’t open your page (${r.status}) — try again.`));
     } catch { tab?.close(); setOpenError('Couldn’t reach the server — check your connection and try again.'); }
+    finally { setOpening(false); }
   };
 
   // Step 1 done → step 2 (the endpoint bumps onboardingStep, so a reload resumes at Sign).
@@ -104,7 +108,8 @@ function OnboardingInner() {
         setPageStatus('approved');
       } else if (decision === 'changes') {
         if (changeCats.size === 0) throw new Error('Pick what needs changing.');
-        const items = [...changeCats].map(category => ({ category, detail: changeNote }));
+        // The note rides on the first category only, so the admin thread doesn't repeat it per category.
+        const items = [...changeCats].map((category, i) => ({ category, detail: i === 0 ? changeNote : '' }));
         const r = await fetch('/api/operator/request-changes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) });
         const d = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(d.error || `Could not send your changes (${r.status}).`);
@@ -162,6 +167,11 @@ function OnboardingInner() {
 
   const isConnected = stripeActive || stripeBanner === 'connected';
 
+  const todo = [
+    pageStatus === 'changes_requested' ? 'approve your updated page once we send it' : pageStatus !== 'approved' ? 'approve your booking page' : '',
+    !isConnected ? 'connect Stripe' : '',
+  ].filter(Boolean);
+
   return (
     <div className="min-h-screen bg-paper p-4">
       <div className="max-w-xl mx-auto pt-10">
@@ -195,10 +205,11 @@ function OnboardingInner() {
             <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-2">Review your booking page</h2>
             <p className="text-sm text-ink mb-5">This is what golfers will see. Check your prices, tee times, photos and policies, then approve it or tell us what to change. Booking is off until you go live.</p>
 
-            <button onClick={openPage}
+            <button onClick={openPage} disabled={opening}
               className="w-full flex items-center justify-center gap-2 bg-white border border-line hover:border-pine/40 text-ink py-3 rounded-md font-medium text-[13px] transition-colors">
-              Open your page <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+              {opening ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden /> : <>Open your page <ExternalLink className="w-3.5 h-3.5" aria-hidden /></>}
             </button>
+            {blockedUrl && <p className="text-sm text-ink mt-2">Your browser blocked the new tab. <a href={blockedUrl} target="_blank" rel="noopener noreferrer" className="text-pine underline">Open your page here</a>.</p>}
             {openError && <p role="alert" className="text-sm text-bad mt-2">{openError}</p>}
 
             {pageStatus !== 'none' ? (
@@ -249,7 +260,7 @@ function OnboardingInner() {
                     {saving ? 'Saving…' : 'Looks good — approve it'}
                   </button>
                 </div>
-                {!opened && <p className="text-xs text-ink-muted mt-2 text-center">Open your page first to approve it.</p>}
+                {!opened && <p className="text-xs text-ink-soft mt-2 text-center">Open your page first to approve it.</p>}
                 <button onClick={() => decide('later')} disabled={saving}
                   className="w-full mt-3 text-[13px] text-ink-muted hover:text-ink transition-colors">I&apos;ll review it later</button>
               </>
@@ -322,7 +333,7 @@ function OnboardingInner() {
             <h2 className="text-[30px] font-serif font-semibold leading-none text-ink mb-2">Setup complete</h2>
             <p className="text-sm text-ink mb-2">{pageStatus === 'approved' && isConnected
               ? 'Your page is approved and payments are connected. GreenReserve will check everything and take your course live — usually within 1 business day.'
-              : `Before your course goes live: ${[pageStatus !== 'approved' ? 'approve your booking page' : '', !isConnected ? 'connect Stripe' : ''].filter(Boolean).join(' and ')}. Your dashboard's checklist has both.`}</p>
+              : `Before your course goes live: ${todo.join(' and ')}. Your dashboard’s checklist has ${todo.length === 1 ? 'it' : 'both'}.`}</p>
             <p className="text-xs text-ink-soft mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
             <button onClick={() => router.push('/dashboard')}
               className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] transition-colors">

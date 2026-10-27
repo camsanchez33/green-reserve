@@ -646,7 +646,7 @@ function WizardContent() {
             <div className="space-y-5">
               <Card className="p-6 space-y-4">
                 <Eyebrow>Operator account</Eyebrow>
-                <p className="text-xs text-ink-soft">Creates their dashboard login. They receive a welcome email with a temp password and setup link.</p>
+                <p className="text-xs text-ink-soft">Creates their dashboard login. They receive a ‘Set your password’ email (the link is good for 7 days).</p>
                 <div>
                   <label className="block"><Eyebrow as="span" className="block mb-1.5">Full name *</Eyebrow>
                   <input value={op.contactName} onChange={e => setOp(f => ({ ...f, contactName: e.target.value }))} className={iCls} placeholder="John Smith" autoFocus/></label>

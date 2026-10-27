@@ -3520,7 +3520,7 @@
     },
     {
       "path": "src/app/api/auth/reset-password/route.ts",
-      "lines": 107,
+      "lines": 106,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7999,7 +7999,7 @@
     },
     {
       "path": "src/app/dashboard/onboarding/page.tsx",
-      "lines": 345,
+      "lines": 356,
       "purpose": "",
       "brain": [],
       "exports": [

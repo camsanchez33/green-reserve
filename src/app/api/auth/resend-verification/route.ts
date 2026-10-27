@@ -6,7 +6,7 @@ import { randomBytes } from 'crypto';
 import { rateLimit } from '@/lib/rate-limit';
 
 // Real verification email for operators who have a session but aren't yet
-// emailVerified (e.g. logged in with a temp password without clicking the
+// emailVerified (e.g. signed in with a password reset without clicking the
 // original setup link). Never verifies in-app — only re-sends the real link.
 export async function POST() {
   const session = await getOperatorSession();

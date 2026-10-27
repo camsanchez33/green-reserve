@@ -54,9 +54,11 @@ async function cleanup() {
   // A forgot-password token (1 hour) sent back with setup: true sets the password, never a session.
   const forgot = await mk('forgot');
   await prisma.courseOperator.update({ where: { id: forgot.id }, data: { resetToken: 'f'.repeat(64), resetTokenExpiry: new Date(Date.now() + 3_600_000) } });
-  const forgotRes = await post({ token: 'f'.repeat(64), password: PW, setup: true });
-  const forgotBody = await forgotRes.json();
-  ok('a forgot-password link with setup: true sets the password but does not sign in', forgotBody.success === true && forgotBody.signedIn === false && !(forgotRes.headers.get('set-cookie') ?? '').includes('gr_operator='), forgotBody);
+  // An ordinary reset queues the password-changed email with after(), which throws
+  // outside a request here — after the write, so the row still tells the story.
+  await post({ token: 'f'.repeat(64), password: PW, setup: true }).catch(() => null);
+  const forgotRow = await prisma.courseOperator.findUniqueOrThrow({ where: { id: forgot.id } });
+  ok('a forgot-password link with setup: true is an ordinary reset (password set, no sign-in, no setup)', forgotRow.resetToken === null && forgotRow.password !== 'x' && !forgotRow.lastLoginAt && !forgotRow.emailVerified, forgotRow);
 
   // No owner password is emailed or returned anywhere.
   const email = readFileSync('src/lib/email.ts', 'utf8');
