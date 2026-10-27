@@ -96,7 +96,8 @@ export async function GET(req: NextRequest) {
     createdAt: course.createdAt,
     bookings30d,
     bookingsPrev30d: priorBookingsCount,
-    hasLinkedInquiry: !!linkedInquiry,
+    // A course built by hand has no inquiry on purpose — never an orphan.
+    hasLinkedInquiry: !!linkedInquiry || course.builtByHand,
   });
 
   const openChanges = linkedInquiry ? computeOpenChanges(linkedInquiry.events) : [];
