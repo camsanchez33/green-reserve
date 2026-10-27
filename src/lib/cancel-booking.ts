@@ -119,6 +119,8 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // NS-EOD: marking a no-show charges nothing until the course's midnight, and
   // cancelling takes the booking out of that run. Cancelling a flagged booking
   // is the final word, so its no-show charges are taken now (unless waived).
+  // Since Cam 2026-10-27 a flagged no-show is refused above (its tee time has gone off),
+  // so this branch only guards a cancel that reaches here some other way.
   if (booking.noShowAt && !waiveFee && !(await liveNoShowCharge(bookingId))) {
     await chargeNoShow(bookingId).catch(err => console.error(JSON.stringify({ ev: 'cancel.noshow_charge.fail', bookingId, error: err instanceof Error ? err.message : String(err) })));
   }

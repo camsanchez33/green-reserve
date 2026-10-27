@@ -93,6 +93,13 @@ async function main() {
     check('waived cancel never charges a late fee', (await lateFeeAttempts(b.id)) === 0);
   }
 
+  // 3. The course calling it off (closure / weather) still takes a teed-off booking off.
+  {
+    const b = await seedNoShow('closure');
+    const r = await performCancellation(b.id, { type: 'system' }, { courseCalledOff: 'closure', waiveFee: true, notifySlotAlerts: false });
+    check('a closure still cancels a booking whose tee time has gone off', 'success' in r && r.success === true, JSON.stringify(r));
+  }
+
   await cleanup();
   console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
   await prisma.$disconnect();

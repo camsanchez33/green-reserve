@@ -324,6 +324,7 @@ function ManagePageInner() {
     feeAlreadyCharged: info.cancellationFeeCharged,
     bookingFeeCents: info.hasCard && info.accessFeeTotal >= 50 ? info.accessFeeTotal : 0,
     noShowKept: !!info.noShowKept,
+    teedOff: !!info.teedOff,
   });
   const policyText = cancelWords.banner;
   const confirmCancelMsg = cancelWords.confirm;
@@ -500,7 +501,7 @@ function ManagePageInner() {
 
           {/* Policy */}
           {!alreadyCancelled && !alreadyCompleted && (
-            <div className={`rounded-md border p-4 mb-5 text-sm ${info.windowOpen ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-warn/5 border-warn/20 text-warn'}`}>
+            <div className={`rounded-md border p-4 mb-5 text-sm ${info.windowOpen && !info.teedOff ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-warn/5 border-warn/20 text-warn'}`}>
               {policyText}
             </div>
           )}
