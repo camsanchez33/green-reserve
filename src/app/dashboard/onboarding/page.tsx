@@ -2,16 +2,17 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronRight, Loader2, Trash2 } from 'lucide-react';
+import { Loader2, ExternalLink } from 'lucide-react';
 import SignAgreements from '@/components/dashboard/SignAgreements';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 
 // AG-2: the single agreement checkbox became its own step — legal name,
 // signer, and each document read to the end before it can be ticked.
-const STEPS = ['Course details', 'Sign', 'Connect payments', 'Go live'];
-
-type TeeSet = { id: string; name: string; yardage: string; rating: string; slope: string };
-const blankTeeSet = (): TeeSet => ({ id: Math.random().toString(36).slice(2), name: '', yardage: '', rating: '', slope: '' });
+// Cam 2026-10-27: step 1 is reviewing the golfer-facing page (approve it or ask
+// for changes). It used to re-ask holes, par and tee sets — all already on the
+// setup sheet, and still editable in Settings.
+const STEPS = ['Review your page', 'Sign', 'Connect payments', 'Go live'];
 
 const iCls = 'w-full bg-paper border border-line rounded-md px-3 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
 
@@ -21,8 +22,14 @@ function OnboardingInner() {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [details, setDetails] = useState({ description: '', holes: 18, par: 72 });
-  const [teeSets, setTeeSets] = useState<TeeSet[]>([blankTeeSet()]);
+  const [pageStatus, setPageStatus] = useState<'none' | 'approved' | 'changes_requested'>('none');
+  const [opened, setOpened] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [blockedUrl, setBlockedUrl] = useState('');
+  const [openError, setOpenError] = useState('');
+  const [asking, setAsking] = useState(false);
+  const [changeCats, setChangeCats] = useState<Set<string>>(new Set());
+  const [changeNote, setChangeNote] = useState('');
   const [stripeActive, setStripeActive] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [stripeBanner, setStripeBanner] = useState('');
@@ -54,20 +61,13 @@ function OnboardingInner() {
     }).catch(() => setLoadError('Network error loading your account.')); // SD-10: was a spinner forever
     fetch('/api/operator/courses').then(r => r.json()).then(c => {
       if (!c) return;
-      setDetails(d => ({ ...d, description: c.description ?? '', holes: c.holes ?? 18, par: c.par ?? 72 }));
       setStripeActive(!!c.stripeAccountActive);
+      if (c.pageApprovalStatus === 'approved' || c.pageApprovalStatus === 'changes_requested') setPageStatus(c.pageApprovalStatus);
     }).catch(() => setLoadError('Network error loading your course — reload the page.'));
     fetch('/api/operator/sign?status=1').then(r => r.ok ? r.json() : null).then(d => {
       const st = d?.status;
       setSignedAll(st ? st.total === 0 || st.signed === st.total : false);
     }).catch(() => setSignedAll(false));
-    fetch('/api/operator/tee-sets').then(r => r.json()).then(rows => {
-      if (Array.isArray(rows) && rows.length > 0) {
-        setTeeSets(rows.map((r: { id: string; name: string; yardage: number; rating: number; slope: number }) => ({
-          id: r.id, name: r.name, yardage: String(r.yardage || ''), rating: String(r.rating || ''), slope: String(r.slope || ''),
-        })));
-      }
-    }).catch(() => setLoadError('Network error loading your tee sets — reload the page.'));
   }, [router]);
 
   useEffect(() => {
@@ -76,27 +76,48 @@ function OnboardingInner() {
     setLoading(false);
   }, [profileStep, signedAll]);
 
-  const set = (k: keyof typeof details, v: string | number) => setDetails(d => ({ ...d, [k]: v }));
-  const setTee = (id: string, k: keyof TeeSet, v: string) => setTeeSets(ts => ts.map(t => t.id === id ? { ...t, [k]: v } : t));
-  const addTee = () => setTeeSets(ts => [...ts, blankTeeSet()]);
-  const removeTee = (id: string) => setTeeSets(ts => ts.filter(t => t.id !== id));
+  // Opens the course's own preview (the same link as the dashboard's "View your page").
+  // The tab opens inside the click so a pop-up blocker allows it.
+  const openPage = async () => {
+    setOpenError(''); setBlockedUrl(''); setOpening(true);
+    const tab = window.open('', '_blank');
+    try {
+      const r = await fetch('/api/operator/preview-link');
+      const d = await r.json().catch(() => ({} as Record<string, unknown>));
+      if (r.ok && typeof d.url === 'string') { // Pop-up blocked: show the link here rather than leaving onboarding.
+        if (tab) tab.location.href = d.url; else setBlockedUrl(d.url); setOpened(true); return; }
+      tab?.close(); setOpenError(String(d.error || `Couldn’t open your page (${r.status}) — try again.`));
+    } catch { tab?.close(); setOpenError('Couldn’t reach the server — check your connection and try again.'); }
+    finally { setOpening(false); }
+  };
 
-  const saveDetails = async () => {
+  // Step 1 done → step 2 (the endpoint bumps onboardingStep, so a reload resumes at Sign).
+  const advance = async () => {
+    const r = await fetch('/api/operator/profile', { method: 'PATCH' });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error || `Could not save your progress (${r.status}).`); }
+    setStep(signedAll ? 3 : 2);
+  };
+
+  const decide = async (decision: 'approve' | 'changes' | 'later') => {
     setSaving(true); setSaveError('');
     try {
-      const J = { 'Content-Type': 'application/json' };
-      const fail = async (r: Response, what: string) => { const d = await r.json().catch(() => ({})); throw new Error(d.error || `Could not save ${what} (${r.status}).`); };
-      const r1 = await fetch('/api/operator/courses', { method: 'PATCH', headers: J, body: JSON.stringify(details) });
-      if (!r1.ok) await fail(r1, 'course details');
-      const r2 = await fetch('/api/operator/tee-sets', { method: 'PUT', headers: J, body: JSON.stringify({ teeSets: teeSets.filter(t => t.name.trim()) }) });
-      if (!r2.ok) await fail(r2, 'tee sets');
-      // SD-9: the endpoint that bumps onboardingStep to 2 existed and was
-      // called by nobody, so a GM who got pulled away re-landed on step 1.
-      const r4 = await fetch('/api/operator/profile', { method: 'PATCH' });
-      if (!r4.ok) await fail(r4, 'your progress');
-      setStep(signedAll ? 3 : 2);
+      if (decision === 'approve') {
+        const r = await fetch('/api/operator/approve-page', { method: 'POST' });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || `Could not record your approval (${r.status}).`);
+        setPageStatus('approved');
+      } else if (decision === 'changes') {
+        if (changeCats.size === 0) throw new Error('Pick what needs changing.');
+        // The note rides on the first category only, so the admin thread doesn't repeat it per category.
+        const items = [...changeCats].map((category, i) => ({ category, detail: i === 0 ? changeNote : '' }));
+        const r = await fetch('/api/operator/request-changes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || `Could not send your changes (${r.status}).`);
+        setPageStatus('changes_requested');
+      }
+      await advance();
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Something went wrong — nothing was lost, try again.');
+      setSaveError(e instanceof Error ? e.message : 'Something went wrong — try again.');
     } finally {
       setSaving(false);
     }
@@ -146,6 +167,11 @@ function OnboardingInner() {
 
   const isConnected = stripeActive || stripeBanner === 'connected';
 
+  const todo = [
+    pageStatus === 'changes_requested' ? 'approve your updated page once we send it' : pageStatus !== 'approved' ? 'approve your booking page' : '',
+    !isConnected ? 'connect Stripe' : '',
+  ].filter(Boolean);
+
   return (
     <div className="min-h-screen bg-paper p-4">
       <div className="max-w-xl mx-auto pt-10">
@@ -173,62 +199,74 @@ function OnboardingInner() {
           ))}
         </div>
 
-        {/* Step 1 — Course Details */}
+        {/* Step 1 — Review your page (Cam 2026-10-27) */}
         {step === 1 && (
           <div className="bg-white rounded-lg shadow-card p-6">
-            <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-1">A few details about the course</h2>
-            <p className="text-sm text-ink-soft mb-6">Your contact info and address are already on file from your setup sheet. This is just the playing details.</p>
+            <h2 className="text-[24px] font-serif font-semibold leading-none text-ink mb-2">Review your booking page</h2>
+            <p className="text-sm text-ink mb-5">This is what golfers will see. Check your prices, tee times, photos and policies, then approve it or tell us what to change. Booking is off until you go live.</p>
 
-            <div className="space-y-5">
-              <div>
-                <label className="block text-[13px] font-semibold text-ink mb-1.5">Description <span className="font-normal text-ink-muted">(optional)</span></label>
-                <textarea value={details.description} onChange={e => set('description', e.target.value)}
-                  rows={3} placeholder="Tell golfers what makes your course special..."
-                  className={iCls + ' resize-none'}/>
+            <button onClick={openPage} disabled={opening}
+              className="w-full flex items-center justify-center gap-2 bg-white border border-line hover:border-pine/40 text-ink py-3 rounded-md font-medium text-[13px] transition-colors">
+              {opening ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden /> : <>Open your page <ExternalLink className="w-3.5 h-3.5" aria-hidden /></>}
+            </button>
+            {blockedUrl && <p className="text-sm text-ink mt-2">Your browser blocked the new tab. <a href={blockedUrl} target="_blank" rel="noopener noreferrer" className="text-pine underline">Open your page here</a>.</p>}
+            {openError && <p role="alert" className="text-sm text-bad mt-2">{openError}</p>}
+
+            {pageStatus !== 'none' ? (
+              <div className="mt-5">
+                <StatusDot status={pageStatus === 'approved' ? 'ok' : 'warn'} label={pageStatus === 'approved' ? 'You approved this page.' : 'You asked for changes — we’ll email you when they’re made.'} />
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[13px] font-semibold text-ink mb-1.5">Holes</label>
-                  <input type="number" value={details.holes} onChange={e => set('holes', Number(e.target.value))} placeholder="18" className={iCls}/>
-                  <p className="text-xs text-ink-faint mt-1">9, 18, 27, 36, etc.</p>
-                </div>
-                <div>
-                  <label className="block text-[13px] font-semibold text-ink mb-1.5">Par</label>
-                  <input type="number" value={details.par} onChange={e => set('par', Number(e.target.value))} className={iCls}/>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-[13px] font-semibold text-ink">Tee sets <span className="font-normal text-ink-muted">(optional)</span></label>
-                  <button onClick={addTee} className="text-xs font-medium text-pine hover:text-pine-hover flex items-center gap-1 transition-colors">
-                    Add tee
-                  </button>
-                </div>
-                <p className="text-xs text-ink-soft mb-3">List your tee boxes (Black, Blue, White, Red…) with yardage, rating, and slope. Leave blank to skip.</p>
-                <div className="space-y-2">
-                  {teeSets.map(t => (
-                    <div key={t.id} className="grid grid-cols-[1.2fr_1fr_1fr_1fr_auto] gap-2 items-center">
-                      <input value={t.name} onChange={e => setTee(t.id, 'name', e.target.value)} placeholder="Black" className={iCls}/>
-                      <input type="number" value={t.yardage} onChange={e => setTee(t.id, 'yardage', e.target.value)} placeholder="Yds" className={iCls}/>
-                      <input type="number" step="0.1" value={t.rating} onChange={e => setTee(t.id, 'rating', e.target.value)} placeholder="Rating" className={iCls}/>
-                      <input type="number" value={t.slope} onChange={e => setTee(t.id, 'slope', e.target.value)} placeholder="Slope" className={iCls}/>
-                      <button onClick={() => removeTee(t.id)} className="text-ink-faint hover:text-bad p-1 transition-colors"><Trash2 className="w-4 h-4"/></button>
-                    </div>
+            ) : asking ? (
+              <div className="mt-5 space-y-3">
+                <p className="text-[13px] font-semibold text-ink">What needs changing?</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {CHANGE_CATEGORIES.map(c => (
+                    <label key={c.key} className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+                      <input type="checkbox" className="accent-pine" checked={changeCats.has(c.key)}
+                        onChange={() => setChangeCats(prev => { const n = new Set(prev); if (n.has(c.key)) n.delete(c.key); else n.add(c.key); return n; })} />
+                      {c.label}
+                    </label>
                   ))}
                 </div>
+                <textarea value={changeNote} onChange={e => setChangeNote(e.target.value)} rows={3} maxLength={1000}
+                  placeholder="Tell us what to change" className={iCls + ' resize-none'} />
               </div>
-            </div>
+            ) : null}
 
-            {saveError && <p className="text-sm text-bad mb-3 mt-6">{saveError}</p>}
-            <button onClick={saveDetails} disabled={saving}
-              className="w-full mt-3 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 disabled:bg-line-strong transition-colors flex items-center justify-center gap-2">
-              {saving ? <><Loader2 className="w-4 h-4 animate-spin"/>Saving...</> : <>Continue<ChevronRight className="w-4 h-4"/></>}
-            </button>
+            {saveError && <p role="alert" className="text-sm text-bad mt-4">{saveError}</p>}
+
+            {pageStatus !== 'none' ? (
+              <button onClick={() => decide('later')} disabled={saving}
+                className="w-full mt-5 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
+                {saving ? 'Saving…' : 'Continue'}
+              </button>
+            ) : asking ? (
+              <div className="mt-5 flex gap-2">
+                <button onClick={() => { setAsking(false); setSaveError(''); }} disabled={saving}
+                  className="px-4 py-3 rounded-md border border-line text-ink text-[13px] font-medium hover:border-pine/40 disabled:opacity-50 transition-colors">Back</button>
+                <button onClick={() => decide('changes')} disabled={saving}
+                  className="flex-1 bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
+                  {saving ? 'Sending…' : 'Send my changes'}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <button onClick={() => { setAsking(true); setSaveError(''); }} disabled={saving}
+                    className="py-3 rounded-md border border-line text-ink text-[13px] font-medium hover:border-pine/40 disabled:opacity-50 transition-colors">Something needs changing</button>
+                  <button onClick={() => decide('approve')} disabled={saving || !opened}
+                    title={opened ? undefined : 'Open your page first'}
+                    className="bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] disabled:opacity-50 transition-colors">
+                    {saving ? 'Saving…' : 'Looks good — approve it'}
+                  </button>
+                </div>
+                {!opened && <p className="text-xs text-ink-soft mt-2 text-center">Open your page first to approve it.</p>}
+                <button onClick={() => decide('later')} disabled={saving}
+                  className="w-full mt-3 text-[13px] text-ink-muted hover:text-ink transition-colors">I&apos;ll review it later</button>
+              </>
+            )}
           </div>
         )}
-
         {/* Step 2 — Sign (AG-2) */}
         {step === 2 && (
           <div className="bg-white rounded-lg shadow-card p-6">
@@ -293,7 +331,9 @@ function OnboardingInner() {
         {step === 4 && (
           <div className="bg-white rounded-lg shadow-card p-10 text-center">
             <h2 className="text-[30px] font-serif font-semibold leading-none text-ink mb-2">Setup complete</h2>
-            <p className="text-sm text-ink-soft mb-2">Your course details are saved and payments are connected. GreenReserve will review everything and take your course live — usually within 1 business day.</p>
+            <p className="text-sm text-ink mb-2">{pageStatus === 'approved' && isConnected
+              ? 'Your page is approved and payments are connected. GreenReserve will check everything and take your course live — usually within 1 business day.'
+              : `Before your course goes live: ${todo.join(' and ')}. Your dashboard’s checklist has ${todo.length === 1 ? 'it' : 'both'}.`}</p>
             <p className="text-xs text-ink-soft mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
             <button onClick={() => router.push('/dashboard')}
               className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] transition-colors">

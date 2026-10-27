@@ -23,7 +23,7 @@ function VerifyContent() {
     if (urlToken) { verify(urlToken); return; }
 
     // No token in the URL — this is a logged-in operator (e.g. signed in with
-    // a temp password without clicking the emailed link) who still needs to
+    // a password reset without clicking the emailed link) who still needs to
     // verify. Load their email + course status for the fallback screen.
     (async () => {
       const profileRes = await fetch('/api/operator/profile');

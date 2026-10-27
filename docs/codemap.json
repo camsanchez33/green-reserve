@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 562,
+    "files": 563,
     "routes": 266,
-    "libs": 190,
+    "libs": 191,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -703,7 +703,7 @@
     },
     {
       "path": "src/app/admin/create/page.tsx",
-      "lines": 761,
+      "lines": 759,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -877,7 +877,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2354,
+      "lines": 2355,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -1996,7 +1996,7 @@
     },
     {
       "path": "src/app/api/admin/create-course/route.ts",
-      "lines": 192,
+      "lines": 198,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2022,6 +2022,7 @@
         "@/lib/admin-session",
         "@/lib/email",
         "@/lib/money",
+        "@/lib/operator-setup",
         "@/lib/prisma",
         "bcryptjs",
         "crypto",
@@ -2290,7 +2291,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1318,
+      "lines": 1294,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2337,6 +2338,7 @@
         "@/lib/inquiry-status",
         "@/lib/lifecycle",
         "@/lib/money",
+        "@/lib/operator-setup",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/tee-sheet-engine",
@@ -3518,7 +3520,7 @@
     },
     {
       "path": "src/app/api/auth/reset-password/route.ts",
-      "lines": 81,
+      "lines": 106,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3544,6 +3546,7 @@
         "@/lib/email",
         "@/lib/password",
         "@/lib/prisma",
+        "@/lib/security-events",
         "bcryptjs",
         "next/server"
       ],
@@ -7089,7 +7092,7 @@
     },
     {
       "path": "src/app/api/preview/send/route.ts",
-      "lines": 154,
+      "lines": 130,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7110,10 +7113,9 @@
         "@/lib/admin-session",
         "@/lib/approval-state",
         "@/lib/email",
+        "@/lib/operator-setup",
         "@/lib/preview-token",
         "@/lib/prisma",
-        "bcryptjs",
-        "crypto",
         "next/server"
       ],
       "usedBy": []
@@ -7997,7 +7999,7 @@
     },
     {
       "path": "src/app/dashboard/onboarding/page.tsx",
-      "lines": 316,
+      "lines": 356,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8014,6 +8016,7 @@
       "imports": [
         "@/components/dashboard/SignAgreements",
         "@/components/ui/StatusDot",
+        "@/lib/change-requests",
         "lucide-react",
         "next/image",
         "next/navigation",
@@ -8111,7 +8114,7 @@
     },
     {
       "path": "src/app/dashboard/reset-password/page.tsx",
-      "lines": 112,
+      "lines": 123,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14408,6 +14411,7 @@
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/dashboard/onboarding/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/lib/approval-state.ts",
         "src/lib/inquiry-action-queue.ts",
@@ -16172,7 +16176,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2152,
+      "lines": 2078,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16297,7 +16301,7 @@
           "kind": "fn"
         },
         {
-          "name": "sendDashboardAccessEmail",
+          "name": "sendDashboardSetupEmail",
           "kind": "fn"
         },
         {
@@ -16413,10 +16417,6 @@
           "kind": "fn"
         },
         {
-          "name": "sendOperatorWelcomeEmail",
-          "kind": "fn"
-        },
-        {
           "name": "sendOwnerDeviceApproval",
           "kind": "fn"
         },
@@ -16429,15 +16429,15 @@
           "kind": "fn"
         },
         {
+          "name": "sendPageReadyInDashboardEmail",
+          "kind": "fn"
+        },
+        {
           "name": "sendPasswordChangedNotification",
           "kind": "fn"
         },
         {
           "name": "sendPreviewEmail",
-          "kind": "fn"
-        },
-        {
-          "name": "sendPreviewWithDashboardAccessEmail",
           "kind": "fn"
         },
         {
@@ -18493,6 +18493,40 @@
       ]
     },
     {
+      "path": "src/lib/operator-setup.ts",
+      "lines": 41,
+      "purpose": "Cam 2026-10-27 (onboarding walk):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "hasSetUp",
+          "kind": "fn"
+        },
+        {
+          "name": "issueSetupLink",
+          "kind": "fn"
+        },
+        {
+          "name": "SETUP_LINK_DAYS",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "crypto"
+      ],
+      "usedBy": [
+        "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/preview/send/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/owner-passkey.ts",
       "lines": 111,
       "purpose": "AW-1b (Cam 2026-10-21:",
@@ -19073,6 +19107,7 @@
         "src/lib/no-show-fee.ts",
         "src/lib/operator-home.ts",
         "src/lib/operator-search.ts",
+        "src/lib/operator-setup.ts",
         "src/lib/owner-passkey.ts",
         "src/lib/owner-session.ts",
         "src/lib/problems.ts",
@@ -20115,6 +20150,7 @@
         "src/app/api/admin/security/route.ts",
         "src/app/api/auth/2fa/verify/route.ts",
         "src/app/api/auth/login/route.ts",
+        "src/app/api/auth/reset-password/route.ts",
         "src/app/api/cam/login/route.ts",
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
@@ -24721,8 +24757,8 @@
         "src/app/api/operator/onboarding-complete/route.ts",
         "src/app/api/operator/profile/route.ts",
         "src/app/api/operator/settings/route.ts",
-        "src/app/api/preview/send/route.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/operator-setup.ts",
         "src/lib/two-factor.ts"
       ],
       "readers": [

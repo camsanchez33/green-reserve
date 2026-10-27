@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { validatePasswordStrength } from '@/lib/password';
 import { sendPasswordChangedNotification } from '@/lib/email';
-import { verifyStaffResetToken } from '@/lib/auth';
+import { verifyStaffResetToken, signToken } from '@/lib/auth';
+import { securityEvent } from '@/lib/security-events';
 
 // SD-9c: an operator's reset token is 64 hex chars stored in a column; a staff
 // member's is a signed JWT (see lib/auth.ts signStaffResetToken).
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { token, password } = await req.json();
+  const { token, password, setup } = await req.json();
   if (!token || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   const passwordError = validatePasswordStrength(password);
   if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
@@ -66,15 +67,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
   }
 
+  // Cam 2026-10-27 — the "set your password" link (lib/operator-setup) lands here
+  // with setup: true. Following it proves the inbox, so it also confirms the email.
+  // On an owner's FIRST setup it signs them in too, when their sign-in codes go to
+  // that same inbox (the link is the same factor as the emailed code); an owner who
+  // gets codes by text signs in normally, so the link never skips their phone.
+  // Setup mode only on a token minted as a setup link (7 days) — a forgot-password
+  // token (1 hour) sent back with setup: true is an ordinary reset.
+  const isSetup = setup === true && operator.resetTokenExpiry.getTime() - Date.now() > 60 * 60 * 1000;
+  const signIn = isSetup && !operator.lastLoginAt && !(operator.twoFactorMethod === 'sms' && operator.phone);
   const hashed = await bcrypt.hash(password, 12);
-  await prisma.courseOperator.update({
-    where: { id: operator.id },
+  // Conditional on the token still being there, so two submits of one link can't both land.
+  const { count } = await prisma.courseOperator.updateMany({
+    where: { id: operator.id, resetToken: token },
     // SD-5: a reset signs every existing session out.
-    data: { password: hashed, resetToken: null, resetTokenExpiry: null, sessionVersion: { increment: 1 } },
+    data: {
+      password: hashed, resetToken: null, resetTokenExpiry: null, sessionVersion: { increment: 1 },
+      ...(isSetup ? { emailVerified: true, verificationToken: null, onboardingStep: Math.max(operator.onboardingStep, 1) } : {}),
+      ...(signIn ? { lastLoginAt: new Date(), failedLoginAttempts: 0, lockoutUntil: null } : {}),
+    },
   });
+  if (count === 0) return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
 
-  after(sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })
-    .catch(err => console.error('Password-changed notification failed:', err)));
+  // Choosing a first password is not a "your password was changed" moment.
+  if (!isSetup) {
+    after(sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })
+      .catch(err => console.error('Password-changed notification failed:', err)));
+  }
+  if (!signIn) return NextResponse.json({ success: true, signedIn: false });
 
-  return NextResponse.json({ success: true });
+  await securityEvent(req, { kind: 'signin_ok', surface: 'course', email: operator.email, accountId: operator.id, detail: 'owner, set-your-password link' });
+  const session = await signToken({ operatorId: operator.id, email: operator.email, sv: operator.sessionVersion + 1 });
+  const redirect = operator.onboardingStep < 3 ? '/dashboard/onboarding' : '/dashboard';
+  const res = NextResponse.json({ success: true, signedIn: true, redirect });
+  res.cookies.set('gr_operator', session, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7, path: '/' });
+  return res;
 }

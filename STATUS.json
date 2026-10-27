@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-27T00:16:53.692Z",
+  "generatedAt": "2026-10-27T03:10:25.642Z",
   "repo": {
-    "head": "ae6e20f5",
+    "head": "ea268e48",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 2,
     "dirty": [
@@ -14,9 +14,37 @@
     "queueLastCommit": "2026-10-22T21:48:15+00:00",
     "unrecorded": [
       {
+        "h": "ea268e48",
+        "date": "2026-10-27T03:08:31+00:00",
+        "subject": "Onboarding review step: honest to-do line, blocked pop-up link, note once; setup mode only on a setup token",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "aa33dd6d",
+        "date": "2026-10-27T03:03:02+00:00",
+        "subject": "Onboarding: review your page is step 1; set-your-password review fixes",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e2cc0a6a",
+        "date": "2026-10-27T02:54:56+00:00",
+        "subject": "Course owners are never emailed a password: one 'Set your password' link (7 days, single use) that confirms the email and signs them in",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "ae6e20f5",
         "date": "2026-10-27T00:15:42+00:00",
         "subject": "Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4d8194b5",
+        "date": "2026-10-26T20:11:18-04:00",
+        "subject": "See a built course's page before sending the preview (#233)",
         "ids": [],
         "matches": []
       },
@@ -750,7 +778,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -816,159 +844,179 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 5
+      "ageDays": 6
     }
   ],
   "bank": null,
   "recentCommits": [
     {
+      "h": "ea268e48",
+      "date": "2026-10-27",
+      "subject": "Onboarding review step: honest to-do line, blocked pop-up link, note once; setup mode only on a setup token"
+    },
+    {
+      "h": "aa33dd6d",
+      "date": "2026-10-27",
+      "subject": "Onboarding: review your page is step 1; set-your-password review fixes"
+    },
+    {
+      "h": "e2cc0a6a",
+      "date": "2026-10-27",
+      "subject": "Course owners are never emailed a password: one 'Set your password' link (7 days, single use) that confirms the email and signs them in"
+    },
+    {
       "h": "ae6e20f5",
       "date": "2026-10-27",
       "subject": "Recap: seasons by month name, nines for 27/36-hole courses, 9-hole replays; a Yes with no fee is refused; resume jumps once"
+    },
+    {
+      "h": "4d8194b5",
+      "date": "2026-10-26",
+      "subject": "See a built course's page before sending the preview (#233)"
     },
     {
       "h": "5afb4b9e",
@@ -1004,26 +1052,6 @@
       "h": "50991cf1",
       "date": "2026-10-26",
       "subject": "Reply to a course from the admin; a new question is your move until you reply; the new-question alert leads with the question"
-    },
-    {
-      "h": "3fac48ef",
-      "date": "2026-10-26",
-      "subject": "/for-courses: one column, no price line, no FAQ; thanks screens keep the header and say one thing"
-    },
-    {
-      "h": "ee9402b3",
-      "date": "2026-10-26",
-      "subject": "Staff switches do what they say (R-AUTH-007) (#231)"
-    },
-    {
-      "h": "d186b39b",
-      "date": "2026-10-26",
-      "subject": "Refunds switch: drop 'back to the card' (shop refunds can be cash); status board + code map"
-    },
-    {
-      "h": "dbfb8d87",
-      "date": "2026-10-26",
-      "subject": "Staff switches: refunds says what it gates, no Stripe connect button for staff, 'Charge a fee by hand' removed (R-AUTH-007)"
     }
   ]
 }

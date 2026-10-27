@@ -32,8 +32,8 @@ interface FeesData {
 }
 interface OpData { contactName: string; contactEmail: string; contactPhone: string; }
 interface Result {
-  slug: string; tempPassword: string; setupLink: string; courseId: string | null;
-  emailSent: boolean; emailError?: string; notesItems?: string[];
+  slug: string; sentTo?: string; courseId: string | null;
+  emailSent: boolean; emailError?: string | null; notesItems?: string[];
   seedScheduleCreated?: boolean; seedTierCreated?: boolean;
 }
 
@@ -293,8 +293,6 @@ function WizardContent() {
   const copyRows: [string, string][] = result
     ? [
         ['Booking page', 'greenreserve.app/courses/' + result.slug],
-        ['Temp password', result.tempPassword],
-        ['Setup link', result.setupLink],
       ]
     : [];
 
@@ -312,7 +310,7 @@ function WizardContent() {
                 <div>
                   <div className="font-serif font-semibold text-ink text-lg">Course created!</div>
                   <div className={'text-xs mt-0.5 ' + (result.emailSent ? 'text-ok' : 'text-bad')}>
-                    {result.emailSent ? 'Welcome email sent to operator' : 'Email failed — share credentials manually'}
+                    {result.emailSent ? `Set-your-password email sent${result.sentTo ? ' to ' + result.sentTo : ''}` : `The set-your-password email didn\u2019t send (${result.emailError || 'unknown error'}). Use Send preview on the course page to send it again.`}
                   </div>
                 </div>
               </div>
@@ -648,7 +646,7 @@ function WizardContent() {
             <div className="space-y-5">
               <Card className="p-6 space-y-4">
                 <Eyebrow>Operator account</Eyebrow>
-                <p className="text-xs text-ink-soft">Creates their dashboard login. They receive a welcome email with a temp password and setup link.</p>
+                <p className="text-xs text-ink-soft">Creates their dashboard login. They receive a ‘Set your password’ email (the link is good for 7 days).</p>
                 <div>
                   <label className="block"><Eyebrow as="span" className="block mb-1.5">Full name *</Eyebrow>
                   <input value={op.contactName} onChange={e => setOp(f => ({ ...f, contactName: e.target.value }))} className={iCls} placeholder="John Smith" autoFocus/></label>
@@ -728,7 +726,7 @@ function WizardContent() {
                   </div>
                 )}
                 <div className="bg-pine/5 border border-pine/20 rounded-md px-4 py-3 text-xs text-pine">
-                  A welcome email with a temporary password and setup link will be sent to <strong>{op.contactEmail}</strong>.
+                  A “Set your password” email will be sent to <strong>{op.contactEmail}</strong>.
                 </div>
               </Card>
               {createError && (

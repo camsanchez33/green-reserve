@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse, after } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
-import { sendOperatorWelcomeEmail } from '@/lib/email';
+import { sendDashboardSetupEmail } from '@/lib/email';
+import { issueSetupLink, SETUP_LINK_DAYS } from '@/lib/operator-setup';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
 import { withAudit } from '@/lib/admin-audit';
 
@@ -77,8 +78,8 @@ async function createCourse(req: NextRequest) {
         ? '[Setup Notes]\n' + notesLines.map((n: string) => '• ' + n).join('\n')
         : '';
 
-    const tempPassword = randomBytes(8).toString('hex');
-    const hashed = await bcrypt.hash(tempPassword, 12);
+    // A random password nobody is told — the owner chooses theirs from the setup link (lib/operator-setup).
+    const hashed = await bcrypt.hash(randomBytes(24).toString('hex'), 12);
     const verificationToken = randomBytes(32).toString('hex');
 
     const operator = await prisma.courseOperator.create({
@@ -115,7 +116,6 @@ async function createCourse(req: NextRequest) {
     });
 
     const courseId = operator.course?.[0]?.id ?? null;
-    const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
 
     // If this was created from an inquiry, mark it
     if (inquiryId && courseId) {
@@ -172,11 +172,17 @@ async function createCourse(req: NextRequest) {
       seedTierCreated = true;
     }
 
-    after(sendOperatorWelcomeEmail({ operatorName: contactName, operatorEmail: contactEmail, courseName, tempPassword, setupLink })
-      .catch(e => console.error('Welcome email failed:', e)));
+    // Cam 2026-10-27: the one "set your password" email — no password in it or in this response.
+    let emailError: string | null = null;
+    try {
+      await sendDashboardSetupEmail({ operatorName: contactName, operatorEmail: contactEmail, courseName, setupUrl: await issueSetupLink(operator.id), pageReady: false, linkDays: SETUP_LINK_DAYS });
+    } catch (e) {
+      emailError = e instanceof Error ? e.message : 'unknown error';
+      console.error('Set-your-password email failed:', e);
+    }
 
     return NextResponse.json({
-      success: true, slug, tempPassword, setupLink, courseId, operatorId: operator.id,
+      success: true, slug, sentTo: contactEmail, emailSent: !emailError, emailError, courseId, operatorId: operator.id,
       seedScheduleCreated, seedTierCreated,
       notesItems: notesLines,
     });

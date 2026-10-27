@@ -9,7 +9,7 @@ import {
 import { stillNeed } from '@/lib/inquiry-needs';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
-import { sendOperatorWelcomeEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendDashboardAccessEmail, sendGoLiveSimpleEmail, sendInquiryDeclinedEmail } from '@/lib/email';
+import { sendDashboardSetupEmail, sendPageReadyInDashboardEmail, sendDetailsRequestEmail, sendCourseLiveOrientationEmail, sendGoLiveSimpleEmail, sendInquiryDeclinedEmail } from '@/lib/email';
 import { generateTeeTimes } from '@/lib/tee-sheet-engine';
 import { resolveAdminSession, requireRole, requireOwner, ownerGateError, MANAGER_PLUS, SUPPORT_PLUS, VIEWER_PLUS, type AdminSession, areaGate } from '@/lib/admin-session';
 import { AGENDA, callGate, fmtCallTime, nextCall, latestCall, parseJson } from '@/lib/inquiry-call';
@@ -20,6 +20,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { firstCheckInAfterGoLive } from '@/lib/course-checkin';
 import { sendCallScheduledEmail, sendCallRecapEmail, sendCallFollowupEmail, sendInquiryReply } from '@/lib/email';
 import { REPLY_EVENT_PREFIX } from '@/lib/inquiry-status';
+import { issueSetupLink, hasSetUp, SETUP_LINK_DAYS } from '@/lib/operator-setup';
 import { encodeChangeAddressed, encodeRequestReReview } from '@/lib/change-requests';
 import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { hasAcceptedAgreement } from '@/lib/agreement-gate';
@@ -565,54 +566,26 @@ async function handleAction(
   }
 
   // ── Build course draft ────────────────────────────────────────────
-  // ── Resend welcome email ──────────────────────────────────────────
-  if (action === 'resend_welcome') {
+  // ── Resend welcome / send dashboard access ───────────────────────
+  // Cam 2026-10-27: no password is emailed any more. Both send the one "set your
+  // password" email (lib/operator-setup) to an owner still setting up; an owner
+  // who already signs in is told the page is in their dashboard, and their
+  // sign-in is not touched (these used to reset the password every time).
+  if (action === 'resend_welcome' || action === 'send_dashboard_access') {
+    if (!inquiry.builtCourseId) return NextResponse.json({ error: 'No course built yet' }, { status: 400 });
+    const course = await prisma.course.findUnique({ where: { id: inquiry.builtCourseId }, include: { operator: true } });
+    if (!course?.operator) return NextResponse.json({ error: 'No operator account found' }, { status: 404 });
+    const op = course.operator;
+    const alreadyIn = hasSetUp(op);
     try {
-      if (!inquiry.builtCourseId) return NextResponse.json({ error: 'No course built yet' }, { status: 400 });
-      const course = await prisma.course.findUnique({ where: { id: inquiry.builtCourseId }, include: { operator: true } });
-      if (!course?.operator) return NextResponse.json({ error: 'No operator account found' }, { status: 404 });
-      const tempPassword = randomBytes(8).toString('hex');
-      const hashed = await bcrypt.hash(tempPassword, 12);
-      const verificationToken = randomBytes(32).toString('hex');
-      await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
-      const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
-      after(sendOperatorWelcomeEmail({
-        operatorName: inquiry.contactName, operatorEmail: inquiry.email,
-        courseName: inquiry.courseName, tempPassword, setupLink,
-      }).catch(emailErr => console.error('Resend welcome email failed:', emailErr)));
-      await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Welcome email resent by ${adminName}`);
-      // MP-2c: the email carries these. Echoing a rotated password and a verify
-      // link back in JSON puts them in browser memory and every proxy log —
-      // MP-2b applied this rule to /api/preview/send and missed the twins here.
-      return NextResponse.json({ success: true });
-    } catch (e) {
-      return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+      if (alreadyIn) await sendPageReadyInDashboardEmail({ operatorName: op.name, operatorEmail: op.email, courseName: inquiry.courseName });
+      else await sendDashboardSetupEmail({ operatorName: op.name, operatorEmail: op.email, courseName: inquiry.courseName, setupUrl: await issueSetupLink(op.id), pageReady: inquiry.status === 'building', linkDays: SETUP_LINK_DAYS });
+    } catch (err) {
+      return NextResponse.json({ error: `The email didn't send (${err instanceof Error ? err.message : 'unknown error'}). Their sign-in is unchanged — try again.` }, { status: 502 });
     }
-  }
-
-  // ── Send dashboard access (Building-stage early access) ───────────
-  if (action === 'send_dashboard_access') {
-    try {
-      if (!inquiry.builtCourseId) return NextResponse.json({ error: 'No course built yet' }, { status: 400 });
-      const course = await prisma.course.findUnique({ where: { id: inquiry.builtCourseId }, include: { operator: true } });
-      if (!course?.operator) return NextResponse.json({ error: 'No operator account found' }, { status: 404 });
-      const tempPassword = randomBytes(8).toString('hex');
-      const hashed = await bcrypt.hash(tempPassword, 12);
-      const verificationToken = randomBytes(32).toString('hex');
-      await prisma.courseOperator.update({ where: { id: course.operator.id }, data: { password: hashed, verificationToken } });
-      const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${verificationToken}`;
-      after(sendDashboardAccessEmail({
-        operatorName: inquiry.contactName, operatorEmail: inquiry.email,
-        courseName: inquiry.courseName, tempPassword, setupLink,
-      }).catch(emailErr => console.error('Dashboard access email failed:', emailErr)));
-      await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `Dashboard access sent by ${adminName}`);
-      // MP-2c: the email carries these. Echoing a rotated password and a verify
-      // link back in JSON puts them in browser memory and every proxy log —
-      // MP-2b applied this rule to /api/preview/send and missed the twins here.
-      return NextResponse.json({ success: true });
-    } catch (e) {
-      return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
-    }
+    await logEvent(inquiryId, inquiry.status, inquiry.status, 'admin', `${alreadyIn ? 'Dashboard reminder' : 'Set-your-password email'} sent by ${adminName}`);
+    // The setup link is never returned — only the email carries it.
+    return NextResponse.json({ success: true, sentTo: op.email, alreadySetUp: alreadyIn });
   }
 
   // ── Mark live ─────────────────────────────────────────────────────
@@ -983,7 +956,7 @@ async function handleAction(
 
       // Captured out of the create branch below so build_course can put them in
       // the welcome email. Stays null when attaching to an existing operator.
-      let newLogin: { tempPassword: string; verificationToken: string; operatorId: string } | null = null;
+      let newLogin: { operatorId: string } | null = null;
       let builtCourseId: string | null = null;
       if (existingOp) {
         // V9-1b: operator having a course is no longer a dead-end.
@@ -1015,8 +988,8 @@ async function handleAction(
         const newCourse = await prisma.course.create({ data: { operatorId: existingOp.id, ...attachData } });
         builtCourseId = newCourse.id;
       } else {
-        const tempPassword = randomBytes(8).toString('hex');
-        const hashed = await bcrypt.hash(tempPassword, 12);
+        // A random password nobody is told — the owner chooses theirs from the setup link.
+        const hashed = await bcrypt.hash(randomBytes(24).toString('hex'), 12);
         const verificationToken = randomBytes(32).toString('hex');
         const operator = await prisma.courseOperator.create({
           data: {
@@ -1031,7 +1004,7 @@ async function handleAction(
           include: { course: true },
         });
         builtCourseId = operator.course?.[0]?.id ?? null;
-        newLogin = { tempPassword, verificationToken, operatorId: operator.id };
+        newLogin = { operatorId: operator.id };
       }
       const from = inquiry.status;
       await prisma.courseInquiry.update({
@@ -1192,15 +1165,18 @@ async function handleAction(
           // silent success here would mean a course with no way to log in.
           return NextResponse.json({ error: 'Course was created but no operator login was minted — check the course in Courses before retrying' }, { status: 500 });
         }
-        const setupLink = `${process.env.NEXT_PUBLIC_URL}/dashboard/verify?token=${newLogin.verificationToken}`;
-        after(sendOperatorWelcomeEmail({
-          operatorName: inquiry.contactName, operatorEmail,
-          courseName: inquiry.courseName, tempPassword: newLogin.tempPassword, setupLink,
-        }).catch(emailErr => console.error('Welcome email failed:', emailErr)));
-        // Response shape unchanged — the detail page renders tempPassword and
-        // setupLink after a build. (Removing them from JSON is its own queue item.)
+        // Cam 2026-10-27: no password in the email or in this response — one
+        // "set your password" link (lib/operator-setup). The course is built
+        // whether or not the email goes, so a failed send is reported, not thrown.
+        let emailError: string | null = null;
+        try {
+          await sendDashboardSetupEmail({ operatorName: inquiry.contactName, operatorEmail, courseName: inquiry.courseName, setupUrl: await issueSetupLink(newLogin.operatorId), pageReady: false, linkDays: SETUP_LINK_DAYS });
+        } catch (err) {
+          emailError = err instanceof Error ? err.message : 'unknown error';
+          console.error('Set-your-password email failed:', err);
+        }
         return NextResponse.json({
-          success: true, tempPassword: newLogin.tempPassword, setupLink,
+          success: true, sentTo: operatorEmail, emailSent: !emailError, emailError,
           operatorId: newLogin.operatorId, slug, courseId: builtCourseId, needsReview,
         });
       }
