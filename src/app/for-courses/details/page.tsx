@@ -3,6 +3,8 @@ import { useEffect, useState, useCallback, Suspense, useRef, useMemo } from 'rea
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import PlainHeader from '@/components/PlainHeader';
+import { Card, CARD } from '@/components/ui/Card';
+import { sheetRecap, SHEET_NEXT_STEPS } from '@/lib/setup-sheet-recap';
 import { ArrowLeft, Trash2, Upload, X } from 'lucide-react';
 import { downscaleImage } from '@/lib/image-resize';
 
@@ -376,6 +378,7 @@ function DetailsForm() {
   );
   const skippedCount = allSections.filter(sec => callNo.includes(sec.id)).length;
   const [activeIdx, setActiveIdx] = useState(0);
+  const [resumeSection, setResumeSection] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -390,10 +393,15 @@ function DetailsForm() {
     setDraft(d => ({ ...d, facilitiesV2: { ...d.facilitiesV2, ...update } }));
   }, []);
 
-  const toggleDay = (day: number) => setDraft(d => ({
-    ...d,
-    daysOpen: d.daysOpen.includes(day) ? d.daysOpen.filter(x => x !== day) : [...d.daysOpen, day],
-  }));
+  // Cam 2026-10-26: an empty list means open every day (the build reads it that way), so it
+  // SHOWS as every day on; tapping a day closes it. Turning the last day off goes back to every day.
+  const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+  const dayOn = (day: number) => draft.daysOpen.length === 0 || draft.daysOpen.includes(day);
+  const toggleDay = (day: number) => setDraft(d => {
+    const open = d.daysOpen.length === 0 ? ALL_DAYS : d.daysOpen;
+    const next = open.includes(day) ? open.filter(x => x !== day) : [...open, day].sort((a, b) => a - b);
+    return { ...d, daysOpen: next.length === 0 || next.length === 7 ? [] : next };
+  });
 
   const updateTeeSet = (i: number, update: Partial<TeeSetRow>) => {
     setDraft(d => {
@@ -441,6 +449,7 @@ function DetailsForm() {
         // The saved sheet was always read loosely below (it predates any typing here).
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const saved: Record<string, any> = merged;
+        if (typeof saved._lastSection === 'string') setResumeSection(saved._lastSection);
 
         // Migrate old teeSets
         const teeSetsLoaded = (Array.isArray(saved.teeSets) && saved.teeSets.length > 0
@@ -528,7 +537,6 @@ function DetailsForm() {
       if (need.length) return `Please add your ${need.map(k => k === 'courseType' ? 'course type' : CONTACT_FILL_LABEL[k].toLowerCase()).join(', ')} under Your details.`;
     }
     if (id === 'schedule') {
-      if (draft.daysOpen.length === 0) return 'Pick the days you are open.';
       if (!draft.firstTeeTime || !draft.lastTeeTime) return 'Enter your first and last tee times.';
     }
     if (id === 'cancellation' && !draft.cancellationPolicy) return 'Choose Yes or No to continue.';
@@ -566,7 +574,8 @@ function DetailsForm() {
     if (isLast) { await submitAll(); return; }
 
     setSaving(true);
-    await saveDraft(draft);
+    // Cam 2026-10-26: the step travels with the answers, so the link reopens where they left off on any device.
+    await saveDraft({ ...draft, _lastSection: sections[activeIdx + 1]?.id } as Partial<Draft>);
     setSaving(false);
     setActiveIdx(i => i + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -600,10 +609,14 @@ function DetailsForm() {
     }
   };
 
-  // SD-9b: the step survives a reload (answers already did, via the draft).
+  // SD-9b: the step survives a reload (answers already did, via the draft). Cam 2026-10-26:
+  // the server's _lastSection (saved with the answers) wins, so another device or browser
+  // reopens at the same step; this browser's own memory is the fallback.
   const stepKey = `gr-sheet-step:${token}`;
   useEffect(() => {
     if (loading || sections.length === 0) return;
+    const fromServer = resumeSection ? sections.findIndex(sec => sec.id === resumeSection) : -1;
+    if (fromServer > 0) { setActiveIdx(fromServer); return; }
     try {
       const n = Number(localStorage.getItem(stepKey));
       if (Number.isInteger(n) && n > 0 && n < sections.length) setActiveIdx(n);
@@ -646,28 +659,59 @@ function DetailsForm() {
 
   if (loading) return <div className="min-h-screen bg-paper flex items-center justify-center text-ink-muted text-sm">Loading...</div>;
   if (loadError) return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-6">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full text-center border border-line">
-        
-        <h1 className="text-[18px] font-serif font-semibold tracking-tight text-ink mb-2">Can&apos;t load this link</h1>
-        <p className="text-ink-soft text-sm">{loadError}</p>
-        <p className="text-ink-soft text-xs mt-4">If you think this is a mistake, reply to the email we sent you.</p>
+    <div className="min-h-screen bg-paper">
+      <PlainHeader />
+      <div className="flex justify-center px-4 sm:px-6 pt-12 sm:pt-20 pb-16">
+        <Card className="p-8 max-w-md w-full text-center">
+          <h1 className="text-[18px] font-serif font-semibold tracking-tight text-ink mb-2">Can&apos;t load this link</h1>
+          <p className="text-ink-soft text-sm">{loadError}</p>
+          <p className="text-ink-soft text-xs mt-4">If you think this is a mistake, reply to the email we sent you.</p>
+        </Card>
       </div>
     </div>
   );
 
-  if (submitted) return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-6">
-      <div className="bg-white rounded-lg p-10 max-w-lg w-full text-center border border-line">
-        
-        <h1 className="text-[22px] font-serif font-semibold tracking-tight text-ink mb-2">Thanks — we&apos;ve got it.</h1>
-        <p className="text-ink-soft text-sm leading-relaxed">
-          We&apos;ll build {courseName}&apos;s booking page with these details and email your login shortly.
-          You&apos;ll be able to fine-tune everything before going live.
-        </p>
+  // Cam 2026-10-26: the done screen keeps the header, says what happens next and shows
+  // what they sent — the same recap (lib/setup-sheet-recap) the confirmation email carries.
+  if (submitted) {
+    const recap = sheetRecap(draft as unknown as Record<string, unknown>);
+    return (
+      <div className="min-h-screen bg-paper">
+        <PlainHeader />
+        <div className="max-w-xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-16">
+          <h1 className="text-[30px] font-serif font-semibold tracking-tight text-ink leading-tight">Your setup sheet is in.</h1>
+          <p className="mt-2 text-[15px] text-ink">We emailed a copy of your answers{contact?.email ? <> to <span className="font-medium">{contact.email}</span></> : ''}.</p>
+
+          <h2 className="mt-8 mb-3 text-[15px] font-semibold text-ink">What happens next</h2>
+          <Card className="p-5">
+            <ol className="space-y-3">
+              {SHEET_NEXT_STEPS.map((t, i) => (
+                <li key={t} className="flex gap-3 text-[14px] text-ink leading-relaxed">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-pine text-white text-[12px] font-semibold flex items-center justify-center">{i + 1}</span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ol>
+          </Card>
+
+          {recap.length > 0 && (
+            <>
+              <h2 className="mt-8 mb-3 text-[15px] font-semibold text-ink">What you sent us for {courseName}</h2>
+              <Card className="divide-y divide-line-soft">
+                {recap.map(r => (
+                  <div key={r.label} className="grid grid-cols-[120px_1fr] gap-3 px-5 py-2.5 text-[14px]">
+                    <div className="text-ink-muted">{r.label}</div>
+                    <div className="text-ink break-words">{r.value}</div>
+                  </div>
+                ))}
+              </Card>
+              <p className="mt-3 text-[13px] text-ink-muted">Something wrong? Reply to our email and we&apos;ll fix it before we build.</p>
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   const section = sections[activeIdx];
   const progress = sections.length > 0 ? ((activeIdx + 1) / sections.length) * 100 : 0;
@@ -880,7 +924,7 @@ function DetailsForm() {
                   </div>
                   <div>
                     <Label text="Rate" sub="(opt.)" />
-                    <DollarInput value={draft.separate9Fee} onChange={v => set('separate9Fee', v)} placeholder="25.00" />
+                    <DollarInput value={draft.separate9Fee} onChange={v => set('separate9Fee', v)} placeholder="0.00" />
                   </div>
                 </div>
                 <div>
@@ -945,7 +989,7 @@ function DetailsForm() {
                   </div>
                   <div>
                     <Label text="9-hole rate" sub="(opt.)" />
-                    <DollarInput value={draft.nineHoleFee} onChange={v => set('nineHoleFee', v)} placeholder="25.00" />
+                    <DollarInput value={draft.nineHoleFee} onChange={v => set('nineHoleFee', v)} placeholder="0.00" />
                   </div>
                 </div>
               </div>
@@ -979,7 +1023,7 @@ function DetailsForm() {
                   </div>
                   <div>
                     <Label text="9-hole rate" sub="(in Fees too)" />
-                    <DollarInput value={draft.nineHoleFee} onChange={v => set('nineHoleFee', v)} placeholder="25.00" />
+                    <DollarInput value={draft.nineHoleFee} onChange={v => set('nineHoleFee', v)} placeholder="0.00" />
                   </div>
                 </div>
                 <p className="text-[11px] text-ink-soft">You can change 9-hole pricing anytime after launch.</p>
@@ -1045,7 +1089,7 @@ function DetailsForm() {
             <p className="text-sm text-ink-soft">{descLabel}</p>
             <div className="space-y-4">
               {draft.teeSets.map((ts, i) => (
-                <div key={i} className="bg-paper border border-line rounded-md p-4 space-y-3">
+                <div key={i} className="bg-paper/70 rounded-md p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-ink-muted">Tee {i + 1}</span>
                     {draft.teeSets.length > 1 && (
@@ -1209,15 +1253,16 @@ function DetailsForm() {
               )}
             </div>
             <div>
-              <Label text="Days open" sub="(leave all unselected if open every day)" />
+              <Label text="Which days are you open?" />
               <div className="flex gap-1.5 flex-wrap">
                 {DAYS_SHORT.map((day, i) => (
-                  <button key={day} type="button" onClick={() => toggleDay(i)} aria-pressed={draft.daysOpen.includes(i)}
-                    className={'px-3 py-2 rounded-md border text-sm transition-colors ' + (draft.daysOpen.includes(i) ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink hover:border-pine/40')}>
+                  <button key={day} type="button" onClick={() => toggleDay(i)} aria-pressed={dayOn(i)}
+                    className={'px-3 py-2 rounded-md border text-sm transition-colors ' + (dayOn(i) ? 'border-pine bg-pine/5 text-pine font-medium' : 'border-line text-ink-muted line-through hover:border-pine/40')}>
                     {day}
                   </button>
                 ))}
               </div>
+              <p className="text-[11px] text-ink-soft mt-1">{draft.daysOpen.length === 0 ? 'Open every day. Tap any day you\u2019re closed.' : `Open ${draft.daysOpen.length} day${draft.daysOpen.length === 1 ? '' : 's'} a week. Tap a day to change it.`}</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -1245,27 +1290,27 @@ function DetailsForm() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label text="Weekday green fee" />
-                <DollarInput value={draft.greenFeeWeekday} onChange={v => set('greenFeeWeekday', v)} placeholder="45.00" />
+                <DollarInput value={draft.greenFeeWeekday} onChange={v => set('greenFeeWeekday', v)} placeholder="0.00" />
               </div>
               <div>
                 <Label text="Weekend green fee" />
-                <DollarInput value={draft.greenFeeWeekend} onChange={v => set('greenFeeWeekend', v)} placeholder="65.00" />
+                <DollarInput value={draft.greenFeeWeekend} onChange={v => set('greenFeeWeekend', v)} placeholder="0.00" />
               </div>
             </div>
             {(draft.nineHoleSupport === 'yes' || draft.nineReplay === 'yes') && (
               <div>
                 <Label text={draft.holes === '9' ? '18-hole (replay) rate' : '9-hole rate'} sub="(optional)" />
-                <DollarInput value={draft.holes === '9' ? draft.nineReplayFee : draft.nineHoleFee} onChange={v => draft.holes === '9' ? set('nineReplayFee', v) : set('nineHoleFee', v)} placeholder="25.00" />
+                <DollarInput value={draft.holes === '9' ? draft.nineReplayFee : draft.nineHoleFee} onChange={v => draft.holes === '9' ? set('nineReplayFee', v) : set('nineHoleFee', v)} placeholder="0.00" />
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label text="Cart fee per player" sub="(optional)" />
-                <DollarInput value={draft.cartFee} onChange={v => set('cartFee', v)} placeholder="18.00" />
+                <DollarInput value={draft.cartFee} onChange={v => set('cartFee', v)} placeholder="0.00" />
               </div>
               <div>
                 <Label text="Twilight rate" sub="(optional)" />
-                <DollarInput value={draft.twilightFee} onChange={v => set('twilightFee', v)} placeholder="30.00" />
+                <DollarInput value={draft.twilightFee} onChange={v => set('twilightFee', v)} placeholder="0.00" />
               </div>
             </div>
             <div>
@@ -1294,7 +1339,7 @@ function DetailsForm() {
             <p className="text-sm text-ink-soft">Add all your membership tiers, season passes, resident cards, and punch cards. Include resident rates if you offer them without a separate card. Add as many as you need.</p>
             <div className="space-y-4">
               {draft.passes.map((p, i) => (
-                <div key={i} className="bg-paper border border-line rounded-md p-4 space-y-3">
+                <div key={i} className="bg-paper/70 rounded-md p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-ink-muted">Item {i + 1}</span>
                     {draft.passes.length > 1 && (
@@ -1367,16 +1412,16 @@ function DetailsForm() {
                             <div className="grid grid-cols-2 gap-3">
                               <div>
                                 <Label text="Weekday rate" />
-                                <DollarInput value={p.perRoundWeekday || p.perRoundFee} onChange={v => updatePass(i, { perRoundWeekday: v, perRoundFee: v })} placeholder="25.00" />
+                                <DollarInput value={p.perRoundWeekday || p.perRoundFee} onChange={v => updatePass(i, { perRoundWeekday: v, perRoundFee: v })} placeholder="0.00" />
                               </div>
                               <div>
                                 <Label text="Weekend rate" sub="(opt.)" />
-                                <DollarInput value={p.perRoundWeekend} onChange={v => updatePass(i, { perRoundWeekend: v })} placeholder="35.00" />
+                                <DollarInput value={p.perRoundWeekend} onChange={v => updatePass(i, { perRoundWeekend: v })} placeholder="0.00" />
                               </div>
                             </div>
                             <div>
                               <Label text="Twilight rate" sub="(opt.)" />
-                              <DollarInput value={p.perRoundTwilight} onChange={v => updatePass(i, { perRoundTwilight: v })} placeholder="20.00" />
+                              <DollarInput value={p.perRoundTwilight} onChange={v => updatePass(i, { perRoundTwilight: v })} placeholder="0.00" />
                             </div>
                             <div>
                               <Label text="Cart included?" />
@@ -1415,7 +1460,7 @@ function DetailsForm() {
                               <div className="grid grid-cols-2 gap-3">
                                 <div>
                                   <Label text="Card cost" />
-                                  <DollarInput value={p.residentCardCost} onChange={v => updatePass(i, { residentCardCost: v })} placeholder="10.00" />
+                                  <DollarInput value={p.residentCardCost} onChange={v => updatePass(i, { residentCardCost: v })} placeholder="0.00" />
                                 </div>
                                 <div>
                                   <Label text="Renews" sub="(how often)" />
@@ -1439,16 +1484,16 @@ function DetailsForm() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label text="Resident weekday rate" />
-                          <DollarInput value={p.residentWeekday} onChange={v => updatePass(i, { residentWeekday: v })} placeholder="30.00" />
+                          <DollarInput value={p.residentWeekday} onChange={v => updatePass(i, { residentWeekday: v })} placeholder="0.00" />
                         </div>
                         <div>
                           <Label text="Resident weekend rate" />
-                          <DollarInput value={p.residentWeekend} onChange={v => updatePass(i, { residentWeekend: v })} placeholder="45.00" />
+                          <DollarInput value={p.residentWeekend} onChange={v => updatePass(i, { residentWeekend: v })} placeholder="0.00" />
                         </div>
                       </div>
                       <div>
                         <Label text="Resident twilight rate" sub="(optional)" />
-                        <DollarInput value={p.residentTwilight} onChange={v => updatePass(i, { residentTwilight: v })} placeholder="20.00" />
+                        <DollarInput value={p.residentTwilight} onChange={v => updatePass(i, { residentTwilight: v })} placeholder="0.00" />
                       </div>
                     </div>
                   )}
@@ -1483,7 +1528,7 @@ function DetailsForm() {
             <p className="text-sm text-ink-soft">Rates for non-member public tee times.</p>
             <div>
               <Label text="Public green fee" />
-              <DollarInput value={draft.publicGreenFee} onChange={v => set('publicGreenFee', v)} placeholder="95.00" />
+              <DollarInput value={draft.publicGreenFee} onChange={v => set('publicGreenFee', v)} placeholder="0.00" />
             </div>
             <div>
               <Label text="When can the public book?" sub="(optional)" />
@@ -1499,7 +1544,7 @@ function DetailsForm() {
             <p className="text-sm text-ink-soft">Members are charged per round when they book through GreenReserve.</p>
             <div>
               <Label text="Member rate per round" />
-              <DollarInput value={draft.memberRate} onChange={v => set('memberRate', v)} placeholder="35.00" />
+              <DollarInput value={draft.memberRate} onChange={v => set('memberRate', v)} placeholder="0.00" />
             </div>
             <p className="text-[11px] text-ink-soft">You can change this rate anytime after launch.</p>
           </div>
@@ -1543,7 +1588,7 @@ function DetailsForm() {
             </div>
 
             {noPolicy && (
-              <div className="bg-paper border border-line rounded-md p-4 text-sm text-ink-soft leading-relaxed">
+              <div className="bg-paper/70 rounded-md p-4 text-sm text-ink-soft leading-relaxed">
                 <p>Golfers will book without saving a card and can cancel anytime at no cost. They pay their green fee at the course on the day of play.</p>
               </div>
             )}
@@ -1551,8 +1596,12 @@ function DetailsForm() {
             {hasPolicy && (
               <>
                 <div className="bg-pine/5 border border-pine/20 rounded-md p-4 space-y-2 text-sm text-ink-soft leading-relaxed">
+                  {/* Cam 2026-10-26: this used to say "nothing is charged until tee time", which is not
+                      what a new course gets — Course.lateFeeTiming defaults to hold_at_cutoff (charged
+                      to every standing booking when the window closes, refunded at check-in). */}
                   <p className="font-medium text-ink text-[13px]">How this works on GreenReserve</p>
-                  <p>Golfers save their card at booking — nothing is charged until tee time. If they cancel <em>before</em> your window, it&apos;s free. If they cancel <em>after</em>, the late fee is automatically charged to their saved card. If they show up and check in, the fee is refunded.</p>
+                  <p>Golfers save a card when they book. Cancelling before your window closes is free.</p>
+                  <p>When the window closes, the fee is charged to every booking that&apos;s still on. It&apos;s a hold: when they check in, it&apos;s refunded. If they cancel after the window or don&apos;t show up, you keep it.</p>
                 </div>
                 <div>
                   <Label text="Free cancellation window" />
@@ -1563,16 +1612,13 @@ function DetailsForm() {
                   <p className="text-[11px] text-ink-soft mt-1">e.g. 24 means golfers can cancel up to 24 hours before their tee time for free.</p>
                 </div>
                 <div>
-                  <Label text="Late cancellation fee" />
-                  <DollarInput value={draft.lateFee} onChange={v => set('lateFee', v)} placeholder="25.00" />
+                  <Label text="Late cancellation fee (per booking)" />
+                  <DollarInput value={draft.lateFee} onChange={v => set('lateFee', v)} placeholder="0.00" />
                 </div>
-                <p className="text-[11px] text-ink-soft">The window and fee can be changed anytime after launch.</p>
+                <p className="text-[11px] text-ink-soft">After launch you can change all of this in Settings — the window, the fee, charging per player instead, or charging only when someone cancels late or doesn&apos;t show.</p>
               </>
             )}
 
-            {!hasPolicy && !noPolicy && (
-              <p className="text-[11px] text-ink-soft">Select an option above to continue.</p>
-            )}
           </div>
         );
       }
@@ -1615,7 +1661,7 @@ function DetailsForm() {
                           }} placeholder="Small" />
                           <DollarInput value={b.price} onChange={v => {
                             const bkts = [...fv2.rangeBuckets]; bkts[bi] = { ...bkts[bi], price: v }; setFv2({ rangeBuckets: bkts });
-                          }} placeholder="6.00" />
+                          }} placeholder="0.00" />
                           <div className="flex items-center gap-1">
                             <input type="number" className={inp} value={b.balls} onChange={e => {
                               const bkts = [...fv2.rangeBuckets]; bkts[bi] = { ...bkts[bi], balls: e.target.value }; setFv2({ rangeBuckets: bkts });
@@ -1682,7 +1728,7 @@ function DetailsForm() {
               {fv2.cartRental && (
                 <div className="pl-4 border-l-2 border-pine/20">
                   <Label text="Cost" sub="(opt.)" />
-                  <DollarInput value={fv2.cartRentalCost} onChange={v => setFv2({ cartRentalCost: v })} placeholder="5.00" />
+                  <DollarInput value={fv2.cartRentalCost} onChange={v => setFv2({ cartRentalCost: v })} placeholder="0.00" />
                 </div>
               )}
             </div>
@@ -1818,7 +1864,7 @@ function DetailsForm() {
         </div>
 
         {activeIdx === 0 && contact && (
-          <div className="bg-white rounded-lg border border-line px-5 py-4 mb-4">
+          <Card className="px-5 py-4 mb-4">
             <p className="text-[13px] font-semibold text-ink mb-2">Your details</p>
             <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1 text-[13px]">
               <dt className="text-ink-muted">Contact</dt><dd className="text-ink">{contact.contactName}{contact.contactTitle ? ` · ${contact.contactTitle}` : ''}</dd>
@@ -1853,17 +1899,17 @@ function DetailsForm() {
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         )}
         {activeIdx === 0 && callRecap.length > 0 && (
-          <div className="bg-white rounded-lg border border-line px-5 py-4 mb-4">
+          <Card className="px-5 py-4 mb-4">
             <p className="text-[13px] font-semibold text-ink mb-2">From our call</p>
             <ul className="list-disc pl-5 space-y-1 text-[13px] text-ink-soft">{callRecap.map(l => <li key={l}>{l}</li>)}</ul>
             <p className="text-[11.5px] text-ink-soft mt-2">This sheet only asks what applies to you. Something off? Reply to our email.</p>
-          </div>
+          </Card>
         )}
 
-        <div className="bg-white rounded-lg border border-line p-6 mb-5">
+        <div className={CARD + ' p-6 mb-5'}>
           <h2 className="text-[18px] font-serif font-semibold tracking-tight text-ink mb-5">
             {section?.title}
             {section?.optional && <span className="ml-2 align-middle text-[12px] font-sans font-normal text-ink-muted">Optional</span>}
