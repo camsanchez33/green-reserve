@@ -356,12 +356,24 @@ function DashboardPageInner() {
 
   // AN-1 (Cam 2026-10-01): the sheet carries ONE line of numbers — the day's
   // booked and checked-in groups. Every other figure lives on Analytics.
-  const liveGroups = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status !== 'cancelled').length ?? 0), 0);
-  const checkedIn = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').length ?? 0), 0);
-  // Cam 2026-10-19: the header also says how many are still to check in.
-  const awaitingCheckIn = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'confirmed' && !b.noShowAt).length ?? 0), 0);
   // The rate ("18 holes · $70 +$10 cart") lives in the time's own panel, where
   // staff need it at the counter — not in the header (Cam 2026-10-19).
+  // DENSE-4b (Cam 2026-10-27, "yes to all four numbers"): the day strip — players
+  // booked of the spots offered and players checked in from the sheet's own
+  // bookings; Paid / Not paid yet from /api/operator/sheet-money (the figures Home
+  // and Analytics show), only for logins with money.payments.
+  const livePlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status !== 'cancelled').reduce((n, b) => n + b.players, 0) ?? 0), 0);
+  const spotsOffered = teeTimes.filter(t => t.status !== 'blocked').reduce((s, t) => s + t.playersAvailable, 0);
+  const checkedInPlayers = teeTimes.reduce((s, t) => s + (t.bookings?.filter(b => b.status === 'completed').reduce((n, b) => n + (b.checkedInPlayers ?? b.players), 0) ?? 0), 0);
+  const [dayMoney, setDayMoney] = useState<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number } | null>(null);
+  const canSeeMoney = access.can('money.payments');
+  useEffect(() => {
+    if (!canSeeMoney || teeTimes.length === 0) { setDayMoney(null); return; }
+    let live = true;
+    dfetch<{ date: string; paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number }>(`/api/operator/sheet-money?date=${selectedDate}`)
+      .then(r => { if (live) setDayMoney(r.ok ? r.data : null); });
+    return () => { live = false; };
+  }, [canSeeMoney, selectedDate, teeTimes]);
 
   const loadTimes = useCallback(async (date: string) => {
     setLoading(true);
@@ -860,9 +872,6 @@ function DashboardPageInner() {
                   <h1 className="text-[30px] sm:text-[38px] font-serif leading-none text-ink">
                     {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                   </h1>
-                  <p className="text-[14px] text-ink mt-2">
-                    {liveGroups} booked · {checkedIn} checked in · {awaitingCheckIn} awaiting check-in
-                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
                   {selectedDate >= today() && wxTabs.length > 0 && (
@@ -882,6 +891,18 @@ function DashboardPageInner() {
                   )}
                 </div>
               </div>
+
+              {/* DENSE-4b: the day strip — players, checked in, and (money.payments) paid / not paid yet. */}
+              {teeTimes.length > 0 && (
+                <div className={CARD + ' grid grid-cols-2 sm:flex sm:flex-wrap mb-4 divide-line-soft sm:divide-x'} role="group" aria-label="The day">
+                  <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[18px] font-semibold text-ink tabular-nums">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div></div>
+                  <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Checked in</div><div className="text-[18px] font-semibold text-ink tabular-nums">{checkedInPlayers}<span className="text-[13px] font-normal text-ink-muted"> of {livePlayers}</span></div></div>
+                  {dayMoney && dayMoney.date === selectedDate && (<>
+                    <div className="px-4 py-2.5 min-w-[9rem]"><div className="text-[12.5px] text-ink-soft">Paid</div><div className="text-[18px] font-semibold text-ink tabular-nums">${(dayMoney.paidCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.paidGroups} {dayMoney.paidGroups === 1 ? 'group' : 'groups'}</span></div></div>
+                    <Link href="/dashboard/money?tab=payments&show=unpaid" className="px-4 py-2.5 min-w-[9rem] hover:bg-paper/60"><div className="text-[12.5px] text-ink-soft">Not paid yet</div><div className={'text-[18px] font-semibold tabular-nums ' + (dayMoney.outstandingCents > 0 ? 'text-warn' : 'text-ink')}>${(dayMoney.outstandingCents / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}<span className="text-[13px] font-normal text-ink-muted"> · {dayMoney.outstandingGroups} {dayMoney.outstandingGroups === 1 ? 'group' : 'groups'}</span></div></Link>
+                  </>)}
+                </div>
+              )}
 
               {sheetError && <LoadError message={sheetError} onRetry={() => loadTimes(selectedDate)} />}
 

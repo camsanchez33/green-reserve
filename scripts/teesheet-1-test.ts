@@ -9,7 +9,9 @@ let failed = 0;
 const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`); if (!ok) failed++; };
 const src = (p: string) => readFileSync(p, 'utf8');
 const page = src('src/app/dashboard/page.tsx');
-check('the header says how many are awaiting check-in', page.includes('{awaitingCheckIn} awaiting check-in'));
+// DENSE-4b (Cam 2026-10-27, "yes to all four numbers"): the day strip replaced the header sentence.
+check('the day strip shows players, checked in, and paid / not paid yet only with money.payments', page.includes('{livePlayers}<span') && page.includes('{checkedInPlayers}<span') && page.includes("access.can('money.payments')") && page.includes('/api/operator/sheet-money?date='));
+check('the strip\'s money route needs money.payments', src('src/app/api/operator/sheet-money/route.ts').includes("requirePermission(session, 'money.payments')"));
 check('the rate is no longer in the header', !page.includes('commonRate'));
 check('the time panel always shows its rate', page.includes("holes · ${panelSlot.greenFee.toFixed(2)} a player"));
 check('Find golfer sits in the sheet bar with a refresh icon', page.includes('id="sheet-search"') && page.includes('aria-label="Refresh the sheet"'));
@@ -27,6 +29,6 @@ check('the calendar opens left-aligned, inside the screen', src('src/components/
 check('an agreement announcement clears once nothing is left to sign', src('src/app/api/operator/announcements/route.ts').includes('/agreement/i.test(newest.title)') && src('src/app/api/operator/announcements/route.ts').includes('st.total > 0 && st.documents.every(d => !d.needsSigning)'));
 check('the announcement banner uses the attention style', src('src/components/AnnouncementBanner.tsx').includes('border-l-[3px] border-l-warn'));
 const demo = src('src/components/home/TeeSheetDemo.tsx');
-check('the homepage demo mirrors: awaiting count, no rate, key above', demo.includes('awaiting check-in') && !demo.includes('{HOLES} holes'));
+check('the homepage demo mirrors: players and checked in, no rate, key above', demo.includes('Players <b>') && demo.includes('Checked in <b>') && !demo.includes('{HOLES} holes'));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

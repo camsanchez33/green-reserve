@@ -116,7 +116,7 @@ function TeeSheet() {
       <div className={s.sheetHead}>
         <div>
           <div className={s.sheetTitle}>{d.long}</div>
-          <div className={s.sheetLine}>{groups.length} booked · {groups.filter(g => g.done).length} checked in · {groups.filter(g => !g.done).length} awaiting check-in</div>
+          <div className={s.sheetLine}>Players <b>{groups.reduce((n, g) => n + g.n, 0)}</b> of {d.rows.filter(r => !r.blocked).length * CAP} · Checked in <b>{groups.filter(g => g.done).reduce((n, g) => n + g.n, 0)}</b></div>
         </div>
         <input className={s.find} value={st.find} placeholder="Find golfer..." aria-label="Find golfer"
           onChange={e => { const v = e.target.value; update(x => ({ ...x, find: v })); }} />
