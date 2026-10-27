@@ -112,7 +112,33 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
   }, []);
   useEffect(() => { load(null); }, [load]);
 
-  if (!data) return error ? <div className="mb-6"><LoadError message={`Couldn't load your sales — ${error}`} onRetry={() => load(range)} /></div> : null;
+  // Next payout and Not paid yet come from the page, so they show even while sales load or fail.
+  const side = (
+    <>
+      {showPayout && (
+        <div className="px-5 py-4">
+          <div className="text-[13px] text-ink-soft">Next payout</div>
+          {nextPayout ? <><div className="text-[22px] font-semibold text-ink tabular-nums">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">{fmtArrival(nextPayout.arrivalDate)}</div></>
+            : !stripeConnected ? <div className="text-[13.5px] text-ink mt-1">Connect Stripe</div>
+            : <div className="text-[13.5px] text-ink-muted mt-1">{nextPayout === null ? 'None on its way' : 'Checking Stripe…'}</div>}
+        </div>
+      )}
+      {notPaid && (
+        <div className="px-5 py-4">
+          <div className="text-[13px] text-ink-soft">Not paid yet · 7 days</div>
+          <div className={'text-[22px] font-semibold tabular-nums ' + (notPaid.cents > 0 ? 'text-warn' : 'text-ink')}>{usd(notPaid.cents)}</div>
+          {notPaid.groups > 0 && onSeeUnpaid && <button onClick={onSeeUnpaid} className="text-[12.5px] font-medium text-pine hover:underline underline-offset-4">{notPaid.groups} {notPaid.groups === 1 ? 'group' : 'groups'}</button>}
+        </div>
+      )}
+    </>
+  );
+
+  if (!data) return (
+    <div className="space-y-5 mb-6">
+      {error && <LoadError message={`Couldn't load your sales — ${error}`} onRetry={() => load(range)} />}
+      {(showPayout || notPaid) && <Card className="md:max-w-[17rem] divide-y divide-line-soft">{side}</Card>}
+    </div>
+  );
   const s = data;
   const change = s.beforeCollectedCents > 0 ? Math.round(((s.collectedCents - s.beforeCollectedCents) / s.beforeCollectedCents) * 100) : null;
   const totalPaid = s.paid.cardCents + s.paid.counterCents;
@@ -133,23 +159,7 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
           </div>
           <TodayLine s={s} />
         </div>
-        <div className="border-t md:border-t-0 md:border-l border-line-soft divide-y divide-line-soft">
-          {showPayout && (
-            <div className="px-5 py-4">
-              <div className="text-[13px] text-ink-soft">Next payout</div>
-              {nextPayout ? <><div className="text-[22px] font-semibold text-ink tabular-nums">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">{fmtArrival(nextPayout.arrivalDate)}</div></>
-                : !stripeConnected ? <div className="text-[13.5px] text-ink mt-1">Connect Stripe</div>
-                : <div className="text-[13.5px] text-ink-muted mt-1">{nextPayout === null ? 'None on its way' : 'Checking Stripe…'}</div>}
-            </div>
-          )}
-          {notPaid && (
-            <div className="px-5 py-4">
-              <div className="text-[13px] text-ink-soft">Not paid yet · 7 days</div>
-              <div className={'text-[22px] font-semibold tabular-nums ' + (notPaid.cents > 0 ? 'text-warn' : 'text-ink')}>{usd(notPaid.cents)}</div>
-              {notPaid.groups > 0 && onSeeUnpaid && <button onClick={onSeeUnpaid} className="text-[12.5px] font-medium text-pine hover:underline underline-offset-4">{notPaid.groups} {notPaid.groups === 1 ? 'group' : 'groups'}</button>}
-            </div>
-          )}
-        </div>
+        <div className="border-t md:border-t-0 md:border-l border-line-soft divide-y divide-line-soft">{side}</div>
       </Card>
 
       <div className="flex flex-wrap items-center gap-3">

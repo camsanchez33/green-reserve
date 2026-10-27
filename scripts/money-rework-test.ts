@@ -37,6 +37,11 @@ const payouts = readFileSync('src/components/dashboard/money/PayoutsPanel.tsx', 
 check('fee note uses only LQ-2 allowed sentences', payouts.includes('our ${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player is then passed to GreenReserve') && !payouts.includes('Nothing. Golfers') && !/from your payouts/.test(payouts));
 check('a failed payouts load is an error, never "nothing on its way"', page.includes('setPayoutError(p && !p.ok ? p.error') && page.includes('nextPayout === null ?'));
 check('no money totals summed from the capped 200-row list', !pay.includes('$ paid') && !pay.includes("`${usd(paid)} paid`") && !cx.includes('in fees kept'));
-check('an unconnected course is told to connect Stripe, not that nothing is on its way', page.includes('p.data.connected ?') && page.indexOf("Connect Stripe to get paid") < page.indexOf('nextPayout === null ?'));
+check('an unconnected course is told to connect Stripe, not that nothing is on its way', page.includes('p.data.connected ?') && sales.includes('Connect Stripe') && sales.indexOf('!stripeConnected ?') !== -1 && sales.indexOf('!stripeConnected ?') < sales.indexOf('nextPayout === null ?'));
+// DENSE-2: the Sales view's route is money.payments only, and the cash drawer count stays behind the close-out's own permission.
+const salesRoute = readFileSync('src/app/api/operator/money/sales/route.ts', 'utf8');
+check('the sales route needs money.payments', salesRoute.includes("requirePermission(session, 'money.payments')"));
+check('the drawer count is read only with shop.close', salesRoute.includes("can(session, 'shop.close') ? recentCloses(") && salesRoute.split('recentCloses(').length === 2);
+check('next payout and not paid yet show even while sales load or fail', sales.indexOf('if (!data)') > sales.indexOf('const side ='));
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);
