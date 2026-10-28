@@ -45,7 +45,8 @@ export async function GET(req: NextRequest) {
 
   const [charges, lateFees, refunds] = await Promise.all([
     prisma.booking.findMany({ where: { paymentStatus: { in: ['paid', 'refunded'] }, roundPaymentIntentId: { not: '' }, checkedInAt: win }, select: bookingSelect, orderBy: { checkedInAt: 'asc' } }),
-    prisma.booking.findMany({ where: { cancellationFeeChargedAt: win }, select: bookingSelect, orderBy: { cancellationFeeChargedAt: 'asc' } }),
+    // A fee the ledger can't trace to a Stripe charge is not a transaction (Cam 2026-10-28: sample data stamps the time with no charge).
+    prisma.booking.findMany({ where: { cancellationFeeChargedAt: win, cancellationFeeChargeId: { not: '' } }, select: bookingSelect, orderBy: { cancellationFeeChargedAt: 'asc' } }),
     prisma.paymentEvent.findMany({
       where: { kind: 'refund', createdAt: win },
       select: { id: true, amountCents: true, stripeId: true, actor: true, actorName: true, detail: true, createdAt: true, booking: { select: bookingSelect } },

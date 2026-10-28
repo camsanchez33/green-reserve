@@ -68,6 +68,15 @@ export type SampleResult = {
   shopItems: number; shopSales: number; event: string | null; eventNote: string;
 };
 
+/** Whether sample rows are on the course (bookings carry the smp id prefix; sales the sample seller). */
+export async function hasSampleData(courseId: string): Promise<boolean> {
+  const [b, s] = await Promise.all([
+    prisma.booking.count({ where: { courseId, id: { startsWith: 'smp' } } }),
+    prisma.shopSale.count({ where: { courseId, soldBy: SAMPLE_SOLD_BY } }),
+  ]);
+  return b + s > 0;
+}
+
 type Person = { name: string; email: string; phone: string; member: { tierId: string; tierName: string; pct: number } | null; resident: boolean; weight: number };
 
 export async function fillTestCourse(courseId: string, now: Date = new Date()): Promise<{ ok: true; made: SampleResult } | { ok: false; status: number; error: string }> {
@@ -128,7 +137,9 @@ export async function fillTestCourse(courseId: string, now: Date = new Date()): 
   const golfer = () => { let x = r() * totalWeight; for (const p of people) { x -= p.weight; if (x <= 0) return p; } return people[people.length - 1]; };
 
   const members = people.filter(p => p.member);
-  await prisma.courseMembership.createMany({ data: members.map((p, i) => {
+  // A fill that died part way (it is not one transaction) must not double these on the retry.
+  const already = await prisma.courseMembership.count({ where: { courseId, addedBy: SAMPLE_SOLD_BY } });
+  if (!already) await prisma.courseMembership.createMany({ data: members.map((p, i) => {
     const paid = i % 5 !== 0;
     const started = new Date(now.getTime() - (30 + i * 9) * 86_400_000);
     return {
@@ -138,7 +149,7 @@ export async function fillTestCourse(courseId: string, now: Date = new Date()): 
     };
   }) });
   const residentPeople = people.filter(p => p.resident);
-  await prisma.courseResident.createMany({ data: residentPeople.map((p, i) => ({
+  if (!(await prisma.courseResident.count({ where: { courseId, addedBy: SAMPLE_SOLD_BY } }))) await prisma.courseResident.createMany({ data: residentPeople.map((p, i) => ({
     courseId, name: p.name, email: p.email, cardNumber: `R-${1040 + i}`, expiresOn: `${today.slice(0, 4)}-12-31`, addedBy: SAMPLE_SOLD_BY,
   })) });
 
@@ -156,6 +167,7 @@ export async function fillTestCourse(courseId: string, now: Date = new Date()): 
   let eventNote = '';
   try {
     const eventDate = addDaysStr(today, 13);
+    if (await prisma.courseEvent.count({ where: { courseId, createdBy: SAMPLE_SOLD_BY } })) throw new Error('it is already there');
     const first = await prisma.teeTime.findFirst({ where: { courseId, date: eventDate, status: { not: 'blocked' } }, orderBy: { time: 'asc' }, select: { time: true } });
     if (!first) throw new Error(`no tee times on ${eventDate}`);
     const { event } = await createEvent(courseId, {
@@ -309,7 +321,11 @@ export async function fillTestCourse(courseId: string, now: Date = new Date()): 
   // Write it all. Booking ids are made here so events and register lines can point at them.
   for (let i = 0; i < bookings.length; i += 500) await prisma.booking.createMany({ data: bookings.slice(i, i + 500) as unknown as Prisma.BookingCreateManyInput[] });
   for (let i = 0; i < events.length; i += 1000) await prisma.bookingEvent.createMany({ data: events.slice(i, i + 1000) as unknown as Prisma.BookingEventCreateManyInput[] });
-  for (const { sale, lines } of sales) await prisma.shopSale.create({ data: { ...(sale as unknown as Prisma.ShopSaleUncheckedCreateInput), lines: { create: lines as unknown as Prisma.ShopSaleLineCreateWithoutSaleInput[] } } });
+  // Batched, so the fill fits Vercel's time limit against a remote database.
+  const saleRows = sales.map(x => ({ ...x.sale, id: `smp${randomUUID().replace(/-/g, '').slice(0, 22)}` }));
+  const lineRows = sales.flatMap((x, i) => x.lines.map(l => ({ ...l, saleId: saleRows[i].id })));
+  for (let i = 0; i < saleRows.length; i += 500) await prisma.shopSale.createMany({ data: saleRows.slice(i, i + 500) as unknown as Prisma.ShopSaleCreateManyInput[] });
+  for (let i = 0; i < lineRows.length; i += 1000) await prisma.shopSaleLine.createMany({ data: lineRows.slice(i, i + 1000) as unknown as Prisma.ShopSaleLineCreateManyInput[] });
   // Paid walk-up sales take from counted stock, as the register does (never below zero).
   const sold = new Map<string, number>();
   for (const { lines } of sales) for (const l of lines) if (typeof l.shopItemId === 'string') sold.set(l.shopItemId, (sold.get(l.shopItemId) ?? 0) + Number(l.quantity ?? 1));
@@ -317,7 +333,10 @@ export async function fillTestCourse(courseId: string, now: Date = new Date()): 
     await prisma.shopItem.update({ where: { id: it.id }, data: { stockCount: Math.max(0, (it.stockCount ?? 0) - (sold.get(it.id) ?? 0)) } });
   }
   const full = slots.filter(s => (booked.get(s.id) ?? 0) >= s.playersAvailable).map(s => s.id);
-  for (const [id, n] of booked) await prisma.teeTime.update({ where: { id }, data: { playersBooked: n, status: full.includes(id) ? 'full' : 'available' } });
+  // One update per distinct count and status, not one per tee time.
+  const byCount = new Map<string, string[]>();
+  for (const [id, n] of booked) { const k = `${n}|${full.includes(id) ? 'full' : 'available'}`; byCount.set(k, [...(byCount.get(k) ?? []), id]); }
+  for (const [k, ids] of byCount) { const [n, status] = k.split('|'); await prisma.teeTime.updateMany({ where: { id: { in: ids } }, data: { playersBooked: Number(n), status } }); }
 
   return {
     ok: true,

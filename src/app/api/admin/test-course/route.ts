@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireOwner, ownerGateError, stepUpRequired } from '@/lib/admin-session';
 import { needReason, reasonOf, auditAdmin } from '@/lib/admin-audit';
 import { previewCourseReset, resetTestCourse } from '@/lib/data-reset';
-import { fillTestCourse } from '@/lib/sample-data';
+import { fillTestCourse, hasSampleData } from '@/lib/sample-data';
 
 // Filling ~80 days of a course takes a while.
 export const maxDuration = 300;
@@ -34,6 +34,10 @@ export async function PATCH(req: NextRequest) {
   if (!courseId || typeof body?.isTest !== 'boolean') return NextResponse.json({ error: 'Send the course and whether it is a test course.' }, { status: 400 });
   const prior = await prisma.course.findUnique({ where: { id: courseId }, select: { isTest: true } });
   if (!prior) return NextResponse.json({ error: 'That course no longer exists — refresh the page.' }, { status: 404 });
+  // Sample data would land in every platform number the moment the test mark came off.
+  if (!body.isTest && prior.isTest && await hasSampleData(courseId)) {
+    return NextResponse.json({ error: 'This course has sample data on it. Reset its activity first, then unmark it.' }, { status: 409 });
+  }
   await prisma.course.update({ where: { id: courseId }, data: { isTest: body.isTest } });
   await auditAdmin(session, { action: 'course_test_mark', targetType: 'course', targetId: courseId, courseId, before: { isTest: prior.isTest }, after: { isTest: body.isTest } });
   return NextResponse.json({ success: true, isTest: body.isTest });

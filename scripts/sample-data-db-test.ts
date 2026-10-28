@@ -3,7 +3,8 @@
 // Home. And nothing about them may ever email, text or charge anyone. Real database.
 // Run: npx tsx scripts/sample-data-db-test.ts
 import { prisma } from '../src/lib/prisma';
-import { fillTestCourse } from '../src/lib/sample-data';
+import { fillTestCourse, hasSampleData } from '../src/lib/sample-data';
+import { readFileSync } from 'fs';
 import { resetTestCourse } from '../src/lib/data-reset';
 import { computeAnalytics } from '../src/lib/analytics';
 import { operatorHome } from '../src/lib/operator-home';
@@ -81,8 +82,12 @@ async function cleanup() {
   ok('an email to a placeholder address is skipped and logged, never sent', (await prisma.sentMessage.count({ where: { status: 'skipped' } })) === before + 1);
   ok('a 555-01xx number is fictional; a real one is not', isFictionalNumber('(518) 555-0142') && isFictionalNumber('+15185550199') && !isFictionalNumber('(518) 555-0200') && !isFictionalNumber('(518) 584-0142'));
 
+  ok('the course knows it has sample data, so its test mark cannot come off', await hasSampleData(course.id) && readFileSync('src/app/api/admin/test-course/route.ts', 'utf8').includes('!body.isTest && prior.isTest && await hasSampleData(courseId)'));
+  const lateNoCharge = bookings.filter(b => b.cancellationFeeChargedAt && !b.cancellationFeeChargeId).length;
+  ok('sample late fees have no Stripe charge, and the accountant\'s export only lists traceable fees', lateNoCharge > 0 && readFileSync('src/app/api/admin/transactions/export/route.ts', 'utf8').includes("cancellationFeeChargedAt: win, cancellationFeeChargeId: { not: '' }"));
+
   const reset = await resetTestCourse(course.id);
-  ok('Reset activity clears it all', reset.ok && (await prisma.booking.count({ where: { courseId: course.id } })) === 0 && (await prisma.courseMembership.count({ where: { courseId: course.id } })) === 0);
+  ok('Reset activity clears it all', reset.ok && !(await hasSampleData(course.id)) && (await prisma.booking.count({ where: { courseId: course.id } })) === 0 && (await prisma.courseMembership.count({ where: { courseId: course.id } })) === 0);
   ok('…and the course can be filled again', (await fillTestCourse(course.id)).ok);
 
   await prisma.sentMessage.deleteMany({ where: { status: 'skipped', to: { contains: PLACEHOLDER_EMAIL_DOMAIN.slice(1) } } });
