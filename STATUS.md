@@ -4,54 +4,23 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-28 00:15 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `ab2aa70` · working tree **8 dirty file(s)**
+Generated 2026-10-28 00:18 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `8facfd1` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 24 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 7 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `ab2aa70` | 2026-10-28 | noshow-eod-test: use yesterday's tee time for the no-cancel case |
+| `8facfd1` | 2026-10-28 | DENSE-3 Home: 7-week trend lines, the next 14 days against the usual, checked-in state, Next payout only |
+| `b8440aa` | 2026-10-27 | Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245) |
 | `8061878` | 2026-10-27 | No cancelling after the tee time: check in or no-show (charged at midnight) (#244) |
-| `b1de882` | 2026-10-27 | Regenerate the code map and status board |
-| `86147c9` | 2026-10-27 | Manage page: after the tee time the banner says the booking can't be cancelled |
-| `4425bd2` | 2026-10-27 | No cancelling after the tee time — the group checks in or is a no-show (charged at midnight) |
 | `e8e2a2e` | 2026-10-27 | DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243) |
-| `068e626` | 2026-10-27 | Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column |
-| `e29c686` | 2026-10-27 | Money → Cancellations says why no fee was kept |
-| `2750cbc` | 2026-10-27 | Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played |
-| `89ad92b` | 2026-10-27 | Regenerate the code map and status board |
-| `1444186` | 2026-10-27 | Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute |
-| `1763e28` | 2026-10-27 | Regenerate the code map and status board |
-| `98c16cf` | 2026-10-27 | DENSE-2: pin the loading branch's payout tiles |
-| `23965db` | 2026-10-27 | Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them |
-| `1a83267` | 2026-10-27 | DENSE-2: payments footer wording |
-| `71e527c` | 2026-10-27 | DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load |
-| `3c692b1` | 2026-10-27 | DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer |
 | `531516a` | 2026-10-27 | DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242) |
-| `6edc9aa` | 2026-10-27 | DENSE-4b review notes: the strip is a labelled group; no money request before the day loads |
-| `8d07854` | 2026-10-27 | DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet |
 | `92087fc` | 2026-10-27 | DENSE-4: the tee sheet is seat rows (#241) |
 | `6eced45` | 2026-10-27 | Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240) |
-| `569a2da` | 2026-10-27 | DENSE-4 review notes: demo legend mirrors the real one, same now cut-off, past blocked rows fade, dead demo CSS gone |
-| `851a246` | 2026-10-27 | DENSE-4: the tee sheet is seat rows |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (8 file(s))
-
-- `M DENSE_UI_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/operator-home-db-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/home/page.tsx`
-- `M src/lib/analytics.ts`
-- `M src/lib/operator-home.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -133,7 +102,7 @@ Nothing awaiting review.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-27 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 0d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-10-28 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-21 | 5d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 1d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 2d |
@@ -173,18 +142,18 @@ Nothing awaiting review.
 
 ## Recent commits
 
-- `ab2aa70` 2026-10-28 — noshow-eod-test: use yesterday's tee time for the no-cancel case
+- `8facfd1` 2026-10-28 — DENSE-3 Home: 7-week trend lines, the next 14 days against the usual, checked-in state, Next payout only
+- `b8440aa` 2026-10-27 — Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)
 - `8061878` 2026-10-27 — No cancelling after the tee time: check in or no-show (charged at midnight) (#244)
-- `b1de882` 2026-10-27 — Regenerate the code map and status board
-- `86147c9` 2026-10-27 — Manage page: after the tee time the banner says the booking can't be cancelled
-- `4425bd2` 2026-10-27 — No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)
 - `e8e2a2e` 2026-10-27 — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)
-- `068e626` 2026-10-27 — Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column
-- `e29c686` 2026-10-27 — Money → Cancellations says why no fee was kept
-- `2750cbc` 2026-10-27 — Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played
-- `89ad92b` 2026-10-27 — Regenerate the code map and status board
-- `1444186` 2026-10-27 — Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute
-- `1763e28` 2026-10-27 — Regenerate the code map and status board
+- `531516a` 2026-10-27 — DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)
+- `92087fc` 2026-10-27 — DENSE-4: the tee sheet is seat rows (#241)
+- `6eced45` 2026-10-27 — Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)
+- `18082d8` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)
+- `c155fec` 2026-10-27 — Page decision for courses built without an inquiry lives on the course (#239)
+- `c5210ef` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)
+- `13634fe` 2026-10-26 — An emailed sign-in code confirms the owner's email (no separate verify link) (#236)
+- `23e81ff` 2026-10-26 — Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)
 
 ---
 
