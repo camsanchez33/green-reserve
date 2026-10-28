@@ -36,6 +36,8 @@ async function cleanup() {
   // Last year: counts for last round order only. Not completed: never counted. Other course: never.
   await book(c.id, '2030-12-30', {});
   await book(c.id, '2031-05-01', { status: 'cancelled', paymentStatus: 'cancellation_fee_charged' });
+  // Played, then refunded in full: a round, but no spend (Analytics' collected set).
+  await book(c.id, '2031-02-01', { paymentStatus: 'refunded' });
   await book(other.id, '2031-06-01', {});
 
   const members = [
@@ -45,14 +47,14 @@ async function cleanup() {
   ];
   const withMoney = await memberRoundStats(c.id, members, '2031-01-01', true);
   const m1 = withMoney.byMember.get('m1')!;
-  check('a booking matched by account and email counts once; email matching ignores case', m1.roundsThisYear === 2, m1);
+  check('a booking matched by account and email counts once; email matching ignores case', m1.roundsThisYear === 3, m1);
   check('last round is the latest checked-in round, any year', m1.lastRound === '2031-04-01', m1);
-  check('spend is the course share — green, cart, range; no shop, no booking fee', m1.spendThisYearCents === 2 * 7500, m1);
-  check('cancelled bookings and other courses are never counted', m1.roundsThisYear === 2 && withMoney.byMember.get('m3')!.roundsThisYear === 0);
-  check('a second membership on the same email sees the same rounds…', withMoney.byMember.get('m2')!.roundsThisYear === 2);
-  check('…but the members\' total counts each round once', withMoney.roundsThisYear === 2, withMoney.roundsThisYear);
+  check('spend is the course share of paid rounds — green, cart, range; no shop, no booking fee, not a refunded round', m1.spendThisYearCents === 2 * 7500, m1);
+  check('cancelled bookings and other courses are never counted', m1.roundsThisYear === 3 && withMoney.byMember.get('m3')!.roundsThisYear === 0);
+  check('a second membership on the same email sees the same rounds…', withMoney.byMember.get('m2')!.roundsThisYear === 3);
+  check('…but the members\' total counts each round once', withMoney.roundsThisYear === 3, withMoney.roundsThisYear);
   const noMoney = await memberRoundStats(c.id, members, '2031-01-01', false);
-  check('without payments, no spend comes back', [...noMoney.byMember.values()].every(s => s.spendThisYearCents === null) && noMoney.byMember.get('m1')!.roundsThisYear === 2);
+  check('without payments, no spend comes back', [...noMoney.byMember.values()].every(s => s.spendThisYearCents === null) && noMoney.byMember.get('m1')!.roundsThisYear === 3);
   const none = await memberRoundStats(c.id, [], '2031-01-01', true);
   check('no members: no query, nothing counted', none.roundsThisYear === 0 && none.byMember.size === 0);
 

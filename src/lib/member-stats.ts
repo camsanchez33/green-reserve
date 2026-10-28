@@ -8,6 +8,9 @@
 import { prisma } from './prisma';
 import { courseShareCents } from './analytics';
 
+/** Analytics' "collected": a completed booking paid by card or at the counter. */
+const COLLECTED = new Set(['paid', 'paid_offline']);
+
 export type MemberKeys = { id: string; keys: string[] };
 export type MemberRoundStats = { lastRound: string | null; roundsThisYear: number; spendThisYearCents: number | null };
 
@@ -16,7 +19,7 @@ export async function memberRoundStats(courseId: string, members: MemberKeys[], 
   const all = [...new Set(members.flatMap(keys))];
   const rounds = all.length === 0 ? [] : await prisma.booking.findMany({
     where: { courseId, status: 'completed', OR: [{ golferAccountId: { in: all } }, { golferEmail: { in: all, mode: 'insensitive' } }] },
-    select: { id: true, golferAccountId: true, golferEmail: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, teeTime: { select: { date: true } } },
+    select: { id: true, golferAccountId: true, golferEmail: true, paymentStatus: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, teeTime: { select: { date: true } } },
   });
   type Round = (typeof rounds)[number];
   const byKey = new Map<string, Round[]>();
@@ -34,7 +37,8 @@ export async function memberRoundStats(courseId: string, members: MemberKeys[], 
     byMember.set(m.id, {
       lastRound: list.map(r => r.teeTime.date).sort().pop() ?? null,
       roundsThisYear: thisYear.length,
-      spendThisYearCents: withMoney ? thisYear.reduce((n, r) => n + courseShareCents(r), 0) : null,
+      // Spend is Analytics' collected money: paid by card or at the counter — a refunded round played, but paid nothing.
+      spendThisYearCents: withMoney ? thisYear.filter(r => COLLECTED.has(r.paymentStatus)).reduce((n, r) => n + courseShareCents(r), 0) : null,
     });
   }
   return { byMember, roundsThisYear: countedThisYear.size };

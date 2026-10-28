@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-28 03:15 UTC</span><span>claude/practical-lovelace-xiu4u5 @ d6b030e</span>
-    <span>11 uncommitted</span>
+    <span>2026-10-28 03:19 UTC</span><span>claude/practical-lovelace-xiu4u5 @ 58f5d42</span>
+    <span>4 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">29 runs have shipped that the queue doesn't know about</div>
+<div class="lede">30 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">58f5d42</span><span>Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats</span></li>
 <li><span class="h">d6b030e</span><span>DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year</span></li>
 <li><span class="h">187a1ba</span><span>DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)</span></li>
 <li><span class="h">92a6f52</span><span>Regenerate the status board</span></li>
@@ -166,7 +167,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/members-import-test.ts</code></li><li><code>M scripts/members-rework-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/api/operator/members/route.ts</code></li><li><code>M src/app/dashboard/members/page.tsx</code></li><li><code>M src/lib/analytics-terms.ts</code></li><li><code>M src/lib/analytics.ts</code></li><li><code>?? scripts/member-stats-db-test.ts</code></li><li><code>?? src/lib/member-stats.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/member-stats-db-test.ts</code></li><li><code>M src/lib/member-stats.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -248,6 +249,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 6d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">58f5d42</td><td class="num">2026-10-28</td><td>Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats</td></tr>
 <tr><td class="num">d6b030e</td><td class="num">2026-10-28</td><td>DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year</td></tr>
 <tr><td class="num">187a1ba</td><td class="num">2026-10-27</td><td>DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)</td></tr>
 <tr><td class="num">92a6f52</td><td class="num">2026-10-28</td><td>Regenerate the status board</td></tr>
@@ -259,7 +261,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">86147c9</td><td class="num">2026-10-27</td><td>Manage page: after the tee time the banner says the booking can't be cancelled</td></tr>
 <tr><td class="num">4425bd2</td><td class="num">2026-10-27</td><td>No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)</td></tr>
 <tr><td class="num">e8e2a2e</td><td class="num">2026-10-27</td><td>DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)</td></tr>
-<tr><td class="num">068e626</td><td class="num">2026-10-27</td><td>Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

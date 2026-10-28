@@ -18357,7 +18357,7 @@
     },
     {
       "path": "src/lib/member-stats.ts",
-      "lines": 42,
+      "lines": 46,
       "purpose": "DENSE-5 (Cam 2026-10-28):",
       "brain": [],
       "exports": [

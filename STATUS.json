@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-10-28T03:15:21.764Z",
+  "generatedAt": "2026-10-28T03:19:51.466Z",
   "repo": {
-    "head": "d6b030e",
+    "head": "58f5d42",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 11,
+    "dirtyCount": 4,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/members-import-test.ts",
-      " M scripts/members-rework-test.ts",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/members/route.ts",
-      " M src/app/dashboard/members/page.tsx",
-      " M src/lib/analytics-terms.ts",
-      " M src/lib/analytics.ts",
-      "?? scripts/member-stats-db-test.ts",
-      "?? src/lib/member-stats.ts"
+      " M scripts/member-stats-db-test.ts",
+      " M src/lib/member-stats.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "58f5d42",
+        "date": "2026-10-28T03:15:23+00:00",
+        "subject": "Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d6b030e",
         "date": "2026-10-28T03:06:50+00:00",
@@ -619,6 +619,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "58f5d42",
+      "date": "2026-10-28",
+      "subject": "Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats"
+    },
+    {
       "h": "d6b030e",
       "date": "2026-10-28",
       "subject": "DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year"
@@ -672,11 +677,6 @@
       "h": "e8e2a2e",
       "date": "2026-10-27",
       "subject": "DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)"
-    },
-    {
-      "h": "068e626",
-      "date": "2026-10-27",
-      "subject": "Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column"
     }
   ]
 }
