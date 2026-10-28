@@ -64,6 +64,8 @@ const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export type Range = { from: string; to: string };
 
 const share = (b: { greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number }) => b.greenFeeTotal + b.cartFeeTotal + b.rangeBallsTotal;
+/** The course's share of a booking — Analytics' revenue definition, also Members' spend (DENSE-5). */
+export const courseShareCents = share;
 const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : null);
 const dowOf = (date: string) => new Date(date + 'T12:00:00Z').getUTCDay();
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000);
@@ -166,6 +168,14 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   }
   for (const b of pastLive) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
   for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += share(b); r.rounds += b.checkedInPlayers ?? b.players; } }
+  // DENSE-2: the same collected course share, by the tee time's weekday and hour (Money's sales charts).
+  const collectedByDow = Array.from({ length: 7 }, () => 0);
+  const collectedByHour = new Map<number, number>();
+  for (const b of collectedB) {
+    collectedByDow[dowOf(b.date)] += share(b);
+    const h = Number(b.time.slice(0, 2));
+    collectedByHour.set(h, (collectedByHour.get(h) ?? 0) + share(b));
+  }
 
   // ── 2. Utilization ───────────────────────────────────────────────────────
   const forSale = L.teeTimes.filter(t => t.status !== 'blocked');
@@ -309,32 +319,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const ratePaid = rateList.reduce((n, r) => n + r.paidCents, 0), ratePosted = rateList.reduce((n, r) => n + r.postedCents, 0);
 
   // ── W2-8 (5): booking pace — the next 14 days against the same weekday, same days out, over the last four weeks ──
-  const paceTo = addDaysStr(today, 13), paceFrom = addDaysStr(today, -28);
-  const paceSlots = await prisma.teeTime.findMany({
-    where: { courseId, date: { gte: paceFrom, lte: paceTo } },
-    select: { date: true, status: true, playersAvailable: true,
-      bookings: { select: { players: true, status: true, createdAt: true, cancelledAt: true } } },
-  });
-  const paceByDate = new Map<string, typeof paceSlots>();
-  for (const t of paceSlots) paceByDate.set(t.date, [...(paceByDate.get(t.date) ?? []), t]);
-  /** Players booked on `date` as of `at`: made by then, and not cancelled by then. */
-  const bookedAsOf = (date: string, at: number) => (paceByDate.get(date) ?? []).reduce((n, t) => n + t.bookings.reduce((m, b) => {
-    if (b.createdAt.getTime() > at) return m;
-    if (b.status === 'cancelled' && (!b.cancelledAt || b.cancelledAt.getTime() <= at)) return m;
-    return m + b.players;
-  }, 0), 0);
-  const offeredOn = (date: string) => (paceByDate.get(date) ?? []).filter(t => t.status !== 'blocked').reduce((n, t) => n + t.playersAvailable, 0);
-  const pace: { date: string; offered: number; booked: number; usual: number | null; weeks: number }[] = [];
-  for (let i = 0; i < 14; i++) {
-    const date = addDaysStr(today, i);
-    const past: number[] = [];
-    for (let k = 1; k <= 4; k++) {
-      const then = addDaysStr(date, -7 * k);
-      if (!offeredOn(then)) continue; // closed or no tee times that day — no comparison
-      past.push(bookedAsOf(then, nowMs - 7 * k * 86400000));
-    }
-    pace.push({ date, offered: offeredOn(date), booked: bookedAsOf(date, nowMs), usual: past.length ? Math.round(past.reduce((n, x) => n + x, 0) / past.length) : null, weeks: past.length });
-  }
+  const pace = await bookingPace(courseId, today, nowMs);
 
   // ── W2-8 (4): spend beyond the green fee — carts, shop items on rounds, walk-up shop sales ──
   // Pro-shop money is its own line (Cam 2026-10-22): never part of "revenue".
@@ -448,6 +433,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
       },
       // W2-8 (2): rate paid vs posted, by rate.
       rates: { rows: rateList, paidCents: ratePaid, postedCents: ratePosted, belowPostedCents: ratePosted - ratePaid, ofPostedPct: pct(ratePaid, ratePosted) },
+      byDow: collectedByDow.map((cents, i) => ({ dow: DOW[i], collectedCents: cents })),
+      byHour: [...collectedByHour.entries()].sort((x, y) => x[0] - y[0]).map(([hour, cents]) => ({ hour, collectedCents: cents })),
       greenCents: greenCollected, cartCents: cartCollected, lateFeesKeptCents: lateFeesKept, holdsHeldCents: holdsHeld, greenReserveFeesCents: grFees,
       pipeline: {
         upcomingBookings: upcomingB.length,
@@ -555,4 +542,39 @@ export function walkUpNet(sales: { totalCents: number; taxCents: number; refunde
     cents += itemsPaid > 0 ? Math.round(items * (itemsPaid - refunded) / itemsPaid) : 0;
   }
   return { sales: n, cents };
+}
+
+export type PaceDay = { date: string; offered: number; booked: number; usual: number | null; weeks: number };
+
+/** W2-8 (5): the next 14 days from `today` — players booked so far against the same weekday the
+ *  same number of days out, averaged over the last four weeks (see `pace` at the top). Analytics
+ *  and Home (DENSE-3) read this one function. */
+export async function bookingPace(courseId: string, today: string, nowMs: number): Promise<PaceDay[]> {
+  const paceTo = addDaysStr(today, 13), paceFrom = addDaysStr(today, -28);
+  const paceSlots = await prisma.teeTime.findMany({
+    where: { courseId, date: { gte: paceFrom, lte: paceTo } },
+    select: { date: true, status: true, playersAvailable: true,
+      bookings: { select: { players: true, status: true, createdAt: true, cancelledAt: true } } },
+  });
+  const paceByDate = new Map<string, typeof paceSlots>();
+  for (const t of paceSlots) paceByDate.set(t.date, [...(paceByDate.get(t.date) ?? []), t]);
+  /** Players booked on `date` as of `at`: made by then, and not cancelled by then. */
+  const bookedAsOf = (date: string, at: number) => (paceByDate.get(date) ?? []).reduce((n, t) => n + t.bookings.reduce((m, b) => {
+    if (b.createdAt.getTime() > at) return m;
+    if (b.status === 'cancelled' && (!b.cancelledAt || b.cancelledAt.getTime() <= at)) return m;
+    return m + b.players;
+  }, 0), 0);
+  const offeredOn = (date: string) => (paceByDate.get(date) ?? []).filter(t => t.status !== 'blocked').reduce((n, t) => n + t.playersAvailable, 0);
+  const pace: { date: string; offered: number; booked: number; usual: number | null; weeks: number }[] = [];
+  for (let i = 0; i < 14; i++) {
+    const date = addDaysStr(today, i);
+    const past: number[] = [];
+    for (let k = 1; k <= 4; k++) {
+      const then = addDaysStr(date, -7 * k);
+      if (!offeredOn(then)) continue; // closed or no tee times that day — no comparison
+      past.push(bookedAsOf(then, nowMs - 7 * k * 86400000));
+    }
+    pace.push({ date, offered: offeredOn(date), booked: bookedAsOf(date, nowMs), usual: past.length ? Math.round(past.reduce((n, x) => n + x, 0) / past.length) : null, weeks: past.length });
+  }
+  return pace;
 }

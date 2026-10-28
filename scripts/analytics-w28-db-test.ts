@@ -87,6 +87,8 @@ async function main() {
   check('rounds with a cart: 1 of 2 paid bookings', by.cartRounds === 1 && by.rounds === 2 && by.cartPct === 50, JSON.stringify(by));
   check('shop items on rounds: $15', by.shopOnRoundsCents === 1500);
   check('walk-up shop sales: 1 paid, $10 before tax (the open one left out)', by.walkUpSales === 1 && by.walkUpCents === 1000);
+  const sum = (xs: { collectedCents: number }[]) => xs.reduce((n, x) => n + x.collectedCents, 0);
+  check('sales by weekday and by hour add up to what was collected', sum(a.revenue.byDow) === a.revenue.collectedCents && sum(a.revenue.byHour) === a.revenue.collectedCents && sum(a.revenue.series) === a.revenue.collectedCents, `${sum(a.revenue.byDow)} ${sum(a.revenue.byHour)} ${a.revenue.collectedCents}`);
   check('shop money is not in revenue', a.revenue.collectedCents === 16000 + 4000 + 15000, String(a.revenue.collectedCents));
   const quiet = a.customers.goneQuiet;
   check('a weekly regular who stopped is on the gone-quiet list, with email and phone', quiet.length === 1 && quiet[0].name === 'Quiet Pat' && quiet[0].email === `${TAG}+pat@test.local` && quiet[0].phone === '201-555-0199' && quiet[0].usualGapDays === 7, JSON.stringify(quiet));

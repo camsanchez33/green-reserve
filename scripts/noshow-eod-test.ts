@@ -88,12 +88,15 @@ async function main() {
   await prisma.booking.update({ where: { id: cleared.id }, data: { noShowAt: null } });
   check('"Still coming" before midnight means no charge', !(await dueNoShowCharges(nextMorning)).includes(cleared.id));
 
-  // 6. Cancelling a flagged booking before midnight takes the no-show charge
-  // then — the cancel would otherwise take it out of the midnight run.
-  const cancelled = await seed(today);
+  // 6. Cam 2026-10-27: a flagged no-show can't be cancelled (its tee time has gone off) —
+  // it stays in the midnight run, charged once with the rest.
+  // Yesterday's tee time: always gone off, whatever time of day the test runs (at 00:05 UTC, today's
+  // 10:00 hadn't happened yet and the cancel was rightly allowed).
+  const cancelled = await seed(new Date(Date.now() - 86_400_000).toISOString().slice(0, 10));
   await markNoShow(cancelled.id, { type: 'staff', id: null });
-  await performCancellation(cancelled.id, { type: 'staff', id: null }, { notifySlotAlerts: false });
-  check('cancelling a flagged no-show attempts the no-show charge', (await attempts(cancelled.id)) === 1);
+  const refused = await performCancellation(cancelled.id, { type: 'staff', id: null }, { notifySlotAlerts: false });
+  check('a flagged no-show cannot be cancelled', 'error' in refused && refused.status === 409);
+  check('…it stays due at midnight, nothing charged early', (await attempts(cancelled.id)) === 0 && (await dueNoShowCharges(nextMorning)).includes(cancelled.id));
 
   // 7. A waived (weather) cancel of a flagged booking charges nothing.
   const waived = await seed(today);

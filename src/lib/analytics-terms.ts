@@ -22,6 +22,11 @@ export const TERMS = {
   beyond: 'Carts and the pro shop. Shop sales aren’t counted in revenue. Before sales tax.',
   posted: 'Green fees on paid rounds against the price posted for each tee time. The gap is member and resident rates and prices staff set by hand.',
   comingUp: 'Bookings for tee times that haven’t happened yet, and what they’re worth when they play.',
+  // DENSE-5 Members strip.
+  notRenewed: 'Active members whose membership ran out and who haven’t paid to renew.',
+  notLinked: 'Members who haven’t linked a GreenReserve account. Online bookings get public rates until they do.',
+  memberRounds: 'Checked-in rounds by your members since January 1.',
+  memberSpend: 'Green fees, carts and range balls on their checked-in rounds since January 1 — the same as Analytics. Pro-shop items aren’t counted.',
   pace: 'Players booked so far for each coming day, against the same weekday the same number of days out over the last four weeks.',
   heatFull: 'Each square is one hour on one day of the week: the share of spots booked.',
   heatEarned: 'Each square is one hour on one day of the week: what it earned for every spot offered, sold or not, on tee times already played.',

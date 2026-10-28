@@ -12,7 +12,7 @@ import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { refundSeparateAccessFee, liveSeparateFee } from './access-fee';
 import { refundOnConnectedAccount } from './stripe';
-import { claimTeeTime, TeeTimeClaimError } from './claim-tee-time';
+import { claimTeeTime, TeeTimeClaimError, LATE_ADD_MESSAGE } from './claim-tee-time';
 import { todayIn } from './course-time';
 import { randomUUID } from 'crypto';
 import { READER_STALE_MS } from './checkin-booking';
@@ -112,6 +112,8 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
 export type CounterBookingInput = {
   teeTimeId: string; golferName: string; golferEmail?: string; golferPhone?: string;
   players: number; cartSelected?: boolean; source?: 'walk_in' | 'phone';
+  /** A walk-in who already played, recorded after the LATE_ADD_MINUTES cut-off (staff only). */
+  late?: boolean;
 };
 export async function createCounterBooking(courseId: string, input: CounterBookingInput, actor: EventActor):
   Promise<{ ok: true; id: string; checkInToken: string | null; greenFeeTotal: number; cartFeeTotal: number; totalAmount: number; teeTime: { date: string; time: string; holes: number }; course: { name: string; address: string | null; city: string | null; state: string | null; slug: string; cancellationHours: number; confirmationNote: string | null } }
@@ -145,7 +147,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       status: 'confirmed',
       source,
       cancellationHoursAtBooking: teeTime.course.cancellationHours,
-    }, actor);
+    }, actor, { allowLate: input.late === true && source === 'walk_in' && actor.type === 'staff' });
     const c = teeTime.course;
     return { ok: true, id: claimed.id, checkInToken: claimed.checkInToken, greenFeeTotal, cartFeeTotal, totalAmount,
       teeTime: { date: teeTime.date, time: teeTime.time, holes: teeTime.holes },
@@ -154,6 +156,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     if (err instanceof TeeTimeClaimError) {
       if (err.code === 'NOT_FOUND') return { ok: false, status: 404, error: 'Tee time not found' };
       if (err.code === 'BLOCKED') return { ok: false, status: 409, error: 'This tee time is blocked.' };
+      if (err.code === 'PAST') return { ok: false, status: 409, error: LATE_ADD_MESSAGE };
       if (err.code === 'FULL' || err.code === 'CONFLICT') return { ok: false, status: 409, error: 'That time just filled up.' };
       if (err.code === 'SPOTS') return { ok: false, status: 409, error: `Only ${err.spotsLeft} spot${err.spotsLeft === 1 ? '' : 's'} left.` };
     }

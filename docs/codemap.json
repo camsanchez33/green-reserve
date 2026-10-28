@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 570,
-    "routes": 267,
-    "libs": 195,
+    "files": 577,
+    "routes": 269,
+    "libs": 199,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3063,7 +3063,7 @@
     },
     {
       "path": "src/app/api/admin/tee-sheet/route.ts",
-      "lines": 128,
+      "lines": 129,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3692,7 +3692,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 407,
+      "lines": 408,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4733,7 +4733,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 91,
+      "lines": 93,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5217,7 +5217,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 298,
+      "lines": 319,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5248,6 +5248,7 @@
         "@/lib/booking-events",
         "@/lib/booking-residents",
         "@/lib/cancel-booking",
+        "@/lib/cancel-fee-reason",
         "@/lib/checkin-booking",
         "@/lib/counter-pay",
         "@/lib/course-time",
@@ -5748,7 +5749,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 293,
+      "lines": 291,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5782,7 +5783,9 @@
       "imports": [
         "@/lib/agreement-required",
         "@/lib/auth",
+        "@/lib/course-time",
         "@/lib/email",
+        "@/lib/member-stats",
         "@/lib/money",
         "@/lib/prisma",
         "@/lib/session",
@@ -5851,6 +5854,34 @@
         "@/lib/course-time",
         "@/lib/operator-home",
         "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/money/sales/route.ts",
+      "lines": 62,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/money/sales",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/analytics",
+        "@/lib/course-time",
+        "@/lib/prisma",
+        "@/lib/register-close",
         "@/lib/session",
         "next/server"
       ],
@@ -6472,6 +6503,31 @@
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/settings-validation",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/sheet-money/route.ts",
+      "lines": 31,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/sheet-money",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/analytics",
+        "@/lib/session",
         "next/server"
       ],
       "usedBy": []
@@ -7864,7 +7920,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 219,
+      "lines": 263,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -7884,6 +7940,7 @@
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/settings/FinishSetup",
         "@/components/ui/StatusDot",
+        "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
         "@/lib/setup-missing",
         "@/lib/use-dashboard-access",
@@ -7947,7 +8004,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 694,
+      "lines": 772,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7971,6 +8028,7 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/use-dashboard-access",
@@ -8012,7 +8070,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 288,
+      "lines": 291,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -8033,6 +8091,7 @@
         "@/components/dashboard/money/PaymentsPanel",
         "@/components/dashboard/money/PayoutsPanel",
         "@/components/dashboard/money/PayoutsTable",
+        "@/components/dashboard/money/SalesPanel",
         "@/components/dashboard/money/types",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -8096,7 +8155,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1521,
+      "lines": 1560,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8117,7 +8176,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/MoveGroupModal",
         "@/components/dashboard/ShopItemsForGroup",
-        "@/components/dashboard/TeeSheetBoard",
+        "@/components/dashboard/TeeSheetRows",
         "@/components/dashboard/Toast",
         "@/components/ui/Card",
         "@/components/ui/MonthPicker",
@@ -8129,6 +8188,7 @@
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
         "@/lib/format",
+        "@/lib/late-add",
         "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
@@ -8630,7 +8690,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 573,
+      "lines": 577,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10011,7 +10071,8 @@
         "react"
       ],
       "usedBy": [
-        "src/app/dashboard/analytics/page.tsx"
+        "src/app/dashboard/analytics/page.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx"
       ]
     },
     {
@@ -10120,6 +10181,7 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
@@ -10441,9 +10503,9 @@
       "usedBy": []
     },
     {
-      "path": "src/components/dashboard/TeeSheetBoard.tsx",
-      "lines": 165,
-      "purpose": "SHEET-2 (PLATFORM_ROADMAP_SPEC §9, Cam 2026-10-07:",
+      "path": "src/components/dashboard/TeeSheetRows.tsx",
+      "lines": 177,
+      "purpose": "DENSE-4 (DENSE_UI_SPEC D1, Cam 2026-10-27:",
       "brain": [],
       "exports": [
         {
@@ -10455,7 +10517,7 @@
           "kind": "type"
         },
         {
-          "name": "default (TeeSheetBoard)",
+          "name": "default (TeeSheetRows)",
           "kind": "component"
         },
         {
@@ -10469,8 +10531,6 @@
       "auth": null,
       "guard": null,
       "imports": [
-        "@/components/ui/Card",
-        "@/components/ui/StatusDot",
         "@/lib/format",
         "react"
       ],
@@ -10759,7 +10819,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 80,
+      "lines": 81,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10777,6 +10837,7 @@
         "./types",
         "@/components/ui/StatusDot",
         "@/lib/format",
+        "@/lib/no-fee-labels",
         "next/link",
         "react"
       ],
@@ -10889,8 +10950,36 @@
       ]
     },
     {
+      "path": "src/components/dashboard/money/SalesPanel.tsx",
+      "lines": 240,
+      "purpose": "DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "SalesPanel",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/DateRangeButton",
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/lib/dashboard-fetch",
+        "@/lib/register-close",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/money/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/money/types.ts",
-      "lines": 18,
+      "lines": 22,
       "purpose": "SD-8 — one booking shape for all three Money tabs.",
       "brain": [],
       "exports": [
@@ -11031,7 +11120,7 @@
     },
     {
       "path": "src/components/home/TeeSheetDemo.tsx",
-      "lines": 320,
+      "lines": 321,
       "purpose": "HOME-2 (HOMEPAGE_SPEC.md, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -11155,7 +11244,6 @@
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
-        "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
@@ -11163,6 +11251,7 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/onboarding/PageReviewStep.tsx",
         "src/components/dashboard/settings/FinishSetup.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
@@ -11441,7 +11530,6 @@
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/TeeSheetBoard.tsx",
         "src/components/dashboard/Toast.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -12926,7 +13014,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 43,
+      "lines": 48,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -12946,12 +13034,14 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/analytics/page.tsx"
+        "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/members/page.tsx"
       ]
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 559,
+      "lines": 581,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -12960,8 +13050,16 @@
           "kind": "type"
         },
         {
+          "name": "bookingPace",
+          "kind": "fn"
+        },
+        {
           "name": "computeAnalytics",
           "kind": "fn"
+        },
+        {
+          "name": "courseShareCents",
+          "kind": "const"
         },
         {
           "name": "EVENT_LOG_START",
@@ -12974,6 +13072,10 @@
         {
           "name": "NO_SHOW_GRACE_MIN",
           "kind": "const"
+        },
+        {
+          "name": "PaceDay",
+          "kind": "type"
         },
         {
           "name": "previousRange",
@@ -13007,8 +13109,11 @@
       "usedBy": [
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
+        "src/app/api/operator/sheet-money/route.ts",
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
+        "src/lib/member-stats.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts"
       ]
@@ -13565,6 +13670,7 @@
         "src/lib/booking-fee.ts",
         "src/lib/booking-residents.ts",
         "src/lib/cancel-booking.ts",
+        "src/lib/cancel-fee-reason.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/claim-tee-time.ts",
         "src/lib/counter-pay.ts",
@@ -14169,7 +14275,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 328,
+      "lines": 343,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14237,8 +14343,45 @@
       ]
     },
     {
+      "path": "src/lib/cancel-fee-reason.ts",
+      "lines": 29,
+      "purpose": "Cam 2026-10-27 (\"how is that no fee — looks within 24 hours to me\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CancelRecord",
+          "kind": "type"
+        },
+        {
+          "name": "NO_FEE_LABEL",
+          "kind": "reexport"
+        },
+        {
+          "name": "noFeeReason",
+          "kind": "fn"
+        },
+        {
+          "name": "NoFeeReason",
+          "kind": "reexport"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./cancel-policy",
+        "./no-fee-labels"
+      ],
+      "usedBy": [
+        "src/app/api/operator/bookings/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/cancel-policy.ts",
-      "lines": 256,
+      "lines": 262,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B).",
       "brain": [],
       "exports": [
@@ -14354,6 +14497,7 @@
         "src/app/dashboard/settings/page.tsx",
         "src/app/manage/[bookingId]/page.tsx",
         "src/lib/cancel-booking.ts",
+        "src/lib/cancel-fee-reason.ts",
         "src/lib/cutoff-hold.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/email.ts",
@@ -14672,13 +14816,21 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 93,
+      "lines": 103,
       "purpose": "",
       "brain": [],
       "exports": [
         {
           "name": "claimTeeTime",
           "kind": "fn"
+        },
+        {
+          "name": "LATE_ADD_MESSAGE",
+          "kind": "reexport"
+        },
+        {
+          "name": "LATE_ADD_MINUTES",
+          "kind": "reexport"
         },
         {
           "name": "TeeTimeClaimError",
@@ -14692,6 +14844,7 @@
       "guard": null,
       "imports": [
         "./booking-events",
+        "./late-add",
         "./prisma",
         "@prisma/client"
       ],
@@ -14816,7 +14969,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 163,
+      "lines": 166,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -15623,7 +15776,9 @@
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/tee-times/route.ts",
@@ -16130,6 +16285,7 @@
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
+        "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
       ]
     },
@@ -17187,7 +17343,7 @@
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
-        "src/components/dashboard/TeeSheetBoard.tsx",
+        "src/components/dashboard/TeeSheetRows.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
@@ -17901,6 +18057,36 @@
       ]
     },
     {
+      "path": "src/lib/late-add.ts",
+      "lines": 13,
+      "purpose": "Cam 2026-10-27:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "LATE_ADD_MESSAGE",
+          "kind": "const"
+        },
+        {
+          "name": "LATE_ADD_MINUTES",
+          "kind": "const"
+        },
+        {
+          "name": "lateForAdding",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
+        "src/lib/claim-tee-time.ts"
+      ]
+    },
+    {
       "path": "src/lib/lifecycle.ts",
       "lines": 416,
       "purpose": "",
@@ -18182,6 +18368,38 @@
         "src/app/api/member/[courseSlug]/session/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/member-stats.ts",
+      "lines": 46,
+      "purpose": "DENSE-5 (Cam 2026-10-28):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MemberKeys",
+          "kind": "type"
+        },
+        {
+          "name": "memberRoundStats",
+          "kind": "fn"
+        },
+        {
+          "name": "MemberRoundStats",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./analytics",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/members/route.ts"
       ]
     },
     {
@@ -18475,6 +18693,32 @@
       ]
     },
     {
+      "path": "src/lib/no-fee-labels.ts",
+      "lines": 13,
+      "purpose": "Client-safe half of lib/cancel-fee-reason (no prisma):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "NO_FEE_LABEL",
+          "kind": "const"
+        },
+        {
+          "name": "NoFeeReason",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/money/CancellationsPanel.tsx",
+        "src/lib/cancel-fee-reason.ts"
+      ]
+    },
+    {
       "path": "src/lib/no-show-fee.ts",
       "lines": 215,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
@@ -18577,7 +18821,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 138,
+      "lines": 158,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -19218,6 +19462,7 @@
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -19303,6 +19548,7 @@
         "src/lib/login-guard.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
+        "src/lib/member-stats.ts",
         "src/lib/money-problems.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
@@ -19781,7 +20027,9 @@
         "./shop"
       ],
       "usedBy": [
-        "src/app/api/operator/register-close/route.ts"
+        "src/app/api/operator/money/sales/route.ts",
+        "src/app/api/operator/register-close/route.ts",
+        "src/components/dashboard/money/SalesPanel.tsx"
       ]
     },
     {
@@ -20603,6 +20851,7 @@
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/nines/route.ts",
@@ -20622,6 +20871,7 @@
         "src/app/api/operator/schedule/route.ts",
         "src/app/api/operator/search/route.ts",
         "src/app/api/operator/settings/route.ts",
+        "src/app/api/operator/sheet-money/route.ts",
         "src/app/api/operator/shop-items/read/route.ts",
         "src/app/api/operator/shop-items/route.ts",
         "src/app/api/operator/shop-sales/quote/route.ts",
@@ -23085,7 +23335,6 @@
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/operator/bookings/route.ts",
-        "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
@@ -23111,6 +23360,7 @@
         "src/lib/dispute-evidence.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/member-stats.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/operator-home.ts",
         "src/lib/operator-search.ts",
@@ -23183,6 +23433,7 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
+        "src/app/api/operator/bookings/route.ts",
         "src/lib/analytics.ts",
         "src/lib/course-timeline.ts",
         "src/lib/data-reset.ts",
@@ -23970,6 +24221,7 @@
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/blackouts/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
@@ -23979,6 +24231,7 @@
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/money/overview/route.ts",
+        "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/my-courses/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
@@ -26230,6 +26483,7 @@
       "readers": [
         "src/app/api/admin/revenue/route.ts",
         "src/app/api/admin/transactions/export/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/admin-home.ts",

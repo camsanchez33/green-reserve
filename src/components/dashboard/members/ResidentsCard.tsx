@@ -115,7 +115,7 @@ export function ResidentsCard({ canEdit }: { canEdit: boolean }) {
         <div className="min-w-0 max-w-[44em]">
           <h2 className="text-[17px] font-semibold text-ink">Residents</h2>
           <p className="text-[13px] text-ink-soft mt-1">
-            Add a golfer here once they show their resident card. Signed in with this email, they book themselves at the resident rate; the rest of their group pays the public rate. At the counter, set how many of a group are residents from the tee sheet.
+            Signed in with this email, they book themselves at the resident rate.
             {shared && ' This list is shared with every course in your group: a resident here gets the resident rate at all of them.'}
           </p>
         </div>

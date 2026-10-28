@@ -14,6 +14,7 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { PaymentsPanel } from '@/components/dashboard/money/PaymentsPanel';
 import { CancellationsPanel } from '@/components/dashboard/money/CancellationsPanel';
 import { PayoutsPanel } from '@/components/dashboard/money/PayoutsPanel';
+import { SalesPanel } from '@/components/dashboard/money/SalesPanel';
 import type { MoneyBooking, MoneyCourse } from '@/components/dashboard/money/types';
 import type { PayoutsData } from '@/components/dashboard/money/PayoutsTable';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -171,7 +172,6 @@ function MoneyPageInner() {
           <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div className="min-w-0">
               <h1 className="font-serif text-[32px] leading-none text-ink">Payments and payouts</h1>
-              <p className="text-[14px] text-ink-soft mt-2.5">What golfers have paid your course, and when Stripe sends it to your bank.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {!treatAsStaff && courseLoaded && course.stripeAccountActive && (
@@ -189,17 +189,20 @@ function MoneyPageInner() {
 
           {overviewError && <div className="mb-4"><LoadError message={`Couldn't load this week's totals — ${overviewError}`} onRetry={loadOverview} /></div>}
           {payoutError && <div className="mb-4"><LoadError message={`Couldn't load your payouts from Stripe — ${payoutError}`} onRetry={loadOverview} /></div>}
-          {(overview || nextPayout !== undefined || (seesPayouts && !payoutError && courseLoaded && !course.stripeAccountActive)) && (
-            <Card className="grid grid-cols-1 sm:grid-cols-3 gap-px !bg-line overflow-hidden mb-6">
-              {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Paid in the last 7 days</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.paidCents)}</div><div className="text-[12.5px] text-ink-muted">for rounds played</div></div>}
-              {overview && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Not paid yet</div><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(overview.notPaidCents)}</div><div className="text-[12.5px] text-ink-muted">{overview.notPaidGroups === 0 ? 'every group in the last 7 days has paid' : `${overview.notPaidGroups} group${overview.notPaidGroups === 1 ? '' : 's'} in the last 7 days, no-shows included`}</div>
-                {overview.notPaidGroups > 0 && tabs.some(t => t.key === 'payments') && <button onClick={() => setTab('payments', 'unpaid')} className="mt-1 text-[12.5px] font-medium text-pine hover:underline">See them</button>}</div>}
-              {seesPayouts && !payoutError && <div className="bg-white px-5 py-4"><div className="text-[13px] font-semibold text-ink">Next payout</div>
-                {nextPayout ? <><div className="text-[24px] font-semibold tabular-nums text-ink mt-0.5">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">lands in your bank {fmtArrival(nextPayout.arrivalDate)}</div></>
-                  : courseLoaded && !course.stripeAccountActive ? <div className="text-[13.5px] text-ink-soft mt-1.5">Connect Stripe to get paid (Payouts tab).</div>
-                  : nextPayout === null ? <div className="text-[13.5px] text-ink-soft mt-1.5">Nothing on its way right now.</div>
-                  : <div className="text-[13.5px] text-ink-soft mt-1.5">Checking Stripe…</div>}
-              </div>}
+          {/* DENSE-2 (Cam 2026-10-27): Sales — today against last week, the picked dates by day,
+              weekday and hour, what it was for, how golfers paid, the cash drawer. */}
+          {seesPayments && (
+            <SalesPanel nextPayout={nextPayout} showPayout={seesPayouts && !payoutError}
+              stripeConnected={courseLoaded && course.stripeAccountActive}
+              notPaid={overview ? { cents: overview.notPaidCents, groups: overview.notPaidGroups } : null}
+              onSeeUnpaid={tabs.some(t => t.key === 'payments') ? () => setTab('payments', 'unpaid') : undefined} />
+          )}
+          {!seesPayments && seesPayouts && !payoutError && (
+            <Card className="px-5 py-4 mb-6 max-w-sm">
+              <div className="text-[13px] text-ink-soft">Next payout</div>
+              {nextPayout ? <><div className="text-[24px] font-semibold tabular-nums text-ink">{usd(nextPayout.amountCents)}</div><div className="text-[12.5px] text-ink-muted">{fmtArrival(nextPayout.arrivalDate)}</div></>
+                : courseLoaded && !course.stripeAccountActive ? <div className="text-[13.5px] text-ink mt-1">Connect Stripe</div>
+                : <div className="text-[13.5px] text-ink-muted mt-1">{nextPayout === null ? 'None on its way' : 'Checking Stripe…'}</div>}
             </Card>
           )}
 

@@ -107,7 +107,7 @@ stay with the overseer.
 
 ### Course dashboard
 
-- [ ] **DENSE-1 Analytics** (`dashboard/analytics/page.tsx`, ~60+ sentences →
+- [x] **DENSE-1 Analytics** (MERGED #237) (`dashboard/analytics/page.tsx`, ~60+ sentences →
   ≤ 8). Lands `words-guard.mjs`. Top: period switcher (Today · 7D · 4W · 3M · 12M) +
   "vs previous"; one large chart whose metric is picked by clicking the four headline
   numbers (Revenue, Tee sheet filled, Rounds played, Per round); eight small cards with
@@ -119,7 +119,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   first review exists. Unused fields to surface: `revenue.perAvailableTeeTimeCents`,
   `utilization.byDay`, `utilization.blockedTimes`. Sparklines need per-period series
   → small addition in `computeAnalytics` (new code, server-side, no money logic).
-- [ ] **DENSE-2 Money** (`dashboard/money/*`, ~15 → ≤ 3). Sales tab first:
+- [x] **DENSE-2 Money** (BUILT 2026-10-27: Sales view on top — today vs same weekday last week, sales by day / weekday / hour, summary, how golfers paid, cash drawer; title stays "Payments and payouts" per money-rework-test) (`dashboard/money/*`, ~15 → ≤ 3). Sales tab first:
   Stripe "Today" cumulative line vs same weekday last week + next payout + not paid
   yet; Toast's sales by day / day of week / time of day; Sales summary table (green
   fees, carts, range, shop on rounds, register sales, late/no-show fees, refunds, net;
@@ -129,13 +129,13 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   `MoneyBooking` (green/cart/range) on expand. The 4-sentence fee card → one line +
   link. New code: the intraday cumulative series and payment-method split (read-only
   aggregation; overseer — it is money).
-- [ ] **DENSE-3 Home** (`dashboard/home`, ~4 → ≤ 2). KPI strip with sparklines vs
+- [x] **DENSE-3 Home** (BUILT 2026-10-28 — Cam picked: the 14-day pace row, Coming up kept with checked-in, money panel = Next payout only, 7-week trend lines under players / fill / paid; Not paid yet = every unpaid group today, as on the tee sheet strip) (`dashboard/home`, ~4 → ≤ 2). KPI strip with sparklines vs
   same weekday; "Today by tee time" fill grid with the now marker; Next 14 days pace
   (booked vs usual-by-now — already `pace` in analytics); Needs you (existing three +
   pace alerts); Next up with checked-in state (`comingUp[].groups[].checkedIn` is
   returned and unused) and a short golfer history; Paid today mix + next payout. AN-1
   exception already covers Home. Golfer history tags = new code (see DENSE-4).
-- [ ] **DENSE-4 Tee sheet: seat rows** (`dashboard/page.tsx`, `TeeSheetBoard.tsx`
+- [x] **DENSE-4 Tee sheet: seat rows** (BUILT 2026-10-27, one day per screen; the next day side by side on desktop and the day strip / golfer card follow as DENSE-4b, each asked of Cam per D2) (`dashboard/page.tsx`, `TeeSheetBoard.tsx`
   → `TeeSheetRows.tsx`, `TeeSheetDemo.tsx`; ~15–20 → ≤ 6, modals keep only what a
   wrong click costs). D1 layout; day strip across the top only if Cam says yes to each
   number (D2: players · checked in · paid · owed · fill by hour — ask); golfer card in
@@ -143,7 +143,8 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   a per-course golfer summary keyed like analytics' "customer"; tenant-scoped; money
   shown only with `money.payments`). Drag, panel actions, Next up, pay links
   unchanged. Homepage demo mirrors it in the same PR. Phone: one day, same rows.
-- [ ] **DENSE-5 Members** (~15–20 → ≤ 4). Table with sortable columns (tier, dues
+- [x] **DENSE-4c Past tee times out of the way** (BUILT 2026-10-27, Cam: "after like 20 minutes the tee time should be sent down where they can still access it but it isnt in the way"): today's times 20 min after they went off (`LATE_ADD_MINUTES`, `lib/late-add.ts`) sit in a collapsed "Past tee times · N" section under the live rows; the next time is first. `claimTeeTime()` refuses new bookings on them (`PAST`), so every path agrees; staff can still record a forgotten walk-in there with "Add a walk-in who already played" (today only, walk-ins only — `late` → `allowLate`). Search shows every time in order; a late chip opens the section.
+- [x] **DENSE-5 Members** (BUILT 2026-10-28 — Cam picked: strip = Active · Not renewed (expired, not paid again) · Not linked · Member rounds this year; table = member + email · phone, membership, dues, renews, member since, rounds this year, spend this year (money.payments only), last round, sortable; no per-row trend line) (~15–20 → ≤ 4). Table with sortable columns (tier, dues
   status, rounds this season, last round, spend), sparkline of rounds per member;
   header strip: active · dues unpaid ($) · renewing in 30 days (ask D2). Wizard hints
   cut to labels; the 1% dues line stays (fee wording, LQ-2).

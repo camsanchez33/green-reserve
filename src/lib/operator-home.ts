@@ -7,7 +7,7 @@
 import { missingSetup } from './setup-missing';
 import { prisma } from './prisma';
 import { todayIn, clockIn, addDaysStr } from './course-time';
-import { computeAnalytics, NO_SHOW_GRACE_MIN } from './analytics';
+import { computeAnalytics, bookingPace, NO_SHOW_GRACE_MIN } from './analytics';
 import { roundChargeCents } from './shop';
 import { isPlaceholderEmail } from './email';
 
@@ -72,9 +72,11 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   const clock = clockIn(tz, now);
   const lastWeek = addDaysStr(today, -7);
 
-  const [cur, prev, slots, { rows: declined, total: declinedTotal }, unread] = await Promise.all([
+  // DENSE-3 (Cam 2026-10-28, "yes, add trend lines"): the same weekday for the last seven weeks, oldest first, then today.
+  const weeksBack = [7, 6, 5, 4, 3, 2, 1].map(k => addDaysStr(today, -7 * k));
+  const [cur, earlier, slots, { rows: declined, total: declinedTotal }, unread, pace] = await Promise.all([
     dayShape(courseId, today),
-    dayShape(courseId, lastWeek),
+    Promise.all(weeksBack.map(d => dayShape(courseId, d))),
     prisma.teeTime.findMany({
       where: { courseId, date: today, status: { not: 'blocked' } },
       orderBy: { time: 'asc' },
@@ -84,7 +86,10 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     declinedCards(courseId, opts.money),
     // The same count as the menu's Messages badge (/api/operator/messages?unreadCount=1).
     opts.messages ? prisma.message.count({ where: { thread: { courseId }, senderType: 'admin', readAt: null } }) : Promise.resolve(0),
+    // DENSE-3 (Cam 2026-10-28): the next 14 days against the usual by now — Analytics' own pace.
+    bookingPace(courseId, today, now.getTime()),
   ]);
+  const prev = earlier[earlier.length - 1];
 
   const declinedIds = new Set(declined.map(d => d.id));
   // Past their tee time plus the no-show grace, still not checked in or marked.
@@ -97,21 +102,29 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   const comingUp: HomeSlot[] = slots.filter(s => s.time.slice(0, 5) >= clock.slice(0, 5)).slice(0, 6).map(s => ({
     time: s.time.slice(0, 5),
     open: Math.max(0, s.playersAvailable - s.playersBooked),
-    groups: s.bookings.map(b => ({ id: b.id, name: b.golferName, players: b.players, paymentStatus: b.paymentStatus, checkedIn: !!b.checkedInAt })),
+    groups: s.bookings.map(b => ({ id: b.id, name: b.golferName, players: b.players, paymentStatus: b.paymentStatus, checkedIn: !!b.checkedInAt || b.status === 'completed' })),
   }));
 
-  let money: null | { paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateFeesWeekCents: number } = null;
+  // Money uses computeAnalytics' definitions. Not paid yet is every live group today not yet paid —
+  // past their time (no-shows included) plus still to play — as on the tee sheet's strip; lateGroups
+  // is the part past their time (Cam 2026-10-27, "how have none of them not paid").
+  let money: null | { paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number } = null;
+  let paidTrend: number[] | null = null;
   if (opts.money) {
-    const [day, week] = await Promise.all([
+    const [day, weeks] = await Promise.all([
       computeAnalytics(courseId, { from: today, to: today }, now),
-      computeAnalytics(courseId, { from: addDaysStr(today, -6), to: today }, now),
+      // 43 days, so the series stays by day (analytics buckets by week past 45).
+      computeAnalytics(courseId, { from: weeksBack[0], to: weeksBack[weeksBack.length - 1] }, now),
     ]);
     money = {
       // Paid bookings (groups), as Analytics' collected set; Analytics' "rounds" are players.
       paidCents: day.revenue.collectedCents, paidGroups: day.revenue.beyond.rounds,
-      outstandingCents: day.revenue.outstandingCents, outstandingGroups: day.revenue.outstandingBookings,
-      lateFeesWeekCents: week.revenue.lateFeesKeptCents,
+      outstandingCents: day.revenue.outstandingCents + day.revenue.upcomingCents,
+      outstandingGroups: day.revenue.outstandingBookings + day.revenue.pipeline.upcomingBookings,
+      lateGroups: day.revenue.outstandingBookings,
     };
+    const byDate = new Map(weeks.revenue.series.map(x => [x.key, x.collectedCents]));
+    paidTrend = [...weeksBack.map(d => byDate.get(d) ?? 0), day.revenue.collectedCents];
   }
 
   return {
@@ -119,6 +132,13 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     hours: cur.hours.map((n, h) => ({ hour: h, today: n, lastWeek: prev.hours[h] })),
     players: { today: cur.players, lastWeek: prev.players },
     fillPct: { today: cur.fillPct, lastWeek: prev.fillPct },
+    trend: {
+      dates: [...weeksBack, today],
+      players: [...earlier.map(e => e.players), cur.players],
+      fillPct: [...earlier.map(e => e.fillPct), cur.fillPct],
+      paidCents: paidTrend,
+    },
+    pace,
     money,
     declined,
     declinedTotal,

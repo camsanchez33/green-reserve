@@ -2,7 +2,7 @@
 // square's money colour. Pins groupTone() against every booking state the tee
 // sheet can show. Pure — no database.
 // Run: npx tsx scripts/board-tone-test.ts
-import { groupTone, type BoardGroup } from '../src/components/dashboard/TeeSheetBoard';
+import { groupTone, type BoardGroup } from '../src/components/dashboard/TeeSheetRows';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: string) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail ? ' — ' + detail : ''}`); if (!ok) failed++; };

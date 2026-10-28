@@ -70,28 +70,34 @@ const lateFeeAttempts = (bookingId: string) =>
 async function main() {
   await cleanup();
 
-  // 1. Staff or golfer cancels after the no-show: no late fee on top.
+  // 1. Cam 2026-10-27: after the tee time nobody cancels — the group is a no-show, charged
+  //    at midnight. So a plain cancel of a no-show is refused, and no late fee is tried.
   {
     const b = await seedNoShow('plain');
-    const r = await performCancellation(b.id, { type: 'staff', id: null });
-    check('cancel after a charged no-show succeeds', 'success' in r && r.success === true, JSON.stringify(r));
-    check('no late-fee charge is attempted on top of the no-show charge', (await lateFeeAttempts(b.id)) === 0);
-    check('the caller is told a fee was kept, not "no charge"', 'success' in r && r.feeCharged === true);
+    const staff = await performCancellation(b.id, { type: 'staff', id: null });
+    check('staff cannot cancel once the tee time has gone off', 'error' in staff && staff.status === 409 && /no-show/.test(staff.error), JSON.stringify(staff));
+    const golfer = await performCancellation(b.id, { type: 'golfer', id: null });
+    check('…nor can the golfer', 'error' in golfer && golfer.status === 409, JSON.stringify(golfer));
+    check('no late-fee charge is attempted', (await lateFeeAttempts(b.id)) === 0);
     const after = await prisma.booking.findUnique({ where: { id: b.id } });
-    check('booking is cancelled', after?.status === 'cancelled');
-    check('no late-fee charge id is stamped', !after?.cancellationFeeChargeId);
-    const ev = await prisma.bookingEvent.findFirst({ where: { bookingId: b.id, type: 'booking_cancelled' } });
-    const meta = (ev?.metadata ?? {}) as Record<string, unknown>;
-    check('the cancel event records the no-show fee as kept', meta.noShowFeeKept === 2500, JSON.stringify(meta));
+    check('the booking stays a confirmed no-show', after?.status === 'confirmed' && !!after?.noShowAt);
   }
 
-  // 2. Weather cancel (fee waived): the no-show charge is refunded, not kept.
+  // 2. A waived cancel (a booking made by mistake, or weather) still comes off after the
+  //    tee time: the no-show charge is refunded, not kept.
   {
     const b = await seedNoShow('waived');
     const r = await performCancellation(b.id, { type: 'staff', id: null }, { waiveFee: true, reason: 'test weather' });
     check('waived cancel succeeds', 'success' in r && r.success === true);
     check('waived cancel tries to refund the no-show charge', 'success' in r && /no-show fee/.test(r.feeRefundFailed ?? ''), 'success' in r ? (r.feeRefundFailed ?? '') : '');
     check('waived cancel never charges a late fee', (await lateFeeAttempts(b.id)) === 0);
+  }
+
+  // 3. The course calling it off (closure / weather) still takes a teed-off booking off.
+  {
+    const b = await seedNoShow('closure');
+    const r = await performCancellation(b.id, { type: 'system' }, { courseCalledOff: 'closure', waiveFee: true, notifySlotAlerts: false });
+    check('a closure still cancels a booking whose tee time has gone off', 'success' in r && r.success === true, JSON.stringify(r));
   }
 
   await cleanup();

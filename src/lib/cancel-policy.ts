@@ -174,7 +174,13 @@ export function cancelNowWords(b: {
   bookingFeeCents: number;
   /** A no-show charge is live on this booking — cancelling keeps it and adds nothing. */
   noShowKept?: boolean;
+  /** The tee time has gone off — performCancellation refuses (Cam 2026-10-27). */
+  teedOff?: boolean;
 }): { banner: string; confirm: string; subtitle: string } {
+  if (b.teedOff) {
+    const s = 'Your tee time has started, so this booking can’t be cancelled. Check in at the course, or call them.';
+    return { banner: s, confirm: s, subtitle: s };
+  }
   // A no-show fee already charged is kept whatever the clock or policy says (performCancellation).
   if (b.noShowKept) {
     const s = 'The no-show fee already charged is kept if you cancel. Cancelling adds nothing.';

@@ -59,6 +59,11 @@ check('booking API returns cutoffPassed and the timing', /cutoffPassed,/.test(bo
   const taken = cancelNowWords({ ...base, windowOpen: false, timing: 'hold_at_cutoff', feeAlreadyCharged: true });
   check('manage: a taken hold is kept AND the booking fee is charged (no "won’t add another charge")', /kept, and the \$6 booking fee is charged/.test(taken.confirm), taken.confirm);
   const untaken = cancelNowWords({ ...base, windowOpen: false, timing: 'hold_at_cutoff', feeAlreadyCharged: false });
+  // Cam 2026-10-27: after the tee time nothing promises a cancel (performCancellation refuses).
+  for (const extra of [{ feeCents: 0 }, { noShowKept: true }, { windowOpen: true }]) {
+    const gone = cancelNowWords({ ...base, windowOpen: false, timing: 'late_cancel', feeAlreadyCharged: false, ...extra, teedOff: true });
+    check(`after the tee time the banner says it can't be cancelled (${JSON.stringify(extra)})`, /can’t be cancelled/.test(gone.banner) && !/[Ff]ree cancellation|if you cancel/.test(gone.banner));
+  }
   check('manage: an untaken hold is charged on cancel, with the booking fee', untaken.confirm === 'Cancelling now charges the $20 hold plus the $6 booking fee to your card. None of it is refundable.', untaken.confirm);
   const late = cancelNowWords({ ...base, windowOpen: false, timing: 'late_cancel', feeAlreadyCharged: false });
   check('manage: late-cancel charges the fee now', /charges the \$20 fee plus the \$6 booking fee/.test(late.confirm));
