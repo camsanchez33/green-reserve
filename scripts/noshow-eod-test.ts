@@ -90,7 +90,9 @@ async function main() {
 
   // 6. Cam 2026-10-27: a flagged no-show can't be cancelled (its tee time has gone off) —
   // it stays in the midnight run, charged once with the rest.
-  const cancelled = await seed(today);
+  // Yesterday's tee time: always gone off, whatever time of day the test runs (at 00:05 UTC, today's
+  // 10:00 hadn't happened yet and the cancel was rightly allowed).
+  const cancelled = await seed(new Date(Date.now() - 86_400_000).toISOString().slice(0, 10));
   await markNoShow(cancelled.id, { type: 'staff', id: null });
   const refused = await performCancellation(cancelled.id, { type: 'staff', id: null }, { notifySlotAlerts: false });
   check('a flagged no-show cannot be cancelled', 'error' in refused && refused.status === 409);
