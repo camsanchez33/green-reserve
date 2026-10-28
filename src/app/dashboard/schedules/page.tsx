@@ -487,7 +487,7 @@ export default function SchedulesPage() {
                   <button onClick={() => shiftMonth(1)} aria-label="Next month" className="w-8 h-8 rounded-md hover:bg-paper text-ink-soft text-[18px] leading-none">›</button>
                 </div>
               </div>
-              <p className="text-[13px] text-ink-muted mt-1 mb-3" title="Booked times stay — to cancel bookings for weather, use Weather on the tee sheet.">{canEdit ? 'Tap a day to close or reopen it · booked times stay' : 'Booked times stay'}</p>
+              <p className="text-[13px] text-ink-muted mt-1 mb-3" title="Booked times stay — to cancel bookings for weather, use Weather on the tee sheet.">{canEdit ? 'Tap a day to close or reopen it · ' : ''}Booked times stay · weather: Weather on the tee sheet</p>
               {blackoutError && <LoadError message={blackoutError} onRetry={loadBlackouts} />}
               <div className="grid grid-cols-7 text-center text-[12px] text-ink-muted mb-1">{WEEK.map(d => <span key={d}>{DAYS[d]}</span>)}</div>
               <div className="grid grid-cols-7 gap-1">
