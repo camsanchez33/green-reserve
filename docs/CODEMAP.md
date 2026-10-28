@@ -223,7 +223,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/frost-delay` | operator | file | POST | `src/app/api/operator/frost-delay/route.ts` | 33 |
 | `/api/operator/golfer-messages` | operator | file | GET POST | `src/app/api/operator/golfer-messages/route.ts` | 59 |
 | `/api/operator/home` | operator | file | GET | `src/app/api/operator/home/route.ts` | 15 |
-| `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 293 |
+| `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 306 |
 | `/api/operator/members/import` | operator | file | POST | `src/app/api/operator/members/import/route.ts` | 35 |
 | `/api/operator/members/remind-overdue` | operator | file | POST | `src/app/api/operator/members/remind-overdue/route.ts` | 76 |
 | `/api/operator/messages` | operator | file | GET PATCH POST | `src/app/api/operator/messages/route.ts` | 123 |
@@ -293,7 +293,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 63 |
 | `/dashboard/home` | operator | middleware | page | `src/app/dashboard/home/page.tsx` | 263 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 77 |
-| `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 694 |
+| `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 766 |
 | `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 196 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 291 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 241 |
@@ -334,7 +334,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/email.ts` | 57 | 2078 |  | `BookingEmailData`, `escapeHtml`, `firstName`, `isPlaceholderEmail`, `PLACEHOLDER_EMAIL_DOMAIN`, `sendAdminDigest`, `sendAdminPasswordChangedNotification`, `sendAdminPasswordResetEmail` +65 more |
 | `src/lib/rate-limit.ts` | 52 | 78 |  | `clientIp`, `evidentiaryIp`, `rateLimit`, `rateLimitCount` |
 | `src/lib/format.ts` | 49 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
-| `src/lib/course-time.ts` | 43 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
+| `src/lib/course-time.ts` | 44 | 46 | SD-3 — course-local time. | `addDaysStr`, `clockIn`, `DEFAULT_TZ`, `isPastIn`, `isValidTimezone`, `todayIn`, `US_TIMEZONES` |
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/agreement-required.ts` | 30 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/auth.ts` | 28 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
@@ -419,6 +419,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/unsaved-guard.ts` | 4 | 95 | SD-8b — leaving a dashboard page with unsaved edits. | `confirmLeave`, `setLeaveGuard`, `useBackGuard` |
 | `src/lib/walking.ts` | 4 | 23 | Settings rework (Cam 2026-10-19): | `walkingSummary`, `walkingWords` |
 | `src/lib/admin-action-queue.ts` | 3 | 116 | AW-4 (Cam 2026-10-21): | `ActionRow`, `buildActionQueue`, `QueueItem` |
+| `src/lib/analytics-terms.ts` | 3 | 47 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS` |
 | `src/lib/booking-fee.ts` | 3 | 123 | FEE-AT-BOOKING (Cam 2026-10-24: | `chargeBookingFee`, `feeCoveredCents`, `refundBookingFee`, `releaseUnpaidBooking` |
 | `src/lib/booking-mode.ts` | 3 | 20 | Course-world pages: | `isBookingMode`, `isCourseWorld` |
 | `src/lib/claim-tee-time.ts` | 3 | 103 |  | `claimTeeTime`, `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `TeeTimeClaimError` |
@@ -452,7 +453,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/admin-goals.ts` | 2 | 49 | AW-4b (Cam 2026-10-21): | `GOAL_METRICS`, `goalCurrent`, `GoalMetric`, `goalPace`, `isGoalMetric`, `listGoals` |
 | `src/lib/agreement-publish.ts` | 2 | 101 | AG-3 — publishing an agreement version: | `agreementVersionsOverview`, `publishAgreementVersion`, `publishDates`, `PublishResult`, `REACCEPT_WINDOW_DAYS`, `reacceptPublishError`, `VersionRow` |
 | `src/lib/agreement-sign.ts` | 2 | 207 | AGREEMENT_SPEC AG-2 — the signing service. | `deliverAgreementPdfs`, `recordSigning`, `retryMissingAgreementPdfs`, `SignInput`, `SignResult` |
-| `src/lib/analytics-terms.ts` | 2 | 43 | DENSE-1 (DENSE_UI_SPEC P2): | `TermKey`, `TERMS` |
 | `src/lib/announcement-audience.ts` | 2 | 18 | Cam 2026-10-05: | `announcementsSince` |
 | `src/lib/birdie/guardrails.ts` | 2 | 74 | BIRDIE_AI_SPEC B1 — scope, caps and the kill switch. | `BIRDIE_MODEL`, `birdieEnabled`, `BirdieTurn`, `birdieUsageToday`, `checkCaps`, `logConversation`, `MAX_HISTORY_TURNS`, `MAX_REPLY_TOKENS` +4 more |
 | `src/lib/birdie/tools.ts` | 2 | 182 | BIRDIE_AI_SPEC B4a (Cam 2026-10-05) — live-data READ tools for the operator persona. | `READ_TOOLS`, `runReadTool`, `ToolContext`, `ToolOutcome` |

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
+import { todayIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaymentLinkEmail } from '@/lib/email';
@@ -50,19 +51,29 @@ export async function GET() {
 
   // Cam 2026-10-19: each member's last round here — their latest checked-in
   // booking, matched by account or by the email on the membership.
+  // DENSE-5 (Cam 2026-10-28): and their rounds and spend this calendar year (course's
+  // timezone). Spend = green fee, cart, range balls and shop items on those rounds —
+  // what they paid the course — and only for logins that see payments.
+  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
+  const yearStart = `${todayIn(course?.timezone).slice(0, 4)}-01-01`;
+  const seesMoney = can(session, 'money.payments');
   const golferIds = memberships.map(m => m.golferId).filter((x): x is string => !!x);
   const emails = memberships.flatMap(m => [m.inviteEmail, m.golfer?.email ?? '']).map(e => e.toLowerCase()).filter(Boolean);
   const rounds = golferIds.length + emails.length === 0 ? [] : await prisma.booking.findMany({
     where: { courseId: session.courseId, status: 'completed', OR: [{ golferAccountId: { in: golferIds } }, { golferEmail: { in: emails, mode: 'insensitive' } }] },
-    select: { golferAccountId: true, golferEmail: true, teeTime: { select: { date: true } } },
+    select: { id: true, golferAccountId: true, golferEmail: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, shopTotalCents: true, teeTime: { select: { date: true } } },
   });
-  const lastBy = new Map<string, string>();
-  const note = (k: string, d: string) => { if (k && (!lastBy.has(k) || lastBy.get(k)! < d)) lastBy.set(k, d); };
-  for (const r of rounds) { note(r.golferAccountId ?? '', r.teeTime.date); note(r.golferEmail.toLowerCase(), r.teeTime.date); }
-  const lastRound = (m: (typeof memberships)[number]) =>
-    [m.golferId ?? '', m.inviteEmail.toLowerCase(), (m.golfer?.email ?? '').toLowerCase()].map(k => lastBy.get(k) ?? '').sort().pop() || null;
+  // Each key (account id or lower-cased email) → the rounds it matches; a member's rounds are the union over their keys.
+  const byKey = new Map<string, (typeof rounds)[number][]>();
+  const add = (k: string, r: (typeof rounds)[number]) => { if (!k) return; const list = byKey.get(k); if (list) list.push(r); else byKey.set(k, [r]); };
+  for (const r of rounds) { add(r.golferAccountId ?? '', r); add(r.golferEmail.toLowerCase(), r); }
+  const roundsOf = (m: (typeof memberships)[number]) => {
+    const seen = new Map<string, (typeof rounds)[number]>();
+    for (const k of [m.golferId ?? '', m.inviteEmail.toLowerCase(), (m.golfer?.email ?? '').toLowerCase()]) for (const r of byKey.get(k) ?? []) seen.set(r.id, r);
+    return [...seen.values()];
+  };
 
-  const normalized = memberships.map(m => ({
+  const normalized = memberships.map(m => { const mine = roundsOf(m); const thisYear = mine.filter(r => r.teeTime.date >= yearStart); return {
     id:             m.id,
     golferId:       m.golferId,
     name:           m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : m.inviteName,
@@ -82,9 +93,11 @@ export async function GET() {
     notes:          m.notes,
     createdAt:      m.createdAt,
     linked:         !!m.golferId,
-    lastRound:      lastRound(m),
+    lastRound:      mine.map(r => r.teeTime.date).sort().pop() ?? null,
     initiationWaived: m.initiationWaived,
-  }));
+    roundsThisYear: thisYear.length,
+    spendThisYearCents: seesMoney ? thisYear.reduce((n, r) => n + r.greenFeeTotal + r.cartFeeTotal + r.rangeBallsTotal + r.shopTotalCents, 0) : null,
+  }; });
 
   return NextResponse.json(normalized);
 }

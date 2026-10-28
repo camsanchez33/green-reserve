@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/Card';
 import { INPUT_COMPACT } from '@/components/ui/field';
 import { ImportMembers } from '@/components/dashboard/members/ImportMembers';
 import { ResidentsCard } from '@/components/dashboard/members/ResidentsCard';
+import { TERMS } from '@/lib/analytics-terms';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Tier {
@@ -36,7 +37,17 @@ interface Member {
   lastRound?: string | null;
   /** Imported members already belong: no joining fee in what they owe. */
   initiationWaived?: boolean;
+  startedAt?: string | null;
+  /** DENSE-5: checked-in rounds here since Jan 1 (course's timezone). */
+  roundsThisYear?: number;
+  /** DENSE-5: what those rounds paid the course — null without money.payments. */
+  spendThisYearCents?: number | null;
 }
+
+type SortKey = 'name' | 'tier' | 'dues' | 'renews' | 'since' | 'rounds' | 'spend' | 'last';
+const usd0 = (c: number) => `$${Math.round(c / 100).toLocaleString('en-US')}`;
+/** A date as "Oct 26" this year, "Oct 26, 2025" otherwise — keeps the table's date columns narrow. */
+const shortDate = (d: string) => { const t = new Date(d.length === 10 ? d + 'T12:00:00' : d); return t.toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(t.getFullYear() === new Date().getFullYear() ? {} : { year: 'numeric' }) }); };
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 const TIER_COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#f43f5e','#14b8a6','#94a3b8'];
@@ -125,6 +136,8 @@ function MembersPageInner() {
   useEffect(() => { const q = searchParams.get('q'); if (q) setSearch(q.slice(0, 80)); }, [searchParams]);
   const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'name', dir: 1 });
+  const [notLinkedOnly, setNotLinkedOnly] = useState(false);
   const canEdit = pageAccess.can('members.edit');
 
   const loadAll = useCallback(async () => {
@@ -487,10 +500,36 @@ function MembersPageInner() {
   const now = new Date();
   const q = search.trim().toLowerCase();
   const shown = filteredMembers.filter(m => !q || (m.name ?? '').toLowerCase().includes(q) || (m.email ?? '').toLowerCase().includes(q) || (m.phone ?? '').includes(q))
-    .filter(m => !unpaidOnly || ['unpaid', 'expired'].includes(duesOf(m, now).kind));
+    .filter(m => !unpaidOnly || ['unpaid', 'expired'].includes(duesOf(m, now).kind))
+    .filter(m => !notLinkedOnly || !m.linked);
   const active = members.filter(m => m.status === 'active');
   const unpaid = active.filter(m => ['unpaid', 'expired'].includes(duesOf(m, now).kind)).length;
-  const renewing = active.filter(m => duesOf(m, now).kind === 'renewing').length;
+  // DENSE-5 (Cam 2026-10-28): the strip — active, not renewed (ran out, not paid again), not linked
+  // (online bookings get public rates), and members' rounds this year.
+  const notRenewed = active.filter(m => duesOf(m, now).kind === 'expired').length;
+  const notLinked = active.filter(m => !m.linked).length;
+  const memberRounds = members.reduce((n, m) => n + (m.roundsThisYear ?? 0), 0);
+  const seesSpend = members.some(m => m.spendThisYearCents != null);
+  const sortVal = (m: Member): string | number => {
+    switch (sort.key) {
+      case 'name': return (m.name || m.email).toLowerCase();
+      case 'tier': return m.tierName.toLowerCase();
+      case 'dues': return ['unpaid', 'expired', 'renewing', 'paid', 'comped', 'inactive'].indexOf(duesOf(m, now).kind);
+      case 'renews': return m.expiresAt ?? '9999';
+      case 'since': return m.startedAt ?? m.createdAt;
+      case 'rounds': return m.roundsThisYear ?? 0;
+      case 'spend': return m.spendThisYearCents ?? 0;
+      case 'last': return m.lastRound ?? '';
+    }
+  };
+  const sorted = [...shown].sort((a, b) => { const x = sortVal(a), y = sortVal(b); return (x < y ? -1 : x > y ? 1 : 0) * sort.dir; });
+  const th = (key: SortKey, label: string, cls = '') => (
+    <th scope="col" aria-sort={sort.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'} className={'px-3 py-2 font-medium text-[12.5px] text-ink-soft text-left whitespace-nowrap ' + cls}>
+      <button type="button" onClick={() => setSort(s => ({ key, dir: s.key === key ? (s.dir === 1 ? -1 : 1) : (key === 'rounds' || key === 'spend' || key === 'last' ? -1 : 1) }))} className="hover:text-ink">
+        {label}{sort.key === key ? (sort.dir === 1 ? ' ↑' : ' ↓') : ''}
+      </button>
+    </th>
+  );
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
       <OperatorSidebar active="members"/>
@@ -500,10 +539,7 @@ function MembersPageInner() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 max-w-[46em]">
               <h1 className="font-serif text-[32px] leading-none text-ink">Members</h1>
-              <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">
-                {members.length === 0 ? 'Your members, what they pay and when they renew. Members book at their own rates and further ahead.'
-                  : <>{active.length} active · {unpaid} with dues unpaid · {renewing} renewing in the next 30 days</>}
-              </p>
+              {members.length === 0 && <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">Your members, what they pay and when they renew.</p>}
             </div>
             {canEdit && (
               <div className="flex gap-2 shrink-0">
@@ -524,6 +560,19 @@ function MembersPageInner() {
             )}
           </div>
           {loadError && <LoadError message={loadError} onRetry={loadAll} />}
+
+          {members.length > 0 && (
+            <div className="flex flex-wrap border border-line rounded-lg overflow-hidden w-fit max-w-full" role="group" aria-label="Your members">
+              <div className="px-4 py-2.5 min-w-[8.5rem]"><div className="text-[12.5px] text-ink-soft">Active</div><div className="text-[20px] font-semibold tabular-nums text-ink">{active.length}</div></div>
+              <button type="button" onClick={() => { setUnpaidOnly(true); setNotLinkedOnly(false); setFilterStatus('active'); }} className="px-4 py-2.5 min-w-[8.5rem] border-l border-line text-left hover:bg-paper/60"
+                title={TERMS.notRenewed}>
+                <div className="text-[12.5px] text-ink-soft">Not renewed</div><div className={'text-[20px] font-semibold tabular-nums ' + (notRenewed ? 'text-bad' : 'text-ink')}>{notRenewed}</div></button>
+              <button type="button" onClick={() => { setNotLinkedOnly(true); setUnpaidOnly(false); setFilterStatus('active'); }} className="px-4 py-2.5 min-w-[8.5rem] border-l border-line text-left hover:bg-paper/60"
+                title={TERMS.notLinked}>
+                <div className="text-[12.5px] text-ink-soft">Not linked</div><div className={'text-[20px] font-semibold tabular-nums ' + (notLinked ? 'text-warn' : 'text-ink')}>{notLinked}</div></button>
+              <div className="px-4 py-2.5 min-w-[8.5rem] border-l border-line" title={TERMS.memberRounds}><div className="text-[12.5px] text-ink-soft">Member rounds this year</div><div className="text-[20px] font-semibold tabular-nums text-ink">{memberRounds}</div></div>
+            </div>
+          )}
 
           {importOpen && <ImportMembers tiers={tiers} onClose={() => setImportOpen(false)} onImported={loadAll} />}
 
@@ -588,60 +637,83 @@ function MembersPageInner() {
                   <option value="inactive">Not active</option>
                   <option value="all">Everyone</option>
                 </select>
-                <label className="flex items-center gap-2 text-[13.5px] text-ink"><input type="checkbox" checked={unpaidOnly} onChange={e => setUnpaidOnly(e.target.checked)} className="w-4 h-4 accent-pine"/>Dues unpaid only</label>
+                <label className="flex items-center gap-2 text-[13.5px] text-ink"><input type="checkbox" checked={unpaidOnly} onChange={e => setUnpaidOnly(e.target.checked)} className="w-4 h-4 accent-pine"/>Dues unpaid</label>
+                <label className="flex items-center gap-2 text-[13.5px] text-ink"><input type="checkbox" checked={notLinkedOnly} onChange={e => setNotLinkedOnly(e.target.checked)} className="w-4 h-4 accent-pine"/>Not linked</label>
                 <span className="ml-auto text-[12.5px] text-ink-muted">{shown.length} of {members.length}</span>
               </div>
               {shown.length === 0 ? (
                 <p className="px-4 py-10 text-center text-[13.5px] text-ink-soft">{members.length === 0 ? 'No members yet. Add your first one above.' : 'Nobody matches that.'}</p>
               ) : (
-                <ul className="divide-y divide-line-soft">
-                  {shown.map(m => {
-                    const d = duesOf(m, now);
-                    const openRow = expanded === m.id;
-                    return (
-                      <li key={m.id} className={m.status !== 'active' ? 'text-ink-soft' : ''}>
-                        <button onClick={() => setExpanded(openRow ? null : m.id)} aria-expanded={openRow}
-                          className="w-full grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.7fr)] gap-x-4 gap-y-0.5 px-4 py-3 text-left hover:bg-paper/60">
-                          <span className="min-w-0">
-                            <span className="block text-[14px] font-medium text-ink truncate">{m.name || m.email}</span>
-                            <span className="block text-[12.5px] text-ink-muted truncate">{m.email}{m.phone ? ` · ${m.phone}` : ''}</span>
-                          </span>
-                          <span className="hidden sm:inline-flex items-center gap-2 text-[13.5px] text-ink min-w-0"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.tierColor }}/><span className="truncate">{m.tierName}</span></span>
-                          <span className="inline-flex items-center gap-1.5 text-[13.5px] text-ink justify-end sm:justify-start"><StatusDot status={d.tone} />{d.label}</span>
-                          <span className="hidden lg:block text-[13px] text-ink-muted">{m.lastRound ? `Last round ${fmtDate(m.lastRound + 'T12:00:00')}` : 'No rounds yet'}</span>
-                        </button>
-                        {openRow && (
-                          <div className="px-4 pb-4 -mt-1 grid sm:grid-cols-[1fr_auto] gap-3 items-end">
-                            <div className="text-[13px] text-ink-soft space-y-0.5">
-                              <p>{m.linked ? 'Account linked — member rates apply when they book online.' : m.inviteAccepted ? 'Invite accepted.' : 'Invite sent; they haven’t linked an account yet, so online bookings don’t get member rates.'}</p>
-                              {m.lastPaidAt && <p>Last paid {fmtDate(m.lastPaidAt)}.</p>}
-                              <p>{m.lastRound ? `Last round here ${fmtDate(m.lastRound + 'T12:00:00')}.` : 'No rounds here yet.'}</p>
-                              {m.notes && <p>Note: {m.notes}</p>}
-                            </div>
-                            {canEdit && (
-                              <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-                                {editMemberId === m.id ? (
-                                  <>
-                                    <select value={editMemberTierId} onChange={e => setEditMemberTierId(e.target.value)} aria-label="New membership"
-                                      className="bg-paper border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink">
-                                      {tiers.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                    </select>
-                                    <button onClick={() => updateMemberTier(m.id, editMemberTierId)} className="text-[13px] font-medium text-pine hover:underline">Save</button>
-                                    <button onClick={() => setEditMemberId(null)} className="text-[13px] text-ink-soft hover:text-ink">Cancel</button>
-                                  </>
-                                ) : (
-                                  <button onClick={() => { setEditMemberId(m.id); setEditMemberTierId(m.tierId ?? ''); }} className="text-[13px] font-medium text-pine hover:underline">Change membership</button>
-                                )}
-                                <button onClick={() => toggleMemberStatus(m)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{m.status === 'active' ? 'Make not active' : 'Make active'}</button>
-                                <button onClick={() => removeMember(m.id, m.name)} className="text-[13px] font-medium text-bad hover:underline">Remove</button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[13.5px]">
+                    <thead className="border-b border-line-soft">
+                      <tr>
+                        {th('name', 'Member')}
+                        {th('tier', 'Membership', 'hidden sm:table-cell')}
+                        {th('dues', 'Dues')}
+                        {th('renews', 'Renews', 'hidden md:table-cell')}
+                        {th('since', 'Member since', 'hidden lg:table-cell')}
+                        {th('rounds', 'Rounds this year', 'text-right hidden md:table-cell')}
+                        {seesSpend && th('spend', 'Spend this year', 'text-right hidden lg:table-cell')}
+                        {th('last', 'Last round', 'hidden xl:table-cell')}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line-soft">
+                      {sorted.map(m => {
+                        const d = duesOf(m, now);
+                        const openRow = expanded === m.id;
+                        return [
+                          <tr key={m.id} onClick={() => setExpanded(openRow ? null : m.id)} className={'cursor-pointer hover:bg-paper/60 ' + (m.status !== 'active' ? 'text-ink-soft' : 'text-ink')}>
+                            <td className="px-3 py-2.5 min-w-[14rem]">
+                              <button type="button" aria-expanded={openRow} className="text-left">
+                                <span className="block font-medium truncate max-w-[18rem]">{m.name || m.email}</span>
+                                <span className="block text-[12.5px] text-ink-muted truncate max-w-[18rem]">{m.email}{m.phone ? ` · ${m.phone}` : ''}</span>
+                              </button>
+                            </td>
+                            <td className="px-3 py-2.5 hidden sm:table-cell whitespace-nowrap"><span className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.tierColor }}/>{m.tierName}</span></td>
+                            <td className="px-3 py-2.5 whitespace-nowrap"><span className="inline-flex items-center gap-1.5"><StatusDot status={d.tone} />{d.kind === 'unpaid' ? d.label.replace('Dues unpaid · ', 'Owes ') : d.kind === 'paid' ? 'Paid' : d.kind === 'renewing' ? 'Renewing' : d.kind === 'expired' ? 'Expired' : d.label}</span></td>
+                            <td className="px-3 py-2.5 hidden md:table-cell whitespace-nowrap tabular-nums">{m.expiresAt ? shortDate(m.expiresAt) : <span className="text-ink-faint">—</span>}</td>
+                            <td className="px-3 py-2.5 hidden lg:table-cell whitespace-nowrap tabular-nums">{shortDate(m.startedAt ?? m.createdAt)}</td>
+                            <td className="px-3 py-2.5 hidden md:table-cell text-right tabular-nums">{m.roundsThisYear ?? 0}</td>
+                            {seesSpend && <td className="px-3 py-2.5 hidden lg:table-cell text-right tabular-nums">{usd0(m.spendThisYearCents ?? 0)}</td>}
+                            <td className="px-3 py-2.5 hidden xl:table-cell whitespace-nowrap tabular-nums">{m.lastRound ? shortDate(m.lastRound) : <span className="text-ink-faint">—</span>}</td>
+                          </tr>,
+                          openRow && (
+                            <tr key={m.id + '-more'}>
+                              <td colSpan={8} className="px-3 pb-4 pt-0">
+                                <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
+                                  <div className="text-[13px] text-ink-soft space-y-0.5">
+                                    <p>{m.linked ? 'Account linked — member rates online.' : m.inviteAccepted ? 'Invite accepted.' : 'Not linked — online bookings get public rates.'}</p>
+                                    {m.lastPaidAt && <p>Last paid {fmtDate(m.lastPaidAt)}</p>}
+                                    {m.notes && <p>Note: {m.notes}</p>}
+                                  </div>
+                                  {canEdit && (
+                                    <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+                                      {editMemberId === m.id ? (
+                                        <>
+                                          <select value={editMemberTierId} onChange={e => setEditMemberTierId(e.target.value)} aria-label="New membership"
+                                            className="bg-paper border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink">
+                                            {tiers.filter(t => t.active).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                          </select>
+                                          <button onClick={() => updateMemberTier(m.id, editMemberTierId)} className="text-[13px] font-medium text-pine hover:underline">Save</button>
+                                          <button onClick={() => setEditMemberId(null)} className="text-[13px] text-ink-soft hover:text-ink">Cancel</button>
+                                        </>
+                                      ) : (
+                                        <button onClick={() => { setEditMemberId(m.id); setEditMemberTierId(m.tierId ?? ''); }} className="text-[13px] font-medium text-pine hover:underline">Change membership</button>
+                                      )}
+                                      <button onClick={() => toggleMemberStatus(m)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{m.status === 'active' ? 'Make not active' : 'Make active'}</button>
+                                      <button onClick={() => removeMember(m.id, m.name)} className="text-[13px] font-medium text-bad hover:underline">Remove</button>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ),
+                        ];
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </Card>
           )}

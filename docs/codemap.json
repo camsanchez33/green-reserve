@@ -5739,7 +5739,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 293,
+      "lines": 306,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5773,6 +5773,7 @@
       "imports": [
         "@/lib/agreement-required",
         "@/lib/auth",
+        "@/lib/course-time",
         "@/lib/email",
         "@/lib/money",
         "@/lib/prisma",
@@ -7992,7 +7993,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 694,
+      "lines": 766,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8016,6 +8017,7 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/use-dashboard-access",
@@ -13001,7 +13003,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 43,
+      "lines": 47,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -13022,7 +13024,8 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
-        "src/app/dashboard/home/page.tsx"
+        "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/members/page.tsx"
       ]
     },
     {
@@ -15754,6 +15757,7 @@
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",

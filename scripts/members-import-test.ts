@@ -89,7 +89,7 @@ async function main() {
     && readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('initiationWaived: m.initiationWaived'));
   check('only "already a member" is swallowed; other failures fail the import', readFileSync('src/lib/member-import.ts', 'utf8').includes("code !== 'P2002') throw err"));
   check('the import never emails', !/send\w*Email|sendSms/.test(route + readFileSync('src/lib/member-import.ts', 'utf8')));
-  check('the members list returns each member\'s last round', readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('lastRound:      lastRound(m)'));
+  check('the members list returns each member\'s last round', readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('lastRound:      mine.map(r => r.teeTime.date).sort().pop()'));
 
   await cleanup();
   console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

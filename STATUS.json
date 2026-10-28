@@ -1,15 +1,40 @@
 {
-  "generatedAt": "2026-10-28T00:18:56.878Z",
+  "generatedAt": "2026-10-28T03:06:48.759Z",
   "repo": {
-    "head": "8facfd1",
+    "head": "bbe5c2b",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 10,
+    "dirty": [
+      "M DENSE_UI_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/members-import-test.ts",
+      " M scripts/members-rework-test.ts",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/api/operator/members/route.ts",
+      " M src/app/dashboard/members/page.tsx",
+      " M src/components/dashboard/members/ResidentsCard.tsx",
+      " M src/lib/analytics-terms.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "187a1ba",
+        "date": "2026-10-27T22:00:35-04:00",
+        "subject": "DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "92a6f52",
+        "date": "2026-10-28T00:19:04+00:00",
+        "subject": "Regenerate the status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "8facfd1",
         "date": "2026-10-28T00:18:54+00:00",
@@ -25,9 +50,37 @@
         "matches": []
       },
       {
+        "h": "ab2aa70",
+        "date": "2026-10-28T00:11:59+00:00",
+        "subject": "noshow-eod-test: use yesterday's tee time for the no-cancel case",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "8061878",
         "date": "2026-10-27T20:05:45-04:00",
         "subject": "No cancelling after the tee time: check in or no-show (charged at midnight) (#244)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b1de882",
+        "date": "2026-10-27T20:08:14+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "86147c9",
+        "date": "2026-10-27T20:06:55+00:00",
+        "subject": "Manage page: after the tee time the banner says the booking can't be cancelled",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4425bd2",
+        "date": "2026-10-27T20:02:30+00:00",
+        "subject": "No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)",
         "ids": [],
         "matches": []
       },
@@ -39,9 +92,100 @@
         "matches": []
       },
       {
+        "h": "068e626",
+        "date": "2026-10-27T19:47:06+00:00",
+        "subject": "Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "e29c686",
+        "date": "2026-10-27T19:40:54+00:00",
+        "subject": "Money → Cancellations says why no fee was kept",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "2750cbc",
+        "date": "2026-10-27T19:38:27+00:00",
+        "subject": "Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "89ad92b",
+        "date": "2026-10-27T19:33:27+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1444186",
+        "date": "2026-10-27T19:33:03+00:00",
+        "subject": "Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1763e28",
+        "date": "2026-10-27T19:28:07+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "98c16cf",
+        "date": "2026-10-27T19:25:54+00:00",
+        "subject": "DENSE-2: pin the loading branch's payout tiles",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "23965db",
+        "date": "2026-10-27T19:24:27+00:00",
+        "subject": "Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1a83267",
+        "date": "2026-10-27T19:22:55+00:00",
+        "subject": "DENSE-2: payments footer wording",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "71e527c",
+        "date": "2026-10-27T19:22:45+00:00",
+        "subject": "DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3c692b1",
+        "date": "2026-10-27T19:14:18+00:00",
+        "subject": "DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer",
+        "ids": [],
+        "matches": []
+      },
+      {
         "h": "531516a",
         "date": "2026-10-27T15:05:11-04:00",
         "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6edc9aa",
+        "date": "2026-10-27T18:58:49+00:00",
+        "subject": "DENSE-4b review notes: the strip is a labelled group; no money request before the day loads",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "8d07854",
+        "date": "2026-10-27T18:56:19+00:00",
+        "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet",
         "ids": [],
         "matches": []
       },
@@ -56,6 +200,20 @@
         "h": "6eced45",
         "date": "2026-10-27T13:51:38-04:00",
         "subject": "Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "569a2da",
+        "date": "2026-10-27T17:51:37+00:00",
+        "subject": "DENSE-4 review notes: demo legend mirrors the real one, same now cut-off, past blocked rows fade, dead demo CSS gone",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "851a246",
+        "date": "2026-10-27T17:47:04+00:00",
+        "subject": "DENSE-4: the tee sheet is seat rows",
         "ids": [],
         "matches": []
       }
@@ -230,14 +388,14 @@
     {
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-28",
+      "lastTouched": "2026-10-27",
       "ageDays": 0
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-21",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -264,135 +422,15 @@
       "ageDays": 4
     },
     {
-      "file": "ADMIN_MASTER_PLAN.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "ADMIN_REBUILD_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "ADMIN_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "ADMIN_V3_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "ADMIN_V4_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
       "ageDays": 5
     },
     {
-      "file": "ARCHITECTURE.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "BACKUP_OPS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "BIRDIE_AI_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 5
-    },
-    {
-      "file": "CODEMAP_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "COURSES_SHEET_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "COURSE_LAYOUT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "DESIGN_SYSTEM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "FB2_COPY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "FB3_FEE_PLAN_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "GOLFER_EDGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "GOLFER_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "HARDENING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "INQUIRY_CALL_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "INQUIRY_FORM_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "MANAGE_BOOKING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
       "ageDays": 5
     },
     {
@@ -408,18 +446,6 @@
       "ageDays": 5
     },
     {
-      "file": "PRIVATE_BILLING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
-      "file": "PRODUCTION_READINESS_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-21",
-      "ageDays": 5
-    },
-    {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -432,26 +458,168 @@
       "ageDays": 5
     },
     {
+      "file": "ADMIN_MASTER_PLAN.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "ADMIN_REBUILD_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "ADMIN_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "ADMIN_V3_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "ADMIN_V4_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "ARCHITECTURE.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "BACKUP_OPS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "BIRDIE_AI_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "CODEMAP_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "COURSES_SHEET_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "COURSE_LAYOUT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "DESIGN_SYSTEM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "FB2_COPY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "FB3_FEE_PLAN_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "GOLFER_EDGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "GOLFER_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "HARDENING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "INQUIRY_CALL_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "INQUIRY_FORM_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "MANAGE_BOOKING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "PRIVATE_BILLING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
+      "file": "PRODUCTION_READINESS_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-21",
+      "ageDays": 6
+    },
+    {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-21",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-21",
-      "ageDays": 5
+      "ageDays": 6
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-21",
-      "ageDays": 5
+      "ageDays": 6
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "187a1ba",
+      "date": "2026-10-27",
+      "subject": "DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)"
+    },
+    {
+      "h": "92a6f52",
+      "date": "2026-10-28",
+      "subject": "Regenerate the status board"
+    },
     {
       "h": "8facfd1",
       "date": "2026-10-28",
@@ -463,9 +631,29 @@
       "subject": "Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)"
     },
     {
+      "h": "ab2aa70",
+      "date": "2026-10-28",
+      "subject": "noshow-eod-test: use yesterday's tee time for the no-cancel case"
+    },
+    {
       "h": "8061878",
       "date": "2026-10-27",
       "subject": "No cancelling after the tee time: check in or no-show (charged at midnight) (#244)"
+    },
+    {
+      "h": "b1de882",
+      "date": "2026-10-27",
+      "subject": "Regenerate the code map and status board"
+    },
+    {
+      "h": "86147c9",
+      "date": "2026-10-27",
+      "subject": "Manage page: after the tee time the banner says the booking can't be cancelled"
+    },
+    {
+      "h": "4425bd2",
+      "date": "2026-10-27",
+      "subject": "No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)"
     },
     {
       "h": "e8e2a2e",
@@ -473,44 +661,14 @@
       "subject": "DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)"
     },
     {
-      "h": "531516a",
+      "h": "068e626",
       "date": "2026-10-27",
-      "subject": "DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)"
+      "subject": "Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column"
     },
     {
-      "h": "92087fc",
+      "h": "e29c686",
       "date": "2026-10-27",
-      "subject": "DENSE-4: the tee sheet is seat rows (#241)"
-    },
-    {
-      "h": "6eced45",
-      "date": "2026-10-27",
-      "subject": "Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)"
-    },
-    {
-      "h": "18082d8",
-      "date": "2026-10-27",
-      "subject": "DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)"
-    },
-    {
-      "h": "c155fec",
-      "date": "2026-10-27",
-      "subject": "Page decision for courses built without an inquiry lives on the course (#239)"
-    },
-    {
-      "h": "c5210ef",
-      "date": "2026-10-27",
-      "subject": "Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)"
-    },
-    {
-      "h": "13634fe",
-      "date": "2026-10-26",
-      "subject": "An emailed sign-in code confirms the owner's email (no separate verify link) (#236)"
-    },
-    {
-      "h": "23e81ff",
-      "date": "2026-10-26",
-      "subject": "Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)"
+      "subject": "Money → Cancellations says why no fee was kept"
     }
   ]
 }
