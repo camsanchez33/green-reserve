@@ -144,7 +144,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   shown only with `money.payments`). Drag, panel actions, Next up, pay links
   unchanged. Homepage demo mirrors it in the same PR. Phone: one day, same rows.
 - [x] **DENSE-4c Past tee times out of the way** (BUILT 2026-10-27, Cam: "after like 20 minutes the tee time should be sent down where they can still access it but it isnt in the way"): today's times 20 min after they went off (`LATE_ADD_MINUTES`, `lib/late-add.ts`) sit in a collapsed "Past tee times · N" section under the live rows; the next time is first. `claimTeeTime()` refuses new bookings on them (`PAST`), so every path agrees; staff can still record a forgotten walk-in there with "Add a walk-in who already played" (today only, walk-ins only — `late` → `allowLate`). Search shows every time in order; a late chip opens the section.
-- [ ] **DENSE-5 Members** (~15–20 → ≤ 4). Table with sortable columns (tier, dues
+- [x] **DENSE-5 Members** (BUILT 2026-10-28 — Cam picked: strip = Active · Not renewed (expired, not paid again) · Not linked · Member rounds this year; table = member + email · phone, membership, dues, renews, member since, rounds this year, spend this year (money.payments only), last round, sortable; no per-row trend line) (~15–20 → ≤ 4). Table with sortable columns (tier, dues
   status, rounds this season, last round, spend), sparkline of rounds per member;
   header strip: active · dues unpaid ($) · renewing in 30 days (ask D2). Wizard hints
   cut to labels; the 1% dues line stays (fee wording, LQ-2).

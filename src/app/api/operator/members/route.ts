@@ -2,7 +2,9 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
+import { todayIn } from '@/lib/course-time';
+import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaymentLinkEmail } from '@/lib/email';
@@ -48,21 +50,15 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   });
 
-  // Cam 2026-10-19: each member's last round here — their latest checked-in
-  // booking, matched by account or by the email on the membership.
-  const golferIds = memberships.map(m => m.golferId).filter((x): x is string => !!x);
-  const emails = memberships.flatMap(m => [m.inviteEmail, m.golfer?.email ?? '']).map(e => e.toLowerCase()).filter(Boolean);
-  const rounds = golferIds.length + emails.length === 0 ? [] : await prisma.booking.findMany({
-    where: { courseId: session.courseId, status: 'completed', OR: [{ golferAccountId: { in: golferIds } }, { golferEmail: { in: emails, mode: 'insensitive' } }] },
-    select: { golferAccountId: true, golferEmail: true, teeTime: { select: { date: true } } },
-  });
-  const lastBy = new Map<string, string>();
-  const note = (k: string, d: string) => { if (k && (!lastBy.has(k) || lastBy.get(k)! < d)) lastBy.set(k, d); };
-  for (const r of rounds) { note(r.golferAccountId ?? '', r.teeTime.date); note(r.golferEmail.toLowerCase(), r.teeTime.date); }
-  const lastRound = (m: (typeof memberships)[number]) =>
-    [m.golferId ?? '', m.inviteEmail.toLowerCase(), (m.golfer?.email ?? '').toLowerCase()].map(k => lastBy.get(k) ?? '').sort().pop() || null;
+  // Cam 2026-10-19: each member's last round here; DENSE-5 (Cam 2026-10-28): rounds and
+  // spend since January 1 of the course's year, and the members' rounds in all (lib/member-stats).
+  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
+  const yearStart = `${todayIn(course?.timezone).slice(0, 4)}-01-01`;
+  const stats = await memberRoundStats(session.courseId,
+    memberships.map(m => ({ id: m.id, keys: [m.golferId ?? '', m.inviteEmail, m.golfer?.email ?? ''] })),
+    yearStart, can(session, 'money.payments'));
 
-  const normalized = memberships.map(m => ({
+  const normalized = memberships.map(m => { const st = stats.byMember.get(m.id); return {
     id:             m.id,
     golferId:       m.golferId,
     name:           m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : m.inviteName,
@@ -82,11 +78,13 @@ export async function GET() {
     notes:          m.notes,
     createdAt:      m.createdAt,
     linked:         !!m.golferId,
-    lastRound:      lastRound(m),
+    lastRound:      st?.lastRound ?? null,
     initiationWaived: m.initiationWaived,
-  }));
+    roundsThisYear: st?.roundsThisYear ?? 0,
+    spendThisYearCents: st?.spendThisYearCents ?? null,
+  }; });
 
-  return NextResponse.json(normalized);
+  return NextResponse.json({ members: normalized, roundsThisYear: stats.roundsThisYear });
 }
 
 export async function POST(req: NextRequest) {
