@@ -64,6 +64,8 @@ const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export type Range = { from: string; to: string };
 
 const share = (b: { greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number }) => b.greenFeeTotal + b.cartFeeTotal + b.rangeBallsTotal;
+/** The course's share of a booking — Analytics' revenue definition, also Members' spend (DENSE-5). */
+export const courseShareCents = share;
 const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : null);
 const dowOf = (date: string) => new Date(date + 'T12:00:00Z').getUTCDay();
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000);

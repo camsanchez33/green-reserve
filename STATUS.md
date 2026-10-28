@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-28 03:06 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `bbe5c2b` · working tree **10 dirty file(s)**
+Generated 2026-10-28 03:15 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `d6b030e` · working tree **11 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 28 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 29 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `d6b030e` | 2026-10-28 | DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year |
 | `187a1ba` | 2026-10-27 | DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246) |
 | `92a6f52` | 2026-10-28 | Regenerate the status board |
 | `8facfd1` | 2026-10-28 | DENSE-3 Home: 7-week trend lines, the next 14 days against the usual, checked-in state, Next payout only |
@@ -43,9 +44,8 @@ Generated 2026-10-28 03:06 UTC · branch `claude/practical-lovelace-xiu4u5` · H
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (10 file(s))
+### Uncommitted working tree (11 file(s))
 
-- `M DENSE_UI_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/members-import-test.ts`
@@ -53,8 +53,10 @@ Generated 2026-10-28 03:06 UTC · branch `claude/practical-lovelace-xiu4u5` · H
 - `M scripts/words-guard.baseline.json`
 - `M src/app/api/operator/members/route.ts`
 - `M src/app/dashboard/members/page.tsx`
-- `M src/components/dashboard/members/ResidentsCard.tsx`
 - `M src/lib/analytics-terms.ts`
+- `M src/lib/analytics.ts`
+- `?? scripts/member-stats-db-test.ts`
+- `?? src/lib/member-stats.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -139,7 +141,7 @@ Nothing awaiting review.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-27 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 0d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-10-28 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-21 | 6d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 1d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 2d |
@@ -179,6 +181,7 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `d6b030e` 2026-10-28 — DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year
 - `187a1ba` 2026-10-27 — DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)
 - `92a6f52` 2026-10-28 — Regenerate the status board
 - `8facfd1` 2026-10-28 — DENSE-3 Home: 7-week trend lines, the next 14 days against the usual, checked-in state, Next payout only
@@ -190,7 +193,6 @@ Nothing awaiting review.
 - `4425bd2` 2026-10-27 — No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)
 - `e8e2a2e` 2026-10-27 — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)
 - `068e626` 2026-10-27 — Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column
-- `e29c686` 2026-10-27 — Money → Cancellations says why no fee was kept
 
 ---
 

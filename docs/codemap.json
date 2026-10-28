@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 575,
+    "files": 576,
     "routes": 269,
-    "libs": 197,
+    "libs": 198,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5739,7 +5739,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 306,
+      "lines": 291,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5775,6 +5775,7 @@
         "@/lib/auth",
         "@/lib/course-time",
         "@/lib/email",
+        "@/lib/member-stats",
         "@/lib/money",
         "@/lib/prisma",
         "@/lib/session",
@@ -7993,7 +7994,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 766,
+      "lines": 772,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -13003,7 +13004,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 47,
+      "lines": 48,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -13030,7 +13031,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 579,
+      "lines": 581,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -13045,6 +13046,10 @@
         {
           "name": "computeAnalytics",
           "kind": "fn"
+        },
+        {
+          "name": "courseShareCents",
+          "kind": "const"
         },
         {
           "name": "EVENT_LOG_START",
@@ -13098,6 +13103,7 @@
         "src/app/api/operator/sheet-money/route.ts",
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
+        "src/lib/member-stats.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts"
       ]
@@ -18350,6 +18356,38 @@
       ]
     },
     {
+      "path": "src/lib/member-stats.ts",
+      "lines": 42,
+      "purpose": "DENSE-5 (Cam 2026-10-28):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "MemberKeys",
+          "kind": "type"
+        },
+        {
+          "name": "memberRoundStats",
+          "kind": "fn"
+        },
+        {
+          "name": "MemberRoundStats",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./analytics",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/members/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/money-problems.ts",
       "lines": 89,
       "purpose": "",
@@ -19495,6 +19533,7 @@
         "src/lib/login-guard.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
+        "src/lib/member-stats.ts",
         "src/lib/money-problems.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
@@ -23217,7 +23256,6 @@
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/operator/bookings/route.ts",
-        "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
@@ -23243,6 +23281,7 @@
         "src/lib/dispute-evidence.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/member-stats.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/operator-home.ts",
         "src/lib/operator-search.ts",

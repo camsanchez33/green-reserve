@@ -1,26 +1,34 @@
 {
-  "generatedAt": "2026-10-28T03:06:48.759Z",
+  "generatedAt": "2026-10-28T03:15:21.764Z",
   "repo": {
-    "head": "bbe5c2b",
+    "head": "d6b030e",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 10,
+    "dirtyCount": 11,
     "dirty": [
-      "M DENSE_UI_SPEC.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/members-import-test.ts",
       " M scripts/members-rework-test.ts",
       " M scripts/words-guard.baseline.json",
       " M src/app/api/operator/members/route.ts",
       " M src/app/dashboard/members/page.tsx",
-      " M src/components/dashboard/members/ResidentsCard.tsx",
-      " M src/lib/analytics-terms.ts"
+      " M src/lib/analytics-terms.ts",
+      " M src/lib/analytics.ts",
+      "?? scripts/member-stats-db-test.ts",
+      "?? src/lib/member-stats.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "d6b030e",
+        "date": "2026-10-28T03:06:50+00:00",
+        "subject": "DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "187a1ba",
         "date": "2026-10-27T22:00:35-04:00",
@@ -388,7 +396,7 @@
     {
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-27",
+      "lastTouched": "2026-10-28",
       "ageDays": 0
     },
     {
@@ -611,6 +619,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "d6b030e",
+      "date": "2026-10-28",
+      "subject": "DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year"
+    },
+    {
       "h": "187a1ba",
       "date": "2026-10-27",
       "subject": "DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)"
@@ -664,11 +677,6 @@
       "h": "068e626",
       "date": "2026-10-27",
       "subject": "Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column"
-    },
-    {
-      "h": "e29c686",
-      "date": "2026-10-27",
-      "subject": "Money → Cancellations says why no fee was kept"
     }
   ]
 }

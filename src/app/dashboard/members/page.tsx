@@ -89,6 +89,7 @@ function MembersPageInner() {
   const pageAccess = useDashboardAccess();
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [memberRounds, setMemberRounds] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [view, setView] = useState<View>('list');
@@ -138,13 +139,15 @@ function MembersPageInner() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'name', dir: 1 });
   const [notLinkedOnly, setNotLinkedOnly] = useState(false);
+  const [notRenewedOnly, setNotRenewedOnly] = useState(false);
   const canEdit = pageAccess.can('members.edit');
 
   const loadAll = useCallback(async () => {
-    const [tr, mb] = await Promise.all([dfetch<Tier[]>('/api/operator/tiers'), dfetch<Member[]>('/api/operator/members')]);
+    const [tr, mb] = await Promise.all([dfetch<Tier[]>('/api/operator/tiers'), dfetch<{ members: Member[]; roundsThisYear: number }>('/api/operator/members')]);
     // SD-10: a 403/500 here used to render "No membership tiers yet".
     setTiers(tr.ok && Array.isArray(tr.data) ? tr.data : []);
-    setMembers(mb.ok && Array.isArray(mb.data) ? mb.data : []);
+    setMembers(mb.ok && Array.isArray(mb.data?.members) ? mb.data.members : []);
+    setMemberRounds(mb.ok && mb.data ? mb.data.roundsThisYear : 0);
     setLoadError(!tr.ok ? tr.error : !mb.ok ? mb.error : '');
     setLoading(false);
   }, []);
@@ -501,14 +504,14 @@ function MembersPageInner() {
   const q = search.trim().toLowerCase();
   const shown = filteredMembers.filter(m => !q || (m.name ?? '').toLowerCase().includes(q) || (m.email ?? '').toLowerCase().includes(q) || (m.phone ?? '').includes(q))
     .filter(m => !unpaidOnly || ['unpaid', 'expired'].includes(duesOf(m, now).kind))
-    .filter(m => !notLinkedOnly || !m.linked);
+    .filter(m => !notLinkedOnly || !m.linked)
+    .filter(m => !notRenewedOnly || duesOf(m, now).kind === 'expired');
   const active = members.filter(m => m.status === 'active');
   const unpaid = active.filter(m => ['unpaid', 'expired'].includes(duesOf(m, now).kind)).length;
   // DENSE-5 (Cam 2026-10-28): the strip — active, not renewed (ran out, not paid again), not linked
   // (online bookings get public rates), and members' rounds this year.
   const notRenewed = active.filter(m => duesOf(m, now).kind === 'expired').length;
   const notLinked = active.filter(m => !m.linked).length;
-  const memberRounds = members.reduce((n, m) => n + (m.roundsThisYear ?? 0), 0);
   const seesSpend = members.some(m => m.spendThisYearCents != null);
   const sortVal = (m: Member): string | number => {
     switch (sort.key) {
@@ -523,8 +526,8 @@ function MembersPageInner() {
     }
   };
   const sorted = [...shown].sort((a, b) => { const x = sortVal(a), y = sortVal(b); return (x < y ? -1 : x > y ? 1 : 0) * sort.dir; });
-  const th = (key: SortKey, label: string, cls = '') => (
-    <th scope="col" aria-sort={sort.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'} className={'px-3 py-2 font-medium text-[12.5px] text-ink-soft text-left whitespace-nowrap ' + cls}>
+  const th = (key: SortKey, label: string, cls = '', title?: string) => (
+    <th scope="col" title={title} aria-sort={sort.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'} className={'px-3 py-2 font-medium text-[12.5px] text-ink-soft text-left whitespace-nowrap ' + cls}>
       <button type="button" onClick={() => setSort(s => ({ key, dir: s.key === key ? (s.dir === 1 ? -1 : 1) : (key === 'rounds' || key === 'spend' || key === 'last' ? -1 : 1) }))} className="hover:text-ink">
         {label}{sort.key === key ? (sort.dir === 1 ? ' ↑' : ' ↓') : ''}
       </button>
@@ -564,10 +567,10 @@ function MembersPageInner() {
           {members.length > 0 && (
             <div className="flex flex-wrap border border-line rounded-lg overflow-hidden w-fit max-w-full" role="group" aria-label="Your members">
               <div className="px-4 py-2.5 min-w-[8.5rem]"><div className="text-[12.5px] text-ink-soft">Active</div><div className="text-[20px] font-semibold tabular-nums text-ink">{active.length}</div></div>
-              <button type="button" onClick={() => { setUnpaidOnly(true); setNotLinkedOnly(false); setFilterStatus('active'); }} className="px-4 py-2.5 min-w-[8.5rem] border-l border-line text-left hover:bg-paper/60"
+              <button type="button" onClick={() => { setNotRenewedOnly(true); setUnpaidOnly(false); setNotLinkedOnly(false); setFilterStatus('active'); }} className="px-4 py-2.5 min-w-[8.5rem] border-l border-line text-left hover:bg-paper/60"
                 title={TERMS.notRenewed}>
                 <div className="text-[12.5px] text-ink-soft">Not renewed</div><div className={'text-[20px] font-semibold tabular-nums ' + (notRenewed ? 'text-bad' : 'text-ink')}>{notRenewed}</div></button>
-              <button type="button" onClick={() => { setNotLinkedOnly(true); setUnpaidOnly(false); setFilterStatus('active'); }} className="px-4 py-2.5 min-w-[8.5rem] border-l border-line text-left hover:bg-paper/60"
+              <button type="button" onClick={() => { setNotLinkedOnly(true); setUnpaidOnly(false); setNotRenewedOnly(false); setFilterStatus('active'); }} className="px-4 py-2.5 min-w-[8.5rem] border-l border-line text-left hover:bg-paper/60"
                 title={TERMS.notLinked}>
                 <div className="text-[12.5px] text-ink-soft">Not linked</div><div className={'text-[20px] font-semibold tabular-nums ' + (notLinked ? 'text-warn' : 'text-ink')}>{notLinked}</div></button>
               <div className="px-4 py-2.5 min-w-[8.5rem] border-l border-line" title={TERMS.memberRounds}><div className="text-[12.5px] text-ink-soft">Member rounds this year</div><div className="text-[20px] font-semibold tabular-nums text-ink">{memberRounds}</div></div>
@@ -638,6 +641,7 @@ function MembersPageInner() {
                   <option value="all">Everyone</option>
                 </select>
                 <label className="flex items-center gap-2 text-[13.5px] text-ink"><input type="checkbox" checked={unpaidOnly} onChange={e => setUnpaidOnly(e.target.checked)} className="w-4 h-4 accent-pine"/>Dues unpaid</label>
+                <label className="flex items-center gap-2 text-[13.5px] text-ink"><input type="checkbox" checked={notRenewedOnly} onChange={e => setNotRenewedOnly(e.target.checked)} className="w-4 h-4 accent-pine"/>Not renewed</label>
                 <label className="flex items-center gap-2 text-[13.5px] text-ink"><input type="checkbox" checked={notLinkedOnly} onChange={e => setNotLinkedOnly(e.target.checked)} className="w-4 h-4 accent-pine"/>Not linked</label>
                 <span className="ml-auto text-[12.5px] text-ink-muted">{shown.length} of {members.length}</span>
               </div>
@@ -654,7 +658,7 @@ function MembersPageInner() {
                         {th('renews', 'Renews', 'hidden md:table-cell')}
                         {th('since', 'Member since', 'hidden lg:table-cell')}
                         {th('rounds', 'Rounds this year', 'text-right hidden md:table-cell')}
-                        {seesSpend && th('spend', 'Spend this year', 'text-right hidden lg:table-cell')}
+                        {seesSpend && th('spend', 'Spend this year', 'text-right hidden lg:table-cell', TERMS.memberSpend)}
                         {th('last', 'Last round', 'hidden xl:table-cell')}
                       </tr>
                     </thead>
@@ -680,9 +684,11 @@ function MembersPageInner() {
                           </tr>,
                           openRow && (
                             <tr key={m.id + '-more'}>
-                              <td colSpan={8} className="px-3 pb-4 pt-0">
+                              <td colSpan={seesSpend ? 8 : 7} className="px-3 pb-4 pt-0">
                                 <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
                                   <div className="text-[13px] text-ink-soft space-y-0.5">
+                                    {/* The columns a narrow screen hides. */}
+                                    <p className="xl:hidden"><span className="sm:hidden">{m.tierName} · </span><span className="md:hidden">{m.expiresAt ? `Renews ${shortDate(m.expiresAt)} · ` : ''}{m.roundsThisYear ?? 0} rounds this year · </span><span className="lg:hidden">Since {shortDate(m.startedAt ?? m.createdAt)}{m.spendThisYearCents != null ? ` · ${usd0(m.spendThisYearCents)} spent` : ''} · </span>{m.lastRound ? `Last round ${shortDate(m.lastRound)}` : 'No rounds yet'}</p>
                                     <p>{m.linked ? 'Account linked — member rates online.' : m.inviteAccepted ? 'Invite accepted.' : 'Not linked — online bookings get public rates.'}</p>
                                     {m.lastPaidAt && <p>Last paid {fmtDate(m.lastPaidAt)}</p>}
                                     {m.notes && <p>Note: {m.notes}</p>}

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { todayIn } from '@/lib/course-time';
+import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaymentLinkEmail } from '@/lib/email';
@@ -49,31 +50,15 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   });
 
-  // Cam 2026-10-19: each member's last round here — their latest checked-in
-  // booking, matched by account or by the email on the membership.
-  // DENSE-5 (Cam 2026-10-28): and their rounds and spend this calendar year (course's
-  // timezone). Spend = green fee, cart, range balls and shop items on those rounds —
-  // what they paid the course — and only for logins that see payments.
+  // Cam 2026-10-19: each member's last round here; DENSE-5 (Cam 2026-10-28): rounds and
+  // spend since January 1 of the course's year, and the members' rounds in all (lib/member-stats).
   const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } });
   const yearStart = `${todayIn(course?.timezone).slice(0, 4)}-01-01`;
-  const seesMoney = can(session, 'money.payments');
-  const golferIds = memberships.map(m => m.golferId).filter((x): x is string => !!x);
-  const emails = memberships.flatMap(m => [m.inviteEmail, m.golfer?.email ?? '']).map(e => e.toLowerCase()).filter(Boolean);
-  const rounds = golferIds.length + emails.length === 0 ? [] : await prisma.booking.findMany({
-    where: { courseId: session.courseId, status: 'completed', OR: [{ golferAccountId: { in: golferIds } }, { golferEmail: { in: emails, mode: 'insensitive' } }] },
-    select: { id: true, golferAccountId: true, golferEmail: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, shopTotalCents: true, teeTime: { select: { date: true } } },
-  });
-  // Each key (account id or lower-cased email) → the rounds it matches; a member's rounds are the union over their keys.
-  const byKey = new Map<string, (typeof rounds)[number][]>();
-  const add = (k: string, r: (typeof rounds)[number]) => { if (!k) return; const list = byKey.get(k); if (list) list.push(r); else byKey.set(k, [r]); };
-  for (const r of rounds) { add(r.golferAccountId ?? '', r); add(r.golferEmail.toLowerCase(), r); }
-  const roundsOf = (m: (typeof memberships)[number]) => {
-    const seen = new Map<string, (typeof rounds)[number]>();
-    for (const k of [m.golferId ?? '', m.inviteEmail.toLowerCase(), (m.golfer?.email ?? '').toLowerCase()]) for (const r of byKey.get(k) ?? []) seen.set(r.id, r);
-    return [...seen.values()];
-  };
+  const stats = await memberRoundStats(session.courseId,
+    memberships.map(m => ({ id: m.id, keys: [m.golferId ?? '', m.inviteEmail, m.golfer?.email ?? ''] })),
+    yearStart, can(session, 'money.payments'));
 
-  const normalized = memberships.map(m => { const mine = roundsOf(m); const thisYear = mine.filter(r => r.teeTime.date >= yearStart); return {
+  const normalized = memberships.map(m => { const st = stats.byMember.get(m.id); return {
     id:             m.id,
     golferId:       m.golferId,
     name:           m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : m.inviteName,
@@ -93,13 +78,13 @@ export async function GET() {
     notes:          m.notes,
     createdAt:      m.createdAt,
     linked:         !!m.golferId,
-    lastRound:      mine.map(r => r.teeTime.date).sort().pop() ?? null,
+    lastRound:      st?.lastRound ?? null,
     initiationWaived: m.initiationWaived,
-    roundsThisYear: thisYear.length,
-    spendThisYearCents: seesMoney ? thisYear.reduce((n, r) => n + r.greenFeeTotal + r.cartFeeTotal + r.rangeBallsTotal + r.shopTotalCents, 0) : null,
+    roundsThisYear: st?.roundsThisYear ?? 0,
+    spendThisYearCents: st?.spendThisYearCents ?? null,
   }; });
 
-  return NextResponse.json(normalized);
+  return NextResponse.json({ members: normalized, roundsThisYear: stats.roundsThisYear });
 }
 
 export async function POST(req: NextRequest) {
