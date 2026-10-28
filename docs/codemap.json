@@ -7908,7 +7908,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 219,
+      "lines": 263,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -7928,6 +7928,7 @@
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/settings/FinishSetup",
         "@/components/ui/StatusDot",
+        "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
         "@/lib/setup-missing",
         "@/lib/use-dashboard-access",
@@ -13020,18 +13021,23 @@
       "guard": null,
       "imports": [],
       "usedBy": [
-        "src/app/dashboard/analytics/page.tsx"
+        "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/home/page.tsx"
       ]
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 569,
+      "lines": 579,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
         {
           "name": "Analytics",
           "kind": "type"
+        },
+        {
+          "name": "bookingPace",
+          "kind": "fn"
         },
         {
           "name": "computeAnalytics",
@@ -13048,6 +13054,10 @@
         {
           "name": "NO_SHOW_GRACE_MIN",
           "kind": "const"
+        },
+        {
+          "name": "PaceDay",
+          "kind": "type"
         },
         {
           "name": "previousRange",
@@ -18754,7 +18764,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 138,
+      "lines": 158,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [

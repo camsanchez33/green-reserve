@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-27 20:08 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `86147c9` · working tree **2 dirty file(s)**
+Generated 2026-10-28 00:15 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `ab2aa70` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 21 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 24 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ab2aa70` | 2026-10-28 | noshow-eod-test: use yesterday's tee time for the no-cancel case |
+| `8061878` | 2026-10-27 | No cancelling after the tee time: check in or no-show (charged at midnight) (#244) |
+| `b1de882` | 2026-10-27 | Regenerate the code map and status board |
 | `86147c9` | 2026-10-27 | Manage page: after the tee time the banner says the booking can't be cancelled |
 | `4425bd2` | 2026-10-27 | No cancelling after the tee time — the group checks in or is a no-show (charged at midnight) |
 | `e8e2a2e` | 2026-10-27 | DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243) |
@@ -36,13 +39,19 @@ Generated 2026-10-27 20:08 UTC · branch `claude/practical-lovelace-xiu4u5` · H
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (8 file(s))
 
+- `M DENSE_UI_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
+- `M scripts/operator-home-db-test.ts`
+- `M scripts/words-guard.baseline.json`
+- `M src/app/dashboard/home/page.tsx`
+- `M src/lib/analytics.ts`
+- `M src/lib/operator-home.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -126,24 +135,20 @@ Nothing awaiting review.
 | `CLAUDE.md` | 1 | 2026-10-27 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-21 | 5d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 0d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 1d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 3d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 4d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 4d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 1d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 2d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 4d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 4d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 4d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 4d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 4d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 4d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-21 | 5d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `ADMIN_V3_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `ADMIN_V4_SPEC.md` | 0 | 2026-10-21 | 5d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `ARCHITECTURE.md` | 0 | 2026-10-21 | 5d |
 | `BACKUP_OPS_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `BIRDIE_AI_SPEC.md` | 0 | 2026-10-21 | 5d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `CODEMAP_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `COURSES_SHEET_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-21 | 5d |
@@ -156,14 +161,21 @@ Nothing awaiting review.
 | `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-21 | 5d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 5d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-21 | 5d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 5d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `REVIEW_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-21 | 5d |
 | `UI_REVISE_SPEC.md` | 0 | 2026-10-21 | 5d |
 
 ## Recent commits
 
+- `ab2aa70` 2026-10-28 — noshow-eod-test: use yesterday's tee time for the no-cancel case
+- `8061878` 2026-10-27 — No cancelling after the tee time: check in or no-show (charged at midnight) (#244)
+- `b1de882` 2026-10-27 — Regenerate the code map and status board
 - `86147c9` 2026-10-27 — Manage page: after the tee time the banner says the booking can't be cancelled
 - `4425bd2` 2026-10-27 — No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)
 - `e8e2a2e` 2026-10-27 — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)
@@ -173,9 +185,6 @@ Nothing awaiting review.
 - `89ad92b` 2026-10-27 — Regenerate the code map and status board
 - `1444186` 2026-10-27 — Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute
 - `1763e28` 2026-10-27 — Regenerate the code map and status board
-- `98c16cf` 2026-10-27 — DENSE-2: pin the loading branch's payout tiles
-- `23965db` 2026-10-27 — Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them
-- `1a83267` 2026-10-27 — DENSE-2: payments footer wording
 
 ---
 

@@ -1,18 +1,45 @@
 {
-  "generatedAt": "2026-10-27T20:08:13.386Z",
+  "generatedAt": "2026-10-28T00:15:19.188Z",
   "repo": {
-    "head": "86147c9",
+    "head": "ab2aa70",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 2,
+    "dirtyCount": 8,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json"
+      "M DENSE_UI_SPEC.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/operator-home-db-test.ts",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/dashboard/home/page.tsx",
+      " M src/lib/analytics.ts",
+      " M src/lib/operator-home.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "ab2aa70",
+        "date": "2026-10-28T00:11:59+00:00",
+        "subject": "noshow-eod-test: use yesterday's tee time for the no-cancel case",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "8061878",
+        "date": "2026-10-27T20:05:45-04:00",
+        "subject": "No cancelling after the tee time: check in or no-show (charged at midnight) (#244)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b1de882",
+        "date": "2026-10-27T20:08:14+00:00",
+        "subject": "Regenerate the code map and status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "86147c9",
         "date": "2026-10-27T20:06:55+00:00",
@@ -344,60 +371,24 @@
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-25",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 3
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 4
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
       "ageDays": 4
     },
     {
       "file": "HOMEPAGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 4
-    },
-    {
-      "file": "ONBOARDING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 4
-    },
-    {
-      "file": "ONBOARDING_V2_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 4
-    },
-    {
-      "file": "PUBLIC_SITE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 4
-    },
-    {
-      "file": "RECEIPT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
       "ageDays": 4
     },
     {
@@ -431,6 +422,12 @@
       "ageDays": 5
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 5
+    },
+    {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-21",
@@ -446,6 +443,12 @@
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-21",
+      "ageDays": 5
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
       "ageDays": 5
     },
     {
@@ -521,6 +524,18 @@
       "ageDays": 5
     },
     {
+      "file": "ONBOARDING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 5
+    },
+    {
+      "file": "ONBOARDING_V2_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 5
+    },
+    {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-21",
@@ -530,6 +545,18 @@
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-21",
+      "ageDays": 5
+    },
+    {
+      "file": "PUBLIC_SITE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 5
+    },
+    {
+      "file": "RECEIPT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
       "ageDays": 5
     },
     {
@@ -553,6 +580,21 @@
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "ab2aa70",
+      "date": "2026-10-28",
+      "subject": "noshow-eod-test: use yesterday's tee time for the no-cancel case"
+    },
+    {
+      "h": "8061878",
+      "date": "2026-10-27",
+      "subject": "No cancelling after the tee time: check in or no-show (charged at midnight) (#244)"
+    },
+    {
+      "h": "b1de882",
+      "date": "2026-10-27",
+      "subject": "Regenerate the code map and status board"
+    },
     {
       "h": "86147c9",
       "date": "2026-10-27",
@@ -597,21 +639,6 @@
       "h": "1763e28",
       "date": "2026-10-27",
       "subject": "Regenerate the code map and status board"
-    },
-    {
-      "h": "98c16cf",
-      "date": "2026-10-27",
-      "subject": "DENSE-2: pin the loading branch's payout tiles"
-    },
-    {
-      "h": "23965db",
-      "date": "2026-10-27",
-      "subject": "Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them"
-    },
-    {
-      "h": "1a83267",
-      "date": "2026-10-27",
-      "subject": "DENSE-2: payments footer wording"
     }
   ]
 }

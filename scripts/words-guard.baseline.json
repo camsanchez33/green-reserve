@@ -40,7 +40,7 @@
   "src/app/dashboard/cancellations/page.tsx": 0,
   "src/app/dashboard/events/page.tsx": 70,
   "src/app/dashboard/forgot-password/page.tsx": 54,
-  "src/app/dashboard/home/page.tsx": 155,
+  "src/app/dashboard/home/page.tsx": 154,
   "src/app/dashboard/layout.tsx": 0,
   "src/app/dashboard/login/page.tsx": 40,
   "src/app/dashboard/members/page.tsx": 498,
