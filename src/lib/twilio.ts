@@ -34,6 +34,12 @@ export async function sendSmsOtp(to: string, code: string) {
   }
 }
 
+/** 555-0100 to 555-0199 in any North American area code: reserved for fiction, never a real line. */
+export function isFictionalNumber(phone: string): boolean {
+  const d = phone.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  return d.length === 10 && d.slice(3, 7) === '5550' && d[7] === '1';
+}
+
 /** Whether text messages can be sent at all (Twilio env present). */
 export const smsConfigured = () => !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER);
 
@@ -42,6 +48,11 @@ export async function sendSms(to: string, body: string, meta: SendMeta = { kind:
   const from = process.env.TWILIO_FROM_NUMBER;
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !from) {
     throw new Error('Text messages are not set up (Twilio)');
+  }
+  // Cam 2026-10-28: 555-0100–0199 is the fictional block (sample data) — never texted.
+  if (isFictionalNumber(to)) {
+    await logSent({ ...meta, channel: 'sms', to, status: 'skipped', error: 'fictional number' });
+    throw new Error('That is a sample phone number (555-01xx) — no text was sent.');
   }
   // BRAIN-1b: every text lands in the send log (kind and ids, never the body).
   let msg;

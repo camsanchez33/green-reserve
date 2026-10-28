@@ -67,7 +67,7 @@ export function evidenceText(e: EvidenceInput): string {
 
   h('What we sent the golfer');
   if (e.sent.length === 0) out.push('Nothing recorded.');
-  for (const s of e.sent) out.push(`${at(s.at)} — ${KIND[s.kind] ?? s.kind.replace(/_/g, ' ')} (${s.channel}), ${s.status === 'sent' ? 'accepted for delivery' : 'failed to send'}`);
+  for (const s of e.sent) out.push(`${at(s.at)} — ${KIND[s.kind] ?? s.kind.replace(/_/g, ' ')} (${s.channel}), ${s.status === 'sent' ? 'accepted for delivery' : s.status === 'skipped' ? 'not sent, no inbox' : 'failed to send'}`);
 
   h('What happened');
   if (e.events.length === 0) out.push('Nothing recorded.');

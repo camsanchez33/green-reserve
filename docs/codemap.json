@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 569,
+    "files": 570,
     "routes": 267,
-    "libs": 194,
+    "libs": 195,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3103,7 +3103,7 @@
     },
     {
       "path": "src/app/api/admin/test-course/route.ts",
-      "lines": 53,
+      "lines": 73,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3112,11 +3112,19 @@
           "kind": "route"
         },
         {
+          "name": "maxDuration",
+          "kind": "const"
+        },
+        {
           "name": "PATCH",
           "kind": "route"
         },
         {
           "name": "POST",
+          "kind": "route"
+        },
+        {
+          "name": "PUT",
           "kind": "route"
         }
       ],
@@ -3125,7 +3133,8 @@
       "methods": [
         "GET",
         "PATCH",
-        "POST"
+        "POST",
+        "PUT"
       ],
       "auth": "admin",
       "guard": "file",
@@ -3134,6 +3143,7 @@
         "@/lib/admin-session",
         "@/lib/data-reset",
         "@/lib/prisma",
+        "@/lib/sample-data",
         "next/server"
       ],
       "usedBy": []
@@ -9772,7 +9782,7 @@
     },
     {
       "path": "src/components/admin/TestDataTools.tsx",
-      "lines": 170,
+      "lines": 185,
       "purpose": "TEST-1 (Cam 2026-10-22):",
       "brain": [],
       "exports": [
@@ -13564,6 +13574,7 @@
         "src/lib/reader-rounds.ts",
         "src/lib/register-close.ts",
         "src/lib/register.ts",
+        "src/lib/sample-data.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -14349,7 +14360,8 @@
         "src/lib/move-booking.ts",
         "src/lib/normalize-course.ts",
         "src/lib/page-review.ts",
-        "src/lib/receipt-charges.ts"
+        "src/lib/receipt-charges.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -15137,7 +15149,8 @@
       ],
       "usedBy": [
         "src/app/api/operator/events/[id]/route.ts",
-        "src/app/api/operator/events/route.ts"
+        "src/app/api/operator/events/route.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -15639,6 +15652,7 @@
         "src/lib/operator-search.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/register-close.ts",
+        "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -16315,7 +16329,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2078,
+      "lines": 2085,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16681,6 +16695,7 @@
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts",
         "src/lib/refund-booking.ts",
+        "src/lib/sample-data.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/two-factor.ts",
         "src/lib/weather-cancel.ts"
@@ -19309,6 +19324,7 @@
         "src/lib/register.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sales-tax.ts",
+        "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/security-checklist.ts",
@@ -19851,7 +19867,8 @@
         "src/lib/booking-residents.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/member-session.ts",
-        "src/lib/move-booking.ts"
+        "src/lib/move-booking.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -19988,6 +20005,56 @@
         "src/app/api/operator/sales-tax/route.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/shop-sales.ts"
+      ]
+    },
+    {
+      "path": "src/lib/sample-data.ts",
+      "lines": 327,
+      "purpose": "Cam 2026-10-28 (\"add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "fillTestCourse",
+          "kind": "fn"
+        },
+        {
+          "name": "SAMPLE_AHEAD_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "SAMPLE_PAST_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "SAMPLE_SOLD_BY",
+          "kind": "const"
+        },
+        {
+          "name": "SampleResult",
+          "kind": "type"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./cancel-policy",
+        "./course-events",
+        "./course-time",
+        "./email",
+        "./prisma",
+        "./residents",
+        "./stripe",
+        "./tee-sheet-engine",
+        "./terms",
+        "@prisma/client",
+        "crypto"
+      ],
+      "usedBy": [
+        "src/app/api/admin/test-course/route.ts"
       ]
     },
     {
@@ -21434,6 +21501,7 @@
         "src/lib/refund-booking.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sales-tax.ts",
+        "src/lib/sample-data.ts",
         "src/lib/shop-sales.ts"
       ]
     },
@@ -21583,6 +21651,7 @@
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts"
       ]
@@ -21662,7 +21731,8 @@
         "src/app/api/admin/course-documents/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/manage/[bookingId]/change-players/route.ts",
-        "src/app/api/manage/[bookingId]/swap-time/route.ts"
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -21757,10 +21827,14 @@
     },
     {
       "path": "src/lib/twilio.ts",
-      "lines": 57,
+      "lines": 68,
       "purpose": "",
       "brain": [],
       "exports": [
+        {
+          "name": "isFictionalNumber",
+          "kind": "fn"
+        },
         {
           "name": "sendSms",
           "kind": "fn"
@@ -22979,7 +23053,8 @@
         "src/lib/lifecycle.ts",
         "src/lib/reader-rounds.ts",
         "src/lib/refund-booking.ts",
-        "src/lib/round-shop-tax.ts"
+        "src/lib/round-shop-tax.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/admin/course-detail/route.ts",
@@ -23099,7 +23174,8 @@
         }
       ],
       "writers": [
-        "src/lib/data-reset.ts"
+        "src/lib/data-reset.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/lib/analytics.ts",
@@ -23954,6 +24030,7 @@
         "src/lib/real-courses.ts",
         "src/lib/register-close.ts",
         "src/lib/sales-tax.ts",
+        "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/sent-messages.ts",
@@ -24346,7 +24423,8 @@
       "writers": [
         "src/app/api/operator/events/[id]/route.ts",
         "src/lib/event-payments.ts",
-        "src/lib/event-signup.ts"
+        "src/lib/event-signup.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/event-payment/[id]/route.ts",
@@ -24826,7 +24904,8 @@
         "src/app/api/operator/members/route.ts",
         "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
-        "src/lib/member-import.ts"
+        "src/lib/member-import.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/admin/course-members/route.ts",
@@ -25259,7 +25338,8 @@
       ],
       "writers": [
         "src/app/api/operator/residents/route.ts",
-        "src/lib/data-reset.ts"
+        "src/lib/data-reset.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/operator/residents/route.ts",
@@ -25665,14 +25745,16 @@
         "src/app/api/admin/create-course/route.ts",
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/operator/tiers/route.ts",
-        "src/lib/lifecycle.ts"
+        "src/lib/lifecycle.ts",
+        "src/lib/sample-data.ts"
       ],
       "readers": [
         "src/app/api/admin/course-members/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tiers/route.ts",
         "src/lib/analytics.ts",
-        "src/lib/member-import.ts"
+        "src/lib/member-import.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -26435,10 +26517,12 @@
       ],
       "writers": [
         "src/app/api/operator/shop-items/route.ts",
+        "src/lib/sample-data.ts",
         "src/lib/shop-catalog.ts"
       ],
       "readers": [
         "src/app/api/operator/shop-items/route.ts",
+        "src/lib/sample-data.ts",
         "src/lib/shop-catalog.ts",
         "src/lib/shop-sales.ts"
       ]
@@ -26560,6 +26644,7 @@
         "src/lib/card-reader.ts",
         "src/lib/data-reset.ts",
         "src/lib/sales-tax.ts",
+        "src/lib/sample-data.ts",
         "src/lib/shop-sales.ts"
       ],
       "readers": [
@@ -26917,6 +27002,7 @@
         "src/lib/data-reset.ts",
         "src/lib/frost-delay.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/sample-data.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -26946,6 +27032,7 @@
         "src/lib/operator-home.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/register.ts",
+        "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -27136,6 +27223,7 @@
         "src/lib/birdie/course-context.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/tee-sheet-engine.ts"

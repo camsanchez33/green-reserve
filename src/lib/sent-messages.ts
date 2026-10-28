@@ -20,7 +20,7 @@ export type SendMeta = {
 export async function logSent(e: SendMeta & {
   channel: 'email' | 'sms';
   to: string | string[] | undefined;
-  status: 'sent' | 'failed';
+  status: 'sent' | 'failed' | 'skipped';
   providerId?: string | null;
   error?: string | null;
 }): Promise<void> {

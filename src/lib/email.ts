@@ -36,6 +36,13 @@ function getResend(): Sender {
       // is ours, not Resend's — taken off before sending, written to the send log.
       const meta: SendMeta = (opts as { meta?: SendMeta }).meta ?? { kind: 'email' };
       delete (opts as { meta?: SendMeta }).meta;
+      // Cam 2026-10-28: an @noemail.greenreserve.app address has no inbox (walk-ins
+      // with no email, sample data) — never hand one to Resend. Skipped and logged.
+      const rcpts = (Array.isArray(to) ? to : [to]).filter(Boolean).map(String);
+      if (rcpts.length > 0 && rcpts.every(a => a.toLowerCase().endsWith(PLACEHOLDER_EMAIL_DOMAIN))) {
+        await logSent({ ...meta, channel: 'email', to, status: 'skipped', error: 'no inbox (placeholder address)' });
+        return { data: { id: '' }, error: null, headers: null } as Awaited<ReturnType<typeof send>>;
+      }
       let r: Awaited<ReturnType<typeof send>>;
       try {
         r = await send(opts, ...rest);
