@@ -121,13 +121,24 @@ export function TestCourseCard({ courseId }: { courseId: string }) {
     load();
   }
 
+  // Cam 2026-10-28: an empty test course can be filled with sample activity (src/lib/sample-data.ts).
+  async function fill() {
+    setBusy(true); setError(''); setNote('');
+    const r = await adminFetch<{ made: { bookings: number; members: number; shopSales: number; event: string | null; eventNote: string } }>('/api/admin/test-course', { method: 'PUT', body: JSON.stringify({ courseId }), action: 'save', subject: 'the sample data' });
+    setBusy(false);
+    if (!r.ok) { setNote(''); setError(r.message); return; }
+    const m = r.data.made;
+    setNote([`${m.bookings} bookings`, `${m.members} members`, `${m.shopSales} shop sales`, m.event ?? m.eventNote].filter(Boolean).join(' · '));
+    load();
+  }
+
   async function reset() {
     if (!p) return;
     setBusy(true); setError(''); setNote('');
     const r = await adminFetch('/api/admin/test-course', { method: 'POST', body: JSON.stringify({ courseId, confirm: typed }), action: 'save', subject: 'the reset' });
     setBusy(false);
     if (!r.ok) { setError(r.message); return; }
-    setNote('Reset — its activity is cleared, and every booked or event-held time is open again.');
+    setNote('Reset. Every booked or held time is open again.');
     setConfirming(false); setTyped('');
     load();
   }
@@ -140,7 +151,11 @@ export function TestCourseCard({ courseId }: { courseId: string }) {
     <div className="border border-line rounded-lg px-4 py-3 flex flex-col gap-2 text-[13.5px]">
       <div className="flex flex-wrap items-center gap-3">
         <StatusDot status={p.isTest ? 'warn' : 'neutral'} label={p.isTest ? 'Test course' : 'Not a test course'} />
-        <span className="text-ink-soft flex-1 min-w-[200px]">{p.isTest ? 'Owner only: its activity can be cleared to test again. Its setup stays.' : 'Mark a course as a test to be able to reset it.'}</span>
+        <span className="text-ink-soft flex-1 min-w-[200px]">{p.isTest ? 'Owner only. Fill or reset its activity; setup stays.' : 'Mark as a test to fill or reset it.'}</span>
+        {p.isTest && !confirming && (p.activity.bookings ?? 0) === 0 && (
+          <button type="button" onClick={fill} disabled={busy}
+            className="border border-line text-ink hover:bg-paper disabled:opacity-50 text-[13px] font-medium px-3 py-1.5 rounded-md">{busy ? 'Filling…' : 'Fill with sample data'}</button>
+        )}
         {p.isTest && !confirming && (
           <button type="button" onClick={() => { setConfirming(true); setError(''); setNote(''); }} disabled={busy}
             className="border border-bad/40 text-bad hover:bg-bad/5 disabled:opacity-50 text-[13px] font-medium px-3 py-1.5 rounded-md">Reset activity…</button>

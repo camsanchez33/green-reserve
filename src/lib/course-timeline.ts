@@ -277,8 +277,8 @@ export async function buildCourseFeed(courseId: string, opts: { cursor?: string 
       const what = m.kind.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
       items.push({
         id: `sm-${m.id}`, at: m.createdAt.toISOString(), group: 'messages',
-        title: `${m.channel === 'sms' ? 'Text' : 'Email'}: ${what}${m.status === 'failed' ? ' — not delivered' : ''}`,
-        detail: m.status === 'failed' ? `To ${m.to}. ${m.error}` : `To ${m.to}`, tone: m.status === 'failed' ? 'bad' : undefined,
+        title: `${m.channel === 'sms' ? 'Text' : 'Email'}: ${what}${m.status === 'failed' ? ' — not delivered' : m.status === 'skipped' ? ' — not sent' : ''}`,
+        detail: m.status === 'failed' || m.status === 'skipped' ? `To ${m.to}. ${m.error}` : `To ${m.to}`, tone: m.status === 'failed' ? 'bad' : undefined,
       });
     }
     for (const m of thread) {

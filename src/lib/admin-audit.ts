@@ -40,7 +40,7 @@ export const ACTION_LABELS: Record<string, string> = {
   course_offline: 'Take a course offline', inquiry_delete: 'Delete an inquiry', expense_delete: 'Delete an expense',
   company_document_delete: 'Delete a company document', goal_delete: 'Remove a goal', course_group_delete: 'Delete a course group',
   schedule_delete: 'Delete a schedule',
-  data_wipe: 'Clear all test data before launch', course_reset: 'Reset a test course', course_test_mark: 'Mark a course as a test course',
+  data_wipe: 'Clear all test data before launch', course_reset: 'Reset a test course', course_test_mark: 'Mark a course as a test course', course_sample_fill: 'Fill a test course with sample data',
   // recorded without a reason
   course_settings: 'Edit course settings', course_go_live: 'Set a course live', course_featured: 'Feature a course',
   course_create: 'Build a course by hand', course_group_add: 'Add a course group', course_group_edit: 'Edit a course group',

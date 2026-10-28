@@ -4,53 +4,41 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-28 03:19 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `58f5d42` · working tree **4 dirty file(s)**
+Generated 2026-10-28 03:58 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `09422b74` · working tree **53 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 30 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 2 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
-| `58f5d42` | 2026-10-28 | Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats |
-| `d6b030e` | 2026-10-28 | DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year |
-| `187a1ba` | 2026-10-27 | DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246) |
-| `92a6f52` | 2026-10-28 | Regenerate the status board |
-| `8facfd1` | 2026-10-28 | DENSE-3 Home: 7-week trend lines, the next 14 days against the usual, checked-in state, Next payout only |
-| `b8440aa` | 2026-10-27 | Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245) |
-| `ab2aa70` | 2026-10-28 | noshow-eod-test: use yesterday's tee time for the no-cancel case |
-| `8061878` | 2026-10-27 | No cancelling after the tee time: check in or no-show (charged at midnight) (#244) |
-| `b1de882` | 2026-10-27 | Regenerate the code map and status board |
-| `86147c9` | 2026-10-27 | Manage page: after the tee time the banner says the booking can't be cancelled |
-| `4425bd2` | 2026-10-27 | No cancelling after the tee time — the group checks in or is a no-show (charged at midnight) |
-| `e8e2a2e` | 2026-10-27 | DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243) |
-| `068e626` | 2026-10-27 | Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column |
-| `e29c686` | 2026-10-27 | Money → Cancellations says why no fee was kept |
-| `2750cbc` | 2026-10-27 | Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played |
-| `89ad92b` | 2026-10-27 | Regenerate the code map and status board |
-| `1444186` | 2026-10-27 | Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute |
-| `1763e28` | 2026-10-27 | Regenerate the code map and status board |
-| `98c16cf` | 2026-10-27 | DENSE-2: pin the loading branch's payout tiles |
-| `23965db` | 2026-10-27 | Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them |
-| `1a83267` | 2026-10-27 | DENSE-2: payments footer wording |
-| `71e527c` | 2026-10-27 | DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load |
-| `3c692b1` | 2026-10-27 | DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer |
-| `531516a` | 2026-10-27 | DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242) |
-| `6edc9aa` | 2026-10-27 | DENSE-4b review notes: the strip is a labelled group; no money request before the day loads |
-| `8d07854` | 2026-10-27 | DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet |
-| `92087fc` | 2026-10-27 | DENSE-4: the tee sheet is seat rows (#241) |
-| `6eced45` | 2026-10-27 | Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240) |
-| `569a2da` | 2026-10-27 | DENSE-4 review notes: demo legend mirrors the real one, same now cut-off, past blocked rows fade, dead demo CSS gone |
-| `851a246` | 2026-10-27 | DENSE-4: the tee sheet is seat rows |
+| `09422b74` | 2026-10-28 | Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill |
+| `161d3d7f` | 2026-10-28 | Fill a test course with sample data; never email a placeholder address or text a fictional number |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (53 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/member-stats-db-test.ts`
-- `M src/lib/member-stats.ts`
+- `M  CLAUDE.md`
+- `M  DENSE_UI_SPEC.md`
+- `UU STATUS.artifact.html`
+- `UU STATUS.json`
+- `UU STATUS.md`
+- `UU docs/CODEMAP.md`
+- `UU docs/codemap.json`
+- `M  scripts/analytics-w28-db-test.ts`
+- `M  scripts/board-tone-test.ts`
+- `M  scripts/cancel-after-noshow-test.ts`
+- `A  scripts/cancel-fee-reason-test.ts`
+- `M  scripts/cash-at-counter-db-test.ts`
+- `A  scripts/member-stats-db-test.ts`
+- `M  scripts/members-import-test.ts`
+- `M  scripts/members-rework-test.ts`
+- `M  scripts/money-rework-test.ts`
+- `M  scripts/noshow-eod-test.ts`
+- `M  scripts/operator-home-db-test.ts`
+- `M  scripts/policy-wording-test.ts`
+- `M  scripts/teesheet-1-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -65,7 +53,9 @@ the queue header's `git checkout -- .` cleanup until that run has committed, or 
 Open checkbox **because the review has not run**, not because the code is missing.
 This is the distinction a raw checkbox count gets wrong.
 
-Nothing awaiting review.
+| item | shipped | age | commit | source |
+|---|---|---|---|---|
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 97d | `b88c8bf3` | `RUN_QUEUE.md:2358` |
 
 ## Not started — the actual queue
 
@@ -74,8 +64,7 @@ Nothing awaiting review.
 3. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:57`
 4. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:236`
 5. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:339`
-6. BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) — `RUN_QUEUE.md:2358`
-7. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2994`
+6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2994`
 
 ## Waiting on you (not on a build)
 
@@ -135,59 +124,59 @@ Nothing awaiting review.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-27 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-10-28 | 0d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-21 | 6d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 0d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 7d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 1d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 2d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 4d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 4d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 5d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 5d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 5d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-21 | 6d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `ARCHITECTURE.md` | 0 | 2026-10-21 | 6d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-21 | 6d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-21 | 6d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 7d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 7d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 7d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 7d |
 
 ## Recent commits
 
-- `58f5d42` 2026-10-28 — Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats
-- `d6b030e` 2026-10-28 — DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year
-- `187a1ba` 2026-10-27 — DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)
-- `92a6f52` 2026-10-28 — Regenerate the status board
-- `8facfd1` 2026-10-28 — DENSE-3 Home: 7-week trend lines, the next 14 days against the usual, checked-in state, Next payout only
-- `b8440aa` 2026-10-27 — Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)
-- `ab2aa70` 2026-10-28 — noshow-eod-test: use yesterday's tee time for the no-cancel case
-- `8061878` 2026-10-27 — No cancelling after the tee time: check in or no-show (charged at midnight) (#244)
-- `b1de882` 2026-10-27 — Regenerate the code map and status board
-- `86147c9` 2026-10-27 — Manage page: after the tee time the banner says the booking can't be cancelled
-- `4425bd2` 2026-10-27 — No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)
-- `e8e2a2e` 2026-10-27 — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)
+- `09422b74` 2026-10-28 — Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill
+- `161d3d7f` 2026-10-28 — Fill a test course with sample data; never email a placeholder address or text a fictional number
+- `18082d87` 2026-10-27 — DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)
+- `581de703` 2026-10-27 — Courses built by hand are marked, never Orphaned or swept; resend sign-in code is rate-limited
+- `c155fec9` 2026-10-27 — Page decision for courses built without an inquiry lives on the course (#239)
+- `df85fcbb` 2026-10-27 — Regenerate status board
+- `a8cbcc80` 2026-10-27 — Page decision for courses built without an inquiry lives on the course
+- `c5210ef2` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)
+- `352be06d` 2026-10-27 — Onboarding walks the owner through their booking page part by part; Finish setting up on Home
+- `13634fec` 2026-10-26 — An emailed sign-in code confirms the owner's email (no separate verify link) (#236)
+- `db165892` 2026-10-27 — Regenerate code map and status board
+- `ca6666d2` 2026-10-27 — SMS fallback emails a fresh code; test the confirm link keeps onboarding progress
 
 ---
 
-**Totals:** 298 done · 0 awaiting review · 1 in flight · 7 not started · 7 revise pages open · 17 ideas · 7 parked.
+**Totals:** 298 done · 1 awaiting review · 1 in flight · 6 not started · 7 revise pages open · 17 ideas · 7 parked.
