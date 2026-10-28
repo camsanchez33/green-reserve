@@ -1,20 +1,36 @@
 {
-  "generatedAt": "2026-10-28T03:19:51.466Z",
+  "generatedAt": "2026-10-28T03:27:50.945Z",
   "repo": {
-    "head": "58f5d42",
+    "head": "ce17fd8",
     "branch": "claude/practical-lovelace-xiu4u5",
-    "dirtyCount": 4,
+    "dirtyCount": 6,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M DENSE_UI_SPEC.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/member-stats-db-test.ts",
-      " M src/lib/member-stats.ts"
+      " M scripts/schedule-rework-test.ts",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/dashboard/schedules/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "fa0add6",
+        "date": "2026-10-27T23:27:30-04:00",
+        "subject": "DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7596d35",
+        "date": "2026-10-28T03:19:54+00:00",
+        "subject": "Member spend counts only paid rounds, as Analytics' collected does",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "58f5d42",
         "date": "2026-10-28T03:15:23+00:00",
@@ -396,7 +412,7 @@
     {
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-28",
+      "lastTouched": "2026-10-27",
       "ageDays": 0
     },
     {
@@ -424,12 +440,6 @@
       "ageDays": 4
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 4
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -439,6 +449,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 5
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 5
     },
     {
@@ -619,6 +635,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "fa0add6",
+      "date": "2026-10-27",
+      "subject": "DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)"
+    },
+    {
+      "h": "7596d35",
+      "date": "2026-10-28",
+      "subject": "Member spend counts only paid rounds, as Analytics' collected does"
+    },
+    {
       "h": "58f5d42",
       "date": "2026-10-28",
       "subject": "Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats"
@@ -667,16 +693,6 @@
       "h": "86147c9",
       "date": "2026-10-27",
       "subject": "Manage page: after the tee time the banner says the booking can't be cancelled"
-    },
-    {
-      "h": "4425bd2",
-      "date": "2026-10-27",
-      "subject": "No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)"
-    },
-    {
-      "h": "e8e2a2e",
-      "date": "2026-10-27",
-      "subject": "DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)"
     }
   ]
 }

@@ -8238,7 +8238,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 610,
+      "lines": 609,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
