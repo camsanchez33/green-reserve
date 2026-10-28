@@ -67,8 +67,15 @@ async function main() {
   check('coming up starts at the course clock and skips blocked times', owner.comingUp.map(s => s.time).join(',') === '13:00,14:00', owner.comingUp.map(s => s.time));
   check('money uses the Analytics definitions (paid today by card or at the counter, counted in groups)', !!owner.money && owner.money.paidCents === 15000 && owner.money.paidGroups === 2, owner.money);
 
+  // DENSE-3 (Cam 2026-10-28): trend lines, the 14-day pace, and Not paid yet as on the tee sheet strip.
+  check('trend: the same weekday for seven weeks, then today', owner.trend.dates.length === 8 && owner.trend.dates[7] === TODAY && owner.trend.dates[6] === LAST_WEEK, owner.trend.dates);
+  check('…players and fill per week, today last', owner.trend.players[6] === 4 && owner.trend.players[7] === 10 && owner.trend.fillPct[7] === owner.fillPct.today, owner.trend);
+  check('…paid per week from computeAnalytics, today last', owner.trend.paidCents?.[7] === 15000 && owner.trend.paidCents.slice(0, 7).every(c => c === 0), owner.trend.paidCents);
+  check('pace: 14 days from today, today\'s live players against spots offered', owner.pace.length === 14 && owner.pace[0].date === TODAY && owner.pace[0].booked === 10 && owner.pace[0].offered === 28, owner.pace[0]);
+  check('not paid yet counts every unpaid group today, past their time and still to play', !!owner.money && owner.money.lateGroups > 0 && owner.money.outstandingGroups > owner.money.lateGroups, owner.money);
   const staff = await operatorHome(course.id, { money: false, messages: false }, NOW);
-  check('a login without payments gets no money', staff.money === null);
+  check('a login without payments gets no money', staff.money === null && staff.trend.paidCents === null);
+  check('…but still sees players, fill and the pace', staff.trend.players[7] === 10 && staff.pace.length === 14);
   check('…and sees who declined, not how much', staff.declined.length === 3 && staff.declined.every(d => d.amountCents === null));
   check('…and no unread count without messages', staff.unreadMessages === 0);
 

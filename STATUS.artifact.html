@@ -117,35 +117,21 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-27 20:08 UTC</span><span>claude/practical-lovelace-xiu4u5 @ 86147c9</span>
-    <span>2 uncommitted</span>
+    <span>2026-10-28 00:18 UTC</span><span>claude/practical-lovelace-xiu4u5 @ 8facfd1</span>
+    <span>tree clean</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">21 runs have shipped that the queue doesn't know about</div>
+<div class="lede">7 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
-<li><span class="h">86147c9</span><span>Manage page: after the tee time the banner says the booking can't be cancelled</span></li>
-<li><span class="h">4425bd2</span><span>No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)</span></li>
+<li><span class="h">8facfd1</span><span>DENSE-3 Home: 7-week trend lines, the next 14 days against the usual, checked-in state, Next payout only</span></li>
+<li><span class="h">b8440aa</span><span>Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)</span></li>
+<li><span class="h">8061878</span><span>No cancelling after the tee time: check in or no-show (charged at midnight) (#244)</span></li>
 <li><span class="h">e8e2a2e</span><span>DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)</span></li>
-<li><span class="h">068e626</span><span>Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column</span></li>
-<li><span class="h">e29c686</span><span>Money → Cancellations says why no fee was kept</span></li>
-<li><span class="h">2750cbc</span><span>Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played</span></li>
-<li><span class="h">89ad92b</span><span>Regenerate the code map and status board</span></li>
-<li><span class="h">1444186</span><span>Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute</span></li>
-<li><span class="h">1763e28</span><span>Regenerate the code map and status board</span></li>
-<li><span class="h">98c16cf</span><span>DENSE-2: pin the loading branch's payout tiles</span></li>
-<li><span class="h">23965db</span><span>Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them</span></li>
-<li><span class="h">1a83267</span><span>DENSE-2: payments footer wording</span></li>
-<li><span class="h">71e527c</span><span>DENSE-2: pin the sales route, drawer gate and weekday/hour sums; payout tiles show while sales load</span></li>
-<li><span class="h">3c692b1</span><span>DENSE-2: Money gets a Sales view — today against last week, sales by day, weekday and hour, the cash drawer</span></li>
 <li><span class="h">531516a</span><span>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)</span></li>
-<li><span class="h">6edc9aa</span><span>DENSE-4b review notes: the strip is a labelled group; no money request before the day loads</span></li>
-<li><span class="h">8d07854</span><span>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet</span></li>
 <li><span class="h">92087fc</span><span>DENSE-4: the tee sheet is seat rows (#241)</span></li>
 <li><span class="h">6eced45</span><span>Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)</span></li>
-<li><span class="h">569a2da</span><span>DENSE-4 review notes: demo legend mirrors the real one, same now cut-off, past blocked rows fade, dead demo CSS gone</span></li>
-<li><span class="h">851a246</span><span>DENSE-4: the tee sheet is seat rows</span></li>
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
@@ -155,11 +141,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">7</span><span class="l">Revise pages left</span></div>
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
-<section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
-</div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
 <div class="row"><span class="idx">1</span><span class="t">DENSE — Cam 2026-10-27: &quot;too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin&quot;. Lots of data, almost no sentences. Plan, princip</span><span class="where">:47</span></div>
@@ -201,26 +182,22 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 0d</td></tr>
-<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 0d</td></tr>
+<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-28 &middot; 0d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-21 &middot; 5d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 0d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 1d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 3d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 4d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 4d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 1d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 2d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 4d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 4d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 4d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 4d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 4d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 4d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
 <tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
 <tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
@@ -233,25 +210,29 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
 <tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
 <tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-21 &middot; 5d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">86147c9</td><td class="num">2026-10-27</td><td>Manage page: after the tee time the banner says the booking can't be cancelled</td></tr>
-<tr><td class="num">4425bd2</td><td class="num">2026-10-27</td><td>No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)</td></tr>
+<tr><td class="num">8facfd1</td><td class="num">2026-10-28</td><td>DENSE-3 Home: 7-week trend lines, the next 14 days against the usual, checked-in state, Next payout only</td></tr>
+<tr><td class="num">b8440aa</td><td class="num">2026-10-27</td><td>Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)</td></tr>
+<tr><td class="num">8061878</td><td class="num">2026-10-27</td><td>No cancelling after the tee time: check in or no-show (charged at midnight) (#244)</td></tr>
 <tr><td class="num">e8e2a2e</td><td class="num">2026-10-27</td><td>DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)</td></tr>
-<tr><td class="num">068e626</td><td class="num">2026-10-27</td><td>Cancellations: say why no fee from what the cancel recorded, not the zeroed fee column</td></tr>
-<tr><td class="num">e29c686</td><td class="num">2026-10-27</td><td>Money → Cancellations says why no fee was kept</td></tr>
-<tr><td class="num">2750cbc</td><td class="num">2026-10-27</td><td>Tee sheet strip: Not paid yet counts every unpaid group on the day, with how many are past their time; no confirmation for a walk-in who already played</td></tr>
-<tr><td class="num">89ad92b</td><td class="num">2026-10-27</td><td>Regenerate the code map and status board</td></tr>
-<tr><td class="num">1444186</td><td class="num">2026-10-27</td><td>Staff can record a walk-in who already played after the 20-minute cut-off; the sheet re-reads the clock each minute</td></tr>
-<tr><td class="num">1763e28</td><td class="num">2026-10-27</td><td>Regenerate the code map and status board</td></tr>
-<tr><td class="num">98c16cf</td><td class="num">2026-10-27</td><td>DENSE-2: pin the loading branch's payout tiles</td></tr>
-<tr><td class="num">23965db</td><td class="num">2026-10-27</td><td>Tee sheet: times 20 min past drop to a Past tee times section; no new bookings on them</td></tr>
-<tr><td class="num">1a83267</td><td class="num">2026-10-27</td><td>DENSE-2: payments footer wording</td></tr>
+<tr><td class="num">531516a</td><td class="num">2026-10-27</td><td>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)</td></tr>
+<tr><td class="num">92087fc</td><td class="num">2026-10-27</td><td>DENSE-4: the tee sheet is seat rows (#241)</td></tr>
+<tr><td class="num">6eced45</td><td class="num">2026-10-27</td><td>Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)</td></tr>
+<tr><td class="num">18082d8</td><td class="num">2026-10-27</td><td>DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)</td></tr>
+<tr><td class="num">c155fec</td><td class="num">2026-10-27</td><td>Page decision for courses built without an inquiry lives on the course (#239)</td></tr>
+<tr><td class="num">c5210ef</td><td class="num">2026-10-27</td><td>Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)</td></tr>
+<tr><td class="num">13634fe</td><td class="num">2026-10-26</td><td>An emailed sign-in code confirms the owner's email (no separate verify link) (#236)</td></tr>
+<tr><td class="num">23e81ff</td><td class="num">2026-10-26</td><td>Owners get a 'Set your password' link, never a password; onboarding starts with Review your page (#235)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

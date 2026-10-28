@@ -129,7 +129,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   `MoneyBooking` (green/cart/range) on expand. The 4-sentence fee card → one line +
   link. New code: the intraday cumulative series and payment-method split (read-only
   aggregation; overseer — it is money).
-- [ ] **DENSE-3 Home** (`dashboard/home`, ~4 → ≤ 2). KPI strip with sparklines vs
+- [x] **DENSE-3 Home** (BUILT 2026-10-28 — Cam picked: the 14-day pace row, Coming up kept with checked-in, money panel = Next payout only, 7-week trend lines under players / fill / paid; Not paid yet = every unpaid group today, as on the tee sheet strip) (`dashboard/home`, ~4 → ≤ 2). KPI strip with sparklines vs
   same weekday; "Today by tee time" fill grid with the now marker; Next 14 days pace
   (booked vs usual-by-now — already `pace` in analytics); Needs you (existing three +
   pace alerts); Next up with checked-in state (`comingUp[].groups[].checkedIn` is
