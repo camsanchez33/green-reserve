@@ -148,7 +148,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   status, rounds this season, last round, spend), sparkline of rounds per member;
   header strip: active · dues unpaid ($) · renewing in 30 days (ask D2). Wizard hints
   cut to labels; the 1% dues line stays (fee wording, LQ-2).
-- [ ] **DENSE-6 Schedule** (~12–15 → ≤ 3). Labels over sentences; the price table
+- [x] **DENSE-6 Schedule** (BUILT 2026-10-28 — one sentence left; explanations behind titles or cut; 461 → 376 words. Pro shop and Events wait: Cam 2026-10-28, "those are going to be huge revamps") (~12–15 → ≤ 3). Labels over sentences; the price table
   already is the right shape. Save preview keeps its warnings as one line each.
 - [ ] **DENSE-7 Pro shop** (~12 → ≤ 3). Register stays task-first; add today's
   sales strip (sales · items · cash · card) and top items (Square) — ask D2.

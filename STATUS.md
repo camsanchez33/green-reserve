@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-28 03:19 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `58f5d42` · working tree **4 dirty file(s)**
+Generated 2026-10-28 03:27 UTC · branch `claude/practical-lovelace-xiu4u5` · HEAD `ce17fd8` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 30 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 32 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `fa0add6` | 2026-10-27 | DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247) |
+| `7596d35` | 2026-10-28 | Member spend counts only paid rounds, as Analytics' collected does |
 | `58f5d42` | 2026-10-28 | Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats |
 | `d6b030e` | 2026-10-28 | DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year |
 | `187a1ba` | 2026-10-27 | DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246) |
@@ -45,12 +47,14 @@ Generated 2026-10-28 03:19 UTC · branch `claude/practical-lovelace-xiu4u5` · H
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (6 file(s))
 
+- `M DENSE_UI_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/member-stats-db-test.ts`
-- `M src/lib/member-stats.ts`
+- `M scripts/schedule-rework-test.ts`
+- `M scripts/words-guard.baseline.json`
+- `M src/app/dashboard/schedules/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -135,14 +139,14 @@ Nothing awaiting review.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-27 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-10-28 | 0d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 0d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-21 | 6d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 1d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 2d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 4d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 4d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 5d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 5d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 5d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 5d |
@@ -175,6 +179,8 @@ Nothing awaiting review.
 
 ## Recent commits
 
+- `fa0add6` 2026-10-27 — DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)
+- `7596d35` 2026-10-28 — Member spend counts only paid rounds, as Analytics' collected does
 - `58f5d42` 2026-10-28 — Members: Not renewed filter matches its number; spend = Analytics' course share; stats in lib/member-stats
 - `d6b030e` 2026-10-28 — DENSE-5 Members: a number strip and a sortable table with renewal, member since, rounds and spend this year
 - `187a1ba` 2026-10-27 — DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)
@@ -185,8 +191,6 @@ Nothing awaiting review.
 - `8061878` 2026-10-27 — No cancelling after the tee time: check in or no-show (charged at midnight) (#244)
 - `b1de882` 2026-10-27 — Regenerate the code map and status board
 - `86147c9` 2026-10-27 — Manage page: after the tee time the banner says the booking can't be cancelled
-- `4425bd2` 2026-10-27 — No cancelling after the tee time — the group checks in or is a no-show (charged at midnight)
-- `e8e2a2e` 2026-10-27 — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)
 
 ---
 
