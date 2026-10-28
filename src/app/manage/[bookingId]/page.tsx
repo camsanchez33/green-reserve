@@ -35,6 +35,7 @@ type BookingInfo = {
   status: string;
   paymentStatus: string;
   windowOpen: boolean;
+  teedOff?: boolean;
   lateFeeTiming?: string | null;
   hasCard?: boolean;
   noShowKept?: boolean;
@@ -323,6 +324,7 @@ function ManagePageInner() {
     feeAlreadyCharged: info.cancellationFeeCharged,
     bookingFeeCents: info.hasCard && info.accessFeeTotal >= 50 ? info.accessFeeTotal : 0,
     noShowKept: !!info.noShowKept,
+    teedOff: !!info.teedOff,
   });
   const policyText = cancelWords.banner;
   const confirmCancelMsg = cancelWords.confirm;
@@ -499,7 +501,7 @@ function ManagePageInner() {
 
           {/* Policy */}
           {!alreadyCancelled && !alreadyCompleted && (
-            <div className={`rounded-md border p-4 mb-5 text-sm ${info.windowOpen ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-warn/5 border-warn/20 text-warn'}`}>
+            <div className={`rounded-md border p-4 mb-5 text-sm ${info.windowOpen && !info.teedOff ? 'bg-ok/5 border-ok/20 text-ok' : 'bg-warn/5 border-warn/20 text-warn'}`}>
               {policyText}
             </div>
           )}
@@ -526,13 +528,15 @@ function ManagePageInner() {
                   onClick={() => { setSelectedPlayers(info.players); setView('change-players'); }}
                 />
               )}
-              <ActionCard
-                tone="bad"
-                icon={<XCircle size={16} />}
-                title="Cancel"
-                subtitle={cancelSubtitle}
-                onClick={() => setView('cancel-confirm')}
-              />
+              {!info.teedOff && (
+                <ActionCard
+                  tone="bad"
+                  icon={<XCircle size={16} />}
+                  title="Cancel"
+                  subtitle={cancelSubtitle}
+                  onClick={() => setView('cancel-confirm')}
+                />
+              )}
             </div>
           )}
 

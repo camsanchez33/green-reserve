@@ -607,6 +607,7 @@ function DashboardPageInner() {
     const bStatus = getBookingStatus(b.status, b.paymentStatus);
     const declined = b.status === 'confirmed' && !!b.checkInFailReason;
     const late = b.status === 'confirmed' && !b.noShowAt && (selectedDate < today() || (selectedDate === today() && tt.time < nowHM));
+    const teedOff = selectedDate < today() || (selectedDate === today() && tt.time <= nowHM);
     const link = 'text-[13px] font-medium text-ink-soft hover:text-ink disabled:opacity-50';
     const primary = 'px-3 min-h-[36px] rounded-md text-[13px] font-medium text-white disabled:opacity-50 transition-colors ';
     const due = (b.totalAmount ?? 0) + shopExtra(b);
@@ -675,7 +676,12 @@ function DashboardPageInner() {
           {late && access.can('sheet.no_show') && (
             <button onClick={() => bookingLifecycle(b, 'no_show')} disabled={rowBusy === b.id} className="text-[13px] font-medium text-bad hover:underline disabled:opacity-50">{rowBusy === b.id ? '…' : 'Mark no-show'}</button>
           )}
-          {b.status === 'confirmed' && access.can('sheet.cancel') && (
+          {/* Cam 2026-10-27: after the tee time a group checks in or is a no-show — no cancel. A booking
+              made by mistake can still come off, with no fee, for logins that can waive (cancel-booking.ts). */}
+          {b.status === 'confirmed' && teedOff && access.can('sheet.cancel') && access.can('sheet.waive_fee') && (
+            <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={'ml-auto ' + link}>Remove, booked by mistake</button>
+          )}
+          {b.status === 'confirmed' && !teedOff && access.can('sheet.cancel') && (
             <span className="ml-auto flex items-center gap-x-4">
               {access.can('sheet.waive_fee') && ((b.cancellationFeeTotal ?? 0) > 0 || !!b.noShowAt) && (
                 <button onClick={() => cancelGroup(b, true)} disabled={rowBusy === b.id} className={link}>Cancel, no fee</button>

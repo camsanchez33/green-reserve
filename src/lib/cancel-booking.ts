@@ -43,6 +43,17 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   if (!booking) return { error: 'Booking not found', status: 404 } as const;
   if (booking.status === 'cancelled') return { error: 'Already cancelled', status: 409 } as const;
   if (booking.status === 'completed') return { error: 'This round was already checked in and paid for — nothing to cancel', status: 409 } as const;
+  // Cam 2026-10-27: "if its after the time then they cant cancel … their no show fee if they
+  // have one and then all the no shows get charged at midnight". Once the tee time has gone
+  // off the group checks in or is a no-show. Only the course calling it off (weather,
+  // closure) or staff removing a booking made by mistake (waiveFee, sheet.waive_fee) takes
+  // it off the sheet after that — neither keeps a fee.
+  const teeStart = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
+  if (teeStart && teeStart.getTime() <= Date.now() && !waiveFee && !opts.courseCalledOff) {
+    return { error: actor.type === 'golfer'
+      ? 'This tee time has already gone off, so it can’t be cancelled. Contact the course.'
+      : 'This tee time has already gone off — mark the group a no-show instead.', status: 409 } as const;
+  }
 
   // MP-1b B1 — a round can now be PAID while still 'confirmed'.
   // collectPayment() (MP-1 fix-now #5) charges without checking anyone in, so a
@@ -108,6 +119,8 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // NS-EOD: marking a no-show charges nothing until the course's midnight, and
   // cancelling takes the booking out of that run. Cancelling a flagged booking
   // is the final word, so its no-show charges are taken now (unless waived).
+  // Since Cam 2026-10-27 a flagged no-show is refused above (its tee time has gone off),
+  // so this branch only guards a cancel that reaches here some other way.
   if (booking.noShowAt && !waiveFee && !(await liveNoShowCharge(bookingId))) {
     await chargeNoShow(bookingId).catch(err => console.error(JSON.stringify({ ev: 'cancel.noshow_charge.fail', bookingId, error: err instanceof Error ? err.message : String(err) })));
   }
