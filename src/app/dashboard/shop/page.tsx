@@ -20,7 +20,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { shopTree, matches, bySku, type FlatItem, type TreeItem } from '@/lib/shop-tree';
+import { shopTree, matches, bySku, skuHits, stockWords, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 
 type Item = FlatItem;
 type Refund = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdAt: string };
@@ -171,7 +171,9 @@ export default function ShopPage() {
   // A scanner types the code and presses Enter: an exact SKU goes straight into the sale.
   function scan(code: string) {
     const hit = bySku(items ?? [], code);
-    if (hit) { add(hit.id, 1); setQ(''); setNote(`Added ${hit.name}.`); setError(''); return true; }
+    if (hit) { add(hit.id, 1); setQ(''); setNote(`Added ${hit.name}.${hit.stockCount !== null && hit.stockCount - (cart[hit.id] ?? 0) <= 0 ? ' None left.' : ''}`); setError(''); return true; }
+    // Two items with one code: say so instead of adding nothing silently.
+    if (skuHits(items ?? [], code).length > 1) { setError(`Code ${code.trim()} is on two items.`); return true; }
     return false;
   }
 
@@ -422,7 +424,7 @@ export default function ShopPage() {
                           <div className="mt-5">
                             <h2 className="text-[13px] font-semibold text-ink mb-2">Walk-in</h2>
                             {roundsData.open.length === 0 ? <p className="text-sm text-ink-soft">No open tee times left today.</p> : !walkForm ? (
-                              <button onClick={() => { const t = roundsData.open[0]; setWalkForm({ teeTimeId: t.teeTimeId, name: '', players: Math.min(2, t.spots), cart: !t.walkingAllowed || t.cartFeeCents > 0 }); }} className={LINK}>Book a walk-in onto the next open time</button>
+                              <button onClick={() => { const t = roundsData.open[0]; setWalkForm({ teeTimeId: t.teeTimeId, name: '', players: Math.min(2, t.spots), cart: !t.walkingAllowed || t.cartFeeCents > 0 }); }} className={LINK}>Walk-in on the next open time</button>
                             ) : (
                               <form className="bg-paper/70 rounded-md p-3 space-y-2 max-w-md" onSubmit={e => {
                                 e.preventDefault();
@@ -472,7 +474,7 @@ export default function ShopPage() {
                     ))}
                   </div>
                 )}
-                {tab === 'items' && tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Scanned a code? Add it as the item’s SKU in Settings → Pro shop.' : ''}</p>}
+                {tab === 'items' && tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Unknown code? Add it as a SKU in Settings → Pro shop.' : ''}</p>}
                 {tab === 'items' && groups.map(([group, list]) => (
                   <section key={group} className="mb-4 last:mb-0">
                     <h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>
@@ -487,7 +489,7 @@ export default function ShopPage() {
                               <span className="block text-sm font-medium text-ink leading-snug">{it.name}</span>
                               <span className="block text-[12.5px] text-ink-muted tabular-nums">
                                 {usd(it.priceCents)}
-                                {opts.length ? <> · {opts.length} options</> : it.stockCount !== null && <span className={it.stockCount <= 0 ? 'text-bad' : ''}> · {it.stockCount <= 0 ? 'none left' : `${it.stockCount} left`}</span>}
+                                {opts.length ? <> · {opts.length} options</> : it.stockCount !== null && <span className={it.stockCount <= 0 ? 'text-bad' : ''}> · {stockWords(it.stockCount)}</span>}
                                 {n ? <span className="text-pine font-semibold"> · {n} in sale</span> : null}
                               </span>
                             </button>

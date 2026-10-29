@@ -5226,7 +5226,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 324,
+      "lines": 327,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8353,7 +8353,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 813,
+      "lines": 815,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10873,7 +10873,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 122,
+      "lines": 124,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -18644,7 +18644,7 @@
     },
     {
       "path": "src/lib/monthly-review.ts",
-      "lines": 255,
+      "lines": 257,
       "purpose": "BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07:",
       "brain": [],
       "exports": [
@@ -21199,7 +21199,7 @@
     },
     {
       "path": "src/lib/shop-catalog.ts",
-      "lines": 139,
+      "lines": 162,
       "purpose": "W2-7 (Cam 2026-10-20):",
       "brain": [],
       "exports": [
@@ -21441,7 +21441,7 @@
     },
     {
       "path": "src/lib/shop-tree.ts",
-      "lines": 44,
+      "lines": 55,
       "purpose": "W2-7:",
       "brain": [],
       "exports": [
@@ -21462,7 +21462,15 @@
           "kind": "fn"
         },
         {
+          "name": "skuHits",
+          "kind": "fn"
+        },
+        {
           "name": "stockOf",
+          "kind": "fn"
+        },
+        {
+          "name": "stockWords",
           "kind": "fn"
         },
         {

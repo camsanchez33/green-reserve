@@ -21,6 +21,9 @@ import { noFeeReason, type CancelRecord } from '@/lib/cancel-fee-reason';
 
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
+/** Payments' played-rounds feed holds this many; the page says so when it is full (until the ledger rework). */
+const PLAYED_CAP = 1000;
+
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -61,7 +64,7 @@ export async function GET(req: NextRequest) {
       teeTime: { select: { date: true, time: true, holes: true } },
     },
     orderBy: played ? [{ teeTime: { date: 'desc' } }, { teeTime: { time: 'desc' } }] : { createdAt: 'desc' },
-    take: date ? undefined : played ? 1000 : 200,
+    take: date ? undefined : played ? PLAYED_CAP : 200,
   });
 
   // SP-A: contact details only with "See golfer email and phone"; payment

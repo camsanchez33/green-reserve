@@ -35,7 +35,9 @@ const FILTERS = [['all', 'All'], ['paid', 'Paid'], ['unpaid', 'Not paid yet'], [
 type Filter = typeof FILTERS[number][0];
 const DAYS_SHOWN = 14;
 
-export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter = 'all', courseNow }: {
+export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter = 'all', courseNow, capped = false }: {
+  /** The played-rounds feed came back full: older rounds aren't in this list. */
+  capped?: boolean;
   bookings: MoneyBooking[];
   /** The course's today and HH:MM (Money's overview); the browser's day until it loads. */
   courseNow?: { today: string; clock: string };
@@ -86,7 +88,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
 
       {rows.length === 0 ? (
         <Card className="py-12 text-center text-ink-soft text-[13.5px]">
-          {q || filter !== 'all' ? 'Nothing matches that.' : dateFilter ? `No bookings on ${fmtDate(dateFilter)}.` : 'No rounds played yet. Payments show here once golfers have played.'}
+          {q || filter !== 'all' ? 'Nothing matches that.' : dateFilter ? `No bookings on ${fmtDate(dateFilter)}.` : 'No rounds played yet.'}
         </Card>
       ) : (
         <div className="space-y-4">
@@ -113,7 +115,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
           {visibleDays.length < days.length && (
             <button onClick={() => setShowAll(true)} className="w-full py-2.5 text-[13px] font-medium text-pine hover:underline">Show older days ({days.length - visibleDays.length} more)</button>
           )}
-          <p className="text-[12.5px] text-ink-muted">Latest 200 bookings · your course’s share, without GreenReserve’s booking fee</p>
+          <p className="text-[12.5px] text-ink-muted">{capped ? 'Last 1,000 played rounds · ' : ''}Your course’s share, without GreenReserve’s booking fee</p>
         </div>
       )}
     </>

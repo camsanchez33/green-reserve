@@ -33,11 +33,22 @@ export function stockOf(i: TreeItem): number | null {
  * exactly that code, or null — never a guess between two.
  */
 export function bySku(items: FlatItem[], code: string): FlatItem | null {
+  const hits = skuHits(items, code);
+  return hits.length === 1 ? hits[0] : null;
+}
+
+/** Every sellable item with exactly this code — more than one means two items share a SKU (the register says so). */
+export function skuHits(items: FlatItem[], code: string): FlatItem[] {
   const c = code.trim().toLowerCase();
-  if (!c) return null;
+  if (!c) return [];
   const parents = new Map(items.filter(i => !i.parentId).map(i => [i.id, i]));
   const hasKids = new Set(items.filter(i => i.parentId).map(i => i.parentId as string));
   const hits = items.filter(i => i.active && i.sku.trim().toLowerCase() === c && !hasKids.has(i.id)
     && (!i.parentId || parents.get(i.parentId)?.active !== false));
-  return hits.length === 1 ? hits[0] : null;
+  return hits;
+}
+
+/** A shelf count in words: below zero says how far it's oversold (a sale never waits on the count). */
+export function stockWords(n: number): string {
+  return n < 0 ? `${-n} oversold` : n === 0 ? 'none left' : `${n} left`;
 }
