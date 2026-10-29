@@ -48,9 +48,9 @@ type Pending = { preview: Preview | null; error: string };
 function previewLines(p: Preview): string[] {
   const out: string[] = [];
   if (p.added) out.push(`Adds ${p.added} tee time${p.added === 1 ? '' : 's'} golfers can book.`);
-  if (p.repriced) out.push(`Changes the price on ${p.repriced} open tee time${p.repriced === 1 ? '' : 's'}.`);
+  if (p.repriced) out.push(`New price on ${p.repriced} tee time${p.repriced === 1 ? '' : 's'}; bookings keep theirs.`);
   if (p.removed) out.push(`Takes ${p.removed} open tee time${p.removed === 1 ? '' : 's'} off the sheet.`);
-  if (p.bookedKept) out.push(`Leaves ${p.bookedKept} booked or blocked time${p.bookedKept === 1 ? '' : 's'} exactly as ${p.bookedKept === 1 ? 'it is' : 'they are'}.`);
+  if (p.bookedKept) out.push(`Keeps ${p.bookedKept} booked or blocked time${p.bookedKept === 1 ? '' : 's'} the schedule no longer has.`);
   if (out.length === 0) out.push('Nothing on the tee sheet changes in the next days; it applies further out as the days come up.');
   return out;
 }

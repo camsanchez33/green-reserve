@@ -31,9 +31,10 @@ const row = (time: string, fee: number, extra: Partial<{ playersBooked: number; 
 const existing = [row('07:00', 5500), row('07:10', 5000), row('07:20', 5000, { playersBooked: 2, bookings: 1 }), row('06:50', 5500), row('06:40', 5500, { status: 'blocked' })];
 const p = diffDay(existing, d1);
 check('new times are counted as added', p.added === 4, JSON.stringify(p)); // 07:30, 07:40, 07:50, 08:00
-check('an open time at a new price is repriced', p.repriced === 1, JSON.stringify(p)); // 07:10
+// Revamp 3 fix 5 (Cam 2026-10-29): a booked time's open spots take the new price too; its bookings keep theirs.
+check('a time at a new price is repriced, booked or not', p.repriced === 2, JSON.stringify(p)); // 07:10 open, 07:20 booked
 check('an open time no longer in the schedule is removed', p.removed === 1, JSON.stringify(p)); // 06:50
-check('booked and blocked times are kept, never changed', p.bookedKept === 2, JSON.stringify(p)); // 07:20 booked at old price, 06:40 blocked
+check('a booked or blocked time the schedule dropped is kept', p.bookedKept === 1, JSON.stringify(p)); // 06:40 blocked
 check('an unchanged open time is not counted', diffDay([row('07:00', 5500)], desiredSlots(mon, [{ ...base, endTime: '07:00' }], [])).added === 0);
 
 const page = readFileSync('src/app/dashboard/schedules/page.tsx', 'utf8');

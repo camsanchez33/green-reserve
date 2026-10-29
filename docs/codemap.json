@@ -13687,6 +13687,7 @@
         "src/lib/register-close.ts",
         "src/lib/register.ts",
         "src/lib/sample-data.ts",
+        "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
       ]
     },
@@ -20447,17 +20448,13 @@
     },
     {
       "path": "src/lib/schedule-preview.ts",
-      "lines": 154,
+      "lines": 153,
       "purpose": "Schedule rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
         {
           "name": "diffDay",
           "kind": "fn"
-        },
-        {
-          "name": "PREVIEW_DAYS",
-          "kind": "const"
         },
         {
           "name": "previewScheduleChange",
@@ -21904,7 +21901,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 255,
+      "lines": 280,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21929,6 +21926,10 @@
           "kind": "fn"
         },
         {
+          "name": "regenerationDays",
+          "kind": "fn"
+        },
+        {
           "name": "ScheduleForSlots",
           "kind": "type"
         },
@@ -21943,6 +21944,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./booking-events",
         "./booking-window",
         "./course-time",
         "./event-hold",

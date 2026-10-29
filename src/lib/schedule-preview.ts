@@ -6,14 +6,14 @@
 // save cannot disagree. Server only.
 import { prisma } from './prisma';
 import { todayIn, addDaysStr } from './course-time';
-import { desiredSlots, slotKey, type ScheduleForSlots } from './tee-sheet-engine';
+import { desiredSlots, slotKey, regenerationDays, type ScheduleForSlots } from './tee-sheet-engine';
 import { scheduleMoneyForCreate, scheduleMoneyFromWire } from './schedule-wire';
 import { compileCoursePlan, type SchedulePlan } from './schedule-service';
 import type { CoursePlan } from './course-plan';
 import { checkSchedule } from './schedule-conflict';
 
-/** How many days regenerateUpcoming() rebuilds — the preview covers the same days. */
-export const PREVIEW_DAYS = 8;
+// The preview covers the same days regenerateUpcoming() rebuilds (regenerationDays: the
+// course's widest booking window plus one — Revamp 3 fix 5, it used to stop at 8).
 
 export type ScheduleChange =
   | { op: 'create'; body: Record<string, unknown> }
@@ -45,11 +45,10 @@ export function diffDay(existing: Existing[], desired: ReturnType<typeof desired
   for (const [key, slot] of desired) {
     const t = byKey.get(key);
     if (!t) { out.added++; continue; }
-    const kept = t.playersBooked > 0 || t.status === 'blocked' || t.bookings > 0;
     const samePrice = t.greenFeeCents === slot.greenFeeCents && t.memberRateCents === slot.memberRateCents
       && t.residentRateCents === slot.residentRateCents && t.cartFeeCents === slot.cartFeeCents;
-    if (samePrice) continue;
-    if (kept) out.bookedKept++; else out.repriced++;
+    // A booked time's open spots take the new price too; its bookings keep theirs (Revamp 3 fix 5).
+    if (!samePrice) out.repriced++;
   }
   for (const [key, t] of byKey) {
     if (desired.has(key)) continue;
@@ -106,13 +105,13 @@ async function proposedSchedules(courseId: string, change: ScheduleChange): Prom
   }));
 }
 
-/** What saving `change` would do to the next PREVIEW_DAYS days. Null when the schedule isn't this course's. */
+/** What saving `change` would do to every bookable day. Null when the schedule isn't this course's. */
 export async function previewScheduleChange(courseId: string, change: ScheduleChange): Promise<SchedulePreview | null> {
   const schedules = await proposedSchedules(courseId, change);
   if (!schedules) return null;
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
   const today = todayIn(course?.timezone);
-  const dates = Array.from({ length: PREVIEW_DAYS }, (_, i) => addDaysStr(today, i));
+  const dates = Array.from({ length: await regenerationDays(courseId) }, (_, i) => addDaysStr(today, i));
   const [products, blackouts, teeTimes] = await Promise.all([
     prisma.courseProduct.findMany({ where: { courseId }, select: { id: true, holes: true, active: true, nineIds: true } }),
     prisma.blackout.findMany({ where: { courseId, date: { in: dates } }, select: { date: true } }),
@@ -122,7 +121,7 @@ export async function previewScheduleChange(courseId: string, change: ScheduleCh
     }),
   ]);
   const closed = new Set(blackouts.map(b => b.date));
-  const total: SchedulePreview = { days: PREVIEW_DAYS, added: 0, removed: 0, repriced: 0, bookedKept: 0 };
+  const total: SchedulePreview = { days: dates.length, added: 0, removed: 0, repriced: 0, bookedKept: 0 };
   for (const date of dates) {
     if (closed.has(date)) continue; // a closed day is never rebuilt
     const existing = teeTimes.filter(t => t.date === date).map(t => ({ ...t, productId: t.productId ?? null, bookings: t._count.bookings }));

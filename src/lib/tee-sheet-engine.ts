@@ -2,6 +2,7 @@ import { prisma } from './prisma';
 import { heldBy, ninesByProduct } from './event-hold';
 import { todayIn, addDaysStr } from './course-time';
 import { generationHorizonDays } from './booking-window';
+import { teeTimeInstant } from './booking-events';
 
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);
@@ -35,13 +36,22 @@ function minutesToTime(m: number): string {
  * idempotent and never touches booked or operator-blocked slots, so replaying
  * the window is the whole fix.
  */
-export async function regenerateUpcoming(courseId: string, days = 8): Promise<void> {
+export async function regenerateUpcoming(courseId: string, days?: number): Promise<void> {
   // SD-3: "today" is the course's today, not the server's UTC day.
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
   const today = todayIn(course?.timezone);
-  for (let i = 0; i < days; i++) {
+  // Revamp 3 fix 5 (Cam 2026-10-29): every day a golfer can book, not just 8 —
+  // a price saved today reached days 1–8 while days 9+ (bookable) kept the old one.
+  const n = days ?? await regenerationDays(courseId);
+  for (let i = 0; i < n; i++) {
     await generateTeeTimes(courseId, addDaysStr(today, i));
   }
+}
+
+/** How many days ahead a schedule change rebuilds: the course's widest booking window plus one, never below 8 (as the nightly run). */
+export async function regenerationDays(courseId: string): Promise<number> {
+  const c = await prisma.course.findUnique({ where: { id: courseId }, select: { publicAdvanceDays: true, memberAdvanceDays: true, membershipTiers: { select: { advanceBookingDays: true } } } });
+  return c ? Math.max(8, generationHorizonDays(c, c.membershipTiers)) : 8;
 }
 
 export type ScheduleForSlots = {
@@ -149,6 +159,8 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     where: { courseId, date: dateStr },
     include: { _count: { select: { bookings: true } } },
   });
+  const tz = (await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } }))?.timezone;
+  const nowMs = Date.now();
   const existingByKey = new Map(existing.map(t => [slotKey(t.productId ?? null, t.time), t]));
   // Pre-L2 rows (productId null) that hold a booking or a block: when a
   // schedule is later scoped to a round, the round's slot at that time ADOPTS
@@ -175,7 +187,20 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   for (const [key, slot] of desired) {
     const existingSlot = existingByKey.get(key);
     if (existingSlot && (existingSlot.playersBooked > 0 || existingSlot.status === 'blocked' || existingSlot._count.bookings > 0)) {
-      // Already booked, manually blocked, or carrying cancelled bookings — leave it exactly as is.
+      // Booked, blocked, or carrying cancelled bookings: the row stays. Revamp 3 fix 5 (Cam
+      // 2026-10-29): its OPEN spots take the new price — a booking keeps the price it was
+      // made at (its own totals), so only new bookings see it. A time already gone keeps
+      // its price: that's the posted-price history Analytics reads.
+      const at = teeTimeInstant(tz, dateStr, existingSlot.time);
+      const changed = existingSlot.greenFeeCents !== slot.greenFeeCents || existingSlot.memberRateCents !== slot.memberRateCents
+        || existingSlot.residentRateCents !== slot.residentRateCents || existingSlot.cartFeeCents !== slot.cartFeeCents
+        || existingSlot.walkingAllowed !== slot.walkingAllowed;
+      if (changed && at && at.getTime() > nowMs) {
+        await prisma.teeTime.update({ where: { id: existingSlot.id }, data: {
+          greenFeeCents: slot.greenFeeCents, memberRateCents: slot.memberRateCents, residentRateCents: slot.residentRateCents,
+          cartFeeCents: slot.cartFeeCents, walkingAllowed: slot.walkingAllowed,
+        } });
+      }
       continue;
     }
     if (slot.productId) {
