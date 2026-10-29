@@ -1124,6 +1124,8 @@ enum BookingEventType {
   booking_moved
   /// RES-1: staff changed a group's price at the counter (residents in the group; metadata: before/after).
   price_changed
+  /// Revamp 3 (Cam 2026-10-29): staff refunded part or all of the course's share of a paid round (lib/staff-refund).
+  round_refunded
 }
 
 enum EventActorType {
