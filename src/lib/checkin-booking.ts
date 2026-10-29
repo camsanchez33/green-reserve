@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { liveMembershipWhere, memberPlayers, splitTotal } from './member-rates';
 import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
 import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { sendCheckInReceiptEmail } from './email';
@@ -78,20 +79,23 @@ export async function cartAddOnCentsFor(booking: {
 }): Promise<number> {
   if (booking.cartSelected || booking.cartFeeTotal > 0) return 0;
   if (booking.paymentStatus === 'paid' && booking.roundPaymentIntentId) return 0;
-  let perPlayer = booking.teeTime.cartFeeCents;
+  const standard = booking.teeTime.cartFeeCents;
+  let perPlayer = standard;
+  const grace = (await prisma.course.findUnique({ where: { id: booking.courseId }, select: { memberGraceDays: true } }))?.memberGraceDays ?? 0;
   // Membership resolves the way the booking route does (member-session.ts):
   // by golfer account OR by the invite email, so an invite-only member who has
   // not accepted yet still gets their rate. Scoped to THIS course.
   const m = await prisma.courseMembership.findFirst({
     where: {
       courseId: booking.courseId,
-      status: 'active',
-      OR: [
+      // Lapsed members (past the end date + grace days) pay the public cart fee (lib/member-rates).
+      ...liveMembershipWhere(grace),
+      AND: [{ OR: [
         ...(booking.golferAccountId ? [{ golferId: booking.golferAccountId }] : []),
         ...(booking.golferEmail ? [{ inviteEmail: { equals: booking.golferEmail, mode: 'insensitive' as const } }] : []),
-      ],
+      ] }],
     },
-    include: { tier: { select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true } } },
+    include: { tier: { select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true } } },
   });
   if (m?.tier) {
     const t = m.tier;
@@ -107,8 +111,9 @@ export async function cartAddOnCentsFor(booking: {
       perPlayer = Math.round(perPlayer * (1 - t.discountPct / 100));
     }
   }
-  if (perPlayer <= 0) return 0;
-  return perPlayer * booking.players;
+  // Cam 2026-10-29: the member's own cart at their rate; guests at the public rate unless the tier includes them.
+  const total = m?.tier ? splitTotal(booking.players, memberPlayers(booking.players, m.tier), perPlayer, standard) : perPlayer * booking.players;
+  return total > 0 ? total : 0;
 }
 
 async function chargeBooking(

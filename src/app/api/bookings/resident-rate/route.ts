@@ -1,27 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getGolferMembership, getMemberSession, golferResident } from '@/lib/member-session';
+import { applyTierRates } from '@/lib/tier-rates';
+import { membershipLive } from '@/lib/member-rates';
 
-// RES-1: what the booking page shows a signed-in resident before they book —
-// the same rule POST /api/bookings applies (one player at the resident rate,
-// never on top of a member rate). Says nothing to anyone else.
+// What the booking page shows the signed-in golfer before they book — the same
+// rules POST /api/bookings applies, so the page can't show one price and charge
+// another:
+//  • a live membership with a tier (golfer session first, then the member sign-in
+//    cookie): the member's own spot at the member rate, guests at the public rate
+//    unless the tier includes them (Cam 2026-10-29, lib/member-rates);
+//  • otherwise RES-1: one player at the resident rate when their card is good.
+// Says nothing to anyone else.
 export async function GET(req: NextRequest) {
   const teeTimeId = req.nextUrl.searchParams.get('teeTimeId') ?? '';
-  const none = NextResponse.json({ residentGreenFee: null });
+  const none = NextResponse.json({ residentGreenFee: null, member: null });
   if (!teeTimeId) return none;
-  const tt = await prisma.teeTime.findUnique({ where: { id: teeTimeId }, select: { courseId: true, date: true, residentRateCents: true } });
-  if (!tt || tt.residentRateCents == null) return none;
-  const membership = await getGolferMembership(tt.courseId);
-  if (membership) {
-    const m = await prisma.courseMembership.findUnique({ where: { id: membership.membershipId }, select: { tierId: true } });
-    if (m?.tierId) return none; // the member rate applies instead
+  const tt = await prisma.teeTime.findUnique({
+    where: { id: teeTimeId },
+    select: { courseId: true, date: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true } } },
+  });
+  if (!tt) return none;
+  const grace = tt.course.memberGraceDays;
+
+  let tier: { name: string; guestsPayMemberRate: boolean; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; cartFeeWeekendCents: number | null; discountPct: number | null } | null = null;
+  const golferMembership = await getGolferMembership(tt.courseId, grace);
+  if (golferMembership) {
+    const m = await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } });
+    tier = m?.tier ?? null;
   }
-  // The member sign-in cookie wins at booking too (POST /api/bookings).
-  const memberSession = await getMemberSession();
-  if (memberSession && memberSession.courseId === tt.courseId) {
-    const m = await prisma.courseMembership.findUnique({ where: { id: memberSession.membershipId }, select: { tierId: true, status: true } });
-    if (m?.tierId && m.status === 'active') return none;
+  if (!tier) {
+    // The member sign-in cookie applies when the golfer session found no member rate (POST /api/bookings).
+    const memberSession = await getMemberSession();
+    if (memberSession && memberSession.courseId === tt.courseId) {
+      const m = await prisma.courseMembership.findUnique({ where: { id: memberSession.membershipId }, include: { tier: true } });
+      if (m && m.courseId === tt.courseId && membershipLive(m, grace)) tier = m.tier;
+    }
   }
-  if (!(await golferResident(tt.courseId, tt.date))) return none;
-  return NextResponse.json({ residentGreenFee: tt.residentRateCents / 100 });
+  if (tier) {
+    const rates = applyTierRates(tt, tier);
+    return NextResponse.json({
+      residentGreenFee: null,
+      member: { name: tier.name, greenFee: rates.greenFeeCents / 100, cartFee: rates.cartFeeCents / 100, guestsMemberRate: tier.guestsPayMemberRate },
+    });
+  }
+  if (tt.residentRateCents == null || !(await golferResident(tt.courseId, tt.date))) return none;
+  return NextResponse.json({ residentGreenFee: tt.residentRateCents / 100, member: null });
 }

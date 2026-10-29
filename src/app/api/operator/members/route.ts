@@ -212,7 +212,8 @@ export async function PATCH(req: NextRequest) {
   if (action === 'mark_paid') {
     // Cash/check at the pro shop — record it, no charge made.
     const termMonths = membership.tier?.termMonths ?? 12;
-    const base = membership.expiresAt && membership.expiresAt.getTime() > Date.now() ? new Date(membership.expiresAt) : new Date();
+    // A first payment starts today; only a renewal extends from the end date (Cam 2026-10-29).
+    const base = membership.lastPaidAt && membership.expiresAt && membership.expiresAt.getTime() > Date.now() ? new Date(membership.expiresAt) : new Date();
     const newExpiry = new Date(base);
     newExpiry.setMonth(newExpiry.getMonth() + termMonths);
     const updated = await prisma.courseMembership.update({

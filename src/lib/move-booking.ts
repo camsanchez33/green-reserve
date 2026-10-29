@@ -33,6 +33,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
+import { memberPlayers, splitTotal } from './member-rates';
 import { groupGreenFee } from './residents';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
@@ -157,6 +158,8 @@ export async function moveBooking(opts: {
 
       // ── price ──
       let rate = { greenFeeCents: slot.greenFeeCents, cartFeeCents: slot.cartFeeCents };
+      // Cam 2026-10-29: how many of the group pay the member rate (the member alone unless the tier includes guests).
+      let memberN = 0;
       if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') {
         // Tier names aren't unique in the schema: take the oldest ACTIVE tier of
         // that name so the answer is deterministic (a tierId on Booking is the
@@ -166,13 +169,14 @@ export async function moveBooking(opts: {
           ? applyTierRates(slot, tier)
           // A member rate whose tier is gone: keep what they paid per player.
           : { greenFeeCents: Math.round(b.greenFeeTotal / b.players), cartFeeCents: b.cartSelected ? Math.round(b.cartFeeTotal / b.players) : slot.cartFeeCents };
+        memberN = tier ? memberPlayers(b.players, tier) : b.players;
       }
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
       const residents = groupGreenFee(b.players, rate.greenFeeCents, opts.residentPlayers ?? b.residentPlayers, slot.residentRateCents);
-      const newGreen = residents.greenFeeTotal;
+      const newGreen = memberN ? splitTotal(b.players, memberN, rate.greenFeeCents, slot.greenFeeCents) : residents.greenFeeTotal;
       // CART-1: a group moved onto a cart-only time takes a cart there.
       const cartOn = b.cartSelected || slot.walkingAllowed === false;
-      const newCart = cartOn ? rate.cartFeeCents * b.players : 0;
+      const newCart = cartOn ? (memberN ? splitTotal(b.players, memberN, rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * b.players) : 0;
       const range = Math.round(b.rangeBallsTotal);
       const access = Math.round(b.accessFeeTotal); // per-player amount unchanged: same players
       // A round already paid (admin "collect payment" before check-in) keeps its

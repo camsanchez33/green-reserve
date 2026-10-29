@@ -85,7 +85,15 @@ async function main() {
   const m2 = await slot(c.id, '2026-10-24', '08:00', { green: 8000 }); // Sat, $80
   const member = await book(c.id, m1.id, { green: 4000, rate: 'Gold' });
   await moveBooking({ bookingId: member.id, newTeeTimeId: m2.id, courseId: c.id, pricing: 'new_slot', actor: STAFF, now: NOW });
-  check('a member is repriced at their tier rate, not the public one', (await bk(member.id))?.greenFeeTotal === 6400 * 2, String((await bk(member.id))?.greenFeeTotal));
+  // Cam 2026-10-29: the member pays the tier rate, their guest the public rate (tier default).
+  check('a member is repriced at their tier rate, their guest at the public one', (await bk(member.id))?.greenFeeTotal === 6400 + 8000, String((await bk(member.id))?.greenFeeTotal));
+  // …and a tier whose guests pay the member rate reprices the whole group at it.
+  await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Club', discountPct: 20, guestsPayMemberRate: true } });
+  const cl1 = await slot(c.id, '2026-10-22', '08:10');
+  const cl2 = await slot(c.id, '2026-10-24', '08:10', { green: 8000 });
+  const club = await book(c.id, cl1.id, { green: 4000, rate: 'Club' });
+  await moveBooking({ bookingId: club.id, newTeeTimeId: cl2.id, courseId: c.id, pricing: 'new_slot', actor: STAFF, now: NOW });
+  check('a tier with guests at the member rate reprices everyone at it', (await bk(club.id))?.greenFeeTotal === 6400 * 2, String((await bk(club.id))?.greenFeeTotal));
 
   // 3b. Tier lookup: an inactive tier of the same name is ignored; the oldest active wins.
   await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Silver', discountPct: 50, active: false } });
@@ -94,7 +102,7 @@ async function main() {
   const s2 = await slot(c.id, '2026-10-22', '09:30');
   const silver = await book(c.id, s1.id, { green: 4500, rate: 'Silver' });
   await moveBooking({ bookingId: silver.id, newTeeTimeId: s2.id, courseId: c.id, pricing: 'new_slot', actor: { type: 'golfer' }, now: NOW });
-  check('an inactive tier of the same name is ignored', (await bk(silver.id))?.greenFeeTotal === 4500 * 2);
+  check('an inactive tier of the same name is ignored', (await bk(silver.id))?.greenFeeTotal === 4500 + 5000, String((await bk(silver.id))?.greenFeeTotal));
 
   // 3c. A round already paid keeps its price, whatever the pricing asked for.
   const p1 = await slot(c.id, '2026-10-22', '12:00');

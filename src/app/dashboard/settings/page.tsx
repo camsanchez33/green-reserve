@@ -75,7 +75,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
   ],
   'Course layout': [],
   'Booking rules': [
-    'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'minPlayers', 'maxPlayers', 'dresscode',
+    'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'memberGraceDays', 'minPlayers', 'maxPlayers', 'dresscode',
     'walkingAllowed', 'walkingNote', 'cartRequired',
   ],
   'Prices & fees': [
@@ -621,7 +621,7 @@ function SettingsPageInner() {
                   )}
                   <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>
                 </Field>
-                <Field label="Gift Card URL" hint="Paste the URL to where golfers can buy gift cards (your website, Square, etc.). An optional button will appear on your course page.">
+                <Field label="Gift Card URL" hint="Where golfers buy gift cards. Adds a button to your course page.">
                   <FInput value={(form.giftCardUrl as string)||''} onChange={v=>set('giftCardUrl',v)} placeholder="https://"/>
                 </Field>
               </SectionCard>
@@ -738,6 +738,11 @@ function SettingsPageInner() {
                   {!!form.hasMemberPricing && (
                     <Field label="Days ahead members can book" hint="Each membership can set its own on Members.">
                       <FInput value={form.memberAdvanceDays as number} onChange={v=>set('memberAdvanceDays',Number(v))} type="number"/>
+                    </Field>
+                  )}
+                  {!!form.hasMemberPricing && (
+                    <Field label="Days member rates last after it ends">
+                      <FInput value={(form.memberGraceDays as number) ?? 0} onChange={v=>set('memberGraceDays',Number(v))} type="number"/>
                     </Field>
                   )}
                 </div>

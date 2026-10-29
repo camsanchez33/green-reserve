@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 577,
+    "files": 578,
     "routes": 269,
-    "libs": 199,
+    "libs": 200,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3667,7 +3667,7 @@
     },
     {
       "path": "src/app/api/bookings/resident-rate/route.ts",
-      "lines": 28,
+      "lines": 50,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3681,18 +3681,20 @@
       "methods": [
         "GET"
       ],
-      "auth": "member",
-      "guard": "file",
+      "auth": "public",
+      "guard": "public",
       "imports": [
+        "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/prisma",
+        "@/lib/tier-rates",
         "next/server"
       ],
       "usedBy": []
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 408,
+      "lines": 416,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3724,6 +3726,7 @@
         "@/lib/course-time",
         "@/lib/demo-courses",
         "@/lib/email",
+        "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
         "@/lib/prisma",
@@ -4922,7 +4925,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "lines": 114,
+      "lines": 119,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4942,6 +4945,7 @@
         "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/course-time",
+        "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
         "@/lib/prisma",
@@ -4979,7 +4983,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 158,
+      "lines": 160,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5749,7 +5753,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 291,
+      "lines": 292,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6976,7 +6980,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 130,
+      "lines": 133,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7332,7 +7336,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 734,
+      "lines": 745,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7363,6 +7367,7 @@
         "@/components/TrustNote",
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
+        "@/lib/member-rates",
         "@stripe/react-stripe-js",
         "@stripe/stripe-js",
         "@stripe/stripe-js/pure",
@@ -7730,7 +7735,7 @@
     },
     {
       "path": "src/app/courses/[slug]/member/page.tsx",
-      "lines": 868,
+      "lines": 874,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7746,6 +7751,7 @@
       "guard": "NONE FOUND",
       "imports": [
         "@/components/ui/StatusDot",
+        "@/lib/member-rates",
         "@/lib/residents",
         "lucide-react",
         "next/link",
@@ -8004,7 +8010,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 772,
+      "lines": 777,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8280,7 +8286,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1134,
+      "lines": 1139,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14746,7 +14752,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 503,
+      "lines": 508,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14777,6 +14783,7 @@
         "./booking-events",
         "./booking-fees",
         "./email",
+        "./member-rates",
         "./no-show-fee",
         "./prisma",
         "./reader-rounds",
@@ -18311,8 +18318,50 @@
       ]
     },
     {
+      "path": "src/lib/member-rates.ts",
+      "lines": 45,
+      "purpose": "Cam 2026-10-29 (Revamp 3 audit, fixes 1 and 2 — \"up to course\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "liveMembershipWhere",
+          "kind": "fn"
+        },
+        {
+          "name": "memberPlayers",
+          "kind": "fn"
+        },
+        {
+          "name": "membershipLive",
+          "kind": "fn"
+        },
+        {
+          "name": "splitTotal",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/bookings/resident-rate/route.ts",
+        "src/app/api/bookings/route.ts",
+        "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/app/book/BookClient.tsx",
+        "src/app/courses/[slug]/member/page.tsx",
+        "src/lib/checkin-booking.ts",
+        "src/lib/member-session.ts",
+        "src/lib/move-booking.ts"
+      ]
+    },
+    {
       "path": "src/lib/member-session.ts",
-      "lines": 110,
+      "lines": 116,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -18353,6 +18402,7 @@
       "imports": [
         "./auth",
         "./course-group",
+        "./member-rates",
         "./prisma",
         "./residents",
         "jose",
@@ -18646,7 +18696,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 232,
+      "lines": 236,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -18680,6 +18730,7 @@
         "./booking-events",
         "./cancel-policy",
         "./course-time",
+        "./member-rates",
         "./prisma",
         "./residents",
         "./tier-rates",
@@ -20892,7 +20943,7 @@
     },
     {
       "path": "src/lib/settings-validation.ts",
-      "lines": 141,
+      "lines": 142,
       "purpose": "SD-1.",
       "brain": [],
       "exports": [
@@ -22050,6 +22101,7 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/lib/move-booking.ts",
@@ -23986,6 +24038,10 @@
           "type": "Boolean"
         },
         {
+          "name": "memberGraceDays",
+          "type": "Int"
+        },
+        {
           "name": "confirmationNote",
           "type": "String?"
         },
@@ -24268,6 +24324,7 @@
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/card-reader.ts",
+        "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
         "src/lib/course-events.ts",
         "src/lib/course-group.ts",
@@ -25988,6 +26045,10 @@
         {
           "name": "notes",
           "type": "String"
+        },
+        {
+          "name": "guestsPayMemberRate",
+          "type": "Boolean"
         },
         {
           "name": "active",

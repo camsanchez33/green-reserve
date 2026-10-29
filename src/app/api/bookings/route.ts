@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { applyTierRates } from '@/lib/tier-rates';
+import { membershipLive, memberPlayers, splitTotal } from '@/lib/member-rates';
 import { groupGreenFee } from '@/lib/residents';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
   const golferSession = await getGolferSession();
   let appliedRate = 'standard';
   let appliedTierName = 'standard';
+  let appliedTier: { guestsPayMemberRate: boolean } | null = null;
 
   // Prefetch the tee time + course data (outside the claim transaction — rates
   // are stable; the claim transaction re-reads capacity under serializable isolation)
@@ -94,7 +96,7 @@ export async function POST(req: NextRequest) {
   if (golferSession) {
     // G5b: matches by direct golferId link OR the golfer's OTP-verified email
     // against an invite-only membership — same recognition as the course page.
-    const golferMembership = await getGolferMembership(teeTimeFull.courseId);
+    const golferMembership = await getGolferMembership(teeTimeFull.courseId, teeTimeFull.course.memberGraceDays);
     const membership = golferMembership
       ? await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } })
       : null;
@@ -105,6 +107,7 @@ export async function POST(req: NextRequest) {
       resolvedCartFeeOverride  = rates.cartFeeCents;
       appliedTierName = membership.tier.name;
       appliedRate     = membership.tier.name;
+      appliedTier     = membership.tier;
     }
   }
   if (!resolvedGreenFeeOverride) {
@@ -114,13 +117,16 @@ export async function POST(req: NextRequest) {
         where: { id: memberSession.membershipId },
         include: { tier: true },
       });
-      if (membership && membership.status === 'active' && !viewerMembership) viewerMembership = { tier: membership.tier };
-      if (membership?.tier && membership.status === 'active') {
-        const rates = applyTierRates(teeTimeFull, membership.tier);
+      // A lapsed membership (past its end date + the course's grace days) gets public rates and the public window.
+      const live = !!membership && membership.courseId === teeTimeFull.courseId && membershipLive(membership, teeTimeFull.course.memberGraceDays);
+      if (live && !viewerMembership) viewerMembership = { tier: membership!.tier };
+      if (live && membership!.tier) {
+        const rates = applyTierRates(teeTimeFull, membership!.tier);
         resolvedGreenFeeOverride = rates.greenFeeCents;
         resolvedCartFeeOverride  = rates.cartFeeCents;
-        appliedTierName = membership.tier.name;
-        appliedRate     = membership.tier.name;
+        appliedTierName = membership!.tier.name;
+        appliedRate     = membership!.tier.name;
+        appliedTier     = membership!.tier;
       }
     }
   }
@@ -145,6 +151,8 @@ export async function POST(req: NextRequest) {
   // there is no float in the money path at all.
   const greenFeePerPlayerCents = resolvedGreenFeeOverride ?? teeTimeFull.greenFeeCents;
   const cartFeePerPlayerCents  = resolvedCartFeeOverride  ?? teeTimeFull.cartFeeCents;
+  // Cam 2026-10-29: the member pays the member rate; guests pay the public rate unless the tier says otherwise.
+  const memberN = memberPlayers(players, appliedTier);
   // A cart is required when this tee time can't be walked (its price-table cell, CART-1).
   const wantsCart = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
 
@@ -153,9 +161,9 @@ export async function POST(req: NextRequest) {
   const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null
     ? await golferResident(teeTimeFull.courseId, teeTimeFull.date) : null;
   const priced = groupGreenFee(players, greenFeePerPlayerCents, resident ? 1 : 0, teeTimeFull.residentRateCents);
-  const greenFeeTotal  = priced.greenFeeTotal;
+  const greenFeeTotal  = appliedTier ? splitTotal(players, memberN, greenFeePerPlayerCents, teeTimeFull.greenFeeCents) : priced.greenFeeTotal;
   if (priced.residentPlayers > 0) appliedRate = 'resident';
-  const cartFeeTotal   = wantsCart ? cartFeePerPlayerCents * players : 0;
+  const cartFeeTotal   = wantsCart ? (appliedTier ? splitTotal(players, memberN, cartFeePerPlayerCents, teeTimeFull.cartFeeCents) : cartFeePerPlayerCents * players) : 0;
 
   let rangeBallsTotal = 0;
   const ballsSize = String(rangeBallsSize || '');

@@ -6,6 +6,7 @@ import { getMemberSession, getGolferMembership, golferResident } from '@/lib/mem
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 import { rulesFor, walkingAllowedAt } from '@/lib/booking-rules';
 import { applyTierRates } from '@/lib/tier-rates';
+import { membershipLive } from '@/lib/member-rates';
 
 export async function GET(
   req: NextRequest,
@@ -25,7 +26,7 @@ export async function GET(
     if (course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     membershipId = session.membershipId;
   } else {
-    const golferMembership = await getGolferMembership(course.id);
+    const golferMembership = await getGolferMembership(course.id, course.memberGraceDays);
     if (!golferMembership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     membershipId = golferMembership.membershipId;
   }
@@ -37,12 +38,14 @@ export async function GET(
   // Booking applies member rates and the member window only to an active
   // membership (api/bookings), so this list does too — otherwise a lapsed
   // member sees a member rate and is charged the public one.
+  // Lapsed (past its end date + the course's grace days, lib/member-rates): public rates and window, as booking charges.
   const tier = membership && membership.courseId === course.id ? membership.tier : null;
-  const pricingTier = membership?.status === 'active' ? tier : null;
+  const live = !!membership && membership.courseId === course.id && membershipLive(membership, course.memberGraceDays);
+  const pricingTier = live ? tier : null;
 
   // BOOKING WINDOWS: a member sees as far ahead as their tier allows (the
   // course's member default when the tier does not say).
-  const win = windowFor(course, membership?.status === 'active' ? { tier } : null);
+  const win = windowFor(course, live ? { tier } : null);
   if (!withinWindow(date, win.days)) {
     return NextResponse.json(outsideWindowBody(win.days, win.scope, course), { status: 403 });
   }
@@ -104,6 +107,8 @@ export async function GET(
         max_players: rules.maxPlayers,
         status: slotStatus,
         has_member_rate: hasMemberRate,
+        // Cam 2026-10-29: whether the rest of the group pays the member rate too (else the public green_fee).
+        guests_member_rate: !!pricingTier?.guestsPayMemberRate,
         // What the signed-in golfer pays for their own spot as a resident (one
         // player); null when the resident rate doesn't apply to this time.
         resident_green_fee: resident && t.residentRateCents != null ? centsToDollarsOr0(t.residentRateCents) : null,

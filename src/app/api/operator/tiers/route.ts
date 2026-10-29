@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
-          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes } = body;
+          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
   // ACT-1 review: a booking records its tier by NAME, so two live tiers with one
@@ -57,6 +57,8 @@ export async function POST(req: NextRequest) {
       // Security review: this now sizes the tee-time generation loop — bounded like the course windows.
       advanceBookingDays: advanceBookingDays != null ? Math.min(365, Math.max(1, Number(advanceBookingDays) || 14)) : 14,
       guestPassesPerYear: guestPassesPerYear != null ? Number(guestPassesPerYear) : 0,
+      // Cam 2026-10-29: off = only the member gets the member rate (lib/member-rates).
+      guestsPayMemberRate: guestsPayMemberRate === true,
       annualFeeCents:     dollarsToCentsOr0(annualFee),
       initiationFeeCents: dollarsToCentsOr0(initiationFee),
       termMonths:         termMonths         != null ? Number(termMonths)         : 12,
@@ -95,6 +97,7 @@ export async function PATCH(req: NextRequest) {
       discountPct:        updates.discountPct        !== undefined ? (updates.discountPct     != null ? Number(updates.discountPct)     : null) : tier.discountPct,
       advanceBookingDays: updates.advanceBookingDays != null ? Math.min(365, Math.max(1, Number(updates.advanceBookingDays) || tier.advanceBookingDays)) : tier.advanceBookingDays,
       guestPassesPerYear: updates.guestPassesPerYear != null ? Number(updates.guestPassesPerYear) : tier.guestPassesPerYear,
+      guestsPayMemberRate: typeof updates.guestsPayMemberRate === 'boolean' ? updates.guestsPayMemberRate : tier.guestsPayMemberRate,
       annualFeeCents:     updates.annualFee     != null ? dollarsToCentsOr0(updates.annualFee)     : tier.annualFeeCents,
       initiationFeeCents: updates.initiationFee != null ? dollarsToCentsOr0(updates.initiationFee) : tier.initiationFeeCents,
       termMonths:         updates.termMonths         != null ? Number(updates.termMonths)         : tier.termMonths,
