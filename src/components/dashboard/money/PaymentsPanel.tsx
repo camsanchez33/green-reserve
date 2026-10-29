@@ -15,7 +15,7 @@ type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 /** One plain status per booking, in the words staff use at the counter. */
-export function paymentStatus(b: MoneyBooking, today: string): { label: string; tone: Tone; group: 'paid' | 'unpaid' | 'cancelled' | 'refunded' | 'upcoming' } {
+export function paymentStatus(b: MoneyBooking, today: string, clock = '99:99'): { label: string; tone: Tone; group: 'paid' | 'unpaid' | 'noshow' | 'cancelled' | 'refunded' | 'upcoming' } {
   if (b.status === 'cancelled') return b.paymentStatus === 'cancellation_fee_charged'
     ? { label: `Cancelled · ${usd(b.cancellationFeeTotal)} fee kept`, tone: 'warn', group: 'cancelled' }
     : { label: 'Cancelled, no fee', tone: 'neutral', group: 'cancelled' };
@@ -23,18 +23,24 @@ export function paymentStatus(b: MoneyBooking, today: string): { label: string; 
   if (b.paymentStatus === 'paid') return { label: 'Paid by card', tone: 'ok', group: 'paid' };
   if (b.paymentStatus === 'paid_offline') return { label: 'Paid at the counter', tone: 'ok', group: 'paid' };
   if (b.paymentStatus === 'refunded') return { label: 'Refunded', tone: 'neutral', group: 'refunded' };
-  if (b.teeTime.date > today) return { label: 'Not played yet', tone: 'neutral', group: 'upcoming' };
-  if (b.noShowAt) return { label: b.paymentStatus === 'cancellation_fee_charged' ? `No-show · ${usd(b.cancellationFeeTotal)} hold kept` : 'No-show', tone: 'bad', group: 'unpaid' };
+  // Still to play — later today counts too (course time), not only future days.
+  if (b.teeTime.date > today || (b.teeTime.date === today && b.teeTime.time.slice(0, 5) > clock)) return { label: 'Not played yet', tone: 'neutral', group: 'upcoming' };
+  // A marked no-show is its own list, never mixed in with what's owed (lib/analytics outstanding).
+  if (b.noShowAt) return { label: b.paymentStatus === 'cancellation_fee_charged' ? `No-show · ${usd(b.cancellationFeeTotal)} hold kept` : 'No-show', tone: 'bad', group: 'noshow' };
   if (b.paymentStatus === 'cancellation_fee_charged') return { label: `Not paid yet · ${usd(b.cancellationFeeTotal)} hold taken`, tone: 'warn', group: 'unpaid' };
   return { label: 'Not paid yet', tone: 'warn', group: 'unpaid' };
 }
 
-const FILTERS = [['all', 'All'], ['paid', 'Paid'], ['unpaid', 'Not paid yet'], ['cancelled', 'Cancelled']] as const;
+const FILTERS = [['all', 'All'], ['paid', 'Paid'], ['unpaid', 'Not paid yet'], ['noshow', 'No-shows'], ['cancelled', 'Cancelled']] as const;
 type Filter = typeof FILTERS[number][0];
 const DAYS_SHOWN = 14;
 
-export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter = 'all' }: {
+export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter = 'all', courseNow, capped = false }: {
+  /** The played-rounds feed came back full: older rounds aren't in this list. */
+  capped?: boolean;
   bookings: MoneyBooking[];
+  /** The course's today and HH:MM (Money's overview); the browser's day until it loads. */
+  courseNow?: { today: string; clock: string };
   /** Money's "See them" opens this tab on Not paid yet (?show=unpaid). */
   initialFilter?: Filter;
   dateFilter: string;
@@ -43,11 +49,12 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<Filter>(initialFilter);
   const [showAll, setShowAll] = useState(false);
-  const today = new Date().toLocaleDateString('en-CA');
+  const today = courseNow?.today ?? new Date().toLocaleDateString('en-CA');
+  const clock = courseNow?.clock ?? '99:99';
   const q = search.trim().toLowerCase();
 
   const rows = bookings
-    .map(b => ({ b, s: paymentStatus(b, today) }))
+    .map(b => ({ b, s: paymentStatus(b, today, clock) }))
     .filter(({ b, s }) => {
       if (!dateFilter && s.group === 'upcoming') return false; // future rounds belong to the tee sheet
       if (q && !b.golferName.toLowerCase().includes(q) && !b.golferEmail.toLowerCase().includes(q)) return false;
@@ -81,7 +88,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
 
       {rows.length === 0 ? (
         <Card className="py-12 text-center text-ink-soft text-[13.5px]">
-          {q || filter !== 'all' ? 'Nothing matches that.' : dateFilter ? `No bookings on ${fmtDate(dateFilter)}.` : 'No rounds played yet. Payments show here once golfers have played.'}
+          {q || filter !== 'all' ? 'Nothing matches that.' : dateFilter ? `No bookings on ${fmtDate(dateFilter)}.` : 'No rounds played yet.'}
         </Card>
       ) : (
         <div className="space-y-4">
@@ -108,7 +115,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
           {visibleDays.length < days.length && (
             <button onClick={() => setShowAll(true)} className="w-full py-2.5 text-[13px] font-medium text-pine hover:underline">Show older days ({days.length - visibleDays.length} more)</button>
           )}
-          <p className="text-[12.5px] text-ink-muted">Latest 200 bookings · your course’s share, without GreenReserve’s booking fee</p>
+          <p className="text-[12.5px] text-ink-muted">{capped ? 'Last 1,000 played rounds · ' : ''}Your course’s share, without GreenReserve’s booking fee</p>
         </div>
       )}
     </>

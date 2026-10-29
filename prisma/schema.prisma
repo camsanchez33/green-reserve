@@ -142,6 +142,9 @@ model Course {
   /// Cam 2026-10-27: made with Admin -> Create course and no inquiry. Such a course
   /// has no inquiry on purpose, so it is never "orphaned" and the orphan sweep skips it.
   builtByHand                Boolean               @default(false)
+  /// Cam 2026-10-29: member rates and the member booking window end this many days after a
+  /// membership's expiry date (0 = on expiry). lib/member-rates.ts.
+  memberGraceDays            Int                   @default(0)
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
   confirmationNote           String?
@@ -390,6 +393,9 @@ model MembershipTier {
   initiationFeeCents   Int                @default(0) // one-time, charged with the first dues payment
   termMonths           Int                @default(12)
   notes                String             @default("")
+  /// Cam 2026-10-29 ("up to course"): whether the member's guests in the same booking also pay
+  /// the member rate. Off: the member pays the member rate, everyone else the public rate.
+  guestsPayMemberRate  Boolean            @default(false)
   active               Boolean            @default(true)
   createdAt            DateTime           @default(now())
   memberships          CourseMembership[]
@@ -620,6 +626,11 @@ model Booking {
   /// standard (or member) rate; greenFeeTotal already includes both.
   residentPlayers            Int               @default(0)
   residentRateCents          Int?
+  /// Cam 2026-10-29: a member's own spot when the group's guests pay the public
+  /// rate (lib/member-rates partyFees) — green and cart per player. Null = every
+  /// player in the group pays the same (no member, or the tier includes guests).
+  memberRateCents            Int?
+  memberCartCents            Int?
   createdAt                  DateTime          @default(now())
   paymentEvents              PaymentEvent[]
   shopItems                  BookingShopItem[]
@@ -675,6 +686,9 @@ model Blackout {
   course   Course @relation(fields: [courseId], references: [id])
   date     String
   reason   String @default("")
+  /// Revamp 3 fix 11 (Cam 2026-10-29): the times this closure blocked in place (they
+  /// held bookings). Reopening unblocks only these — never a time staff blocked by hand.
+  blockedTeeTimeIds String[] @default([])
 }
 
 model TeeTimeAlert {
@@ -1355,6 +1369,9 @@ model ShopSale {
   taxCents         Int            @default(0)
   taxCalculationId String         @default("")
   taxTransactionId String         @default("")
+  /// Cam 2026-10-29: a cash sale rung up while Stripe Tax couldn't be reached —
+  /// taken with no tax rather than blocked (cash is never blocked).
+  taxUnavailable   Boolean        @default(false)
   customerName     String         @default("")
   customerPhone    String         @default("")
   customerEmail    String         @default("")

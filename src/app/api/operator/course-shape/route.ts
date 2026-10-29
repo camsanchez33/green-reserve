@@ -3,6 +3,9 @@ import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { planCourseSetup, applyCourseSetup, type SetupInput } from '@/lib/course-shape-setup';
 
+// A schedule change rebuilds every bookable day (lib/tee-sheet-engine regenerateUpcoming), up to a year ahead.
+export const maxDuration = 120;
+
 // W2-6: set the course's shape — its nines and the rounds golfers can book —
 // in one save. `preview: true` says what would change and writes nothing.
 // The owner's alone, like the rest of the course layout.

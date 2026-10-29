@@ -30,7 +30,7 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
     if (b.status !== 'confirmed' || b.checkedInAt) return fail(409, 'This group is already checked in — its price can’t change now.');
     if (b.noShowAt) return fail(409, 'This group is marked a no-show. Use "Still coming" first.');
     if (b.paymentStatus === 'paid' || b.paidOffline || b.roundPaymentIntentId || b.shopLockedAt) return fail(409, 'This round is already paid or being paid — its price can’t change now.');
-    if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') return fail(409, `This group is booked at the ${b.appliedRate} member rate, which already applies to everyone.`);
+    if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') return fail(409, `This group is booked at the ${b.appliedRate} member rate — residents don’t combine with it.`);
     if (b.teeTime.residentRateCents == null) return fail(409, 'This tee time has no resident price. Set one in Schedule.');
     if (n === b.residentPlayers) return { ok: true, residentPlayers: n, greenFeeTotal: b.greenFeeTotal, totalAmount: b.totalAmount };
 

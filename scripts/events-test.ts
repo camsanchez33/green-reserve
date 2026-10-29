@@ -1,7 +1,7 @@
 // W2-9 Events, the pure parts: the shotgun hold window, which event holds a
 // time, pairing players in list order, reading a pasted player list, and the
 // "Run events" permission. Run: npx tsx scripts/events-test.ts
-import { shotgunWindow, autoPairings, parsePlayers, dueFor, DEFAULT_TASKS } from '../src/lib/course-events';
+import { shotgunWindow, autoPairings, parsePlayers, dueFor, DEFAULT_TASKS, shotgunLabels, groupStartTime } from '../src/lib/course-events';
 import { heldBy, type HoldEvent } from '../src/lib/event-hold';
 import { PRESETS, LEGACY_KEYS, ALL_KEYS } from '../src/lib/staff-permissions';
 
@@ -55,6 +55,14 @@ check('"Run events" is in the catalog', (ALL_KEYS as string[]).includes('events.
 check('the Manager preset runs events', (preset('manager') as string[]).includes('events.manage'), PRESETS.map(p => p.key));
 check('Front desk does not', !(preset('front_desk') as string[]).includes('events.manage'));
 check('legacy staff (pre-SP-A) do not', !(LEGACY_KEYS as string[]).includes('events.manage'));
+
+// Revamp 3 fix 10: 36 groups on 18 holes start 1A…18A then 1B…18B; a hole with one group is just its number.
+const big = autoPairings(Array.from({ length: 144 }, (_, i) => ({ id: `p${i}` })), 4, true, 18);
+const groups = [...new Map(big.map(p => [p.groupNo, { groupNo: p.groupNo, startHole: p.startHole }])).values()];
+const lbl = shotgunLabels(groups);
+check('a full-field shotgun splits shared holes A/B', groups.length === 36 && lbl.get(1) === '1A' && lbl.get(19) === '1B' && lbl.get(36) === '18B' && new Set(lbl.values()).size === 36, [...lbl.entries()].slice(0, 3));
+check('…a hole with one group reads its number', shotgunLabels([{ groupNo: 1, startHole: 1 }, { groupNo: 2, startHole: 2 }]).get(2) === '2');
+check('a tee-times group past the times held gets no time, never the first one again', groupStartTime(6, ['15:00', '15:10', '15:20', '15:30', '15:40']) === null && groupStartTime(2, ['15:00', '15:10']) === '15:10');
 
 if (failed) { console.log(`\n${failed} FAILED`); process.exit(1); }
 console.log('\nALL PASS');

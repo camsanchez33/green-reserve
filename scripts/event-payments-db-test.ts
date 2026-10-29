@@ -9,7 +9,7 @@ import { prisma } from '../src/lib/prisma';
 import { stripe } from '../src/lib/stripe';
 import {
   recordCoursePayment, createPayLink, settleOpenPayment, chargeEventPayment, refundPayment, sendRefund, voidOpenLinks,
-  reconcileStuckPayments, eventMoney, eventFeeFor, toCents, playerPayState, STALE_CHARGE_MS,
+  reconcileStuckPayments, eventMoney, eventFeeFor, toCents, playerPayState, playerPaymentsWhere, STALE_CHARGE_MS,
 } from '../src/lib/event-payments';
 import { EVENT_FEE_ON } from '../src/lib/booking-fees';
 
@@ -208,6 +208,20 @@ async function main() {
   check('a player paid at the course is recorded against them, no fee', tr2.ok && toms.length === 1 && toms[0].kind === 'player' && toms[0].method === 'cash' && toms[0].payerName === 'Tom Lee' && playerPayState(toms) === 'paid');
   await prisma.courseEventPlayer.delete({ where: { id: tom.id } });
   check('removing a player keeps the money they paid on the event', (await prisma.courseEventPayment.findUniqueOrThrow({ where: { id: toms[0].id } })).playerId === null);
+  // Revamp 3 fix 10: a captain pays at the course for the whole sign-up — every player in it reads paid.
+  const gk = 'team-' + ev.id;
+  const cap = await prisma.courseEventPlayer.create({ data: { eventId: ev.id, name: 'Al Captain', groupKey: gk } });
+  const mates = await Promise.all([1, 2, 3].map(i => prisma.courseEventPlayer.create({ data: { eventId: ev.id, name: `Team Player ${i}`, groupKey: gk } })));
+  const teamPay = await recordCoursePayment(course.id, ev.id, { playerId: cap.id, amount: '500', method: 'cash', forGroup: true }, 'x');
+  const theirsOf = (p: { id: string; groupKey: string }) => prisma.courseEventPayment.findMany({ where: playerPaymentsWhere(ev.id, p), select: { status: true, amountCents: true, refundedCents: true } });
+  const states = await Promise.all([cap, ...mates].map(async p => playerPayState(await theirsOf(p))));
+  check('a captain\'s payment for the sign-up covers all four', teamPay.ok && states.every(x => x === 'paid'), states);
+  check('…so a teammate can\'t be recorded paying again', /already paid/.test(((await recordCoursePayment(course.id, ev.id, { playerId: mates[0].id, amount: '125', method: 'cash' }, 'x')) as { error?: string }).error ?? ''));
+  const solo = await prisma.courseEventPlayer.create({ data: { eventId: ev.id, name: 'Paid Alone', groupKey: 'team2-' + ev.id } });
+  const mate2 = await prisma.courseEventPlayer.create({ data: { eventId: ev.id, name: 'Not Yet', groupKey: 'team2-' + ev.id } });
+  await recordCoursePayment(course.id, ev.id, { playerId: solo.id, amount: '125', method: 'cash' }, 'x');
+  check('…and a team payment is refused when someone in it already paid', /Paid Alone has already paid/.test(((await recordCoursePayment(course.id, ev.id, { playerId: mate2.id, amount: '250', method: 'cash', forGroup: true }, 'x')) as { error?: string }).error ?? ''));
+  await prisma.courseEventPlayer.deleteMany({ where: { id: { in: [cap.id, solo.id, mate2.id, ...mates.map(m => m.id)] } } });
   await prisma.courseEventPayment.deleteMany({ where: { eventId: ev.id, kind: 'player' } }); // keep the money totals below as they were
 
   // Cancelling the event closes its open links; a link can't be paid on a cancelled event.

@@ -132,9 +132,13 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
   if (who.error) return who.error;
   const player = who.player;
   const kind = player ? 'player' : (PAY_KINDS as readonly string[]).includes(String(input.kind)) && input.kind !== 'player' ? String(input.kind) : 'other';
+  // Revamp 3 fix 10 (Cam 2026-10-29): a captain pays at the course for their whole sign-up.
+  // The payment carries the sign-up's groupKey, so it covers every player in it (playerPaymentsWhere).
+  const forGroup = !!player && input.forGroup === true && !!player.groupKey;
+  const team = forGroup ? await prisma.courseEventPlayer.findMany({ where: { eventId, groupKey: player!.groupKey, status: 'in' }, select: { id: true, name: true, groupKey: true }, orderBy: { sortOrder: 'asc' } }) : [];
   const data = {
-    eventId, courseId, kind, playerId: player?.id ?? null,
-    label: str(input.label, 80) || (player ? `${player.name} — entry` : kind === 'deposit' ? 'Deposit' : kind === 'balance' ? 'Balance' : 'Payment'),
+    eventId, courseId, kind, playerId: player?.id ?? null, ...(forGroup ? { groupKey: player!.groupKey } : {}),
+    label: str(input.label, 80) || (player ? (forGroup ? `${player.name} — entry for ${team.length}` : `${player.name} — entry`) : kind === 'deposit' ? 'Deposit' : kind === 'balance' ? 'Balance' : 'Payment'),
     amountCents, method, status: 'paid', paidAt: new Date(),
     payerName: str(input.payerName, 120) || player?.name || '', note: str(input.note, 300), createdBy: actor,
   };
@@ -145,18 +149,24 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
   // A player's own payment: under the same lock as sending them a link, and
   // never alongside one that is paid, being paid, or still open — so cash at
   // the counter and their card can't both land.
+  // For a whole sign-up, every player in it is checked the same way (locked in id order).
+  const covered = forGroup ? team : [player];
   const r = await prisma.$transaction(async tx => {
-    await tx.$queryRaw`SELECT id FROM "CourseEventPlayer" WHERE id = ${player.id} FOR UPDATE`;
-    const theirs = await tx.courseEventPayment.findMany({ where: playerPaymentsWhere(eventId, player), select: { status: true, amountCents: true, refundedCents: true } });
-    if (theirs.some(x => x.status === 'paying')) return 'paying' as const;
-    const state = playerPayState(theirs);
-    if (state !== 'none') return state;
-    return tx.courseEventPayment.create({ data });
+    for (const p of [...covered].sort((a, b) => a.id.localeCompare(b.id))) await tx.$queryRaw`SELECT id FROM "CourseEventPlayer" WHERE id = ${p.id} FOR UPDATE`;
+    for (const p of covered) {
+      const theirs = await tx.courseEventPayment.findMany({ where: playerPaymentsWhere(eventId, { id: p.id, groupKey: p.groupKey }), select: { status: true, amountCents: true, refundedCents: true } });
+      if (theirs.some(x => x.status === 'paying')) return { stop: 'paying' as const, name: p.name };
+      const state = playerPayState(theirs);
+      if (state !== 'none') return { stop: state, name: p.name };
+    }
+    return { made: await tx.courseEventPayment.create({ data }) };
   });
-  if (r === 'paying') return fail(409, `${player.name} is paying their link right now — wait a moment and refresh.`);
-  if (r === 'paid') return fail(409, `${player.name} has already paid.`);
-  if (r === 'sent') return fail(409, `${player.name} has a pay link — mark that link paid instead, so they can\u2019t pay twice.`);
-  return { ok: true, value: { id: r.id } };
+  if ('stop' in r) {
+    if (r.stop === 'paying') return fail(409, `${r.name} is paying their link right now — wait a moment and refresh.`);
+    if (r.stop === 'paid') return fail(409, `${r.name} has already paid.`);
+    return fail(409, `${r.name} has a pay link — mark that link paid instead, so they can\u2019t pay twice.`);
+  }
+  return { ok: true, value: { id: r.made.id } };
 }
 
 /** A pay link for the organizer: any amount the course chooses; a balance confirms the headcount. */

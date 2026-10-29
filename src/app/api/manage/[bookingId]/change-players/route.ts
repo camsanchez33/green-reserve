@@ -8,6 +8,7 @@ import { bookingWindowHours, rescalePartyFees } from '@/lib/cancel-policy';
 import { teeTimeInstant } from '@/lib/booking-events';
 import { isPastIn } from '@/lib/course-time';
 import { groupGreenFee, otherPerPlayerCents } from '@/lib/residents';
+import { partyFees } from '@/lib/member-rates';
 import { rulesFor, groupSizeError } from '@/lib/booking-rules';
 import { refundBookingFee } from '@/lib/booking-fee';
 
@@ -35,10 +36,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
         select: {
           id: true, checkInToken: true, golferAccountId: true, teeTimeId: true, players: true,
           status: true, cartSelected: true, rangeBallsTotal: true,
-          greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true,
+          greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
           paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, feePaidCents: true, noShowAt: true,
-          teeTime: { select: { date: true, time: true, greenFeeCents: true, product: { select: { minPlayers: true, maxPlayers: true } } } },
+          teeTime: { select: { date: true, time: true, greenFeeCents: true, cartFeeCents: true, product: { select: { minPlayers: true, maxPlayers: true } } } },
           course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true, minPlayers: true, maxPlayers: true } },
         },
       });
@@ -80,9 +81,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
         throw Object.assign(new Error(), { code: 'FULL', max: maxPlayers });
       }
 
-      // Recompute fees at the same per-player rate as the original booking
-      const perPlayerGreen = booking.players > 0 ? booking.greenFeeTotal / booking.players : 0;
-      const perPlayerCart = (booking.cartSelected && booking.players > 0) ? booking.cartFeeTotal / booking.players : 0;
+      // Recompute fees at the booking's own rates: the member's spot or the
+      // residents first, everyone else at what the booking's other players pay.
       // The booking fee keeps its per-player amount: a counter booking that
       // carries none (0) never gains one (PAY-2).
       const perPlayerAccess = booking.players > 0 ? Math.round(booking.accessFeeTotal / booking.players) : 0;
@@ -90,12 +90,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
 
       // RES-1: residents keep the resident rate (never more of them than players);
       // everyone else pays what the booking's non-residents pay.
-      const others = otherPerPlayerCents(booking);
       const res = booking.residentPlayers > 0
-        ? groupGreenFee(newPlayers, others ?? booking.teeTime.greenFeeCents, booking.residentPlayers, booking.residentRateCents)
+        ? groupGreenFee(newPlayers, otherPerPlayerCents(booking) ?? booking.teeTime.greenFeeCents, booking.residentPlayers, booking.residentRateCents)
         : null;
-      const greenFeeTotal = res ? res.greenFeeTotal : Math.round(perPlayerGreen * newPlayers);
-      const cartFeeTotal = Math.round(perPlayerCart * newPlayers);
+      const fees = partyFees({ ...booking, cartFeeTotal: booking.cartSelected ? booking.cartFeeTotal : 0 }, newPlayers, booking.teeTime);
+      const greenFeeTotal = fees.greenFeeTotal;
+      const cartFeeTotal = fees.cartFeeTotal;
       const accessFeeTotal = perPlayerAccess * newPlayers;
       const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
 

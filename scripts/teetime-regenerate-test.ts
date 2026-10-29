@@ -32,21 +32,27 @@ async function main() {
     check('first run makes the seven times (W2-3: the last at 08:00)', (await count()) === 7, String(await count()));
     await generateTeeTimes(course.id, DATE);
     check('a second run keeps them (it used to delete them all)', (await count()) === 7, String(await count()));
+    const idsBefore = (await prisma.teeTime.findMany({ where: { courseId: course.id, date: DATE }, select: { id: true } })).map(r => r.id).sort().join();
     await generateTeeTimes(course.id, DATE);
     check('a third run still seven', (await count()) === 7, String(await count()));
+    // Reviewer 2026-10-29: a rebuild of the whole horizon must not rewrite every open slot.
+    const idsAfter = () => prisma.teeTime.findMany({ where: { courseId: course.id, date: DATE }, select: { id: true } }).then(r => r.map(x => x.id).sort().join());
+    check('…the same rows, not deleted and re-created', (await idsAfter()) === idsBefore);
 
     await prisma.teeTimeSchedule.update({ where: { id: sched.id }, data: { greenFeeWeekdayCents: 6000 } });
     await generateTeeTimes(course.id, DATE);
     const rows = await prisma.teeTime.findMany({ where: { courseId: course.id, date: DATE } });
     check('a price change keeps every time, at the new price', rows.length === 7 && rows.every(r => r.greenFeeCents === 6000), JSON.stringify(rows.map(r => r.greenFeeCents)));
+    check('…updated in place (same rows)', (await idsAfter()) === idsBefore);
 
-    // A booked time is never touched.
+    // A booked time stays (never deleted) and its open spots take the new price;
+    // the booking keeps its own (Revamp 3 fix 5, Cam 2026-10-29).
     const t0700 = rows.find(r => r.time === '07:00')!;
     await prisma.teeTime.update({ where: { id: t0700.id }, data: { playersBooked: 2 } });
     await prisma.teeTimeSchedule.update({ where: { id: sched.id }, data: { greenFeeWeekdayCents: 6500 } });
     await generateTeeTimes(course.id, DATE);
     const after = await prisma.teeTime.findMany({ where: { courseId: course.id, date: DATE } });
-    check('the booked time keeps its old price; the rest move', after.length === 7 && after.find(r => r.time === '07:00')!.greenFeeCents === 6000 && after.filter(r => r.time !== '07:00').every(r => r.greenFeeCents === 6500), JSON.stringify(after.map(r => [r.time, r.greenFeeCents])));
+    check('the booked time stays, its open spots at the new price', after.length === 7 && after.every(r => r.greenFeeCents === 6500) && after.find(r => r.time === '07:00')!.playersBooked === 2, JSON.stringify(after.map(r => [r.time, r.greenFeeCents])));
   } finally {
     await cleanup();
     await prisma.$disconnect();

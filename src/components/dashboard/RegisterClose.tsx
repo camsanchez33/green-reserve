@@ -12,7 +12,7 @@ import { addDaysStr } from '@/lib/course-time';
 
 type Summary = {
   day: string; today: string;
-  cashSales: { count: number; cents: number; itemsCents: number; roundsCents: number };
+  cashSales: { count: number; cents: number; itemsCents: number; roundsCents: number; untaxed?: number };
   counterRounds: { count: number; cents: number };
   cashRefunds: { count: number; cents: number };
   cashTakenCents: number;
@@ -91,12 +91,13 @@ export function RegisterClose() {
                 <ul className="divide-y divide-line-soft text-sm">
                   <li className="flex justify-between py-2"><span className="text-ink">Cash sales at the register <span className="text-ink-muted">· {plural(summary.cashSales.count, 'sale')}</span></span><span className="tabular-nums">{usd(summary.cashSales.cents)}</span></li>
                   {summary.cashSales.roundsCents > 0 && <li className="flex justify-between py-1.5 pl-3 text-[12.5px] text-ink-soft"><span>Shop items {usd(summary.cashSales.itemsCents)} · green fees {usd(summary.cashSales.roundsCents)}</span></li>}
+                  {(summary.cashSales.untaxed ?? 0) > 0 && <li className="py-1.5 pl-3 text-[12.5px] text-warn">{plural(summary.cashSales.untaxed ?? 0, 'sale')} taken without sales tax</li>}
                   {/* CASH-1: every counter payment is now a register sale; this is only older records' "paid at the counter". */}
                   {summary.counterRounds.count > 0 && <li className="flex justify-between py-2"><span className="text-ink">Marked paid at the counter (no tender recorded) <span className="text-ink-muted">· {plural(summary.counterRounds.count, 'group')}</span></span><span className="tabular-nums">{usd(summary.counterRounds.cents)}</span></li>}
                   <li className="flex justify-between py-2"><span className="text-ink">Cash refunds <span className="text-ink-muted">· {summary.cashRefunds.count}</span></span><span className="tabular-nums">{usd(-summary.cashRefunds.cents)}</span></li>
                   <li className="flex justify-between py-2 font-semibold text-ink"><span>Cash taken</span><span className="tabular-nums">{usd(summary.cashTakenCents)}</span></li>
                 </ul>
-                {summary.counterRounds.count > 0 && <p className="text-[12.5px] text-ink-muted mt-2">Groups marked paid before cash went through the register don’t say how they paid — counted here as cash.</p>}
+                {summary.counterRounds.count > 0 && <p className="text-[12.5px] text-ink-muted mt-2">Groups marked paid without a tender are counted as cash.</p>}
                 <h3 className="text-[13.5px] font-semibold text-ink mt-5 mb-1">Card, for reference</h3>
                 <ul className="divide-y divide-line-soft text-sm">
                   <li className="flex justify-between py-2"><span className="text-ink">Shop sales by card</span><span className="tabular-nums">{usd(summary.card.shopCents)}</span></li>

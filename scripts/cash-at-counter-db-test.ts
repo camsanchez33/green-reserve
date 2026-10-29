@@ -79,9 +79,16 @@ async function cleanup() {
   const under = await ringUpCash(c.id, { lines: [], bookingIds: [short.id], walkIns: [], cashTenderedCents: 2000, soldBy: 't', actor: STAFF });
   ok('a tender below the total: the sale is still recorded (no change figure), and staff are told', under.ok && under.value.sale.totalCents === 5000 && under.value.sale.cashTenderedCents === null && under.value.notes.some(n => /less than the total/.test(n)), under);
 
+  // Cam 2026-10-29: a member's group of four (member $30 + $10 cart, guests $50 + $20, $8 of range balls), two show:
+  // the member and one guest, range balls whole — never the per-player average ($129).
+  const mem = await prisma.booking.create({ data: { teeTimeId: tt.id, courseId: c.id, golferName: 'Member Four', golferEmail: `${TAG}+m@t.local`, players: 4, appliedRate: 'Full',
+    greenFeeTotal: 18000, cartFeeTotal: 7000, cartSelected: true, rangeBallsTotal: 800, accessFeeTotal: 600, totalAmount: 26400, memberRateCents: 3000, memberCartCents: 1000, status: 'confirmed', paymentStatus: 'no_payment_method' } });
+  const memCash = await ringUpCash(c.id, { lines: [], bookingIds: [mem.id], walkIns: [], headcounts: { [mem.id]: 2 }, soldBy: 't', actor: STAFF });
+  ok('part of a member group pays the member’s spot and a guest’s, range balls whole', memCash.ok && memCash.value.sale.totalCents === 3000 + 5000 + 1000 + 2000 + 800, memCash.ok ? memCash.value.sale.totalCents : memCash);
+
   // The close-out: register cash, counted once; nothing under "marked paid at the counter".
   const s = await daySummary(c.id);
-  ok('the close-out counts this cash once, as register cash sales', s.ok && s.value.cashSales.cents === 30000 && s.value.cashSales.roundsCents === 30000 && s.value.counterRounds.count === 0 && s.value.cashTakenCents === 30000, s.ok ? s.value : s);
+  ok('the close-out counts this cash once, as register cash sales', s.ok && s.value.cashSales.cents === 41800 && s.value.cashSales.roundsCents === 41800 && s.value.counterRounds.count === 0 && s.value.cashTakenCents === 41800, s.ok ? s.value : s);
 
   // No unrecorded path is left.
   const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');

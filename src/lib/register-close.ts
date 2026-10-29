@@ -26,7 +26,8 @@ const MAX_CENTS = 10_000_000; // $100,000 — a typo guard
 
 export type DaySummary = {
   day: string;
-  cashSales: { count: number; cents: number; itemsCents: number; roundsCents: number };
+  /** untaxed: cash sales taken with no tax while Stripe Tax was down (ShopSale.taxUnavailable). */
+  cashSales: { count: number; cents: number; itemsCents: number; roundsCents: number; untaxed: number };
   counterRounds: { count: number; cents: number };
   cashRefunds: { count: number; cents: number };
   /** Cash taken, before the starting float: sales + counter rounds − refunds. */
@@ -60,13 +61,13 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
   const { start, end } = cd.value;
   const inDay = { gte: start, lt: end };
   const [cashSales, cardSales, refunds, counterAll, cardRounds] = await Promise.all([
-    prisma.shopSale.findMany({ where: { courseId, status: 'paid_cash', paidAt: inDay }, select: { totalCents: true, roundsCents: true } }),
+    prisma.shopSale.findMany({ where: { courseId, status: 'paid_cash', paidAt: inDay }, select: { totalCents: true, roundsCents: true, taxUnavailable: true } }),
     prisma.shopSale.findMany({ where: { courseId, status: 'paid_card', paidAt: inDay }, select: { totalCents: true } }),
     prisma.shopSaleRefund.findMany({ where: { courseId, status: 'done', createdAt: inDay }, select: { amountCents: true, method: true } }),
     // Paid at the counter on the tee sheet — not the rounds the register already rang up in cash.
     prisma.booking.findMany({
       where: { courseId, paymentStatus: 'paid_offline', paidAt: inDay },
-      select: { id: true, players: true, checkedInPlayers: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true },
+      select: { id: true, players: true, checkedInPlayers: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true },
     }),
     prisma.booking.findMany({
       where: { courseId, paymentStatus: { in: ['paid', 'refunded'] }, roundPaymentIntentId: { not: '' }, paidAt: inDay },
@@ -81,7 +82,7 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
   const cashRefunds = refunds.filter(r => r.method === 'cash');
   const s = {
-    cashSales: { count: cashSales.length, cents: sum(cashSales.map(x => x.totalCents)), roundsCents: sum(cashSales.map(x => x.roundsCents)), itemsCents: sum(cashSales.map(x => x.totalCents - x.roundsCents)) },
+    cashSales: { count: cashSales.length, cents: sum(cashSales.map(x => x.totalCents)), roundsCents: sum(cashSales.map(x => x.roundsCents)), itemsCents: sum(cashSales.map(x => x.totalCents - x.roundsCents)), untaxed: cashSales.filter(x => x.taxUnavailable).length },
     // A partial party paid for those who showed, as the counter charged it.
     counterRounds: { count: counter.length, cents: sum(counter.map(b => counterDueCents(b, b.checkedInPlayers ?? undefined))) },
     cashRefunds: { count: cashRefunds.length, cents: sum(cashRefunds.map(r => r.amountCents)) },

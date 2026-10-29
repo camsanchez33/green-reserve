@@ -18,5 +18,11 @@ check('tierless member gets the course member default 14', windowFor(course, { t
 check('tier member gets the tier window 30', windowFor(course, { tier: { advanceBookingDays: 30 } }).days === 30);
 check('generation horizon = widest window + 1 (31)', generationHorizonDays(course, [{ advanceBookingDays: 30 }]) === 31);
 check('generation horizon never below 8', generationHorizonDays({ publicAdvanceDays: 3, memberAdvanceDays: 3 }, []) === 8);
+// Revamp 3 fix 8 (Cam 2026-10-29): the window turns over at the course's midnight, not UTC's.
+// 2026-10-29 01:30Z is still Oct 28, 9:30 PM in New York.
+const evening = new Date('2026-10-29T01:30:00Z');
+check('an Eastern course at 9:30 PM is still on its own day', dayOffset('2026-10-28', evening, 'America/New_York') === 0 && dayOffset('2026-10-28', evening) === -1);
+check('…so the next week-out day has not opened yet', !withinWindow('2026-11-05', 7, evening, 'America/New_York') && withinWindow('2026-11-04', 7, evening, 'America/New_York'));
+check('…and the last bookable date is counted from it', lastBookableDate(7, evening, 'America/New_York') === '2026-11-04' && lastBookableDate(7, evening) === '2026-11-05');
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 process.exit(failed === 0 ? 0 : 1);

@@ -341,7 +341,7 @@ export function ShopCatalog() {
                         <span className={'text-sm ' + (i.active ? 'text-ink' : 'text-ink-muted')}>{i.name}</span>
                         {i.category && <span className="text-[12.5px] text-ink-muted"> · {i.category}</span>}
                         {!i.active && <span className="text-[12.5px] text-ink-muted"> · hidden</span>}
-                        {stock !== null && <span className={'text-[12.5px] ' + (stock <= 0 ? 'text-bad' : 'text-ink-muted')}> · {stock <= 0 ? 'none left' : `${stock} in stock`}</span>}
+                        {stock !== null && <span className={'text-[12.5px] ' + (stock <= 0 ? 'text-bad' : 'text-ink-muted')}> · {stock < 0 ? `${-stock} oversold` : stock === 0 ? 'none left' : `${stock} in stock`}</span>}
                         {i.sku && <span className="text-[12.5px] text-ink-muted"> · {i.sku}</span>}
                         {opts.length > 0 && (
                           <div className="text-[12.5px] text-ink-soft mt-0.5">

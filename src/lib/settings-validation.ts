@@ -23,6 +23,7 @@ const INT_RANGES: Record<string, [number, number]> = {
   checkInWindowHours: [0, 48],
   publicAdvanceDays: [1, 365],
   memberAdvanceDays: [1, 365],
+  memberGraceDays: [0, 365],
   establishedYear: [1700, new Date().getFullYear()],
 };
 const FLOAT_RANGES: Record<string, [number, number]> = {

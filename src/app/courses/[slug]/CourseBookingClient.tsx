@@ -1,5 +1,6 @@
 'use client';
 import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
+import { lastBookableDate } from '@/lib/booking-window';
 import { teeColour } from '@/lib/tee-colour';
 import { walkingWords } from '@/lib/walking';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -391,12 +392,12 @@ export default function CourseDetailPage({
       const found: string[] = [];
       // BOOKING WINDOWS: never suggest a date the viewer cannot book.
       const winDays = memberSession?.windowDays ?? course.public_advance_days ?? 7;
-      const limit = startOfToday(); limit.setDate(limit.getDate() + winDays);
+      const limit = lastBookableDate(winDays, new Date(), course.timezone);
       for (let i = 1; i <= 7 && found.length < 2; i++) {
         if (cancelled) return;
         const d = new Date(selectedDate + 'T12:00:00');
         d.setDate(d.getDate() + i);
-        if (d > limit) break;
+        if (formatDate(d) > limit) break;
         const ds = formatDate(d);
         try {
           const url = previewMode
@@ -662,8 +663,9 @@ export default function CourseDetailPage({
   // BOOKING WINDOWS: the viewer's horizon — a member's tier window, else the
   // course's public window. Days beyond it are shown but not bookable.
   const viewerWindowDays = memberSession?.windowDays ?? course.public_advance_days ?? 7;
-  const lastBookable = (() => { const d = startOfToday(); d.setDate(d.getDate() + viewerWindowDays); d.setHours(23, 59, 59, 999); return d; })();
-  const beyondWindow = (d: Date) => d > lastBookable;
+  // Counted from the course's today, as the server counts it (lib/booking-window, Revamp 3 fix 8).
+  const lastBookableStr = lastBookableDate(viewerWindowDays, new Date(), course.timezone);
+  const beyondWindow = (d: Date) => formatDate(d) > lastBookableStr;
   const memberWindowDays = course.member_advance_days ?? 14;
   const membersBookEarlier = !memberSession && !!course.has_member_pricing && memberWindowDays > viewerWindowDays;
 

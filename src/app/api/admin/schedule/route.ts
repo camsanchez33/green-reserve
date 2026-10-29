@@ -3,6 +3,9 @@ import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate 
 import { listSchedules, createSchedule, updateSchedule, deleteSchedule, ScheduleConflictError, ScheduleProductError } from '@/lib/schedule-service';
 import { withAudit } from '@/lib/admin-audit';
 
+// A schedule change rebuilds every bookable day (lib/tee-sheet-engine regenerateUpcoming), up to a year ahead.
+export const maxDuration = 120;
+
 // L2: the service refuses a save that would double-book a nine (409) or names a
 // product this course does not own (400); everything else is unchanged.
 function scheduleError(err: unknown) {

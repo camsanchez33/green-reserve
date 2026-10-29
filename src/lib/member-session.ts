@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
+import { liveMembershipWhere, type LapseRule } from './member-rates';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 import { getGolferSession } from './auth';
@@ -64,7 +65,11 @@ export async function getMemberSession() {
 // OTP possession-proof (email or phone) — the exact same proof the member
 // magic link already relies on. Strictly courseId-scoped: only ever resolves
 // a membership at the ONE course being asked about, never leaks across courses.
-export async function getGolferMembership(courseId: string): Promise<{ membershipId: string; tierName: string } | null> {
+/**
+ * `rule` given (the course's grace days and timezone): only a membership whose member rates
+ * still apply (lib/member-rates). Leave it out where a lapsed member must still be recognised (their portal, paying dues).
+ */
+export async function getGolferMembership(courseId: string, rule?: LapseRule): Promise<{ membershipId: string; tierName: string } | null> {
   const golferSession = await getGolferSession();
   if (!golferSession) return null;
 
@@ -78,6 +83,7 @@ export async function getGolferMembership(courseId: string): Promise<{ membershi
     where: {
       courseId,
       status: 'active',
+      ...(rule ? { AND: [liveMembershipWhere(rule)] } : {}),
       OR: [
         { golferId: golferSession.golferId },
         { inviteEmail: { equals: golfer.email, mode: 'insensitive' } },

@@ -85,7 +85,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // payment and then hits the guards below instead of charging again.
   return prisma.$transaction(async (tx) => {
   await tx.$queryRaw`SELECT id FROM "CourseMembership" WHERE id = ${m.id} FOR UPDATE`;
-  const now = await tx.courseMembership.findUnique({ where: { id: m.id }, select: { status: true, paymentStatus: true, expiresAt: true } });
+  const now = await tx.courseMembership.findUnique({ where: { id: m.id }, select: { status: true, paymentStatus: true, expiresAt: true, lastPaidAt: true } });
   if (!now) return NextResponse.json({ error: 'Invalid or expired payment link.' }, { status: 404 });
   // A membership the course deactivated is not revived by an old pay link.
   if (now.status !== 'active') {
@@ -124,9 +124,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: `Payment failed: ${message}` }, { status: 402 });
   }
 
-  // Term extends from expiry if renewing early, from today otherwise.
+  // Term extends from expiry if renewing early, from today otherwise. A first
+  // payment (nothing paid before) always starts today: the end date typed when
+  // the member was added is not a paid term (Cam 2026-10-29: it paid two terms).
   const termMonths = m.tier?.termMonths ?? 12;
-  const base = now.expiresAt && now.expiresAt.getTime() > Date.now() ? new Date(now.expiresAt) : new Date();
+  const base = now.lastPaidAt && now.expiresAt && now.expiresAt.getTime() > Date.now() ? new Date(now.expiresAt) : new Date();
   const newExpiry = new Date(base);
   newExpiry.setMonth(newExpiry.getMonth() + termMonths);
 

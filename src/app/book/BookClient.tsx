@@ -1,4 +1,5 @@
 'use client';
+import { splitTotal } from '@/lib/member-rates';
 import { FEE_AT_BOOKING_ON } from '@/lib/booking-fees';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, Suspense } from 'react';
@@ -184,13 +185,18 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   }, [courseSlug, teeTimeId, date]);
 
   // RES-1: a signed-in resident sees their own resident rate before booking.
+  // Cam 2026-10-29: a signed-in member sees their member rate the same way (the booking charges it).
   const [residentFee, setResidentFee] = useState<number | null>(null);
+  const [memberRate, setMemberRate] = useState<{ name: string; greenFee: number; cartFee: number; guestsMemberRate: boolean } | null>(null);
   const ttId = teeTime?.id;
   useEffect(() => {
-    if (!golfer || !ttId) { setResidentFee(null); return; }
+    if (!golfer || !ttId) { setResidentFee(null); setMemberRate(null); return; }
     fetch(`/api/bookings/resident-rate?teeTimeId=${encodeURIComponent(String(ttId))}`)
-      .then(r => r.ok ? r.json() : null).then(d => setResidentFee(typeof d?.residentGreenFee === 'number' ? d.residentGreenFee : null))
-      .catch(() => setResidentFee(null));
+      .then(r => r.ok ? r.json() : null).then(d => {
+        setResidentFee(typeof d?.residentGreenFee === 'number' ? d.residentGreenFee : null);
+        setMemberRate(d?.member && typeof d.member.greenFee === 'number' ? d.member : null);
+      })
+      .catch(() => { setResidentFee(null); setMemberRate(null); });
   }, [golfer, ttId]);
 
   const accent = course?.brand_color || '#173B2A';
@@ -330,8 +336,12 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   // The server adds a cart whenever the course, the round or this time's schedule requires one — show the same.
   const cartForced = !!teeTime.cart_required;
   const withCart = cartForced || cartSelected;
-  const greenTotal  = residentFee != null ? residentFee + teeTime.green_fee * (players - 1) : teeTime.green_fee * players;
-  const cartTotal    = withCart ? teeTime.cart_fee * players : 0;
+  // Cents, so the total matches what the booking charges (lib/member-rates splitTotal).
+  const memberN = memberRate ? (memberRate.guestsMemberRate ? players : Math.min(1, players)) : 0;
+  const c = (d: number) => Math.round(d * 100);
+  const greenTotal  = memberRate ? splitTotal(players, memberN, c(memberRate.greenFee), c(teeTime.green_fee)) / 100
+    : residentFee != null ? residentFee + teeTime.green_fee * (players - 1) : teeTime.green_fee * players;
+  const cartTotal    = withCart ? (memberRate ? splitTotal(players, memberN, c(memberRate.cartFee), c(teeTime.cart_fee)) / 100 : teeTime.cart_fee * players) : 0;
   const rangeBallsPrice = rangeBallsSize === 'small' ? course.range_balls_small_price
     : rangeBallsSize === 'medium' ? course.range_balls_medium_price
     : rangeBallsSize === 'large' ? course.range_balls_large_price
@@ -420,6 +430,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
               <div className="border-t border-line pt-3 space-y-2">
                 <div className="flex justify-between text-ink-soft"><span>Green fee (×{players})</span><span>${greenTotal.toFixed(2)}</span></div>
+                {memberRate && <p className="text-[12.5px] text-ink-muted -mt-1">{memberRate.name} rate ${memberRate.greenFee.toFixed(2)}{memberN < players ? ` for you; your guests pay $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
                 {residentFee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
                 {cartTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
                 {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls ({rangeBallsSize})</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}

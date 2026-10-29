@@ -33,6 +33,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
+import { memberPlayers, splitTotal, memberSpot, membershipLive } from './member-rates';
 import { groupGreenFee } from './residents';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
@@ -115,12 +116,12 @@ export async function moveBooking(opts: {
       const b = await tx.booking.findUnique({
         where: { id: opts.bookingId },
         select: {
-          id: true, courseId: true, teeTimeId: true, players: true, status: true, checkedInAt: true, noShowAt: true,
+          id: true, courseId: true, teeTimeId: true, players: true, status: true, checkedInAt: true, noShowAt: true, golferAccountId: true, golferEmail: true,
           paymentStatus: true, roundPaymentIntentId: true, readerStartedAt: true,
           cartSelected: true, appliedRate: true, residentPlayers: true, residentRateCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
-          course: { select: { timezone: true, cancellationHours: true } },
+          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true } },
         },
       });
       if (!b || (opts.courseId && b.courseId !== opts.courseId)) throw new MoveError('NOT_FOUND');
@@ -157,22 +158,38 @@ export async function moveBooking(opts: {
 
       // ── price ──
       let rate = { greenFeeCents: slot.greenFeeCents, cartFeeCents: slot.cartFeeCents };
+      // Cam 2026-10-29: how many of the group pay the member rate (the member alone unless the tier includes guests).
+      let memberN = 0;
+      let spot = memberSpot(null, rate);
       if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') {
         // Tier names aren't unique in the schema: take the oldest ACTIVE tier of
         // that name so the answer is deterministic (a tierId on Booking is the
         // proper fix; the tiers route now refuses duplicate names).
-        const tier = await tx.membershipTier.findFirst({ where: { courseId: b.courseId, name: b.appliedRate, active: true }, orderBy: { createdAt: 'asc' } });
-        rate = tier
+        const named = await tx.membershipTier.findFirst({ where: { courseId: b.courseId, name: b.appliedRate, active: true }, orderBy: { createdAt: 'asc' } });
+        // A repriced move re-applies the tier only while the golfer's membership is live (lib/member-rates);
+        // a lapsed member moves at the new time's public price.
+        // A membership we can't tie to the booking keeps the old behaviour (the tier applies).
+        const theirs = named && opts.pricing !== 'keep' && (b.golferAccountId || b.golferEmail)
+          ? await tx.courseMembership.findMany({ where: { courseId: b.courseId, tierId: named.id, OR: [
+              ...(b.golferAccountId ? [{ golferId: b.golferAccountId }] : []),
+              ...(b.golferEmail ? [{ inviteEmail: { equals: b.golferEmail, mode: 'insensitive' as const } }] : []),
+            ] }, select: { status: true, expiresAt: true } })
+          : [];
+        const lapsed = theirs.length > 0 && !theirs.some(m => membershipLive(m, b.course));
+        const tier = lapsed ? null : named;
+        rate = lapsed ? rate : tier
           ? applyTierRates(slot, tier)
           // A member rate whose tier is gone: keep what they paid per player.
           : { greenFeeCents: Math.round(b.greenFeeTotal / b.players), cartFeeCents: b.cartSelected ? Math.round(b.cartFeeTotal / b.players) : slot.cartFeeCents };
+        memberN = lapsed ? 0 : tier ? memberPlayers(b.players, tier) : b.players;
+        spot = memberSpot(tier, rate);
       }
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
       const residents = groupGreenFee(b.players, rate.greenFeeCents, opts.residentPlayers ?? b.residentPlayers, slot.residentRateCents);
-      const newGreen = residents.greenFeeTotal;
+      const newGreen = memberN ? splitTotal(b.players, memberN, rate.greenFeeCents, slot.greenFeeCents) : residents.greenFeeTotal;
       // CART-1: a group moved onto a cart-only time takes a cart there.
       const cartOn = b.cartSelected || slot.walkingAllowed === false;
-      const newCart = cartOn ? rate.cartFeeCents * b.players : 0;
+      const newCart = cartOn ? (memberN ? splitTotal(b.players, memberN, rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * b.players) : 0;
       const range = Math.round(b.rangeBallsTotal);
       const access = Math.round(b.accessFeeTotal); // per-player amount unchanged: same players
       // A round already paid (admin "collect payment" before check-in) keeps its
@@ -203,7 +220,9 @@ export async function moveBooking(opts: {
       if (!keep) {
         data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
         data.cartSelected = cartOn;
+        data.memberRateCents = spot.memberRateCents; data.memberCartCents = spot.memberCartCents;
         if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
+        if (memberN === 0 && b.appliedRate !== 'resident' && b.appliedRate !== 'standard') data.appliedRate = residents.residentPlayers > 0 ? 'resident' : 'standard';
       }
       if (opts.terms) { data.termsAcceptedAt = now; data.termsVersion = opts.terms.version; }
       await tx.booking.update({ where: { id: b.id }, data });

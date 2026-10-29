@@ -35,6 +35,8 @@ export async function GET(req: NextRequest) {
       select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true, cancellationFeeTotal: true, roundPaymentIntentId: true,
         // RES-1: residents in the group, and whether it is on a member rate.
         residentPlayers: true, appliedRate: true,
+        // Part of a group checking in is priced on the sheet as the server charges it (lib/member-rates partyFees).
+        greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
         // POS-1a: pro-shop items added to the round, for the panel.
         shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, shopLockedAt: true, shopItems: { orderBy: { createdAt: 'asc' }, select: { id: true, name: true, unitPriceCents: true, quantity: true } } },
     } } : {}),

@@ -117,16 +117,39 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-28 03:58 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 09422b74</span>
-    <span>53 uncommitted</span>
+    <span>2026-10-29 13:49 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 9e689d2b</span>
+    <span>6 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">2 runs have shipped that the queue doesn't know about</div>
+<div class="lede">25 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">9e689d2b</span><span>Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked</span></li>
+<li><span class="h">1f56429b</span><span>Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5</span></li>
+<li><span class="h">28e44ab2</span><span>Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team</span></li>
+<li><span class="h">447cb1bd</span><span>Status board</span></li>
+<li><span class="h">e02ea5d4</span><span>One code, one shop item; an oversold count says so</span></li>
+<li><span class="h">fa151d17</span><span>The booking window turns over at the course's midnight, not UTC's</span></li>
+<li><span class="h">57e64d2d</span><span>&quot;Not paid yet&quot; is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds</span></li>
+<li><span class="h">9bcc13b3</span><span>A cash sale records the total the register showed, or nothing</span></li>
+<li><span class="h">6ed720e1</span><span>A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing</span></li>
+<li><span class="h">af4b9fc3</span><span>Cash at the register is never blocked by sales tax</span></li>
+<li><span class="h">bee3bc29</span><span>A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight</span></li>
+<li><span class="h">ec1f63b8</span><span>A price change reaches every bookable day and the open spots of booked times</span></li>
+<li><span class="h">64c39edb</span><span>An unsigned Operator Agreement no longer locks staff out of the tee sheet</span></li>
+<li><span class="h">59b616cd</span><span>Member pricing: the member alone gets the member rate unless the tier includes guests; rates end after the membership does (course grace days); a first dues payment is one term</span></li>
+<li><span class="h">d0b0c181</span><span>Fill a test course with sample data; never email a placeholder address or text a fictional number (#249)</span></li>
 <li><span class="h">09422b74</span><span>Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill</span></li>
 <li><span class="h">161d3d7f</span><span>Fill a test course with sample data; never email a placeholder address or text a fictional number</span></li>
+<li><span class="h">fa0add63</span><span>DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)</span></li>
+<li><span class="h">187a1ba4</span><span>DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)</span></li>
+<li><span class="h">b8440aa6</span><span>Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)</span></li>
+<li><span class="h">8061878d</span><span>No cancelling after the tee time: check in or no-show (charged at midnight) (#244)</span></li>
+<li><span class="h">e8e2a2e6</span><span>DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)</span></li>
+<li><span class="h">531516a0</span><span>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)</span></li>
+<li><span class="h">92087fca</span><span>DENSE-4: the tee sheet is seat rows (#241)</span></li>
+<li><span class="h">6eced458</span><span>Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)</span></li>
 </ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
@@ -139,7 +162,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  CLAUDE.md</code></li><li><code>M  DENSE_UI_SPEC.md</code></li><li><code>UU STATUS.artifact.html</code></li><li><code>UU STATUS.json</code></li><li><code>UU STATUS.md</code></li><li><code>UU docs/CODEMAP.md</code></li><li><code>UU docs/codemap.json</code></li><li><code>M  scripts/analytics-w28-db-test.ts</code></li><li><code>M  scripts/board-tone-test.ts</code></li><li><code>M  scripts/cancel-after-noshow-test.ts</code></li><li><code>A  scripts/cancel-fee-reason-test.ts</code></li><li><code>M  scripts/cash-at-counter-db-test.ts</code></li><li><code>A  scripts/member-stats-db-test.ts</code></li><li><code>M  scripts/members-import-test.ts</code></li><li><code>M  scripts/members-rework-test.ts</code></li><li><code>M  scripts/money-rework-test.ts</code></li><li><code>M  scripts/noshow-eod-test.ts</code></li><li><code>M  scripts/operator-home-db-test.ts</code></li><li><code>M  scripts/policy-wording-test.ts</code></li><li><code>M  scripts/teesheet-1-test.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/golfer-messages-test.ts</code></li><li><code>M src/app/api/operator/golfer-messages/route.ts</code></li><li><code>M src/components/dashboard/GolferMessageModal.tsx</code></li><li><code>M src/lib/golfer-messages.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -170,7 +193,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">97d</span><span class="where">b88c8bf3</span></div>
+<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">98d</span><span class="where">b88c8bf3</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:50</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:57</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:236</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:339</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2358</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2994</span></li></ul>
@@ -181,58 +204,58 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 0d</td></tr>
-<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 0d</td></tr>
-<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 1d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 2d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 4d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
-<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 5d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 5d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 7d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 1d</td></tr>
+<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 1d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 2d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 3d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 5d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
+<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 6d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
-<tr><td class="num">09422b74</td><td class="num">2026-10-28</td><td>Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill</td></tr>
-<tr><td class="num">161d3d7f</td><td class="num">2026-10-28</td><td>Fill a test course with sample data; never email a placeholder address or text a fictional number</td></tr>
-<tr><td class="num">18082d87</td><td class="num">2026-10-27</td><td>DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard (#237)</td></tr>
-<tr><td class="num">581de703</td><td class="num">2026-10-27</td><td>Courses built by hand are marked, never Orphaned or swept; resend sign-in code is rate-limited</td></tr>
-<tr><td class="num">c155fec9</td><td class="num">2026-10-27</td><td>Page decision for courses built without an inquiry lives on the course (#239)</td></tr>
-<tr><td class="num">df85fcbb</td><td class="num">2026-10-27</td><td>Regenerate status board</td></tr>
-<tr><td class="num">a8cbcc80</td><td class="num">2026-10-27</td><td>Page decision for courses built without an inquiry lives on the course</td></tr>
-<tr><td class="num">c5210ef2</td><td class="num">2026-10-27</td><td>Onboarding walks the owner through their booking page part by part; Finish setting up on Home (#238)</td></tr>
-<tr><td class="num">352be06d</td><td class="num">2026-10-27</td><td>Onboarding walks the owner through their booking page part by part; Finish setting up on Home</td></tr>
-<tr><td class="num">13634fec</td><td class="num">2026-10-26</td><td>An emailed sign-in code confirms the owner's email (no separate verify link) (#236)</td></tr>
-<tr><td class="num">db165892</td><td class="num">2026-10-27</td><td>Regenerate code map and status board</td></tr>
-<tr><td class="num">ca6666d2</td><td class="num">2026-10-27</td><td>SMS fallback emails a fresh code; test the confirm link keeps onboarding progress</td></tr>
+<tr><td class="num">9e689d2b</td><td class="num">2026-10-29</td><td>Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked</td></tr>
+<tr><td class="num">1f56429b</td><td class="num">2026-10-29</td><td>Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5</td></tr>
+<tr><td class="num">28e44ab2</td><td class="num">2026-10-29</td><td>Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team</td></tr>
+<tr><td class="num">447cb1bd</td><td class="num">2026-10-29</td><td>Status board</td></tr>
+<tr><td class="num">e02ea5d4</td><td class="num">2026-10-29</td><td>One code, one shop item; an oversold count says so</td></tr>
+<tr><td class="num">fa151d17</td><td class="num">2026-10-29</td><td>The booking window turns over at the course's midnight, not UTC's</td></tr>
+<tr><td class="num">57e64d2d</td><td class="num">2026-10-29</td><td>&quot;Not paid yet&quot; is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds</td></tr>
+<tr><td class="num">9bcc13b3</td><td class="num">2026-10-29</td><td>A cash sale records the total the register showed, or nothing</td></tr>
+<tr><td class="num">6ed720e1</td><td class="num">2026-10-29</td><td>A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing</td></tr>
+<tr><td class="num">af4b9fc3</td><td class="num">2026-10-29</td><td>Cash at the register is never blocked by sales tax</td></tr>
+<tr><td class="num">bee3bc29</td><td class="num">2026-10-29</td><td>A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight</td></tr>
+<tr><td class="num">ec1f63b8</td><td class="num">2026-10-29</td><td>A price change reaches every bookable day and the open spots of booked times</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

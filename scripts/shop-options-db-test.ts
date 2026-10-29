@@ -33,6 +33,18 @@ async function cleanup() {
 
   const bad = await createItems(c.id, [{ name: 'X', priceCents: 100, options: [{ label: 'Only' }] }, { name: 'Y', priceCents: 100 }]);
   ok('one bad row stops the whole bulk add', !bad.ok && (await prisma.shopItem.count({ where: { courseId: c.id, name: 'Y' } })) === 0);
+  // Revamp 3 fix 9: one code, one item — a re-import used to make a second item with the same SKU.
+  const dupImport = await createItems(c.id, [{ name: 'Glove again', priceCents: 2000, sku: 'g1' }]);
+  ok('a code already on another item is refused, by name', !dupImport.ok && /already on Glove/.test(dupImport.error), JSON.stringify(dupImport));
+  const twice = await createItems(c.id, [{ name: 'A', priceCents: 100, sku: 'Z9' }, { name: 'B', priceCents: 100, sku: 'z9' }]);
+  ok('…and a code used twice in one import', !twice.ok && /used twice/.test(twice.error));
+  const otherCourse = await createItems(other.id, [{ name: 'Their glove', priceCents: 2000, sku: 'G1' }]);
+  ok('…another course may use the same code', otherCourse.ok);
+  const gloveRow = rows.find(x => x.name === 'Glove')!;
+  const keepOwn = await updateItem(c.id, gloveRow.id, { name: 'Glove', category: 'Accessories', priceCents: 2100, stockCount: 10, sku: 'G1' });
+  ok('…an item keeps its own code when edited', !!keepOwn && keepOwn.ok, JSON.stringify(keepOwn));
+  const stealCode = await updateItem(c.id, gloveRow.id, { name: 'Glove', category: 'Accessories', priceCents: 2100, stockCount: 10, sku: 'P-S' });
+  ok('…but can\'t take an option\'s code', !!stealCode && !stealCode.ok);
 
   const parentSale = await createSale({ courseId: c.id, lines: [{ shopItemId: polo.id, quantity: 1 }], pay: 'cash', soldBy: 't' });
   ok('the item itself cannot be sold, only an option', !parentSale.ok);

@@ -2002,7 +2002,7 @@ export async function sendAdminDigest(data: {
 /** W2-9: a player's group in an event — sent from the event's player list. Replies go to the course (the staff who sent it). */
 export async function sendEventPairingsEmail(data: {
   name: string; email: string; courseName: string; coursePhone: string; replyTo: string;
-  eventName: string; dateLabel: string; startLabel: string; groupNo: number; startHole: number | null; groupmates: string[]; courseId?: string;
+  eventName: string; dateLabel: string; startLabel: string; groupNo: number; startHole: string | null; groupmates: string[]; courseId?: string;
 }) {
   const e = escapeHtml;
   const row = (label: string, value: string) => `<tr><td style="padding:6px 0;color:#6B706A;font-size:14px;width:120px;vertical-align:top;">${label}</td><td style="padding:6px 0;color:#141814;font-size:14px;">${value}</td></tr>`;
@@ -2013,7 +2013,7 @@ export async function sendEventPairingsEmail(data: {
       ${row('Date', e(data.dateLabel))}
       ${row(data.startHole ? 'Shotgun' : 'Tee time', e(data.startLabel))}
       ${row('Group', String(data.groupNo))}
-      ${data.startHole ? row('Starting hole', String(data.startHole)) : ''}
+      ${data.startHole ? row('Starting hole', e(data.startHole)) : ''}
       ${data.groupmates.length ? row('Playing with', data.groupmates.map(e).join('<br>')) : ''}
     </table>
     <p style="margin:0;color:#6B706A;font-size:13px;">Questions? Reply to this email${data.coursePhone ? ` or call ${e(data.courseName)} at ${e(data.coursePhone)}` : ''}.</p>

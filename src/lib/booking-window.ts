@@ -8,8 +8,10 @@
 //                         Course.memberAdvanceDays (default 14)
 //
 // "N days ahead" is inclusive: today plus the next N calendar days. Dates are
-// the tee sheet's YYYY-MM-DD strings, compared on the same UTC-day basis the
-// tee-times APIs already use for "today".
+// the tee sheet's YYYY-MM-DD strings. Revamp 3 fix 8 (Cam 2026-10-29): "today"
+// is the COURSE's today when its timezone is given — a UTC day opened the next
+// day at 8 PM for an Eastern course. Without one it stays the UTC day.
+import { todayIn, addDaysStr } from './course-time';
 
 export const DEFAULT_PUBLIC_WINDOW_DAYS = 7;
 export const DEFAULT_MEMBER_WINDOW_DAYS = 14;
@@ -22,20 +24,26 @@ export function utcToday(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
-/** Whole days from today (UTC) to `date`; negative for the past. */
-export function dayOffset(date: string, now: Date = new Date()): number {
-  const a = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+/** Today for the window: the course's day when its timezone is known, else the UTC day. */
+function windowToday(now: Date, tz?: string | null): string {
+  return tz ? todayIn(tz, now) : utcToday(now);
+}
+
+/** Whole days from today (the course's, given its timezone) to `date`; negative for the past. */
+export function dayOffset(date: string, now: Date = new Date(), tz?: string | null): number {
+  const [ty, tm, td] = windowToday(now, tz).split('-').map(Number);
+  const a = Date.UTC(ty, tm - 1, td);
   const [y, m, d] = date.split('-').map(Number);
   const b = Date.UTC(y, m - 1, d);
   return Math.round((b - a) / DAY);
 }
 
-export function withinWindow(date: string, windowDays: number, now: Date = new Date()): boolean {
-  return dayOffset(date, now) <= Math.max(0, windowDays);
+export function withinWindow(date: string, windowDays: number, now: Date = new Date(), tz?: string | null): boolean {
+  return dayOffset(date, now, tz) <= Math.max(0, windowDays);
 }
 
-export function lastBookableDate(windowDays: number, now: Date = new Date()): string {
-  return new Date(now.getTime() + Math.max(0, windowDays) * DAY).toISOString().slice(0, 10);
+export function lastBookableDate(windowDays: number, now: Date = new Date(), tz?: string | null): string {
+  return addDaysStr(windowToday(now, tz), Math.max(0, windowDays));
 }
 
 export type WindowCourse = { publicAdvanceDays?: number | null; memberAdvanceDays?: number | null };
@@ -62,13 +70,13 @@ export function generationHorizonDays(course: WindowCourse, tiers: { advanceBook
 }
 
 /** The 403 body the tee-times APIs return for a date past the viewer's window. */
-export function outsideWindowBody(days: number, scope: 'public' | 'member', course: WindowCourse & { hasMemberPricing?: boolean | null }, now: Date = new Date()) {
+export function outsideWindowBody(days: number, scope: 'public' | 'member', course: WindowCourse & { hasMemberPricing?: boolean | null; timezone?: string | null }, now: Date = new Date()) {
   const memberDays = course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS;
   return {
     error: 'outside_window' as const,
     windowDays: days,
     scope,
-    lastDate: lastBookableDate(days, now),
+    lastDate: lastBookableDate(days, now, course.timezone),
     memberWindowDays: memberDays,
     membersBookEarlier: scope === 'public' && !!course.hasMemberPricing && memberDays > days,
   };

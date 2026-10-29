@@ -1,7 +1,9 @@
 import { prisma } from './prisma';
+import type { Prisma } from '@prisma/client';
 import { heldBy, ninesByProduct } from './event-hold';
 import { todayIn, addDaysStr } from './course-time';
 import { generationHorizonDays } from './booking-window';
+import { teeTimeInstant } from './booking-events';
 
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);
@@ -35,13 +37,22 @@ function minutesToTime(m: number): string {
  * idempotent and never touches booked or operator-blocked slots, so replaying
  * the window is the whole fix.
  */
-export async function regenerateUpcoming(courseId: string, days = 8): Promise<void> {
+export async function regenerateUpcoming(courseId: string, days?: number): Promise<void> {
   // SD-3: "today" is the course's today, not the server's UTC day.
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
   const today = todayIn(course?.timezone);
-  for (let i = 0; i < days; i++) {
+  // Revamp 3 fix 5 (Cam 2026-10-29): every day a golfer can book, not just 8 —
+  // a price saved today reached days 1–8 while days 9+ (bookable) kept the old one.
+  const n = days ?? await regenerationDays(courseId);
+  for (let i = 0; i < n; i++) {
     await generateTeeTimes(courseId, addDaysStr(today, i));
   }
+}
+
+/** How many days ahead a schedule change rebuilds: the course's widest booking window plus one, never below 8 (as the nightly run). */
+export async function regenerationDays(courseId: string): Promise<number> {
+  const c = await prisma.course.findUnique({ where: { id: courseId }, select: { publicAdvanceDays: true, memberAdvanceDays: true, membershipTiers: { select: { advanceBookingDays: true } } } });
+  return c ? Math.max(8, generationHorizonDays(c, c.membershipTiers)) : 8;
 }
 
 export type ScheduleForSlots = {
@@ -149,6 +160,8 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     where: { courseId, date: dateStr },
     include: { _count: { select: { bookings: true } } },
   });
+  const tz = (await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } }))?.timezone;
+  const nowMs = Date.now();
   const existingByKey = new Map(existing.map(t => [slotKey(t.productId ?? null, t.time), t]));
   // Pre-L2 rows (productId null) that hold a booking or a block: when a
   // schedule is later scoped to a round, the round's slot at that time ADOPTS
@@ -159,23 +172,57 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
 
   let created = 0;
 
-  // Remove empty slots that either changed or are no longer in the schedule.
+  // Reviewer 2026-10-29 (fix 5 widened the rebuild to the whole booking horizon):
+  // open slots are diffed, not deleted and re-created. An open slot still in the
+  // schedule is updated in place only when something about it changed (grouped,
+  // so a price change is a handful of writes per day); an open slot the schedule
+  // no longer has is deleted; only missing times are created. A save that changes
+  // nothing writes nothing.
   // Booked slots (playersBooked > 0) are never deleted, even if the schedule
-  // dropped that time — the golfer already paid for it.
-  // A slot whose only bookings are cancelled still has Booking rows pointing
-  // at it (RESTRICT): deleting it would abort the whole date. Keep it.
-  const toDelete = existing.filter(t => t.playersBooked === 0 && t.status !== 'blocked' && t._count.bookings === 0).map(t => t.id);
-  // Operator-blocked slots are also left alone — that's a manual override, not generated data.
-  const deleted = new Set(toDelete);
+  // dropped that time — the golfer already paid for it. A slot whose only
+  // bookings are cancelled still has Booking rows pointing at it (RESTRICT), and
+  // operator-blocked slots are a manual override: both are left alone.
+  const isOpen = (t: typeof existing[number]) => t.playersBooked === 0 && t.status !== 'blocked' && t._count.bookings === 0;
+  const toDelete = existing.filter(t => isOpen(t) && !desired.has(slotKey(t.productId ?? null, t.time))).map(t => t.id);
   if (toDelete.length > 0) {
     await prisma.teeTime.deleteMany({ where: { id: { in: toDelete } } });
   }
+  const updates = new Map<string, { data: Prisma.TeeTimeUncheckedUpdateManyInput; ids: string[] }>();
 
   const adopted = new Set<string>();
   for (const [key, slot] of desired) {
     const existingSlot = existingByKey.get(key);
-    if (existingSlot && (existingSlot.playersBooked > 0 || existingSlot.status === 'blocked' || existingSlot._count.bookings > 0)) {
-      // Already booked, manually blocked, or carrying cancelled bookings — leave it exactly as is.
+    if (existingSlot && !isOpen(existingSlot)) {
+      // Booked, blocked, or carrying cancelled bookings: the row stays. Revamp 3 fix 5 (Cam
+      // 2026-10-29): its OPEN spots take the new price — a booking keeps the price it was
+      // made at (its own totals), so only new bookings see it. A time already gone keeps
+      // its price: that's the posted-price history Analytics reads.
+      const at = teeTimeInstant(tz, dateStr, existingSlot.time);
+      const changed = existingSlot.greenFeeCents !== slot.greenFeeCents || existingSlot.memberRateCents !== slot.memberRateCents
+        || existingSlot.residentRateCents !== slot.residentRateCents || existingSlot.cartFeeCents !== slot.cartFeeCents
+        || existingSlot.walkingAllowed !== slot.walkingAllowed;
+      if (changed && at && at.getTime() > nowMs) {
+        await prisma.teeTime.update({ where: { id: existingSlot.id }, data: {
+          greenFeeCents: slot.greenFeeCents, memberRateCents: slot.memberRateCents, residentRateCents: slot.residentRateCents,
+          cartFeeCents: slot.cartFeeCents, walkingAllowed: slot.walkingAllowed,
+        } });
+      }
+      continue;
+    }
+    const event = heldBy(events, slot.productId, slot.time, ninesOf(slot.productId));
+    const fields = {
+      holes: slot.holes, greenFeeCents: slot.greenFeeCents, memberRateCents: slot.memberRateCents, residentRateCents: slot.residentRateCents,
+      cartFeeCents: slot.cartFeeCents, walkingAllowed: slot.walkingAllowed, tierName: slot.tierName,
+      status: event ? 'blocked' : 'available', eventId: event?.id ?? null,
+    };
+    if (existingSlot) {
+      // Open and still wanted: bring it up to date in place (its id, and any alert or link to it, survive).
+      const same = (Object.keys(fields) as (keyof typeof fields)[]).every(k => existingSlot[k] === fields[k]);
+      if (!same) {
+        const k = JSON.stringify(fields);
+        const u = updates.get(k) ?? { data: fields, ids: [] as string[] };
+        u.ids.push(existingSlot.id); updates.set(k, u);
+      }
       continue;
     }
     if (slot.productId) {
@@ -186,33 +233,14 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
         continue;
       }
     }
-    // Hotfix 2026-10-19: `existing` was read BEFORE the delete above, so every
-    // open row we just deleted still matched here and was skipped — a second
-    // run on the same day wiped all its open tee times and recreated none
-    // (they came back the next night, then vanished again). Only a row that
-    // survived the delete (cancelled bookings only) is kept as is.
-    if (existingSlot && !deleted.has(existingSlot.id)) continue;
-    const event = heldBy(events, slot.productId, slot.time, ninesOf(slot.productId));
     await prisma.teeTime.create({
-      data: {
-        courseId,
-        date: dateStr,
-        time: slot.time,
-        productId: slot.productId,
-        holes: slot.holes,
-        playersAvailable: 4,
-        playersBooked: 0,
-        greenFeeCents: slot.greenFeeCents,
-        memberRateCents: slot.memberRateCents,
-        residentRateCents: slot.residentRateCents,
-        cartFeeCents: slot.cartFeeCents,
-        walkingAllowed: slot.walkingAllowed,
-        tierName: slot.tierName,
-        status: event ? 'blocked' : 'available',
-        eventId: event?.id ?? null,
-      },
+      data: { courseId, date: dateStr, time: slot.time, productId: slot.productId, playersAvailable: 4, playersBooked: 0, ...fields },
     });
     created++;
+  }
+  // Only rows still open: a booking that landed since the read keeps its slot as it is.
+  for (const { data, ids } of updates.values()) {
+    await prisma.teeTime.updateMany({ where: { id: { in: ids }, playersBooked: 0, status: { not: 'blocked' } }, data });
   }
 
   return created;

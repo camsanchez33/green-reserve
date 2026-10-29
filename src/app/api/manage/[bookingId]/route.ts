@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
+      teeTime: { select: { date: true, time: true, holes: true, greenFeeCents: true, cartFeeCents: true, product: { select: { label: true } } } },
       course: {
         select: {
           name: true, slug: true, address: true, city: true, state: true, phone: true,
@@ -72,6 +72,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     cartFeeTotal: booking.cartFeeTotal,
     rangeBallsTotal: booking.rangeBallsTotal,
     accessFeeTotal: booking.accessFeeTotal,
+    // The change-players preview prices a new party size as the server will (lib/member-rates partyFees).
+    party: { residentPlayers: booking.residentPlayers, residentRateCents: booking.residentRateCents, memberRateCents: booking.memberRateCents, memberCartCents: booking.memberCartCents, publicGreenCents: booking.teeTime.greenFeeCents, publicCartCents: booking.teeTime.cartFeeCents },
     totalAmount: booking.totalAmount,
     // POS-1a: pro-shop items the course added, with GreenReserve's fee on them.
     shopChargeCents: booking.shopTotalCents + booking.shopFeeCents + booking.shopTaxCents,

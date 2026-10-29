@@ -5,6 +5,7 @@ import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { groupGreenFee } from '@/lib/residents';
+import { splitTotal } from '@/lib/member-rates';
 
 type MemberTier = {
   id: string;
@@ -45,6 +46,7 @@ type MemberTeeTime = {
   has_member_rate: boolean;
   /** RES-1: the signed-in golfer's own spot at the resident rate (one player), when it applies. */
   resident_green_fee?: number | null;
+  guests_member_rate?: boolean;
 };
 
 // The group's green fee as booking charges it (api/bookings → groupGreenFee):
@@ -53,7 +55,9 @@ type MemberTeeTime = {
 const toCents = (d: number) => Math.round(d * 100);
 function groupGreen(t: MemberTeeTime, players: number): number {
   const resident = t.resident_green_fee != null ? toCents(t.resident_green_fee) : null;
-  return groupGreenFee(players, toCents(t.member_green_fee), resident != null ? 1 : 0, resident).greenFeeTotal;
+  if (resident != null) return groupGreenFee(players, toCents(t.member_green_fee), 1, resident).greenFeeTotal;
+  // Cam 2026-10-29: the member's own spot at the member rate; guests at the public rate unless the tier includes them.
+  return splitTotal(players, t.guests_member_rate ? players : Math.min(1, players), toCents(t.member_green_fee), toCents(t.green_fee));
 }
 
 type PaymentRecord = {
@@ -784,7 +788,9 @@ function MemberDashboard({
               <div className="text-xs text-ink-muted mt-0.5">
                 {selectedTime.resident_green_fee != null
                   ? <>Your spot ${selectedTime.resident_green_fee} as a resident{players > 1 ? ` + $${selectedTime.member_green_fee} × ${players - 1}` : ''}</>
-                  : <>Member rate ${selectedTime.member_green_fee} × {players}</>}
+                  : selectedTime.guests_member_rate || players === 1
+                    ? <>Member rate ${selectedTime.member_green_fee} × {players}</>
+                    : <>Your spot ${selectedTime.member_green_fee} at the member rate + ${selectedTime.green_fee} × {players - 1} for your guests</>}
                 {selectedTime.has_member_rate && selectedTime.member_green_fee < selectedTime.green_fee
                   ? ` · Saving $${((toCents(selectedTime.green_fee) * players - groupGreen(selectedTime, players)) / 100).toFixed(2)} total`
                   : ''}

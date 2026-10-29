@@ -106,7 +106,7 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
   }));
 
   // Money uses computeAnalytics' definitions. Not paid yet is every live group today not yet paid —
-  // past their time (no-shows included) plus still to play — as on the tee sheet's strip; lateGroups
+  // past their time (marked no-shows and refunded rounds aside, lib/analytics) plus still to play — as on the tee sheet's strip; lateGroups
   // is the part past their time (Cam 2026-10-27, "how have none of them not paid").
   let money: null | { paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number } = null;
   let paidTrend: number[] | null = null;

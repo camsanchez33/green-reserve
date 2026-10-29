@@ -335,7 +335,7 @@ function Headline({ d, metric, setMetric }: { d: Data; metric: Metric; setMetric
           </span>
           <span className="flex gap-4">
             <Ask q="Walk me through these numbers — what changed, and why?" />
-            <Download onClick={() => downloadCsv(`analytics-${d.range.from}-${d.range.to}`, [per ? 'Week of' : 'Date', 'Revenue', 'Played, not paid', 'Rounds', 'Per round', 'Filled %'], cur.map(r => [r.key, r.collectedCents / 100, Math.max(0, r.gapCents) / 100, r.rounds, r.perRoundCents == null ? null : r.perRoundCents / 100, r.fillPct]))} />
+            <Download onClick={() => downloadCsv(`analytics-${d.range.from}-${d.range.to}`, [per ? 'Week of' : 'Date', 'Revenue', 'Not collected (no-shows included)', 'Rounds', 'Per round', 'Filled %'], cur.map(r => [r.key, r.collectedCents / 100, Math.max(0, r.gapCents) / 100, r.rounds, r.perRoundCents == null ? null : r.perRoundCents / 100, r.fillPct]))} />
           </span>
         </div>
         {young ? (

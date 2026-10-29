@@ -9,7 +9,7 @@ import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { INPUT } from '@/components/ui/field';
 
-type Reach = { golfers: number; email: number; sms: number; unreachable: number };
+type Reach = { golfers: number; email: number; sms: number; unreachable: number; noEmail?: number };
 type Recent = { id: string; date: string; fromTime: string | null; toTime: string | null; body: string; sentEmail: number; sentSms: number; failed: number; createdAt: string };
 type Result = { ok: boolean; sentEmail: number; sentSms: number; failed: { name: string; how: string; error: string }[]; unreachable: number };
 const MAX = 600;
@@ -49,9 +49,13 @@ export default function GolferMessageModal({ date, onClose }: { date: string; on
   };
 
   const tooLongForText = sms && !!info?.smsAvailable && body.length > info.smsMaxChars;
+  // Texting off (or unticked): a mobile number reaches nobody (fix 12).
+  const texting = !!info?.smsAvailable && sms;
+  const missed = info ? (texting ? info.reach.unreachable : info.reach.noEmail ?? info.reach.unreachable) : 0;
+  const reachable = info ? info.reach.email + (texting ? info.reach.sms : 0) : 0;
   const reachLine = info ? (info.reach.golfers === 0
     ? `Nobody is booked ${whole ? 'that day' : 'in that window'}.`
-    : `${info.reach.golfers} golfer${info.reach.golfers === 1 ? '' : 's'} booked — ${info.reach.email} by email${info.smsAvailable && sms ? `, ${info.reach.sms} by text` : ''}.${info.reach.unreachable ? ` ${info.reach.unreachable} ha${info.reach.unreachable === 1 ? 's' : 've'} no email${info.smsAvailable ? ' or mobile' : ''} on file.` : ''}`) : '';
+    : `${info.reach.golfers} golfer${info.reach.golfers === 1 ? '' : 's'} booked — ${info.reach.email} by email${texting ? `, ${info.reach.sms} by text` : ''}.${missed ? ` ${missed} ha${missed === 1 ? 's' : 've'} no email${texting ? ' or mobile' : ''} on file.` : ''}`) : '';
 
   return (
     <div className="fixed inset-0 bg-ink/20 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -109,7 +113,7 @@ export default function GolferMessageModal({ date, onClose }: { date: string; on
             {sendErr && <p className="text-[13px] text-bad mb-3">{sendErr}</p>}
             <div className="flex gap-2">
               <button onClick={onClose} disabled={sending} className="flex-1 py-2.5 rounded-md border border-line text-[13.5px] font-medium text-ink hover:bg-paper disabled:opacity-50">Cancel</button>
-              <button onClick={send} disabled={sending || !info || info.reach.golfers === 0 || body.trim().length < 3 || tooLongForText}
+              <button onClick={send} disabled={sending || !info || info.reach.golfers === 0 || reachable === 0 || body.trim().length < 3 || tooLongForText}
                 className="flex-1 py-2.5 rounded-md bg-pine hover:bg-pine-hover text-white text-[13.5px] font-semibold disabled:opacity-50">
                 {sending ? 'Sending…' : 'Send'}
               </button>

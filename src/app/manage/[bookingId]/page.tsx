@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
+import { partyFees } from '@/lib/member-rates';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { XCircle, Loader2, Clock, Users, ArrowLeft } from 'lucide-react';
@@ -27,6 +28,7 @@ type BookingInfo = {
   rangeBallsTotal: number;
   accessFeeTotal: number;
   totalAmount: number;
+  party?: { residentPlayers: number; residentRateCents: number | null; memberRateCents: number | null; memberCartCents: number | null; publicGreenCents: number; publicCartCents: number };
   /** POS-1a: pro-shop items the course added plus GreenReserve's fee on them. */
   shopChargeCents?: number;
   cancellationHours: number;
@@ -409,10 +411,12 @@ function ManagePageInner() {
 
   // ── Change players ────────────────────────────────────────────────────────
   if (view === 'change-players') {
-    const perPlayerGreen = info.players > 0 ? info.greenFeeTotal / info.players : 0;
-    const perPlayerCart = info.players > 0 ? info.cartFeeTotal / info.players : 0;
-    const newGreen = Math.round(perPlayerGreen * selectedPlayers);
-    const newCart = Math.round(perPlayerCart * selectedPlayers);
+    // The same pricing the server applies: the member's spot or residents first (lib/member-rates).
+    const p = info.party;
+    const fees = partyFees({ players: info.players, greenFeeTotal: info.greenFeeTotal, cartFeeTotal: info.cartFeeTotal, residentPlayers: p?.residentPlayers ?? 0, residentRateCents: p?.residentRateCents ?? null, memberRateCents: p?.memberRateCents ?? null, memberCartCents: p?.memberCartCents ?? null },
+      selectedPlayers, { greenFeeCents: p?.publicGreenCents ?? 0, cartFeeCents: p?.publicCartCents ?? 0 });
+    const newGreen = fees.greenFeeTotal;
+    const newCart = fees.cartFeeTotal;
     const newAccess = 150 * selectedPlayers;
     const newTotal = newGreen + newCart + info.rangeBallsTotal + newAccess;
     const maxPlayers = 4;

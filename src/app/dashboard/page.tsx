@@ -1,5 +1,6 @@
 'use client';
-import { CARD } from '@/components/ui/Card';
+import { Card, CARD } from '@/components/ui/Card';
+import { partyFees } from '@/lib/member-rates';
 import Link from 'next/link';
 import { MonthPicker } from '@/components/ui/MonthPicker';
 import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
@@ -75,9 +76,18 @@ type Booking = {
   /** RES-1: how many of the group pay the resident rate; appliedRate names a member tier otherwise. */
   residentPlayers?: number;
   appliedRate?: string;
+  /** The round's parts, so part of a group is priced as the server charges it (lib/member-rates partyFees). */
+  greenFeeTotal?: number; cartFeeTotal?: number; rangeBallsTotal?: number;
+  residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null;
 };
 /** POS-1a: what the card is charged beyond the round itself. */
 const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0) + (b.shopTaxCents ?? 0);
+/** The round for `n` of the group (card check-in: green + cart + booking fee for those who showed, range balls whole). */
+function partRound(b: Booking, n: number, withAccess: boolean): number {
+  if (b.greenFeeTotal == null) return Math.round((b.totalAmount - (withAccess ? 0 : b.accessFeeTotal ?? 0)) * n / b.players);
+  const f = partyFees({ players: b.players, greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal ?? 0, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null }, n, { greenFeeCents: 0, cartFeeCents: 0 });
+  return f.greenFeeTotal + f.cartFeeTotal + (b.rangeBallsTotal ?? 0) + (withAccess ? Math.round((b.accessFeeTotal ?? 0) * n / b.players) : 0);
+}
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 // SD-3: "today" is the COURSE's today (see courseTz inside the component) —
 // this module-level fallback only seeds state before the course has loaded.
@@ -188,6 +198,7 @@ function DashboardPageInner() {
   const [connectingStripe, setConnectingStripe] = useState(false);
   // AGREEMENT = GO-LIVE GATE (RUN_QUEUE)
   const [agreementAccepted, setAgreementAccepted] = useState(true); // assume yes until loaded — never flash a false "not accepted" prompt
+  const [agreementLater, setAgreementLater] = useState(false); // the owner put the signing prompt off for this visit
   const [acceptingAgreement, setAcceptingAgreement] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
   // AG-2: signed / total signable documents for the checklist count.
@@ -261,7 +272,7 @@ function DashboardPageInner() {
       const who = checkedInPlayers ?? b.players;
       // POS-1a: shop items on the booking are collected at the counter too (no
       // GreenReserve shop fee on a counter payment, like the booking fee in cash).
-      const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
+      const owed = (who < b.players ? partRound(b, who, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
       // CASH-1: a cash sale of the round, rung up like the register (receipt on the Pro shop page).
       if (!confirm(`Take $${(owed / 100).toFixed(2)} cash from ${b.golferName} for ${who} of ${b.players} player${b.players === 1 ? '' : 's'}? They’re checked in, and the sale goes on today’s register.`)) return;
     }
@@ -302,7 +313,7 @@ function DashboardPageInner() {
     if (showed === null) return;
     const partial = showed < b.players ? showed : undefined;
     // POS-1a: shop items and their fee are never prorated — they ride whole.
-    const amount = (partial ? Math.round(b.totalAmount * partial / b.players) : b.totalAmount) + shopExtra(b);
+    const amount = (partial ? partRound(b, partial, true) : b.totalAmount) + shopExtra(b);
     if (!confirm(`Check in ${b.golferName}${partial ? ` (${partial} of ${b.players} players)` : ''} and charge their card $${(amount / 100).toFixed(2)} for the round${(b.shopTotalCents ?? 0) > 0 ? ' and shop items' : ''}?`)) return;
     setCheckingInId(b.id);
     let res: Response; let data: Record<string, unknown> & { error?: string; totalCharged: number };
@@ -850,15 +861,24 @@ function DashboardPageInner() {
               this never blocks anything, it's a nudge, not a gate (going
               live retroactively isn't a thing; the gate only applies to the
               NEXT time a course goes live). Dismissed only by accepting. */}
-          {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && (
+          {/* Revamp 3 fix 4 (Cam 2026-10-29): it covered the sheet with no way out, and staff
+              can't sign — every staff login was locked out. Staff get one line; the owner can
+              put it off for this visit. */}
+          {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && access.isStaff && (
+            <Card className="mb-4 border-l-[3px] border-l-warn px-4 py-2.5 text-[13.5px] text-ink">
+              The course owner needs to sign the updated Operator Agreement.
+            </Card>
+          )}
+          {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && !access.isStaff && !agreementLater && (
             <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-50 px-4">
               <div className="bg-white rounded-lg border border-line max-w-md w-full p-6">
                 <h2 className="text-[18px] font-serif font-semibold text-ink mb-2">Please sign the Operator Agreement</h2>
                 <p className="text-sm text-ink-soft mb-5">
-                  We&apos;ve updated our terms since {courseName || 'your course'} went live. Please review and accept the Operator Agreement to keep your account in good standing — this doesn&apos;t affect your live status.
+                  Sign the updated agreement to keep your account in good standing. {courseName || 'Your course'} stays live.
                 </p>
                 <div className="flex items-center gap-3">
                   <a href="/operator-agreement" target="_blank" className="text-sm text-pine hover:underline">Read the agreement</a>
+                  <button onClick={() => setAgreementLater(true)} className="text-sm text-ink-soft hover:text-ink">Later</button>
                   {/* AG-2: signing captures legal name, signer and the text
                       read to the end — it lives on its own page now. */}
                   <button

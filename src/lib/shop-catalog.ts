@@ -53,6 +53,26 @@ export function readItem(body: Record<string, unknown>): { ok: true; item: ItemI
   return { ok: true, item: { ...v, stockCount: options.length ? null : stock, sku: options.length ? '' : sku, taxCategory, options } };
 }
 
+/**
+ * Revamp 3 audit (fix 9): a barcode is one item's. A SKU already on another of the
+ * course's items, or used twice in what's being saved, is refused by name — a
+ * re-import used to make a second item with the same code, and scanning it then
+ * added nothing.
+ */
+async function skuClash(courseId: string, items: ItemIn[], exceptIds: string[] = []): Promise<string | null> {
+  const codes: string[] = [];
+  for (const it of items) { if (it.sku) codes.push(it.sku); for (const o of it.options) if (o.sku) codes.push(o.sku); }
+  const seen = new Set<string>();
+  for (const c of codes) { const k = c.toLowerCase(); if (seen.has(k)) return `Code ${c} is used twice — give each item its own.`; seen.add(k); }
+  if (!codes.length) return null;
+  const taken = await prisma.shopItem.findFirst({
+    // A hidden item's options keep active: true — only codes the register can still scan count.
+    where: { courseId, active: true, id: { notIn: exceptIds }, AND: [{ OR: [{ parentId: null }, { parent: { active: true } }] }], OR: codes.map(c => ({ sku: { equals: c, mode: 'insensitive' as const } })) },
+    select: { name: true, sku: true },
+  });
+  return taken ? `Code ${taken.sku} is already on ${taken.name} — change one of them.` : null;
+}
+
 /** Create one or many items (a bulk add), all or nothing. */
 export async function createItems(courseId: string, bodies: unknown[]) {
   if (!bodies.length) return fail('Nothing to add.');
@@ -63,6 +83,8 @@ export async function createItems(courseId: string, bodies: unknown[]) {
     if (!r.ok) return r;
     items.push(r.item);
   }
+  const clash = await skuClash(courseId, items);
+  if (clash) return fail(clash);
   const ids = await prisma.$transaction(async tx => {
     const out: string[] = [];
     for (const it of items) {
@@ -94,6 +116,8 @@ export async function updateItem(courseId: string, id: string, body: Record<stri
   const active = typeof body.active === 'boolean' ? body.active : existing.active;
   const mine = new Map(existing.options.map(o => [o.id, o]));
   if (it.options.some(o => o.id && !mine.has(o.id))) return null;
+  const clash = await skuClash(courseId, [it], [id, ...existing.options.map(o => o.id)]);
+  if (clash) return fail(clash);
   await prisma.$transaction(async tx => {
     await tx.shopItem.update({ where: { id }, data: { name: it.name, category: it.category, priceCents: it.priceCents, stockCount: it.stockCount, sku: it.sku, taxCategory: it.taxCategory, active } });
     const keep = new Set<string>();

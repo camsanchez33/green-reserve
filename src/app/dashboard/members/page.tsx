@@ -22,7 +22,7 @@ interface Tier {
   greenFeeWeekday: number | null; greenFeeWeekend: number | null;
   cartFeeWeekday: number | null; cartFeeWeekend: number | null;
   discountPct: number | null;
-  advanceBookingDays: number; guestPassesPerYear: number;
+  advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean;
   annualFee: number; initiationFee: number; termMonths: number;
   notes: string; active: boolean;
   _count?: { memberships: number };
@@ -75,7 +75,8 @@ function duesOf(m: Member, now: Date): Dues {
   const owed = (m.annualFee ?? 0) + ((m.lastPaidAt || m.initiationWaived) ? 0 : (m.initiationFee ?? 0));
   if (m.paymentStatus === 'comped' || owed <= 0) return { kind: 'comped', label: 'No dues', tone: 'ok' };
   if (m.paymentStatus === 'unpaid') return { kind: 'unpaid', label: `Dues unpaid · ${fmtMoney(owed)}`, tone: 'bad' };
-  if (m.expiresAt && new Date(m.expiresAt) < now) return { kind: 'expired', label: `Expired ${fmtDate(m.expiresAt)}`, tone: 'bad' };
+  // The "runs until" date is a member day all day (lib/member-rates).
+  if (m.expiresAt && m.expiresAt.slice(0, 10) < now.toLocaleDateString('en-CA')) return { kind: 'expired', label: `Expired ${fmtDate(m.expiresAt)}`, tone: 'bad' };
   if (m.expiresAt && new Date(m.expiresAt).getTime() - now.getTime() < 30 * 86400000) return { kind: 'renewing', label: `Renews ${fmtDate(m.expiresAt)}`, tone: 'warn' };
   return { kind: 'paid', label: m.expiresAt ? `Paid to ${fmtDate(m.expiresAt)}` : 'Paid', tone: 'ok' };
 }
@@ -331,7 +332,7 @@ function MembersPageInner() {
                   </div>
                   <p className="text-xs text-ink-soft mt-1.5">
                     {pricingMode === 'flat'
-                      ? 'Set exact dollar amounts. Overrides the standard tee time price for members of this tier. Leave a field blank to inherit standard pricing.'
+                      ? 'Exact member prices. Leave blank to use the standard price.'
                       : 'Apply a percentage off the standard rate for every booking.'}
                   </p>
                 </div>
@@ -383,6 +384,10 @@ function MembersPageInner() {
                     <label className={lblCls}>Guest passes / year</label>
                     <input type="number" min="0" className={iCls} value={tierForm.guestPassesPerYear ?? 0} onChange={e => setTF('guestPassesPerYear', Number(e.target.value))}/>
                   </div>
+                  <label className="col-span-2 flex items-center gap-2 text-[13.5px] text-ink">
+                    <input type="checkbox" className="accent-pine" checked={!!tierForm.guestsPayMemberRate} onChange={e => setTF('guestsPayMemberRate', e.target.checked)}/>
+                    Guests pay the member rate
+                  </label>
                   <div>
                     <label className={lblCls}>Annual fee ($)</label>
                     <div className="relative">
@@ -742,6 +747,7 @@ function MembersPageInner() {
                         t.discountPct != null ? `${t.discountPct}% off public rates` : (t.greenFeeWeekday != null ? `rounds ${fmtMoney(t.greenFeeWeekday)} weekdays, ${fmtMoney(t.greenFeeWeekend)} weekends` : null),
                         `books ${t.advanceBookingDays} days ahead`,
                         t.guestPassesPerYear > 0 ? `${t.guestPassesPerYear} guest pass${t.guestPassesPerYear === 1 ? '' : 'es'} a year` : null,
+                        t.guestsPayMemberRate ? 'guests too' : null,
                       ].filter(Boolean).join(' · ')}
                     </span>
                     <span className="text-[12.5px] text-ink-muted">{t._count?.memberships ?? 0} active</span>

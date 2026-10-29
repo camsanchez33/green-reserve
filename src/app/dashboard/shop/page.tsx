@@ -20,7 +20,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { shopTree, matches, bySku, type FlatItem, type TreeItem } from '@/lib/shop-tree';
+import { shopTree, matches, bySku, skuHits, stockWords, type FlatItem, type TreeItem } from '@/lib/shop-tree';
 
 type Item = FlatItem;
 type Refund = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdAt: string };
@@ -44,7 +44,7 @@ type Owing = { bookingId: string; time: string; holes: number; golferName: strin
 type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean };
 type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number };
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
-type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string };
+type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
@@ -160,7 +160,9 @@ export default function ShopPage() {
   const hasRounds = pickedRounds.length + walkIns.length > 0;
   const itemsEmpty = salePayload.length === 0;
   const due = (itemsEmpty ? 0 : priced ? priced.totalCents : subtotal) + roundsCents;
-  const ready = itemsEmpty ? hasRounds : !!priced;
+  // Stripe Tax down: cash still goes through, with no tax (Cam 2026-10-29); a pay link or the reader waits.
+  const noTax = !itemsEmpty && !!priced?.taxUnavailable;
+  const ready = itemsEmpty ? hasRounds : !!priced && (!noTax || pay === 'cash');
   const tenderedCents = toCents(tendered);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
   const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
@@ -169,7 +171,9 @@ export default function ShopPage() {
   // A scanner types the code and presses Enter: an exact SKU goes straight into the sale.
   function scan(code: string) {
     const hit = bySku(items ?? [], code);
-    if (hit) { add(hit.id, 1); setQ(''); setNote(`Added ${hit.name}.`); setError(''); return true; }
+    if (hit) { add(hit.id, 1); setQ(''); setNote(`Added ${hit.name}.${hit.stockCount !== null && hit.stockCount - (cart[hit.id] ?? 0) <= 0 ? ' None left.' : ''}`); setError(''); return true; }
+    // Two items with one code: say so instead of adding nothing silently.
+    if (skuHits(items ?? [], code).length > 1) { setError(`Code ${code.trim()} is on two items.`); return true; }
     return false;
   }
 
@@ -184,12 +188,16 @@ export default function ShopPage() {
         walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart })),
         pay: pay === 'cash' || pay === 'reader' ? pay : 'link', via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
         cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
+        // The total on screen: if the tax has changed since, nothing is rung up and the new total shows.
+        expectedItemsCents: pay === 'cash' && !itemsEmpty && priced ? priced.totalCents : undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
       }),
     });
     setBusy('');
     if (!r.ok) {
       setError(r.error);
+      // The tax changed since the total was shown: work the total out again.
+      if (r.status === 409 && /sales tax changed/.test(r.error)) setQuoteTry(n => n + 1);
       // The rounds went through (checked in, paid at the counter) though the items didn't: take them out of the sale.
       if (/^The (round was|\d+ rounds were) paid/.test(r.error)) { setPicked([]); setWalkIns([]); loadRounds(); load(); }
       return;
@@ -242,7 +250,7 @@ export default function ShopPage() {
     setBusy('');
     if (!r.ok) { setRoundOnReader(o => o && { ...o, message: r.error }); return; }
     if (action === 'cancel') {
-      if (r.data.status === 'paid') { setNote(`${roundOnReader.label} — the card went through before the reader stopped: paid and checked in.`); setRoundOnReader(null); loadRounds(); return; }
+      if (r.data.status === 'paid') { setNote(`${roundOnReader.label} — the card went through: paid and checked in.`); setRoundOnReader(null); loadRounds(); return; }
       if (r.data.status === 'refunded') { setError(r.data.message ?? ''); setRoundOnReader(null); loadRounds(); return; }
       setRoundOnReader(o => o && (r.data.status === 'waiting' ? { ...o, message: r.data.message ?? '' } : { ...o, state: 'cancelled', message: 'Cancelled — nothing was charged.' }));
       loadRounds();
@@ -304,7 +312,7 @@ export default function ShopPage() {
     setBusy('');
     if (!r.ok) { setError(r.error); load(); return; }
     setRefund(null);
-    setNote(r.data.status === 'pending' ? 'Sent to Stripe — it hasn’t confirmed yet. Check back in a few minutes.' : sale.status === 'paid_card' ? 'Refunded to their card.' : 'Refund recorded — hand the cash back.');
+    setNote(r.data.status === 'pending' ? 'Sent to Stripe — not confirmed yet.' : sale.status === 'paid_card' ? 'Refunded to their card.' : 'Refund recorded — hand the cash back.');
     load();
   }
 
@@ -416,7 +424,7 @@ export default function ShopPage() {
                           <div className="mt-5">
                             <h2 className="text-[13px] font-semibold text-ink mb-2">Walk-in</h2>
                             {roundsData.open.length === 0 ? <p className="text-sm text-ink-soft">No open tee times left today.</p> : !walkForm ? (
-                              <button onClick={() => { const t = roundsData.open[0]; setWalkForm({ teeTimeId: t.teeTimeId, name: '', players: Math.min(2, t.spots), cart: !t.walkingAllowed || t.cartFeeCents > 0 }); }} className={LINK}>Book a walk-in onto the next open time</button>
+                              <button onClick={() => { const t = roundsData.open[0]; setWalkForm({ teeTimeId: t.teeTimeId, name: '', players: Math.min(2, t.spots), cart: !t.walkingAllowed || t.cartFeeCents > 0 }); }} className={LINK}>Walk-in on the next open time</button>
                             ) : (
                               <form className="bg-paper/70 rounded-md p-3 space-y-2 max-w-md" onSubmit={e => {
                                 e.preventDefault();
@@ -438,7 +446,7 @@ export default function ShopPage() {
                                     Cart ({usd(walkTime.cartFeeCents)} / player){!walkTime.walkingAllowed ? ' — required on this time' : ''}
                                   </label>
                                 )}
-                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkTime.greenFeeCents + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)} at the standard rate. It goes on the tee sheet, checked in and paid, when you take the cash.</p>}
+                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkTime.greenFeeCents + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)} at the standard rate, checked in when you take the cash.</p>}
                                 <div className="flex gap-2">
                                   <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add to the sale</button>
                                   <button type="button" onClick={() => setWalkForm(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Cancel</button>
@@ -466,7 +474,7 @@ export default function ShopPage() {
                     ))}
                   </div>
                 )}
-                {tab === 'items' && tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Scanned a code? Add it as the item’s SKU in Settings → Pro shop.' : ''}</p>}
+                {tab === 'items' && tree.length > 0 && groups.length === 0 && <p className="text-sm text-ink-soft">Nothing matches.{q.trim() ? ' Unknown code? Add it as a SKU in Settings → Pro shop.' : ''}</p>}
                 {tab === 'items' && groups.map(([group, list]) => (
                   <section key={group} className="mb-4 last:mb-0">
                     <h2 className="text-[13px] font-semibold text-ink mb-2">{group}</h2>
@@ -481,7 +489,7 @@ export default function ShopPage() {
                               <span className="block text-sm font-medium text-ink leading-snug">{it.name}</span>
                               <span className="block text-[12.5px] text-ink-muted tabular-nums">
                                 {usd(it.priceCents)}
-                                {opts.length ? <> · {opts.length} options</> : it.stockCount !== null && <span className={it.stockCount <= 0 ? 'text-bad' : ''}> · {it.stockCount <= 0 ? 'none left' : `${it.stockCount} left`}</span>}
+                                {opts.length ? <> · {opts.length} options</> : it.stockCount !== null && <span className={it.stockCount <= 0 ? 'text-bad' : ''}> · {stockWords(it.stockCount)}</span>}
                                 {n ? <span className="text-pine font-semibold"> · {n} in sale</span> : null}
                               </span>
                             </button>
@@ -638,6 +646,7 @@ export default function ShopPage() {
                         <p className="text-[12.5px] text-ink-muted">They pay on their phone with Apple Pay, Google Pay or a card. The money goes to your Stripe account.</p>
                       </div>
                     )}
+                    {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
                     <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">

@@ -164,6 +164,7 @@ const taxLines = (lines: PricedLine[], discountCents = 0): TaxLine[] => {
     .filter(l => l.amountCents > 0);
 };
 const TAX_DOWN = 'We couldn’t work out the sales tax just now — try again in a moment.';
+export const TOTAL_CHANGED = 'The sales tax changed since the total was shown — look at the new total.';
 
 /** What the tax on these lines comes to (none when the whole sale is discounted away). */
 async function taxFor(courseId: string, lines: TaxLine[], reuseId?: string) {
@@ -172,16 +173,23 @@ async function taxFor(courseId: string, lines: TaxLine[], reuseId?: string) {
 }
 
 /** W2-7 part B: what a sale will come to, tax included, before it is rung up. */
-export async function quoteSale(courseId: string, raw: unknown, discount?: DiscountInput): Promise<Result<{ subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string }>> {
+// Cam 2026-10-29 ("no tax on cash"): when Stripe Tax can't be reached the quote
+// says so (taxUnavailable) instead of failing, so the counter can still take
+// cash — with no tax, marked on the sale. A pay link or the card reader still waits.
+export async function quoteSale(courseId: string, raw: unknown, discount?: DiscountInput): Promise<Result<{ subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable: boolean }>> {
   const p = await priceLines(courseId, raw);
   if (!p.ok) return p;
   const d = discountFor(p.value.subtotalCents, discount);
   if (!d.ok) return d;
   let q;
   try { q = await taxFor(courseId, taxLines(p.value.lines, d.value.discountCents)); }
-  catch (err) { console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId, error: err instanceof Error ? err.message : String(err) })); return fail(502, TAX_DOWN); }
+  catch (err) {
+    console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId, error: err instanceof Error ? err.message : String(err) }));
+    q = null;
+  }
   const net = p.value.subtotalCents - d.value.discountCents;
-  return { ok: true, value: { subtotalCents: p.value.subtotalCents, discountCents: d.value.discountCents, taxCents: q.taxCents, totalCents: net + q.taxCents, taxCalculationId: q.calculationId } };
+  if (!q) return { ok: true, value: { subtotalCents: p.value.subtotalCents, discountCents: d.value.discountCents, taxCents: 0, totalCents: net, taxCalculationId: '', taxUnavailable: true } };
+  return { ok: true, value: { subtotalCents: p.value.subtotalCents, discountCents: d.value.discountCents, taxCents: q.taxCents, totalCents: net + q.taxCents, taxCalculationId: q.calculationId, taxUnavailable: false } };
 }
 
 /** Ring up a sale. Cash is paid on the spot; a link sale waits for the customer. */
@@ -195,6 +203,14 @@ export async function createSale(opts: {
   discount?: DiscountInput;
   /** POS-3: cash handed over (cents), for the change; must cover the total. */
   cashTenderedCents?: unknown;
+  /**
+   * Cash: the items' total (tax included, rounds left out) the register showed. When the tax
+   * worked out now gives a different total — Stripe Tax went down or came back since the
+   * quote — nothing is rung up (409), so a sale always records the cash actually taken.
+   */
+  expectedItemsCents?: unknown;
+  /** Server only (ringUpCash): the tax of a quote just made, used as is. Never from a request body. */
+  presetTax?: { taxCents: number; calculationId: string; unavailable: boolean };
   /** POS-3 R2: rounds already paid at the counter (settleAtCounter) — lines on the receipt, no tax, no discount, no stock. Cash only. */
   rounds?: { bookingId: string; name: string; amountCents: number }[];
 }): Promise<Result<SaleView & { payToken: string }>> {
@@ -211,13 +227,20 @@ export async function createSale(opts: {
   ];
   // W2-7 part B: sales tax from Stripe Tax when the course has it on.
   let tax = { taxCents: 0, calculationId: '' };
-  try {
+  let taxUnavailable = false;
+  if (opts.presetTax && opts.pay === 'cash') {
+    tax = { taxCents: opts.presetTax.taxCents, calculationId: opts.presetTax.calculationId };
+    taxUnavailable = opts.presetTax.unavailable;
+  } else try {
     tax = await taxFor(opts.courseId, taxLines(p.value.lines, d.value.discountCents), opts.taxCalculationId);
   } catch (err) {
-    console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId: opts.courseId, error: err instanceof Error ? err.message : String(err) }));
-    return fail(502, TAX_DOWN);
+    console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId: opts.courseId, pay: opts.pay, error: err instanceof Error ? err.message : String(err) }));
+    // Cash is never blocked (Cam 2026-10-29: "no tax on cash" when Stripe Tax is down) — taken without tax, marked on the sale.
+    if (opts.pay !== 'cash') return fail(502, TAX_DOWN);
+    taxUnavailable = true;
   }
   const totalCents = p.value.subtotalCents - d.value.discountCents + tax.taxCents + roundsCents;
+  if (opts.pay === 'cash' && opts.expectedItemsCents != null && opts.expectedItemsCents !== '' && Number(opts.expectedItemsCents) !== totalCents - roundsCents) return fail(409, TOTAL_CHANGED);
   if (opts.pay !== 'cash' && totalCents <= 0) return fail(400, 'This sale comes to nothing — take it as cash instead.');
   if (opts.pay === 'reader' && totalCents < 50) return fail(400, 'Card payments start at $0.50 — take this one as cash.');
   if (opts.pay !== 'cash' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up card payments are not set up for the shop fee yet.');
@@ -235,7 +258,7 @@ export async function createSale(opts: {
   const sale = await prisma.$transaction(async tx => {
     const s = await tx.shopSale.create({
       data: {
-        courseId: opts.courseId, totalCents, taxCents: tax.taxCents, taxCalculationId: tax.calculationId, soldBy: opts.soldBy, customerName: name, customerPhone: phone, customerEmail: email, payToken,
+        courseId: opts.courseId, totalCents, taxCents: tax.taxCents, taxCalculationId: tax.calculationId, taxUnavailable, soldBy: opts.soldBy, customerName: name, customerPhone: phone, customerEmail: email, payToken,
         status: opts.pay === 'cash' ? 'paid_cash' : 'open', paidAt: opts.pay === 'cash' ? new Date() : null,
         discountCents: d.value.discountCents, discountNote: d.value.note, cashTenderedCents, roundsCents,
         lines: { create: lines },

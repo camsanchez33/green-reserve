@@ -48,9 +48,9 @@ type Pending = { preview: Preview | null; error: string };
 function previewLines(p: Preview): string[] {
   const out: string[] = [];
   if (p.added) out.push(`Adds ${p.added} tee time${p.added === 1 ? '' : 's'} golfers can book.`);
-  if (p.repriced) out.push(`Changes the price on ${p.repriced} open tee time${p.repriced === 1 ? '' : 's'}.`);
+  if (p.repriced) out.push(`New price on ${p.repriced} tee time${p.repriced === 1 ? '' : 's'}; bookings keep theirs.`);
   if (p.removed) out.push(`Takes ${p.removed} open tee time${p.removed === 1 ? '' : 's'} off the sheet.`);
-  if (p.bookedKept) out.push(`Leaves ${p.bookedKept} booked or blocked time${p.bookedKept === 1 ? '' : 's'} exactly as ${p.bookedKept === 1 ? 'it is' : 'they are'}.`);
+  if (p.bookedKept) out.push(`Keeps ${p.bookedKept} booked or blocked time${p.bookedKept === 1 ? '' : 's'} the schedule no longer has.`);
   if (out.length === 0) out.push('Nothing on the tee sheet changes in the next days; it applies further out as the days come up.');
   return out;
 }
@@ -87,6 +87,13 @@ export default function SchedulesPage() {
   const [blackouts, setBlackouts] = useState<{ id: string; date: string; reason: string }[]>([]);
   const [blackoutError, setBlackoutError] = useState('');
   const [closing, setClosing] = useState<{ date: string; reason: string } | null>(null);
+  // Revamp 3 fix 11: who is booked on the day being closed (null while loading, or when it couldn't be read).
+  const [closingBooked, setClosingBooked] = useState<{ groups: number; players: number } | 'error' | null>(null);
+  async function startClosing(date: string) {
+    setClosing({ date, reason: '' }); setClosingBooked(null);
+    const r = await dfetch<{ groups: number; players: number }>(`/api/operator/blackouts?date=${date}`);
+    setClosingBooked(r.ok ? r.data : 'error');
+  }
   const [month, setMonth] = useState(() => new Date().toLocaleDateString('en-CA').slice(0, 8) + '01');
   const [windows, setWindows] = useState<{ publicAdvanceDays: number | null; memberAdvanceDays: number | null }>({ publicAdvanceDays: null, memberAdvanceDays: null });
   const [windowsError, setWindowsError] = useState('');
@@ -229,14 +236,17 @@ export default function SchedulesPage() {
   async function closeDay() {
     if (!closing) return;
     setBusy(true);
-    const r = await dfetch('/api/operator/blackouts', { method: 'POST', body: JSON.stringify(closing) });
+    const r = await dfetch<{ booked: { groups: number } }>('/api/operator/blackouts', { method: 'POST', body: JSON.stringify(closing) });
     setBusy(false);
     if (!r.ok) { toast(r.error); return; }
     setClosing(null);
     await loadBlackouts();
-    toast('Closed. Open tee times that day are off the sheet; booked ones stay.', 'ok');
+    toast(r.data.booked.groups ? `Closed. ${r.data.booked.groups} booked group${r.data.booked.groups === 1 ? '' : 's'} kept.` : 'Closed.', 'ok');
   }
   async function reopenDay(id: string) {
+    // One misclick used to put a closed day back on sale (fix 11).
+    const b = blackouts.find(x => x.id === id);
+    if (b && !confirm(`Reopen ${new Date(b.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}? Its tee times go back on sale.`)) return;
     setBusy(true);
     const r = await dfetch<{ created?: number }>('/api/operator/blackouts', { method: 'DELETE', body: JSON.stringify({ id }) });
     setBusy(false);
@@ -388,14 +398,14 @@ export default function SchedulesPage() {
         <div className="px-4 sm:px-10 py-7 space-y-6">
           <div className="min-w-0 max-w-[46em]">
             <h1 className="font-serif text-[32px] leading-none text-ink">Schedule</h1>
-            <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">When you&apos;re open, what golfers can book, and what it costs. Saving updates your tee sheet straight away, and times that already have bookings never change.</p>
+            <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">When you&apos;re open, what golfers can book, and what it costs. Saving updates your tee sheet straight away; bookings keep their price.</p>
           </div>
 
           {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
           {productsError && <LoadError message={`Couldn't load your rounds — ${productsError}`} onRetry={loadProducts} />}
           {!plan && !loadError && <Card className="p-5 text-[14px] text-ink-muted">Loading your schedule…</Card>}
           {plan && !loading && rows.length === 0 && !loadError && (
-            <p className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink">No tee times are set up yet. Check the hours and prices below, then save to put them on your tee sheet.</p>
+            <p className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink">No tee times yet. Check the hours and prices below, then save.</p>
           )}
 
           {plan && (
@@ -498,7 +508,7 @@ export default function SchedulesPage() {
                   const past = date < today;
                   return (
                     <button key={date} disabled={!canEdit || past || busy}
-                      onClick={() => closed ? reopenDay(closed.id) : setClosing({ date, reason: '' })}
+                      onClick={() => closed ? reopenDay(closed.id) : startClosing(date)}
                       title={closed ? `Closed${closed.reason ? `: ${closed.reason}` : ''} — click to reopen` : past ? '' : 'Click to close this day'}
                       className={'h-10 rounded-md text-[13px] tabular-nums ' + (closed ? 'bg-bad/[0.08] text-bad font-semibold border border-bad/20' : past ? 'text-ink-faint' : 'text-ink hover:bg-paper border border-transparent')}>
                       {i + 1}
@@ -512,6 +522,10 @@ export default function SchedulesPage() {
                     <label className={lCls} htmlFor="close-reason">Close {new Date(closing.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}</label>
                     <input id="close-reason" value={closing.reason} onChange={e => setClosing({ ...closing, reason: e.target.value })} placeholder="Why (member outing, aeration…)" className={iCls} />
                   </div>
+                  {closingBooked && closingBooked !== 'error' && closingBooked.groups > 0 && (
+                    <p className="basis-full text-[13px] text-warn">{closingBooked.groups} group{closingBooked.groups === 1 ? '' : 's'} · {closingBooked.players} players booked — they stay booked. <Link href={`/dashboard?date=${closing.date}`} className="underline font-medium">Cancel and tell them</Link></p>
+                  )}
+                  {closingBooked === 'error' && <p className="basis-full text-[13px] text-bad">Couldn’t check who’s booked. <button type="button" onClick={() => startClosing(closing.date)} className="underline font-medium">Retry</button></p>}
                   <button onClick={() => setClosing(null)} className="px-3 py-2 rounded-md text-[13px] text-ink-soft hover:text-ink">Cancel</button>
                   <button onClick={closeDay} disabled={busy} className="px-4 py-2 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50">{busy ? 'Closing…' : 'Close this day'}</button>
                 </div>

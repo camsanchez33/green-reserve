@@ -19,6 +19,7 @@ import { teeTimeInstant } from './booking-events';
 import { generateTeeTimes } from './tee-sheet-engine';
 import { policyFrom, lateFeeTotalCents, noShowTotalCents } from './cancel-policy';
 import { groupGreenFee } from './residents';
+import { splitTotal } from './member-rates';
 import { ACCESS_FEE_CENTS } from './stripe';
 import { CURRENT_TERMS_VERSION } from './terms';
 import { createEvent } from './course-events';
@@ -218,8 +219,10 @@ export async function fillTestCourse(courseId: string, now: Date = new Date()): 
       const source = srcRoll < 0.72 ? 'online' : srcRoll < 0.86 ? 'phone' : 'walk_in';
       const online = source === 'online';
       const memberRate = who.member ? (s.memberRateCents ?? Math.round(s.greenFeeCents * (1 - who.member.pct / 100))) : null;
-      const perPlayer = memberRate ?? s.greenFeeCents;
-      const fee = groupGreenFee(players, perPlayer, who.resident && !who.member && s.residentRateCents != null ? 1 : 0, s.residentRateCents);
+      // The member alone at the member rate, guests at the public one (lib/member-rates).
+      const fee = memberRate != null
+        ? { residentPlayers: 0, residentRateCents: null, greenFeeTotal: splitTotal(players, 1, memberRate, s.greenFeeCents) }
+        : groupGreenFee(players, s.greenFeeCents, who.resident && s.residentRateCents != null ? 1 : 0, s.residentRateCents);
       const cart = !s.walkingAllowed || r() < 0.6;
       const cartFeeTotal = cart ? s.cartFeeCents * players : 0;
       const accessFeeTotal = online ? ACCESS_FEE_CENTS * players : 0;
@@ -233,6 +236,7 @@ export async function fillTestCourse(courseId: string, now: Date = new Date()): 
         id, teeTimeId: s.id, courseId, golferName: who.name, golferEmail: who.email, golferPhone: who.phone, players,
         appliedRate: who.member ? who.member.tierName : fee.residentPlayers ? 'resident' : 'standard',
         residentPlayers: fee.residentPlayers, residentRateCents: fee.residentRateCents,
+        ...(memberRate != null ? { memberRateCents: memberRate, memberCartCents: s.cartFeeCents } : {}),
         greenFeeTotal: fee.greenFeeTotal, cartFeeTotal, cartSelected: cart, accessFeeTotal, totalAmount, source, createdAt,
         status: 'confirmed', // No sample booking claims a saved card it doesn't have: staff take payment by pay link, card or cash.
         paymentStatus: online ? 'no_payment_method' : 'manual',

@@ -87,7 +87,9 @@ export function buildFacts(
     isBaseline: !baseline,
     thinSample: a.behavior.bookings < THIN_BOOKINGS,
     thisMonth: money(cur),
-    revenueStillOwedDollars: dollars(a.revenue.gapCents),
+    // Owed = played and not paid (lib/analytics outstanding); no-shows are counted apart.
+    revenueStillOwedDollars: dollars(a.revenue.outstandingCents),
+    noShowsNotPaidDollars: dollars(a.revenue.noShowUnpaidCents),
     fillByDayOfWeek: a.utilization.byDow.filter(d => d.sale > 0).map(d => ({ day: d.dow, fillPct: d.fillPct })),
     fillByHour: a.utilization.byHour.filter(h => h.sale > 0).map(h => ({ hour: hourLabel(h.hour), fillPct: h.fillPct })),
     worstUnsoldHours: a.unfilled.worstHours.map(h => ({ hour: hourLabel(h.hour), openSpots: h.open })),

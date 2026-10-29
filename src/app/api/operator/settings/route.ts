@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest) {
     // row would be decoration a crafted request walks straight past.
     'phone','website','description',
     'holes','par','yardage','slope','courseRating','type',
-    'hasMemberPricing','memberAdvanceDays',
+    'hasMemberPricing','memberAdvanceDays','memberGraceDays',
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',
     'walkingAllowed','walkingNote','cartRequired',
     'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays','timezone',
