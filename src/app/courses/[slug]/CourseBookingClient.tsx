@@ -1226,9 +1226,9 @@ export default function CourseDetailPage({
                     <h2 className="font-serif text-ink text-[28px] sm:text-[34px] leading-none">
                       Tee times for <span style={{ color: accent }}>{displayDate(selectedDate)}</span>
                     </h2>
-                    {!loadingTimes && teeTimes.length > 0 && (
-                      <span className="text-sm text-ink-muted">{filtered.length} available</span>
-                    )}
+                    {/* Always takes its place (hidden while loading): appearing later, it wrapped onto a second
+                        line on a phone and pushed the page down (perf budget: CLS). */}
+                    <span className={'text-sm text-ink-muted' + (!loadingTimes && teeTimes.length > 0 ? '' : ' invisible')} aria-hidden={loadingTimes || teeTimes.length === 0}>{loadingTimes || teeTimes.length === 0 ? '0 available' : `${filtered.length} available`}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
@@ -1306,7 +1306,9 @@ export default function CourseDetailPage({
                   </div>
                 )}
 
-                {/* List */}
+                {/* List. It keeps the loading placeholder's height (6 rows × 4rem + gaps), so a
+                    short afternoon list never pulls the page up under the golfer (perf budget: CLS). */}
+                <div className="min-h-[26.5rem]">
                 {loadingTimes ? (
                   <div className="space-y-2">
                     {[...Array(6)].map((_, i) => (
@@ -1576,6 +1578,7 @@ export default function CourseDetailPage({
                     ))}
                   </div>
                 )}
+                </div>
 
                 {/* Quiet member sign-in link — unobtrusive, below the slot list */}
                 {!memberSession && (

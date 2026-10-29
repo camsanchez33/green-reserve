@@ -213,6 +213,40 @@ function MembersPageInner() {
     setEditMemberId(null);
   };
 
+  // Revamp 3 dead end 21: dues taken at the shop, a dues link, and editing a member after adding them.
+  const [memberBusy, setMemberBusy] = useState<string | null>(null);
+  const [editDetails, setEditDetails] = useState<{ id: string; name: string; email: string; phone: string; expiresAt: string; notes: string } | null>(null);
+  const [detailsError, setDetailsError] = useState('');
+  const markDuesPaid = async (m: Member) => {
+    if (!confirm(`Record ${m.name || m.email}'s dues as paid at the shop?`)) return;
+    setMemberBusy(m.id);
+    const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id: m.id, action: 'mark_paid' }) });
+    setMemberBusy(null);
+    if (!r.ok) { toast(r.error); return; }
+    await loadAll();
+    toast(`${m.name || m.email}: dues recorded as paid.`, 'ok');
+  };
+  const sendDuesLink = async (m: Member) => {
+    setMemberBusy(m.id);
+    const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id: m.id, action: 'send_pay_link' }) });
+    setMemberBusy(null);
+    if (!r.ok) { toast(r.error); return; }
+    toast(`Dues link emailed to ${m.email}.`, 'ok');
+  };
+  const saveDetails = async () => {
+    if (!editDetails) return;
+    const m = members.find(x => x.id === editDetails.id);
+    setMemberBusy(editDetails.id); setDetailsError('');
+    const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({
+      id: editDetails.id, notes: editDetails.notes, expiresAt: editDetails.expiresAt || null,
+      ...(m && !m.linked ? { name: editDetails.name, email: editDetails.email, phone: editDetails.phone } : {}),
+    }) });
+    setMemberBusy(null);
+    if (!r.ok) { setDetailsError(r.error); return; }
+    setEditDetails(null);
+    await loadAll();
+  };
+
   const toggleMemberStatus = async (m: Member) => {
     const newStatus = m.status === 'active' ? 'inactive' : 'active';
     const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id: m.id, status: newStatus }) });
@@ -269,7 +303,7 @@ function MembersPageInner() {
             {editingTier ? 'Edit membership tier' : 'New membership tier'}
           </h1>
           <p className="text-sm text-ink-soft mb-8">
-            {editingTier ? 'Update the details of this tier.' : 'Set up a tier in three quick steps. Members assigned to it get these rates automatically at checkout.'}
+            {editingTier ? 'Update the details of this tier.' : 'Three steps. Its members get these rates at checkout.'}
           </p>
 
           {/* Step indicator */}
@@ -550,10 +584,10 @@ function MembersPageInner() {
               {members.length === 0 && <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">Your members, what they pay and when they renew.</p>}
             </div>
             {canEdit && (
-              <div className="flex gap-2 shrink-0">
+              <div className="flex flex-wrap gap-2">
                 {unpaid > 0 && (
                   <button onClick={remindOverdue} disabled={remindingOverdue}
-                    title="Emails the dues link to every active member who is unpaid or past their expiry — at most once a week each"
+                    title="Emails each unpaid or expired member their dues link, at most weekly"
                     className="bg-white border border-line hover:border-line-strong text-ink rounded-md text-[13px] font-medium px-4 py-2 disabled:opacity-50">
                     {remindingOverdue ? 'Sending…' : `Remind ${unpaid} unpaid`}
                   </button>
@@ -591,7 +625,7 @@ function MembersPageInner() {
                 <h2 className="font-serif font-semibold text-ink text-[20px]">Add a member</h2>
                 <button onClick={() => { setAddOpen(false); setMemberError(''); }} aria-label="Close" className="text-ink-muted hover:text-ink"><X className="w-4 h-4"/></button>
               </div>
-              <p className="text-[13px] text-ink-soft -mt-2 mb-4">We email them an invite to link their GreenReserve account, so they get member rates when they book online.</p>
+              <p className="text-[13px] text-ink-soft -mt-2 mb-4">We email them an invite so they get member rates online.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2"><label className={lblCls} htmlFor="m-email">Email</label>
                   <input id="m-email" className={iCls} value={memberForm.email} onChange={e => setMemberForm(f => ({ ...f, email: e.target.value }))} placeholder="member@email.com" type="email"/></div>
@@ -626,7 +660,7 @@ function MembersPageInner() {
           {tiers.length === 0 ? (
             <Card className="p-10 text-center">
               <p className="text-[15px] font-semibold text-ink">No memberships set up yet</p>
-              <p className="text-[13.5px] text-ink-soft mt-1 max-w-[36em] mx-auto">Set up a membership — its price, member rates and how far ahead members can book — then add your members to it.</p>
+              <p className="text-[13.5px] text-ink-soft mt-1 max-w-[36em] mx-auto">Set up a membership, then add your members to it.</p>
               {canEdit && <button onClick={() => openWizard()} className="mt-4 bg-pine hover:bg-pine-hover text-white px-4 py-2 rounded-md text-[13px] font-medium">Set up a membership</button>}
             </Card>
           ) : (
@@ -673,10 +707,10 @@ function MembersPageInner() {
                         const openRow = expanded === m.id;
                         return [
                           <tr key={m.id} onClick={() => setExpanded(openRow ? null : m.id)} className={'cursor-pointer hover:bg-paper/60 ' + (m.status !== 'active' ? 'text-ink-soft' : 'text-ink')}>
-                            <td className="px-3 py-2.5 min-w-[14rem]">
+                            <td className="px-3 py-2.5 min-w-[10rem] sm:min-w-[14rem]">
                               <button type="button" aria-expanded={openRow} className="text-left">
-                                <span className="block font-medium truncate max-w-[18rem]">{m.name || m.email}</span>
-                                <span className="block text-[12.5px] text-ink-muted truncate max-w-[18rem]">{m.email}{m.phone ? ` · ${m.phone}` : ''}</span>
+                                <span className="block font-medium truncate max-w-[52vw] sm:max-w-[18rem]">{m.name || m.email}</span>
+                                <span className="block text-[12.5px] text-ink-muted truncate max-w-[52vw] sm:max-w-[18rem]">{m.email}{m.phone ? ` · ${m.phone}` : ''}</span>
                               </button>
                             </td>
                             <td className="px-3 py-2.5 hidden sm:table-cell whitespace-nowrap"><span className="inline-flex items-center gap-2"><span className="w-2 h-2 rounded-full shrink-0" style={{ background: m.tierColor }}/>{m.tierName}</span></td>
@@ -712,8 +746,29 @@ function MembersPageInner() {
                                       ) : (
                                         <button onClick={() => { setEditMemberId(m.id); setEditMemberTierId(m.tierId ?? ''); }} className="text-[13px] font-medium text-pine hover:underline">Change membership</button>
                                       )}
+                                      {(d.kind === 'unpaid' || d.kind === 'expired' || d.kind === 'renewing') && <>
+                                        <button onClick={() => markDuesPaid(m)} disabled={memberBusy === m.id} className="text-[13px] font-medium text-pine hover:underline disabled:opacity-50">Paid at the shop</button>
+                                        {m.email && <button onClick={() => sendDuesLink(m)} disabled={memberBusy === m.id} className="text-[13px] font-medium text-pine hover:underline disabled:opacity-50">{memberBusy === m.id ? 'Sending…' : 'Email dues link'}</button>}
+                                      </>}
+                                      <button onClick={() => { setDetailsError(''); setEditDetails({ id: m.id, name: m.name, email: m.email, phone: m.phone, expiresAt: m.expiresAt ? m.expiresAt.slice(0, 10) : '', notes: m.notes }); }} className="text-[13px] font-medium text-pine hover:underline">Edit details</button>
                                       <button onClick={() => toggleMemberStatus(m)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{m.status === 'active' ? 'Make not active' : 'Make active'}</button>
                                       <button onClick={() => removeMember(m.id, m.name)} className="text-[13px] font-medium text-bad hover:underline">Remove</button>
+                                    </div>
+                                  )}
+                                  {canEdit && editDetails?.id === m.id && (
+                                    <div className="sm:col-span-2 grid sm:grid-cols-2 gap-2 bg-paper/70 rounded-md p-3">
+                                      {!m.linked && <>
+                                        <input value={editDetails.name} onChange={e => setEditDetails({ ...editDetails, name: e.target.value })} aria-label="Name" placeholder="Name" className={iCls} />
+                                        <input value={editDetails.email} onChange={e => setEditDetails({ ...editDetails, email: e.target.value })} aria-label="Email" placeholder="Email" type="email" className={iCls} />
+                                        <input value={editDetails.phone} onChange={e => setEditDetails({ ...editDetails, phone: e.target.value })} aria-label="Phone" placeholder="Phone" type="tel" className={iCls} />
+                                      </>}
+                                      <label className="text-[12.5px] text-ink-soft">Runs until<input type="date" value={editDetails.expiresAt} onChange={e => setEditDetails({ ...editDetails, expiresAt: e.target.value })} className={iCls} /></label>
+                                      <input value={editDetails.notes} onChange={e => setEditDetails({ ...editDetails, notes: e.target.value })} aria-label="Note" placeholder="Note" className={iCls + ' sm:col-span-2'} />
+                                      {detailsError && <p role="alert" className="sm:col-span-2 text-[13px] text-bad">{detailsError}</p>}
+                                      <div className="sm:col-span-2 flex gap-3">
+                                        <button onClick={saveDetails} disabled={memberBusy === m.id} className="px-3 py-1.5 rounded-md bg-pine hover:bg-pine-hover text-white text-[13px] font-medium disabled:opacity-50">{memberBusy === m.id ? 'Saving…' : 'Save'}</button>
+                                        <button onClick={() => setEditDetails(null)} className="text-[13px] text-ink-soft hover:text-ink">Cancel</button>
+                                      </div>
                                     </div>
                                   )}
                                 </div>

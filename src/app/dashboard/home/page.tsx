@@ -9,6 +9,8 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { DeclinedCardList } from '@/components/dashboard/DeclinedCardList';
+import type { DeclinedCard } from '@/lib/operator-home';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
@@ -27,7 +29,7 @@ type Home = {
   trend: { dates: string[]; players: number[]; fillPct: (number | null)[]; paidCents: number[] | null };
   pace: { date: string; offered: number; booked: number; usual: number | null; weeks: number }[];
   money: null | { paidCents: number; paidGroups: number; outstandingCents: number; outstandingGroups: number; lateGroups: number };
-  declined: { id: string; name: string; date: string; time: string; amountCents: number | null }[];
+  declined: DeclinedCard[];
   declinedTotal: number;
   late: { id: string; name: string; time: string }[];
   unreadMessages: number;
@@ -188,16 +190,7 @@ export default function DashboardHome() {
                   <p className="text-[14px] text-ink-soft"><StatusDot status="ok" label="" /> Nothing needs you right now.</p>
                 ) : (
                   <div className="border border-line rounded-lg divide-y divide-line-soft text-[14px]">
-                    {home.declined.map(d => (
-                      <div key={d.id} className="flex items-center gap-3 px-4 py-3">
-                        <StatusDot status="bad" label="" />
-                        <div className="flex-1 min-w-0"><div className="truncate">Card declined — {d.name}</div><div className="text-[12.5px] text-ink-muted">{d.date === home.today ? fmtTime(d.time) : `${d.date} ${fmtTime(d.time)}`}{d.amountCents !== null ? ` · ${usd(d.amountCents)}` : ''}</div></div>
-                        <Link href="/dashboard" className="text-[13px] font-medium text-pine">Open</Link>
-                      </div>
-                    ))}
-                    {home.declinedTotal > home.declined.length && (
-                      <div className="flex items-center gap-3 px-4 py-3 text-ink-soft"><StatusDot status="bad" label="" /><span className="flex-1">and {home.declinedTotal - home.declined.length} more declined card{home.declinedTotal - home.declined.length === 1 ? '' : 's'}</span></div>
-                    )}
+                    <DeclinedCardList rows={home.declined} total={home.declinedTotal} canSendLink={access.can('sheet.checkin')} moreHref={access.can('money.payments') ? '/dashboard/money' : undefined} />
                     {home.late.length > 0 && (
                       <div className="flex items-center gap-3 px-4 py-3">
                         <StatusDot status="warn" label="" />

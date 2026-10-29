@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-29 13:49 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 9e689d2b</span>
-    <span>6 uncommitted</span>
+    <span>2026-10-29 20:08 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 06b64277</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">25 runs have shipped that the queue doesn't know about</div>
+<div class="lede">28 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">06b64277</span><span>Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations</span></li>
+<li><span class="h">0dfd8bdf</span><span>Revamp 3: the 12 audit fixes (#250)</span></li>
+<li><span class="h">92b9bfa6</span><span>Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused</span></li>
 <li><span class="h">9e689d2b</span><span>Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked</span></li>
 <li><span class="h">1f56429b</span><span>Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5</span></li>
 <li><span class="h">28e44ab2</span><span>Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team</span></li>
@@ -162,7 +165,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/golfer-messages-test.ts</code></li><li><code>M src/app/api/operator/golfer-messages/route.ts</code></li><li><code>M src/components/dashboard/GolferMessageModal.tsx</code></li><li><code>M src/lib/golfer-messages.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/dead-ends-a-test.ts</code></li><li><code>M src/app/api/operator/members/route.ts</code></li><li><code>M src/app/dashboard/money/page.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -193,7 +196,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
 <div class="ledger">
-<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">98d</span><span class="where">b88c8bf3</span></div>
+<div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">99d</span><span class="where">b88c8bf3</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
 <ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:50</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:57</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:236</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:339</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2358</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2994</span></li></ul>
@@ -244,6 +247,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">06b64277</td><td class="num">2026-10-29</td><td>Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations</td></tr>
+<tr><td class="num">0dfd8bdf</td><td class="num">2026-10-29</td><td>Revamp 3: the 12 audit fixes (#250)</td></tr>
+<tr><td class="num">92b9bfa6</td><td class="num">2026-10-29</td><td>Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused</td></tr>
 <tr><td class="num">9e689d2b</td><td class="num">2026-10-29</td><td>Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked</td></tr>
 <tr><td class="num">1f56429b</td><td class="num">2026-10-29</td><td>Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5</td></tr>
 <tr><td class="num">28e44ab2</td><td class="num">2026-10-29</td><td>Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team</td></tr>
@@ -253,9 +259,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">57e64d2d</td><td class="num">2026-10-29</td><td>&quot;Not paid yet&quot; is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds</td></tr>
 <tr><td class="num">9bcc13b3</td><td class="num">2026-10-29</td><td>A cash sale records the total the register showed, or nothing</td></tr>
 <tr><td class="num">6ed720e1</td><td class="num">2026-10-29</td><td>A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing</td></tr>
-<tr><td class="num">af4b9fc3</td><td class="num">2026-10-29</td><td>Cash at the register is never blocked by sales tax</td></tr>
-<tr><td class="num">bee3bc29</td><td class="num">2026-10-29</td><td>A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight</td></tr>
-<tr><td class="num">ec1f63b8</td><td class="num">2026-10-29</td><td>A price change reaches every bookable day and the open spots of booked times</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

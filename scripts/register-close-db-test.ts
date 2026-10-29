@@ -74,7 +74,8 @@ async function cleanup() {
   // Count the drawer.
   ok('the counted cash is required', !(await closeDay(c.id, { openingFloatCents: 10000 }, 't')).ok);
   ok('amounts must be whole cents, not negative', !(await closeDay(c.id, { openingFloatCents: -1, countedCashCents: 0 }, 't')).ok && !(await closeDay(c.id, { openingFloatCents: 0, countedCashCents: 1.5 }, 't')).ok);
-  ok('only today or yesterday', !(await closeDay(c.id, { day: addDaysStr(today, -2), openingFloatCents: 0, countedCashCents: 0 }, 't')).ok && (await daySummary(c.id, addDaysStr(today, -1))).ok);
+  // Revamp 3 dead end 24: any of the last 14 days — never a day still to come, never older.
+  ok('any of the last two weeks, never the future', (await daySummary(c.id, addDaysStr(today, -13))).ok && !(await daySummary(c.id, addDaysStr(today, -14))).ok && !(await daySummary(c.id, addDaysStr(today, 1))).ok);
   const first = await closeDay(c.id, { openingFloatCents: 10000, countedCashCents: 10000 + 30000 - 500, note: 'gave $5 too much change' }, 'desk@t.local');
   ok('closed: expected = float + cash taken; $5 short', first.ok && first.value.expectedCashCents === 40000 && first.value.differenceCents === -500 && first.value.day === today && first.value.closedBy === 'desk@t.local', first);
   const again = await closeDay(c.id, { openingFloatCents: 10000, countedCashCents: 40000 }, 'manager@t.local');

@@ -158,9 +158,13 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     settings: access.can('settings.edit'),
   } as Record<string, boolean>)[k] !== false;
 
-  // SD-2: what fits in a thumb row.
-  const mobileKeys: OperatorNavKey[] = (['teesheet', 'shop', 'money', 'schedule', 'messages', 'settings'] as OperatorNavKey[]).filter(visible);
+  // SD-2: what fits in a thumb row. Revamp 3 dead end 26 (Cam 2026-10-29): everything
+  // else — Home, Members, Events, Analytics, Settings — is one tap away under More,
+  // so no page is out of reach on a phone.
+  const mobileKeys: OperatorNavKey[] = (['teesheet', 'shop', 'money', 'messages'] as OperatorNavKey[]).filter(visible);
   const mobileItems = navItems.filter(n => mobileKeys.includes(n.key) && !n.soon);
+  const moreItems = navItems.filter(n => !mobileKeys.includes(n.key) && !n.soon && visible(n.key));
+  const [moreOpen, setMoreOpen] = useState(false);
 
   return (
     <>
@@ -215,7 +219,26 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           </button>
         );
       })}
+      {moreItems.length > 0 && (
+        <button onClick={() => setMoreOpen(o => !o)} aria-expanded={moreOpen} aria-controls="op-more"
+          className={'flex-1 min-h-[56px] flex flex-col items-center justify-center gap-1 text-[10.5px] font-medium ' + (moreItems.some(i => i.key === active) ? 'text-ink' : 'text-ink-muted')}
+          style={moreItems.some(i => i.key === active) ? { color: brandColor } : undefined}>
+          <span aria-hidden="true" className="h-4 leading-4 text-[15px] tracking-[0.1em]">•••</span>
+          <span className="leading-none">More</span>
+        </button>
+      )}
     </nav>
+    {moreOpen && (
+      <div id="op-more" className="md:hidden fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom))] z-30 bg-white border-t border-line shadow-card">
+        {moreItems.map(item => (
+          <button key={item.key} onClick={() => { setMoreOpen(false); if (confirmLeave()) router.push(item.href); }}
+            aria-current={active === item.key ? 'page' : undefined}
+            className="w-full text-left px-5 py-3.5 text-[14px] border-b border-line-soft last:border-b-0 text-ink" style={active === item.key ? { color: brandColor } : undefined}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+    )}
 
     {/* DASH-C (Cam 2026-10-22, "very nice" on the course dashboard mockups,
         replacing CLUB-3's colour bar): on desktop a white 232px menu down the

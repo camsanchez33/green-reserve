@@ -23,6 +23,8 @@ import { roundChargeCents } from './shop';
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
 const MAX_CENTS = 10_000_000; // $100,000 — a typo guard
+/** How far back a day can still be closed out (the day picker's range). */
+export const CLOSE_BACK_DAYS = 14;
 
 export type DaySummary = {
   day: string;
@@ -46,8 +48,9 @@ async function courseDay(courseId: string, day?: string) {
   if (!course) return fail(404, 'Course not found.');
   const today = todayIn(course.timezone);
   const d = day || today;
-  // Today or yesterday (a close-out finished after midnight), never another day.
-  if (d !== today && d !== addDaysStr(today, -1)) return fail(400, 'Close out today, or yesterday if it’s after midnight.');
+  // Revamp 3 dead end 24 (Cam 2026-10-29): any of the last two weeks — Saturday's drawer can be
+  // closed on Monday. Never a day still to come.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > today || d < addDaysStr(today, -(CLOSE_BACK_DAYS - 1))) return fail(400, `Close out a day from the last ${CLOSE_BACK_DAYS} days.`);
   const start = teeTimeInstant(course.timezone, d, '00:00');
   const end = teeTimeInstant(course.timezone, addDaysStr(d, 1), '00:00');
   if (!start || !end) return fail(400, 'Bad day.');

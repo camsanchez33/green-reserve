@@ -9,21 +9,24 @@ import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaymentLinkEmail } from '@/lib/email';
 
-/** Send the dues payment link if the tier actually costs money and Stripe is connected. */
-async function maybeSendPayLink(membershipId: string, isRenewal = false) {
+/**
+ * Send the dues payment link if the tier actually costs money and Stripe is connected.
+ * Says why when it didn't (dead end 21: the staff button must never report a send that didn't happen).
+ */
+async function maybeSendPayLink(membershipId: string, isRenewal = false): Promise<'sent' | 'no_tier' | 'no_email' | 'nothing_owed' | 'no_stripe'> {
   const m = await prisma.courseMembership.findUnique({
     where: { id: membershipId },
     include: { tier: true, course: { select: { name: true, stripeAccountActive: true } }, golfer: { select: { email: true, firstName: true, lastName: true } } },
   });
-  if (!m || !m.tier) return;
+  if (!m || !m.tier) return 'no_tier';
   // The account's email wins over the invite address (a self-joined member has no invite address).
   const to = m.golfer?.email || m.inviteEmail;
-  if (!to) return;
+  if (!to) return 'no_email';
   // MP-3 B2a: compare in cents, convert to dollars only for the email, which
   // renders $${annualFee.toFixed(2)}.
   const initiationCents = m.lastPaidAt || m.initiationWaived ? 0 : m.tier.initiationFeeCents;
-  if (m.tier.annualFeeCents + initiationCents <= 0) return;
-  if (!m.course.stripeAccountActive) return;
+  if (m.tier.annualFeeCents + initiationCents <= 0) return 'nothing_owed';
+  if (!m.course.stripeAccountActive) return 'no_stripe';
   await sendMembershipPaymentLinkEmail({
     name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '),
     email: to,
@@ -34,7 +37,15 @@ async function maybeSendPayLink(membershipId: string, isRenewal = false) {
     payLink: `${process.env.NEXT_PUBLIC_URL}/membership/${m.id}?token=${m.payToken}`,
     isRenewal,
   });
+  return 'sent';
 }
+
+const NOT_SENT: Record<Exclude<Awaited<ReturnType<typeof maybeSendPayLink>>, 'sent'>, string> = {
+  no_tier: 'Put them on a membership first — the link is for its dues.',
+  no_email: 'They have no email on file — add one with Edit details.',
+  nothing_owed: 'Their membership costs nothing, so there is no link to send.',
+  no_stripe: 'Connect Stripe first — the link takes a payment, and there is nowhere for the money to go yet.',
+};
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -202,6 +213,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { id, tierId, status, notes, expiresAt, action } = body;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  if (expiresAt && (typeof expiresAt !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(expiresAt) || Number.isNaN(Date.parse(expiresAt)))) return NextResponse.json({ error: 'Pick the date it runs until, or leave it blank.' }, { status: 400 });
 
   const membership = await prisma.courseMembership.findUnique({ where: { id }, include: { tier: true } });
   if (!membership || membership.courseId !== session.courseId) {
@@ -235,13 +247,30 @@ export async function PATCH(req: NextRequest) {
   }
   if (action === 'send_pay_link') {
     const isRenewal = !!membership.lastPaidAt;
+    let sent: Awaited<ReturnType<typeof maybeSendPayLink>>;
     try {
-      await maybeSendPayLink(id, isRenewal);
+      sent = await maybeSendPayLink(id, isRenewal);
     } catch (err) {
       console.error('Pay link email error:', err);
       return NextResponse.json({ error: 'Could not send the payment email.' }, { status: 500 });
     }
+    if (sent !== 'sent') return NextResponse.json({ error: NOT_SENT[sent] }, { status: 409 });
     return NextResponse.json({ success: true });
+  }
+
+  // Revamp 3 dead end 21: a member's details can be edited after they're added. A linked
+  // golfer account owns its own name, email and phone; only an invite's are edited here.
+  const contact: { inviteName?: string; inviteEmail?: string; invitePhone?: string } = {};
+  if (body.name !== undefined || body.email !== undefined || body.phone !== undefined) {
+    if (membership.golferId) return NextResponse.json({ error: 'This member signs in with their own account — their name, email and phone are theirs to change.' }, { status: 409 });
+    if (body.name !== undefined) { const n = String(body.name ?? '').trim().slice(0, 120); if (!n) return NextResponse.json({ error: 'Add the member’s name.' }, { status: 400 }); contact.inviteName = n; }
+    if (body.email !== undefined) {
+      const e = String(body.email ?? '').trim().toLowerCase().slice(0, 200);
+      if (e && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return NextResponse.json({ error: 'That email address doesn’t look right.' }, { status: 400 });
+      if (e && e !== membership.inviteEmail.toLowerCase() && await prisma.courseMembership.findFirst({ where: { courseId: session.courseId, id: { not: id }, inviteEmail: { equals: e, mode: 'insensitive' } }, select: { id: true } })) return NextResponse.json({ error: 'Another member already uses that email.' }, { status: 409 });
+      contact.inviteEmail = e;
+    }
+    if (body.phone !== undefined) contact.invitePhone = String(body.phone ?? '').trim().slice(0, 30);
   }
 
   if (tierId) {
@@ -258,6 +287,7 @@ export async function PATCH(req: NextRequest) {
       status:    status    ?? membership.status,
       notes:     notes     ?? membership.notes,
       expiresAt: expiresAt !== undefined ? (expiresAt ? new Date(expiresAt) : null) : membership.expiresAt,
+      ...contact,
       // A golfer's self-join has no pay link yet (api/golfer/memberships). Once
       // staff put it on a tier, it can owe dues — mint the token so the pay
       // link, the overdue reminder and the dues cron all reach it.

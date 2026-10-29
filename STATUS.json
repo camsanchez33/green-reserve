@@ -1,22 +1,42 @@
 {
-  "generatedAt": "2026-10-29T13:49:56.848Z",
+  "generatedAt": "2026-10-29T20:08:36.957Z",
   "repo": {
-    "head": "9e689d2b",
+    "head": "06b64277",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 5,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/golfer-messages-test.ts",
-      " M src/app/api/operator/golfer-messages/route.ts",
-      " M src/components/dashboard/GolferMessageModal.tsx",
-      " M src/lib/golfer-messages.ts"
+      " M scripts/dead-ends-a-test.ts",
+      " M src/app/api/operator/members/route.ts",
+      " M src/app/dashboard/money/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "06b64277",
+        "date": "2026-10-29T20:00:59+00:00",
+        "subject": "Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "0dfd8bdf",
+        "date": "2026-10-29T09:58:44-04:00",
+        "subject": "Revamp 3: the 12 audit fixes (#250)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "92b9bfa6",
+        "date": "2026-10-29T13:49:59+00:00",
+        "subject": "Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "9e689d2b",
         "date": "2026-10-29T13:48:14+00:00",
@@ -219,7 +239,7 @@
       "line": 2358,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 98
+      "ageDays": 99
     }
   ],
   "next": [
@@ -589,6 +609,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "06b64277",
+      "date": "2026-10-29",
+      "subject": "Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations"
+    },
+    {
+      "h": "0dfd8bdf",
+      "date": "2026-10-29",
+      "subject": "Revamp 3: the 12 audit fixes (#250)"
+    },
+    {
+      "h": "92b9bfa6",
+      "date": "2026-10-29",
+      "subject": "Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused"
+    },
+    {
       "h": "9e689d2b",
       "date": "2026-10-29",
       "subject": "Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked"
@@ -632,21 +667,6 @@
       "h": "6ed720e1",
       "date": "2026-10-29",
       "subject": "A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing"
-    },
-    {
-      "h": "af4b9fc3",
-      "date": "2026-10-29",
-      "subject": "Cash at the register is never blocked by sales tax"
-    },
-    {
-      "h": "bee3bc29",
-      "date": "2026-10-29",
-      "subject": "A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight"
-    },
-    {
-      "h": "ec1f63b8",
-      "date": "2026-10-29",
-      "subject": "A price change reaches every bookable day and the open spots of booked times"
     }
   ]
 }
