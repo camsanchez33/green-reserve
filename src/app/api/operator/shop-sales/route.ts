@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { createSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, type SaleView } from '@/lib/shop-sales';
+import { createSale, findSales, voidCashSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, type SaleView } from '@/lib/shop-sales';
 import { rateLimit } from '@/lib/rate-limit';
 import { ringUpCash } from '@/lib/register';
 import { startReaderPayment, readerSaleStatus, cancelReaderPayment, simulateTap } from '@/lib/card-reader';
@@ -30,9 +30,17 @@ async function gate() {
 }
 
 /** Today's sales and any still waiting on a pay link, newest first. */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const g = await gate();
   if ('res' in g) return g.res;
+  // Dead end 15: a past day, or a search across 90 days (the register's history).
+  const day = req.nextUrl.searchParams.get('day') ?? '';
+  const q = req.nextUrl.searchParams.get('q') ?? '';
+  if (day || q) {
+    const r = await findSales(g.session.courseId, { day: day || undefined, q });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ sales: r.value });
+  }
   const since = new Date(Date.now() - 36 * 60 * 60 * 1000);
   // A card payment whose request never finished is settled from Stripe here.
   const stuck = await prisma.shopSale.findMany({ where: { courseId: g.session.courseId, status: 'paying' }, select: { id: true }, take: 10 });
@@ -197,10 +205,16 @@ export async function PATCH(req: NextRequest) {
     if (err) return NextResponse.json({ error: err }, { status: 502 });
     return NextResponse.json({ sent: true });
   }
+  // Dead end 23 (Cam 2026-10-29: "Same day, before close-out", anyone with the shop permission).
+  if (body.action === 'void_cash') {
+    const r = await voidCashSale(g.session.courseId, id);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ sale: r.value });
+  }
   if (body.action === 'refund') {
     const denied = requirePermission(g.session, 'money.refund');
     if (denied) return denied;
-    const r = await refundSale(g.session.courseId, id, { amountCents: body.amountCents, reason: body.reason, restock: body.restock }, g.session.email);
+    const r = await refundSale(g.session.courseId, id, { amountCents: body.amountCents, reason: body.reason, restock: body.restock, lines: body.lines }, g.session.email);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json(r.value);
   }

@@ -1371,6 +1371,8 @@ model ShopSale {
   taxCents         Int            @default(0)
   taxCalculationId String         @default("")
   taxTransactionId String         @default("")
+  /// Revamp 3 dead end 23: a paid cash sale voided the same day — its recorded tax reversed ("" = none, or not yet).
+  voidTaxReversalId String        @default("")
   /// Cam 2026-10-29: a cash sale rung up while Stripe Tax couldn't be reached —
   /// taken with no tax rather than blocked (cash is never blocked).
   taxUnavailable   Boolean        @default(false)
@@ -1420,6 +1422,8 @@ model ShopSaleLine {
   quantity       Int       @default(1)
   /// POS-3 R2: a round paid at the register — the booking it settled (no item, no tax, no stock).
   bookingId      String?
+  /// Revamp 3 dead end 23 (Cam 2026-10-29): how many of this line came back as a return.
+  returnedQty    Int       @default(0)
 
   @@index([saleId])
   @@index([shopItemId])
@@ -1680,8 +1684,10 @@ model ShopSaleRefund {
   /// The sales-tax reversal on the course's Stripe account ("" = none needed yet, or not recorded yet).
   taxReversalId  String   @default("")
   reason         String   @default("")
-  /// The items went back on the shelf (a full refund only).
+  /// The items went back on the shelf.
   restocked      Boolean  @default(false)
+  /// Revamp 3 dead end 23: a return by item — [{ lineId, quantity }] — so a refund Stripe refuses puts them back.
+  returnedLines  Json?
   error          String   @default("")
   createdBy      String   @default("")
   createdAt      DateTime @default(now())
