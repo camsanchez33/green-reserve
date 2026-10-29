@@ -4,6 +4,9 @@ import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { listSchedules, createSchedule, updateSchedule, deleteSchedule, saveSchedulePlan, saveCoursePlan, ScheduleConflictError, ScheduleProductError, SchedulePlanError, type SchedulePlan } from '@/lib/schedule-service';
 import type { CoursePlan } from '@/lib/course-plan';
 
+// A schedule change rebuilds every bookable day (lib/tee-sheet-engine regenerateUpcoming), up to a year ahead.
+export const maxDuration = 120;
+
 // L2: the service refuses a save that would double-book a nine (409) or names a
 // product this course does not own (400); everything else is unchanged.
 function scheduleError(err: unknown) {

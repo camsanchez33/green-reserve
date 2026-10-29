@@ -5,6 +5,9 @@ import { resolveDashboardSession, STAFF_FORBIDDEN } from '@/lib/session';
 import { regenerateUpcoming } from '@/lib/tee-sheet-engine';
 import { findScheduleConflict } from '@/lib/schedule-conflict';
 
+// A schedule change rebuilds every bookable day (lib/tee-sheet-engine regenerateUpcoming), up to a year ahead.
+export const maxDuration = 120;
+
 /** L2 review: after a product's nines change, every pair of running schedules must still be legal. */
 async function conflictAfterNineChange(courseId: string, productId: string, nineIds: string[]): Promise<string | null> {
   const [schedules, products, nines] = await Promise.all([

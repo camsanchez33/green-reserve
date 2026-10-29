@@ -2805,7 +2805,7 @@
     },
     {
       "path": "src/app/api/admin/schedule/route.ts",
-      "lines": 83,
+      "lines": 86,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2816,6 +2816,10 @@
         {
           "name": "GET",
           "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
         },
         {
           "name": "PATCH",
@@ -5393,7 +5397,7 @@
     },
     {
       "path": "src/app/api/operator/course-products/route.ts",
-      "lines": 122,
+      "lines": 125,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5404,6 +5408,10 @@
         {
           "name": "GET",
           "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
         },
         {
           "name": "PATCH",
@@ -5436,10 +5444,14 @@
     },
     {
       "path": "src/app/api/operator/course-shape/route.ts",
-      "lines": 23,
+      "lines": 26,
       "purpose": "",
       "brain": [],
       "exports": [
+        {
+          "name": "maxDuration",
+          "kind": "const"
+        },
         {
           "name": "POST",
           "kind": "route"
@@ -6405,7 +6417,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/route.ts",
-      "lines": 96,
+      "lines": 99,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6416,6 +6428,10 @@
         {
           "name": "GET",
           "kind": "route"
+        },
+        {
+          "name": "maxDuration",
+          "kind": "const"
         },
         {
           "name": "PATCH",
@@ -13050,7 +13066,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 581,
+      "lines": 589,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -21929,7 +21945,7 @@
     },
     {
       "path": "src/lib/tee-sheet-engine.ts",
-      "lines": 280,
+      "lines": 283,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -21976,7 +21992,8 @@
         "./booking-window",
         "./course-time",
         "./event-hold",
-        "./prisma"
+        "./prisma",
+        "@prisma/client"
       ],
       "usedBy": [
         "src/app/api/admin/inquiries/route.ts",

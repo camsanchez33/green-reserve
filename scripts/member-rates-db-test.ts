@@ -7,6 +7,7 @@
 // Real database. Run: npx tsx scripts/member-rates-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
+import { counterDueCents } from '../src/lib/counter-pay';
 import { liveMembershipWhere, membershipLive, memberPlayers, splitTotal, partyFees, memberSpot } from '../src/lib/member-rates';
 import { cartAddOnCentsFor } from '../src/lib/checkin-booking';
 
@@ -61,6 +62,10 @@ async function cleanup() {
   ok('guests at the member rate: plain per player', all.memberRateCents === null && partyFees(all, 2, pub).greenFeeTotal === 6000 && partyFees(all, 2, pub).cartFeeTotal === 2000);
   const res = { players: 4, greenFeeTotal: 2500 + 3 * 5000, cartFeeTotal: 0, residentPlayers: 1, residentRateCents: 2500, memberRateCents: null, memberCartCents: null };
   ok('residents still counted first', partyFees(res, 2, pub).greenFeeTotal === 2500 + 5000);
+  // The counter (and the close-out, which re-reads it) keeps range balls whole on a partial party, as card check-in does.
+  const counterB = { ...four, totalAmount: 25000 + 800 + 600, accessFeeTotal: 600, rangeBallsTotal: 800, shopTotalCents: 0, shopTaxCents: 0 };
+  ok('counter: 2 of a member\'s 4 pay the member spot + a guest, range balls whole', counterDueCents(counterB, 2) === 3000 + 5000 + 1000 + 2000 + 800, counterDueCents(counterB, 2));
+  ok('…and the whole group pays the round less the booking fee', counterDueCents(counterB) === 25800);
 
   const op = await prisma.courseOperator.create({ data: { name: 'Rates Test', email: `${TAG}@t.local`, password: 'x' } });
   const course = await prisma.course.create({ data: { name: 'Rates GC', slug: `${TAG}-1`, operatorId: op.id, address: 'a', city: 'c', state: 'NY', zipCode: '1', memberGraceDays: 0 } });
