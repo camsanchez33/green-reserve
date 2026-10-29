@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-29 13:10 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bee3bc29` · working tree **11 dirty file(s)**
+Generated 2026-10-29 13:22 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9bcc13b3` · working tree **10 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 15 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 18 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `9bcc13b3` | 2026-10-29 | A cash sale records the total the register showed, or nothing |
+| `6ed720e1` | 2026-10-29 | A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing |
+| `af4b9fc3` | 2026-10-29 | Cash at the register is never blocked by sales tax |
 | `bee3bc29` | 2026-10-29 | A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight |
 | `ec1f63b8` | 2026-10-29 | A price change reaches every bookable day and the open spots of booked times |
 | `64c39edb` | 2026-10-29 | An unsigned Operator Agreement no longer locks staff out of the tee sheet |
@@ -30,19 +33,18 @@ Generated 2026-10-29 13:10 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (10 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/shop-sales-tax-db-test.ts`
-- `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/shop-sales/quote/route.ts`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/components/dashboard/RegisterClose.tsx`
-- `M src/lib/register-close.ts`
-- `M src/lib/shop-sales.ts`
-- `?? prisma/migrations/20261029070000_shop_sale_tax_unavailable/`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/money/overview/route.ts`
+- `M src/app/api/operator/sheet-money/route.ts`
+- `M src/app/dashboard/money/page.tsx`
+- `M src/components/dashboard/money/PaymentsPanel.tsx`
+- `M src/lib/analytics.ts`
+- `M src/lib/operator-home.ts`
+- `?? scripts/not-paid-db-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -168,6 +170,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `9bcc13b3` 2026-10-29 — A cash sale records the total the register showed, or nothing
+- `6ed720e1` 2026-10-29 — A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing
+- `af4b9fc3` 2026-10-29 — Cash at the register is never blocked by sales tax
 - `bee3bc29` 2026-10-29 — A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight
 - `ec1f63b8` 2026-10-29 — A price change reaches every bookable day and the open spots of booked times
 - `64c39edb` 2026-10-29 — An unsigned Operator Agreement no longer locks staff out of the tee sheet
@@ -177,9 +182,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `161d3d7f` 2026-10-28 — Fill a test course with sample data; never email a placeholder address or text a fictional number
 - `fa0add63` 2026-10-27 — DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)
 - `187a1ba4` 2026-10-27 — DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)
-- `b8440aa6` 2026-10-27 — Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)
-- `8061878d` 2026-10-27 — No cancelling after the tee time: check in or no-show (charged at midnight) (#244)
-- `e8e2a2e6` 2026-10-27 — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)
 
 ---
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
-import { todayIn, addDaysStr } from '@/lib/course-time';
+import { todayIn, addDaysStr, clockIn } from '@/lib/course-time';
 import { computeAnalytics } from '@/lib/analytics';
 import { declinedCards } from '@/lib/operator-home';
 
@@ -24,6 +24,8 @@ export async function GET() {
   ]);
   return NextResponse.json({
     week: { from, to: today },
+    // Course time, so Payments sorts played from still-to-play by the course's clock, not the browser's.
+    today, clock: clockIn(course?.timezone),
     paidCents: a.revenue.collectedCents,
     notPaidCents: a.revenue.outstandingCents,
     notPaidGroups: a.revenue.outstandingBookings,

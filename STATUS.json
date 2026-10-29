@@ -1,27 +1,47 @@
 {
-  "generatedAt": "2026-10-29T13:10:06.616Z",
+  "generatedAt": "2026-10-29T13:22:50.530Z",
   "repo": {
-    "head": "bee3bc29",
+    "head": "9bcc13b3",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 11,
+    "dirtyCount": 10,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/shop-sales-tax-db-test.ts",
-      " M scripts/words-guard.baseline.json",
-      " M src/app/api/operator/shop-sales/quote/route.ts",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/components/dashboard/RegisterClose.tsx",
-      " M src/lib/register-close.ts",
-      " M src/lib/shop-sales.ts",
-      "?? prisma/migrations/20261029070000_shop_sale_tax_unavailable/"
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/money/overview/route.ts",
+      " M src/app/api/operator/sheet-money/route.ts",
+      " M src/app/dashboard/money/page.tsx",
+      " M src/components/dashboard/money/PaymentsPanel.tsx",
+      " M src/lib/analytics.ts",
+      " M src/lib/operator-home.ts",
+      "?? scripts/not-paid-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "9bcc13b3",
+        "date": "2026-10-29T13:22:47+00:00",
+        "subject": "A cash sale records the total the register showed, or nothing",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6ed720e1",
+        "date": "2026-10-29T13:15:58+00:00",
+        "subject": "A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "af4b9fc3",
+        "date": "2026-10-29T13:10:14+00:00",
+        "subject": "Cash at the register is never blocked by sales tax",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "bee3bc29",
         "date": "2026-10-29T13:03:29+00:00",
@@ -524,6 +544,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "9bcc13b3",
+      "date": "2026-10-29",
+      "subject": "A cash sale records the total the register showed, or nothing"
+    },
+    {
+      "h": "6ed720e1",
+      "date": "2026-10-29",
+      "subject": "A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing"
+    },
+    {
+      "h": "af4b9fc3",
+      "date": "2026-10-29",
+      "subject": "Cash at the register is never blocked by sales tax"
+    },
+    {
       "h": "bee3bc29",
       "date": "2026-10-29",
       "subject": "A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight"
@@ -567,21 +602,6 @@
       "h": "187a1ba4",
       "date": "2026-10-27",
       "subject": "DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)"
-    },
-    {
-      "h": "b8440aa6",
-      "date": "2026-10-27",
-      "subject": "Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)"
-    },
-    {
-      "h": "8061878d",
-      "date": "2026-10-27",
-      "subject": "No cancelling after the tee time: check in or no-show (charged at midnight) (#244)"
-    },
-    {
-      "h": "e8e2a2e6",
-      "date": "2026-10-27",
-      "subject": "DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)"
     }
   ]
 }

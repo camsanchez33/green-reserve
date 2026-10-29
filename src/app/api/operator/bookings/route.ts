@@ -8,7 +8,7 @@ import { performCheckIn } from '@/lib/checkin-booking';
 import { sendBookingConfirmation, sendCheckInAvailableEmail, sendBookingModifiedEmail, isPlaceholderEmail } from '@/lib/email';
 import { moveBooking } from '@/lib/move-booking';
 import { setBookingResidents } from '@/lib/booking-residents';
-import { isPastIn } from '@/lib/course-time';
+import { isPastIn, todayIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { refundSeparateAccessFee } from '@/lib/access-fee';
 import { markNoShow, refundNoShowFee, roundPaid } from '@/lib/no-show-fee';
@@ -33,12 +33,17 @@ export async function GET(req: NextRequest) {
   const asked = req.nextUrl.searchParams.get('status') || undefined;
   const status = seesPayments ? asked : (asked === 'cancelled' || asked === 'confirmed' ? asked : { in: ['confirmed', 'cancelled'] });
   const date = req.nextUrl.searchParams.get('date') || undefined;
+  // Revamp 3 audit (Cam 2026-10-29): Payments lists rounds already played, newest
+  // tee time first. The default feed (newest 200 made) was mostly future rounds,
+  // so "Not paid yet · 12 groups" opened a list of 2.
+  const played = seesPayments && !date && req.nextUrl.searchParams.get('played') === '1';
+  const courseToday = played ? todayIn((await prisma.course.findUnique({ where: { id: session.courseId }, select: { timezone: true } }))?.timezone) : '';
 
   const bookings = await prisma.booking.findMany({
     where: {
       courseId: session.courseId,
       ...(status ? { status } : {}),
-      ...(date ? { teeTime: { date } } : {}),
+      ...(date ? { teeTime: { date } } : played ? { teeTime: { date: { lte: courseToday } } } : {}),
     },
     // SD-8 review (MEDIUM): this used to ship WHOLE booking rows to the
     // browser — up to 200 of them — including `checkInToken`, the bearer token
@@ -55,8 +60,8 @@ export async function GET(req: NextRequest) {
       cancellationHoursAtBooking: true, source: true,
       teeTime: { select: { date: true, time: true, holes: true } },
     },
-    orderBy: { createdAt: 'desc' },
-    take: date ? undefined : 200,
+    orderBy: played ? [{ teeTime: { date: 'desc' } }, { teeTime: { time: 'desc' } }] : { createdAt: 'desc' },
+    take: date ? undefined : played ? 1000 : 200,
   });
 
   // SP-A: contact details only with "See golfer email and phone"; payment

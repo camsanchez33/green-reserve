@@ -17,7 +17,10 @@
 //   collected        course share of completed bookings: paid by card at
 //                    check-in ('paid') or at the counter ('paid_offline').
 //                    There is no online prepay — cards are charged at check-in.
-//   outstanding      non-cancelled, tee time passed, not collected.
+//   outstanding      non-cancelled, tee time passed, not collected — and not a
+//                    no-show staff marked (counted apart, never chased as a debt)
+//                    or a round refunded in full (Revamp 3 audit, Cam 2026-10-29).
+//                    Expected leaves fully refunded rounds out too.
 //   spots for sale   playersAvailable of every non-blocked tee time.
 //   no-show          non-cancelled, never checked in, tee time + grace passed.
 //   unfilled slot    non-blocked tee time that passed with open spots; lost
@@ -134,17 +137,21 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const live = bookings.filter(b => b.status !== 'cancelled');
   const cancelled = bookings.filter(b => b.status === 'cancelled');
   const collectedB = live.filter(b => b.status === 'completed' && (b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline'));
+  const refunded = (b: { paymentStatus: string }) => b.paymentStatus === 'refunded';
   const pastLive = live.filter(b => b.passed);
+  // Money: a round refunded in full is settled, neither expected nor owed.
+  const pastMoney = pastLive.filter(b => !refunded(b));
   const collectedSet = new Set(collectedB);
 
   // ── 1. Revenue ────────────────────────────────────────────────────────────
-  const expected = pastLive.reduce((s, b) => s + share(b), 0);
+  const expected = pastMoney.reduce((s, b) => s + share(b), 0);
   const collected = collectedB.reduce((s, b) => s + share(b), 0);
   const card = collectedB.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + share(b), 0);
   const counter = collectedB.filter(b => b.paymentStatus === 'paid_offline').reduce((s, b) => s + share(b), 0);
-  const outstandingB = pastLive.filter(b => !collectedSet.has(b));
+  const outstandingB = pastMoney.filter(b => !collectedSet.has(b) && !b.noShowAt);
   const outstanding = outstandingB.reduce((s, b) => s + share(b), 0);
-  const upcomingB = live.filter(b => !b.passed && !collectedSet.has(b));
+  const noShowUnpaidB = pastMoney.filter(b => !collectedSet.has(b) && b.noShowAt);
+  const upcomingB = live.filter(b => !b.passed && !collectedSet.has(b) && !refunded(b));
   const upcoming = upcomingB.reduce((s, b) => s + share(b), 0);
   // Review (spec): the Money tab's Pending tiles, now here — upcoming rounds
   // with a card saved (charged at check-in), and upcoming rounds paid at the
@@ -166,7 +173,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   for (let d = range.from; d <= range.to && d <= today; d = addDaysStr(d, 1)) {
     const k = bucketOf(d); if (!series.has(k)) series.set(k, { expected: 0, collected: 0, rounds: 0, sale: 0, booked: 0 });
   }
-  for (const b of pastLive) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
+  for (const b of pastMoney) { const r = series.get(bucketOf(b.date)); if (r) r.expected += share(b); }
   for (const b of collectedB) { const r = series.get(bucketOf(b.date)); if (r) { r.collected += share(b); r.rounds += b.checkedInPlayers ?? b.players; } }
   // DENSE-2: the same collected course share, by the tee time's weekday and hour (Money's sales charts).
   const collectedByDow = Array.from({ length: 7 }, () => 0);
@@ -425,6 +432,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     revenue: {
       expectedCents: expected, collectedCents: collected, gapCents: expected - collected, gapPct: pct(expected - collected, expected),
       cardCents: card, counterCents: counter, outstandingCents: outstanding, outstandingBookings: outstandingB.length, upcomingCents: upcoming,
+      noShowUnpaidCents: noShowUnpaidB.reduce((s, b) => s + share(b), 0), noShowUnpaidBookings: noShowUnpaidB.length,
       // W2-8 (4): beyond the green fee — rounds with a cart, shop items on rounds, and walk-up shop sales (before tax).
       beyond: {
         cartRounds, rounds: collectedB.length, cartPct: pct(cartRounds, collectedB.length),

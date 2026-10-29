@@ -5226,7 +5226,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 319,
+      "lines": 324,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5850,7 +5850,7 @@
     },
     {
       "path": "src/app/api/operator/money/overview/route.ts",
-      "lines": 35,
+      "lines": 37,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6681,7 +6681,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 250,
+      "lines": 251,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8093,7 +8093,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 291,
+      "lines": 298,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -8352,7 +8352,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 809,
+      "lines": 813,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10872,7 +10872,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 117,
+      "lines": 122,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -20129,7 +20129,7 @@
     },
     {
       "path": "src/lib/register.ts",
-      "lines": 113,
+      "lines": 120,
       "purpose": "POS-3 R2 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -21299,7 +21299,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 601,
+      "lines": 614,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -21401,6 +21401,10 @@
         },
         {
           "name": "STALE_CHARGE_MS",
+          "kind": "const"
+        },
+        {
+          "name": "TOTAL_CHANGED",
           "kind": "const"
         },
         {

@@ -21,7 +21,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { formatTeeTime, formatTeeDate } from '@/lib/format';
 import type { DeclinedCard } from '@/lib/operator-home';
 
-type Overview = { week: { from: string; to: string }; paidCents: number; notPaidCents: number; notPaidGroups: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
+type Overview = { week: { from: string; to: string }; today: string; clock: string; paidCents: number; notPaidCents: number; notPaidGroups: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
 const usd2 = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 const fmtArrival = (iso: string) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -47,6 +47,8 @@ function MoneyPageInner() {
   const showParam = searchParams.get('show');
 
   const [bookings, setBookings] = useState<MoneyBooking[]>([]);
+  const [played, setPlayed] = useState<MoneyBooking[] | null>(null);
+  const [playedError, setPlayedError] = useState('');
   const [dated, setDated] = useState<MoneyBooking[] | null>(null);
   const [datedError, setDatedError] = useState('');
   const [course, setCourse] = useState<MoneyCourse>(EMPTY_COURSE);
@@ -76,13 +78,17 @@ function MoneyPageInner() {
     // The unfiltered list drives Cancellations and the unfiltered Payments
     // view. A ?date= deep link from the tee sheet gets its own fetch, because
     // the unfiltered one is capped at the newest 200 rows.
-    const [all, day] = await Promise.all([
+    const [all, playedRes, day] = await Promise.all([
       dfetch<MoneyBooking[]>('/api/operator/bookings'),
+      // Payments: rounds already played, newest first (not the newest bookings made).
+      dfetch<MoneyBooking[]>('/api/operator/bookings?played=1'),
       dateFilter ? dfetch<MoneyBooking[]>(`/api/operator/bookings?date=${encodeURIComponent(dateFilter)}`) : Promise.resolve(null),
     ]);
     if (all.status === 401) { router.push('/dashboard/login'); return; }
     if (!all.ok) { setBookings([]); setLoadError(all.error); }
     else { setBookings(Array.isArray(all.data) ? all.data : []); setLoadError(''); }
+    if (playedRes.ok && Array.isArray(playedRes.data)) { setPlayed(playedRes.data); setPlayedError(''); }
+    else { setPlayed(null); setPlayedError(playedRes.ok ? 'Unreadable reply.' : playedRes.error); }
     // SD-8 review (BLOCKING): this used to discard a failed day fetch and fall
     // back to the unfiltered list while the panel still announced "Showing
     // bookings for <date>" — the wrong rows under a banner asserting they were
@@ -162,7 +168,7 @@ function MoneyPageInner() {
 
   // With a date asked for but not loaded, show nothing rather than the
   // unfiltered list — the error above says why.
-  const paymentRows = dateFilter ? (dated ?? []) : bookings;
+  const paymentRows = dateFilter ? (dated ?? []) : (played ?? []);
 
   return (
     <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
@@ -262,6 +268,7 @@ function MoneyPageInner() {
             </div>
           )}
           {loadError && tabs.length > 0 && <LoadError message={loadError} onRetry={loadBookings} />}
+          {playedError && active === 'payments' && !dateFilter && <LoadError message={playedError} onRetry={loadBookings} />}
           {datedError && active === 'payments' && (
             <LoadError message={`Couldn't load that day's bookings — ${datedError}`} onRetry={loadBookings} />
           )}
@@ -269,7 +276,7 @@ function MoneyPageInner() {
           {!access.loaded || tabs.length === 0 ? null : loading ? (
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
           ) : active === 'payments' ? (
-            <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
+            <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} courseNow={overview ? { today: overview.today, clock: overview.clock } : undefined} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
           ) : active === 'cancellations' ? (
             <CancellationsPanel bookings={bookings} course={course}/>
           ) : (
