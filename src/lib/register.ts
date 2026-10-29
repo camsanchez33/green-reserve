@@ -24,7 +24,7 @@ export async function registerRounds(courseId: string, date: string, nowTime: st
     }),
     prisma.teeTime.findMany({
       where: { courseId, date, time: { gte: nowTime }, status: { not: 'blocked' } },
-      select: { id: true, time: true, holes: true, playersAvailable: true, playersBooked: true, greenFeeCents: true, cartFeeCents: true, walkingAllowed: true, product: { select: { label: true } } },
+      select: { id: true, time: true, holes: true, playersAvailable: true, playersBooked: true, greenFeeCents: true, cartFeeCents: true, residentRateCents: true, seniorRateCents: true, juniorRateCents: true, walkingAllowed: true, product: { select: { label: true } } },
       orderBy: { time: 'asc' }, take: 40,
     }),
   ]);
@@ -34,6 +34,8 @@ export async function registerRounds(courseId: string, date: string, nowTime: st
     open: open.filter(t => t.playersAvailable - t.playersBooked > 0).slice(0, 12).map(t => ({
       teeTimeId: t.id, time: t.time, holes: t.holes, round: t.product?.label ?? null, spots: t.playersAvailable - t.playersBooked,
       greenFeeCents: t.greenFeeCents, cartFeeCents: t.cartFeeCents, walkingAllowed: t.walkingAllowed,
+      // Dead end 20: the time's other prices the register can ring a walk-in at.
+      rates: { resident: t.residentRateCents, senior: t.seniorRateCents, junior: t.juniorRateCents },
     })),
   };
 }

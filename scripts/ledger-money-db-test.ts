@@ -166,8 +166,8 @@ const hhmm = (d: Date) => d.toISOString().slice(11, 16);
   ok('…the booking stays a confirmed no-show', cc.status === 'confirmed' && !!cc.noShowAt);
 
   // ── Route guards (the routes read cookies, so their checks are read from source) ──
-  const players = readFileSync('src/app/api/manage/[bookingId]/change-players/route.ts', 'utf8');
-  ok('G9: change-players refuses a no-show or a started tee time', /booking\.noShowAt \|\| isPastIn\(/.test(players) && players.includes("code: 'STARTED'"));
+  const players = readFileSync('src/lib/change-party.ts', 'utf8');
+  ok('G9: change-players refuses a no-show or a started tee time', /booking\.noShowAt \|\| \(who\.by === 'golfer' && isPastIn\(/.test(players) && players.includes("code: 'STARTED'"));
   ok('R-BOOK-004: change-players never reopens a blocked time, nor sells into it', players.includes("slot.status !== 'blocked' ?") && players.includes("slot.status === 'blocked' && newPlayers > booking.players"));
   const sheet = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
   const sc = sheet.slice(sheet.indexOf("if (action === 'still_coming')"));

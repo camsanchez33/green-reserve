@@ -21,6 +21,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { formatTeeTime, formatTeeDate } from '@/lib/format';
 import type { DeclinedCard } from '@/lib/operator-home';
 import { DeclinedCardList } from '@/components/dashboard/DeclinedCardList';
+import { toast } from '@/components/dashboard/Toast';
 
 type Overview = { week: { from: string; to: string }; today: string; clock: string; paidCents: number; notPaidCents: number; notPaidGroups: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
 const usd2 = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -242,9 +243,9 @@ function MoneyPageInner() {
           {!access.loaded || tabs.length === 0 ? null : loading ? (
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
           ) : active === 'payments' ? (
-            <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} courseNow={overview ? { today: overview.today, clock: overview.clock } : undefined} capped={!dateFilter && (played?.length ?? 0) >= 1000} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
+            <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} courseNow={overview ? { today: overview.today, clock: overview.clock } : undefined} capped={!dateFilter && (played?.length ?? 0) >= 1000} canRefund={access.can('money.refund_rounds')} onRefunded={m => { toast(m, 'ok'); loadBookings(); }} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
           ) : active === 'cancellations' ? (
-            <CancellationsPanel key={searchParams.get('q') ?? ''} bookings={bookings} course={course} initialQuery={active === 'cancellations' ? searchParams.get('q') ?? '' : ''}/>
+            <CancellationsPanel key={searchParams.get('q') ?? ''} canWaive={access.can('sheet.waive_fee')} onRefunded={m => { toast(m, 'ok'); loadBookings(); }} bookings={bookings} course={course} initialQuery={active === 'cancellations' ? searchParams.get('q') ?? '' : ''}/>
           ) : (
             <PayoutsPanel course={course} stripeParam={stripeParam} onConnected={loadCourse} canConnect={!treatAsStaff}/>
           )}

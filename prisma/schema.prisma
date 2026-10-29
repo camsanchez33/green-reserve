@@ -145,6 +145,10 @@ model Course {
   /// Cam 2026-10-29: member rates and the member booking window end this many days after a
   /// membership's expiry date (0 = on expiry). lib/member-rates.ts.
   memberGraceDays            Int                   @default(0)
+  /// Cam 2026-10-29: who gets a member rate at the counter. 'member' (default): staff pick the
+  /// member — they show their membership — and that membership's live rate applies. 'any': staff
+  /// may pick any of the course's memberships for a walk-in or phone booking (the course's call).
+  counterMemberRate String @default("member")
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
   confirmationNote           String?
@@ -490,6 +494,9 @@ model TeeTime {
   greenFeeCents     Int
   memberRateCents   Int?
   residentRateCents Int?
+  /// Revamp 3 dead end 20 (Cam 2026-10-29): senior and junior prices, picked at the counter (online only through a membership).
+  seniorRateCents   Int?
+  juniorRateCents   Int?
   cartFeeCents      Int            @default(0)
   walkingAllowed    Boolean        @default(true)
   tierName          String         @default("standard")
@@ -664,6 +671,11 @@ model TeeTimeSchedule {
   memberRateWeekendCents   Int?
   residentRateWeekdayCents Int?
   residentRateWeekendCents Int?
+  /// Revamp 3 dead end 20: senior and junior prices (counter only).
+  seniorRateWeekdayCents   Int?
+  seniorRateWeekendCents   Int?
+  juniorRateWeekdayCents   Int?
+  juniorRateWeekendCents   Int?
   cartFeeCents             Int            @default(0)
   walkingAllowed           Boolean        @default(true)
   /// CART-1 (Cam 2026-10-24): weekend cart price and walking; null = the same as weekdays.
@@ -1124,6 +1136,8 @@ enum BookingEventType {
   booking_moved
   /// RES-1: staff changed a group's price at the counter (residents in the group; metadata: before/after).
   price_changed
+  /// Revamp 3 (Cam 2026-10-29): staff refunded part or all of the course's share of a paid round (lib/staff-refund).
+  round_refunded
 }
 
 enum EventActorType {
@@ -1369,6 +1383,8 @@ model ShopSale {
   taxCents         Int            @default(0)
   taxCalculationId String         @default("")
   taxTransactionId String         @default("")
+  /// Revamp 3 dead end 23: a paid cash sale voided the same day — its recorded tax reversed ("" = none, or not yet).
+  voidTaxReversalId String        @default("")
   /// Cam 2026-10-29: a cash sale rung up while Stripe Tax couldn't be reached —
   /// taken with no tax rather than blocked (cash is never blocked).
   taxUnavailable   Boolean        @default(false)
@@ -1418,6 +1434,8 @@ model ShopSaleLine {
   quantity       Int       @default(1)
   /// POS-3 R2: a round paid at the register — the booking it settled (no item, no tax, no stock).
   bookingId      String?
+  /// Revamp 3 dead end 23 (Cam 2026-10-29): how many of this line came back as a return.
+  returnedQty    Int       @default(0)
 
   @@index([saleId])
   @@index([shopItemId])
@@ -1678,8 +1696,10 @@ model ShopSaleRefund {
   /// The sales-tax reversal on the course's Stripe account ("" = none needed yet, or not recorded yet).
   taxReversalId  String   @default("")
   reason         String   @default("")
-  /// The items went back on the shelf (a full refund only).
+  /// The items went back on the shelf.
   restocked      Boolean  @default(false)
+  /// Revamp 3 dead end 23: a return by item — [{ lineId, quantity }] — so a refund Stripe refuses puts them back.
+  returnedLines  Json?
   error          String   @default("")
   createdBy      String   @default("")
   createdAt      DateTime @default(now())

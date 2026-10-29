@@ -178,6 +178,7 @@ const BOOKING_TITLES: Record<string, string> = {
   booking_created: 'Booked', booking_cancelled: 'Cancelled', checked_in: 'Checked in',
   no_show_marked: 'Marked no-show', no_show_cleared: 'No-show cleared', booking_moved: 'Moved to another time',
   price_changed: 'Price changed at the counter',
+  round_refunded: 'Round refunded by the course',
 };
 const PAYMENT_TITLES: Record<string, [string, FeedItem['tone']]> = {
   round_charge: ['Round charged', 'ok'], charge: ['Charged', 'ok'], fee_charged: ['GreenReserve fee charged', 'ok'],

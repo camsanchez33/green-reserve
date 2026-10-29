@@ -26,7 +26,7 @@ type Item = FlatItem;
 type Refund = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdAt: string };
 type Sale = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: string; paidAt: string | null; customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
-  lines: { name: string; unitPriceCents: number; quantity: number }[];
+  lines: { id: string; name: string; unitPriceCents: number; quantity: number; returnedQty: number; round: boolean }[];
   discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number; receiptSentAt: string | null; refunds: Refund[];
   /** POS-3 R2: green fees in this sale — refunded from the booking, not here. */
   roundsCents: number;
@@ -41,8 +41,8 @@ type ReaderSale = { sale: Sale; readerId: string; state: 'waiting' | 'declined' 
 type Custom = { key: string; name: string; priceCents: number; quantity: number };
 // POS-3 R2: green fees at the register — today's groups that owe, and walk-ins.
 type Owing = { bookingId: string; time: string; holes: number; golferName: string; players: number; dueCents: number; cardCents: number; noShow: boolean };
-type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean };
-type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number };
+type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean; rates?: Record<'resident' | 'senior' | 'junior', number | null> };
+type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number; rate: string };
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
 type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean };
 
@@ -89,14 +89,29 @@ export default function ShopPage() {
   const [tendered, setTendered] = useState('');
   const [justPaid, setJustPaid] = useState<Sale | null>(null);
   const [receipt, setReceipt] = useState<{ id: string; via: 'email' | 'sms'; to: string } | null>(null);
-  const [refund, setRefund] = useState<{ id: string; amount: string; reason: string; restock: boolean; confirm: boolean } | null>(null);
+  // returns: line id → how many are coming back (dead end 23: a return by item; empty = a refund by amount).
+  const [refund, setRefund] = useState<{ id: string; amount: string; reason: string; restock: boolean; confirm: boolean; returns?: Record<string, string> } | null>(null);
+  // Dead end 15: the register's history — a past day or a search across 90 days (null = today's list).
+  const [hist, setHist] = useState<{ q: string; day: string } | null>(null);
+  const [histSales, setHistSales] = useState<Sale[] | null>(null);
+  const [histError, setHistError] = useState('');
+  async function loadHistory(h: { q: string; day: string }) {
+    setHist(h); setHistError('');
+    if (!h.q.trim() && !h.day) { setHist(null); setHistSales(null); return; }
+    const p = new URLSearchParams(); if (h.q.trim()) p.set('q', h.q.trim()); if (h.day) p.set('day', h.day);
+    const r = await dfetch<{ sales: Sale[] }>(`/api/operator/shop-sales?${p}`);
+    if (!r.ok) { setHistError(r.error); setHistSales(null); return; }
+    setHistSales(r.data.sales);
+  }
   const searchRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<'items' | 'rounds'>('items');
   const [roundsData, setRoundsData] = useState<{ owing: Owing[]; open: OpenTime[] } | null>(null);
   const [roundsError, setRoundsError] = useState('');
   const [picked, setPicked] = useState<string[]>([]);
   const [walkIns, setWalkIns] = useState<WalkIn[]>([]);
-  const [walkForm, setWalkForm] = useState<{ teeTimeId: string; name: string; players: number; cart: boolean } | null>(null);
+  const [walkForm, setWalkForm] = useState<{ teeTimeId: string; name: string; players: number; cart: boolean; rate?: string } | null>(null);
+  // Dead end 20: a walk-in at the time's resident, senior or junior price (members are booked on the tee sheet).
+  const walkGreen = (t: OpenTime, rate?: string) => (rate && rate !== 'standard' ? t.rates?.[rate as 'resident' | 'senior' | 'junior'] ?? t.greenFeeCents : t.greenFeeCents);
   const [quoteError, setQuoteError] = useState('');
   const [quoteTry, setQuoteTry] = useState(0);
 
@@ -185,7 +200,7 @@ export default function ShopPage() {
       body: JSON.stringify({
         lines: salePayload, discount: itemsEmpty ? undefined : discountPayload,
         bookingIds: pickedRounds.map(o => o.bookingId),
-        walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart })),
+        walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart, rate: w.rate })),
         pay: pay === 'cash' || pay === 'reader' ? pay : 'link', via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
         cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
         // The total on screen: if the tax has changed since, nothing is rung up and the new total shows.
@@ -308,12 +323,15 @@ export default function ShopPage() {
   async function doRefund(sale: Sale) {
     if (!refund) return;
     setBusy('refund' + sale.id); setError(''); setNote('');
-    const r = await dfetch<{ status: 'done' | 'pending' }>('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: sale.id, action: 'refund', amountCents: toCents(refund.amount), reason: refund.reason, restock: refund.restock }) });
+    const lines = Object.entries(refund.returns ?? {}).map(([lineId, q]) => ({ lineId, quantity: Number(q) })).filter(l => l.quantity > 0);
+    const r = await dfetch<{ status: 'done' | 'pending' }>('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify(lines.length
+      ? { id: sale.id, action: 'refund', lines, reason: refund.reason, restock: refund.restock }
+      : { id: sale.id, action: 'refund', amountCents: toCents(refund.amount), reason: refund.reason, restock: refund.restock }) });
     setBusy('');
     if (!r.ok) { setError(r.error); load(); return; }
     setRefund(null);
     setNote(r.data.status === 'pending' ? 'Sent to Stripe — not confirmed yet.' : sale.status === 'paid_card' ? 'Refunded to their card.' : 'Refund recorded — hand the cash back.');
-    load();
+    load(); if (hist) loadHistory(hist);
   }
 
   async function retryRefund(sale: Sale, refundId: string) {
@@ -325,15 +343,16 @@ export default function ShopPage() {
     load();
   }
 
-  async function act(sale: Sale, action: 'void' | 'paid_cash' | 'resend', via?: 'sms' | 'email') {
+  async function act(sale: Sale, action: 'void' | 'paid_cash' | 'resend' | 'void_cash', via?: 'sms' | 'email') {
     if (action === 'void' && !confirm(`Void this ${usd(sale.totalCents)} sale?${sale.link ? ' The pay link stops working.' : ''}`)) return;
+    if (action === 'void_cash' && !confirm(`Void this ${usd(sale.totalCents)} cash sale and hand the cash back?`)) return;
     if (onReader?.sale.id === sale.id) setOnReader(null);
     setBusy(sale.id); setError(''); setNote('');
     const r = await dfetch('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: sale.id, action, via }) });
     setBusy('');
     if (!r.ok) { setError(r.error); load(); return; }
-    setNote(action === 'void' ? 'Sale voided.' : action === 'paid_cash' ? 'Recorded as paid in cash.' : 'Pay link sent again.');
-    load();
+    setNote(action === 'void' || action === 'void_cash' ? 'Sale voided.' : action === 'paid_cash' ? 'Recorded as paid in cash.' : 'Pay link sent again.');
+    load(); if (hist) loadHistory(hist);
   }
 
   const canSell = access.can('shop.sell');
@@ -430,7 +449,7 @@ export default function ShopPage() {
                                 e.preventDefault();
                                 if (!walkTime || walkForm.name.trim().length < 2) { setError('Pick a time and enter the golfer’s name.'); return; }
                                 const cart = walkForm.cart || !walkTime.walkingAllowed;
-                                setWalkIns(ws => [...ws, { key: `w${Date.now()}`, teeTimeId: walkTime.teeTimeId, time: walkTime.time, golferName: walkForm.name.trim(), players: walkForm.players, cart, estimateCents: (walkTime.greenFeeCents + (cart ? walkTime.cartFeeCents : 0)) * walkForm.players }]);
+                                setWalkIns(ws => [...ws, { key: `w${Date.now()}`, teeTimeId: walkTime.teeTimeId, time: walkTime.time, golferName: walkForm.name.trim(), players: walkForm.players, cart, estimateCents: (walkGreen(walkTime, walkForm.rate) + (cart ? walkTime.cartFeeCents : 0)) * walkForm.players, rate: walkForm.rate ?? 'standard' }]);
                                 setWalkForm(null); setError('');
                               }}>
                                 <div className="flex flex-wrap gap-2">
@@ -446,7 +465,13 @@ export default function ShopPage() {
                                     Cart ({usd(walkTime.cartFeeCents)} / player){!walkTime.walkingAllowed ? ' — required on this time' : ''}
                                   </label>
                                 )}
-                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkTime.greenFeeCents + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)} at the standard rate, checked in when you take the cash.</p>}
+                                {walkTime && (['resident', 'senior', 'junior'] as const).some(k => walkTime.rates?.[k] != null) && (
+                                  <select value={walkForm.rate ?? 'standard'} onChange={e => setWalkForm({ ...walkForm, rate: e.target.value })} aria-label="Rate" className={INPUT}>
+                                    <option value="standard">Standard</option>
+                                    {(['resident', 'senior', 'junior'] as const).filter(k => walkTime.rates?.[k] != null).map(k => <option key={k} value={k}>{k[0].toUpperCase() + k.slice(1)}</option>)}
+                                  </select>
+                                )}
+                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkGreen(walkTime, walkForm.rate) + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)}, checked in when you take the cash.</p>}
                                 <div className="flex gap-2">
                                   <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add to the sale</button>
                                   <button type="button" onClick={() => setWalkForm(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Cancel</button>
@@ -617,10 +642,10 @@ export default function ShopPage() {
                     )}
                     {pay === 'reader' && <p className="text-[12.5px] text-ink-muted">The reader asks for the card. The money goes to your Stripe account.</p>}
                     {hasRounds && <p className="text-[12.5px] text-ink-muted">{pay === 'reader'
-                      ? 'The group pays their round by card, booking fee included — the same as paying online — and is checked in when the card goes through.'
-                      : 'In cash, each group is checked in and paid at the register — one receipt for the sale. One group on its own (no items) can go on the card reader. Discounts apply to shop items only.'}</p>}
+                      ? 'They pay by card, booking fee included, and are checked in when it goes through.'
+                      : 'Cash: groups are checked in and paid here, one receipt. One group alone can go on the card reader. Discounts are for shop items.'}</p>}
                     {/* CASH-1: a login with check-in but not counter payment can only use the reader, for one group at a time. */}
-                    {!payChoices.some(([k]) => k === pay) && <p className="text-[12.5px] text-bad" role="alert">{hasRounds && !canCash ? 'You can put one group on its own on the card reader. Taking cash needs “Mark paid at the counter” — ask the course owner.' : 'Pick how they pay.'}</p>}
+                    {!payChoices.some(([k]) => k === pay) && <p className="text-[12.5px] text-bad" role="alert">{hasRounds && !canCash ? 'One group alone can go on the card reader. Cash needs “Mark paid at the counter”.' : 'Pick how they pay.'}</p>}
                     {pay === 'cash' && ready && due > 0 && (
                       <div>
                         <span className="block text-[13px] font-medium text-ink mb-1.5">Cash handed over <span className="font-normal text-ink-muted">(optional)</span></span>
@@ -643,7 +668,7 @@ export default function ShopPage() {
                         {pay === 'sms'
                           ? <input value={customer.phone} onChange={e => setCustomer(c => ({ ...c, phone: e.target.value }))} placeholder="Mobile number" type="tel" aria-label="Mobile number" className={INPUT + ' w-full'} />
                           : <input value={customer.email} onChange={e => setCustomer(c => ({ ...c, email: e.target.value }))} placeholder="Email address" type="email" aria-label="Email address" className={INPUT + ' w-full'} />}
-                        <p className="text-[12.5px] text-ink-muted">They pay on their phone with Apple Pay, Google Pay or a card. The money goes to your Stripe account.</p>
+                        <p className="text-[12.5px] text-ink-muted">They pay on their phone. The money goes to your Stripe account.</p>
                       </div>
                     )}
                     {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
@@ -712,11 +737,20 @@ export default function ShopPage() {
             </div>
 
             <Card className="mt-5">
-              <h2 className="text-[15px] font-semibold text-ink px-5 pt-4 pb-2">Today’s sales</h2>
-              {sales && sales.length === 0 && <p className="px-5 pb-4 text-sm text-ink-soft">No walk-up sales yet today.</p>}
-              {sales && sales.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 px-5 pt-4 pb-2">
+                <h2 className="text-[15px] font-semibold text-ink">{hist ? (hist.day ? `Sales, ${hist.day}` : 'Sales, last 90 days') : 'Today’s sales'}</h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} placeholder="Find a sale" aria-label="Find a sale" className={INPUT + ' w-44'} />
+                  <input type="date" value={hist?.day ?? ''} max={new Date().toLocaleDateString('en-CA')} onChange={e => loadHistory({ q: hist?.q ?? '', day: e.target.value })} aria-label="Sales on a day" className={INPUT} />
+                  {hist && <button type="button" onClick={() => loadHistory({ q: '', day: '' })} className={LINK}>Today</button>}
+                </div>
+              </div>
+              {histError && <p className="px-5 pb-3 text-[13px] text-bad" role="alert">{histError} <button type="button" onClick={() => hist && loadHistory(hist)} className="underline font-medium">Try again</button></p>}
+              {(() => { const list = hist ? histSales : sales; return <>
+              {list && list.length === 0 && <p className="px-5 pb-4 text-sm text-ink-soft">{hist ? 'No sales match.' : 'No walk-up sales yet today.'}</p>}
+              {list && list.length > 0 && (
                 <ul className="divide-y divide-line-soft">
-                  {sales.map(s => {
+                  {list.map(s => {
                     const itemsCents = s.totalCents - (s.roundsCents ?? 0);
                     const fully = isPaid(s) && itemsCents > 0 && s.refundedCents >= itemsCents;
                     // A sale rung up for the card reader, not paid yet (declined or cancelled), or on the reader now.
@@ -736,6 +770,8 @@ export default function ShopPage() {
                           <StatusDot status={st.tone} label={st.label} />
                           {isPaid(s) && <button onClick={() => { setReceipt(receipt?.id === s.id ? null : { id: s.id, via: s.customerEmail || !s.customerPhone ? 'email' : 'sms', to: s.customerEmail || s.customerPhone }); setError(''); }} disabled={!!busy} className={LINK}>Receipt</button>}
                           {isPaid(s) && canRefund && left > 0 && <button onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setError(''); }} disabled={!!busy} className={LINK}>Refund</button>}
+                          {/* Dead end 23: a cash sale rung up by mistake, the same day (the server also checks the close-out). */}
+                          {s.status === 'paid_cash' && !s.roundsCents && s.refundedCents === 0 && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString() && <button onClick={() => act(s, 'void_cash')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
                           {s.status === 'open' && (
                             <>
                               {s.link
@@ -768,11 +804,23 @@ export default function ShopPage() {
                             {s.refundedCents === 0 && toCents(refund.amount) === itemsCents && s.lines.some(l => !/ round · /.test(l.name)) && (
                               <label className="flex items-center gap-2 text-[13px] text-ink"><input type="checkbox" checked={refund.restock} onChange={e => setRefund({ ...refund, restock: e.target.checked })} className="accent-pine" />Put the items back on the shelf</label>
                             )}
-                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'Goes back to the card they paid with. It can’t be undone.' : 'Recorded only — hand the cash back yourself.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
+                            {s.lines.some(l => !l.round && l.quantity > l.returnedQty) && (
+                              <div className="space-y-1">
+                                <span className="block text-[12.5px] font-medium text-ink">Or return items</span>
+                                {s.lines.filter(l => !l.round && l.quantity > l.returnedQty).map(l => (
+                                  <label key={l.id} className="flex items-center justify-between gap-2 text-[13px] text-ink">
+                                    <span className="truncate">{l.name} <span className="text-ink-muted">· {usd(l.unitPriceCents)}{l.returnedQty ? ` · ${l.returnedQty} back` : ''}</span></span>
+                                    <input type="number" min={0} max={l.quantity - l.returnedQty} value={refund.returns?.[l.id] ?? ''} placeholder="0" aria-label={`How many ${l.name} back`}
+                                      onChange={e => setRefund({ ...refund, confirm: false, restock: true, returns: { ...(refund.returns ?? {}), [l.id]: e.target.value } })} className={INPUT + ' w-16'} />
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'Goes back to their card. It can’t be undone.' : 'Recorded only — hand the cash back yourself.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
                             <div className="flex gap-2">
-                              {!refund.confirm
-                                ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!toCents(refund.amount)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">Refund ${refund.amount || '0'}</button>
-                                : <button onClick={() => doRefund(s)} disabled={!!busy} className="px-3 py-2 rounded-md text-[13px] font-medium bg-bad text-white disabled:opacity-50">{busy === 'refund' + s.id ? 'Refunding…' : `Yes, refund $${refund.amount}`}</button>}
+                              {(() => { const byItem = Object.values(refund.returns ?? {}).some(q => Number(q) > 0); return !refund.confirm
+                                ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!byItem && !toCents(refund.amount)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">{byItem ? 'Return these items' : `Refund $${refund.amount || '0'}`}</button>
+                                : <button onClick={() => doRefund(s)} disabled={!!busy} className="px-3 py-2 rounded-md text-[13px] font-medium bg-bad text-white disabled:opacity-50">{busy === 'refund' + s.id ? 'Refunding…' : byItem ? 'Yes, refund their share and restock' : `Yes, refund $${refund.amount}`}</button>; })()}
                               <button onClick={() => setRefund(null)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper">Close</button>
                             </div>
                           </div>
@@ -782,6 +830,7 @@ export default function ShopPage() {
                   })}
                 </ul>
               )}
+              </>; })()}
             </Card>
             {/* POS-3 R4: count the drawer at the end of the day. */}
             {access.can('shop.close') && <RegisterClose />}

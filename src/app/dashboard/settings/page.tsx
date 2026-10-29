@@ -63,7 +63,7 @@ const NO_SAVE_BUTTON: Section[] = ['Course layout', 'Pro shop', 'Staff', 'Your a
 // "Edit course settings" never sends these (the API refuses them too).
 // Cam 2026-10-26: the time zone (every clock on the sheet) and the course type
 // (private turns off online booking) are the owner's too.
-const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'timezone', 'type'];
+const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'counterMemberRate', 'timezone', 'type'];
 
 // SD-8: Save used to PATCH the WHOLE form, so saving a dress-code chip also
 // re-sent every facility toggle and every price — two people editing different
@@ -75,7 +75,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
   ],
   'Course layout': [],
   'Booking rules': [
-    'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'memberGraceDays', 'minPlayers', 'maxPlayers', 'dresscode',
+    'timezone', 'publicAdvanceDays', 'memberAdvanceDays', 'memberGraceDays', 'counterMemberRate', 'minPlayers', 'maxPlayers', 'dresscode',
     'walkingAllowed', 'walkingNote', 'cartRequired',
   ],
   'Prices & fees': [
@@ -513,7 +513,7 @@ function SettingsPageInner() {
           {active==='Your course' && (
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
               <SectionCard title="How you look">
-                <p className="text-sm text-ink-soft -mt-1">The three things golfers see first. Logo and photo save the moment you upload them; the colour saves with the button above.</p>
+                <p className="text-sm text-ink-soft -mt-1">What golfers see first. Logo and photo save on upload; the colour saves with the button above.</p>
                 <ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square works best (a PNG with a transparent background is ideal). Max 8MB — large photos are auto-resized."/>
                 <Field label="Your colour" hint="One accent colour. It tints your dashboard and the buttons on your booking page. Click the swatch to pick.">
                   <div className="flex items-center gap-2">
@@ -559,7 +559,7 @@ function SettingsPageInner() {
           {active==='Your course' && (
             <div className="space-y-5">
               <SectionCard title="Course identity">
-                <p className="text-sm text-ink-soft -mt-1">Your name and address are what GreenReserve listed and what golfers search for, so we change them with you rather than silently. Everything else on this page you edit yourself.</p>
+                <p className="text-sm text-ink-soft -mt-1">Your name and address are what golfers search for, so we change them with you. Everything else here you edit yourself.</p>
                 <dl className="divide-y divide-line-soft border border-line rounded-md">
                   {IDENTITY_ROWS.map(r => (
                     <div key={r.key} className="flex items-baseline gap-3 px-3 py-2.5">
@@ -743,6 +743,15 @@ function SettingsPageInner() {
                   {!!form.hasMemberPricing && (
                     <Field label="Days member rates last after it ends">
                       <FInput value={(form.memberGraceDays as number) ?? 0} onChange={v=>set('memberGraceDays',Number(v))} type="number"/>
+                    </Field>
+                  )}
+                  {/* Cam 2026-10-29: who gets a member rate at the counter — the owner's call. */}
+                  {!!form.hasMemberPricing && (
+                    <Field label="Member rate at the counter">
+                      <select value={(form.counterMemberRate as string) || 'member'} onChange={e=>set('counterMemberRate',e.target.value)} disabled={isStaffLogin} className={iCls}>
+                        <option value="member">The member shows their membership</option>
+                        <option value="any">Any membership, staff&apos;s call</option>
+                      </select>
                     </Field>
                   )}
                 </div>

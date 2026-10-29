@@ -38,6 +38,7 @@ type Row = {
   intervalMinutes: number; holes: number; greenFeeWeekday: number; greenFeeWeekend: number;
   memberRateWeekday: number | null; memberRateWeekend: number | null;
   residentRateWeekday: number | null; residentRateWeekend: number | null;
+  seniorRateWeekday?: number | null; juniorRateWeekday?: number | null;
   cartFee: number; walkingAllowed: boolean; active: boolean;
 };
 type ProductOpt = { id: string; label: string; holes: number; active: boolean } & RoundRules;
@@ -145,6 +146,9 @@ export default function SchedulesPage() {
   const dirty = !!plan && JSON.stringify(plan) !== saved;
   const showMember = hasMember || rows.some(s => s.memberRateWeekday != null);
   const showResident = hasResident || rows.some(s => s.residentRateWeekday != null);
+  // Revamp 3 dead end 20: senior and junior prices (picked at the counter) once the course adds them.
+  const [addAges, setAddAges] = useState(false);
+  const showAges = addAges || rows.some(s => s.seniorRateWeekday != null || s.juniorRateWeekday != null);
 
   // ── Editing the plan ───────────────────────────────────────────────────────
   const edit = (f: (p: CoursePlan) => CoursePlan) => setPlan(p => p ? f(p) : p);
@@ -316,10 +320,11 @@ export default function SchedulesPage() {
       );
       return <div className="flex gap-1.5">{box('walk', 'walkWeekend', wd, 'weekday')}{box('walkWeekend', 'walk', we, 'weekend')}</div>;
     };
-    const pair = (key: string, col: number, kind: 'green' | 'cart' | 'member' | 'resident') => {
+    const pair = (key: string, col: number, kind: 'green' | 'cart' | 'member' | 'resident' | 'senior' | 'junior') => {
       const c = d.prices[key]?.[col];
       if (!c) return null;
-      const [a, b] = kind === 'green' ? ['weekday', 'weekend'] as const : kind === 'cart' ? ['cart', 'cartWeekend'] as const : kind === 'member' ? ['memberWeekday', 'memberWeekend'] as const : ['residentWeekday', 'residentWeekend'] as const;
+      const [a, b] = kind === 'green' ? ['weekday', 'weekend'] as const : kind === 'cart' ? ['cart', 'cartWeekend'] as const : kind === 'member' ? ['memberWeekday', 'memberWeekend'] as const
+        : kind === 'senior' ? ['seniorWeekday', 'seniorWeekend'] as const : kind === 'junior' ? ['juniorWeekday', 'juniorWeekend'] as const : ['residentWeekday', 'residentWeekend'] as const;
       const req = kind === 'green' || kind === 'cart';
       const parse = req ? num : optNum;
       return (
@@ -329,10 +334,11 @@ export default function SchedulesPage() {
         </div>
       );
     };
-    const subRows: { kind: 'green' | 'cart' | 'walk' | 'member' | 'resident'; label: string }[] = [
+    const subRows: { kind: 'green' | 'cart' | 'walk' | 'member' | 'resident' | 'senior' | 'junior'; label: string }[] = [
       { kind: 'green', label: 'Green fee' }, { kind: 'cart', label: 'Cart, per rider' }, { kind: 'walk', label: 'Can walk' },
       ...(showMember ? [{ kind: 'member' as const, label: 'Members' }] : []),
       ...(showResident ? [{ kind: 'resident' as const, label: 'Residents' }] : []),
+      ...(showAges ? [{ kind: 'senior' as const, label: 'Seniors' }, { kind: 'junior' as const, label: 'Juniors' }] : []),
     ];
     return (
       <div className="overflow-x-auto -mx-5 px-5">
@@ -474,7 +480,7 @@ export default function SchedulesPage() {
               <Card className="p-5 space-y-6">
                 <div>
                   <h2 className="text-[17px] font-semibold text-ink">What it costs</h2>
-                  <p className="text-[13px] text-ink-soft mt-1">A price per round, and a column for each time the price changes. Tap a name to rename it.{!showMember && !showResident ? ' Member and resident prices appear here once you have a membership or a resident list.' : ''}</p>
+                  <p className="text-[13px] text-ink-soft mt-1">A price per round, and a column for each time the price changes. Tap a name to rename.{!showMember && !showResident ? ' Member and resident prices show once you have them.' : ''}{!showAges && canEdit && <> <button type="button" onClick={() => setAddAges(true)} className="text-pine font-medium hover:underline">Add senior/junior prices</button></>}</p>
                 </div>
                 {dayPlans.map((d, i) => d.closed ? null : (
                   <section key={i}>

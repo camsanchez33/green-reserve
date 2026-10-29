@@ -36,7 +36,7 @@ const bookings = src('src/app/api/bookings/route.ts');
 check('booking creation is rate-limited per IP and per email', bookings.includes('`booking:${clientIp(req)}`') && bookings.includes('booking-email:'));
 check('a SetupIntent backs one booking', bookings.includes('booking-seti:'));
 check('a course that is not live takes no bookings', /liveStatus !== 'live'/.test(bookings) && /archivedAt/.test(bookings));
-const players = src('src/app/api/manage/[bookingId]/change-players/route.ts');
+const players = src('src/lib/change-party.ts');
 check('change-players never hard-codes the booking fee', !/perPlayerAccess\s*=\s*150/.test(players));
 check('change-players rescales the fee totals', players.includes('rescalePartyFees('));
 

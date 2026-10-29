@@ -8,6 +8,8 @@ import { performCheckIn } from '@/lib/checkin-booking';
 import { sendBookingConfirmation, sendCheckInAvailableEmail, sendBookingModifiedEmail, isPlaceholderEmail } from '@/lib/email';
 import { moveBooking } from '@/lib/move-booking';
 import { setBookingResidents } from '@/lib/booking-residents';
+import { refundRound, waiveLateFee } from '@/lib/staff-refund';
+import { changePartySize } from '@/lib/change-party';
 import { isPastIn, todayIn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { refundSeparateAccessFee } from '@/lib/access-fee';
@@ -100,18 +102,22 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
   // CASH-1: 'take_cash' (the old 'paid_offline' still arrives from open tabs — it is the same cash sale).
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents'];
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
   // SP-A: each counter action is its own permission.
-  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', take_cash: 'sheet.counter_payment', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', move: 'sheet.move', set_residents: 'sheet.counter_payment' };
+  const NEEDS: Record<string, PermissionKey> = { cancel: 'sheet.cancel', checkin: 'sheet.checkin', no_show: 'sheet.no_show', still_coming: 'sheet.no_show', take_cash: 'sheet.counter_payment', paid_offline: 'sheet.counter_payment', send_pay_link: 'sheet.checkin', move: 'sheet.move', set_residents: 'sheet.counter_payment',
+    // Revamp 3 dead end 14: refunding a paid round is its own permission; giving back a kept late fee is waiving it.
+    refund_round: 'money.refund_rounds', waive_late_fee: 'sheet.waive_fee',
+    // Dead end 19: a group's party size changes its price at the counter, like residents.
+    change_players: 'sheet.counter_payment' };
   const deniedAction = requirePermission(session, NEEDS[action]);
   if (deniedAction) return deniedAction;
   // SP-A: cancelling WITHOUT the late fee refunds a hold already taken — its own permission.
@@ -143,6 +149,36 @@ export async function PATCH(req: NextRequest) {
   // time's free-cancellation window has closed) so the sheet can show it
   // before Confirm. The price is kept unless staff ask for the new time's rate.
   // RES-1: how many of the group are residents (they showed their card).
+  if (action === 'change_players') {
+    const n = Number(newPlayers);
+    if (!Number.isInteger(n) || n < 1 || n > 8) return NextResponse.json({ error: 'Players must be 1 to 8.' }, { status: 400 });
+    try {
+      const r = await changePartySize(id, n, { by: 'staff', courseId: session.courseId, actor: staff });
+      return NextResponse.json({ ok: true, ...r });
+    } catch (err) {
+      const e = err as { code?: string; max?: number; msg?: string };
+      const words: Record<string, [number, string]> = {
+        INVALID: [404, 'Not found'],
+        NOT_CONFIRMED: [409, 'This group is checked in or cancelled — its party can’t change now.'],
+        PAID: [409, 'This round is paid or being paid, or its hold was taken — refund or move it instead.'],
+        STARTED: [409, 'This group is marked a no-show. Use “Still coming” first.'],
+        SAME: [409, `The group is already ${n}.`],
+        SIZE: [400, e.msg ?? 'That group size isn’t allowed on this round.'],
+        FULL: [409, `Only ${e.max ?? 0} spot${e.max === 1 ? '' : 's'} left on this time.`],
+        P2034: [409, 'The time just changed — try again.'],
+      };
+      const w = e.code ? words[e.code] : undefined;
+      if (w) return NextResponse.json({ error: w[1] }, { status: w[0] });
+      throw err;
+    }
+  }
+  if (action === 'refund_round' || action === 'waive_late_fee') {
+    const r = action === 'refund_round'
+      ? await refundRound(session.courseId, id, { amountCents, reason, actorName, actor: staff })
+      : await waiveLateFee(session.courseId, id, { reason, actorName, actor: staff });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r);
+  }
   if (action === 'set_residents') {
     const r = await setBookingResidents(session.courseId, id, residentPlayers, staff);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
@@ -285,6 +321,7 @@ export async function POST(req: NextRequest) {
   const made = await createCounterBooking(session.courseId, {
     teeTimeId: String(body.teeTimeId ?? ''), golferName, golferEmail, golferPhone: String(body.golferPhone ?? ''),
     players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in', late: body.late === true,
+    rate: typeof body.rate === 'string' ? body.rate : undefined,
   }, { type: 'staff', id: session.staffId ?? session.operatorId });
   if (!made.ok) return NextResponse.json({ error: made.error }, { status: made.status });
   // CASH-1: "paying cash now" — the booking is made, then its round is rung up in cash.

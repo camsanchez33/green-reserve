@@ -30,6 +30,8 @@ export type PriceCell = {
   walk: boolean; walkWeekend: boolean;
   memberWeekday: number | null; memberWeekend: number | null;
   residentWeekday: number | null; residentWeekend: number | null;
+  /** Revamp 3 dead end 20: senior and junior prices, picked at the counter. Absent on older pages = none. */
+  seniorWeekday?: number | null; seniorWeekend?: number | null; juniorWeekday?: number | null; juniorWeekend?: number | null;
 };
 
 /** A round golfers can book. key = its CourseProduct id, '' for a course with no named rounds.
@@ -60,6 +62,7 @@ export type CompiledRow = {
   greenFeeWeekday: number; greenFeeWeekend: number; cartFee: number; cartFeeWeekend: number;
   memberRateWeekday: number | null; memberRateWeekend: number | null;
   residentRateWeekday: number | null; residentRateWeekend: number | null;
+  seniorRateWeekday: number | null; seniorRateWeekend: number | null; juniorRateWeekday: number | null; juniorRateWeekend: number | null;
 };
 
 const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
@@ -129,7 +132,8 @@ export function checkPlan(plan: CoursePlan, rounds: PlanRound[]): string | null 
       if (!cells || cells.length !== d.changes.length + 1) return 'Fill in a price for every round and price change.';
       const okOpt = (v: number | null) => v == null || (typeof v === 'number' && v >= 0);
       if (cells.some(c => !(c.weekday >= 0) || !(c.weekend >= 0) || !(c.cart >= 0) || !((c.cartWeekend ?? c.cart) >= 0)
-        || !okOpt(c.memberWeekday) || !okOpt(c.memberWeekend) || !okOpt(c.residentWeekday) || !okOpt(c.residentWeekend))) return 'Prices can’t be negative.';
+        || !okOpt(c.memberWeekday) || !okOpt(c.memberWeekend) || !okOpt(c.residentWeekday) || !okOpt(c.residentWeekend)
+        || !okOpt(c.seniorWeekday ?? null) || !okOpt(c.seniorWeekend ?? null) || !okOpt(c.juniorWeekday ?? null) || !okOpt(c.juniorWeekend ?? null))) return 'Prices can’t be negative.';
     }
   }
   if (plan.usual.closed && daysOf(plan, plan.usual).length > 0 && plan.different.every(d => d.closed)) return 'Open at least one day.';
@@ -162,6 +166,8 @@ export function compilePlan(plan: CoursePlan, rounds: PlanRound[]): CompiledRow[
           greenFeeWeekday: cell.weekday, greenFeeWeekend: cell.weekend, cartFee: cell.cart, cartFeeWeekend: cell.cartWeekend ?? cell.cart,
           memberRateWeekday: cell.memberWeekday, memberRateWeekend: cell.memberWeekend,
           residentRateWeekday: cell.residentWeekday, residentRateWeekend: cell.residentWeekend,
+          seniorRateWeekday: cell.seniorWeekday ?? null, seniorRateWeekend: cell.seniorWeekend ?? null,
+          juniorRateWeekday: cell.juniorWeekday ?? null, juniorRateWeekend: cell.juniorWeekend ?? null,
         });
       }
     }
@@ -169,13 +175,16 @@ export function compilePlan(plan: CoursePlan, rounds: PlanRound[]): CompiledRow[
   return rows;
 }
 
-type StoredRow = Omit<CompiledRow, 'active' | 'walkingWeekend' | 'cartFeeWeekend'> & { active: boolean; walkingWeekend?: boolean | null; cartFeeWeekend?: number | null };
+type StoredRow = Omit<CompiledRow, 'active' | 'walkingWeekend' | 'cartFeeWeekend' | 'seniorRateWeekday' | 'seniorRateWeekend' | 'juniorRateWeekday' | 'juniorRateWeekend'> & { active: boolean; walkingWeekend?: boolean | null; cartFeeWeekend?: number | null;
+  seniorRateWeekday?: number | null; seniorRateWeekend?: number | null; juniorRateWeekday?: number | null; juniorRateWeekend?: number | null };
 
 const cellOf = (r: StoredRow): PriceCell => ({
   weekday: r.greenFeeWeekday, weekend: r.greenFeeWeekend, cart: r.cartFee, cartWeekend: r.cartFeeWeekend ?? r.cartFee,
   walk: r.walkingAllowed !== false, walkWeekend: (r.walkingWeekend ?? r.walkingAllowed) !== false,
   memberWeekday: r.memberRateWeekday, memberWeekend: r.memberRateWeekend,
   residentWeekday: r.residentRateWeekday, residentWeekend: r.residentRateWeekend,
+  seniorWeekday: r.seniorRateWeekday ?? null, seniorWeekend: r.seniorRateWeekend ?? null,
+  juniorWeekday: r.juniorRateWeekday ?? null, juniorWeekend: r.juniorRateWeekend ?? null,
 });
 
 /** A blank plan: the usual week 7:00–5:00 every 8 minutes, every round on all day. */

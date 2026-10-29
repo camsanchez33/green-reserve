@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import type { MoneyBooking } from './types';
+import { RefundForm } from './RefundForm';
 import { formatTeeTime as fmtTime, formatTeeDate as fmtDate } from '@/lib/format';
 
 type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
@@ -35,7 +36,10 @@ const FILTERS = [['all', 'All'], ['paid', 'Paid'], ['unpaid', 'Not paid yet'], [
 type Filter = typeof FILTERS[number][0];
 const DAYS_SHOWN = 14;
 
-export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter = 'all', courseNow, capped = false }: {
+export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter = 'all', courseNow, capped = false, canRefund = false, onRefunded }: {
+  /** money.refund_rounds: a Refund on rounds paid by card (dead end 14). */
+  canRefund?: boolean;
+  onRefunded?: (message: string) => void;
   /** The played-rounds feed came back full: older rounds aren't in this list. */
   capped?: boolean;
   bookings: MoneyBooking[];
@@ -106,6 +110,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
                       <span className="min-w-0 truncate"><span className="font-medium">{b.golferName}</span><span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span></span>
                       <span className="tabular-nums text-right font-medium">{usd(b.greenFeeTotal + b.cartFeeTotal + b.rangeBallsTotal)}</span>
                       <span className="col-span-3 sm:col-span-1 inline-flex items-center gap-1.5"><StatusDot status={s.tone} />{s.label}</span>
+                      {canRefund && b.paymentStatus === 'paid' && <div className="col-span-3 sm:col-span-4"><RefundForm bookingId={b.id} kind="round" onDone={m => onRefunded?.(m)} /></div>}
                     </li>
                   ))}
                 </ul>

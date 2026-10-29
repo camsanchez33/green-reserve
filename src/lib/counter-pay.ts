@@ -17,7 +17,8 @@ import { todayIn } from './course-time';
 import { randomUUID } from 'crypto';
 import { READER_STALE_MS } from './checkin-booking';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
-import { partyFees, type PartyBooking } from './member-rates';
+import { applyTierRates } from './tier-rates';
+import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 
 export type CounterResult =
   | { ok: true; amountCents: number; note: string | null }
@@ -123,6 +124,15 @@ export type CounterBookingInput = {
   players: number; cartSelected?: boolean; source?: 'walk_in' | 'phone';
   /** A walk-in who already played, recorded after the LATE_ADD_MINUTES cut-off (staff only). */
   late?: boolean;
+  /**
+   * Revamp 3 dead end 20 (Cam 2026-10-29): the rate staff pick at the counter — the tee
+   * time's standard price, its resident, senior or junior price, or a member's:
+   * `member:<membershipId>` (the member showed their membership; it must be live) or, only
+   * when the course allows it (Course.counterMemberRate 'any'), `tier:<id>`. Either way the
+   * member is at the member rate and guests at the standard one unless the tier includes them.
+   * Absent = standard.
+   */
+  rate?: string;
 };
 export async function createCounterBooking(courseId: string, input: CounterBookingInput, actor: EventActor):
   Promise<{ ok: true; id: string; checkInToken: string | null; greenFeeTotal: number; cartFeeTotal: number; totalAmount: number; teeTime: { date: string; time: string; holes: number }; course: { name: string; address: string | null; city: string | null; state: string | null; slug: string; cancellationHours: number; confirmationNote: string | null } }
@@ -139,8 +149,37 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
   if (!teeTime || teeTime.courseId !== courseId) return { ok: false, status: 404, error: 'Tee time not found' };
   if (teeTime.date < todayIn(teeTime.course.timezone)) return { ok: false, status: 409, error: 'That date has passed.' };
   const cart = input.cartSelected === true || teeTime.walkingAllowed === false;
-  const greenFeeTotal = teeTime.greenFeeCents * players;
-  const cartFeeTotal = cart ? teeTime.cartFeeCents * players : 0;
+  const rate = String(input.rate ?? 'standard');
+  let greenFeeTotal = teeTime.greenFeeCents * players;
+  let cartFeeTotal = cart ? teeTime.cartFeeCents * players : 0;
+  let appliedRate = 'standard';
+  let rateRows: { residentPlayers?: number; residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null } = {};
+  if (rate === 'resident' || rate === 'senior' || rate === 'junior') {
+    const per = rate === 'resident' ? teeTime.residentRateCents : rate === 'senior' ? teeTime.seniorRateCents : teeTime.juniorRateCents;
+    if (per == null) return { ok: false, status: 409, error: `This tee time has no ${rate} price. Set one in Schedule.` };
+    greenFeeTotal = per * players;
+    appliedRate = rate;
+    if (rate === 'resident') rateRows = { residentPlayers: players, residentRateCents: per };
+  } else if (rate.startsWith('tier:') || rate.startsWith('member:')) {
+    let tier;
+    if (rate.startsWith('member:')) {
+      // Cam: "they should show their membership when they get there" — the member's own, and only while it's live.
+      const m = await prisma.courseMembership.findFirst({ where: { id: rate.slice(7), courseId }, include: { tier: true } });
+      if (!m || !m.tier) return { ok: false, status: 400, error: 'That member isn’t on your course.' };
+      if (!membershipLive(m, teeTime.course)) return { ok: false, status: 409, error: 'That membership has ended — book them at the standard rate, or renew it on Members.' };
+      tier = m.tier;
+    } else {
+      if (teeTime.course.counterMemberRate !== 'any') return { ok: false, status: 409, error: 'Pick the member — your course gives member rates at the counter only to members.' };
+      tier = await prisma.membershipTier.findFirst({ where: { id: rate.slice(5), courseId, active: true } });
+    }
+    if (!tier) return { ok: false, status: 400, error: 'That membership isn’t on your course.' };
+    const r = applyTierRates(teeTime, tier);
+    const n = memberPlayers(players, tier);
+    greenFeeTotal = splitTotal(players, n, r.greenFeeCents, teeTime.greenFeeCents);
+    cartFeeTotal = cart ? splitTotal(players, n, r.cartFeeCents, teeTime.cartFeeCents) : 0;
+    appliedRate = tier.name;
+    rateRows = memberSpot(tier, r);
+  } else if (rate !== 'standard') return { ok: false, status: 400, error: 'Pick a rate.' };
   // No platform fee on a counter booking — nothing is collected online.
   const totalAmount = greenFeeTotal + cartFeeTotal;
   // CASH-1 (Cam 2026-10-25: "can't just be paid at counter"): a counter booking is
@@ -149,7 +188,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     const claimed = await claimTeeTime({
       teeTimeId: teeTime.id, courseId,
       golferName, golferEmail: golferEmail || `${source}+${Date.now()}@noemail.greenreserve.app`, golferPhone,
-      players, appliedRate: 'standard',
+      players, appliedRate, ...rateRows,
       greenFeeTotal, cartFeeTotal, cartSelected: cart, accessFeeTotal: 0, totalAmount,
       checkInToken: golferEmail ? randomUUID() : null,
       paymentStatus: 'manual',

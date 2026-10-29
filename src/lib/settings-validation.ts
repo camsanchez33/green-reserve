@@ -43,6 +43,8 @@ const ENUMS: Record<string, string[]> = {
   // SD-3: the course's clock — one of the US zones the settings page offers.
   // SP-B: the cancellation & card policy (lib/cancel-policy).
   lateFeeBasis: ['booking', 'player'],
+  // Cam 2026-10-29: member rates at the counter — the member shows their membership, or any membership.
+  counterMemberRate: ['member', 'any'],
   noShowFeeBasis: ['booking', 'player'],
   lateFeeTiming: ['hold_at_cutoff', 'late_cancel', 'late_cancel_or_no_show'],
   timezone: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu'],

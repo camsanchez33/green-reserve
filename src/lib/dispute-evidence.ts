@@ -26,7 +26,7 @@ const money = (c: number) => `$${(c / 100).toFixed(2)}`;
 const KIND: Record<string, string> = { booking_confirmation: 'Booking confirmation', booking_reminder: 'Reminder' };
 const EVENT: Record<string, string> = {
   booking_created: 'Booked', booking_cancelled: 'Cancelled', checked_in: 'Checked in', no_show_marked: 'Marked no-show',
-  no_show_cleared: 'No-show cleared', fee_charged: 'Fee charged', fee_refunded: 'Fee refunded', booking_moved: 'Moved to another tee time', price_changed: 'Price changed at the counter',
+  no_show_cleared: 'No-show cleared', fee_charged: 'Fee charged', fee_refunded: 'Fee refunded', booking_moved: 'Moved to another tee time', price_changed: 'Price changed at the counter', round_refunded: 'Round refunded by the course',
 };
 
 /** The pack as plain text, one fact per line, times in the course's own time zone. */

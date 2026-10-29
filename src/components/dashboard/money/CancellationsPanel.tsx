@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { RefundForm } from './RefundForm';
 import type { MoneyBooking, MoneyCourse } from './types';
 import { NO_FEE_LABEL } from '@/lib/no-fee-labels';
 import { formatStamp as fmtStamp, formatTeeTime as fmtTime, formatTeeDay as fmtDate } from '@/lib/format';
@@ -23,7 +24,7 @@ const hoursAhead = (b: MoneyBooking) => {
   return `${d} day${d === 1 ? '' : 's'} before`;
 };
 
-export function CancellationsPanel({ bookings, course, initialQuery = '' }: { bookings: MoneyBooking[]; course: MoneyCourse; initialQuery?: string }) {
+export function CancellationsPanel({ bookings, course, initialQuery = '', canWaive = false, onRefunded }: { bookings: MoneyBooking[]; course: MoneyCourse; initialQuery?: string; canWaive?: boolean; onRefunded?: (message: string) => void }) {
   const [feesOnly, setFeesOnly] = useState(false);
   // Search opens this tab with the golfer's name (dead end 18).
   const [search, setSearch] = useState(initialQuery);
@@ -42,7 +43,7 @@ export function CancellationsPanel({ bookings, course, initialQuery = '' }: { bo
         <p className="text-[12.5px] text-ink-muted">
           Free cancellation until {course.cancellationHours} hours before
           {course.lateCancellationFee > 0 ? <>, then a ${course.lateCancellationFee.toFixed(2)} fee</> : ', no late fee'}.{' '}
-          <Link href="/dashboard/settings?section=Prices+%26+fees" className="text-pine font-medium hover:underline">Change in Settings</Link>
+          <Link href="/dashboard/settings?section=Prices+%26+fees" className="text-pine font-medium hover:underline">Settings</Link>
         </p>
       </div>
       {course.lateCancellationFee > 0 && !course.stripeAccountActive && (
@@ -72,8 +73,9 @@ export function CancellationsPanel({ bookings, course, initialQuery = '' }: { bo
                     <div className="text-ink-soft">{fmtDate(b.teeTime.date)} at {fmtTime(b.teeTime.time)}{b.cancelledAt ? <> · cancelled {fmtStamp(b.cancelledAt)}{ahead ? ` (${ahead})` : ''}</> : null}</div>
                   </div>
                   <span className="inline-flex items-center gap-1.5 text-ink sm:justify-end">
-                    <StatusDot status={fee ? 'warn' : b.noFeeReason === 'charge_failed' ? 'bad' : 'neutral'} />{fee ? (b.noShowFeeKeptCents ? `${usd(b.noShowFeeKeptCents)} no-show fee kept` : `${usd(b.cancellationFeeTotal)} fee kept`) : b.noFeeReason ? NO_FEE_LABEL[b.noFeeReason] : 'No fee'}
+                    <StatusDot status={fee ? 'warn' : b.noFeeReason === 'charge_failed' ? 'bad' : 'neutral'} />{fee ? (b.noShowFeeKeptCents ? `${usd(b.noShowFeeKeptCents)} no-show fee kept` : `${usd(b.cancellationFeeTotal)} fee kept`) : b.paymentStatus === 'refunded' ? 'Fee refunded' : b.noFeeReason ? NO_FEE_LABEL[b.noFeeReason] : 'No fee'}
                   </span>
+                  {canWaive && b.paymentStatus === 'cancellation_fee_charged' && <div className="sm:col-span-2"><RefundForm bookingId={b.id} kind="late_fee" onDone={m => onRefunded?.(m)} /></div>}
                 </li>
               );
             })}

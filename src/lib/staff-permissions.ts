@@ -12,7 +12,7 @@ export type PermissionKey =
   | 'sheet.view' | 'sheet.checkin' | 'sheet.counter_payment' | 'sheet.walkin' | 'sheet.move' | 'sheet.no_show'
   | 'sheet.cancel' | 'sheet.waive_fee' | 'sheet.block' | 'sheet.edit_times' | 'sheet.delay_start'
   | 'sheet.weather_cancel' | 'sheet.golfer_contact' | 'sheet.message_golfers' | 'sheet.course_alert'
-  | 'money.cancellations' | 'money.payments' | 'money.refund' | 'money.payouts'
+  | 'money.cancellations' | 'money.payments' | 'money.refund' | 'money.refund_rounds' | 'money.payouts'
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
   | 'analytics.view' | 'messages.use' | 'settings.edit'
@@ -54,6 +54,8 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'money.payments', group: 'Money', label: 'See payments', help: 'What was charged, per booking and in total.' },
   // R-AUTH-007: the two places staff can refund — event payments and pro shop sales (rounds are refunded by cancelling or "still coming").
   { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund event payments and pro shop sales.', requires: ['money.payments'], movesMoney: true },
+  // Revamp 3 (Cam 2026-10-29: "New staff permission"): refunding a paid round — off by default, given per person.
+  { key: 'money.refund_rounds', group: 'Money', label: 'Refund rounds', help: 'Refund part or all of a round paid by card — your share, never GreenReserve’s fee. A reason is required.', requires: ['money.payments'], movesMoney: true },
   // 'Charge a fee by hand' (money.charge_fee) was removed (Cam 2026-10-26): no screen charges a fee by hand, so the
   // switch did nothing. A stored key is dropped by normalizePermissions. It comes back only with that feature.
   { key: 'money.payouts', group: 'Money', label: 'See payouts', help: 'What Stripe has paid out to the course.' },
@@ -86,7 +88,8 @@ export const PRESETS: { key: PresetKey; label: string; help: string; keys: Permi
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use'] },
   { key: 'front_desk', label: 'Front desk', help: 'Runs the counter: payments, walk-ins, cancellations, blocking, shop items.',
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'sheet.course_alert', 'money.cancellations', 'shop.sell', 'shop.close'] },
-  { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given.', keys: [...ALL_KEYS] },
+  // Cam 2026-10-29: "Refund rounds" is in no preset — the owner gives it person by person.
+  { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given, but refunding rounds.', keys: ALL_KEYS.filter(k => k !== 'money.refund_rounds') },
 ];
 
 /** Staff created before SP-A: today's powers minus weather cancel and waiving a fee. */

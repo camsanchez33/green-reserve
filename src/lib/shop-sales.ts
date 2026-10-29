@@ -24,6 +24,8 @@ import Stripe from 'stripe';
 import { stripe } from './stripe';
 import { MAX_ITEM_PRICE_CENTS, MAX_LINE_QUANTITY, takeStock, shopFeeFor } from './shop';
 import { quoteShopTax, reuseShopTaxQuote, recordShopSaleTax, type TaxLine } from './sales-tax';
+import { todayIn, addDaysStr } from './course-time';
+import { teeTimeInstant } from './booking-events';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
@@ -38,7 +40,8 @@ export type RefundView = { id: string; amountCents: number; method: string; stat
 export type SaleView = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: string; paidAt: string | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
-  lines: { name: string; unitPriceCents: number; quantity: number }[];
+  /** id and returnedQty for a return by item (dead end 23); round = a green fee line (never returned here). */
+  lines: { id: string; name: string; unitPriceCents: number; quantity: number; returnedQty: number; round: boolean }[];
   discountCents: number; discountNote: string; cashTenderedCents: number | null; refundedCents: number;
   receiptSentAt: string | null; refunds: RefundView[];
   /** POS-3 R2: green fees paid in this sale (not refundable here). */
@@ -50,7 +53,7 @@ export type SaleView = {
 type SaleRow = {
   id: string; status: string; totalCents: number; taxCents: number; createdAt: Date; paidAt: Date | null;
   customerName: string; customerPhone: string; customerEmail: string; soldBy: string;
-  lines: { name: string; unitPriceCents: number; quantity: number }[];
+  lines: { id: string; name: string; unitPriceCents: number; quantity: number; returnedQty: number; bookingId: string | null }[];
   discountCents?: number; discountNote?: string; cashTenderedCents?: number | null; refundedCents?: number; receiptSentAt?: Date | null; roundsCents?: number; payToken?: string;
   refunds?: { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdBy: string; createdAt: Date }[];
 };
@@ -58,7 +61,7 @@ type SaleRow = {
 export const saleView = (s: SaleRow): SaleView => ({
   id: s.id, status: s.status, totalCents: s.totalCents, taxCents: s.taxCents, createdAt: s.createdAt.toISOString(), paidAt: s.paidAt?.toISOString() ?? null,
   customerName: s.customerName, customerPhone: s.customerPhone, customerEmail: s.customerEmail, soldBy: s.soldBy,
-  lines: s.lines.map(l => ({ name: l.name, unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
+  lines: s.lines.map(l => ({ id: l.id, name: l.name, unitPriceCents: l.unitPriceCents, quantity: l.quantity, returnedQty: l.returnedQty, round: !!l.bookingId })),
   discountCents: s.discountCents ?? 0, discountNote: s.discountNote ?? '', cashTenderedCents: s.cashTenderedCents ?? null,
   refundedCents: s.refundedCents ?? 0, receiptSentAt: s.receiptSentAt?.toISOString() ?? null, roundsCents: s.roundsCents ?? 0,
   refunds: (s.refunds ?? []).map(r => ({ ...r, createdAt: r.createdAt.toISOString() })),
@@ -67,7 +70,7 @@ export const saleView = (s: SaleRow): SaleView => ({
 
 /** What every sale read includes, so saleView has the whole sale. */
 export const SALE_INCLUDE = {
-  lines: { select: { name: true, unitPriceCents: true, quantity: true }, orderBy: { id: 'asc' as const } },
+  lines: { select: { id: true, name: true, unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true }, orderBy: { id: 'asc' as const } },
   refunds: { select: { id: true, amountCents: true, method: true, status: true, reason: true, restocked: true, error: true, createdBy: true, createdAt: true }, orderBy: { createdAt: 'asc' as const } },
 };
 
@@ -288,7 +291,7 @@ export async function settleOpenSale(courseId: string, saleId: string, to: 'void
       // The token stays: the customer's page then says the sale was paid or cancelled.
       data: to === 'void' ? { status: 'void', voidedAt: new Date() } : { status: 'paid_cash', paidAt: new Date() },
     });
-    const sale = await tx.shopSale.findFirst({ where: { id: saleId, courseId }, include: { ...SALE_INCLUDE, lines: { select: { name: true, unitPriceCents: true, quantity: true, shopItemId: true }, orderBy: { id: 'asc' } } } });
+    const sale = await tx.shopSale.findFirst({ where: { id: saleId, courseId }, include: { ...SALE_INCLUDE, lines: { select: { id: true, name: true, unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true, shopItemId: true }, orderBy: { id: 'asc' } } } });
     if (!sale) return fail(404, 'Sale not found.');
     if (done.count === 0) return fail(409, whyNotOpen(sale.status));
     if (to === 'paid_cash') for (const l of sale.lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
@@ -488,8 +491,38 @@ const isPaid = (status: string) => status === 'paid_cash' || status === 'paid_ca
  * goes through Stripe on the course's account (sendShopRefund). A full refund
  * can put the items back on the shelf.
  */
-export async function refundSale(courseId: string, saleId: string, input: { amountCents?: unknown; reason?: unknown; restock?: unknown }, actor: string): Promise<Result<{ status: 'done' | 'pending'; sale: SaleView }>> {
-  const s = await prisma.shopSale.findFirst({ where: { id: saleId, courseId } });
+/**
+ * Revamp 3 dead end 23 (Cam 2026-10-29): what a return of some items gives back — their
+ * share of the items after the sale's discount, plus their share of its tax — and the
+ * lines it covers. Null with a reason when the return isn't possible.
+ */
+export function returnAmount(sale: { discountCents: number; taxCents: number; lines: { id: string; unitPriceCents: number; quantity: number; returnedQty: number; bookingId: string | null }[] }, raw: unknown): { ok: true; cents: number; lines: { lineId: string; quantity: number }[] } | { ok: false; error: string } {
+  if (!Array.isArray(raw) || !raw.length) return { ok: false, error: 'Pick what is coming back.' };
+  const items = sale.lines.filter(l => !l.bookingId);
+  const subtotal = items.reduce((n, l) => n + l.unitPriceCents * l.quantity, 0);
+  if (subtotal <= 0) return { ok: false, error: 'This sale has no items to return.' };
+  const out: { lineId: string; quantity: number }[] = [];
+  let gross = 0;
+  for (const r of raw as { lineId?: unknown; quantity?: unknown }[]) {
+    const line = items.find(l => l.id === r?.lineId);
+    const q = Number(r?.quantity);
+    if (!line) return { ok: false, error: 'That item isn’t on this sale.' };
+    if (!Number.isInteger(q) || q < 1) return { ok: false, error: 'Enter how many are coming back.' };
+    if (q > line.quantity - line.returnedQty) return { ok: false, error: `Only ${line.quantity - line.returnedQty} of that can still come back.` };
+    if (out.some(o => o.lineId === line.id)) return { ok: false, error: 'Each item once, with its count.' };
+    out.push({ lineId: line.id, quantity: q });
+    gross += line.unitPriceCents * q;
+  }
+  const net = subtotal - sale.discountCents;
+  const back = Math.round(gross * net / subtotal);
+  const tax = net > 0 ? Math.round(sale.taxCents * back / net) : 0;
+  return { ok: true, cents: back + tax, lines: out };
+}
+
+class ReturnRaceError extends Error {}
+
+export async function refundSale(courseId: string, saleId: string, input: { amountCents?: unknown; reason?: unknown; restock?: unknown; lines?: unknown }, actor: string): Promise<Result<{ status: 'done' | 'pending'; sale: SaleView }>> {
+  const s = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, include: { lines: { select: { id: true, unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true } } } });
   if (!s) return fail(404, 'Sale not found.');
   if (!isPaid(s.status)) return fail(409, 'Only a paid sale can be refunded.');
   // POS-3 R2: green fees rung up here were paid at the counter on their own
@@ -497,23 +530,34 @@ export async function refundSale(courseId: string, saleId: string, input: { amou
   const items = s.totalCents - s.roundsCents;
   const left = items - s.refundedCents;
   if (left <= 0) return fail(409, s.roundsCents > 0 && items <= 0 ? 'Green fees are refunded from the tee sheet booking, not the register.' : 'This sale has already been refunded in full.');
-  const amountCents = input.amountCents == null || input.amountCents === '' ? left : Number(input.amountCents);
+  // A return by item: the amount follows from the items (their share of the discount and tax), and they go back on the shelf.
+  const byItem = input.lines !== undefined ? returnAmount(s, input.lines) : null;
+  if (byItem && !byItem.ok) return fail(400, byItem.error);
+  const amountCents = byItem?.ok ? Math.min(byItem.cents, left) : input.amountCents == null || input.amountCents === '' ? left : Number(input.amountCents);
   if (!Number.isInteger(amountCents) || amountCents < 1) return fail(400, 'Enter the amount to refund.');
   if (amountCents > left) return fail(400, `At most $${(left / 100).toFixed(2)} can still be refunded on this sale${s.roundsCents ? ' (green fees are refunded from the tee sheet booking)' : ''}.`);
   const method = s.status === 'paid_card' ? 'card' : 'cash';
-  // The items go back only when the whole sale is refunded in one go.
-  const restock = input.restock === true && s.refundedCents === 0 && amountCents === items;
+  // By amount, the items go back only when the whole sale is refunded in one go; a return by item restocks its items.
+  const restock = byItem?.ok ? input.restock !== false : input.restock === true && s.refundedCents === 0 && amountCents === items;
+  const returned = byItem?.ok ? byItem.lines : null;
   const reason = String(input.reason ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 300);
   const refund = await prisma.$transaction(async tx => {
     const reserved = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: s.status, refundedCents: { lte: items - amountCents } }, data: { refundedCents: { increment: amountCents } } });
     if (!reserved.count) return null;
-    const r = await tx.shopSaleRefund.create({ data: { saleId, courseId, amountCents, method, status: method === 'cash' ? 'done' : 'pending', reason, restocked: restock, createdBy: actor } });
-    if (restock) {
+    const r = await tx.shopSaleRefund.create({ data: { saleId, courseId, amountCents, method, status: method === 'cash' ? 'done' : 'pending', reason, restocked: restock, createdBy: actor, ...(returned ? { returnedLines: returned } : {}) } });
+    if (returned) {
+      // Never more back than was sold: the count is checked again under the write.
+      for (const rl of returned) {
+        const ok = await tx.shopSaleLine.updateMany({ where: { id: rl.lineId, saleId, returnedQty: { lte: (s.lines.find(l => l.id === rl.lineId)?.quantity ?? 0) - rl.quantity } }, data: { returnedQty: { increment: rl.quantity } } });
+        if (!ok.count) throw new ReturnRaceError();
+        if (restock) { const l = await tx.shopSaleLine.findUnique({ where: { id: rl.lineId }, select: { shopItemId: true } }); if (l?.shopItemId) await takeStock(tx, l.shopItemId, -rl.quantity); }
+      }
+    } else if (restock) {
       const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true } });
       for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, -l.quantity);
     }
     return r;
-  });
+  }).catch(err => { if (err instanceof ReturnRaceError) return null; throw err; });
   if (!refund) return fail(409, 'Someone else just refunded part of this — refresh and try again.');
   let status: 'done' | 'pending' = 'done';
   if (method === 'card') {
@@ -533,8 +577,16 @@ async function giveBackRefund(refundId: string, saleId: string, amountCents: num
     if (!r.count) return;
     await tx.shopSale.update({ where: { id: saleId }, data: { refundedCents: { decrement: amountCents } } });
     const row = await tx.shopSaleRefund.findUniqueOrThrow({ where: { id: refundId } });
-    // Items put back for a refund that didn't happen come off the shelf again.
-    if (row.restocked) {
+    // A return by item that didn't happen: its items count as sold again.
+    const back = Array.isArray(row.returnedLines) ? row.returnedLines as { lineId: string; quantity: number }[] : null;
+    if (back) {
+      for (const rl of back) {
+        await tx.shopSaleLine.updateMany({ where: { id: rl.lineId, saleId }, data: { returnedQty: { decrement: rl.quantity } } });
+        if (row.restocked) { const l = await tx.shopSaleLine.findUnique({ where: { id: rl.lineId }, select: { shopItemId: true } }); if (l?.shopItemId) await takeStock(tx, l.shopItemId, rl.quantity); }
+      }
+      if (row.restocked) await tx.shopSaleRefund.update({ where: { id: refundId }, data: { restocked: false } });
+    } else if (row.restocked) {
+      // Items put back for a refund that didn't happen come off the shelf again.
       const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true } });
       for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
       await tx.shopSaleRefund.update({ where: { id: refundId }, data: { restocked: false } });
@@ -609,5 +661,92 @@ export async function reverseShopRefundTax(refundId: string): Promise<void> {
 export async function reversePendingShopRefundTax(limit = 50): Promise<number> {
   const pending = await prisma.shopSaleRefund.findMany({ where: { status: 'done', taxReversalId: '', sale: { taxCents: { gt: 0 } } }, select: { id: true }, take: limit, orderBy: { createdAt: 'asc' } });
   for (const r of pending) await reverseShopRefundTax(r.id);
-  return pending.length;
+  // Voided cash sales whose tax was recorded but not yet reversed (dead end 23).
+  const voided = await prisma.shopSale.findMany({ where: { status: 'void', taxCents: { gt: 0 }, taxTransactionId: { not: '' }, voidTaxReversalId: '' }, select: { id: true }, take: limit });
+  for (const v of voided) await reverseVoidTax(v.id);
+  return pending.length + voided.length;
+}
+
+/**
+ * Revamp 3 dead end 23 (Cam 2026-10-29: "Same day, before close-out"): a cash sale rung up
+ * by mistake is voided, not refunded — so the day's totals and the close-out never show it
+ * as a sale plus a refund. Only a paid cash sale, the course's same day, nothing refunded
+ * on it, no green fees in it (those are undone on the tee sheet), and before the day's
+ * drawer is counted. Its items go back on the shelf and its recorded tax is reversed.
+ */
+export async function voidCashSale(courseId: string, saleId: string): Promise<Result<SaleView>> {
+  const s = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, include: { course: { select: { timezone: true, stripeAccountId: true } } } });
+  if (!s) return fail(404, 'Sale not found.');
+  if (s.status !== 'paid_cash' || !s.paidAt) return fail(409, s.status === 'paid_card' ? 'A card sale is refunded, not voided.' : 'Only a paid cash sale can be voided.');
+  if (s.roundsCents > 0) return fail(409, 'This sale paid green fees — undo those on the tee sheet, and refund the items.');
+  if (s.refundedCents > 0) return fail(409, 'Part of this sale was refunded — refund the rest instead.');
+  const today = todayIn(s.course.timezone);
+  if (todayIn(s.course.timezone, s.paidAt) !== today) return fail(409, 'A sale from an earlier day is refunded, not voided.');
+  if (await prisma.registerClose.findFirst({ where: { courseId, day: today, createdAt: { gt: s.paidAt } }, select: { id: true } })) {
+    return fail(409, 'Today’s drawer has been counted since this sale — refund it instead.');
+  }
+  const r = await prisma.$transaction(async tx => {
+    const done = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: 'paid_cash', refundedCents: 0 }, data: { status: 'void', voidedAt: new Date() } });
+    if (!done.count) return null;
+    const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true, returnedQty: true } });
+    for (const l of lines) if (l.shopItemId && l.quantity - l.returnedQty > 0) await takeStock(tx, l.shopItemId, -(l.quantity - l.returnedQty));
+    return true;
+  });
+  if (!r) return fail(409, 'This sale just changed — refresh and look again.');
+  await reverseVoidTax(saleId);
+  const sale = await prisma.shopSale.findUniqueOrThrow({ where: { id: saleId }, include: SALE_INCLUDE });
+  return { ok: true, value: saleView(sale) };
+}
+
+/** A voided sale's recorded tax, reversed in full. Never throws; the hourly sweep retries. */
+export async function reverseVoidTax(saleId: string): Promise<void> {
+  const s = await prisma.shopSale.findUnique({ where: { id: saleId }, select: { status: true, taxCents: true, taxTransactionId: true, voidTaxReversalId: true, course: { select: { stripeAccountId: true } } } });
+  if (!s || s.status !== 'void' || s.taxCents <= 0 || !s.taxTransactionId || s.voidTaxReversalId || !s.course.stripeAccountId) return;
+  try {
+    const rev = await stripe.tax.transactions.createReversal(
+      { mode: 'full', original_transaction: s.taxTransactionId, reference: `shop-void-${saleId}`, metadata: { shopSaleId: saleId, voided: 'true' } },
+      { stripeAccount: s.course.stripeAccountId, idempotencyKey: `tax-rev-shop-void-${saleId}` },
+    );
+    await prisma.shopSale.update({ where: { id: saleId }, data: { voidTaxReversalId: rev.id } });
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'sales_tax.void_reverse.fail', saleId, error: err instanceof Error ? err.message : String(err) }));
+  }
+}
+
+/**
+ * Revamp 3 dead end 15 (Cam 2026-10-29): sale history and lookup — the shop page showed
+ * only the last 36 hours. A day (the course's), or a search across 90 days by customer,
+ * item or receipt number. Newest first.
+ */
+export async function findSales(courseId: string, opts: { day?: string; q?: string }): Promise<Result<SaleView[]>> {
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
+  if (!course) return fail(404, 'Course not found.');
+  const today = todayIn(course.timezone);
+  let from: Date | null, to: Date | null;
+  if (opts.day) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(opts.day) || opts.day > today) return fail(400, 'Pick a day up to today.');
+    from = teeTimeInstant(course.timezone, opts.day, '00:00');
+    to = teeTimeInstant(course.timezone, addDaysStr(opts.day, 1), '00:00');
+  } else {
+    from = teeTimeInstant(course.timezone, addDaysStr(today, -89), '00:00');
+    to = null;
+  }
+  if (!from) return fail(400, 'Bad day.');
+  const q = (opts.q ?? '').trim().slice(0, 80);
+  const contains = { contains: q, mode: 'insensitive' as const };
+  const digits = q.replace(/\D/g, '');
+  const sales = await prisma.shopSale.findMany({
+    where: {
+      courseId, status: { not: 'open' }, createdAt: { gte: from, ...(to ? { lt: to } : {}) },
+      ...(q ? { OR: [
+        { customerName: contains }, { customerEmail: contains },
+        ...(digits.length >= 4 ? [{ customerPhone: { contains: digits } }] : []),
+        { lines: { some: { name: contains } } },
+        // The receipt shows the sale's id — its last characters are enough.
+        { id: { endsWith: q.toLowerCase() } },
+      ] } : {}),
+    },
+    orderBy: { createdAt: 'desc' }, take: 100, include: SALE_INCLUDE,
+  });
+  return { ok: true, value: sales.map(saleView) };
 }

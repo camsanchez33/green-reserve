@@ -42,6 +42,8 @@ type TeeTime = {
   greenFee: number; cartFee: number; walkingAllowed: boolean;
   /** RES-1: the tee time's resident price (cents); null = none. */
   residentRateCents?: number | null;
+  /** Dead end 20: senior and junior prices (cents), picked at the counter. */
+  seniorRateCents?: number | null; juniorRateCents?: number | null;
   status: string; bookings?: Booking[];
   /** W2-9: the event holding this (blocked) time. */
   event?: { id: string; name: string } | null;
@@ -187,6 +189,15 @@ function DashboardPageInner() {
   const [walkInLate, setWalkInLate] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
   const [cardModalBooking, setCardModalBooking] = useState<Booking | null>(null);
+  // Revamp 3 dead end 19: the players who showed, carried into the card form (no saved card, or a declined one).
+  const [cardModalShowed, setCardModalShowed] = useState<number | undefined>(undefined);
+  /** Open the card form for a group, asking first how many showed. */
+  function openCardModal(b: Booking, reason: string, showed?: number) {
+    const n = showed ?? askHeadcount(b);
+    if (n === null) return;
+    setCardModalShowed(n < b.players ? n : undefined);
+    setCardModalReason(reason); setCardModalBooking(b);
+  }
   const [cardModalReason, setCardModalReason] = useState('');
   // SD-10: failure is never emptiness, and no button stays stuck.
   const [sheetError, setSheetError] = useState('');
@@ -261,6 +272,19 @@ function DashboardPageInner() {
     }
   }
 
+  // Revamp 3 dead end 19: staff change a group's party size at the counter.
+  async function changePlayers(b: Booking, n: number) {
+    setRowBusy(b.id);
+    try {
+      const r = await dfetch<{ totalAmount: number; feeRefundError?: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: b.id, action: 'change_players', newPlayers: n }) });
+      if (!r.ok) { toast(r.error, 'warn'); return; }
+      toast(r.data.feeRefundError || `${b.golferName}: now ${n} player${n === 1 ? '' : 's'}${access.can('money.payments') ? ` — round $${(r.data.totalAmount / 100).toFixed(2)}` : ''}.`, r.data.feeRefundError ? 'warn' : 'ok');
+      await loadTimes(selectedDate);
+    } finally {
+      setRowBusy(null);
+    }
+  }
+
   async function bookingLifecycle(b: Booking, action: 'no_show' | 'still_coming' | 'take_cash') {
     let checkedInPlayers: number | undefined;
     if (action === 'take_cash') {
@@ -307,7 +331,7 @@ function DashboardPageInner() {
     // No saved card → the card modal. Keyed on the card itself, not paymentStatus:
     // the hourly cron flips a no-card booking to 'awaiting_checkin' when it sends
     // the pay link, which is before most golfers reach the counter.
-    if (b.hasCard === false || b.paymentStatus === 'no_payment_method') { setCardModalReason(''); setCardModalBooking(b); return; }
+    if (b.hasCard === false || b.paymentStatus === 'no_payment_method') { openCardModal(b, ''); return; }
     // SD-5: partial party — the charge is prorated to who showed.
     const showed = askHeadcount(b);
     if (showed === null) return;
@@ -332,8 +356,8 @@ function DashboardPageInner() {
       // that takes a fresh card already existed for no-card bookings; a
       // decline opens it as a retry, with the decline reason on it.
       if (res.status === 402) {
-        setCardModalReason(data.error || 'The saved card was declined.');
-        setCardModalBooking(b);
+        // The headcount already given carries over: the card form charges the same players.
+        openCardModal(b, data.error || 'The saved card was declined.', partial ?? b.players);
         loadTimes(selectedDate); // the row now carries the decline
         return;
       }
@@ -347,7 +371,7 @@ function DashboardPageInner() {
     setCheckingInId(b.id);
     let res: Response; let data: Record<string, unknown> & { error?: string; totalCharged: number };
     try {
-      res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin', paymentMethodId }) });
+      res = await fetch('/api/operator/bookings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.id, action: 'checkin', paymentMethodId, ...(cardModalShowed ? { checkedInPlayers: cardModalShowed } : {}) }) });
       data = await res.json().catch(() => ({}));
     } catch {
       setCheckingInId(null);
@@ -362,7 +386,7 @@ function DashboardPageInner() {
       return msg;
     }
     chargeOutcome(data);
-    setCardModalBooking(null); setCardModalReason('');
+    setCardModalBooking(null); setCardModalReason(''); setCardModalShowed(undefined);
     loadTimes(selectedDate);
     return null;
   }
@@ -664,7 +688,7 @@ function DashboardPageInner() {
             </button>
           )}
           {b.status !== 'completed' && b.status !== 'cancelled' && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && (
-            <button onClick={() => { if (b.checkInFailReason) { setCardModalReason(b.checkInFailReason); setCardModalBooking(b); } else checkInBooking(b); }}
+            <button onClick={() => { if (b.checkInFailReason) openCardModal(b, b.checkInFailReason); else checkInBooking(b); }}
               disabled={checkingInId === b.id} className={primary + (b.checkInFailReason ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')}>
               {checkingInId === b.id ? 'Charging…' : b.checkInFailReason ? 'Retry with new card' : 'Check in'}
             </button>
@@ -714,6 +738,16 @@ function DashboardPageInner() {
           )}
         </div>
 
+        {/* Dead end 19: the party size, while the round's price can still change. */}
+        {b.status === 'confirmed' && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid' && b.paymentStatus !== 'cancellation_fee_charged' && access.can('sheet.counter_payment') && (
+          <label className="mt-2.5 flex items-center gap-2 text-[13px] text-ink-soft" onClick={e => e.stopPropagation()}>
+            Players
+            <select value={b.players} disabled={rowBusy === b.id} onChange={e => changePlayers(b, Number(e.target.value))}
+              className="bg-paper border border-line rounded-md px-2 py-1 text-[13px] text-ink disabled:opacity-50">
+              {Array.from({ length: Math.max(b.players, tt.playersAvailable - tt.playersBooked + b.players) }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
+            </select>
+          </label>
+        )}
         {/* RES-1: residents in the group, while the round's price can still change. */}
         {b.status === 'confirmed' && tt.residentRateCents != null && !b.noShowAt && !b.paidOffline && !b.roundPaid && !b.shopLocked && b.paymentStatus !== 'paid'
           && (!b.appliedRate || b.appliedRate === 'standard' || b.appliedRate === 'resident') && access.can('sheet.counter_payment') && (
@@ -1262,7 +1296,7 @@ function DashboardPageInner() {
                 <button onClick={() => { setFrostOpen(false); setFrostResult(null); }} className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold">Done</button>
               </div>
             ) : (<>
-            <p className="text-[13px] text-ink-soft mb-4">Every group booked before the new first tee time moves, in tee-time order, to the earliest open time that fits them. The early times are blocked and each moved golfer is emailed. Prices don&apos;t change. Nobody is cancelled.</p>
+            <p className="text-[13px] text-ink-soft mb-4">Groups before the new first tee time move, in order, to the earliest open time that fits. Early times are blocked; moved golfers are emailed. Prices stay. Nobody is cancelled.</p>
             <label className="block text-[12.5px] text-ink-muted mb-1.5">New first tee time</label>
             <div className="flex gap-2 mb-4">
               <input type="time" value={frostTime} onChange={e => { setFrostTime(e.target.value); setFrostPlan(null); }} className={iCls + ' flex-1'}/>
@@ -1336,7 +1370,7 @@ function DashboardPageInner() {
       {cardModalBooking && (
         <div className="fixed inset-0 bg-ink/20 z-50 flex items-center justify-center p-4">
           <Elements stripe={stripePromise}>
-            <CardCheckInModal booking={cardModalBooking} reason={cardModalReason} onConfirm={(pmId) => checkInWithCard(cardModalBooking, pmId)} onCancel={() => { setCardModalBooking(null); setCardModalReason(''); }}/>
+            <CardCheckInModal booking={cardModalBooking} reason={cardModalReason} showed={cardModalShowed} onConfirm={(pmId) => checkInWithCard(cardModalBooking, pmId)} onCancel={() => { setCardModalBooking(null); setCardModalReason(''); setCardModalShowed(undefined); }}/>
           </Elements>
         </div>
       )}
@@ -1349,7 +1383,7 @@ function DashboardPageInner() {
               <h3 className="font-serif font-semibold text-ink text-[17px]">Course alert</h3>
               <button onClick={() => setShowConditions(false)} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
             </div>
-            <p className="text-sm text-ink-soft mb-3">A short notice at the top of your booking page, like “Cart path only today” or “Back nine closed”. It stays up until you clear it. Leave blank to clear.</p>
+            <p className="text-sm text-ink-soft mb-3">A short notice at the top of your booking page, like “Cart path only today”. Leave blank to clear.</p>
             <textarea value={conditionsInput} onChange={e=>setConditionsInput(e.target.value)} rows={3} maxLength={280}
               placeholder="e.g. Cart paths only through Sunday"
               className={iCls + ' w-full mb-1 resize-none'}/>
@@ -1402,13 +1436,32 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   const [checkInNow, setCheckInNow] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
+  // Revamp 3 dead end 20: the rate staff pick — the time's standard, resident, senior or junior price, or a membership.
+  const [rate, setRate] = useState('standard');
+  // Members (Cam 2026-10-29): the member shows their membership and is picked by name; a course
+  // that allows it (Settings) can also pick any membership. Rate 'member' = picking one now.
+  const [tiers, setTiers] = useState<{ id: string; name: string }[]>([]);
+  const [memberQ, setMemberQ] = useState('');
+  const [memberHits, setMemberHits] = useState<{ id: string; name: string; tier: string }[]>([]);
+  const [member, setMember] = useState<{ id: string; name: string; tier: string } | null>(null);
+  useEffect(() => { dfetch<{ tiers: { id: string; name: string }[] }>('/api/operator/counter-members').then(r => { if (r.ok) setTiers(r.data.tiers); }); }, []);
+  useEffect(() => {
+    if (rate !== 'member' || memberQ.trim().length < 2) { setMemberHits([]); return; }
+    const t = setTimeout(() => { dfetch<{ members: { id: string; name: string; tier: string }[] }>(`/api/operator/counter-members?q=${encodeURIComponent(memberQ.trim())}`).then(r => { if (r.ok) setMemberHits(r.data.members); }); }, 250);
+    return () => clearTimeout(t);
+  }, [rate, memberQ]);
+  const perCents: Record<string, number | null | undefined> = { resident: slot.residentRateCents, senior: slot.seniorRateCents, junior: slot.juniorRateCents };
+  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ['member', 'Member'], ...tiers.map(t => [`tier:${t.id}`, t.name])];
+  const sentRate = rate === 'member' ? (member ? `member:${member.id}` : 'standard') : rate;
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
-  const total = (slot.greenFee + (cart ? slot.cartFee : 0)) * players;
+  // A membership is priced by the server (its member and guest rules); the rest show here.
+  const green = rate in perCents && perCents[rate] != null ? (perCents[rate] as number) / 100 : slot.greenFee;
+  const total = rate.startsWith('tier:') || rate === 'member' ? null : (green + (cart ? slot.cartFee : 0)) * players;
 
   async function save() {
     setSaving(true); setErr('');
     const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
-      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate: sentRate, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
@@ -1448,18 +1501,31 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
           <input type="checkbox" checked={cart} disabled={cartForced} onChange={e => setCart(e.target.checked)} className="accent-pine" />Cart (${slot.cartFee} / player){cartForced ? ' — required on this time' : ''}
         </label>
       )}
+      {rates.length > 1 && (
+        <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Rate</span>
+          <select value={rate} onChange={e => { setRate(e.target.value); setMember(null); }} className={inp}>{rates.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        </label>
+      )}
+      {rate === 'member' && (member ? (
+        <p className="text-[13px] text-ink">{member.name} · {member.tier} <button type="button" onClick={() => setMember(null)} className="text-pine font-medium hover:underline">Change</button></p>
+      ) : (
+        <div>
+          <input value={memberQ} onChange={e => setMemberQ(e.target.value)} placeholder="Find the member" aria-label="Find the member" className={inp} />
+          {memberHits.map(m => <button key={m.id} type="button" onClick={() => { setMember(m); if (!name.trim()) setName(m.name); }} className="block w-full text-left px-2 py-1.5 text-[13px] text-ink hover:bg-paper">{m.name} <span className="text-ink-muted">· {m.tier}</span></button>)}
+        </div>
+      ))}
       {source === 'walk_in' && (
         <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
           <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Paying cash now — take it and check this group in
         </label>
       )}
-      <div className="text-[12.5px] text-ink-muted">Due: <b className="text-ink">${total.toFixed(2)}</b> — in cash, on the card reader or by pay link from their card on the sheet. No booking fee.</div>
+      <div className="text-[12.5px] text-ink-muted">Due: <b className="text-ink">{total === null ? 'member rate' : `$${total.toFixed(2)}`}</b> — cash, card reader or pay link. No booking fee.</div>
       {err && <p className="text-sm text-bad">{err}</p>}
       <div className="flex gap-2 pt-1">
         <button onClick={onCancel} disabled={saving} className="flex-1 px-4 py-2.5 border border-line text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors">Cancel</button>
-        <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0}
+        <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0 || (rate === 'member' && !member)}
           className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors">
-          {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? `Add + take $${total.toFixed(2)} cash` : 'Add booking'}
+          {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? (total === null ? 'Add + take cash' : `Add + take $${total.toFixed(2)} cash`) : 'Add booking'}
         </button>
       </div>
     </div>
@@ -1531,8 +1597,10 @@ function AddTeeTimeForm({ date, existingTimes, onSave, onCancel }: { date: strin
 }
 
 /* ─── Card Check-In Modal ───────────────────────────────────────────────── */
-function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
+function CardCheckInModal({ booking, reason, showed, onConfirm, onCancel }: {
   booking: Booking;
+  /** Part of the group that showed — charged for them only (dead end 19). */
+  showed?: number;
   /** SD-4: why this opened — the decline message when it is a retry. */
   reason?: string;
   onConfirm: (paymentMethodId: string) => Promise<string | null>;
@@ -1558,12 +1626,13 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
     } catch { setError('Something went wrong — try again.'); setLoading(false); }
   }
 
+  const due = (showed ? partRound(booking, showed, true) : booking.totalAmount) + shopExtra(booking);
   return (
     <div className="bg-white border border-line w-full max-w-sm rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-serif font-semibold text-ink text-[17px]">{reason ? 'Retry with a new card' : 'Check in'} — {booking.golferName}</h3>
-          <p className="text-xs text-ink-soft mt-0.5">Enter golfer&apos;s card to charge ${((booking.totalAmount + shopExtra(booking)) / 100).toFixed(2)}</p>
+          <p className="text-xs text-ink-soft mt-0.5">Enter golfer&apos;s card to charge ${(due / 100).toFixed(2)}{showed ? ` for ${showed} of ${booking.players} players` : ''}</p>
         </div>
         <button onClick={onCancel} className="text-ink-muted hover:text-ink"><X className="w-5 h-5"/></button>
       </div>
@@ -1581,7 +1650,7 @@ function CardCheckInModal({ booking, reason, onConfirm, onCancel }: {
       {error && <p className="text-bad text-xs mb-3">{error}</p>}
       <button onClick={handleCharge} disabled={loading || !stripe}
         className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md text-[12.5px] font-medium disabled:opacity-50 flex items-center justify-center gap-2 mb-2 transition-colors">
-        {loading ? <><Loader2 className="w-4 h-4 animate-spin"/>Charging…</> : `Charge $${((booking.totalAmount + shopExtra(booking)) / 100).toFixed(2)}`}
+        {loading ? <><Loader2 className="w-4 h-4 animate-spin"/>Charging…</> : `Charge $${(due / 100).toFixed(2)}`}
       </button>
       <div className="flex items-center justify-center gap-1.5 text-ink-muted text-xs">
         <span>Powered by Stripe</span>
