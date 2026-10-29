@@ -1366,6 +1366,9 @@ model ShopSale {
   taxCents         Int            @default(0)
   taxCalculationId String         @default("")
   taxTransactionId String         @default("")
+  /// Cam 2026-10-29: a cash sale rung up while Stripe Tax couldn't be reached —
+  /// taken with no tax rather than blocked (cash is never blocked).
+  taxUnavailable   Boolean        @default(false)
   customerName     String         @default("")
   customerPhone    String         @default("")
   customerEmail    String         @default("")

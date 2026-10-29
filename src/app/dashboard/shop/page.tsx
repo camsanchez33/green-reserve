@@ -44,7 +44,7 @@ type Owing = { bookingId: string; time: string; holes: number; golferName: strin
 type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean };
 type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number };
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
-type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string };
+type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
@@ -160,7 +160,9 @@ export default function ShopPage() {
   const hasRounds = pickedRounds.length + walkIns.length > 0;
   const itemsEmpty = salePayload.length === 0;
   const due = (itemsEmpty ? 0 : priced ? priced.totalCents : subtotal) + roundsCents;
-  const ready = itemsEmpty ? hasRounds : !!priced;
+  // Stripe Tax down: cash still goes through, with no tax (Cam 2026-10-29); a pay link or the reader waits.
+  const noTax = !itemsEmpty && !!priced?.taxUnavailable;
+  const ready = itemsEmpty ? hasRounds : !!priced && (!noTax || pay === 'cash');
   const tenderedCents = toCents(tendered);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
   const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
@@ -242,7 +244,7 @@ export default function ShopPage() {
     setBusy('');
     if (!r.ok) { setRoundOnReader(o => o && { ...o, message: r.error }); return; }
     if (action === 'cancel') {
-      if (r.data.status === 'paid') { setNote(`${roundOnReader.label} — the card went through before the reader stopped: paid and checked in.`); setRoundOnReader(null); loadRounds(); return; }
+      if (r.data.status === 'paid') { setNote(`${roundOnReader.label} — the card went through: paid and checked in.`); setRoundOnReader(null); loadRounds(); return; }
       if (r.data.status === 'refunded') { setError(r.data.message ?? ''); setRoundOnReader(null); loadRounds(); return; }
       setRoundOnReader(o => o && (r.data.status === 'waiting' ? { ...o, message: r.data.message ?? '' } : { ...o, state: 'cancelled', message: 'Cancelled — nothing was charged.' }));
       loadRounds();
@@ -304,7 +306,7 @@ export default function ShopPage() {
     setBusy('');
     if (!r.ok) { setError(r.error); load(); return; }
     setRefund(null);
-    setNote(r.data.status === 'pending' ? 'Sent to Stripe — it hasn’t confirmed yet. Check back in a few minutes.' : sale.status === 'paid_card' ? 'Refunded to their card.' : 'Refund recorded — hand the cash back.');
+    setNote(r.data.status === 'pending' ? 'Sent to Stripe — not confirmed yet.' : sale.status === 'paid_card' ? 'Refunded to their card.' : 'Refund recorded — hand the cash back.');
     load();
   }
 
@@ -438,7 +440,7 @@ export default function ShopPage() {
                                     Cart ({usd(walkTime.cartFeeCents)} / player){!walkTime.walkingAllowed ? ' — required on this time' : ''}
                                   </label>
                                 )}
-                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkTime.greenFeeCents + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)} at the standard rate. It goes on the tee sheet, checked in and paid, when you take the cash.</p>}
+                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkTime.greenFeeCents + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)} at the standard rate, checked in when you take the cash.</p>}
                                 <div className="flex gap-2">
                                   <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add to the sale</button>
                                   <button type="button" onClick={() => setWalkForm(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Cancel</button>
@@ -638,6 +640,7 @@ export default function ShopPage() {
                         <p className="text-[12.5px] text-ink-muted">They pay on their phone with Apple Pay, Google Pay or a card. The money goes to your Stripe account.</p>
                       </div>
                     )}
+                    {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
                     <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">

@@ -6612,7 +6612,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/quote/route.ts",
-      "lines": 21,
+      "lines": 22,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8336,7 +8336,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 806,
+      "lines": 809,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -10253,7 +10253,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 163,
+      "lines": 164,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -20068,7 +20068,7 @@
     },
     {
       "path": "src/lib/register-close.ts",
-      "lines": 132,
+      "lines": 133,
       "purpose": "POS-3 R4 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -21283,7 +21283,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 591,
+      "lines": 601,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -26922,6 +26922,10 @@
         {
           "name": "taxTransactionId",
           "type": "String"
+        },
+        {
+          "name": "taxUnavailable",
+          "type": "Boolean"
         },
         {
           "name": "customerName",

@@ -88,8 +88,14 @@ async function cleanup() {
   ok('a voided sale is never recorded', !!v?.ok && !recorded.some(r => r.ref === `shop-sale-${v.value.id}`));
 
   failCreate = true;
+  // Cam 2026-10-29 ("no tax on cash"): cash is never blocked — taken without tax, marked on the sale.
   const down = await createSale({ courseId: c.id, lines, pay: 'cash', soldBy: 't' });
-  ok('no tax worked out → no sale (never under-collect silently)', !down.ok && down.status === 502);
+  const downRow = down.ok ? await prisma.shopSale.findUnique({ where: { id: down.value.id }, select: { taxCents: true, taxUnavailable: true, status: true } }) : null;
+  ok('Stripe Tax down: cash still goes through, no tax, marked', down.ok && downRow?.status === 'paid_cash' && downRow.taxCents === 0 && downRow.taxUnavailable === true, JSON.stringify(down));
+  const downLink = await createSale({ courseId: c.id, lines, pay: 'link', soldBy: 't', customerPhone: '+12125550123' });
+  ok('…a pay link still waits for the tax', !downLink.ok && downLink.status === 502);
+  const downQuote = await quoteSale(c.id, lines);
+  ok('…and the quote says tax is unavailable instead of failing', downQuote.ok && downQuote.value.taxUnavailable && downQuote.value.taxCents === 0);
   failCreate = false;
 
   const noTax = await createSale({ courseId: off.id, lines: [{ shopItemId: offItem.id, quantity: 1 }], pay: 'cash', soldBy: 't' });
