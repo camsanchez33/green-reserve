@@ -84,7 +84,7 @@ async function cleanup() {
   ok('…and a tier with guests at the member rate covers everyone', (await cartAddOnCentsFor(b(`${TAG}+live@t.local`))) === 4 * 1000);
 
   // Every place that prices a member uses the same rules.
-  ok('party size, partial check-in and cash use partyFees', ['src/app/api/manage/[bookingId]/change-players/route.ts', 'src/lib/checkin-booking.ts', 'src/lib/counter-pay.ts', 'src/app/manage/[bookingId]/page.tsx', 'src/app/dashboard/page.tsx'].every(f => readFileSync(f, 'utf8').includes('partyFees(')));
+  ok('party size, partial check-in and cash use partyFees', ['src/lib/change-party.ts', 'src/lib/checkin-booking.ts', 'src/lib/counter-pay.ts', 'src/app/manage/[bookingId]/page.tsx', 'src/app/dashboard/page.tsx'].every(f => readFileSync(f, 'utf8').includes('partyFees(')));
   ok('booking and moves store the member spot', readFileSync('src/app/api/bookings/route.ts', 'utf8').includes('...memberSpot(appliedTier') && readFileSync('src/lib/move-booking.ts', 'utf8').includes('data.memberRateCents = spot.memberRateCents'));
   const src = (f: string) => readFileSync(f, 'utf8');
   ok('booking charges the split and checks the end date', src('src/app/api/bookings/route.ts').includes('splitTotal(players, memberN, greenFeePerPlayerCents, teeTimeFull.greenFeeCents)') && src('src/app/api/bookings/route.ts').includes('membershipLive(membership, teeTimeFull.course)') && src('src/app/api/bookings/route.ts').includes('getGolferMembership(teeTimeFull.courseId, teeTimeFull.course)'));

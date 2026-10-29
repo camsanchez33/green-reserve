@@ -88,7 +88,7 @@ async function cleanup() {
   // Players taken off before the cutoff: their part comes back.
   const part = await refundBookingFee(g.id, 150, 'party lowered', 'golfer');
   ok('taking a player off refunds their part', part.ok && part.refundedCents === 150 && (await prisma.booking.findUniqueOrThrow({ where: { id: g.id } })).feePaidCents === 150 && refunds.at(-1)?.amount === 150);
-  const cp = readFileSync('src/app/api/manage/[bookingId]/change-players/route.ts', 'utf8');
+  const cp = readFileSync('src/lib/change-party.ts', 'utf8');
   ok('…the party-size change does that before the cutoff only', cp.includes('const feeBack = beforeCutoff ? Math.max(0, booking.feePaidCents - accessFeeTotal) : 0') && cp.includes('refundBookingFee(bookingId, feeBack'));
 
   // Cancel before the cutoff: refunded.

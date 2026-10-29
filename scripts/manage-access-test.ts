@@ -24,7 +24,8 @@ check('a booking with an empty-string token never matches', !canManageBooking({ 
 const routes = [
   'src/app/api/manage/[bookingId]/route.ts',
   'src/app/api/manage/[bookingId]/available-times/route.ts',
-  'src/app/api/manage/[bookingId]/change-players/route.ts',
+  // Dead end 19: the party-size rules (and its golfer check) live in lib/change-party.
+  'src/lib/change-party.ts',
   'src/app/api/manage/[bookingId]/swap-time/route.ts',
   'src/app/api/manage/[bookingId]/send-modified-email/route.ts',
   'src/app/api/bookings/cancel/route.ts',
