@@ -48,7 +48,9 @@ async function cleanup() {
 
   await prisma.booking.update({ where: { id: b.id }, data: { noShowAt: new Date() } });
   ok('a no-show can\'t change', (await code(changePartySize(b.id, 2, { by: 'staff', courseId: c.id, actor: STAFF }))) === 'STARTED');
-  await prisma.booking.update({ where: { id: b.id }, data: { noShowAt: null, paymentStatus: 'paid', roundPaymentIntentId: 'pi_x' } });
+  await prisma.booking.update({ where: { id: b.id }, data: { noShowAt: null, readerStartedAt: new Date() } });
+  ok('nor a group on the card reader right now (it is being charged at this size)', (await code(changePartySize(b.id, 2, { by: 'staff', courseId: c.id, actor: STAFF }))) === 'PAID');
+  await prisma.booking.update({ where: { id: b.id }, data: { readerStartedAt: null, paymentStatus: 'paid', roundPaymentIntentId: 'pi_x' } });
   ok('nor a paid round', (await code(changePartySize(b.id, 2, { by: 'staff', courseId: c.id, actor: STAFF }))) === 'PAID');
 
   // The tee sheet: a Players picker, and the card form asks how many showed.

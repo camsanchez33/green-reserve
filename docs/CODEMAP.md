@@ -358,14 +358,14 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/approval-state.ts` | 11 | 61 |  | `ApprovalState`, `coursePageDecision`, `getApprovalState`, `recordCoursePageDecision` |
 | `src/lib/real-courses.ts` | 11 | 22 | TEST-2 (Cam 2026-10-22: | `ON_REAL_BOOKING`, `ON_REAL_COURSE`, `REAL_COURSE` |
 | `src/lib/security-events.ts` | 11 | 129 | SEC-3 (Cam 2026-10-26, "security has to be insane"; chose "log events" and "email + Problems"): | `BURST_PER_IP`, `BURST_TOTAL`, `lockedAccountsNow`, `MAX_EVENTS_PER_IP_HOUR`, `purgeOldSecurityEvents`, `SECURITY_KEEP_DAYS`, `securityEvent`, `securityFindings` +3 more |
-| `src/lib/staff-permissions.ts` | 11 | 149 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
+| `src/lib/staff-permissions.ts` | 11 | 150 | SP-A (STAFF_POLICY_SPEC Part A). | `ALL_KEYS`, `deniedMessage`, `labelFor`, `LEGACY_KEYS`, `normalizePermissions`, `PermissionDef`, `PermissionKey`, `PERMISSIONS` +5 more |
 | `src/lib/step-up-client.ts` | 11 | 70 | AW-1c: | `askReason`, `registerReasonHandler`, `registerStepUpHandler`, `stepUpFetch`, `withReason` |
 | `src/lib/access-fee.ts` | 10 | 187 | FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B). | `bookingIdForFeeCharge`, `chargeAccessFeeSeparately`, `counterFeesUncollected`, `FeeChargeResult`, `liveSeparateFee`, `refundSeparateAccessFee` |
 | `src/lib/cron-log.ts` | 10 | 141 | MP-8b: | `cronHealth`, `CronHealth`, `cronRoute`, `lastStripeWebhook`, `logStripeWebhook`, `STRIPE_WEBHOOK_JOB` |
 | `src/lib/tee-sheet-engine.ts` | 10 | 290 |  | `DesiredSlot`, `desiredSlots`, `generateForAllCourses`, `generateTeeTimes`, `regenerateUpcoming`, `regenerationDays`, `ScheduleForSlots`, `slotKey` |
 | `src/lib/agreement-gate.ts` | 9 | 117 | AG-1: | `AgreementDocStatus`, `agreementStatus`, `AgreementStatus`, `hasAcceptedAgreement`, `latestOperatorAgreement` |
 | `src/lib/agreements.ts` | 9 | 134 | AGREEMENT_SPEC AG-1 §2 — versioned agreement documents. | `AgreementDocument`, `currentDocuments`, `currentVersion`, `DOCUMENT_DIR`, `DocumentMeta`, `listVersions`, `loadDocument`, `LoadedDocument` +2 more |
-| `src/lib/analytics.ts` | 9 | 589 | AN-1 (Cam 2026-10-01): | `Analytics`, `bookingPace`, `computeAnalytics`, `courseShareCents`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `PaceDay` +4 more |
+| `src/lib/analytics.ts` | 9 | 591 | AN-1 (Cam 2026-10-01): | `Analytics`, `bookingPace`, `computeAnalytics`, `courseShareCents`, `EVENT_LOG_START`, `headline`, `NO_SHOW_GRACE_MIN`, `PaceDay` +4 more |
 | `src/lib/member-session.ts` | 9 | 116 |  | `getGolferMembership`, `getMemberSession`, `golferResident`, `residentOn`, `signMemberMagicToken`, `signMemberSessionToken`, `verifyMemberMagicToken` |
 | `src/lib/residents.ts` | 9 | 66 | RES-1 (Cam 2026-10-19): | `cardValidOn`, `groupGreenFee`, `MAX_CARD_NUMBER`, `MAX_RESIDENT_NAME`, `otherPerPlayerCents`, `residentInput` |
 | `src/lib/tee-time-utils.ts` | 9 | 41 | Converts a stored tee-time (date "YYYY-MM-DD", time "HH:MM" in the course's local timezone) to a UTC millisecond timestamp. | `teeToUtcMs` |
@@ -519,7 +519,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/sheet-vs-live.ts` | 1 | 108 | MP-5e. | `ConfigDrift`, `InquirySide`, `LiveSide`, `sheetVsLive` |
 | `src/lib/shop-ai-import.ts` | 1 | 96 | W2-7 (Cam 2026-10-20: | `cleanRows`, `MAX_READ_CHARS`, `ReadRow`, `readShopList`, `SHOP_READ_MODEL` |
 | `src/lib/shop-catalog.ts` | 1 | 163 | W2-7 (Cam 2026-10-20): | `createItems`, `deleteItem`, `ImportItem`, `ITEM_SELECT`, `ItemIn`, `optionName`, `readItem`, `setItemActive` +1 more |
-| `src/lib/staff-refund.ts` | 1 | 128 | Revamp 3 dead end 14 (Cam 2026-10-29): | `refundableCents`, `refundRound`, `StaffRefundResult`, `waiveLateFee` |
+| `src/lib/staff-refund.ts` | 1 | 131 | Revamp 3 dead end 14 (Cam 2026-10-29): | `refundableCents`, `refundRound`, `StaffRefundResult`, `waiveLateFee` |
 | `src/lib/stripe-match.ts` | 1 | 25 | ADMIN-C Money → Disputes: | `lastFullMonths`, `matchResult`, `MonthWindow` |
 | `src/lib/tee-time-fit.ts` | 1 | 19 | Cam 2026-10-19: | `FIT_WINDOW_MIN`, `timesTooClose` |
 | `src/lib/tier-wire.ts` | 1 | 43 |  | `tierToWire` |

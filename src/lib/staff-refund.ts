@@ -72,8 +72,10 @@ export async function refundRound(courseId: string, bookingId: string, opts: { a
   try {
     refund = await stripe.refunds.create(
       { payment_intent: b.roundPaymentIntentId, amount: amountCents, refund_application_fee: false, metadata: { bookingId, reason: reason.slice(0, 480), by: `operator:${opts.actorName}` } },
-      // The refunds made so far are in the key, so a retry after a timeout can't refund twice.
-      { stripeAccount: b.course.stripeAccountId, idempotencyKey: `staff-refund-${bookingId}-${amountCents}-${already}` },
+      // Keyed on what was refunded before, not the amount: two refunds started at once from the same
+      // state share a key, so Stripe refunds once (a different amount gets its "same key, different
+      // request" refusal) — never two that together pass the course's share.
+      { stripeAccount: b.course.stripeAccountId, idempotencyKey: `staff-refund-${bookingId}-${already}` },
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -107,7 +109,8 @@ export async function waiveLateFee(courseId: string, bookingId: string, opts: { 
   const reason = String(opts.reason ?? '').trim().slice(0, 300);
   if (!reason) return fail(400, 'Add a reason — the golfer sees it.');
   // Claim it first, so two taps refund once.
-  const claimed = await prisma.booking.updateMany({ where: { id: bookingId, paymentStatus: 'cancellation_fee_charged' }, data: { paymentStatus: 'refunded' } });
+  // cancellationFeeApplies off too, as a waive at cancel time does (Analytics reads it).
+  const claimed = await prisma.booking.updateMany({ where: { id: bookingId, paymentStatus: 'cancellation_fee_charged' }, data: { paymentStatus: 'refunded', cancellationFeeApplies: false } });
   if (!claimed.count) return fail(409, 'That fee was just given back.');
   let refund: Stripe.Refund;
   try {
@@ -116,7 +119,7 @@ export async function waiveLateFee(courseId: string, bookingId: string, opts: { 
       { stripeAccount: b.course.stripeAccountId, idempotencyKey: `staff-waive-${bookingId}` },
     );
   } catch (err) {
-    await prisma.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'cancellation_fee_charged' } });
+    await prisma.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'cancellation_fee_charged', cancellationFeeApplies: b.cancellationFeeApplies } });
     return fail(502, `Stripe refused the refund: ${err instanceof Error ? err.message : String(err)}`);
   }
   await recordBookingEventSafe({

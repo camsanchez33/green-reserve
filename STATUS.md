@@ -4,14 +4,21 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-29 20:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `06b64277` · working tree **5 dirty file(s)**
+Generated 2026-10-29 21:02 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `cfe7cb40` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 28 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 35 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `cfe7cb40` | 2026-10-29 | WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings |
+| `3d18ecd9` | 2026-10-29 | Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251) |
+| `69bcbab8` | 2026-10-29 | WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale |
+| `7dcf8122` | 2026-10-29 | Course page: no layout shift when the day's tee times load |
+| `f226c81b` | 2026-10-29 | WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party |
+| `9de927a8` | 2026-10-29 | WIP part B: staff refunds (course share) and giving back a kept late fee |
+| `4e1d9c2c` | 2026-10-29 | The dues link says why it didn't send; a search result opens Cancellations filtered |
 | `06b64277` | 2026-10-29 | Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations |
 | `0dfd8bdf` | 2026-10-29 | Revamp 3: the 12 audit fixes (#250) |
 | `92b9bfa6` | 2026-10-29 | Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused |
@@ -43,13 +50,17 @@ Generated 2026-10-29 20:08 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (9 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/dead-ends-a-test.ts`
-- `M src/app/api/operator/members/route.ts`
-- `M src/app/dashboard/money/page.tsx`
+- `M scripts/change-party-db-test.ts`
+- `M scripts/staff-refund-db-test.ts`
+- `M src/lib/analytics.ts`
+- `M src/lib/booking-residents.ts`
+- `M src/lib/change-party.ts`
+- `M src/lib/staff-permissions.ts`
+- `M src/lib/staff-refund.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -175,18 +186,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `cfe7cb40` 2026-10-29 — WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings
+- `3d18ecd9` 2026-10-29 — Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)
+- `69bcbab8` 2026-10-29 — WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale
+- `7dcf8122` 2026-10-29 — Course page: no layout shift when the day's tee times load
+- `f226c81b` 2026-10-29 — WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party
+- `9de927a8` 2026-10-29 — WIP part B: staff refunds (course share) and giving back a kept late fee
+- `4e1d9c2c` 2026-10-29 — The dues link says why it didn't send; a search result opens Cancellations filtered
 - `06b64277` 2026-10-29 — Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations
 - `0dfd8bdf` 2026-10-29 — Revamp 3: the 12 audit fixes (#250)
 - `92b9bfa6` 2026-10-29 — Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused
 - `9e689d2b` 2026-10-29 — Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked
 - `1f56429b` 2026-10-29 — Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5
-- `28e44ab2` 2026-10-29 — Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team
-- `447cb1bd` 2026-10-29 — Status board
-- `e02ea5d4` 2026-10-29 — One code, one shop item; an oversold count says so
-- `fa151d17` 2026-10-29 — The booking window turns over at the course's midnight, not UTC's
-- `57e64d2d` 2026-10-29 — "Not paid yet" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds
-- `9bcc13b3` 2026-10-29 — A cash sale records the total the register showed, or nothing
-- `6ed720e1` 2026-10-29 — A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing
 
 ---
 

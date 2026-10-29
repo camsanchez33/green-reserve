@@ -6,7 +6,7 @@ import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { stripe } from '../src/lib/stripe';
 import { refundRound, waiveLateFee, refundableCents } from '../src/lib/staff-refund';
-import { PERMISSIONS } from '../src/lib/staff-permissions';
+import { PERMISSIONS, PRESETS } from '../src/lib/staff-permissions';
 
 const TAG = 'staffrefunddbtest';
 let failed = 0;
@@ -20,7 +20,10 @@ const refunds = stripe.refunds as unknown as { create: unknown };
 refunds.create = async (p: { payment_intent: string; amount?: number; refund_application_fee?: boolean }, o: { stripeAccount: string; idempotencyKey: string }) => {
   calls.push({ pi: p.payment_intent, amount: p.amount, appFee: p.refund_application_fee, account: o.stripeAccount, key: o.idempotencyKey });
   // Idempotent like Stripe: the same key returns the same refund.
-  const prior = seen.get(o.idempotencyKey); if (prior) return prior;
+  const prior = seen.get(o.idempotencyKey);
+  // Like Stripe: the same key with a different amount is refused.
+  if (prior && prior.amount !== (p.amount ?? 1500)) throw new Error('Keys for idempotent requests can only be used with the same parameters they were first used with.');
+  if (prior) return prior;
   const r = { id: `re_${calls.length}`, amount: p.amount ?? 1500 };
   seen.set(o.idempotencyKey, r);
   return r;
@@ -66,6 +69,15 @@ async function cleanup() {
   ok('blank amount refunds what\'s left of the share, and the round reads refunded', rest.ok && (rest as { amountCents: number }).amountCents === 2000 && (await prisma.booking.findUniqueOrThrow({ where: { id: paid.id } })).paymentStatus === 'refunded', rest);
   ok('…after which nothing more can go back', !(await refundRound(c.id, paid.id, { reason: 'x', actorName: 't', actor: STAFF })).ok);
 
+  // Two refunds started at once from the same state (different amounts): only one goes through.
+  const race = await book({ roundPaymentIntentId: 'pi_race' });
+  const [r1, r2] = await Promise.all([
+    refundRound(c.id, race.id, { amountCents: 6000, reason: 'a', actorName: 'one', actor: STAFF }),
+    refundRound(c.id, race.id, { amountCents: 5000, reason: 'b', actorName: 'two', actor: STAFF }),
+  ]);
+  const raceTotal = (await prisma.paymentEvent.findMany({ where: { bookingId: race.id, kind: 'refund' } })).reduce((n, e) => n + e.amountCents, 0);
+  ok('two refunds at once can never pass the course\'s share together', [r1.ok, r2.ok].filter(Boolean).length === 1 && raceTotal <= 10000, { r1: r1.ok, r2: r2.ok, raceTotal });
+
   const cash = await book({ paymentStatus: 'paid_offline', roundPaymentIntentId: '', paidOffline: true });
   const cashR = await refundRound(c.id, cash.id, { reason: 'x', actorName: 't', actor: STAFF });
   ok('a round paid in cash is refunded at the register, not here', !cashR.ok && /register/.test((cashR as { error: string }).error));
@@ -79,8 +91,7 @@ async function cleanup() {
   // Who may.
   const perm = PERMISSIONS.find(p => p.key === 'money.refund_rounds');
   ok('"Refund rounds" is its own permission that moves money', !!perm && perm.movesMoney === true && (perm.requires ?? []).includes('money.payments'));
-  const presets = readFileSync('src/lib/staff-permissions.ts', 'utf8').slice(readFileSync('src/lib/staff-permissions.ts', 'utf8').indexOf('PRESETS'));
-  ok('…off in every preset (given per person)', !presets.includes("'money.refund_rounds'"));
+  ok('…off in every preset, Manager included (given per person)', PRESETS.every(p => !p.keys.includes('money.refund_rounds')));
   const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
   ok('the route gates refunds on it and a waived fee on sheet.waive_fee', route.includes("refund_round: 'money.refund_rounds', waive_late_fee: 'sheet.waive_fee'"));
   ok('the assistant can\'t refund (its body rules allow only move and pay links)', !readFileSync('src/lib/birdie/proposal-types.ts', 'utf8').includes('refund_round'));

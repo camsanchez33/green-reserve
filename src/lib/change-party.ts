@@ -32,7 +32,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
           status: true, cartSelected: true, rangeBallsTotal: true,
           greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
-          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, feePaidCents: true, noShowAt: true,
+          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true, feePaidCents: true, noShowAt: true,
           teeTime: { select: { date: true, time: true, greenFeeCents: true, cartFeeCents: true, product: { select: { minPlayers: true, maxPlayers: true } } } },
           course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true, minPlayers: true, maxPlayers: true } },
         },
@@ -52,7 +52,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
       const sizeError = groupSizeError(rulesFor(booking.course, booking.teeTime.product), newPlayers);
       if (sizeError) throw Object.assign(new Error(), { code: 'SIZE', msg: sizeError });
       // A payment taken or started (or a hold already charged) carries the old party's price.
-      if (booking.paymentStatus === 'paid' || booking.paymentStatus === 'cancellation_fee_charged' || booking.roundPaymentIntentId || booking.shopLockedAt) throw Object.assign(new Error(), { code: 'PAID' });
+      if (booking.paymentStatus === 'paid' || booking.paymentStatus === 'cancellation_fee_charged' || booking.roundPaymentIntentId || booking.shopLockedAt || booking.readerStartedAt) throw Object.assign(new Error(), { code: 'PAID' }); // on the card reader: being charged at this size
       // Launch security review 2026-10-18: once the cutoff has passed at a course
       // with a late fee (a no-show-only course has no window), the party is what the fee was set on — dropping
       // players late would give seats back free, and a hold may already be taken.

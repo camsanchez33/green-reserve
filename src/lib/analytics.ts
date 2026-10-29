@@ -314,6 +314,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     const posted = postedOf.get(b.teeTimeId) ?? 0;
     if (posted <= 0) continue; // a free time has no posted price to compare against
     const players = b.checkedInPlayers ?? b.players;
+    // Dead end 20: senior and junior are counter rates, not memberships.
+    if (b.appliedRate === 'senior' || b.appliedRate === 'junior') { addRate(b.appliedRate, players, b.greenFeeTotal, players * posted); continue; }
     if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') { addRate(`tier:${b.appliedRate}`, players, b.greenFeeTotal, players * posted); continue; }
     const res = Math.min(b.residentPlayers, players);
     const resCents = res > 0 && b.residentRateCents != null ? Math.min(b.greenFeeTotal, res * b.residentRateCents) : 0;
@@ -321,7 +323,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     addRate('standard', players - res, b.greenFeeTotal - resCents, (players - res) * posted);
   }
   const rateList = [...rateRows.entries()]
-    .map(([k, r]) => ({ rate: k === 'standard' ? 'Standard' : k === 'resident' ? 'Residents' : k.slice(5), kind: k.startsWith('tier:') ? 'member' as const : k as 'standard' | 'resident', ...r, ofPostedPct: pct(r.paidCents, r.postedCents) }))
+    .map(([k, r]) => ({ rate: k === 'standard' ? 'Standard' : k === 'resident' ? 'Residents' : k === 'senior' ? 'Seniors' : k === 'junior' ? 'Juniors' : k.slice(5), kind: k.startsWith('tier:') ? 'member' as const : k === 'senior' || k === 'junior' ? 'standard' as const : k as 'standard' | 'resident', ...r, ofPostedPct: pct(r.paidCents, r.postedCents) }))
     .sort((a, b) => b.players - a.players);
   const ratePaid = rateList.reduce((n, r) => n + r.paidCents, 0), ratePosted = rateList.reduce((n, r) => n + r.postedCents, 0);
 

@@ -13124,7 +13124,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 589,
+      "lines": 591,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -21797,7 +21797,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 149,
+      "lines": 150,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [
@@ -21876,7 +21876,7 @@
     },
     {
       "path": "src/lib/staff-refund.ts",
-      "lines": 128,
+      "lines": 131,
       "purpose": "Revamp 3 dead end 14 (Cam 2026-10-29):",
       "brain": [],
       "exports": [

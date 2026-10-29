@@ -1,21 +1,74 @@
 {
-  "generatedAt": "2026-10-29T20:08:36.957Z",
+  "generatedAt": "2026-10-29T21:02:16.861Z",
   "repo": {
-    "head": "06b64277",
+    "head": "cfe7cb40",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 5,
+    "dirtyCount": 9,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/dead-ends-a-test.ts",
-      " M src/app/api/operator/members/route.ts",
-      " M src/app/dashboard/money/page.tsx"
+      " M scripts/change-party-db-test.ts",
+      " M scripts/staff-refund-db-test.ts",
+      " M src/lib/analytics.ts",
+      " M src/lib/booking-residents.ts",
+      " M src/lib/change-party.ts",
+      " M src/lib/staff-permissions.ts",
+      " M src/lib/staff-refund.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "cfe7cb40",
+        "date": "2026-10-29T20:50:08+00:00",
+        "subject": "WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3d18ecd9",
+        "date": "2026-10-29T16:36:49-04:00",
+        "subject": "Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "69bcbab8",
+        "date": "2026-10-29T20:36:22+00:00",
+        "subject": "WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "7dcf8122",
+        "date": "2026-10-29T20:27:01+00:00",
+        "subject": "Course page: no layout shift when the day's tee times load",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f226c81b",
+        "date": "2026-10-29T20:23:27+00:00",
+        "subject": "WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "9de927a8",
+        "date": "2026-10-29T20:18:19+00:00",
+        "subject": "WIP part B: staff refunds (course share) and giving back a kept late fee",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4e1d9c2c",
+        "date": "2026-10-29T20:08:39+00:00",
+        "subject": "The dues link says why it didn't send; a search result opens Cancellations filtered",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "06b64277",
         "date": "2026-10-29T20:00:59+00:00",
@@ -609,6 +662,41 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "cfe7cb40",
+      "date": "2026-10-29",
+      "subject": "WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings"
+    },
+    {
+      "h": "3d18ecd9",
+      "date": "2026-10-29",
+      "subject": "Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)"
+    },
+    {
+      "h": "69bcbab8",
+      "date": "2026-10-29",
+      "subject": "WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale"
+    },
+    {
+      "h": "7dcf8122",
+      "date": "2026-10-29",
+      "subject": "Course page: no layout shift when the day's tee times load"
+    },
+    {
+      "h": "f226c81b",
+      "date": "2026-10-29",
+      "subject": "WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party"
+    },
+    {
+      "h": "9de927a8",
+      "date": "2026-10-29",
+      "subject": "WIP part B: staff refunds (course share) and giving back a kept late fee"
+    },
+    {
+      "h": "4e1d9c2c",
+      "date": "2026-10-29",
+      "subject": "The dues link says why it didn't send; a search result opens Cancellations filtered"
+    },
+    {
       "h": "06b64277",
       "date": "2026-10-29",
       "subject": "Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations"
@@ -632,41 +720,6 @@
       "h": "1f56429b",
       "date": "2026-10-29",
       "subject": "Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5"
-    },
-    {
-      "h": "28e44ab2",
-      "date": "2026-10-29",
-      "subject": "Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team"
-    },
-    {
-      "h": "447cb1bd",
-      "date": "2026-10-29",
-      "subject": "Status board"
-    },
-    {
-      "h": "e02ea5d4",
-      "date": "2026-10-29",
-      "subject": "One code, one shop item; an oversold count says so"
-    },
-    {
-      "h": "fa151d17",
-      "date": "2026-10-29",
-      "subject": "The booking window turns over at the course's midnight, not UTC's"
-    },
-    {
-      "h": "57e64d2d",
-      "date": "2026-10-29",
-      "subject": "\"Not paid yet\" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds"
-    },
-    {
-      "h": "9bcc13b3",
-      "date": "2026-10-29",
-      "subject": "A cash sale records the total the register showed, or nothing"
-    },
-    {
-      "h": "6ed720e1",
-      "date": "2026-10-29",
-      "subject": "A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing"
     }
   ]
 }

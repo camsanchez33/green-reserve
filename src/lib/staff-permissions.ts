@@ -88,7 +88,8 @@ export const PRESETS: { key: PresetKey; label: string; help: string; keys: Permi
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use'] },
   { key: 'front_desk', label: 'Front desk', help: 'Runs the counter: payments, walk-ins, cancellations, blocking, shop items.',
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'sheet.course_alert', 'money.cancellations', 'shop.sell', 'shop.close'] },
-  { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given.', keys: [...ALL_KEYS] },
+  // Cam 2026-10-29: "Refund rounds" is in no preset — the owner gives it person by person.
+  { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given, but refunding rounds.', keys: ALL_KEYS.filter(k => k !== 'money.refund_rounds') },
 ];
 
 /** Staff created before SP-A: today's powers minus weather cancel and waiving a fee. */

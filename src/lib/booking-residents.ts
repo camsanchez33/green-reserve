@@ -19,7 +19,7 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
       where: { id: bookingId },
       select: {
         id: true, courseId: true, status: true, players: true, appliedRate: true, paymentStatus: true, paidOffline: true,
-        checkedInAt: true, noShowAt: true, roundPaymentIntentId: true, shopLockedAt: true,
+        checkedInAt: true, noShowAt: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true,
         greenFeeTotal: true, totalAmount: true, residentPlayers: true, residentRateCents: true,
         teeTime: { select: { date: true, time: true, greenFeeCents: true, residentRateCents: true } },
         course: { select: { timezone: true } },
@@ -29,7 +29,7 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
     if (!Number.isInteger(n) || n < 0 || n > b.players) return fail(400, `Residents must be 0 to ${b.players}.`);
     if (b.status !== 'confirmed' || b.checkedInAt) return fail(409, 'This group is already checked in — its price can’t change now.');
     if (b.noShowAt) return fail(409, 'This group is marked a no-show. Use "Still coming" first.');
-    if (b.paymentStatus === 'paid' || b.paidOffline || b.roundPaymentIntentId || b.shopLockedAt) return fail(409, 'This round is already paid or being paid — its price can’t change now.');
+    if (b.paymentStatus === 'paid' || b.paidOffline || b.roundPaymentIntentId || b.shopLockedAt || b.readerStartedAt) return fail(409, 'This round is already paid or being paid — its price can’t change now.');
     if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') return fail(409, `This group is booked at the ${b.appliedRate} member rate — residents don’t combine with it.`);
     if (b.teeTime.residentRateCents == null) return fail(409, 'This tee time has no resident price. Set one in Schedule.');
     if (n === b.residentPlayers) return { ok: true, residentPlayers: n, greenFeeTotal: b.greenFeeTotal, totalAmount: b.totalAmount };
