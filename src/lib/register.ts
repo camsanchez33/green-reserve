@@ -9,7 +9,7 @@ import { prisma } from './prisma';
 import { formatTeeTime } from './format';
 import { settleAtCounter, createCounterBooking, counterDueCents, type CounterBookingInput } from './counter-pay';
 import { roundChargeCents } from './shop';
-import { createSale, quoteSale, type DiscountInput, type SaleView } from './shop-sales';
+import { createSale, quoteSale, type DiscountInput, type SaleView, TOTAL_CHANGED } from './shop-sales';
 import type { EventActor } from './booking-events';
 
 export const MAX_REGISTER_ROUNDS = 8;
@@ -48,6 +48,8 @@ type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: st
  */
 export async function ringUpCash(courseId: string, opts: {
   lines: unknown[]; discount?: DiscountInput; cashTenderedCents?: unknown; taxCalculationId?: string;
+  /** The items' total the register showed (lib/shop-sales createSale). */
+  expectedItemsCents?: unknown;
   bookingIds: string[]; walkIns: CounterBookingInput[];
   /** CASH-1: a group where only some showed pays for those (bookingId → players who showed). */
   headcounts?: Record<string, number>;
@@ -58,9 +60,14 @@ export async function ringUpCash(courseId: string, opts: {
   if (bookingIds.length + walkIns.length > MAX_REGISTER_ROUNDS) return { ok: false, status: 400, error: `Up to ${MAX_REGISTER_ROUNDS} rounds in one sale.` };
   if (!opts.lines.length && !bookingIds.length && !walkIns.length) return { ok: false, status: 400, error: 'Add something to the sale.' };
   // Check before changing anything: the items price, and every group is this course's and still owes.
+  // The items' tax is fixed here, before any round is settled: the sale uses this quote as is, so
+  // a Stripe Tax outage starting or ending mid-sale can't leave paid rounds without their sale.
+  let presetTax: { taxCents: number; calculationId: string; unavailable: boolean } | undefined;
   if (opts.lines.length) {
     const q = await quoteSale(courseId, opts.lines, opts.discount);
     if (!q.ok) return q;
+    if (opts.expectedItemsCents != null && opts.expectedItemsCents !== '' && Number(opts.expectedItemsCents) !== q.value.totalCents) return { ok: false, status: 409, error: TOTAL_CHANGED };
+    presetTax = { taxCents: q.value.taxCents, calculationId: q.value.taxCalculationId, unavailable: q.value.taxUnavailable };
   }
   const groups = bookingIds.length ? await prisma.booking.findMany({ where: { id: { in: bookingIds }, courseId }, select: { id: true, status: true, paymentStatus: true } }) : [];
   if (groups.length !== bookingIds.length) return { ok: false, status: 404, error: 'One of those groups isn’t on your tee sheet — refresh and try again.' };
@@ -89,7 +96,7 @@ export async function ringUpCash(courseId: string, opts: {
   }
   if (!opts.lines.length && !settled.length) return { ok: false, status: 409, error: skipped.join(' ') || 'Nothing could be rung up.' };
   const saleInput = {
-    courseId, lines: opts.lines, pay: 'cash' as const, soldBy: opts.soldBy, discount: opts.discount, taxCalculationId: opts.taxCalculationId,
+    courseId, lines: opts.lines, pay: 'cash' as const, soldBy: opts.soldBy, discount: opts.discount, taxCalculationId: opts.taxCalculationId, presetTax,
     // The cash covered what the screen showed; if a round dropped out, the change shown at the counter is what counts.
     cashTenderedCents: skipped.length ? undefined : opts.cashTenderedCents,
     rounds: settled, customerName: opts.customerName, customerPhone: opts.customerPhone, customerEmail: opts.customerEmail,

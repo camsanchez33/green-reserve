@@ -186,12 +186,16 @@ export default function ShopPage() {
         walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart })),
         pay: pay === 'cash' || pay === 'reader' ? pay : 'link', via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
         cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
+        // The total on screen: if the tax has changed since, nothing is rung up and the new total shows.
+        expectedItemsCents: pay === 'cash' && !itemsEmpty && priced ? priced.totalCents : undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
       }),
     });
     setBusy('');
     if (!r.ok) {
       setError(r.error);
+      // The tax changed since the total was shown: work the total out again.
+      if (r.status === 409 && /sales tax changed/.test(r.error)) setQuoteTry(n => n + 1);
       // The rounds went through (checked in, paid at the counter) though the items didn't: take them out of the sale.
       if (/^The (round was|\d+ rounds were) paid/.test(r.error)) { setPicked([]); setWalkIns([]); loadRounds(); load(); }
       return;

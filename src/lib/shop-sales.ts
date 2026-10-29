@@ -164,6 +164,7 @@ const taxLines = (lines: PricedLine[], discountCents = 0): TaxLine[] => {
     .filter(l => l.amountCents > 0);
 };
 const TAX_DOWN = 'We couldn’t work out the sales tax just now — try again in a moment.';
+export const TOTAL_CHANGED = 'The sales tax changed since the total was shown — look at the new total.';
 
 /** What the tax on these lines comes to (none when the whole sale is discounted away). */
 async function taxFor(courseId: string, lines: TaxLine[], reuseId?: string) {
@@ -202,6 +203,14 @@ export async function createSale(opts: {
   discount?: DiscountInput;
   /** POS-3: cash handed over (cents), for the change; must cover the total. */
   cashTenderedCents?: unknown;
+  /**
+   * Cash: the items' total (tax included, rounds left out) the register showed. When the tax
+   * worked out now gives a different total — Stripe Tax went down or came back since the
+   * quote — nothing is rung up (409), so a sale always records the cash actually taken.
+   */
+  expectedItemsCents?: unknown;
+  /** Server only (ringUpCash): the tax of a quote just made, used as is. Never from a request body. */
+  presetTax?: { taxCents: number; calculationId: string; unavailable: boolean };
   /** POS-3 R2: rounds already paid at the counter (settleAtCounter) — lines on the receipt, no tax, no discount, no stock. Cash only. */
   rounds?: { bookingId: string; name: string; amountCents: number }[];
 }): Promise<Result<SaleView & { payToken: string }>> {
@@ -219,7 +228,10 @@ export async function createSale(opts: {
   // W2-7 part B: sales tax from Stripe Tax when the course has it on.
   let tax = { taxCents: 0, calculationId: '' };
   let taxUnavailable = false;
-  try {
+  if (opts.presetTax && opts.pay === 'cash') {
+    tax = { taxCents: opts.presetTax.taxCents, calculationId: opts.presetTax.calculationId };
+    taxUnavailable = opts.presetTax.unavailable;
+  } else try {
     tax = await taxFor(opts.courseId, taxLines(p.value.lines, d.value.discountCents), opts.taxCalculationId);
   } catch (err) {
     console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId: opts.courseId, pay: opts.pay, error: err instanceof Error ? err.message : String(err) }));
@@ -228,6 +240,7 @@ export async function createSale(opts: {
     taxUnavailable = true;
   }
   const totalCents = p.value.subtotalCents - d.value.discountCents + tax.taxCents + roundsCents;
+  if (opts.pay === 'cash' && opts.expectedItemsCents != null && opts.expectedItemsCents !== '' && Number(opts.expectedItemsCents) !== totalCents - roundsCents) return fail(409, TOTAL_CHANGED);
   if (opts.pay !== 'cash' && totalCents <= 0) return fail(400, 'This sale comes to nothing — take it as cash instead.');
   if (opts.pay === 'reader' && totalCents < 50) return fail(400, 'Card payments start at $0.50 — take this one as cash.');
   if (opts.pay !== 'cash' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up card payments are not set up for the shop fee yet.');

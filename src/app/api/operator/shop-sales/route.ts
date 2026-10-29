@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     if (pay !== 'cash') return NextResponse.json({ error: 'Rounds are paid in cash at the register for now — send a pay link from the tee sheet instead.' }, { status: 400 });
     if (walkIns.length) { const denied = requirePermission(g.session, 'sheet.walkin'); if (denied) return denied; }
     const r = await ringUpCash(g.session.courseId, {
-      lines: Array.isArray(body.lines) ? body.lines : [], discount: body.discount as never, cashTenderedCents: body.cashTenderedCents,
+      lines: Array.isArray(body.lines) ? body.lines : [], discount: body.discount as never, cashTenderedCents: body.cashTenderedCents, expectedItemsCents: body.expectedItemsCents,
       taxCalculationId: typeof body.taxCalculationId === 'string' ? body.taxCalculationId : undefined,
       bookingIds,
       walkIns: walkIns.map(w => ({ teeTimeId: String(w.teeTimeId ?? ''), golferName: String(w.golferName ?? ''), golferPhone: String(w.golferPhone ?? ''), golferEmail: String(w.golferEmail ?? ''), players: Number(w.players), cartSelected: w.cartSelected === true })),
@@ -124,6 +124,7 @@ export async function POST(req: NextRequest) {
     customerName: body.customerName as string, customerPhone: body.customerPhone as string, customerEmail: body.customerEmail as string,
     taxCalculationId: typeof body.taxCalculationId === 'string' ? body.taxCalculationId : undefined,
     discount: body.discount as never, cashTenderedCents: pay === 'cash' ? body.cashTenderedCents : undefined,
+    expectedItemsCents: pay === 'cash' ? body.expectedItemsCents : undefined,
   });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   const { payToken, ...sale } = r.value;

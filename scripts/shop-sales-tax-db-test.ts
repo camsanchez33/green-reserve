@@ -5,6 +5,7 @@ import { prisma } from '../src/lib/prisma';
 import { stripe } from '../src/lib/stripe';
 import { createSale, quoteSale, settleOpenSale } from '../src/lib/shop-sales';
 import { recordPendingShopTax, isTaxCategory } from '../src/lib/sales-tax';
+import { ringUpCash } from '../src/lib/register';
 const TAG = 'w27tax';
 let failed = 0;
 const ok = (l: string, c: boolean, i = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || !i ? '' : ' — ' + i}`); if (!c) failed++; };
@@ -96,6 +97,24 @@ async function cleanup() {
   ok('…a pay link still waits for the tax', !downLink.ok && downLink.status === 502);
   const downQuote = await quoteSale(c.id, lines);
   ok('…and the quote says tax is unavailable instead of failing', downQuote.ok && downQuote.value.taxUnavailable && downQuote.value.taxCents === 0);
+  // Reviewer 2026-10-29: the tax changes state between the total shown and the ring-up — never record other than the cash taken.
+  const shownDown = downQuote.ok ? downQuote.value.totalCents : -1;
+  failCreate = false;
+  const upQuote = await quoteSale(c.id, lines);
+  const shownUp = upQuote.ok ? upQuote.value.totalCents : -1;
+  const backUp = await createSale({ courseId: c.id, lines, pay: 'cash', soldBy: 't', expectedItemsCents: shownDown });
+  ok('shown without tax, Stripe back at ring-up: refused, nothing recorded', !backUp.ok && backUp.status === 409 && shownUp > shownDown, JSON.stringify(backUp));
+  failCreate = true;
+  const wentDown = await createSale({ courseId: c.id, lines, pay: 'cash', soldBy: 't', expectedItemsCents: shownUp, taxCalculationId: upQuote.ok ? upQuote.value.taxCalculationId : undefined });
+  // The quote it showed is reused (no Stripe call needed), so the tax taken is on the sale.
+  ok('shown with tax, Stripe down at ring-up: the shown quote is used, tax on the sale', wentDown.ok && wentDown.value.totalCents === shownUp && wentDown.value.taxCents > 0, JSON.stringify(wentDown));
+  const wentDownNoQuote = await createSale({ courseId: c.id, lines, pay: 'cash', soldBy: 't', expectedItemsCents: shownUp });
+  ok('…with no quote to reuse: refused, never recorded without the tax taken', !wentDownNoQuote.ok && wentDownNoQuote.status === 409, JSON.stringify(wentDownNoQuote));
+  const regDown = await ringUpCash(c.id, { lines, bookingIds: [], walkIns: [], soldBy: 't', actor: { type: 'staff', id: null }, expectedItemsCents: shownUp });
+  ok('…the register refuses the same way, before any round is settled', !regDown.ok && regDown.status === 409, JSON.stringify(regDown));
+  const regOk = await ringUpCash(c.id, { lines, bookingIds: [], walkIns: [], soldBy: 't', actor: { type: 'staff', id: null }, expectedItemsCents: shownDown });
+  const regRow = regOk.ok ? await prisma.shopSale.findUnique({ where: { id: regOk.value.sale.id }, select: { taxUnavailable: true, totalCents: true } }) : null;
+  ok('…and takes the cash at the total it showed', regOk.ok && regRow?.taxUnavailable === true && regRow.totalCents === shownDown, JSON.stringify(regOk));
   failCreate = false;
 
   const noTax = await createSale({ courseId: off.id, lines: [{ shopItemId: offItem.id, quantity: 1 }], pay: 'cash', soldBy: 't' });
