@@ -1,5 +1,5 @@
 'use client';
-import { CARD } from '@/components/ui/Card';
+import { Card, CARD } from '@/components/ui/Card';
 import Link from 'next/link';
 import { MonthPicker } from '@/components/ui/MonthPicker';
 import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
@@ -188,6 +188,7 @@ function DashboardPageInner() {
   const [connectingStripe, setConnectingStripe] = useState(false);
   // AGREEMENT = GO-LIVE GATE (RUN_QUEUE)
   const [agreementAccepted, setAgreementAccepted] = useState(true); // assume yes until loaded — never flash a false "not accepted" prompt
+  const [agreementLater, setAgreementLater] = useState(false); // the owner put the signing prompt off for this visit
   const [acceptingAgreement, setAcceptingAgreement] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
   // AG-2: signed / total signable documents for the checklist count.
@@ -850,15 +851,24 @@ function DashboardPageInner() {
               this never blocks anything, it's a nudge, not a gate (going
               live retroactively isn't a thing; the gate only applies to the
               NEXT time a course goes live). Dismissed only by accepting. */}
-          {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && (
+          {/* Revamp 3 fix 4 (Cam 2026-10-29): it covered the sheet with no way out, and staff
+              can't sign — every staff login was locked out. Staff get one line; the owner can
+              put it off for this visit. */}
+          {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && access.isStaff && (
+            <Card className="mb-4 border-l-[3px] border-l-warn px-4 py-2.5 text-[13.5px] text-ink">
+              The course owner needs to sign the updated Operator Agreement.
+            </Card>
+          )}
+          {agreementChecked && !agreementAccepted && !courseDraft && !courseArchived && !access.isStaff && !agreementLater && (
             <div className="fixed inset-0 bg-ink/40 flex items-center justify-center z-50 px-4">
               <div className="bg-white rounded-lg border border-line max-w-md w-full p-6">
                 <h2 className="text-[18px] font-serif font-semibold text-ink mb-2">Please sign the Operator Agreement</h2>
                 <p className="text-sm text-ink-soft mb-5">
-                  We&apos;ve updated our terms since {courseName || 'your course'} went live. Please review and accept the Operator Agreement to keep your account in good standing — this doesn&apos;t affect your live status.
+                  Sign the updated agreement to keep your account in good standing. {courseName || 'Your course'} stays live.
                 </p>
                 <div className="flex items-center gap-3">
                   <a href="/operator-agreement" target="_blank" className="text-sm text-pine hover:underline">Read the agreement</a>
+                  <button onClick={() => setAgreementLater(true)} className="text-sm text-ink-soft hover:text-ink">Later</button>
                   {/* AG-2: signing captures legal name, signer and the text
                       read to the end — it lives on its own page now. */}
                   <button

@@ -8161,7 +8161,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1560,
+      "lines": 1570,
       "purpose": "",
       "brain": [],
       "exports": [
