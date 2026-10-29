@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
   // A round may set its own public window; a member never sees less than the public.
   const baseWindow = windowFor({ ...teeTimeFull.course, publicAdvanceDays: rules.publicAdvanceDays }, viewerMembership);
   const bookingWindow = baseWindow.scope === 'member' ? { ...baseWindow, days: Math.max(baseWindow.days, rules.publicAdvanceDays) } : baseWindow;
-  if (!withinWindow(teeTimeFull.date, bookingWindow.days)) {
+  if (!withinWindow(teeTimeFull.date, bookingWindow.days, new Date(), teeTimeFull.course.timezone)) {
     return NextResponse.json({
       error: bookingWindow.scope === 'member'
         ? `That date isn’t open yet — your membership lets you book up to ${bookingWindow.days} days ahead.`

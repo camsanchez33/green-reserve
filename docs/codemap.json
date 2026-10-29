@@ -7635,7 +7635,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1847,
+      "lines": 1849,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7653,6 +7653,7 @@
         "@/components/TrustNote",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
+        "@/lib/booking-window",
         "@/lib/cancel-policy",
         "@/lib/change-requests",
         "@/lib/contact",
@@ -13969,7 +13970,7 @@
     },
     {
       "path": "src/lib/booking-window.ts",
-      "lines": 76,
+      "lines": 84,
       "purpose": "BOOKING WINDOWS (RUN_QUEUE) — how far ahead each audience can see and book the tee sheet.",
       "brain": [],
       "exports": [
@@ -14027,10 +14028,13 @@
       "methods": [],
       "auth": null,
       "guard": null,
-      "imports": [],
+      "imports": [
+        "./course-time"
+      ],
       "usedBy": [
         "src/app/api/bookings/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
         "src/lib/public-tee-times.ts",
         "src/lib/tee-sheet-engine.ts"
       ]
@@ -15823,6 +15827,7 @@
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
         "src/lib/booking-events.ts",
+        "src/lib/booking-window.ts",
         "src/lib/counter-pay.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",

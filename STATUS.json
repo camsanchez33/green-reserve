@@ -1,26 +1,31 @@
 {
-  "generatedAt": "2026-10-29T13:22:50.530Z",
+  "generatedAt": "2026-10-29T13:25:10.893Z",
   "repo": {
-    "head": "9bcc13b3",
+    "head": "57e64d2d",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 10,
+    "dirtyCount": 8,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/money/overview/route.ts",
-      " M src/app/api/operator/sheet-money/route.ts",
-      " M src/app/dashboard/money/page.tsx",
-      " M src/components/dashboard/money/PaymentsPanel.tsx",
-      " M src/lib/analytics.ts",
-      " M src/lib/operator-home.ts",
-      "?? scripts/not-paid-db-test.ts"
+      " M scripts/booking-window-test.ts",
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/member/[courseSlug]/tee-times/route.ts",
+      " M src/app/courses/[slug]/CourseBookingClient.tsx",
+      " M src/lib/booking-window.ts",
+      " M src/lib/public-tee-times.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "57e64d2d",
+        "date": "2026-10-29T13:22:53+00:00",
+        "subject": "\"Not paid yet\" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "9bcc13b3",
         "date": "2026-10-29T13:22:47+00:00",
@@ -544,6 +549,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "57e64d2d",
+      "date": "2026-10-29",
+      "subject": "\"Not paid yet\" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds"
+    },
+    {
       "h": "9bcc13b3",
       "date": "2026-10-29",
       "subject": "A cash sale records the total the register showed, or nothing"
@@ -597,11 +607,6 @@
       "h": "fa0add63",
       "date": "2026-10-27",
       "subject": "DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)"
-    },
-    {
-      "h": "187a1ba4",
-      "date": "2026-10-27",
-      "subject": "DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)"
     }
   ]
 }

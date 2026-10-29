@@ -66,7 +66,7 @@ export async function loadPublicTeeTimes(slug: string, date: string): Promise<Pu
   // BOOKING WINDOWS: the public sees the sheet only as far ahead as the course
   // allows. Enforced here, not just in the picker — the picker reads this.
   const win = windowFor(dbCourse, null);
-  if (!withinWindow(date, win.days)) {
+  if (!withinWindow(date, win.days, new Date(), dbCourse.timezone)) {
     return { ok: false, status: 403, body: outsideWindowBody(win.days, win.scope, dbCourse) as Record<string, unknown> };
   }
 
@@ -85,7 +85,7 @@ export async function loadPublicTeeTimes(slug: string, date: string): Promise<Pu
     ? teeTimes.filter(t => t.time > nowLocal)
     : teeTimes)
     // A round with a shorter window of its own isn't shown past it.
-    .filter(t => withinWindow(date, rulesFor(dbCourse, t.product).publicAdvanceDays));
+    .filter(t => withinWindow(date, rulesFor(dbCourse, t.product).publicAdvanceDays, new Date(), dbCourse.timezone));
 
   return { ok: true, teeTimes: visible.map(t => normalizeDbTeeTime(t, dbCourse)) };
 }

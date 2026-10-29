@@ -46,7 +46,7 @@ export async function GET(
   // BOOKING WINDOWS: a member sees as far ahead as their tier allows (the
   // course's member default when the tier does not say).
   const win = windowFor(course, live ? { tier } : null);
-  if (!withinWindow(date, win.days)) {
+  if (!withinWindow(date, win.days, new Date(), course.timezone)) {
     return NextResponse.json(outsideWindowBody(win.days, win.scope, course), { status: 403 });
   }
 
@@ -63,7 +63,7 @@ export async function GET(
     ? teeTimes.filter(t => t.time > nowLocal)
     : teeTimes)
     // W2-6 slice 3: a round's shorter public window holds for a non-member here too.
-    .filter(t => win.scope === 'member' || withinWindow(date, rulesFor(course, t.product).publicAdvanceDays));
+    .filter(t => win.scope === 'member' || withinWindow(date, rulesFor(course, t.product).publicAdvanceDays, new Date(), course.timezone));
 
   // A member pays exactly what applyTierRates says — the one function booking
   // (api/bookings), moves and check-in pricing use. This list used to carry its
