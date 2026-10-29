@@ -626,6 +626,11 @@ model Booking {
   /// standard (or member) rate; greenFeeTotal already includes both.
   residentPlayers            Int               @default(0)
   residentRateCents          Int?
+  /// Cam 2026-10-29: a member's own spot when the group's guests pay the public
+  /// rate (lib/member-rates partyFees) — green and cart per player. Null = every
+  /// player in the group pays the same (no member, or the tier includes guests).
+  memberRateCents            Int?
+  memberCartCents            Int?
   createdAt                  DateTime          @default(now())
   paymentEvents              PaymentEvent[]
   shopItems                  BookingShopItem[]

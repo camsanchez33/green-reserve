@@ -17,15 +17,24 @@ import { todayIn } from './course-time';
 import { randomUUID } from 'crypto';
 import { READER_STALE_MS } from './checkin-booking';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
+import { partyFees, type PartyBooking } from './member-rates';
 
 export type CounterResult =
   | { ok: true; amountCents: number; note: string | null }
   | { ok: false; status: number; error: string };
 
-/** What the group hands over at the counter: the round less GreenReserve's fee, plus shop items and their tax. */
-export function counterDueCents(b: { totalAmount: number; accessFeeTotal: number; players: number; shopTotalCents?: number | null; shopTaxCents?: number | null }, showed?: number): number {
-  const who = showed ?? b.players;
-  return Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
+/**
+ * What the group hands over at the counter: the round less GreenReserve's fee,
+ * plus shop items and their tax. Part of a group: green and cart for those who
+ * showed priced as card check-in prices them (lib/member-rates partyFees — the
+ * member's spot or the residents first), range balls whole.
+ */
+export function counterDueCents(b: PartyBooking & { totalAmount: number; accessFeeTotal: number; rangeBallsTotal: number; shopTotalCents?: number | null; shopTaxCents?: number | null }, showed?: number): number {
+  const shop = (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
+  if (showed == null || showed >= b.players) return b.totalAmount - (b.accessFeeTotal ?? 0) + shop;
+  // Nobody to read a guest price from only when the whole group is one player, which can't be part-paid.
+  const fees = partyFees(b, showed, { greenFeeCents: 0, cartFeeCents: 0 });
+  return fees.greenFeeTotal + fees.cartFeeTotal + b.rangeBallsTotal + shop;
 }
 
 export async function settleAtCounter(courseId: string, bookingId: string, opts: { actor: EventActor; actorName: string; checkedInPlayers?: number }): Promise<CounterResult> {
@@ -96,7 +105,7 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
     const r = await refundSeparateAccessFee(bookingId, 'paid at the counter — no GreenReserve fee on cash', 'operator', opts.actorName);
     if (!r.ok) refundNote = `GreenReserve's booking fee could not be refunded to the golfer's card (${r.error}) — GreenReserve will follow up.`;
   }
-  const after = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { totalAmount: true, accessFeeTotal: true, players: true, shopTotalCents: true, shopTaxCents: true } });
+  const after = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { totalAmount: true, accessFeeTotal: true, players: true, shopTotalCents: true, shopTaxCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true } });
   return { ok: true, amountCents: counterDueCents(after, cip), note: [holdNote, refundNote].filter(Boolean).join(' ') || null };
 }
 

@@ -26,7 +26,7 @@ export async function GET(
     if (course.id !== session.courseId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     membershipId = session.membershipId;
   } else {
-    const golferMembership = await getGolferMembership(course.id, course.memberGraceDays);
+    const golferMembership = await getGolferMembership(course.id, course);
     if (!golferMembership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     membershipId = golferMembership.membershipId;
   }
@@ -40,7 +40,7 @@ export async function GET(
   // member sees a member rate and is charged the public one.
   // Lapsed (past its end date + the course's grace days, lib/member-rates): public rates and window, as booking charges.
   const tier = membership && membership.courseId === course.id ? membership.tier : null;
-  const live = !!membership && membership.courseId === course.id && membershipLive(membership, course.memberGraceDays);
+  const live = !!membership && membership.courseId === course.id && membershipLive(membership, course);
   const pricingTier = live ? tier : null;
 
   // BOOKING WINDOWS: a member sees as far ahead as their tier allows (the

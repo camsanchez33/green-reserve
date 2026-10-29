@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { applyTierRates } from '@/lib/tier-rates';
-import { membershipLive, memberPlayers, splitTotal } from '@/lib/member-rates';
+import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { groupGreenFee } from '@/lib/residents';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
   if (golferSession) {
     // G5b: matches by direct golferId link OR the golfer's OTP-verified email
     // against an invite-only membership — same recognition as the course page.
-    const golferMembership = await getGolferMembership(teeTimeFull.courseId, teeTimeFull.course.memberGraceDays);
+    const golferMembership = await getGolferMembership(teeTimeFull.courseId, teeTimeFull.course);
     const membership = golferMembership
       ? await prisma.courseMembership.findUnique({ where: { id: golferMembership.membershipId }, include: { tier: true } })
       : null;
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
         include: { tier: true },
       });
       // A lapsed membership (past its end date + the course's grace days) gets public rates and the public window.
-      const live = !!membership && membership.courseId === teeTimeFull.courseId && membershipLive(membership, teeTimeFull.course.memberGraceDays);
+      const live = !!membership && membership.courseId === teeTimeFull.courseId && membershipLive(membership, teeTimeFull.course);
       if (live && !viewerMembership) viewerMembership = { tier: membership!.tier };
       if (live && membership!.tier) {
         const rates = applyTierRates(teeTimeFull, membership!.tier);
@@ -251,6 +251,8 @@ export async function POST(req: NextRequest) {
       greenFeeTotal,
       residentPlayers:  priced.residentPlayers,
       residentRateCents: priced.residentRateCents,
+      // The member's own spot when guests pay the public rate (lib/member-rates partyFees).
+      ...memberSpot(appliedTier, { greenFeeCents: greenFeePerPlayerCents, cartFeeCents: cartFeePerPlayerCents }),
       cartFeeTotal,
       cartSelected:     wantsCart,
       rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',

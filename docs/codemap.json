@@ -3694,7 +3694,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 416,
+      "lines": 418,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4726,6 +4726,7 @@
         "@/lib/cancel-policy",
         "@/lib/course-time",
         "@/lib/manage-access",
+        "@/lib/member-rates",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/residents",
@@ -4736,7 +4737,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/route.ts",
-      "lines": 93,
+      "lines": 95,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6936,7 +6937,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 151,
+      "lines": 153,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8010,7 +8011,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 777,
+      "lines": 778,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8161,7 +8162,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1570,
+      "lines": 1580,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8195,6 +8196,7 @@
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "@/lib/late-add",
+        "@/lib/member-rates",
         "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
@@ -8696,7 +8698,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 577,
+      "lines": 581,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8715,6 +8717,7 @@
         "@/components/GolferExitLinks",
         "@/components/ui/StatusDot",
         "@/lib/cancel-policy",
+        "@/lib/member-rates",
         "lucide-react",
         "next/link",
         "next/navigation",
@@ -14753,7 +14756,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 508,
+      "lines": 503,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14788,7 +14791,6 @@
         "./no-show-fee",
         "./prisma",
         "./reader-rounds",
-        "./residents",
         "./round-shop-tax",
         "./shop",
         "./stripe"
@@ -14977,7 +14979,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 166,
+      "lines": 175,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -15013,6 +15015,7 @@
         "./checkin-booking",
         "./claim-tee-time",
         "./course-time",
+        "./member-rates",
         "./no-show-fee",
         "./prisma",
         "./reader-rounds",
@@ -15808,6 +15811,7 @@
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/event-signup.ts",
+        "src/lib/member-rates.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
@@ -18320,10 +18324,14 @@
     },
     {
       "path": "src/lib/member-rates.ts",
-      "lines": 45,
+      "lines": 101,
       "purpose": "Cam 2026-10-29 (Revamp 3 audit, fixes 1 and 2 — \"up to course\"):",
       "brain": [],
       "exports": [
+        {
+          "name": "LapseRule",
+          "kind": "type"
+        },
         {
           "name": "liveMembershipWhere",
           "kind": "fn"
@@ -18337,6 +18345,18 @@
           "kind": "fn"
         },
         {
+          "name": "memberSpot",
+          "kind": "fn"
+        },
+        {
+          "name": "PartyBooking",
+          "kind": "type"
+        },
+        {
+          "name": "partyFees",
+          "kind": "fn"
+        },
+        {
           "name": "splitTotal",
           "kind": "fn"
         }
@@ -18347,17 +18367,24 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./course-time",
+        "./residents",
         "@prisma/client"
       ],
       "usedBy": [
         "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
+        "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/member/page.tsx",
+        "src/app/dashboard/page.tsx",
+        "src/app/manage/[bookingId]/page.tsx",
         "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/member-session.ts",
-        "src/lib/move-booking.ts"
+        "src/lib/move-booking.ts",
+        "src/lib/sample-data.ts"
       ]
     },
     {
@@ -18697,7 +18724,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 236,
+      "lines": 251,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -20165,7 +20192,7 @@
         "src/app/api/operator/residents/route.ts",
         "src/app/courses/[slug]/member/page.tsx",
         "src/lib/booking-residents.ts",
-        "src/lib/checkin-booking.ts",
+        "src/lib/member-rates.ts",
         "src/lib/member-session.ts",
         "src/lib/move-booking.ts",
         "src/lib/sample-data.ts"
@@ -20309,7 +20336,7 @@
     },
     {
       "path": "src/lib/sample-data.ts",
-      "lines": 346,
+      "lines": 350,
       "purpose": "Cam 2026-10-28 (\"add a shit ton of test tee times, members and shit to the test course … do a lot of fake bookings\"):",
       "brain": [],
       "exports": [
@@ -20349,6 +20376,7 @@
         "./course-events",
         "./course-time",
         "./email",
+        "./member-rates",
         "./prisma",
         "./residents",
         "./stripe",
@@ -23332,6 +23360,14 @@
         },
         {
           "name": "residentRateCents",
+          "type": "Int?"
+        },
+        {
+          "name": "memberRateCents",
+          "type": "Int?"
+        },
+        {
+          "name": "memberCartCents",
           "type": "Int?"
         },
         {

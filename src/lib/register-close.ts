@@ -66,7 +66,7 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
     // Paid at the counter on the tee sheet — not the rounds the register already rang up in cash.
     prisma.booking.findMany({
       where: { courseId, paymentStatus: 'paid_offline', paidAt: inDay },
-      select: { id: true, players: true, checkedInPlayers: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true },
+      select: { id: true, players: true, checkedInPlayers: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true },
     }),
     prisma.booking.findMany({
       where: { courseId, paymentStatus: { in: ['paid', 'refunded'] }, roundPaymentIntentId: { not: '' }, paidAt: inDay },

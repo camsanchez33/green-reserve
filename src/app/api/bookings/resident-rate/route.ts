@@ -18,10 +18,10 @@ export async function GET(req: NextRequest) {
   if (!teeTimeId) return none;
   const tt = await prisma.teeTime.findUnique({
     where: { id: teeTimeId },
-    select: { courseId: true, date: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true } } },
+    select: { courseId: true, date: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true } } },
   });
   if (!tt) return none;
-  const grace = tt.course.memberGraceDays;
+  const grace = tt.course;
 
   let tier: { name: string; guestsPayMemberRate: boolean; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; cartFeeWeekendCents: number | null; discountPct: number | null } | null = null;
   const golferMembership = await getGolferMembership(tt.courseId, grace);

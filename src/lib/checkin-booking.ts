@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { liveMembershipWhere, memberPlayers, splitTotal } from './member-rates';
+import { liveMembershipWhere, memberPlayers, splitTotal, partyFees } from './member-rates';
 import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
 import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { sendCheckInReceiptEmail } from './email';
@@ -7,7 +7,6 @@ import { feeCoveredCents } from './booking-fees';
 import { refundSeparateAccessFee } from './access-fee';
 import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop';
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
-import { groupGreenFee, otherPerPlayerCents } from './residents';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 
 /**
@@ -81,7 +80,7 @@ export async function cartAddOnCentsFor(booking: {
   if (booking.paymentStatus === 'paid' && booking.roundPaymentIntentId) return 0;
   const standard = booking.teeTime.cartFeeCents;
   let perPlayer = standard;
-  const grace = (await prisma.course.findUnique({ where: { id: booking.courseId }, select: { memberGraceDays: true } }))?.memberGraceDays ?? 0;
+  const grace = (await prisma.course.findUnique({ where: { id: booking.courseId }, select: { memberGraceDays: true, timezone: true } })) ?? { memberGraceDays: 0 };
   // Membership resolves the way the booking route does (member-session.ts):
   // by golfer account OR by the invite email, so an invite-only member who has
   // not accepted yet still gets their rate. Scoped to THIS course.
@@ -126,7 +125,7 @@ async function chargeBooking(
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
-      teeTime: { select: { date: true, time: true, cartFeeCents: true } },
+      teeTime: { select: { date: true, time: true, greenFeeCents: true, cartFeeCents: true } },
       course: { select: { name: true, slug: true, address: true, city: true, state: true, stripeAccountId: true, stripeAccountActive: true, timezone: true } },
     },
   });
@@ -186,15 +185,11 @@ async function chargeBooking(
   let partialApplied = false;
   const showed = opts?.checkedInPlayers;
   if (showed != null && Number.isInteger(showed) && showed >= 1 && showed < booking.players && !alreadyPaid) {
-    const f = showed / booking.players;
-    // RES-1: with residents in the group, the residents are counted first among
-    // those who showed; the others pay what the booking's non-residents pay.
-    const others = booking.residentPlayers > 0 ? otherPerPlayerCents(booking) : null;
-    const greenFeeTotal = booking.residentPlayers > 0
-      ? groupGreenFee(showed, others ?? 0, booking.residentPlayers, booking.residentRateCents).greenFeeTotal
-      : Math.round(booking.greenFeeTotal * f);
-    const cartFeeTotal = Math.round(booking.cartFeeTotal * f);
-    const accessFeeTotal = Math.round(booking.accessFeeTotal * f);
+    // The member's own spot (Cam 2026-10-29) or the residents (RES-1) are
+    // counted first among those who showed; the others pay what the booking's
+    // other players pay (lib/member-rates partyFees).
+    const { greenFeeTotal, cartFeeTotal } = partyFees(booking, showed, booking.teeTime);
+    const accessFeeTotal = Math.round(booking.accessFeeTotal * showed / booking.players);
     const totalAmount = greenFeeTotal + cartFeeTotal + accessFeeTotal + booking.rangeBallsTotal;
     await prisma.booking.update({ where: { id: bookingId }, data: { greenFeeTotal, cartFeeTotal, accessFeeTotal, totalAmount, checkedInPlayers: showed } });
     booking.greenFeeTotal = greenFeeTotal; booking.cartFeeTotal = cartFeeTotal; booking.accessFeeTotal = accessFeeTotal; booking.totalAmount = totalAmount;

@@ -75,7 +75,8 @@ function duesOf(m: Member, now: Date): Dues {
   const owed = (m.annualFee ?? 0) + ((m.lastPaidAt || m.initiationWaived) ? 0 : (m.initiationFee ?? 0));
   if (m.paymentStatus === 'comped' || owed <= 0) return { kind: 'comped', label: 'No dues', tone: 'ok' };
   if (m.paymentStatus === 'unpaid') return { kind: 'unpaid', label: `Dues unpaid · ${fmtMoney(owed)}`, tone: 'bad' };
-  if (m.expiresAt && new Date(m.expiresAt) < now) return { kind: 'expired', label: `Expired ${fmtDate(m.expiresAt)}`, tone: 'bad' };
+  // The "runs until" date is a member day all day (lib/member-rates).
+  if (m.expiresAt && m.expiresAt.slice(0, 10) < now.toLocaleDateString('en-CA')) return { kind: 'expired', label: `Expired ${fmtDate(m.expiresAt)}`, tone: 'bad' };
   if (m.expiresAt && new Date(m.expiresAt).getTime() - now.getTime() < 30 * 86400000) return { kind: 'renewing', label: `Renews ${fmtDate(m.expiresAt)}`, tone: 'warn' };
   return { kind: 'paid', label: m.expiresAt ? `Paid to ${fmtDate(m.expiresAt)}` : 'Paid', tone: 'ok' };
 }

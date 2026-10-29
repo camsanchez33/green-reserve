@@ -1,5 +1,6 @@
 'use client';
 import { Card, CARD } from '@/components/ui/Card';
+import { partyFees } from '@/lib/member-rates';
 import Link from 'next/link';
 import { MonthPicker } from '@/components/ui/MonthPicker';
 import { useEffect, useState, useCallback, Suspense, useRef } from 'react';
@@ -75,9 +76,18 @@ type Booking = {
   /** RES-1: how many of the group pay the resident rate; appliedRate names a member tier otherwise. */
   residentPlayers?: number;
   appliedRate?: string;
+  /** The round's parts, so part of a group is priced as the server charges it (lib/member-rates partyFees). */
+  greenFeeTotal?: number; cartFeeTotal?: number; rangeBallsTotal?: number;
+  residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null;
 };
 /** POS-1a: what the card is charged beyond the round itself. */
 const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0) + (b.shopTaxCents ?? 0);
+/** The round for `n` of the group (card check-in: green + cart + booking fee for those who showed, range balls whole). */
+function partRound(b: Booking, n: number, withAccess: boolean): number {
+  if (b.greenFeeTotal == null) return Math.round((b.totalAmount - (withAccess ? 0 : b.accessFeeTotal ?? 0)) * n / b.players);
+  const f = partyFees({ players: b.players, greenFeeTotal: b.greenFeeTotal, cartFeeTotal: b.cartFeeTotal ?? 0, residentPlayers: b.residentPlayers ?? 0, residentRateCents: b.residentRateCents ?? null, memberRateCents: b.memberRateCents ?? null, memberCartCents: b.memberCartCents ?? null }, n, { greenFeeCents: 0, cartFeeCents: 0 });
+  return f.greenFeeTotal + f.cartFeeTotal + (b.rangeBallsTotal ?? 0) + (withAccess ? Math.round((b.accessFeeTotal ?? 0) * n / b.players) : 0);
+}
 /* ─── Helpers ──────────────────────────────────────────────────────────── */
 // SD-3: "today" is the COURSE's today (see courseTz inside the component) —
 // this module-level fallback only seeds state before the course has loaded.
@@ -262,7 +272,7 @@ function DashboardPageInner() {
       const who = checkedInPlayers ?? b.players;
       // POS-1a: shop items on the booking are collected at the counter too (no
       // GreenReserve shop fee on a counter payment, like the booking fee in cash).
-      const owed = Math.round((b.totalAmount - (b.accessFeeTotal ?? 0)) * who / b.players) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
+      const owed = (who < b.players ? partRound(b, who, false) : b.totalAmount - (b.accessFeeTotal ?? 0)) + (b.shopTotalCents ?? 0) + (b.shopTaxCents ?? 0);
       // CASH-1: a cash sale of the round, rung up like the register (receipt on the Pro shop page).
       if (!confirm(`Take $${(owed / 100).toFixed(2)} cash from ${b.golferName} for ${who} of ${b.players} player${b.players === 1 ? '' : 's'}? They’re checked in, and the sale goes on today’s register.`)) return;
     }
@@ -303,7 +313,7 @@ function DashboardPageInner() {
     if (showed === null) return;
     const partial = showed < b.players ? showed : undefined;
     // POS-1a: shop items and their fee are never prorated — they ride whole.
-    const amount = (partial ? Math.round(b.totalAmount * partial / b.players) : b.totalAmount) + shopExtra(b);
+    const amount = (partial ? partRound(b, partial, true) : b.totalAmount) + shopExtra(b);
     if (!confirm(`Check in ${b.golferName}${partial ? ` (${partial} of ${b.players} players)` : ''} and charge their card $${(amount / 100).toFixed(2)} for the round${(b.shopTotalCents ?? 0) > 0 ? ' and shop items' : ''}?`)) return;
     setCheckingInId(b.id);
     let res: Response; let data: Record<string, unknown> & { error?: string; totalCharged: number };
