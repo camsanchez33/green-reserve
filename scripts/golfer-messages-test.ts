@@ -49,8 +49,13 @@ async function main() {
   check('cancelled bookings are not messaged', !all.some(r => r.name === 'Gone Guy'));
   check("another course's golfers are never included", !all.some(r => r.name === 'Not Mine'));
   check('a golfer gets their earliest tee time', all.find(r => r.name === 'Ann Lee')?.teeTime === '07:00');
-  const r = reach(all);
+  const r = reach(all, true);
   check('reach counts email, mobile and the unreachable', r.email === 2 && r.sms === 1 && r.unreachable === 1, JSON.stringify(r));
+  // Revamp 3 fix 12: with texting off a mobile number reaches nobody.
+  const off = reach(all, false);
+  check('…with texting off, nobody is counted by text, and the unreachable are everyone with no email', off.sms === 0 && off.unreachable === off.noEmail && off.unreachable === all.filter(x => !x.email).length, JSON.stringify(off));
+  const route = (await import('fs')).readFileSync('src/app/api/operator/golfer-messages/route.ts', 'utf8');
+  check('…and a send that reaches nobody is refused, not answered ok', route.includes('r0.email + r0.sms === 0') && route.includes('status: 400'));
   const morning = await audience(c.id, { date: DAY, from: '07:30', to: '09:00' });
   check('a window only reaches its own times', morning.map(x => x.name).sort().join(',') === 'Ann Lee,Walk In');
 

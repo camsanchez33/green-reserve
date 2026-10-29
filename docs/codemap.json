@@ -5647,7 +5647,7 @@
     },
     {
       "path": "src/app/api/operator/golfer-messages/route.ts",
-      "lines": 59,
+      "lines": 62,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10128,7 +10128,7 @@
     },
     {
       "path": "src/components/dashboard/GolferMessageModal.tsx",
-      "lines": 136,
+      "lines": 140,
       "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5):",
       "brain": [],
       "exports": [
@@ -17505,7 +17505,7 @@
     },
     {
       "path": "src/lib/golfer-messages.ts",
-      "lines": 110,
+      "lines": 119,
       "purpose": "MSG-1 (PLATFORM_ROADMAP_SPEC §5, Cam 2026-10-07:",
       "brain": [],
       "exports": [

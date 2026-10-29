@@ -1,15 +1,50 @@
 {
-  "generatedAt": "2026-10-29T13:30:31.232Z",
+  "generatedAt": "2026-10-29T13:49:56.848Z",
   "repo": {
-    "head": "e02ea5d4",
+    "head": "9e689d2b",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 0,
-    "dirty": [],
-    "looksLikeRunInProgress": false
+    "dirtyCount": 6,
+    "dirty": [
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/golfer-messages-test.ts",
+      " M src/app/api/operator/golfer-messages/route.ts",
+      " M src/components/dashboard/GolferMessageModal.tsx",
+      " M src/lib/golfer-messages.ts"
+    ],
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "9e689d2b",
+        "date": "2026-10-29T13:48:14+00:00",
+        "subject": "Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "1f56429b",
+        "date": "2026-10-29T13:42:36+00:00",
+        "subject": "Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "28e44ab2",
+        "date": "2026-10-29T13:37:12+00:00",
+        "subject": "Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "447cb1bd",
+        "date": "2026-10-29T13:30:34+00:00",
+        "subject": "Status board",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "e02ea5d4",
         "date": "2026-10-29T13:30:30+00:00",
@@ -554,6 +589,26 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "9e689d2b",
+      "date": "2026-10-29",
+      "subject": "Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked"
+    },
+    {
+      "h": "1f56429b",
+      "date": "2026-10-29",
+      "subject": "Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5"
+    },
+    {
+      "h": "28e44ab2",
+      "date": "2026-10-29",
+      "subject": "Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team"
+    },
+    {
+      "h": "447cb1bd",
+      "date": "2026-10-29",
+      "subject": "Status board"
+    },
+    {
       "h": "e02ea5d4",
       "date": "2026-10-29",
       "subject": "One code, one shop item; an oversold count says so"
@@ -592,26 +647,6 @@
       "h": "ec1f63b8",
       "date": "2026-10-29",
       "subject": "A price change reaches every bookable day and the open spots of booked times"
-    },
-    {
-      "h": "64c39edb",
-      "date": "2026-10-29",
-      "subject": "An unsigned Operator Agreement no longer locks staff out of the tee sheet"
-    },
-    {
-      "h": "59b616cd",
-      "date": "2026-10-29",
-      "subject": "Member pricing: the member alone gets the member rate unless the tier includes guests; rates end after the membership does (course grace days); a first dues payment is one term"
-    },
-    {
-      "h": "d0b0c181",
-      "date": "2026-10-28",
-      "subject": "Fill a test course with sample data; never email a placeholder address or text a fictional number (#249)"
-    },
-    {
-      "h": "09422b74",
-      "date": "2026-10-28",
-      "subject": "Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill"
     }
   ]
 }

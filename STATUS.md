@@ -4,14 +4,18 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-29 13:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e02ea5d4` · working tree clean
+Generated 2026-10-29 13:49 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9e689d2b` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 21 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 25 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `9e689d2b` | 2026-10-29 | Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked |
+| `1f56429b` | 2026-10-29 | Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5 |
+| `28e44ab2` | 2026-10-29 | Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team |
+| `447cb1bd` | 2026-10-29 | Status board |
 | `e02ea5d4` | 2026-10-29 | One code, one shop item; an oversold count says so |
 | `fa151d17` | 2026-10-29 | The booking window turns over at the course's midnight, not UTC's |
 | `57e64d2d` | 2026-10-29 | "Not paid yet" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds |
@@ -35,6 +39,18 @@ Generated 2026-10-29 13:30 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `6eced458` | 2026-10-27 | Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+
+### Uncommitted working tree (6 file(s))
+
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/golfer-messages-test.ts`
+- `M src/app/api/operator/golfer-messages/route.ts`
+- `M src/components/dashboard/GolferMessageModal.tsx`
+- `M src/lib/golfer-messages.ts`
+
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -157,6 +173,10 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `9e689d2b` 2026-10-29 — Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked
+- `1f56429b` 2026-10-29 — Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5
+- `28e44ab2` 2026-10-29 — Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team
+- `447cb1bd` 2026-10-29 — Status board
 - `e02ea5d4` 2026-10-29 — One code, one shop item; an oversold count says so
 - `fa151d17` 2026-10-29 — The booking window turns over at the course's midnight, not UTC's
 - `57e64d2d` 2026-10-29 — "Not paid yet" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds
@@ -165,10 +185,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `af4b9fc3` 2026-10-29 — Cash at the register is never blocked by sales tax
 - `bee3bc29` 2026-10-29 — A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight
 - `ec1f63b8` 2026-10-29 — A price change reaches every bookable day and the open spots of booked times
-- `64c39edb` 2026-10-29 — An unsigned Operator Agreement no longer locks staff out of the tee sheet
-- `59b616cd` 2026-10-29 — Member pricing: the member alone gets the member rate unless the tier includes guests; rates end after the membership does (course grace days); a first dues payment is one term
-- `d0b0c181` 2026-10-28 — Fill a test course with sample data; never email a placeholder address or text a fictional number (#249)
-- `09422b74` 2026-10-28 — Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill
 
 ---
 

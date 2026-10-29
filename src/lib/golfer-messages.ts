@@ -53,8 +53,17 @@ export async function audience(courseId: string, w: Window): Promise<Recipient[]
   return out;
 }
 
-export function reach(list: Recipient[]) {
-  return { golfers: list.length, email: list.filter(r => r.email).length, sms: list.filter(r => r.phone).length, unreachable: list.filter(r => !r.email && !r.phone).length };
+/**
+ * Who a message reaches. Revamp 3 fix 12 (Cam 2026-10-29): a mobile number only
+ * reaches a golfer when texting is on — the preview used to count them with texting
+ * off, so "22 booked, 0 unreachable" sent to nobody. `noEmail` is who's left when
+ * the text box is unticked.
+ */
+export function reach(list: Recipient[], textingOn: boolean) {
+  return {
+    golfers: list.length, email: list.filter(r => r.email).length, sms: textingOn ? list.filter(r => r.phone).length : 0,
+    unreachable: list.filter(r => !r.email && !(textingOn && r.phone)).length, noEmail: list.filter(r => !r.email).length,
+  };
 }
 
 export async function sendCourseMessage(opts: {

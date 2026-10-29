@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     prisma.courseMessage.findMany({ where: { courseId: session.courseId }, orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, date: true, fromTime: true, toTime: true, body: true, sentEmail: true, sentSms: true, failed: true, createdAt: true } }),
     prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true } }),
   ]);
-  return NextResponse.json({ reach: reach(list), smsAvailable: smsConfigured(), smsMaxChars: smsRoom(course?.name ?? ''), recent }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ reach: reach(list, smsConfigured()), smsAvailable: smsConfigured(), smsMaxChars: smsRoom(course?.name ?? ''), recent }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(req: NextRequest) {
@@ -48,6 +48,9 @@ export async function POST(req: NextRequest) {
     const room = smsRoom(course?.name ?? '');
     if (body.length > room) return NextResponse.json({ error: `A text fits ${room} characters — shorten the message or untick the text box.` }, { status: 400 });
   }
+  // Revamp 3 fix 12: a send that reaches nobody is refused, never answered "ok" with 0 sent.
+  const r0 = reach(await audience(session.courseId, w), b.sms === true && smsConfigured());
+  if (r0.golfers > 0 && r0.email + r0.sms === 0) return NextResponse.json({ error: `None of the ${r0.golfers} golfer${r0.golfers === 1 ? '' : 's'} booked has an email on file${smsConfigured() ? (b.sms === true ? ' or a mobile' : ' — tick the text box') : ', and texting is off'}. Tell them at the counter.` }, { status: 400 });
   // A course can't flood its golfers by accident: six notices an hour.
   if (!(await rateLimit(`golfer-msg:${session.courseId}`, 6, 3600))) {
     return NextResponse.json({ error: 'That’s six messages in the last hour — wait a bit before sending another.' }, { status: 429 });
