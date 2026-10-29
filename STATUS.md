@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-29 21:02 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `cfe7cb40` · working tree **9 dirty file(s)**
+Generated 2026-10-29 23:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `65df5988` · working tree **12 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 35 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 36 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `65df5988` | 2026-10-29 | Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share |
 | `cfe7cb40` | 2026-10-29 | WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings |
 | `3d18ecd9` | 2026-10-29 | Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251) |
 | `69bcbab8` | 2026-10-29 | WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale |
@@ -50,17 +51,20 @@ Generated 2026-10-29 21:02 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (12 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/change-party-db-test.ts`
-- `M scripts/staff-refund-db-test.ts`
-- `M src/lib/analytics.ts`
-- `M src/lib/booking-residents.ts`
-- `M src/lib/change-party.ts`
-- `M src/lib/staff-permissions.ts`
-- `M src/lib/staff-refund.ts`
+- `M prisma/schema.prisma`
+- `M scripts/counter-rates-db-test.ts`
+- `M scripts/register-rounds-db-test.ts`
+- `M src/app/api/operator/settings/route.ts`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
+- `M src/lib/counter-pay.ts`
+- `M src/lib/settings-validation.ts`
+- `?? prisma/migrations/20261029120000_counter_member_rate/`
+- `?? src/app/api/operator/counter-members/`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -148,16 +152,16 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 1 | 2026-10-27 | 1d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 1d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 8d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 2d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 3d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 5d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 6d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 6d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 3d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 4d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 6d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 6d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 6d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 6d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 6d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 6d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 7d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 7d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 7d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 7d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 7d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 7d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 8d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 8d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 8d |
@@ -186,6 +190,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `65df5988` 2026-10-29 — Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share
 - `cfe7cb40` 2026-10-29 — WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings
 - `3d18ecd9` 2026-10-29 — Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)
 - `69bcbab8` 2026-10-29 — WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale
@@ -197,7 +202,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `0dfd8bdf` 2026-10-29 — Revamp 3: the 12 audit fixes (#250)
 - `92b9bfa6` 2026-10-29 — Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused
 - `9e689d2b` 2026-10-29 — Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked
-- `1f56429b` 2026-10-29 — Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5
 
 ---
 

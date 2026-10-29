@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 583,
-    "routes": 269,
+    "files": 584,
+    "routes": 270,
     "libs": 203,
     "models": 58,
     "orphans": 10,
@@ -5388,6 +5388,32 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/counter-members/route.ts",
+      "lines": 33,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/counter-members",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/member-rates",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/course-products/route.ts",
       "lines": 125,
       "purpose": "",
@@ -6485,7 +6511,7 @@
     },
     {
       "path": "src/app/api/operator/settings/route.ts",
-      "lines": 130,
+      "lines": 132,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8175,7 +8201,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1642,
+      "lines": 1661,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8301,7 +8327,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1139,
+      "lines": 1148,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15128,7 +15154,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 202,
+      "lines": 214,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -18541,6 +18567,7 @@
         "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/app/api/operator/counter-members/route.ts",
         "src/app/book/BookClient.tsx",
         "src/app/courses/[slug]/member/page.tsx",
         "src/app/dashboard/page.tsx",
@@ -19702,6 +19729,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/change-password/route.ts",
         "src/app/api/operator/conditions/route.ts",
+        "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
@@ -21092,6 +21120,7 @@
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/operator/card-readers/route.ts",
         "src/app/api/operator/conditions/route.ts",
+        "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
@@ -21147,7 +21176,7 @@
     },
     {
       "path": "src/lib/settings-validation.ts",
-      "lines": 142,
+      "lines": 144,
       "purpose": "SD-1.",
       "brain": [],
       "exports": [
@@ -24341,6 +24370,10 @@
           "type": "Int"
         },
         {
+          "name": "counterMemberRate",
+          "type": "String"
+        },
+        {
           "name": "confirmationNote",
           "type": "String?"
         },
@@ -24576,6 +24609,7 @@
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
@@ -25538,11 +25572,13 @@
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
         "src/app/api/membership/[id]/route.ts",
+        "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tiers/route.ts",
         "src/lib/analytics.ts",
         "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
         "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
@@ -26373,6 +26409,7 @@
       ],
       "readers": [
         "src/app/api/admin/course-members/route.ts",
+        "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/tiers/route.ts",
         "src/lib/analytics.ts",

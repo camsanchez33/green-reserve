@@ -20,6 +20,7 @@ async function cleanup() {
   await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTimeSchedule.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.courseMembership.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.membershipTier.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.course.deleteMany({ where: { id: { in: ids } } });
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
@@ -52,8 +53,20 @@ async function cleanup() {
   ok('…the resident price, recorded as residents', res.ok && res.greenFeeTotal === 3500 && resRow?.residentPlayers === 1 && resRow.appliedRate === 'resident', resRow);
 
   const tier = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Full', greenFeeWeekdayCents: 3000, greenFeeWeekendCents: 3000, cartFeeWeekdayCents: 1000, cartFeeWeekendCents: 1000 } });
-  const mem = await createCounterBooking(c.id, { teeTimeId: (await prisma.teeTime.findFirstOrThrow({ where: { courseId: c.id, date: day, time: '07:10' } })).id, golferName: 'Member Two', players: 2, rate: `tier:${tier.id}`, cartSelected: true }, STAFF);
-  ok('a member at the counter: their spot at the member rate, the guest at the standard one', mem.ok && mem.greenFeeTotal === 3000 + 6000 && mem.cartFeeTotal === 1000 + 2000, mem);
+  const t710 = (await prisma.teeTime.findFirstOrThrow({ where: { courseId: c.id, date: day, time: '07:10' } })).id;
+  // Cam 2026-10-29: by default the member shows their membership — staff pick the member, not a tier.
+  const anyTier = await createCounterBooking(c.id, { teeTimeId: t710, golferName: 'Not A Member', players: 1, rate: `tier:${tier.id}` }, STAFF);
+  ok('by default a membership can\'t be picked for just anyone', !anyTier.ok && /Pick the member/.test(anyTier.error), anyTier);
+  const pat = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: tier.id, inviteName: 'Pat Member', inviteEmail: `${TAG}+pat@t.local`, status: 'active' } });
+  const mem = await createCounterBooking(c.id, { teeTimeId: t710, golferName: 'Pat Member', players: 2, rate: `member:${pat.id}`, cartSelected: true }, STAFF);
+  ok('the member at the counter: their spot at the member rate, the guest at the standard one', mem.ok && mem.greenFeeTotal === 3000 + 6000 && mem.cartFeeTotal === 1000 + 2000, mem);
+  const lapsed = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: tier.id, inviteName: 'Lee Lapsed', inviteEmail: `${TAG}+lee@t.local`, status: 'active', expiresAt: new Date(Date.now() - 30 * 86400000) } });
+  const lap = await createCounterBooking(c.id, { teeTimeId: t710, golferName: 'Lee Lapsed', players: 1, rate: `member:${lapsed.id}` }, STAFF);
+  ok('…a membership that has ended gets no member rate', !lap.ok && /has ended/.test(lap.error), lap);
+  // The course can make it flexible.
+  await prisma.course.update({ where: { id: c.id }, data: { counterMemberRate: 'any' } });
+  const flex = await createCounterBooking(c.id, { teeTimeId: t710, golferName: 'Staff Call', players: 1, rate: `tier:${tier.id}` }, STAFF);
+  ok('a course set to "any membership" lets staff pick one', flex.ok && flex.greenFeeTotal === 3000, flex);
 
   const bare = await prisma.teeTime.create({ data: { courseId: c.id, date: day, time: '09:00', holes: 18, greenFeeCents: 6000, cartFeeCents: 0, playersAvailable: 4 } });
   const none = await createCounterBooking(c.id, { teeTimeId: bare.id, golferName: 'No Senior', players: 1, rate: 'senior' }, STAFF);
@@ -64,6 +77,10 @@ async function cleanup() {
 
   // Online: senior and junior never apply — no golfer route reads them.
   const book = readFileSync('src/app/api/bookings/route.ts', 'utf8');
+  const lookup = readFileSync('src/app/api/operator/counter-members/route.ts', 'utf8');
+  ok('the counter\'s member lookup is gated like adding a walk-in, and lists only live memberships', lookup.includes("requirePermission(session, 'sheet.walkin')") && lookup.includes('liveMembershipWhere(course)') && !/email|phone/i.test(lookup.slice(lookup.indexOf('select:'))));
+  const settings = readFileSync('src/app/api/operator/settings/route.ts', 'utf8');
+  ok('only the owner can change who gets a member rate at the counter', settings.includes("if (session.isStaff && 'counterMemberRate' in body)"));
   ok('online booking never reads senior or junior prices (memberships only)', !/seniorRate|juniorRate/.test(book));
 
   await cleanup(); await prisma.$disconnect();

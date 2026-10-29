@@ -117,14 +117,15 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-29 21:02 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ cfe7cb40</span>
-    <span>9 uncommitted</span>
+    <span>2026-10-29 23:33 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 65df5988</span>
+    <span>12 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">35 runs have shipped that the queue doesn't know about</div>
+<div class="lede">36 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">65df5988</span><span>Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share</span></li>
 <li><span class="h">cfe7cb40</span><span>WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings</span></li>
 <li><span class="h">3d18ecd9</span><span>Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)</span></li>
 <li><span class="h">69bcbab8</span><span>WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale</span></li>
@@ -172,7 +173,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/change-party-db-test.ts</code></li><li><code>M scripts/staff-refund-db-test.ts</code></li><li><code>M src/lib/analytics.ts</code></li><li><code>M src/lib/booking-residents.ts</code></li><li><code>M src/lib/change-party.ts</code></li><li><code>M src/lib/staff-permissions.ts</code></li><li><code>M src/lib/staff-refund.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/counter-rates-db-test.ts</code></li><li><code>M scripts/register-rounds-db-test.ts</code></li><li><code>M src/app/api/operator/settings/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/lib/counter-pay.ts</code></li><li><code>M src/lib/settings-validation.ts</code></li><li><code>?? prisma/migrations/20261029120000_counter_member_rate/</code></li><li><code>?? src/app/api/operator/counter-members/</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -217,16 +218,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 1d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 1d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 2d</td></tr>
-<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 3d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 5d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 3d</td></tr>
+<tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 4d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 6d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 6d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 6d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
@@ -254,6 +255,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">65df5988</td><td class="num">2026-10-29</td><td>Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share</td></tr>
 <tr><td class="num">cfe7cb40</td><td class="num">2026-10-29</td><td>WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings</td></tr>
 <tr><td class="num">3d18ecd9</td><td class="num">2026-10-29</td><td>Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)</td></tr>
 <tr><td class="num">69bcbab8</td><td class="num">2026-10-29</td><td>WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale</td></tr>
@@ -265,7 +267,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">0dfd8bdf</td><td class="num">2026-10-29</td><td>Revamp 3: the 12 audit fixes (#250)</td></tr>
 <tr><td class="num">92b9bfa6</td><td class="num">2026-10-29</td><td>Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused</td></tr>
 <tr><td class="num">9e689d2b</td><td class="num">2026-10-29</td><td>Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked</td></tr>
-<tr><td class="num">1f56429b</td><td class="num">2026-10-29</td><td>Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

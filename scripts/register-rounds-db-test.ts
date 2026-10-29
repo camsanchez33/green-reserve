@@ -29,7 +29,8 @@ async function cleanup() {
   const c = await mk('a'), other = await mk('b');
   const today = todayIn('UTC');
   const tt = (courseId: string, time: string, o: { walk?: boolean } = {}) => prisma.teeTime.create({ data: { courseId, date: today, time, holes: 18, greenFeeCents: 5000, cartFeeCents: 2000, walkingAllowed: o.walk ?? true, playersAvailable: 4 } });
-  const t1 = await tt(c.id, '23:00'), t2 = await tt(c.id, '23:10', { walk: false }), tOther = await tt(other.id, '23:00');
+  // 23:45 and later: never 20 minutes gone on their own day, whenever the test runs (the late-add cut-off).
+  const t1 = await tt(c.id, '23:45'), t2 = await tt(c.id, '23:55', { walk: false }), tOther = await tt(other.id, '23:45');
   const book = async (courseId: string, teeTimeId: string, players: number, o: { access?: number; cart?: number } = {}) => {
     await prisma.teeTime.update({ where: { id: teeTimeId }, data: { playersBooked: { increment: players } } });
     const green = 5000 * players, cart = o.cart ?? 0, access = o.access ?? 0;

@@ -39,6 +39,8 @@ export async function PATCH(req: NextRequest) {
   // SP-A: the cancellation & card policy is the owner's alone (STAFF_POLICY_SPEC
   // A2) — a staff login with "Edit course settings" can change everything else.
   const OWNER_ONLY_FIELDS = ['cancellationHours', 'checkInWindowHours', 'rainCheckPolicy', 'lateCancellationFee', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'twoFactorMethod', 'twoFactorPhone'];
+  // Who gets a member rate at the counter is the owner's call, like the policy.
+  if (session.isStaff && 'counterMemberRate' in body) return NextResponse.json({ error: 'Only the course owner can change who gets a member rate at the counter.' }, { status: 403 });
   if (session.isStaff && OWNER_ONLY_FIELDS.some(k => k in body)) {
     return NextResponse.json({ error: 'The cancellation policy can only be changed from the course owner’s login.' }, { status: 403 });
   }
@@ -56,7 +58,7 @@ export async function PATCH(req: NextRequest) {
     // row would be decoration a crafted request walks straight past.
     'phone','website','description',
     'holes','par','yardage','slope','courseRating','type',
-    'hasMemberPricing','memberAdvanceDays','memberGraceDays',
+    'hasMemberPricing','memberAdvanceDays','memberGraceDays','counterMemberRate',
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',
     'walkingAllowed','walkingNote','cartRequired',
     'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays','timezone',

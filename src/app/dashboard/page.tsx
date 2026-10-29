@@ -1296,7 +1296,7 @@ function DashboardPageInner() {
                 <button onClick={() => { setFrostOpen(false); setFrostResult(null); }} className="w-full bg-pine hover:bg-pine-hover text-white py-2.5 rounded-md text-[13px] font-semibold">Done</button>
               </div>
             ) : (<>
-            <p className="text-[13px] text-ink-soft mb-4">Every group booked before the new first tee time moves, in tee-time order, to the earliest open time that fits them. The early times are blocked and each moved golfer is emailed. Prices don&apos;t change. Nobody is cancelled.</p>
+            <p className="text-[13px] text-ink-soft mb-4">Groups before the new first tee time move, in order, to the earliest open time that fits. Early times are blocked; moved golfers are emailed. Prices stay. Nobody is cancelled.</p>
             <label className="block text-[12.5px] text-ink-muted mb-1.5">New first tee time</label>
             <div className="flex gap-2 mb-4">
               <input type="time" value={frostTime} onChange={e => { setFrostTime(e.target.value); setFrostPlan(null); }} className={iCls + ' flex-1'}/>
@@ -1438,19 +1438,30 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   const [err, setErr] = useState('');
   // Revamp 3 dead end 20: the rate staff pick — the time's standard, resident, senior or junior price, or a membership.
   const [rate, setRate] = useState('standard');
-  const [tiers, setTiers] = useState<{ id: string; name: string; active: boolean }[]>([]);
-  useEffect(() => { dfetch<{ id: string; name: string; active: boolean }[]>('/api/operator/tiers').then(r => { if (r.ok && Array.isArray(r.data)) setTiers(r.data.filter(t => t.active)); }); }, []);
+  // Members (Cam 2026-10-29): the member shows their membership and is picked by name; a course
+  // that allows it (Settings) can also pick any membership. Rate 'member' = picking one now.
+  const [tiers, setTiers] = useState<{ id: string; name: string }[]>([]);
+  const [memberQ, setMemberQ] = useState('');
+  const [memberHits, setMemberHits] = useState<{ id: string; name: string; tier: string }[]>([]);
+  const [member, setMember] = useState<{ id: string; name: string; tier: string } | null>(null);
+  useEffect(() => { dfetch<{ tiers: { id: string; name: string }[] }>('/api/operator/counter-members').then(r => { if (r.ok) setTiers(r.data.tiers); }); }, []);
+  useEffect(() => {
+    if (rate !== 'member' || memberQ.trim().length < 2) { setMemberHits([]); return; }
+    const t = setTimeout(() => { dfetch<{ members: { id: string; name: string; tier: string }[] }>(`/api/operator/counter-members?q=${encodeURIComponent(memberQ.trim())}`).then(r => { if (r.ok) setMemberHits(r.data.members); }); }, 250);
+    return () => clearTimeout(t);
+  }, [rate, memberQ]);
   const perCents: Record<string, number | null | undefined> = { resident: slot.residentRateCents, senior: slot.seniorRateCents, junior: slot.juniorRateCents };
-  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ...tiers.map(t => [`tier:${t.id}`, t.name])];
+  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ['member', 'Member'], ...tiers.map(t => [`tier:${t.id}`, t.name])];
+  const sentRate = rate === 'member' ? (member ? `member:${member.id}` : 'standard') : rate;
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
   // A membership is priced by the server (its member and guest rules); the rest show here.
   const green = rate in perCents && perCents[rate] != null ? (perCents[rate] as number) / 100 : slot.greenFee;
-  const total = rate.startsWith('tier:') ? null : (green + (cart ? slot.cartFee : 0)) * players;
+  const total = rate.startsWith('tier:') || rate === 'member' ? null : (green + (cart ? slot.cartFee : 0)) * players;
 
   async function save() {
     setSaving(true); setErr('');
     const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
-      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate: sentRate, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
@@ -1492,9 +1503,17 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
       )}
       {rates.length > 1 && (
         <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Rate</span>
-          <select value={rate} onChange={e => setRate(e.target.value)} className={inp}>{rates.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+          <select value={rate} onChange={e => { setRate(e.target.value); setMember(null); }} className={inp}>{rates.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         </label>
       )}
+      {rate === 'member' && (member ? (
+        <p className="text-[13px] text-ink">{member.name} · {member.tier} <button type="button" onClick={() => setMember(null)} className="text-pine font-medium hover:underline">Change</button></p>
+      ) : (
+        <div>
+          <input value={memberQ} onChange={e => setMemberQ(e.target.value)} placeholder="Find the member" aria-label="Find the member" className={inp} />
+          {memberHits.map(m => <button key={m.id} type="button" onClick={() => { setMember(m); if (!name.trim()) setName(m.name); }} className="block w-full text-left px-2 py-1.5 text-[13px] text-ink hover:bg-paper">{m.name} <span className="text-ink-muted">· {m.tier}</span></button>)}
+        </div>
+      ))}
       {source === 'walk_in' && (
         <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
           <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Paying cash now — take it and check this group in
@@ -1504,7 +1523,7 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
       {err && <p className="text-sm text-bad">{err}</p>}
       <div className="flex gap-2 pt-1">
         <button onClick={onCancel} disabled={saving} className="flex-1 px-4 py-2.5 border border-line text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors">Cancel</button>
-        <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0}
+        <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0 || (rate === 'member' && !member)}
           className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors">
           {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? (total === null ? 'Add + take cash' : `Add + take $${total.toFixed(2)} cash`) : 'Add booking'}
         </button>

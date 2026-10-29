@@ -18,7 +18,7 @@ import { randomUUID } from 'crypto';
 import { READER_STALE_MS } from './checkin-booking';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 import { applyTierRates } from './tier-rates';
-import { memberPlayers, splitTotal, memberSpot, partyFees, type PartyBooking } from './member-rates';
+import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 
 export type CounterResult =
   | { ok: true; amountCents: number; note: string | null }
@@ -126,9 +126,11 @@ export type CounterBookingInput = {
   late?: boolean;
   /**
    * Revamp 3 dead end 20 (Cam 2026-10-29): the rate staff pick at the counter — the tee
-   * time's standard price, its resident, senior or junior price, or a membership's
-   * (`tier:<id>`: the member at the member rate, guests at the standard one unless the
-   * tier includes them). Absent = standard.
+   * time's standard price, its resident, senior or junior price, or a member's:
+   * `member:<membershipId>` (the member showed their membership; it must be live) or, only
+   * when the course allows it (Course.counterMemberRate 'any'), `tier:<id>`. Either way the
+   * member is at the member rate and guests at the standard one unless the tier includes them.
+   * Absent = standard.
    */
   rate?: string;
 };
@@ -158,8 +160,18 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     greenFeeTotal = per * players;
     appliedRate = rate;
     if (rate === 'resident') rateRows = { residentPlayers: players, residentRateCents: per };
-  } else if (rate.startsWith('tier:')) {
-    const tier = await prisma.membershipTier.findFirst({ where: { id: rate.slice(5), courseId, active: true } });
+  } else if (rate.startsWith('tier:') || rate.startsWith('member:')) {
+    let tier;
+    if (rate.startsWith('member:')) {
+      // Cam: "they should show their membership when they get there" — the member's own, and only while it's live.
+      const m = await prisma.courseMembership.findFirst({ where: { id: rate.slice(7), courseId }, include: { tier: true } });
+      if (!m || !m.tier) return { ok: false, status: 400, error: 'That member isn’t on your course.' };
+      if (!membershipLive(m, teeTime.course)) return { ok: false, status: 409, error: 'That membership has ended — book them at the standard rate, or renew it on Members.' };
+      tier = m.tier;
+    } else {
+      if (teeTime.course.counterMemberRate !== 'any') return { ok: false, status: 409, error: 'Pick the member — your course gives member rates at the counter only to members.' };
+      tier = await prisma.membershipTier.findFirst({ where: { id: rate.slice(5), courseId, active: true } });
+    }
     if (!tier) return { ok: false, status: 400, error: 'That membership isn’t on your course.' };
     const r = applyTierRates(teeTime, tier);
     const n = memberPlayers(players, tier);

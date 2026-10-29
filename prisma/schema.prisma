@@ -145,6 +145,10 @@ model Course {
   /// Cam 2026-10-29: member rates and the member booking window end this many days after a
   /// membership's expiry date (0 = on expiry). lib/member-rates.ts.
   memberGraceDays            Int                   @default(0)
+  /// Cam 2026-10-29: who gets a member rate at the counter. 'member' (default): staff pick the
+  /// member — they show their membership — and that membership's live rate applies. 'any': staff
+  /// may pick any of the course's memberships for a walk-in or phone booking (the course's call).
+  counterMemberRate String @default("member")
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
   confirmationNote           String?
