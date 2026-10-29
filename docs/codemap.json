@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 579,
+    "files": 580,
     "routes": 269,
     "libs": 201,
     "models": 58,
@@ -5765,7 +5765,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 292,
+      "lines": 309,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7943,7 +7943,7 @@
     },
     {
       "path": "src/app/dashboard/home/page.tsx",
-      "lines": 263,
+      "lines": 256,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
       "brain": [],
       "exports": [
@@ -7959,12 +7959,14 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/DeclinedCardList",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/money/PayoutsTable",
         "@/components/dashboard/settings/FinishSetup",
         "@/components/ui/StatusDot",
         "@/lib/analytics-terms",
         "@/lib/dashboard-fetch",
+        "@/lib/operator-home",
         "@/lib/setup-missing",
         "@/lib/use-dashboard-access",
         "next/link",
@@ -8027,7 +8029,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 778,
+      "lines": 833,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8093,7 +8095,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 298,
+      "lines": 264,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -8109,6 +8111,7 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/DeclinedCardList",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/money/CancellationsPanel",
         "@/components/dashboard/money/PaymentsPanel",
@@ -8178,7 +8181,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1580,
+      "lines": 1592,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9359,7 +9362,7 @@
     },
     {
       "path": "src/components/OperatorSidebar.tsx",
-      "lines": 287,
+      "lines": 310,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10101,6 +10104,35 @@
       ]
     },
     {
+      "path": "src/components/dashboard/DeclinedCardList.tsx",
+      "lines": 63,
+      "purpose": "Declined cards — the same rows on Home and Money → Needs you (Revamp 3 dead end 16, Cam 2026-10-29).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DeclinedCardList",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/StatusDot",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "@/lib/operator-home",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/money/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/GettingStartedChecklist.tsx",
       "lines": 187,
       "purpose": "",
@@ -10269,7 +10301,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 164,
+      "lines": 174,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -10845,7 +10877,7 @@
     },
     {
       "path": "src/components/dashboard/money/CancellationsPanel.tsx",
-      "lines": 81,
+      "lines": 86,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11550,6 +11582,7 @@
         "src/components/dashboard/AgreementNotice.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
@@ -15432,7 +15465,8 @@
       ],
       "usedBy": [
         "src/app/api/operator/residents/route.ts",
-        "src/lib/member-session.ts"
+        "src/lib/member-session.ts",
+        "src/lib/operator-search.ts"
       ]
     },
     {
@@ -16346,6 +16380,7 @@
         "src/app/dashboard/shop/page.tsx",
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
@@ -17415,6 +17450,7 @@
         "src/app/events/[id]/page.tsx",
         "src/app/g/[slug]/page.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
@@ -18963,7 +18999,7 @@
     },
     {
       "path": "src/lib/operator-home.ts",
-      "lines": 158,
+      "lines": 159,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the course dashboard mockups):",
       "brain": [],
       "exports": [
@@ -19004,15 +19040,21 @@
       "usedBy": [
         "src/app/api/operator/home/route.ts",
         "src/app/api/operator/money/overview/route.ts",
-        "src/app/dashboard/money/page.tsx"
+        "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/money/page.tsx",
+        "src/components/dashboard/DeclinedCardList.tsx"
       ]
     },
     {
       "path": "src/lib/operator-search.ts",
-      "lines": 58,
+      "lines": 80,
       "purpose": "DASH-C search (the mockups' \"Find a golfer, booking or member\"):",
       "brain": [],
       "exports": [
+        {
+          "name": "bySearchOrder",
+          "kind": "fn"
+        },
         {
           "name": "operatorSearch",
           "kind": "fn"
@@ -19028,6 +19070,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./course-group",
         "./course-time",
         "./prisma"
       ],
@@ -20132,10 +20175,14 @@
     },
     {
       "path": "src/lib/register-close.ts",
-      "lines": 133,
+      "lines": 136,
       "purpose": "POS-3 R4 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
+        {
+          "name": "CLOSE_BACK_DAYS",
+          "kind": "const"
+        },
         {
           "name": "closeDay",
           "kind": "fn"
@@ -25783,6 +25830,7 @@
         "src/app/api/operator/residents/route.ts",
         "src/lib/data-reset.ts",
         "src/lib/member-session.ts",
+        "src/lib/operator-search.ts",
         "src/lib/sample-data.ts"
       ]
     },

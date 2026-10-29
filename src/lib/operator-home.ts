@@ -41,7 +41,8 @@ export async function declinedCards(courseId: string, withAmounts: boolean, take
   const where = { courseId, checkInFailReason: { not: '' }, checkedInAt: null, status: { not: 'cancelled' } };
   const [rows, total] = await Promise.all([
     prisma.booking.findMany({
-      where, orderBy: { createdAt: 'desc' }, take,
+      // The round's own day, latest first (dead end 16: it was by when the booking was made).
+      where, orderBy: [{ teeTime: { date: 'desc' } }, { teeTime: { time: 'desc' } }], take,
       // POS-1a: what the retry will charge — the round plus any shop items on it.
       select: { id: true, golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, accessFeeTotal: true, feePaidCents: true, teeTime: { select: { date: true, time: true } } },
     }),

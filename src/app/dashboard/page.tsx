@@ -388,11 +388,12 @@ function DashboardPageInner() {
     return () => { live = false; };
   }, [canSeeMoney, selectedDate, teeTimes]);
 
-  const loadTimes = useCallback(async (date: string) => {
-    setLoading(true);
+  // quiet: the background re-read (dead end 17) — no spinner, and a failed read keeps the sheet as it was.
+  const loadTimes = useCallback(async (date: string, quiet = false) => {
+    if (!quiet) setLoading(true);
     const r = await dfetch<TeeTime[]>(`/api/operator/tee-times?date=${date}&withBookings=1`);
     if (r.status === 401) { setLoading(false); toast('Your session ended — sign in again.', 'warn'); router.push('/dashboard/login'); return; }
-    if (!r.ok) { setTeeTimes([]); setSheetError(r.error); }
+    if (!r.ok) { if (quiet) return; setTeeTimes([]); setSheetError(r.error); }
     // FLOW-1 fix: the API sends greenFeeCents / cartFeeCents (the columns moved
     // to cents); the sheet, the walk-in total and the revenue line all read
     // dollars, so every price rendered as a bare "$" and every total as NaN.
@@ -579,6 +580,17 @@ function DashboardPageInner() {
   // Re-read the clock every minute so the Now line moves and gone times drop to the bottom on their own.
   const [, setClockTick] = useState(0);
   useEffect(() => { const i = setInterval(() => setClockTick(t => t + 1), 60_000); return () => clearInterval(i); }, []);
+  // Revamp 3 dead end 17: two counters see the same sheet — it re-reads its bookings every
+  // 30 seconds while the tab is in front, and as soon as it comes back to the front. Never
+  // mid-action: a check-in, a row being changed or a modal open waits for the next round.
+  const busyRef = useRef(false);
+  busyRef.current = !!(checkingInId || rowBusy || cardModalBooking || moveTarget);
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === 'visible' && !busyRef.current) loadTimes(selectedDate, true); };
+    const i = setInterval(tick, 30_000);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(i); document.removeEventListener('visibilitychange', tick); };
+  }, [loadTimes, selectedDate]);
   const nowHM = clockIn(courseTz); // SD-3: the course's clock, not the browser's
   // B-8: a group is late when its tee time went off 10+ minutes ago today and
   // nobody in it is checked in. Read straight off the sheet already loaded.

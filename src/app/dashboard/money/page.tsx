@@ -20,6 +20,7 @@ import type { PayoutsData } from '@/components/dashboard/money/PayoutsTable';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { formatTeeTime, formatTeeDate } from '@/lib/format';
 import type { DeclinedCard } from '@/lib/operator-home';
+import { DeclinedCardList } from '@/components/dashboard/DeclinedCardList';
 
 type Overview = { week: { from: string; to: string }; today: string; clock: string; paidCents: number; notPaidCents: number; notPaidGroups: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
 const usd2 = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -79,7 +80,8 @@ function MoneyPageInner() {
     // view. A ?date= deep link from the tee sheet gets its own fetch, because
     // the unfiltered one is capped at the newest 200 rows.
     const [all, playedRes, day] = await Promise.all([
-      dfetch<MoneyBooking[]>('/api/operator/bookings'),
+      // Cancellations: only cancelled bookings (dead end 13 — 1 of 87 showed in the newest 200 of everything).
+      dfetch<MoneyBooking[]>('/api/operator/bookings?status=cancelled'),
       // Payments: rounds already played, newest first (not the newest bookings made).
       dfetch<MoneyBooking[]>('/api/operator/bookings?played=1'),
       dateFilter ? dfetch<MoneyBooking[]>(`/api/operator/bookings?date=${encodeURIComponent(dateFilter)}`) : Promise.resolve(null),
@@ -145,19 +147,8 @@ function MoneyPageInner() {
   useEffect(() => { if (access.loaded) loadOverview(); }, [access.loaded, loadOverview]);
   const refresh = () => { loadBookings(); loadCourse(); loadOverview(); };
 
-  // DASH-C Needs you: (re)send a declined group their pay link, the tee sheet's
-  // own action and permission. One row at a time; each says what happened.
+  // DASH-C Needs you: the declined-card rows are shared with Home (DeclinedCardList), pay links included.
   const canSendLink = access.can('sheet.checkin');
-  const [linkBusy, setLinkBusy] = useState<string | null>(null);
-  const [linkResult, setLinkResult] = useState<Record<string, { ok: boolean; text: string }>>({});
-  async function sendPayLink(d: DeclinedCard, via: 'sms' | 'email') {
-    setLinkBusy(d.id);
-    const r = await dfetch<{ sentTo: string }>('/api/operator/bookings', { method: 'PATCH', body: JSON.stringify({ id: d.id, action: 'send_pay_link', via }) });
-    setLinkBusy(null);
-    setLinkResult(m => ({ ...m, [d.id]: r.ok
-      ? { ok: true, text: `${via === 'sms' ? 'Texted' : 'Emailed'} to ${r.data.sentTo}. This clears once they pay.` }
-      : { ok: false, text: r.error } }));
-  }
 
   async function openStripe() {
     setOpeningStripe(true); setStripeError('');
@@ -216,34 +207,9 @@ function MoneyPageInner() {
             <section className="mb-6" aria-labelledby="money-needs">
               <h2 id="money-needs" className="text-[15px] font-semibold text-ink mb-2">Needs you</h2>
               <Card>
-                <ul className="divide-y divide-line-soft">
-                  {overview.declined.map(d => {
-                    const res = linkResult[d.id];
-                    return (
-                      <li key={d.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 text-[13.5px]">
-                        <StatusDot status="bad" label="" />
-                        <div className="flex-1 min-w-[12rem]">
-                          <div className="text-ink">Card declined — {d.name}</div>
-                          <div className="text-[12.5px] text-ink-muted tabular-nums">{formatTeeDate(d.date)} {formatTeeTime(d.time)}{d.amountCents !== null ? ` · ${usd2(d.amountCents)}` : ''}</div>
-                          {res && <div role={res.ok ? 'status' : 'alert'} className={'text-[12.5px] mt-0.5 ' + (res.ok ? 'text-ok' : 'text-bad')}>{res.text}</div>}
-                        </div>
-                        {canSendLink && (d.canText || d.canEmail) ? (
-                          <div className="flex gap-2 shrink-0">
-                            {d.canText && <button onClick={() => sendPayLink(d, 'sms')} disabled={linkBusy !== null}
-                              className="text-[13px] font-medium text-ink px-3 py-1.5 rounded-md bg-white border border-line hover:border-line-strong disabled:opacity-50">{linkBusy === d.id ? 'Sending…' : 'Text pay link'}</button>}
-                            {d.canEmail && <button onClick={() => sendPayLink(d, 'email')} disabled={linkBusy !== null}
-                              className="text-[13px] font-medium text-ink px-3 py-1.5 rounded-md bg-white border border-line hover:border-line-strong disabled:opacity-50">{linkBusy === d.id ? 'Sending…' : 'Email pay link'}</button>}
-                          </div>
-                        ) : (
-                          <span className="text-[12.5px] text-ink-muted shrink-0">{canSendLink ? 'No phone or email on file — take payment at the counter' : 'Take payment on the tee sheet'}</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                  {overview.declinedTotal > overview.declined.length && (
-                    <li className="px-4 py-3 text-[13px] text-ink-soft">and {overview.declinedTotal - overview.declined.length} more declined card{overview.declinedTotal - overview.declined.length === 1 ? '' : 's'}</li>
-                  )}
-                </ul>
+                <div className="divide-y divide-line-soft">
+                  <DeclinedCardList rows={overview.declined} total={overview.declinedTotal} canSendLink={canSendLink} />
+                </div>
               </Card>
             </section>
           )}
@@ -278,7 +244,7 @@ function MoneyPageInner() {
           ) : active === 'payments' ? (
             <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} courseNow={overview ? { today: overview.today, clock: overview.clock } : undefined} capped={!dateFilter && (played?.length ?? 0) >= 1000} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
           ) : active === 'cancellations' ? (
-            <CancellationsPanel bookings={bookings} course={course}/>
+            <CancellationsPanel bookings={bookings} course={course} initialQuery={active === 'cancellations' ? searchParams.get('q') ?? '' : ''}/>
           ) : (
             <PayoutsPanel course={course} stripeParam={stripeParam} onConnected={loadCourse} canConnect={!treatAsStaff}/>
           )}

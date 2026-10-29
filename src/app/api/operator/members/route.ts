@@ -202,6 +202,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { id, tierId, status, notes, expiresAt, action } = body;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  if (expiresAt && (typeof expiresAt !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(expiresAt) || Number.isNaN(Date.parse(expiresAt)))) return NextResponse.json({ error: 'Pick the date it runs until, or leave it blank.' }, { status: 400 });
 
   const membership = await prisma.courseMembership.findUnique({ where: { id }, include: { tier: true } });
   if (!membership || membership.courseId !== session.courseId) {
@@ -244,6 +245,21 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
+  // Revamp 3 dead end 21: a member's details can be edited after they're added. A linked
+  // golfer account owns its own name, email and phone; only an invite's are edited here.
+  const contact: { inviteName?: string; inviteEmail?: string; invitePhone?: string } = {};
+  if (body.name !== undefined || body.email !== undefined || body.phone !== undefined) {
+    if (membership.golferId) return NextResponse.json({ error: 'This member signs in with their own account — their name, email and phone are theirs to change.' }, { status: 409 });
+    if (body.name !== undefined) { const n = String(body.name ?? '').trim().slice(0, 120); if (!n) return NextResponse.json({ error: 'Add the member’s name.' }, { status: 400 }); contact.inviteName = n; }
+    if (body.email !== undefined) {
+      const e = String(body.email ?? '').trim().toLowerCase().slice(0, 200);
+      if (e && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return NextResponse.json({ error: 'That email address doesn’t look right.' }, { status: 400 });
+      if (e && e !== membership.inviteEmail.toLowerCase() && await prisma.courseMembership.findFirst({ where: { courseId: session.courseId, id: { not: id }, inviteEmail: { equals: e, mode: 'insensitive' } }, select: { id: true } })) return NextResponse.json({ error: 'Another member already uses that email.' }, { status: 409 });
+      contact.inviteEmail = e;
+    }
+    if (body.phone !== undefined) contact.invitePhone = String(body.phone ?? '').trim().slice(0, 30);
+  }
+
   if (tierId) {
     const tier = await prisma.membershipTier.findUnique({ where: { id: tierId } });
     if (!tier || tier.courseId !== session.courseId) {
@@ -258,6 +274,7 @@ export async function PATCH(req: NextRequest) {
       status:    status    ?? membership.status,
       notes:     notes     ?? membership.notes,
       expiresAt: expiresAt !== undefined ? (expiresAt ? new Date(expiresAt) : null) : membership.expiresAt,
+      ...contact,
       // A golfer's self-join has no pay link yet (api/golfer/memberships). Once
       // staff put it on a tier, it can owe dues — mint the token so the pay
       // link, the overdue reminder and the dues cron all reach it.

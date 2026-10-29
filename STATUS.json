@@ -1,22 +1,50 @@
 {
-  "generatedAt": "2026-10-29T13:49:56.848Z",
+  "generatedAt": "2026-10-29T20:00:55.551Z",
   "repo": {
-    "head": "9e689d2b",
+    "head": "7fec759a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 21,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/golfer-messages-test.ts",
-      " M src/app/api/operator/golfer-messages/route.ts",
-      " M src/components/dashboard/GolferMessageModal.tsx",
-      " M src/lib/golfer-messages.ts"
+      " M scripts/operator-home-db-test.ts",
+      " M scripts/operator-search-db-test.ts",
+      " M scripts/register-close-db-test.ts",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/api/operator/members/route.ts",
+      " M src/app/api/operator/money/overview/route.ts",
+      " M src/app/dashboard/home/page.tsx",
+      " M src/app/dashboard/members/page.tsx",
+      " M src/app/dashboard/money/page.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/components/OperatorSidebar.tsx",
+      " M src/components/dashboard/OperatorSearch.tsx",
+      " M src/components/dashboard/RegisterClose.tsx",
+      " M src/components/dashboard/money/CancellationsPanel.tsx",
+      " M src/lib/operator-home.ts",
+      " M src/lib/operator-search.ts",
+      " M src/lib/register-close.ts",
+      "?? scripts/dead-ends-a-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "0dfd8bdf",
+        "date": "2026-10-29T09:58:44-04:00",
+        "subject": "Revamp 3: the 12 audit fixes (#250)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "92b9bfa6",
+        "date": "2026-10-29T13:49:59+00:00",
+        "subject": "Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "9e689d2b",
         "date": "2026-10-29T13:48:14+00:00",
@@ -219,7 +247,7 @@
       "line": 2358,
       "hash": "b88c8bf3",
       "shipDate": "2026-07-22",
-      "ageDays": 98
+      "ageDays": 99
     }
   ],
   "next": [
@@ -589,6 +617,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0dfd8bdf",
+      "date": "2026-10-29",
+      "subject": "Revamp 3: the 12 audit fixes (#250)"
+    },
+    {
+      "h": "92b9bfa6",
+      "date": "2026-10-29",
+      "subject": "Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused"
+    },
+    {
       "h": "9e689d2b",
       "date": "2026-10-29",
       "subject": "Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked"
@@ -637,16 +675,6 @@
       "h": "af4b9fc3",
       "date": "2026-10-29",
       "subject": "Cash at the register is never blocked by sales tax"
-    },
-    {
-      "h": "bee3bc29",
-      "date": "2026-10-29",
-      "subject": "A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight"
-    },
-    {
-      "h": "ec1f63b8",
-      "date": "2026-10-29",
-      "subject": "A price change reaches every bookable day and the open spots of booked times"
     }
   ]
 }

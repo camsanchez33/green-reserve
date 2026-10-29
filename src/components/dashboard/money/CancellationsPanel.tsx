@@ -23,9 +23,12 @@ const hoursAhead = (b: MoneyBooking) => {
   return `${d} day${d === 1 ? '' : 's'} before`;
 };
 
-export function CancellationsPanel({ bookings, course }: { bookings: MoneyBooking[]; course: MoneyCourse }) {
+export function CancellationsPanel({ bookings, course, initialQuery = '' }: { bookings: MoneyBooking[]; course: MoneyCourse; initialQuery?: string }) {
   const [feesOnly, setFeesOnly] = useState(false);
-  const cancelled = bookings.filter(b => b.status === 'cancelled')
+  // Search opens this tab with the golfer's name (dead end 18).
+  const [search, setSearch] = useState(initialQuery);
+  const q = search.trim().toLowerCase();
+  const cancelled = bookings.filter(b => b.status === 'cancelled' && (!q || b.golferName.toLowerCase().includes(q) || b.golferEmail.toLowerCase().includes(q)))
     .sort((a, b) => (b.cancelledAt ?? b.createdAt).localeCompare(a.cancelledAt ?? a.createdAt));
   const withFee = cancelled.filter(b => b.paymentStatus === 'cancellation_fee_charged' || !!b.noShowFeeKeptCents);
   const rows = feesOnly ? withFee : cancelled;
@@ -34,7 +37,7 @@ export function CancellationsPanel({ bookings, course }: { bookings: MoneyBookin
     <div className="space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="text-[13.5px] text-ink">
-          {cancelled.length === 0 ? 'No cancellations yet.' : 'Your latest cancellations, newest first.'}
+          {cancelled.length === 0 ? (q ? `Nobody matches “${search.trim()}”.` : 'No cancellations yet.') : 'Newest first.'}
         </p>
         <p className="text-[12.5px] text-ink-muted">
           Free cancellation until {course.cancellationHours} hours before
@@ -44,13 +47,15 @@ export function CancellationsPanel({ bookings, course }: { bookings: MoneyBookin
       </div>
       {course.lateCancellationFee > 0 && !course.stripeAccountActive && (
         <div className="bg-white border border-line border-l-[3px] border-l-warn rounded-md px-4 py-2.5 text-[13px] text-ink">
-          Your late-cancel fee can&apos;t be charged until Stripe is connected (Payouts tab). Golfers can still book and cancel.
+          Your late-cancel fee can&apos;t be charged until Stripe is connected (Payouts tab).
         </div>
       )}
 
-      {cancelled.length > 0 && (
+      {(cancelled.length > 0 || q) && (
         <div className="bg-white rounded-lg shadow-card">
-          <div className="flex gap-5 px-4 pt-3 border-b border-line-soft" role="tablist" aria-label="Show">
+          <div className="flex flex-wrap items-end gap-5 px-4 pt-3 border-b border-line-soft" role="tablist" aria-label="Show">
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a golfer" aria-label="Find a golfer"
+              className="mb-2 w-48 bg-white border border-line rounded-md px-3 py-1.5 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none" />
             {([[false, 'All'], [true, 'Fee kept']] as [boolean, string][]).map(([v, l]) => (
               <button key={l} role="tab" aria-selected={feesOnly === v} onClick={() => setFeesOnly(v)}
                 className={'pb-2 -mb-px text-[13.5px] font-medium border-b-2 ' + (feesOnly === v ? 'text-ink border-fairway' : 'text-ink-soft border-transparent hover:text-ink')}>{l}</button>

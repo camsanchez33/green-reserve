@@ -88,9 +88,9 @@ async function main() {
   check('a walk-in placeholder email is never offered', byTime['10:45']?.canEmail === false, byTime['10:45']);
   check('the flags are booleans — no phone or email leaves the server', money.rows.every(r => !('golferPhone' in r) && !('golferEmail' in r)));
   const overview = readFileSync('src/app/api/operator/money/overview/route.ts', 'utf8');
-  check('Money\'s overview is gated by payments and uses the shared list', /requirePermission\(session, 'money\.payments'\)/.test(overview) && /declinedCards\(session\.courseId, true\)/.test(overview));
+  check('Money\'s overview is gated by payments and uses the shared list', /requirePermission\(session, 'money\.payments'\)/.test(overview) && /declinedCards\(session\.courseId, true, 50\)/.test(overview));
   const page = readFileSync('src/app/dashboard/money/page.tsx', 'utf8');
-  check('Money\'s pay-link buttons need the tee sheet\'s check-in permission, like the route', /access\.can\('sheet\.checkin'\)/.test(page) && /action: 'send_pay_link'/.test(page));
+  check('Money\'s pay-link buttons need the tee sheet\'s check-in permission, like the route', /access\.can\('sheet\.checkin'\)/.test(page) && /action: 'send_pay_link'/.test(readFileSync('src/components/dashboard/DeclinedCardList.tsx', 'utf8')));
 
   const route = readFileSync('src/app/api/operator/home/route.ts', 'utf8');
   check('the route gates money and messages per permission', /money: can\(session, 'money\.payments'\)/.test(route) && /messages: can\(session, 'messages\.use'\)/.test(route) && /requirePermission\(session, 'sheet\.view'\)/.test(route));

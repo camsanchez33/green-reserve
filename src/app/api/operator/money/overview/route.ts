@@ -20,7 +20,7 @@ export async function GET() {
   const [a, declined] = await Promise.all([
     computeAnalytics(session.courseId, { from, to: today }),
     // DASH-C: Money → Needs you, the same list Home shows.
-    declinedCards(session.courseId, true),
+    declinedCards(session.courseId, true, 50),
   ]);
   return NextResponse.json({
     week: { from, to: today },

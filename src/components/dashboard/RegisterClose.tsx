@@ -3,6 +3,10 @@
 // the Pro shop page. The day's figures come from the server (lib/register-close
 // .ts); staff enter the starting cash and what they counted, see over or short,
 // and save the count. A recount adds a new count — the latest stands.
+// Revamp 3 dead end 24 (Cam 2026-10-29): a blind count — the day's cash figures and
+// what should be in the drawer show only once the count is saved, so nobody counts to
+// match; starting cash carries over from the last close-out; any of the last two weeks.
+// (Shown in the browser only after counting; the route still returns them for the reveal.)
 import { useCallback, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -44,6 +48,9 @@ export function RegisterClose() {
     const r = await dfetch<{ summary: Summary; recent: Close[] }>(`/api/operator/register-close${d ? `?day=${d}` : ''}`);
     if (!r.ok) { setLoadError(r.error); return; }
     setSummary(r.data.summary); setRecent(r.data.recent); setDay(r.data.summary.day);
+    // The drawer usually starts each day with the same float: offer the last one used.
+    const last = r.data.recent[0];
+    if (last) setFloat(f => f || (last.openingFloatCents / 100).toFixed(2));
   }, []);
 
   async function close() {
@@ -62,8 +69,9 @@ export function RegisterClose() {
   const countedCents = toCents(counted);
   const expected = summary ? floatCents + summary.cashTakenCents : 0;
   const diff = countedCents === null ? null : countedCents - expected;
-  const yesterday = summary ? addDaysStr(summary.today, -1) : '';
   const dayCloses = recent.filter(c => c.day === summary?.day);
+  // A day already counted shows its figures (a recount compares against them); otherwise only after saving.
+  const revealed = !!summary && (dayCloses.length > 0 || saved?.day === summary.day);
 
   return (
     <Card className="mt-5">
@@ -72,12 +80,8 @@ export function RegisterClose() {
         {!open
           ? <button type="button" onClick={() => { setOpen(true); load(); }} className="text-[13px] text-pine font-medium hover:underline">Count the drawer</button>
           : summary && (
-            <div className="flex gap-1" role="group" aria-label="Day">
-              {[[summary.today, 'Today'], [yesterday, 'Yesterday']].map(([d, l]) => (
-                <button key={d} type="button" aria-pressed={day === d} onClick={() => { setSaved(null); load(d); }}
-                  className={'px-2.5 py-1 rounded-md border text-[12.5px] ' + (day === d ? 'border-pine/40 text-ink font-medium' : 'border-line text-ink-soft hover:text-ink')}>{l}</button>
-              ))}
-            </div>
+            <input type="date" aria-label="Day" value={day ?? summary.day} min={addDaysStr(summary.today, -13)} max={summary.today}
+              onChange={e => { if (e.target.value) { setSaved(null); setCounted(''); load(e.target.value); } }} className={INPUT} />
           )}
       </div>
       {open && (
@@ -87,6 +91,9 @@ export function RegisterClose() {
           {summary && (
             <div className="grid gap-6 md:grid-cols-2">
               <div>
+                {!revealed ? (
+                  <p className="text-[13.5px] text-ink-soft">Count first; the day&apos;s cash shows after.</p>
+                ) : <>
                 <h3 className="text-[13.5px] font-semibold text-ink mb-1">Cash, {dayLabel(summary.day)}</h3>
                 <ul className="divide-y divide-line-soft text-sm">
                   <li className="flex justify-between py-2"><span className="text-ink">Cash sales at the register <span className="text-ink-muted">· {plural(summary.cashSales.count, 'sale')}</span></span><span className="tabular-nums">{usd(summary.cashSales.cents)}</span></li>
@@ -98,13 +105,14 @@ export function RegisterClose() {
                   <li className="flex justify-between py-2 font-semibold text-ink"><span>Cash taken</span><span className="tabular-nums">{usd(summary.cashTakenCents)}</span></li>
                 </ul>
                 {summary.counterRounds.count > 0 && <p className="text-[12.5px] text-ink-muted mt-2">Groups marked paid without a tender are counted as cash.</p>}
+                </>}
                 <h3 className="text-[13.5px] font-semibold text-ink mt-5 mb-1">Card, for reference</h3>
                 <ul className="divide-y divide-line-soft text-sm">
                   <li className="flex justify-between py-2"><span className="text-ink">Shop sales by card</span><span className="tabular-nums">{usd(summary.card.shopCents)}</span></li>
                   <li className="flex justify-between py-2"><span className="text-ink">Rounds paid by card</span><span className="tabular-nums">{usd(summary.card.roundsCents)}</span></li>
                   {summary.card.refundsCents > 0 && <li className="flex justify-between py-2"><span className="text-ink">Shop card refunds</span><span className="tabular-nums">{usd(-summary.card.refundsCents)}</span></li>}
                 </ul>
-                <p className="text-[12.5px] text-ink-muted mt-2">Card payments go to your Stripe account — nothing to count.</p>
+                <p className="text-[12.5px] text-ink-muted mt-2">Card goes to Stripe — nothing to count.</p>
               </div>
               <div>
                 <h3 className="text-[13.5px] font-semibold text-ink mb-2">Count the drawer</h3>
@@ -118,11 +126,13 @@ export function RegisterClose() {
                       <input value={counted} onChange={e => setCounted(e.target.value)} inputMode="decimal" placeholder="0.00" className={INPUT + ' w-full pl-6'} /></div>
                   </label>
                 </div>
-                <ul className="mt-3 divide-y divide-line-soft text-sm">
-                  <li className="flex justify-between py-2"><span className="text-ink">Should be in the drawer</span><span className="tabular-nums font-semibold">{usd(expected)}</span></li>
-                  <li className="flex justify-between py-2"><span className="text-ink">Counted</span>{diff === null ? <span className="text-ink-muted">—</span> : <StatusDot status={overShort(diff).tone} label={overShort(diff).label} />}</li>
-                </ul>
-                <input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder="Note (optional) — e.g. $20 paid out for ice" aria-label="Note" className={INPUT + ' w-full mt-3'} />
+                {revealed && (
+                  <ul className="mt-3 divide-y divide-line-soft text-sm">
+                    <li className="flex justify-between py-2"><span className="text-ink">Should be in the drawer</span><span className="tabular-nums font-semibold">{usd(expected)}</span></li>
+                    <li className="flex justify-between py-2"><span className="text-ink">Counted</span>{diff === null ? <span className="text-ink-muted">—</span> : <StatusDot status={overShort(diff).tone} label={overShort(diff).label} />}</li>
+                  </ul>
+                )}
+                <input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder="Note (optional)" aria-label="Note" className={INPUT + ' w-full mt-3'} />
                 <button type="button" onClick={close} disabled={busy || countedCents === null}
                   className="mt-3 w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
                   {busy ? 'Saving…' : dayCloses.length ? 'Save this recount' : `Close out ${summary.day === summary.today ? 'today' : dayLabel(summary.day)}`}

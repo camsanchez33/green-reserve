@@ -69,13 +69,13 @@ export default function OperatorSearch() {
         <Card role="listbox" aria-label="Search results" className="absolute inset-x-0 top-full mt-1 z-50 py-1 text-[13px] max-h-[60vh] overflow-y-auto">
           {error ? <p role="alert" className="px-3 py-2.5 text-bad">{error}</p>
             : results === null ? <p className="px-3 py-2.5 text-ink-muted">{busy ? 'Searching…' : 'Keep typing…'}</p>
-            : results.length === 0 ? <p className="px-3 py-2.5 text-ink-muted">Nobody matches “{q.trim()}” in the last 60 days or your members.</p>
+            : results.length === 0 ? <p className="px-3 py-2.5 text-ink-muted">No match for “{q.trim()}” in 60 days.</p>
             : results.map(r => (
               <button key={r.kind + r.id} type="button" role="option" aria-selected="false" onClick={() => go(r.href)}
                 className="w-full text-left px-3 py-2 hover:bg-paper flex flex-col">
                 <span className="truncate text-ink">{r.name}</span>
                 <span className="text-[12px] text-ink-muted truncate">
-                  {r.kind === 'booking' ? `${fmtDate(r.date)} ${fmtTime(r.time)} · ${r.players} player${r.players === 1 ? '' : 's'}` : `Member · ${r.tier}`}
+                  {r.kind === 'booking' ? `${fmtDate(r.date)} ${fmtTime(r.time)} · ${r.players} player${r.players === 1 ? '' : 's'}${r.status === 'cancelled' ? ' · cancelled' : r.noShow ? ' · no-show' : ''}` : r.kind === 'member' ? `Member · ${r.tier}` : 'Resident'}
                 </span>
               </button>
             ))}

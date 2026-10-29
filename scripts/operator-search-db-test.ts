@@ -4,7 +4,7 @@
 // Needs a database. Run: npx tsx scripts/operator-search-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { operatorSearch } from '../src/lib/operator-search';
+import { operatorSearch, bySearchOrder } from '../src/lib/operator-search';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 
 const TAG = 'opsearchdbtest';
@@ -53,8 +53,11 @@ async function main() {
   check('…but not without contact permission', (await operatorSearch(a.id, 'zq@example', { contact: false, members: false })).length === 0);
   check('phone digits match only with contact permission', (await operatorSearch(a.id, '8675309', { contact: true, members: false })).length === 1 && (await operatorSearch(a.id, '8675309', { contact: false, members: false })).length === 0);
   check('members stay hidden without members.view', !(await operatorSearch(a.id, 'quarterm', { contact: true, members: false })).some(r => r.kind === 'member'));
-  check('cancelled bookings are left out (the sheet would not show them)', (await operatorSearch(a.id, 'Quinn', { contact: true, members: false })).length === 0);
-  check('…also by phone', (await operatorSearch(a.id, '1112222', { contact: true, members: false })).length === 0);
+  // Revamp 3 dead end 18 (Cam 2026-10-29): cancelled groups are found too — they open Money → Cancellations.
+  const quinn = await operatorSearch(a.id, 'Quinn', { contact: true, members: false });
+  check('a cancelled booking is found, and opens Cancellations', quinn.length === 1 && quinn[0].kind === 'booking' && quinn[0].status === 'cancelled' && quinn[0].href.startsWith('/dashboard/money?tab=cancellations'), quinn);
+  check('…also by phone', (await operatorSearch(a.id, '1112222', { contact: true, members: false })).length === 1);
+  check('today first, then still to come, then the past', bySearchOrder([{ date: '2026-10-20', time: '08:00' }, { date: '2026-11-05', time: '09:00' }, { date: '2026-10-29', time: '15:00' }, { date: '2026-10-30', time: '07:00' }, { date: '2026-10-25', time: '10:00' }], '2026-10-29').map(r => r.date).join() === '2026-10-29,2026-10-30,2026-11-05,2026-10-25,2026-10-20');
   check('inactive members are left out (Members opens on active)', !(await operatorSearch(a.id, 'Quinn', { contact: true, members: true })).some(r => r.kind === 'member'));
   const sheet = readFileSync('src/app/dashboard/page.tsx', 'utf8');
   check('the tee sheet starts on a ?date= day and the course-clock re-seed leaves it', /useState\(urlDate \?\? todayFallback\(\)\)/.test(sheet) && /if \(!urlDateRef\.current\) setSelectedDate/.test(sheet));
