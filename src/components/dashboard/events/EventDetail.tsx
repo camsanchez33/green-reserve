@@ -3,6 +3,7 @@
 // and its players with their groups. Every write shows its pending state and
 // then the result or the server's reason (dfetch never throws).
 import { useState } from 'react';
+import { shotgunLabels, groupStartTime } from '@/lib/course-events';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
@@ -60,7 +61,8 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   // Cam 2026-10-24: the organizer pays the course → no per-player payments here.
   const playersPay = e.payer !== 'organizer';
   const [linkCopied, setLinkCopied] = useState(false);
-  const [paidHere, setPaidHere] = useState<{ id: string; amount: string; method: string } | null>(null);
+  // team: a captain paying for their whole sign-up (Revamp 3 fix 10).
+  const [paidHere, setPaidHere] = useState<{ id: string; amount: string; method: string; team?: boolean } | null>(null);
   const [copied, setCopied] = useState('');
   // W2-9d: only players on the list are paired, counted and asked to pay; a sign-up group's one payment covers each of them.
   const onList = e.entrants.filter(p => p.status === 'in');
@@ -106,9 +108,13 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const sortedGroups = [...groups.entries()].sort((a, b) => a[0] - b[0]);
   const ungrouped = onList.filter(p => p.groupNo == null);
   const heldTimes = [...new Set(held.map(h => h.time))];
-  const startOf = (g: number, hole: number | null) => e.format === 'shotgun'
-    ? `${formatTeeTime(e.startTime)}${hole ? `, hole ${hole}` : ''}`
-    : formatTeeTime(heldTimes[g - 1] ?? e.startTime);
+  // Revamp 3 fix 10: two groups on one hole read 1A / 1B; a group past the times held has none (never another group's).
+  const holeLabel = shotgunLabels(sortedGroups.map(([g, ps]) => ({ groupNo: g, startHole: ps[0]?.startHole ?? null })));
+  const startOf = (g: number, hole: number | null) => {
+    if (e.format === 'shotgun') return `${formatTeeTime(e.startTime)}${hole ? `, hole ${holeLabel.get(g) ?? hole}` : ''}`;
+    const t = groupStartTime(g, heldTimes);
+    return t ? formatTeeTime(t) : 'No tee time held';
+  };
   const kind = KINDS.find(k => k.key === e.kind)?.label ?? 'Event';
   const maxHole = Math.min(e.holes, data.courseHoles);
 
@@ -253,7 +259,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             <label className="text-[13px] text-ink-soft flex items-center gap-2">Groups of
               <select className={INPUT} value={size} onChange={ev => setSize(Number(ev.target.value))}>{[2, 3, 4, 5].map(n => <option key={n}>{n}</option>)}</select>
             </label>
-            <button disabled={!!busy} onClick={() => act('auto', { action: 'pairings_auto', size }, () => 'Players put into groups in list order, with people who signed up together kept together. Change any group or hole below.')} className={SECONDARY}>
+            <button disabled={!!busy} onClick={() => act('auto', { action: 'pairings_auto', size }, () => 'Grouped in list order; sign-ups stay together. Change any group or hole below.')} className={SECONDARY}>
               {busy === 'auto' ? 'Pairing…' : 'Pair in list order'}
             </button>
             {sortedGroups.length > 0 && <>
@@ -328,8 +334,11 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                         // Their card is going through: nothing to do until it lands.
                         if (st === 'paying') return <StatusDot status="warn" label="Paying now" />;
                         const openLink = theirs(p).find(x => x.status === 'open');
+                        // Their sign-up's other players with nothing paid or sent: a captain can pay for all of them.
+                        const team = p.groupKey ? onList.filter(o => o.groupKey === p.groupKey && stateOf(o) === 'none') : [];
                         if (paidHere?.id === p.id) return (
                           <span className="flex flex-wrap items-center gap-1.5">
+                            {!openLink && team.length > 1 && <label className="flex items-center gap-1 text-[12.5px] text-ink-soft"><input type="checkbox" checked={!!paidHere.team} onChange={ev => setPaidHere({ ...paidHere, team: ev.target.checked, amount: price ? (Number(price) * (ev.target.checked ? team.length : 1)).toFixed(2) : paidHere.amount })} />All {team.length}</label>}
                             {/* With a link out, it's that link that gets paid — its amount, not a new one. */}
                             {openLink
                               ? <span className="text-[12.5px] text-ink-soft">Closes their {`$${(openLink.amountCents / 100).toFixed(2)}`} link</span>
@@ -341,7 +350,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                               // A link they were sent is closed first, so they can't pay twice.
                               const ok = openLink
                                 ? await payAct('here' + p.id, { action: 'paid_other', paymentId: openLink.id, method: paidHere.method }, () => `${p.name} marked paid; their link was closed.`)
-                                : await payAct('here' + p.id, { action: 'record', playerId: p.id, amount: paidHere.amount, method: paidHere.method }, () => `${p.name} marked paid.`);
+                                : await payAct('here' + p.id, { action: 'record', playerId: p.id, amount: paidHere.amount, method: paidHere.method, forGroup: !!paidHere.team }, () => paidHere.team ? `${p.name} paid for ${team.length}.` : `${p.name} marked paid.`);
                               if (ok) setPaidHere(null);
                             }} className={SECONDARY}>{busy === 'here' + p.id ? 'Saving…' : 'Save'}</button>
                             <button onClick={() => setPaidHere(null)} className="text-[12.5px] text-ink-soft hover:text-ink">Close</button>

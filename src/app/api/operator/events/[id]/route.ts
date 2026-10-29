@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import {
-  updateEvent, cancelEvent, setGuarantee, guaranteeDue, applyHold, unheldTimes, previewEvent, autoPairings, parsePlayers, isDate, EventError, type EventInput,
+  updateEvent, cancelEvent, setGuarantee, guaranteeDue, applyHold, unheldTimes, previewEvent, autoPairings, parsePlayers, isDate, EventError, shotgunLabels, groupStartTime, type EventInput,
 } from '@/lib/course-events';
 import { sendEventPairingsEmail, isPlaceholderEmail } from '@/lib/email';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
@@ -261,6 +261,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ]);
         const grouped = players.filter(p => p.groupNo != null);
         if (!grouped.length) return bad('Put the players into groups first.');
+        // Revamp 3 fix 10: never email a group a time the event doesn't hold (it may be a public booking's).
+        const timeless = event.format === 'shotgun' ? [] : [...new Set(grouped.map(p => p.groupNo!))].filter(g => !groupStartTime(g, times));
+        if (timeless.length) return bad(`Group ${timeless.join(', ')} ${timeless.length === 1 ? 'has' : 'have'} no tee time held — hold more times or merge groups first.`);
+        const labels = shotgunLabels([...new Map(grouped.map(p => [p.groupNo!, { groupNo: p.groupNo!, startHole: p.startHole }])).values()]);
         const to = grouped.filter(p => p.email && !isPlaceholderEmail(p.email));
         if (!to.length) return bad('None of the grouped players has an email. Print the pairings instead.');
         let sent = 0; const failed: string[] = []; const notSent: string[] = [];
@@ -268,12 +272,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         for (const p of to) {
           if (Date.now() - started > SEND_BUDGET_MS) { notSent.push(p.name); continue; }
           const g2 = p.groupNo!;
-          const start = event.format === 'shotgun' ? event.startTime : (times[g2 - 1] ?? event.startTime);
+          const start = event.format === 'shotgun' ? event.startTime : groupStartTime(g2, times)!;
           try {
             await sendEventPairingsEmail({
               courseId, name: p.name, email: p.email, courseName: course?.name ?? '', coursePhone: course?.phone ?? '', replyTo: g.session.email,
               eventName: event.name, dateLabel: formatTeeDay(event.date), startLabel: formatTeeTime(start),
-              groupNo: g2, startHole: event.format === 'shotgun' ? p.startHole : null,
+              groupNo: g2, startHole: event.format === 'shotgun' && p.startHole != null ? (labels.get(g2) ?? String(p.startHole)) : null,
               groupmates: grouped.filter(o => o.groupNo === g2 && o.id !== p.id).map(o => o.name),
             });
             sent++;

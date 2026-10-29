@@ -66,7 +66,8 @@ async function skuClash(courseId: string, items: ItemIn[], exceptIds: string[] =
   for (const c of codes) { const k = c.toLowerCase(); if (seen.has(k)) return `Code ${c} is used twice — give each item its own.`; seen.add(k); }
   if (!codes.length) return null;
   const taken = await prisma.shopItem.findFirst({
-    where: { courseId, active: true, id: { notIn: exceptIds }, OR: codes.map(c => ({ sku: { equals: c, mode: 'insensitive' as const } })) },
+    // A hidden item's options keep active: true — only codes the register can still scan count.
+    where: { courseId, active: true, id: { notIn: exceptIds }, AND: [{ OR: [{ parentId: null }, { parent: { active: true } }] }], OR: codes.map(c => ({ sku: { equals: c, mode: 'insensitive' as const } })) },
     select: { name: true, sku: true },
   });
   return taken ? `Code ${taken.sku} is already on ${taken.name} — change one of them.` : null;

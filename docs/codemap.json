@@ -5545,7 +5545,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 296,
+      "lines": 300,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10609,7 +10609,7 @@
     },
     {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 374,
+      "lines": 383,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -10646,6 +10646,7 @@
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/components/ui/field",
+        "@/lib/course-events",
         "@/lib/dashboard-fetch",
         "@/lib/format",
         "react"
@@ -15211,7 +15212,7 @@
     },
     {
       "path": "src/lib/course-events.ts",
-      "lines": 378,
+      "lines": 403,
       "purpose": "W2-9 Events (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -15260,6 +15261,10 @@
           "kind": "type"
         },
         {
+          "name": "groupStartTime",
+          "kind": "fn"
+        },
+        {
           "name": "guaranteeDue",
           "kind": "fn"
         },
@@ -15304,6 +15309,10 @@
           "kind": "fn"
         },
         {
+          "name": "shotgunLabels",
+          "kind": "fn"
+        },
+        {
           "name": "shotgunWindow",
           "kind": "fn"
         },
@@ -15334,6 +15343,7 @@
       "usedBy": [
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
+        "src/components/dashboard/events/EventDetail.tsx",
         "src/lib/sample-data.ts"
       ]
     },
@@ -16923,7 +16933,7 @@
     },
     {
       "path": "src/lib/event-payments.ts",
-      "lines": 456,
+      "lines": 466,
       "purpose": "W2-9b (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -21199,7 +21209,7 @@
     },
     {
       "path": "src/lib/shop-catalog.ts",
-      "lines": 162,
+      "lines": 163,
       "purpose": "W2-7 (Cam 2026-10-20):",
       "brain": [],
       "exports": [

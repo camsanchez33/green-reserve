@@ -336,7 +336,32 @@ export async function cancelEvent(courseId: string, id: string) {
   return { released };
 }
 
-/** Pure: put players into groups of `size` in list order, numbering groups from 1. Shotgun groups start on holes 1, 2, … */
+/**
+ * Revamp 3 fix 10 (Cam 2026-10-29): a shotgun with more groups than holes puts two
+ * groups on a hole — they read 1A, 1B (by group number), never two "hole 1"s.
+ * A hole with one group reads just its number.
+ */
+export function shotgunLabels(groups: { groupNo: number; startHole: number | null }[]): Map<number, string> {
+  const byHole = new Map<number, number[]>();
+  for (const g of groups) if (g.startHole != null) byHole.set(g.startHole, [...new Set([...(byHole.get(g.startHole) ?? []), g.groupNo])]);
+  const out = new Map<number, string>();
+  for (const [hole, gs] of byHole) {
+    const sorted = [...gs].sort((a, b) => a - b);
+    sorted.forEach((g, i) => out.set(g, sorted.length > 1 ? `${hole}${String.fromCharCode(65 + Math.min(i, 25))}` : String(hole)));
+  }
+  return out;
+}
+
+/**
+ * Revamp 3 fix 10: a tee-times event's group N starts at the Nth time it holds — or
+ * nowhere, when a booking in the window left it fewer times than groups. Never the
+ * first time again, which may be a public booking's.
+ */
+export function groupStartTime(groupNo: number, heldTimes: string[]): string | null {
+  return heldTimes[groupNo - 1] ?? null;
+}
+
+/** Pure: put players into groups of `size` in list order, numbering groups from 1. Shotgun groups start on holes 1, 2, … (then 1B, 2B, …) */
 export function autoPairings<P extends { id: string; groupKey?: string }>(players: P[], size: number, shotgun: boolean, holes: number): { id: string; groupNo: number; startHole: number | null }[] {
   const n = Math.max(1, Math.min(5, Math.floor(size) || 4));
   // W2-9d: players who signed up together stay together — a sign-up that won't
