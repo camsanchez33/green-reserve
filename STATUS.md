@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-29 13:25 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `57e64d2d` · working tree **8 dirty file(s)**
+Generated 2026-10-29 13:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e02ea5d4` · working tree clean
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 19 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 21 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e02ea5d4` | 2026-10-29 | One code, one shop item; an oversold count says so |
+| `fa151d17` | 2026-10-29 | The booking window turns over at the course's midnight, not UTC's |
 | `57e64d2d` | 2026-10-29 | "Not paid yet" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds |
 | `9bcc13b3` | 2026-10-29 | A cash sale records the total the register showed, or nothing |
 | `6ed720e1` | 2026-10-29 | A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing |
@@ -33,20 +35,6 @@ Generated 2026-10-29 13:25 UTC · branch `claude/walkthrough-2-prioritization-ui
 | `6eced458` | 2026-10-27 | Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240) |
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
-
-### Uncommitted working tree (8 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/booking-window-test.ts`
-- `M src/app/api/bookings/route.ts`
-- `M src/app/api/member/[courseSlug]/tee-times/route.ts`
-- `M src/app/courses/[slug]/CourseBookingClient.tsx`
-- `M src/lib/booking-window.ts`
-- `M src/lib/public-tee-times.ts`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -169,6 +157,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e02ea5d4` 2026-10-29 — One code, one shop item; an oversold count says so
+- `fa151d17` 2026-10-29 — The booking window turns over at the course's midnight, not UTC's
 - `57e64d2d` 2026-10-29 — "Not paid yet" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds
 - `9bcc13b3` 2026-10-29 — A cash sale records the total the register showed, or nothing
 - `6ed720e1` 2026-10-29 — A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing
@@ -179,8 +169,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `59b616cd` 2026-10-29 — Member pricing: the member alone gets the member rate unless the tier includes guests; rates end after the membership does (course grace days); a first dues payment is one term
 - `d0b0c181` 2026-10-28 — Fill a test course with sample data; never email a placeholder address or text a fictional number (#249)
 - `09422b74` 2026-10-28 — Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill
-- `161d3d7f` 2026-10-28 — Fill a test course with sample data; never email a placeholder address or text a fictional number
-- `fa0add63` 2026-10-27 — DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)
 
 ---
 

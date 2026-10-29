@@ -1,24 +1,29 @@
 {
-  "generatedAt": "2026-10-29T13:25:10.893Z",
+  "generatedAt": "2026-10-29T13:30:31.232Z",
   "repo": {
-    "head": "57e64d2d",
+    "head": "e02ea5d4",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 8,
-    "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/booking-window-test.ts",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/member/[courseSlug]/tee-times/route.ts",
-      " M src/app/courses/[slug]/CourseBookingClient.tsx",
-      " M src/lib/booking-window.ts",
-      " M src/lib/public-tee-times.ts"
-    ],
-    "looksLikeRunInProgress": true
+    "dirtyCount": 0,
+    "dirty": [],
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "e02ea5d4",
+        "date": "2026-10-29T13:30:30+00:00",
+        "subject": "One code, one shop item; an oversold count says so",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "fa151d17",
+        "date": "2026-10-29T13:25:13+00:00",
+        "subject": "The booking window turns over at the course's midnight, not UTC's",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "57e64d2d",
         "date": "2026-10-29T13:22:53+00:00",
@@ -549,6 +554,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e02ea5d4",
+      "date": "2026-10-29",
+      "subject": "One code, one shop item; an oversold count says so"
+    },
+    {
+      "h": "fa151d17",
+      "date": "2026-10-29",
+      "subject": "The booking window turns over at the course's midnight, not UTC's"
+    },
+    {
       "h": "57e64d2d",
       "date": "2026-10-29",
       "subject": "\"Not paid yet\" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds"
@@ -597,16 +612,6 @@
       "h": "09422b74",
       "date": "2026-10-28",
       "subject": "Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill"
-    },
-    {
-      "h": "161d3d7f",
-      "date": "2026-10-28",
-      "subject": "Fill a test course with sample data; never email a placeholder address or text a fictional number"
-    },
-    {
-      "h": "fa0add63",
-      "date": "2026-10-27",
-      "subject": "DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)"
     }
   ]
 }
