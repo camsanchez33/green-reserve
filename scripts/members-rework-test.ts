@@ -10,7 +10,7 @@ check('the strip on top: active, not renewed, not linked, member rounds this yea
 check('the table: renews, member since, rounds and spend this year (spend only with payments)', p.includes("th('renews', 'Renews'") && p.includes("th('since', 'Member since'") && p.includes("th('rounds', 'Rounds this year'") && p.includes("seesSpend && th('spend'") && readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes("can(session, 'money.payments')"));
 check('the Not renewed number and its filter show the same members', p.includes("duesOf(m, now).kind === 'expired').length") && p.includes("!notRenewedOnly || duesOf(m, now).kind === 'expired'") && p.includes('setNotRenewedOnly(true)'));
 check('search, membership, status and unpaid filters', p.includes('placeholder="Find a member"') && p.includes('/>Dues unpaid</label>') && p.includes('Every membership'));
-check('dues status uses the same overdue rule as Remind (unpaid, or expired and not comped)', p.includes("m.paymentStatus === 'comped'") && p.includes("m.paymentStatus === 'unpaid'") && p.includes('new Date(m.expiresAt) < now'));
+check('dues status uses the same overdue rule as Remind (unpaid, or expired and not comped)', p.includes("m.paymentStatus === 'comped'") && p.includes("m.paymentStatus === 'unpaid'") && p.includes("m.expiresAt.slice(0, 10) < now.toLocaleDateString('en-CA')"));
 check('edit actions only for members.edit', p.includes("const canEdit = pageAccess.can('members.edit');") && p.includes('{canEdit && ('));
 check('the 1% dues fee is stated plainly', p.includes('a 1% fee is added to what they pay'));
 check('no decorative icons in rows', !p.includes('UserCheck') && !p.includes('Trash2'));

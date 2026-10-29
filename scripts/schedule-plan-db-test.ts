@@ -39,7 +39,10 @@ async function cleanup() {
   rows = await saveSchedulePlan(c.id, { replaces: ids, daysOfWeek: [0,1,2,3,4,5,6], intervalMinutes: 10, holes: 18, periods: [P('Morning', '07:00', '16:00', 70, morning.id), P('Late', '16:00', '17:00', 35)] });
   ok('still two rows, morning kept its id', rows!.length === 2 && rows!.some((r: any) => r.id === morning.id));
   tts = await prisma.teeTime.findMany({ where: { courseId: c.id, date: today } });
-  ok('15:30 booked kept old price', tts.find(t => t.time === '15:30')?.greenFeeCents === fee(40));
+  // Revamp 3 fix 5 (Cam 2026-10-29): a booked time still to come takes the new price for its open
+  // spots (the booking keeps its own); one already gone keeps the price it was posted at.
+  const t1530Gone = new Date().toISOString().slice(11, 16) >= '15:30';
+  ok('15:30 booked: open spots repriced if still to come, kept if gone', tts.find(t => t.time === '15:30')?.greenFeeCents === (t1530Gone ? fee(40) : fee(70)));
   ok('15:40 now morning $70, 16:00 late $35', tts.find(t => t.time === '15:40')?.greenFeeCents === fee(70) && tts.find(t => t.time === '16:00')?.greenFeeCents === fee(35));
   const ids2 = rows!.map((r: any) => r.id);
   rows = await saveSchedulePlan(c.id, { replaces: ids2, daysOfWeek: [0,1,2,3,4,5,6], intervalMinutes: 10, holes: 18, active: false, periods: [P('Morning', '07:00', '16:00', 70, ids2[0]), P('Late', '16:00', '17:00', 35, ids2[1])].map((p, i) => ({ ...p, id: rows![i].id, tierName: (rows![i] as any).tierName, startTime: (rows![i] as any).startTime, endTime: (rows![i] as any).endTime })) });
