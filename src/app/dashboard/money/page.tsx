@@ -244,7 +244,7 @@ function MoneyPageInner() {
           ) : active === 'payments' ? (
             <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} courseNow={overview ? { today: overview.today, clock: overview.clock } : undefined} capped={!dateFilter && (played?.length ?? 0) >= 1000} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
           ) : active === 'cancellations' ? (
-            <CancellationsPanel bookings={bookings} course={course} initialQuery={active === 'cancellations' ? searchParams.get('q') ?? '' : ''}/>
+            <CancellationsPanel key={searchParams.get('q') ?? ''} bookings={bookings} course={course} initialQuery={active === 'cancellations' ? searchParams.get('q') ?? '' : ''}/>
           ) : (
             <PayoutsPanel course={course} stripeParam={stripeParam} onConnected={loadCourse} canConnect={!treatAsStaff}/>
           )}

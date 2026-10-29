@@ -25,6 +25,8 @@ ok('21: Paid at the shop and Email dues link on members who owe', members.includ
 ok('21: a member can be edited after adding — an invite\'s contact, never a linked account\'s', members.includes('Edit details') && route.includes('if (membership.golferId) return NextResponse.json({ error: \'This member signs in with their own account'));
 ok('21: a bad "runs until" date is refused, not a 500', route.includes("Pick the date it runs until, or leave it blank."));
 
+ok('21: the dues link never reports a send that did not happen (no Stripe, no email, nothing owed)', route.includes("if (sent !== 'sent') return NextResponse.json({ error: NOT_SENT[sent] }, { status: 409 });") && route.includes("return 'no_stripe';"));
+
 // 24. Close-out.
 const close = src('src/components/dashboard/RegisterClose.tsx');
 ok('24: a blind count — figures show only once the day is counted', close.includes('const revealed = !!summary && (dayCloses.length > 0 || saved?.day === summary.day)') && close.includes('{revealed && ('));
@@ -35,6 +37,7 @@ const nav = src('src/components/OperatorSidebar.tsx');
 ok('26: the phone bar has More for every page not on it', nav.includes('const moreItems = navItems.filter(n => !mobileKeys.includes(n.key) && !n.soon && visible(n.key))') && nav.includes('id="op-more"'));
 
 // 13. Cancellations reads cancelled bookings only.
+ok('13: a search result opens Cancellations filtered even when already on it', src('src/app/dashboard/money/page.tsx').includes("<CancellationsPanel key={searchParams.get('q') ?? ''}"));
 ok('13: Cancellations reads only cancelled bookings, and can be searched', src('src/app/dashboard/money/page.tsx').includes("/api/operator/bookings?status=cancelled") && src('src/components/dashboard/money/CancellationsPanel.tsx').includes('placeholder="Find a golfer"'));
 
 if (failed) { console.error(`\n${failed} FAILED`); process.exit(1); }

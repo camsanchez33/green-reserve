@@ -9,21 +9,24 @@ import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaymentLinkEmail } from '@/lib/email';
 
-/** Send the dues payment link if the tier actually costs money and Stripe is connected. */
-async function maybeSendPayLink(membershipId: string, isRenewal = false) {
+/**
+ * Send the dues payment link if the tier actually costs money and Stripe is connected.
+ * Says why when it didn't (dead end 21: the staff button must never report a send that didn't happen).
+ */
+async function maybeSendPayLink(membershipId: string, isRenewal = false): Promise<'sent' | 'no_tier' | 'no_email' | 'nothing_owed' | 'no_stripe'> {
   const m = await prisma.courseMembership.findUnique({
     where: { id: membershipId },
     include: { tier: true, course: { select: { name: true, stripeAccountActive: true } }, golfer: { select: { email: true, firstName: true, lastName: true } } },
   });
-  if (!m || !m.tier) return;
+  if (!m || !m.tier) return 'no_tier';
   // The account's email wins over the invite address (a self-joined member has no invite address).
   const to = m.golfer?.email || m.inviteEmail;
-  if (!to) return;
+  if (!to) return 'no_email';
   // MP-3 B2a: compare in cents, convert to dollars only for the email, which
   // renders $${annualFee.toFixed(2)}.
   const initiationCents = m.lastPaidAt || m.initiationWaived ? 0 : m.tier.initiationFeeCents;
-  if (m.tier.annualFeeCents + initiationCents <= 0) return;
-  if (!m.course.stripeAccountActive) return;
+  if (m.tier.annualFeeCents + initiationCents <= 0) return 'nothing_owed';
+  if (!m.course.stripeAccountActive) return 'no_stripe';
   await sendMembershipPaymentLinkEmail({
     name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '),
     email: to,
@@ -34,7 +37,15 @@ async function maybeSendPayLink(membershipId: string, isRenewal = false) {
     payLink: `${process.env.NEXT_PUBLIC_URL}/membership/${m.id}?token=${m.payToken}`,
     isRenewal,
   });
+  return 'sent';
 }
+
+const NOT_SENT: Record<Exclude<Awaited<ReturnType<typeof maybeSendPayLink>>, 'sent'>, string> = {
+  no_tier: 'Put them on a membership first — the link is for its dues.',
+  no_email: 'They have no email on file — add one with Edit details.',
+  nothing_owed: 'Their membership costs nothing, so there is no link to send.',
+  no_stripe: 'Connect Stripe first — the link takes a payment, and there is nowhere for the money to go yet.',
+};
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -236,12 +247,14 @@ export async function PATCH(req: NextRequest) {
   }
   if (action === 'send_pay_link') {
     const isRenewal = !!membership.lastPaidAt;
+    let sent: Awaited<ReturnType<typeof maybeSendPayLink>>;
     try {
-      await maybeSendPayLink(id, isRenewal);
+      sent = await maybeSendPayLink(id, isRenewal);
     } catch (err) {
       console.error('Pay link email error:', err);
       return NextResponse.json({ error: 'Could not send the payment email.' }, { status: 500 });
     }
+    if (sent !== 'sent') return NextResponse.json({ error: NOT_SENT[sent] }, { status: 409 });
     return NextResponse.json({ success: true });
   }
 

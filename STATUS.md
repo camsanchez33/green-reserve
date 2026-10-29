@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-29 20:00 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7fec759a` · working tree **21 dirty file(s)**
+Generated 2026-10-29 20:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `06b64277` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 27 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 28 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `06b64277` | 2026-10-29 | Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations |
 | `0dfd8bdf` | 2026-10-29 | Revamp 3: the 12 audit fixes (#250) |
 | `92b9bfa6` | 2026-10-29 | Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused |
 | `9e689d2b` | 2026-10-29 | Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked |
@@ -42,28 +43,13 @@ Generated 2026-10-29 20:00 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (21 file(s))
+### Uncommitted working tree (5 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/operator-home-db-test.ts`
-- `M scripts/operator-search-db-test.ts`
-- `M scripts/register-close-db-test.ts`
-- `M scripts/words-guard.baseline.json`
+- `M scripts/dead-ends-a-test.ts`
 - `M src/app/api/operator/members/route.ts`
-- `M src/app/api/operator/money/overview/route.ts`
-- `M src/app/dashboard/home/page.tsx`
-- `M src/app/dashboard/members/page.tsx`
 - `M src/app/dashboard/money/page.tsx`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/OperatorSidebar.tsx`
-- `M src/components/dashboard/OperatorSearch.tsx`
-- `M src/components/dashboard/RegisterClose.tsx`
-- `M src/components/dashboard/money/CancellationsPanel.tsx`
-- `M src/lib/operator-home.ts`
-- `M src/lib/operator-search.ts`
-- `M src/lib/register-close.ts`
-- `?? scripts/dead-ends-a-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -189,6 +175,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `06b64277` 2026-10-29 — Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations
 - `0dfd8bdf` 2026-10-29 — Revamp 3: the 12 audit fixes (#250)
 - `92b9bfa6` 2026-10-29 — Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused
 - `9e689d2b` 2026-10-29 — Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked
@@ -200,7 +187,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `57e64d2d` 2026-10-29 — "Not paid yet" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds
 - `9bcc13b3` 2026-10-29 — A cash sale records the total the register showed, or nothing
 - `6ed720e1` 2026-10-29 — A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing
-- `af4b9fc3` 2026-10-29 — Cash at the register is never blocked by sales tax
 
 ---
 
