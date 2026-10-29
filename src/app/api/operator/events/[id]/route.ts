@@ -264,7 +264,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         // Revamp 3 fix 10: never email a group a time the event doesn't hold (it may be a public booking's).
         const timeless = event.format === 'shotgun' ? [] : [...new Set(grouped.map(p => p.groupNo!))].filter(g => !groupStartTime(g, times));
         if (timeless.length) return bad(`Group ${timeless.join(', ')} ${timeless.length === 1 ? 'has' : 'have'} no tee time held — hold more times or merge groups first.`);
-        const labels = shotgunLabels([...new Map(grouped.map(p => [p.groupNo!, { groupNo: p.groupNo!, startHole: p.startHole }])).values()]);
+        // A group's hole is its first player's, as the sheet shows it.
+        const firstOf = new Map<number, { groupNo: number; startHole: number | null }>();
+        for (const p of grouped) if (!firstOf.has(p.groupNo!)) firstOf.set(p.groupNo!, { groupNo: p.groupNo!, startHole: p.startHole });
+        const labels = shotgunLabels([...firstOf.values()]);
         const to = grouped.filter(p => p.email && !isPlaceholderEmail(p.email));
         if (!to.length) return bad('None of the grouped players has an email. Print the pairings instead.');
         let sent = 0; const failed: string[] = []; const notSent: string[] = [];
@@ -277,7 +280,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             await sendEventPairingsEmail({
               courseId, name: p.name, email: p.email, courseName: course?.name ?? '', coursePhone: course?.phone ?? '', replyTo: g.session.email,
               eventName: event.name, dateLabel: formatTeeDay(event.date), startLabel: formatTeeTime(start),
-              groupNo: g2, startHole: event.format === 'shotgun' && p.startHole != null ? (labels.get(g2) ?? String(p.startHole)) : null,
+              groupNo: g2, startHole: event.format === 'shotgun' && firstOf.get(g2)?.startHole != null ? (labels.get(g2) ?? null) : null,
               groupmates: grouped.filter(o => o.groupNo === g2 && o.id !== p.id).map(o => o.name),
             });
             sent++;

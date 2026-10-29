@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 578,
+    "files": 579,
     "routes": 269,
-    "libs": 200,
+    "libs": 201,
     "models": 58,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5188,7 +5188,7 @@
     },
     {
       "path": "src/app/api/operator/blackouts/route.ts",
-      "lines": 60,
+      "lines": 42,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5216,10 +5216,9 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
-        "@/lib/course-time",
+        "@/lib/blackouts",
         "@/lib/prisma",
         "@/lib/session",
-        "@/lib/tee-sheet-engine",
         "next/server"
       ],
       "usedBy": []
@@ -5545,7 +5544,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 300,
+      "lines": 303,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8273,7 +8272,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 610,
+      "lines": 624,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -13653,6 +13652,39 @@
       ]
     },
     {
+      "path": "src/lib/blackouts.ts",
+      "lines": 43,
+      "purpose": "Closing a day on the schedule (Blackout) and reopening it.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "bookedOn",
+          "kind": "fn"
+        },
+        {
+          "name": "closeDay",
+          "kind": "fn"
+        },
+        {
+          "name": "reopenDay",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./prisma",
+        "./tee-sheet-engine"
+      ],
+      "usedBy": [
+        "src/app/api/operator/blackouts/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/booking-events.ts",
       "lines": 85,
       "purpose": "",
@@ -15812,7 +15844,6 @@
         "src/app/api/manage/[bookingId]/change-players/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
@@ -15836,6 +15867,7 @@
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/blackouts.ts",
         "src/lib/booking-events.ts",
         "src/lib/booking-window.ts",
         "src/lib/counter-pay.ts",
@@ -19630,6 +19662,7 @@
         "src/lib/birdie/guardrails.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/blackouts.ts",
         "src/lib/booking-events.ts",
         "src/lib/booking-fee.ts",
         "src/lib/booking-residents.ts",
@@ -22025,9 +22058,9 @@
       "usedBy": [
         "src/app/api/admin/inquiries/route.ts",
         "src/app/api/cron/generate-tee-times/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/lib/blackouts.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/sample-data.ts",
@@ -23144,10 +23177,14 @@
         {
           "name": "reason",
           "type": "String"
+        },
+        {
+          "name": "blockedTeeTimeIds",
+          "type": "String[]"
         }
       ],
       "writers": [
-        "src/app/api/operator/blackouts/route.ts",
+        "src/lib/blackouts.ts",
         "src/lib/lifecycle.ts",
         "src/lib/weather-cancel.ts"
       ],
@@ -23156,6 +23193,7 @@
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
         "src/lib/birdie/tools.ts",
+        "src/lib/blackouts.ts",
         "src/lib/course-events.ts",
         "src/lib/data-reset.ts",
         "src/lib/schedule-preview.ts",
@@ -23482,6 +23520,7 @@
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",
         "src/lib/birdie/proposals.ts",
+        "src/lib/blackouts.ts",
         "src/lib/booking-fee.ts",
         "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
@@ -24358,7 +24397,6 @@
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/approve-page/route.ts",
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/courses/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
@@ -24405,6 +24443,7 @@
         "src/lib/approval-state.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/birdie/proposals.ts",
+        "src/lib/blackouts.ts",
         "src/lib/card-reader.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/course-closure.ts",
@@ -27408,8 +27447,8 @@
         }
       ],
       "writers": [
-        "src/app/api/operator/blackouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
+        "src/lib/blackouts.ts",
         "src/lib/course-events.ts",
         "src/lib/data-reset.ts",
         "src/lib/frost-delay.ts",

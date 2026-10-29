@@ -45,8 +45,8 @@ check('open hours, what golfers can book, what it costs, closed days', ["When yo
 check('price names are automatic and the course can rename them', page.includes('Tap a name to rename it') && page.includes('columnNames(d)'));
 const engine = readFileSync('src/lib/tee-sheet-engine.ts', 'utf8');
 check('the generator uses the same desiredSlots as the preview', engine.includes('const desired = desiredSlots(dateStr, schedules, products);'));
-const bo = readFileSync('src/app/api/operator/blackouts/route.ts', 'utf8');
-check('reopening a closed day rebuilds it', bo.includes('await generateTeeTimes(session.courseId, blackout.date)'));
+const bo = readFileSync('src/app/api/operator/blackouts/route.ts', 'utf8') + readFileSync('src/lib/blackouts.ts', 'utf8');
+check('reopening a closed day rebuilds it', bo.includes('await generateTeeTimes(courseId, blackout.date)'));
 const prev = readFileSync('src/app/api/operator/schedule/preview/route.ts', 'utf8');
 check('the preview needs the edit permission and writes nothing', prev.includes("requirePermission(session, 'schedule.edit')") && !/prisma\.\w+\.(create|update|delete)/.test(readFileSync('src/lib/schedule-preview.ts', 'utf8')));
 check('rounds are switched on through setRoundSale (prices every column; tested in course-plan-test)', page.includes('setRoundSale(p, key, patch, defaultCell)'));

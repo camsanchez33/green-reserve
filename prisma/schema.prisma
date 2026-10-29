@@ -686,6 +686,9 @@ model Blackout {
   course   Course @relation(fields: [courseId], references: [id])
   date     String
   reason   String @default("")
+  /// Revamp 3 fix 11 (Cam 2026-10-29): the times this closure blocked in place (they
+  /// held bookings). Reopening unblocks only these — never a time staff blocked by hand.
+  blockedTeeTimeIds String[] @default([])
 }
 
 model TeeTimeAlert {

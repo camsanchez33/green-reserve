@@ -135,7 +135,7 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
   // Revamp 3 fix 10 (Cam 2026-10-29): a captain pays at the course for their whole sign-up.
   // The payment carries the sign-up's groupKey, so it covers every player in it (playerPaymentsWhere).
   const forGroup = !!player && input.forGroup === true && !!player.groupKey;
-  const team = forGroup ? await prisma.courseEventPlayer.findMany({ where: { eventId, groupKey: player!.groupKey }, select: { id: true, name: true, groupKey: true }, orderBy: { sortOrder: 'asc' } }) : [];
+  const team = forGroup ? await prisma.courseEventPlayer.findMany({ where: { eventId, groupKey: player!.groupKey, status: 'in' }, select: { id: true, name: true, groupKey: true }, orderBy: { sortOrder: 'asc' } }) : [];
   const data = {
     eventId, courseId, kind, playerId: player?.id ?? null, ...(forGroup ? { groupKey: player!.groupKey } : {}),
     label: str(input.label, 80) || (player ? (forGroup ? `${player.name} — entry for ${team.length}` : `${player.name} — entry`) : kind === 'deposit' ? 'Deposit' : kind === 'balance' ? 'Balance' : 'Payment'),
