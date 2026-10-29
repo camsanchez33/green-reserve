@@ -490,6 +490,9 @@ model TeeTime {
   greenFeeCents     Int
   memberRateCents   Int?
   residentRateCents Int?
+  /// Revamp 3 dead end 20 (Cam 2026-10-29): senior and junior prices, picked at the counter (online only through a membership).
+  seniorRateCents   Int?
+  juniorRateCents   Int?
   cartFeeCents      Int            @default(0)
   walkingAllowed    Boolean        @default(true)
   tierName          String         @default("standard")
@@ -664,6 +667,11 @@ model TeeTimeSchedule {
   memberRateWeekendCents   Int?
   residentRateWeekdayCents Int?
   residentRateWeekendCents Int?
+  /// Revamp 3 dead end 20: senior and junior prices (counter only).
+  seniorRateWeekdayCents   Int?
+  seniorRateWeekendCents   Int?
+  juniorRateWeekdayCents   Int?
+  juniorRateWeekendCents   Int?
   cartFeeCents             Int            @default(0)
   walkingAllowed           Boolean        @default(true)
   /// CART-1 (Cam 2026-10-24): weekend cart price and walking; null = the same as weekdays.

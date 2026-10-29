@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       lines: Array.isArray(body.lines) ? body.lines : [], discount: body.discount as never, cashTenderedCents: body.cashTenderedCents, expectedItemsCents: body.expectedItemsCents,
       taxCalculationId: typeof body.taxCalculationId === 'string' ? body.taxCalculationId : undefined,
       bookingIds,
-      walkIns: walkIns.map(w => ({ teeTimeId: String(w.teeTimeId ?? ''), golferName: String(w.golferName ?? ''), golferPhone: String(w.golferPhone ?? ''), golferEmail: String(w.golferEmail ?? ''), players: Number(w.players), cartSelected: w.cartSelected === true })),
+      walkIns: walkIns.map(w => ({ teeTimeId: String(w.teeTimeId ?? ''), golferName: String(w.golferName ?? ''), golferPhone: String(w.golferPhone ?? ''), golferEmail: String(w.golferEmail ?? ''), players: Number(w.players), cartSelected: w.cartSelected === true, rate: typeof w.rate === 'string' ? w.rate : undefined })),
       soldBy: g.session.email, actor: { type: 'staff', id: g.session.staffId ?? g.session.operatorId },
       customerName: body.customerName as string, customerPhone: body.customerPhone as string, customerEmail: body.customerEmail as string,
     });

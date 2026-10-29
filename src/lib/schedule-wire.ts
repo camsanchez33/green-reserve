@@ -19,6 +19,10 @@ const SCHEDULE_MONEY = {
   memberRateWeekend:   'memberRateWeekendCents',
   residentRateWeekday: 'residentRateWeekdayCents',
   residentRateWeekend: 'residentRateWeekendCents',
+  seniorRateWeekday:   'seniorRateWeekdayCents',
+  seniorRateWeekend:   'seniorRateWeekendCents',
+  juniorRateWeekday:   'juniorRateWeekdayCents',
+  juniorRateWeekend:   'juniorRateWeekendCents',
   cartFee:             'cartFeeCents',
   cartFeeWeekend:      'cartFeeWeekendCents',
 } as const;
@@ -54,6 +58,8 @@ const TEETIME_MONEY = {
   greenFee:     'greenFeeCents',
   memberRate:   'memberRateCents',
   residentRate: 'residentRateCents',
+  seniorRate:   'seniorRateCents',
+  juniorRate:   'juniorRateCents',
   cartFee:      'cartFeeCents',
 } as const;
 
@@ -89,5 +95,9 @@ export function scheduleMoneyForCreate(body: Record<string, unknown>) {
     memberRateWeekendCents:   o(body.memberRateWeekend),
     residentRateWeekdayCents: o(body.residentRateWeekday),
     residentRateWeekendCents: o(body.residentRateWeekend),
+    seniorRateWeekdayCents:   o(body.seniorRateWeekday),
+    seniorRateWeekendCents:   o(body.seniorRateWeekend),
+    juniorRateWeekdayCents:   o(body.juniorRateWeekday),
+    juniorRateWeekendCents:   o(body.juniorRateWeekend),
   };
 }

@@ -321,6 +321,7 @@ export async function POST(req: NextRequest) {
   const made = await createCounterBooking(session.courseId, {
     teeTimeId: String(body.teeTimeId ?? ''), golferName, golferEmail, golferPhone: String(body.golferPhone ?? ''),
     players, cartSelected: body.cartSelected === true, source: body.source === 'phone' ? 'phone' : 'walk_in', late: body.late === true,
+    rate: typeof body.rate === 'string' ? body.rate : undefined,
   }, { type: 'staff', id: session.staffId ?? session.operatorId });
   if (!made.ok) return NextResponse.json({ error: made.error }, { status: made.status });
   // CASH-1: "paying cash now" — the booking is made, then its round is rung up in cash.

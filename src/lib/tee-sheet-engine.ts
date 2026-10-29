@@ -60,6 +60,7 @@ export type ScheduleForSlots = {
   greenFeeWeekdayCents: number; greenFeeWeekendCents: number;
   memberRateWeekdayCents: number | null; memberRateWeekendCents: number | null;
   residentRateWeekdayCents: number | null; residentRateWeekendCents: number | null;
+  seniorRateWeekdayCents?: number | null; seniorRateWeekendCents?: number | null; juniorRateWeekdayCents?: number | null; juniorRateWeekendCents?: number | null;
   cartFeeCents: number; walkingAllowed: boolean; tierName: string; active?: boolean;
   /** CART-1: weekend cart price and walking; null/absent = the weekday values. */
   cartFeeWeekendCents?: number | null; walkingWeekend?: boolean | null;
@@ -67,6 +68,7 @@ export type ScheduleForSlots = {
 export type DesiredSlot = {
   productId: string | null; time: string;
   holes: number; greenFeeCents: number; memberRateCents: number | null; residentRateCents: number | null;
+  seniorRateCents: number | null; juniorRateCents: number | null;
   cartFeeCents: number; walkingAllowed: boolean; tierName: string;
 };
 export const slotKey = (productId: string | null, time: string) => `${productId ?? ''}|${time}`;
@@ -134,6 +136,8 @@ export function desiredSlots(dateStr: string, schedules: ScheduleForSlots[], pro
         greenFeeCents,
         memberRateCents: memberRateCents ?? null,
         residentRateCents: residentRateCents ?? null,
+        seniorRateCents: (isWeekend ? schedule.seniorRateWeekendCents : schedule.seniorRateWeekdayCents) ?? null,
+        juniorRateCents: (isWeekend ? schedule.juniorRateWeekendCents : schedule.juniorRateWeekdayCents) ?? null,
         cartFeeCents: isWeekend ? schedule.cartFeeWeekendCents ?? schedule.cartFeeCents : schedule.cartFeeCents,
         walkingAllowed: isWeekend ? schedule.walkingWeekend ?? schedule.walkingAllowed : schedule.walkingAllowed,
         tierName: schedule.tierName,
@@ -200,10 +204,12 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
       const at = teeTimeInstant(tz, dateStr, existingSlot.time);
       const changed = existingSlot.greenFeeCents !== slot.greenFeeCents || existingSlot.memberRateCents !== slot.memberRateCents
         || existingSlot.residentRateCents !== slot.residentRateCents || existingSlot.cartFeeCents !== slot.cartFeeCents
+        || existingSlot.seniorRateCents !== slot.seniorRateCents || existingSlot.juniorRateCents !== slot.juniorRateCents
         || existingSlot.walkingAllowed !== slot.walkingAllowed;
       if (changed && at && at.getTime() > nowMs) {
         await prisma.teeTime.update({ where: { id: existingSlot.id }, data: {
           greenFeeCents: slot.greenFeeCents, memberRateCents: slot.memberRateCents, residentRateCents: slot.residentRateCents,
+          seniorRateCents: slot.seniorRateCents, juniorRateCents: slot.juniorRateCents,
           cartFeeCents: slot.cartFeeCents, walkingAllowed: slot.walkingAllowed,
         } });
       }
@@ -212,6 +218,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
     const event = heldBy(events, slot.productId, slot.time, ninesOf(slot.productId));
     const fields = {
       holes: slot.holes, greenFeeCents: slot.greenFeeCents, memberRateCents: slot.memberRateCents, residentRateCents: slot.residentRateCents,
+      seniorRateCents: slot.seniorRateCents, juniorRateCents: slot.juniorRateCents,
       cartFeeCents: slot.cartFeeCents, walkingAllowed: slot.walkingAllowed, tierName: slot.tierName,
       status: event ? 'blocked' : 'available', eventId: event?.id ?? null,
     };

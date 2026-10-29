@@ -41,8 +41,8 @@ type ReaderSale = { sale: Sale; readerId: string; state: 'waiting' | 'declined' 
 type Custom = { key: string; name: string; priceCents: number; quantity: number };
 // POS-3 R2: green fees at the register — today's groups that owe, and walk-ins.
 type Owing = { bookingId: string; time: string; holes: number; golferName: string; players: number; dueCents: number; cardCents: number; noShow: boolean };
-type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean };
-type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number };
+type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean; rates?: Record<'resident' | 'senior' | 'junior', number | null> };
+type WalkIn = { key: string; teeTimeId: string; time: string; golferName: string; players: number; cart: boolean; estimateCents: number; rate: string };
 type Discount = { mode: 'percent' | 'amount'; value: string; note: string };
 type Quote = { key: string; subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable?: boolean };
 
@@ -109,7 +109,9 @@ export default function ShopPage() {
   const [roundsError, setRoundsError] = useState('');
   const [picked, setPicked] = useState<string[]>([]);
   const [walkIns, setWalkIns] = useState<WalkIn[]>([]);
-  const [walkForm, setWalkForm] = useState<{ teeTimeId: string; name: string; players: number; cart: boolean } | null>(null);
+  const [walkForm, setWalkForm] = useState<{ teeTimeId: string; name: string; players: number; cart: boolean; rate?: string } | null>(null);
+  // Dead end 20: a walk-in at the time's resident, senior or junior price (members are booked on the tee sheet).
+  const walkGreen = (t: OpenTime, rate?: string) => (rate && rate !== 'standard' ? t.rates?.[rate as 'resident' | 'senior' | 'junior'] ?? t.greenFeeCents : t.greenFeeCents);
   const [quoteError, setQuoteError] = useState('');
   const [quoteTry, setQuoteTry] = useState(0);
 
@@ -198,7 +200,7 @@ export default function ShopPage() {
       body: JSON.stringify({
         lines: salePayload, discount: itemsEmpty ? undefined : discountPayload,
         bookingIds: pickedRounds.map(o => o.bookingId),
-        walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart })),
+        walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart, rate: w.rate })),
         pay: pay === 'cash' || pay === 'reader' ? pay : 'link', via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
         cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
         // The total on screen: if the tax has changed since, nothing is rung up and the new total shows.
@@ -447,7 +449,7 @@ export default function ShopPage() {
                                 e.preventDefault();
                                 if (!walkTime || walkForm.name.trim().length < 2) { setError('Pick a time and enter the golfer’s name.'); return; }
                                 const cart = walkForm.cart || !walkTime.walkingAllowed;
-                                setWalkIns(ws => [...ws, { key: `w${Date.now()}`, teeTimeId: walkTime.teeTimeId, time: walkTime.time, golferName: walkForm.name.trim(), players: walkForm.players, cart, estimateCents: (walkTime.greenFeeCents + (cart ? walkTime.cartFeeCents : 0)) * walkForm.players }]);
+                                setWalkIns(ws => [...ws, { key: `w${Date.now()}`, teeTimeId: walkTime.teeTimeId, time: walkTime.time, golferName: walkForm.name.trim(), players: walkForm.players, cart, estimateCents: (walkGreen(walkTime, walkForm.rate) + (cart ? walkTime.cartFeeCents : 0)) * walkForm.players, rate: walkForm.rate ?? 'standard' }]);
                                 setWalkForm(null); setError('');
                               }}>
                                 <div className="flex flex-wrap gap-2">
@@ -463,7 +465,13 @@ export default function ShopPage() {
                                     Cart ({usd(walkTime.cartFeeCents)} / player){!walkTime.walkingAllowed ? ' — required on this time' : ''}
                                   </label>
                                 )}
-                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkTime.greenFeeCents + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)} at the standard rate, checked in when you take the cash.</p>}
+                                {walkTime && (['resident', 'senior', 'junior'] as const).some(k => walkTime.rates?.[k] != null) && (
+                                  <select value={walkForm.rate ?? 'standard'} onChange={e => setWalkForm({ ...walkForm, rate: e.target.value })} aria-label="Rate" className={INPUT}>
+                                    <option value="standard">Standard</option>
+                                    {(['resident', 'senior', 'junior'] as const).filter(k => walkTime.rates?.[k] != null).map(k => <option key={k} value={k}>{k[0].toUpperCase() + k.slice(1)}</option>)}
+                                  </select>
+                                )}
+                                {walkTime && <p className="text-[12.5px] text-ink-muted tabular-nums">{usd((walkGreen(walkTime, walkForm.rate) + ((walkForm.cart || !walkTime.walkingAllowed) ? walkTime.cartFeeCents : 0)) * walkForm.players)}, checked in when you take the cash.</p>}
                                 <div className="flex gap-2">
                                   <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add to the sale</button>
                                   <button type="button" onClick={() => setWalkForm(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Cancel</button>

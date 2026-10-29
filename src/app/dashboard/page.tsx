@@ -42,6 +42,8 @@ type TeeTime = {
   greenFee: number; cartFee: number; walkingAllowed: boolean;
   /** RES-1: the tee time's resident price (cents); null = none. */
   residentRateCents?: number | null;
+  /** Dead end 20: senior and junior prices (cents), picked at the counter. */
+  seniorRateCents?: number | null; juniorRateCents?: number | null;
   status: string; bookings?: Booking[];
   /** W2-9: the event holding this (blocked) time. */
   event?: { id: string; name: string } | null;
@@ -1434,13 +1436,21 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   const [checkInNow, setCheckInNow] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
+  // Revamp 3 dead end 20: the rate staff pick — the time's standard, resident, senior or junior price, or a membership.
+  const [rate, setRate] = useState('standard');
+  const [tiers, setTiers] = useState<{ id: string; name: string; active: boolean }[]>([]);
+  useEffect(() => { dfetch<{ id: string; name: string; active: boolean }[]>('/api/operator/tiers').then(r => { if (r.ok && Array.isArray(r.data)) setTiers(r.data.filter(t => t.active)); }); }, []);
+  const perCents: Record<string, number | null | undefined> = { resident: slot.residentRateCents, senior: slot.seniorRateCents, junior: slot.juniorRateCents };
+  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ...tiers.map(t => [`tier:${t.id}`, t.name])];
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
-  const total = (slot.greenFee + (cart ? slot.cartFee : 0)) * players;
+  // A membership is priced by the server (its member and guest rules); the rest show here.
+  const green = rate in perCents && perCents[rate] != null ? (perCents[rate] as number) / 100 : slot.greenFee;
+  const total = rate.startsWith('tier:') ? null : (green + (cart ? slot.cartFee : 0)) * players;
 
   async function save() {
     setSaving(true); setErr('');
     const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
-      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
@@ -1480,18 +1490,23 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
           <input type="checkbox" checked={cart} disabled={cartForced} onChange={e => setCart(e.target.checked)} className="accent-pine" />Cart (${slot.cartFee} / player){cartForced ? ' — required on this time' : ''}
         </label>
       )}
+      {rates.length > 1 && (
+        <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Rate</span>
+          <select value={rate} onChange={e => setRate(e.target.value)} className={inp}>{rates.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        </label>
+      )}
       {source === 'walk_in' && (
         <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
           <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Paying cash now — take it and check this group in
         </label>
       )}
-      <div className="text-[12.5px] text-ink-muted">Due: <b className="text-ink">${total.toFixed(2)}</b> — in cash, on the card reader or by pay link from their card on the sheet. No booking fee.</div>
+      <div className="text-[12.5px] text-ink-muted">Due: <b className="text-ink">{total === null ? 'member rate' : `$${total.toFixed(2)}`}</b> — cash, card reader or pay link. No booking fee.</div>
       {err && <p className="text-sm text-bad">{err}</p>}
       <div className="flex gap-2 pt-1">
         <button onClick={onCancel} disabled={saving} className="flex-1 px-4 py-2.5 border border-line text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors">Cancel</button>
         <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0}
           className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors">
-          {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? `Add + take $${total.toFixed(2)} cash` : 'Add booking'}
+          {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? (total === null ? 'Add + take cash' : `Add + take $${total.toFixed(2)} cash`) : 'Add booking'}
         </button>
       </div>
     </div>
