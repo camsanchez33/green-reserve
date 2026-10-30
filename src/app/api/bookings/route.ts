@@ -3,7 +3,7 @@ import { onlineBookingBlock } from '@/lib/golfer-record';
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { groupGreenFee } from '@/lib/residents';
-import { applyPromo, reserveUse, releaseUse } from '@/lib/promo-codes';
+import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoRow } from '@/lib/promo-codes';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
 import { describePolicy, policyFrom, cardAtBooking, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
@@ -162,18 +162,25 @@ export async function POST(req: NextRequest) {
   // rate for one player — themselves. A member rate is never combined with it.
   const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null
     ? await golferResident(teeTimeFull.courseId, teeTimeFull.date) : null;
-  const priced = groupGreenFee(players, greenFeePerPlayerCents, resident ? 1 : 0, teeTimeFull.residentRateCents);
-  const ratedGreenFeeTotal = appliedTier ? splitTotal(players, memberN, greenFeePerPlayerCents, teeTimeFull.greenFeeCents) : priced.greenFeeTotal;
-  if (priced.residentPlayers > 0) appliedRate = 'resident';
-  // PRICE-1 (Cam 2026-10-30): a promo code comes off the green fee. Checked here, before any
-  // card is saved; its use is reserved just before the tee time is claimed.
-  let promo: { id: string; discountCents: number } | null = null;
+  // PRICE-1 (Cam 2026-10-30): a promo code comes off the green fee, SEAT BY SEAT — the member's
+  // spot, the resident and each other player each pay their own rate less the code — so the
+  // per-seat rates kept on the booking add up to its total and keep the discount through a
+  // partial check-in or a party change. Checked here, before any card is saved; its use is
+  // reserved just before the tee time is claimed.
+  let promoRow: PromoRow | null = null;
   if (promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') {
-    const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, players, greenFeeTotalCents: ratedGreenFeeTotal, rateApplied: !!appliedTier || priced.residentPlayers > 0, golferEmail: String(golferEmail) });
+    const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, rateApplied: !!appliedTier || !!resident, golferEmail: String(golferEmail) });
     if (!p.ok) return NextResponse.json({ error: p.error, code: 'promo' }, { status: 400 });
-    promo = { id: p.code.id, discountCents: p.discountCents };
+    promoRow = p.code;
   }
-  const greenFeeTotal = ratedGreenFeeTotal - (promo?.discountCents ?? 0);
+  const seat = (c: number) => (promoRow ? seatAfter(promoRow, c) : c);
+  const ratedGreenFeeTotal = appliedTier ? splitTotal(players, memberN, greenFeePerPlayerCents, teeTimeFull.greenFeeCents)
+    : groupGreenFee(players, greenFeePerPlayerCents, resident ? 1 : 0, teeTimeFull.residentRateCents).greenFeeTotal;
+  const priced = groupGreenFee(players, seat(greenFeePerPlayerCents), resident ? 1 : 0, teeTimeFull.residentRateCents == null ? null : seat(teeTimeFull.residentRateCents));
+  const greenFeeTotal = appliedTier ? splitTotal(players, memberN, seat(greenFeePerPlayerCents), seat(teeTimeFull.greenFeeCents)) : priced.greenFeeTotal;
+  if (priced.residentPlayers > 0) appliedRate = 'resident';
+  const promo = promoRow ? { id: promoRow.id, discountCents: ratedGreenFeeTotal - greenFeeTotal } : null;
+  if (promo && promo.discountCents <= 0) return NextResponse.json({ error: NOTHING_OFF, code: 'promo' }, { status: 400 });
   const cartFeeTotal   = wantsCart ? (appliedTier ? splitTotal(players, memberN, cartFeePerPlayerCents, teeTimeFull.cartFeeCents) : cartFeePerPlayerCents * players) : 0;
 
   let rangeBallsTotal = 0;
@@ -270,7 +277,7 @@ export async function POST(req: NextRequest) {
       residentPlayers:  priced.residentPlayers,
       residentRateCents: priced.residentRateCents,
       // The member's own spot when guests pay the public rate (lib/member-rates partyFees).
-      ...memberSpot(appliedTier, { greenFeeCents: greenFeePerPlayerCents, cartFeeCents: cartFeePerPlayerCents }),
+      ...memberSpot(appliedTier, { greenFeeCents: seat(greenFeePerPlayerCents), cartFeeCents: cartFeePerPlayerCents }),
       cartFeeTotal,
       cartSelected:     wantsCart,
       rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',

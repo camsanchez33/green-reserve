@@ -4,11 +4,14 @@
 // weekdays, a time of day), within its total uses and, when set, once per golfer.
 // A code that doesn't work with rates is refused when a member or resident rate applies.
 //
-// One file: the online booking route and the counter both price through applyPromo(),
-// and a use is reserved atomically (reserveUse) before the booking is made, given back
-// if it isn't. What a code took off is kept on the booking (promoDiscountCents), and
-// greenFeeTotal is already the price after it, so every later charge, refund and party
-// change reads the discounted price.
+// One file: the online booking route, the counter and a repriced move all check a code
+// with applyPromo()/promoFits() and price it SEAT BY SEAT with seatAfter() — the member's
+// spot, each resident and each other player each pay their own rate less the code — so
+// the per-seat rates stored on the booking (memberRateCents, residentRateCents) add up
+// to greenFeeTotal and every later recompute (part of a group checking in, a party-size
+// change, residents set at the counter) keeps the discount. A use is reserved atomically
+// (reserveUse) before the booking is made, given back if it isn't. What a code took off
+// is kept on the booking (promoDiscountCents).
 import { prisma } from './prisma';
 
 export type PromoRow = { id: string; code: string; kind: string; value: number; startsOn: string | null; endsOn: string | null; days: number[]; fromTime: string | null; toTime: string | null; maxUses: number | null; usesCount: number; onePerGolfer: boolean; withRates: boolean; active: boolean };
@@ -17,11 +20,16 @@ const fail = (error: string): Fail => ({ ok: false, error });
 
 export const normCode = (raw: unknown) => String(raw ?? '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 30);
 
-/** Pure: what the code takes off a green fee total for this many players. */
-export function promoDiscount(code: Pick<PromoRow, 'kind' | 'value'>, greenFeeTotalCents: number, players: number): number {
-  if (greenFeeTotalCents <= 0) return 0;
-  const off = code.kind === 'percent' ? Math.round(greenFeeTotalCents * Math.min(100, Math.max(0, code.value)) / 100) : Math.max(0, code.value) * players;
-  return Math.min(greenFeeTotalCents, off);
+/** Pure: one player's green fee after the code — never below $0. */
+export function seatAfter(code: Pick<PromoRow, 'kind' | 'value'>, seatCents: number): number {
+  if (seatCents <= 0) return Math.max(0, seatCents);
+  const off = code.kind === 'percent' ? Math.round(seatCents * Math.min(100, Math.max(0, code.value)) / 100) : Math.max(0, code.value);
+  return Math.max(0, seatCents - off);
+}
+
+/** Pure: what the code takes off a group all paying one rate (a summary; bookings price seat by seat). */
+export function promoDiscount(code: Pick<PromoRow, 'kind' | 'value'>, seatCents: number, players: number): number {
+  return (seatCents - seatAfter(code, seatCents)) * players;
 }
 
 /** Pure: why this code can't be used on this tee time, or null. */
@@ -37,15 +45,15 @@ export function promoFits(code: PromoRow, teeTime: { date: string; time: string 
   if (code.fromTime && t < code.fromTime) return `That code is for tee times from ${code.fromTime}.`;
   if (code.toTime && t >= code.toTime) return `That code is for tee times before ${code.toTime}.`;
   if (code.maxUses != null && code.usesCount >= code.maxUses) return 'That code has been used up.';
-  if (opts.rateApplied && !code.withRates) return 'That code can’t be used with a member or resident rate.';
+  if (opts.rateApplied && !code.withRates) return 'That code can’t be combined with a member, resident, senior or junior rate.';
   return null;
 }
 
 /**
- * Look a code up for a course and check it against a tee time and a golfer. On success,
- * the discount on the green fee total given.
+ * Look a code up for a course and check it against a tee time and a golfer. The caller
+ * prices it seat by seat (seatAfter) and refuses it when it takes nothing off.
  */
-export async function applyPromo(courseId: string, raw: unknown, ctx: { date: string; time: string; players: number; greenFeeTotalCents: number; rateApplied: boolean; golferEmail?: string | null }): Promise<{ ok: true; code: PromoRow; discountCents: number } | Fail> {
+export async function applyPromo(courseId: string, raw: unknown, ctx: { date: string; time: string; rateApplied: boolean; golferEmail?: string | null }): Promise<{ ok: true; code: PromoRow } | Fail> {
   const code = normCode(raw);
   if (!code) return fail('Enter a code.');
   const row = await prisma.promoCode.findUnique({ where: { courseId_code: { courseId, code } } });
@@ -57,9 +65,7 @@ export async function applyPromo(courseId: string, raw: unknown, ctx: { date: st
     const used = await prisma.booking.findFirst({ where: { courseId, promoCodeId: row.id, status: { not: 'cancelled' }, golferEmail: { equals: ctx.golferEmail.trim(), mode: 'insensitive' } }, select: { id: true } });
     if (used) return fail('You’ve already used that code.');
   }
-  const discountCents = promoDiscount(row, ctx.greenFeeTotalCents, ctx.players);
-  if (discountCents <= 0) return fail('That code takes nothing off this tee time.');
-  return { ok: true, code: row, discountCents };
+  return { ok: true, code: row };
 }
 
 /** Take one use, only if one is left. False = the last use went to someone else just now. */
@@ -107,3 +113,5 @@ export async function listPromos(courseId: string) {
   const by = new Map(sums.map(s => [s.promoCodeId, s]));
   return codes.map(c => ({ ...c, createdAt: c.createdAt.toISOString(), updatedAt: c.updatedAt.toISOString(), bookings: by.get(c.id)?._count._all ?? 0, discountedCents: by.get(c.id)?._sum.promoDiscountCents ?? 0 }));
 }
+
+export const NOTHING_OFF = 'That code takes nothing off this tee time.';

@@ -366,8 +366,12 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
   // A code that doesn't work with member or resident rates takes nothing off one (the server says so too).
   const promoBlocked = !!promo && !promo.withRates && (!!memberRate || residentFee != null);
-  const greenCents = Math.round(greenTotal * 100);
-  const promoOff = !promo || promoBlocked ? 0 : Math.min(greenCents, promo.kind === 'percent' ? Math.round(greenCents * promo.value / 100) : promo.value * players) / 100;
+  // Seat by seat, as the server prices it (lib/promo-codes seatAfter): each player's own rate less the code.
+  const seatOff = (d: number) => { const s = c(d); return s - Math.max(0, s - (promo!.kind === 'percent' ? Math.round(s * promo!.value / 100) : promo!.value)); };
+  const promoOff = !promo || promoBlocked ? 0 : (memberRate
+    ? memberN * seatOff(memberRate.greenFee) + (players - memberN) * seatOff(teeTime.green_fee)
+    : residentFee != null ? seatOff(residentFee) + (players - 1) * seatOff(teeTime.green_fee)
+    : players * seatOff(teeTime.green_fee)) / 100;
   const total         = greenTotal - promoOff + cartTotal + rangeBallsTotal + accessTotal;
 
   // SP-B: the course's policy decides whether a card is asked for at all, and
@@ -555,8 +559,9 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   // Cam 2026-10-19: agreeing is a box the golfer ticks, never implied by the
   // button (clickwrap). Nothing books — card form, Apple Pay or no card — until it is.
   const [agreed, setAgreed] = useState(false);
-  const latest = useRef({ name, email, phone, agreed });
-  latest.current = { name, email, phone, agreed };
+  // The wallet button's handler is registered once; it reads the code from here, never a stale render.
+  const latest = useRef({ name, email, phone, agreed, promoCode });
+  latest.current = { name, email, phone, agreed, promoCode };
 
   /** Create the booking. setupIntentId when a card was saved for it. */
   async function book(who: { name: string; email: string; phone: string }, setupIntentId?: string): Promise<boolean> {
@@ -573,7 +578,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         ...(setupIntentId ? { setupIntentId } : {}),
         cartSelected,
         rangeBallsSize,
-        ...(promoCode ? { promoCode } : {}),
+        ...(latest.current.promoCode ? { promoCode: latest.current.promoCode } : {}),
         termsAccepted: latest.current.agreed === true,
       }),
     });

@@ -47,7 +47,8 @@ export async function PATCH(req: NextRequest) {
   // A full edit. The code's text stays as it was (golfers may already have it).
   const r = readPromo({ ...body, code: row.code });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
-  const { code: _c, ...data } = r.data;
+  // On/off is only the toggle's — an edit never turns a code back on.
+  const { code: _c, active: _a, ...data } = r.data;
   await prisma.promoCode.updateMany({ where: { id: row.id, courseId: g.session.courseId }, data });
   return NextResponse.json({ ok: true });
 }

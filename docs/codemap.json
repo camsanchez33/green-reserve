@@ -3698,7 +3698,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 439,
+      "lines": 446,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6276,7 +6276,7 @@
     },
     {
       "path": "src/app/api/operator/promo-codes/route.ts",
-      "lines": 54,
+      "lines": 55,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7557,7 +7557,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 776,
+      "lines": 781,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14339,7 +14339,7 @@
     },
     {
       "path": "src/lib/booking-residents.ts",
-      "lines": 60,
+      "lines": 63,
       "purpose": "RES-1 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -14360,6 +14360,7 @@
       "imports": [
         "./booking-events",
         "./prisma",
+        "./promo-codes",
         "./residents"
       ],
       "usedBy": [
@@ -15519,7 +15520,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 230,
+      "lines": 237,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -19557,7 +19558,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 251,
+      "lines": 263,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -19593,6 +19594,7 @@
         "./course-time",
         "./member-rates",
         "./prisma",
+        "./promo-codes",
         "./residents",
         "./tier-rates",
         "@prisma/client"
@@ -20598,7 +20600,7 @@
     },
     {
       "path": "src/lib/promo-codes.ts",
-      "lines": 110,
+      "lines": 118,
       "purpose": "PRICE-1 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -20613,6 +20615,10 @@
         {
           "name": "normCode",
           "kind": "fn"
+        },
+        {
+          "name": "NOTHING_OFF",
+          "kind": "const"
         },
         {
           "name": "promoDiscount",
@@ -20637,6 +20643,10 @@
         {
           "name": "reserveUse",
           "kind": "fn"
+        },
+        {
+          "name": "seatAfter",
+          "kind": "fn"
         }
       ],
       "route": null,
@@ -20651,7 +20661,9 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/operator/promo-codes/route.ts",
         "src/app/api/promo/check/route.ts",
-        "src/lib/counter-pay.ts"
+        "src/lib/booking-residents.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/move-booking.ts"
       ]
     },
     {

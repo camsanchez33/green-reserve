@@ -706,7 +706,7 @@ function DashboardPageInner() {
           )}
           {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && (
             <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={link}
-              title="Text them a link to pay on their phone (Apple Pay, Google Pay or card)">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
+              title="Text them a link to pay on their phone (Apple Pay, Google Pay or card); the booking fee is collected with the round">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
           )}
           {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && (
             <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={link}
@@ -860,7 +860,7 @@ function DashboardPageInner() {
         )}
         {statusError && (
           <div className="bg-warn/5 border-b border-warn/20 px-6 py-2.5 flex items-center gap-2 text-[13px] text-warn">
-            <span>We couldn&apos;t load your course&apos;s status (live, Stripe, setup). The tee sheet works; the setup reminders may be out of date.</span>
+            <span>We couldn&apos;t load your course&apos;s status (live, Stripe, setup). The tee sheet still works.</span>
             <button onClick={() => { setStatusError(false); loadCourseStatus(); }} className="ml-auto underline font-medium">Retry</button>
           </div>
         )}

@@ -1,35 +1,34 @@
 {
-  "generatedAt": "2026-10-30T16:19:29.195Z",
+  "generatedAt": "2026-10-30T16:28:48.227Z",
   "repo": {
-    "head": "2607a042",
+    "head": "869ce75a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 19,
+    "dirtyCount": 11,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
+      " M scripts/promo-codes-db-test.ts",
       " M src/app/api/bookings/route.ts",
-      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/promo-codes/route.ts",
       " M src/app/book/BookClient.tsx",
       " M src/app/dashboard/page.tsx",
-      " M src/app/dashboard/schedules/page.tsx",
+      " M src/lib/booking-residents.ts",
       " M src/lib/counter-pay.ts",
-      " M src/lib/data-reset.ts",
-      "?? prisma/migrations/20261030050000_promo_codes/",
-      "?? scripts/promo-codes-db-test.ts",
-      "?? src/app/api/operator/promo-codes/",
-      "?? src/app/api/promo/",
-      "?? src/components/dashboard/PromoCodes.tsx",
-      "?? src/lib/promo-codes.ts"
+      " M src/lib/move-booking.ts",
+      " M src/lib/promo-codes.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "869ce75a",
+        "date": "2026-10-30T16:19:31+00:00",
+        "subject": "Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ca86612a",
         "date": "2026-10-30T11:40:56-04:00",
@@ -791,6 +790,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "869ce75a",
+      "date": "2026-10-30",
+      "subject": "Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter"
+    },
+    {
       "h": "ca86612a",
       "date": "2026-10-30",
       "subject": "Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)"
@@ -844,11 +848,6 @@
       "h": "5917aabf",
       "date": "2026-10-30",
       "subject": "Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction"
-    },
-    {
-      "h": "89f0e830",
-      "date": "2026-10-29",
-      "subject": "Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)"
     }
   ]
 }
