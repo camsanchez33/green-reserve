@@ -7,7 +7,8 @@
 //                 + groups marked paid at the counter on the tee sheet that day (paid_offline — since CASH-1
 //                   (2026-10-25) new cash goes through the register, so these are older records;
 //                   not settled through the register — those are already in the register's cash)
-//                 − cash handed back for refunds that day
+//                 + other cash taken that day: membership dues and event payments in cash (LEDGER-2, from MoneyMove)
+//                 − cash handed back for refunds that day (and for those payments)
 //
 // "Paid at the counter" on the tee sheet records no tender (cash, a check, another
 // terminal), so it is its own line on the close-out, never folded silently into
@@ -32,13 +33,15 @@ export type DaySummary = {
   cashSales: { count: number; cents: number; itemsCents: number; roundsCents: number; untaxed: number };
   counterRounds: { count: number; cents: number };
   cashRefunds: { count: number; cents: number };
-  /** Cash taken, before the starting float: sales + counter rounds − refunds. */
+  /** Dues and event payments taken in cash, less their cash refunds (net). */
+  otherCash: { count: number; cents: number };
+  /** Cash taken, before the starting float: sales + counter rounds + other cash − refunds. */
   cashTakenCents: number;
   card: { shopCents: number; roundsCents: number; refundsCents: number; cents: number };
 };
 export type CloseView = {
   id: string; day: string; openingFloatCents: number; expectedCashCents: number; countedCashCents: number; differenceCents: number;
-  cashSalesCents: number; counterRoundsCents: number; cashRefundsCents: number; cardCents: number; note: string; closedBy: string; createdAt: string;
+  cashSalesCents: number; counterRoundsCents: number; cashRefundsCents: number; otherCashCents: number; cardCents: number; note: string; closedBy: string; createdAt: string;
 };
 type CloseRow = Omit<CloseView, 'createdAt'> & { createdAt: Date; courseId: string };
 const closeView = ({ courseId: _c, ...c }: CloseRow): CloseView => ({ ...c, createdAt: c.createdAt.toISOString() });
@@ -63,7 +66,7 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
   if (!cd.ok) return cd;
   const { start, end } = cd.value;
   const inDay = { gte: start, lt: end };
-  const [cashSales, cardSales, refunds, counterAll, cardRounds] = await Promise.all([
+  const [cashSales, cardSales, refunds, counterAll, cardRounds, otherMoves] = await Promise.all([
     prisma.shopSale.findMany({ where: { courseId, status: 'paid_cash', paidAt: inDay }, select: { totalCents: true, roundsCents: true, taxUnavailable: true } }),
     prisma.shopSale.findMany({ where: { courseId, status: 'paid_card', paidAt: inDay }, select: { totalCents: true } }),
     prisma.shopSaleRefund.findMany({ where: { courseId, status: 'done', createdAt: inDay }, select: { amountCents: true, method: true } }),
@@ -76,6 +79,8 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
       where: { courseId, paymentStatus: { in: ['paid', 'refunded'] }, roundPaymentIntentId: { not: '' }, paidAt: inDay },
       select: { roundChargedCents: true, totalAmount: true, accessFeeTotal: true, feePaidCents: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true },
     }),
+    // Cash that never went through the register: dues and event payments.
+    prisma.moneyMove.findMany({ where: { courseId, method: 'cash', what: { in: ['dues', 'event'] }, at: inDay }, select: { direction: true, amountCents: true } }),
   ]);
   // Rounds the register rang up are already in its cash sales.
   const viaRegister = counterAll.length
@@ -89,6 +94,7 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
     // A partial party paid for those who showed, as the counter charged it.
     counterRounds: { count: counter.length, cents: sum(counter.map(b => counterDueCents(b, b.checkedInPlayers ?? undefined))) },
     cashRefunds: { count: cashRefunds.length, cents: sum(cashRefunds.map(r => r.amountCents)) },
+    otherCash: { count: otherMoves.length, cents: sum(otherMoves.map(m => (m.direction === 'out' ? -1 : 1) * m.amountCents)) },
   };
   const shopCard = sum(cardSales.map(x => x.totalCents));
   const roundsCard = sum(cardRounds.map(b => b.roundChargedCents ?? roundChargeCents(b)));
@@ -97,7 +103,7 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
     ok: true,
     value: {
       day: cd.value.day, today: cd.value.today, ...s,
-      cashTakenCents: s.cashSales.cents + s.counterRounds.cents - s.cashRefunds.cents,
+      cashTakenCents: s.cashSales.cents + s.counterRounds.cents + s.otherCash.cents - s.cashRefunds.cents,
       card: { shopCents: shopCard, roundsCents: roundsCard, refundsCents: cardRefunds, cents: shopCard + roundsCard - cardRefunds },
     },
   };
@@ -120,7 +126,7 @@ export async function closeDay(courseId: string, input: { day?: unknown; opening
   const row = await prisma.registerClose.create({
     data: {
       courseId, day: s.value.day, openingFloatCents: float,
-      cashSalesCents: s.value.cashSales.cents, counterRoundsCents: s.value.counterRounds.cents, cashRefundsCents: s.value.cashRefunds.cents,
+      cashSalesCents: s.value.cashSales.cents, counterRoundsCents: s.value.counterRounds.cents, cashRefundsCents: s.value.cashRefunds.cents, otherCashCents: s.value.otherCash.cents,
       expectedCashCents: expected, countedCashCents: counted, differenceCents: counted - expected,
       cardCents: s.value.card.cents, note: String(input.note ?? '').trim().slice(0, 500), closedBy: closedBy.slice(0, 200),
     },

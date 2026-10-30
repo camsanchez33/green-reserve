@@ -217,12 +217,22 @@ function MembersPageInner() {
   const [memberBusy, setMemberBusy] = useState<string | null>(null);
   const [editDetails, setEditDetails] = useState<{ id: string; name: string; email: string; phone: string; expiresAt: string; notes: string } | null>(null);
   const [detailsError, setDetailsError] = useState('');
+  // LEDGER-2: what was taken and how — the ledger and the cash drawer need both.
+  const [duesForm, setDuesForm] = useState<{ id: string; amount: string; method: 'cash' | 'check' } | null>(null);
+  const [duesError, setDuesError] = useState('');
+  const openDuesForm = (m: Member) => {
+    const due = (m.annualFee ?? 0) + (m.lastPaidAt || m.initiationWaived ? 0 : (m.initiationFee ?? 0));
+    setDuesError(''); setDuesForm({ id: m.id, amount: due ? due.toFixed(2) : '', method: 'cash' });
+  };
   const markDuesPaid = async (m: Member) => {
-    if (!confirm(`Record ${m.name || m.email}'s dues as paid at the shop?`)) return;
-    setMemberBusy(m.id);
-    const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id: m.id, action: 'mark_paid' }) });
+    if (!duesForm || duesForm.id !== m.id) return;
+    const cents = Math.round(Number(duesForm.amount) * 100);
+    if (!duesForm.amount.trim() || !Number.isFinite(cents) || cents < 0) { setDuesError('Enter the amount taken.'); return; }
+    setMemberBusy(m.id); setDuesError('');
+    const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id: m.id, action: 'mark_paid', amountCents: cents, method: duesForm.method }) });
     setMemberBusy(null);
-    if (!r.ok) { toast(r.error); return; }
+    if (!r.ok) { setDuesError(r.error); return; }
+    setDuesForm(null);
     await loadAll();
     toast(`${m.name || m.email}: dues recorded as paid.`, 'ok');
   };
@@ -337,7 +347,7 @@ function MembersPageInner() {
                 <div>
                   <label className={lblCls}>Tier Name *</label>
                   <input autoFocus className={iCls} value={tierForm.name ?? ''} onChange={e => setTF('name', e.target.value)} placeholder="e.g. Full Member, Senior, Junior"/>
-                  <p className="text-xs text-ink-soft mt-1.5">This is what staff and members will see on bookings.</p>
+                  <p className="text-xs text-ink-soft mt-1.5">Shown on bookings.</p>
                 </div>
                 <div>
                   <label className={lblCls}>Color</label>
@@ -346,7 +356,7 @@ function MembersPageInner() {
                       <button key={c} onClick={() => setTF('color', c)} className={'w-8 h-8 rounded-full border-2 transition-all ' + (tierForm.color === c ? 'border-ink scale-110' : 'border-transparent')} style={{ background: c }}/>
                     ))}
                   </div>
-                  <p className="text-xs text-ink-soft mt-1.5">Used to tag members of this tier across the tee sheet.</p>
+                  <p className="text-xs text-ink-soft mt-1.5">Tags this tier on the tee sheet.</p>
                 </div>
               </>
             )}
@@ -747,12 +757,27 @@ function MembersPageInner() {
                                         <button onClick={() => { setEditMemberId(m.id); setEditMemberTierId(m.tierId ?? ''); }} className="text-[13px] font-medium text-pine hover:underline">Change membership</button>
                                       )}
                                       {(d.kind === 'unpaid' || d.kind === 'expired' || d.kind === 'renewing') && <>
-                                        <button onClick={() => markDuesPaid(m)} disabled={memberBusy === m.id} className="text-[13px] font-medium text-pine hover:underline disabled:opacity-50">Paid at the shop</button>
+                                        <button onClick={() => openDuesForm(m)} disabled={memberBusy === m.id} className="text-[13px] font-medium text-pine hover:underline disabled:opacity-50">Paid at the shop</button>
                                         {m.email && <button onClick={() => sendDuesLink(m)} disabled={memberBusy === m.id} className="text-[13px] font-medium text-pine hover:underline disabled:opacity-50">{memberBusy === m.id ? 'Sending…' : 'Email dues link'}</button>}
                                       </>}
                                       <button onClick={() => { setDetailsError(''); setEditDetails({ id: m.id, name: m.name, email: m.email, phone: m.phone, expiresAt: m.expiresAt ? m.expiresAt.slice(0, 10) : '', notes: m.notes }); }} className="text-[13px] font-medium text-pine hover:underline">Edit details</button>
                                       <button onClick={() => toggleMemberStatus(m)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{m.status === 'active' ? 'Make not active' : 'Make active'}</button>
                                       <button onClick={() => removeMember(m.id, m.name)} className="text-[13px] font-medium text-bad hover:underline">Remove</button>
+                                    </div>
+                                  )}
+                                  {canEdit && duesForm?.id === m.id && (
+                                    <div className="sm:col-span-2 flex flex-wrap items-end gap-2 bg-paper/70 rounded-md p-3">
+                                      <label className="text-[12.5px] text-ink-soft">Amount
+                                        <input value={duesForm.amount} onChange={e => setDuesForm({ ...duesForm, amount: e.target.value })} inputMode="decimal" className="block mt-1 w-28 bg-paper border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink" />
+                                      </label>
+                                      <label className="text-[12.5px] text-ink-soft">Method
+                                        <select value={duesForm.method} onChange={e => setDuesForm({ ...duesForm, method: e.target.value as 'cash' | 'check' })} className="block mt-1 bg-paper border border-line rounded-md px-2.5 py-1.5 text-[13px] text-ink">
+                                          <option value="cash">Cash</option><option value="check">Check</option>
+                                        </select>
+                                      </label>
+                                      <button onClick={() => markDuesPaid(m)} disabled={memberBusy === m.id} className="bg-pine hover:bg-pine-hover text-white text-[13px] font-medium rounded-md px-3 py-1.5 disabled:opacity-50">{memberBusy === m.id ? 'Saving…' : 'Save'}</button>
+                                      <button onClick={() => setDuesForm(null)} className="text-[13px] text-ink-soft hover:text-ink px-1 py-1.5">Cancel</button>
+                                      {duesError && <p role="alert" className="w-full text-[12.5px] text-bad">{duesError}</p>}
                                     </div>
                                   )}
                                   {canEdit && editDetails?.id === m.id && (

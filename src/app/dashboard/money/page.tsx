@@ -22,6 +22,7 @@ import { formatTeeTime, formatTeeDate } from '@/lib/format';
 import type { DeclinedCard } from '@/lib/operator-home';
 import { DeclinedCardList } from '@/components/dashboard/DeclinedCardList';
 import { toast } from '@/components/dashboard/Toast';
+import { LedgerPanel } from '@/components/dashboard/money/LedgerPanel';
 
 type Overview = { week: { from: string; to: string }; today: string; clock: string; paidCents: number; notPaidCents: number; notPaidGroups: number; declined: DeclinedCard[]; declinedTotal: number; stripeConnected: boolean };
 const usd2 = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -30,13 +31,14 @@ const fmtArrival = (iso: string) => new Date(iso).toLocaleDateString('en-US', { 
 
 const TABS = [
   { key: 'payments', label: 'Payments' },
+  { key: 'ledger', label: 'Ledger' },
   { key: 'payouts', label: 'Payouts' },
   { key: 'cancellations', label: 'Cancellations' },
 ] as const;
 type TabKey = typeof TABS[number]['key'];
 
 // SP-A: each tab is a permission the course owner grants per person.
-const TAB_PERMISSION = { payments: 'money.payments', cancellations: 'money.cancellations', payouts: 'money.payouts' } as const;
+const TAB_PERMISSION = { payments: 'money.payments', ledger: 'money.payments', cancellations: 'money.cancellations', payouts: 'money.payouts' } as const;
 
 const EMPTY_COURSE: MoneyCourse = { cancellationHours: 24, lateCancellationFee: 10, stripeAccountActive: false, liveStatus: 'draft' };
 
@@ -98,7 +100,7 @@ function MoneyPageInner() {
     // the right ones. A failed day fetch is now its own visible error.
     if (!day) { setDated(null); setDatedError(''); }
     else if (day.ok && Array.isArray(day.data)) { setDated(day.data); setDatedError(''); }
-    else { setDated(null); setDatedError(day.ok ? 'That day came back in a shape we could not read.' : day.error); }
+    else { setDated(null); setDatedError(day.ok ? 'That day couldn’t be read.' : day.error); }
     setLoading(false);
   }, [router, dateFilter]);
 
@@ -244,6 +246,8 @@ function MoneyPageInner() {
             <div className="flex items-center justify-center py-16 text-ink-muted gap-2"><Loader2 className="w-5 h-5 animate-spin"/>Loading...</div>
           ) : active === 'payments' ? (
             <PaymentsPanel key={showParam ?? 'all'} initialFilter={showParam === 'unpaid' ? 'unpaid' : 'all'} courseNow={overview ? { today: overview.today, clock: overview.clock } : undefined} capped={!dateFilter && (played?.length ?? 0) >= 1000} canRefund={access.can('money.refund_rounds')} onRefunded={m => { toast(m, 'ok'); loadBookings(); }} bookings={paymentRows} dateFilter={datedError ? '' : dateFilter} onClearDate={() => router.push('/dashboard/money?tab=payments')}/>
+          ) : active === 'ledger' ? (
+            <LedgerPanel/>
           ) : active === 'cancellations' ? (
             <CancellationsPanel key={searchParams.get('q') ?? ''} canWaive={access.can('sheet.waive_fee')} onRefunded={m => { toast(m, 'ok'); loadBookings(); }} bookings={bookings} course={course} initialQuery={active === 'cancellations' ? searchParams.get('q') ?? '' : ''}/>
           ) : (

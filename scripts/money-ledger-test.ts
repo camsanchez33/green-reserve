@@ -42,7 +42,7 @@ ok('cash paths write the ledger: the register, a cash sale, a sale taken in cash
   const sales = code('src/lib/shop-sales.ts');
   return /method: 'cash'[^\n]*what: 'shop'|what: 'shop', direction: 'in', method: 'cash'/.test(sales) && /note: 'voided'/.test(sales) && /pay link taken in cash/.test(sales) && /recordMove\(/.test(code('src/lib/register.ts'));
 })());
-ok('dues taken at the course write the ledger', /what: 'dues', direction: 'in', method: 'other'/.test(code('src/app/api/operator/members/route.ts')));
+ok('dues taken at the course write the ledger', /what: 'dues', direction: 'in', method: method === 'cash' \? 'cash' : 'other'/.test(code('src/app/api/operator/members/route.ts')));
 ok('the webhook mirrors Stripe-dashboard refunds and dispute money', /charge\.dispute\.funds_withdrawn/.test(code('src/app/api/stripe/webhook/route.ts')) && /mirrorMove\(/.test(code('src/app/api/stripe/webhook/route.ts')));
 ok('the ledger is cleared by the launch wipe and the test-course reset', WIPED_TABLES.includes('MoneyMove') && /moneyMove\.deleteMany/.test(code('src/lib/data-reset.ts')));
 const dues = code('src/app/api/membership/[id]/route.ts');

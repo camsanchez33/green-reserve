@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 590,
-    "routes": 272,
-    "libs": 207,
+    "files": 593,
+    "routes": 273,
+    "libs": 208,
     "models": 61,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -5820,7 +5820,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 326,
+      "lines": 331,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5897,6 +5897,33 @@
       "imports": [
         "@/lib/contact",
         "@/lib/email",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/money/ledger/route.ts",
+      "lines": 45,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/money/ledger",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/course-time",
+        "@/lib/ledger-view",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -8117,7 +8144,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 833,
+      "lines": 858,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8183,7 +8210,7 @@
     },
     {
       "path": "src/app/dashboard/money/page.tsx",
-      "lines": 265,
+      "lines": 269,
       "purpose": "SD-8 — Payments and Cancellations were two pages querying the same endpoint, and Payouts was buried in Settings.",
       "brain": [],
       "exports": [
@@ -8203,6 +8230,7 @@
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
         "@/components/dashboard/money/CancellationsPanel",
+        "@/components/dashboard/money/LedgerPanel",
         "@/components/dashboard/money/PaymentsPanel",
         "@/components/dashboard/money/PayoutsPanel",
         "@/components/dashboard/money/PayoutsTable",
@@ -10190,6 +10218,7 @@
       ],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/components/dashboard/money/LedgerPanel.tsx",
         "src/components/dashboard/money/SalesPanel.tsx"
       ]
     },
@@ -10328,6 +10357,7 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
+        "src/components/dashboard/money/LedgerPanel.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
@@ -10392,7 +10422,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 174,
+      "lines": 176,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -10997,6 +11027,36 @@
       ]
     },
     {
+      "path": "src/components/dashboard/money/LedgerPanel.tsx",
+      "lines": 154,
+      "purpose": "LEDGER-2 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "LedgerPanel",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/DateRangeButton",
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/dashboard-fetch",
+        "@/lib/ledger-view",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/money/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
       "lines": 129,
       "purpose": "Money rework (Cam 2026-10-19:",
@@ -11429,6 +11489,7 @@
         "src/components/dashboard/events/EventSignup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
+        "src/components/dashboard/money/LedgerPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/onboarding/PageReviewStep.tsx",
@@ -11717,6 +11778,7 @@
         "src/components/dashboard/events/EventSignup.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/CancellationsPanel.tsx",
+        "src/components/dashboard/money/LedgerPanel.tsx",
         "src/components/dashboard/money/PaymentsPanel.tsx",
         "src/components/dashboard/money/PayoutsPanel.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
@@ -13895,6 +13957,7 @@
         "src/lib/counter-pay.ts",
         "src/lib/cutoff-hold.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/ledger-view.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/reader-rounds.ts",
@@ -16056,6 +16119,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/members/route.ts",
+        "src/app/api/operator/money/ledger/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
@@ -16083,6 +16147,7 @@
         "src/lib/course-shape-setup.ts",
         "src/lib/event-signup.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/ledger-view.ts",
         "src/lib/member-rates.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
@@ -16572,6 +16637,7 @@
         "src/components/dashboard/events/EventSetup.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
+        "src/components/dashboard/money/LedgerPanel.tsx",
         "src/components/dashboard/money/PayoutsTable.tsx",
         "src/components/dashboard/money/RefundForm.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
@@ -18470,6 +18536,77 @@
       ]
     },
     {
+      "path": "src/lib/ledger-view.ts",
+      "lines": 187,
+      "purpose": "LEDGER-2 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "dayOf",
+          "kind": "fn"
+        },
+        {
+          "name": "dayStart",
+          "kind": "fn"
+        },
+        {
+          "name": "LEDGER_MAX_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "ledgerCsv",
+          "kind": "fn"
+        },
+        {
+          "name": "LedgerDay",
+          "kind": "type"
+        },
+        {
+          "name": "ledgerDays",
+          "kind": "fn"
+        },
+        {
+          "name": "LedgerRow",
+          "kind": "type"
+        },
+        {
+          "name": "ledgerRows",
+          "kind": "fn"
+        },
+        {
+          "name": "matchOf",
+          "kind": "fn"
+        },
+        {
+          "name": "methodLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "moveLabel",
+          "kind": "fn"
+        },
+        {
+          "name": "sumDay",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./course-time",
+        "./prisma",
+        "./stripe"
+      ],
+      "usedBy": [
+        "src/app/api/operator/money/ledger/route.ts",
+        "src/components/dashboard/money/LedgerPanel.tsx"
+      ]
+    },
+    {
       "path": "src/lib/lifecycle.ts",
       "lines": 416,
       "purpose": "",
@@ -20011,6 +20148,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/ledger/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
@@ -20097,6 +20235,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
         "src/lib/login-guard.ts",
         "src/lib/member-import.ts",
@@ -20546,7 +20685,7 @@
     },
     {
       "path": "src/lib/register-close.ts",
-      "lines": 136,
+      "lines": 142,
       "purpose": "POS-3 R4 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -21411,6 +21550,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/ledger/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/monthly-reviews/route.ts",
@@ -22384,6 +22524,7 @@
         "src/lib/cutoff-hold.ts",
         "src/lib/email.ts",
         "src/lib/event-payments.ts",
+        "src/lib/ledger-view.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
         "src/lib/reader-rounds.ts",
@@ -24020,6 +24161,7 @@
         "src/lib/dispute-evidence.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-stats.ts",
         "src/lib/no-show-fee.ts",
@@ -24925,6 +25067,7 @@
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
+        "src/app/api/operator/money/ledger/route.ts",
         "src/app/api/operator/money/overview/route.ts",
         "src/app/api/operator/money/sales/route.ts",
         "src/app/api/operator/my-courses/route.ts",
@@ -24975,6 +25118,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts",
@@ -25307,7 +25451,8 @@
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/lib/event-payments.ts",
-        "src/lib/event-signup.ts"
+        "src/lib/event-signup.ts",
+        "src/lib/ledger-view.ts"
       ]
     },
     {
@@ -25894,6 +26039,7 @@
         "src/lib/counter-pay.ts",
         "src/lib/data-reset.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
@@ -27013,7 +27159,9 @@
       ],
       "readers": [
         "src/app/api/member/[courseSlug]/payments/route.ts",
-        "src/lib/money-ledger.ts"
+        "src/lib/ledger-view.ts",
+        "src/lib/money-ledger.ts",
+        "src/lib/register-close.ts"
       ]
     },
     {
@@ -27439,6 +27587,10 @@
           "type": "Int"
         },
         {
+          "name": "otherCashCents",
+          "type": "Int"
+        },
+        {
           "name": "cashRefundsCents",
           "type": "Int"
         },
@@ -27811,6 +27963,7 @@
         "src/lib/card-reader.ts",
         "src/lib/data-reset.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/ledger-view.ts",
         "src/lib/register-close.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
