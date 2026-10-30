@@ -1441,6 +1441,11 @@ export default function CourseDetailPage({
                                       <div className="font-medium text-ink whitespace-nowrap">
                                         ${displayGreenFee}<span className="text-ink-muted font-normal text-[13px]"> / player</span>
                                       </div>
+                                      {!hasMemberRate && t.list_green_fee != null && (
+                                        <div className="text-[11px] text-ink-faint">
+                                          <span className="line-through">${t.list_green_fee}</span> · last-minute
+                                        </div>
+                                      )}
                                       {hasMemberRate && (
                                         <div className="text-[11px] text-ink-faint">
                                           <span className="line-through">${t.green_fee}</span> · member rate

@@ -26,6 +26,7 @@ import { toast } from '@/components/dashboard/Toast';
 import { Card } from '@/components/ui/Card';
 import { formatTeeTime as fmtTime } from '@/lib/format';
 import { PromoCodes } from '@/components/dashboard/PromoCodes';
+import { LastMinuteDeals } from '@/components/dashboard/LastMinuteDeals';
 import { readPlan, checkPlan, columnNames, daysOf, snap, emptyCell, isTime, setRoundSale, type CoursePlan, type DayPlan, type PlanRound, type PriceCell } from '@/lib/course-plan';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -495,6 +496,7 @@ export default function SchedulesPage() {
 
           {/* PRICE-1: promo codes, beside the prices. */}
           <PromoCodes canEdit={canEdit} />
+          <LastMinuteDeals canEdit={canEdit} />
 
           {/* Closed days + booking rules + booking windows */}
           <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">

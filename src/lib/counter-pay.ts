@@ -20,6 +20,7 @@ import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 import { recordMove } from './money-ledger';
 import { applyTierRates } from './tier-rates';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoRow } from './promo-codes';
+import { dealPct, dealSeat, dealRateSeat } from './last-minute';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 
 export type CounterResult =
@@ -165,18 +166,22 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     promoRow = p.code;
   }
   const seat = (c: number) => (promoRow ? seatAfter(promoRow, c) : c);
-  let ratedGreen = teeTime.greenFeeCents * players;
-  let greenFeeTotal = seat(teeTime.greenFeeCents) * players;
+  // PRICE-2: a last-minute deal, when the course gives it at the counter too (lib/last-minute) — before any code.
+  const lastMinutePct = dealPct(teeTime.course, teeTime, 'counter');
+  const pub = dealSeat(lastMinutePct, teeTime.greenFeeCents);
+  const rated = (c: number) => dealRateSeat(lastMinutePct, c, teeTime.greenFeeCents, teeTime.course.lastMinuteStack);
+  let ratedGreen = pub * players;
+  let greenFeeTotal = seat(pub) * players;
   let cartFeeTotal = cart ? teeTime.cartFeeCents * players : 0;
   let appliedRate = 'standard';
   let rateRows: { residentPlayers?: number; residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null } = {};
   if (rate === 'resident' || rate === 'senior' || rate === 'junior') {
     const per = rate === 'resident' ? teeTime.residentRateCents : rate === 'senior' ? teeTime.seniorRateCents : teeTime.juniorRateCents;
     if (per == null) return { ok: false, status: 409, error: `This tee time has no ${rate} price. Set one in Schedule.` };
-    ratedGreen = per * players;
-    greenFeeTotal = seat(per) * players;
+    ratedGreen = rated(per) * players;
+    greenFeeTotal = seat(rated(per)) * players;
     appliedRate = rate;
-    if (rate === 'resident') rateRows = { residentPlayers: players, residentRateCents: seat(per) };
+    if (rate === 'resident') rateRows = { residentPlayers: players, residentRateCents: seat(rated(per)) };
   } else if (rate.startsWith('tier:') || rate.startsWith('member:')) {
     let tier;
     if (rate.startsWith('member:')) {
@@ -192,11 +197,11 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     if (!tier) return { ok: false, status: 400, error: 'That membership isn’t on your course.' };
     const r = applyTierRates(teeTime, tier);
     const n = memberPlayers(players, tier);
-    ratedGreen = splitTotal(players, n, r.greenFeeCents, teeTime.greenFeeCents);
-    greenFeeTotal = splitTotal(players, n, seat(r.greenFeeCents), seat(teeTime.greenFeeCents));
+    ratedGreen = splitTotal(players, n, rated(r.greenFeeCents), pub);
+    greenFeeTotal = splitTotal(players, n, seat(rated(r.greenFeeCents)), seat(pub));
     cartFeeTotal = cart ? splitTotal(players, n, r.cartFeeCents, teeTime.cartFeeCents) : 0;
     appliedRate = tier.name;
-    rateRows = memberSpot(tier, { greenFeeCents: seat(r.greenFeeCents), cartFeeCents: r.cartFeeCents });
+    rateRows = memberSpot(tier, { greenFeeCents: seat(rated(r.greenFeeCents)), cartFeeCents: r.cartFeeCents });
   } else if (rate !== 'standard') return { ok: false, status: 400, error: 'Pick a rate.' };
   const promo = promoRow ? { id: promoRow.id, discountCents: ratedGreen - greenFeeTotal } : null;
   if (promo && promo.discountCents <= 0) return { ok: false, status: 400, error: NOTHING_OFF };
@@ -211,6 +216,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       golferName, golferEmail: golferEmail || `${source}+${Date.now()}@noemail.greenreserve.app`, golferPhone,
       players, appliedRate, ...rateRows,
       ...(promo ? { promoCodeId: promo.id, promoDiscountCents: promo.discountCents } : {}),
+      lastMinutePct,
       greenFeeTotal, cartFeeTotal, cartSelected: cart, accessFeeTotal: 0, totalAmount,
       checkInToken: golferEmail ? randomUUID() : null,
       paymentStatus: 'manual',

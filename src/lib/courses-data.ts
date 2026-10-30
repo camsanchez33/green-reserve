@@ -43,6 +43,9 @@ export type TeeTime = {
   product_slope?: number;
   players_available: number;
   green_fee: number;
+  // PRICE-2: inside a last-minute deal, green_fee is the deal price and this the price before it.
+  list_green_fee?: number | null;
+  deal_pct?: number;
   cart_fee: number;
   walking_allowed: boolean;
   /** W2-6 slice 3: this time's booking rules — the course's, or its round's own (lib/booking-rules). */

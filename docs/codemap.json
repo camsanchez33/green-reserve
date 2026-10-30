@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 603,
-    "routes": 277,
-    "libs": 211,
+    "files": 606,
+    "routes": 278,
+    "libs": 212,
     "models": 63,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3671,7 +3671,7 @@
     },
     {
       "path": "src/app/api/bookings/resident-rate/route.ts",
-      "lines": 50,
+      "lines": 54,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3688,6 +3688,7 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/last-minute",
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/prisma",
@@ -3698,7 +3699,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 446,
+      "lines": 455,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3731,6 +3732,7 @@
         "@/lib/demo-courses",
         "@/lib/email",
         "@/lib/golfer-record",
+        "@/lib/last-minute",
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
@@ -4924,7 +4926,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "lines": 119,
+      "lines": 125,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4944,6 +4946,7 @@
         "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/course-time",
+        "@/lib/last-minute",
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
@@ -5785,6 +5788,37 @@
       "guard": "file",
       "imports": [
         "@/lib/operator-home",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/last-minute/route.ts",
+      "lines": 39,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/last-minute",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/last-minute",
+        "@/lib/prisma",
         "@/lib/session",
         "next/server"
       ],
@@ -7557,7 +7591,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 781,
+      "lines": 783,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7840,7 +7874,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1852,
+      "lines": 1857,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8514,7 +8548,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 634,
+      "lines": 636,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -8530,6 +8564,7 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/LastMinuteDeals",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/PromoCodes",
         "@/components/dashboard/RoundRulesCard",
@@ -10454,6 +10489,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/LastMinuteDeals.tsx",
+      "lines": 71,
+      "purpose": "PRICE-2 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "LastMinuteDeals",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/schedules/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/LoadError.tsx",
       "lines": 16,
       "purpose": "SD-10.",
@@ -10479,6 +10542,7 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/analytics/ShopTab.tsx",
@@ -11691,6 +11755,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
+        "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
@@ -11980,6 +12045,7 @@
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
+        "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
@@ -12057,6 +12123,7 @@
         "src/components/admin/TestDataTools.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
+        "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
@@ -14176,6 +14243,7 @@
         "src/lib/counter-pay.ts",
         "src/lib/cutoff-hold.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/last-minute.ts",
         "src/lib/ledger-view.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
@@ -14339,7 +14407,7 @@
     },
     {
       "path": "src/lib/booking-residents.ts",
-      "lines": 63,
+      "lines": 66,
       "purpose": "RES-1 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -14359,6 +14427,7 @@
       "guard": null,
       "imports": [
         "./booking-events",
+        "./last-minute",
         "./prisma",
         "./promo-codes",
         "./residents"
@@ -15520,7 +15589,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 237,
+      "lines": 243,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -15556,6 +15625,7 @@
         "./checkin-booking",
         "./claim-tee-time",
         "./course-time",
+        "./last-minute",
         "./member-rates",
         "./money-ledger",
         "./no-show-fee",
@@ -16625,7 +16695,7 @@
     },
     {
       "path": "src/lib/courses-data.ts",
-      "lines": 324,
+      "lines": 327,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16849,6 +16919,7 @@
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
+        "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/PromoCodes.tsx",
@@ -18733,6 +18804,52 @@
       ]
     },
     {
+      "path": "src/lib/last-minute.ts",
+      "lines": 43,
+      "purpose": "PRICE-2 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DealCourse",
+          "kind": "type"
+        },
+        {
+          "name": "dealPct",
+          "kind": "fn"
+        },
+        {
+          "name": "dealRateSeat",
+          "kind": "fn"
+        },
+        {
+          "name": "dealSeat",
+          "kind": "fn"
+        },
+        {
+          "name": "dealSettingsError",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events"
+      ],
+      "usedBy": [
+        "src/app/api/bookings/resident-rate/route.ts",
+        "src/app/api/bookings/route.ts",
+        "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/app/api/operator/last-minute/route.ts",
+        "src/lib/booking-residents.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/move-booking.ts",
+        "src/lib/public-tee-times.ts"
+      ]
+    },
+    {
       "path": "src/lib/late-add.ts",
       "lines": 13,
       "purpose": "Cam 2026-10-27:",
@@ -19558,7 +19675,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 266,
+      "lines": 275,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -19592,6 +19709,7 @@
         "./booking-events",
         "./cancel-policy",
         "./course-time",
+        "./last-minute",
         "./member-rates",
         "./prisma",
         "./promo-codes",
@@ -20382,6 +20500,7 @@
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts",
+        "src/app/api/operator/last-minute/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -20695,7 +20814,7 @@
     },
     {
       "path": "src/lib/public-tee-times.ts",
-      "lines": 92,
+      "lines": 100,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
@@ -20721,6 +20840,7 @@
         "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/course-time",
+        "@/lib/last-minute",
         "@/lib/money",
         "@/lib/prisma"
       ],
@@ -21858,6 +21978,7 @@
         "src/app/api/operator/golfer-messages/route.ts",
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/home/route.ts",
+        "src/app/api/operator/last-minute/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
@@ -24287,6 +24408,10 @@
           "type": "Int"
         },
         {
+          "name": "lastMinutePct",
+          "type": "Int"
+        },
+        {
           "name": "greenFeeTotal",
           "type": "Int"
         },
@@ -25221,6 +25346,26 @@
           "type": "Int"
         },
         {
+          "name": "lastMinuteOn",
+          "type": "Boolean"
+        },
+        {
+          "name": "lastMinuteHours",
+          "type": "Int"
+        },
+        {
+          "name": "lastMinutePct",
+          "type": "Int"
+        },
+        {
+          "name": "lastMinuteCounter",
+          "type": "Boolean"
+        },
+        {
+          "name": "lastMinuteStack",
+          "type": "Boolean"
+        },
+        {
           "name": "golferNotes",
           "type": "GolferNote[]"
         },
@@ -25430,6 +25575,7 @@
         "src/app/api/admin/test-course/route.ts",
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/last-minute/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
@@ -25483,6 +25629,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
+        "src/app/api/operator/last-minute/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",

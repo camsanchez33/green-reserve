@@ -38,6 +38,7 @@ import { groupGreenFee } from './residents';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
 import { promoFits, seatAfter } from './promo-codes';
+import { dealPct, dealSeat, dealRateSeat } from './last-minute';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 
 export type MovePricing = 'keep' | 'new_slot';
@@ -117,12 +118,12 @@ export async function moveBooking(opts: {
       const b = await tx.booking.findUnique({
         where: { id: opts.bookingId },
         select: {
-          id: true, courseId: true, teeTimeId: true, players: true, status: true, checkedInAt: true, noShowAt: true, golferAccountId: true, golferEmail: true,
+          id: true, courseId: true, teeTimeId: true, players: true, status: true, source: true, checkedInAt: true, noShowAt: true, golferAccountId: true, golferEmail: true,
           paymentStatus: true, roundPaymentIntentId: true, readerStartedAt: true,
           cartSelected: true, appliedRate: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, promoDiscountCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
-          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true } },
+          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true } },
         },
       });
       if (!b || (opts.courseId && b.courseId !== opts.courseId)) throw new MoveError('NOT_FOUND');
@@ -196,11 +197,18 @@ export async function moveBooking(opts: {
       const promo = code && !promoFits({ ...code, maxUses: null, active: true }, slot, { rateApplied: memberN > 0 || (residentN > 0 && slot.residentRateCents != null) }) ? code : null;
       const seat = (c: number) => (promo && !rateIsOwn ? seatAfter(promo, c) : c);
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
-      const ratedResidents = groupGreenFee(b.players, rate.greenFeeCents, residentN, slot.residentRateCents);
-      const ratedGreen = memberN ? splitTotal(b.players, memberN, rate.greenFeeCents, slot.greenFeeCents) : ratedResidents.greenFeeTotal;
-      const residents = groupGreenFee(b.players, seat(rate.greenFeeCents), residentN, slot.residentRateCents == null ? null : seat(slot.residentRateCents));
-      const newGreen = memberN ? splitTotal(b.players, memberN, seat(rate.greenFeeCents), seat(slot.greenFeeCents)) : residents.greenFeeTotal;
-      spot = spot.memberRateCents != null ? { ...spot, memberRateCents: seat(spot.memberRateCents) } : spot;
+      // PRICE-2: a repriced move into the new time's last-minute window gets its deal (before any code).
+      // A counter booking gets the deal only when the course gives it at the counter.
+      const lmPct = rateIsOwn ? 0 : dealPct(b.course, slot, golferMove || b.source === 'online' ? 'online' : 'counter', now);
+      const stack = b.course.lastMinuteStack;
+      const pubSeat = dealSeat(lmPct, slot.greenFeeCents);
+      const ownSeat = rateIsOwn ? rate.greenFeeCents : memberN ? dealRateSeat(lmPct, rate.greenFeeCents, slot.greenFeeCents, stack) : dealSeat(lmPct, rate.greenFeeCents);
+      const resSeat = slot.residentRateCents == null ? null : dealRateSeat(lmPct, slot.residentRateCents, slot.greenFeeCents, stack);
+      const ratedResidents = groupGreenFee(b.players, ownSeat, residentN, resSeat);
+      const ratedGreen = memberN ? splitTotal(b.players, memberN, ownSeat, pubSeat) : ratedResidents.greenFeeTotal;
+      const residents = groupGreenFee(b.players, seat(ownSeat), residentN, resSeat == null ? null : seat(resSeat));
+      const newGreen = memberN ? splitTotal(b.players, memberN, seat(ownSeat), seat(pubSeat)) : residents.greenFeeTotal;
+      spot = spot.memberRateCents != null ? { ...spot, memberRateCents: seat(ownSeat) } : spot;
       // CART-1: a group moved onto a cart-only time takes a cart there.
       const cartOn = b.cartSelected || slot.walkingAllowed === false;
       const newCart = cartOn ? (memberN ? splitTotal(b.players, memberN, rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * b.players) : 0;
@@ -235,6 +243,7 @@ export async function moveBooking(opts: {
         data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
         data.cartSelected = cartOn;
         data.memberRateCents = spot.memberRateCents; data.memberCartCents = spot.memberCartCents;
+        data.lastMinutePct = lmPct;
         if (b.promoCodeId && !rateIsOwn) { data.promoCodeId = promo ? promo.id : null; data.promoDiscountCents = promo ? ratedGreen - newGreen : 0; }
         if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
         if (memberN === 0 && b.appliedRate !== 'resident' && b.appliedRate !== 'standard') data.appliedRate = residents.residentPlayers > 0 ? 'resident' : 'standard';

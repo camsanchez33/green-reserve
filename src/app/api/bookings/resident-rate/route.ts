@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getGolferMembership, getMemberSession, golferResident } from '@/lib/member-session';
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive } from '@/lib/member-rates';
+import { dealPct, dealRateSeat } from '@/lib/last-minute';
 
 // What the booking page shows the signed-in golfer before they book — the same
 // rules POST /api/bookings applies, so the page can't show one price and charge
@@ -18,10 +19,13 @@ export async function GET(req: NextRequest) {
   if (!teeTimeId) return none;
   const tt = await prisma.teeTime.findUnique({
     where: { id: teeTimeId },
-    select: { courseId: true, date: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true } } },
+    select: { courseId: true, date: true, time: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true } } },
   });
   if (!tt) return none;
   const grace = tt.course;
+  // PRICE-2: inside a last-minute window the rate is priced as POST /api/bookings prices it.
+  const pct = dealPct(tt.course, tt, 'online');
+  const rated = (cents: number) => dealRateSeat(pct, cents, tt.greenFeeCents, tt.course.lastMinuteStack);
 
   let tier: { name: string; guestsPayMemberRate: boolean; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; cartFeeWeekendCents: number | null; discountPct: number | null } | null = null;
   const golferMembership = await getGolferMembership(tt.courseId, grace);
@@ -41,9 +45,9 @@ export async function GET(req: NextRequest) {
     const rates = applyTierRates(tt, tier);
     return NextResponse.json({
       residentGreenFee: null,
-      member: { name: tier.name, greenFee: rates.greenFeeCents / 100, cartFee: rates.cartFeeCents / 100, guestsMemberRate: tier.guestsPayMemberRate },
+      member: { name: tier.name, greenFee: rated(rates.greenFeeCents) / 100, cartFee: rates.cartFeeCents / 100, guestsMemberRate: tier.guestsPayMemberRate },
     });
   }
   if (tt.residentRateCents == null || !(await golferResident(tt.courseId, tt.date))) return none;
-  return NextResponse.json({ residentGreenFee: tt.residentRateCents / 100, member: null });
+  return NextResponse.json({ residentGreenFee: rated(tt.residentRateCents) / 100, member: null });
 }

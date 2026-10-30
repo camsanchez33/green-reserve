@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { dealPct, dealSeat, dealRateSeat } from '@/lib/last-minute';
 import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
@@ -88,6 +89,9 @@ export async function GET(
         open <= 1 ? 'almost_full' : open <= 2 ? 'limited' : 'available';
       const rates = pricingTier ? applyTierRates(t, pricingTier) : null;
       const hasMemberRate = !!pricingTier && (hasTierPrice || t.memberRateCents != null);
+      // PRICE-2: inside a last-minute window, priced as POST /api/bookings prices it (lib/last-minute).
+      const pct = dealPct(course, t, 'online');
+      const rated = (c: number) => dealRateSeat(pct, c, t.greenFeeCents, course.lastMinuteStack);
 
       return {
         id: t.id,
@@ -98,8 +102,10 @@ export async function GET(
         product_label: t.product?.label ?? null,
         players_available: spotsLeft,
         // cents at rest, dollars on the wire — the course page renders these.
-        green_fee: centsToDollarsOr0(t.greenFeeCents),
-        member_green_fee: centsToDollarsOr0(rates?.greenFeeCents ?? t.greenFeeCents),
+        green_fee: centsToDollarsOr0(dealSeat(pct, t.greenFeeCents)),
+        list_green_fee: pct > 0 ? centsToDollarsOr0(t.greenFeeCents) : null,
+        deal_pct: pct,
+        member_green_fee: centsToDollarsOr0(rates ? rated(rates.greenFeeCents) : dealSeat(pct, t.greenFeeCents)),
         cart_fee: centsToDollarsOr0(rates?.cartFeeCents ?? t.cartFeeCents),
         walking_allowed: walkingAllowedAt(t),
         cart_required: !walkingAllowedAt(t),
@@ -111,7 +117,7 @@ export async function GET(
         guests_member_rate: !!pricingTier?.guestsPayMemberRate,
         // What the signed-in golfer pays for their own spot as a resident (one
         // player); null when the resident rate doesn't apply to this time.
-        resident_green_fee: resident && t.residentRateCents != null ? centsToDollarsOr0(t.residentRateCents) : null,
+        resident_green_fee: resident && t.residentRateCents != null ? centsToDollarsOr0(rated(t.residentRateCents)) : null,
       };
     })
   );

@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 import { rulesFor, walkingAllowedAt, type RuleCourse } from '@/lib/booking-rules';
+import { dealPct, dealSeat, type DealCourse } from '@/lib/last-minute';
 
 /**
  * Maps a Prisma TeeTime row (camelCase, real availability counts) onto the
@@ -13,7 +14,7 @@ import { rulesFor, walkingAllowedAt, type RuleCourse } from '@/lib/booking-rules
  * reads green_fee, cart_fee, players_available, walking_allowed, status).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function normalizeDbTeeTime(t: any, course?: RuleCourse) {
+export function normalizeDbTeeTime(t: any, course?: RuleCourse & Partial<DealCourse>) {
   // W2-6 slice 3: the time's booking rules (the course's, or its round's own).
   // Spots are what ONE booking may take — capped at the group-size maximum — so
   // every players picker on the golfer pages respects it without knowing why.
@@ -42,7 +43,14 @@ export function normalizeDbTeeTime(t: any, course?: RuleCourse) {
     // public course page would have rendered with no price. Found by grepping the old
     // names after tsc went green — the same way B2b's normalize-course was.
     // Cents at rest, dollars on the wire (the UI formats dollars).
-    green_fee: centsToDollarsOr0(t.greenFeeCents),
+    // PRICE-2: inside the course's last-minute window the price shown is the deal price,
+    // with what it was (list_green_fee) for the struck-through old price.
+    ...(() => {
+      const pct = dealPct(course, t, 'online');
+      return pct > 0
+        ? { green_fee: centsToDollarsOr0(dealSeat(pct, t.greenFeeCents)), list_green_fee: centsToDollarsOr0(t.greenFeeCents), deal_pct: pct, deal_stack: !!course?.lastMinuteStack }
+        : { green_fee: centsToDollarsOr0(t.greenFeeCents), list_green_fee: null as number | null, deal_pct: 0, deal_stack: false };
+    })(),
     cart_fee: centsToDollarsOr0(t.cartFeeCents),
     walking_allowed: walkingAllowedAt(t),
     cart_required: !walkingAllowedAt(t),
