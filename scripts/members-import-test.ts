@@ -81,7 +81,7 @@ async function main() {
   const route = readFileSync('src/app/api/operator/members/import/route.ts', 'utf8');
   check('the import route needs members.edit and reads the file itself', route.includes("requirePermission(session, 'members.edit')") && route.includes('readMemberCsv(csv)'));
   check('every dues path skips the joining fee for imported members',
-    readFileSync('src/app/api/operator/members/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
+    readFileSync('src/lib/membership-pay-link.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
     && readFileSync('src/app/api/operator/members/remind-overdue/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
     && readFileSync('src/app/api/membership/[id]/route.ts', 'utf8').includes('m.lastPaidAt || m.initiationWaived ? 0')
     && readFileSync('src/app/api/member/[courseSlug]/payments/route.ts', 'utf8').includes('!membership.initiationWaived')

@@ -13,7 +13,7 @@ console.log('\nALL PASS');
 
 // Self-joined members have no invite address: both dues senders fall back to the account's email.
 const cron = readFileSync('src/app/api/cron/send-reminders/route.ts', 'utf8');
-for (const [name, file] of [['members route pay link', src], ['renewal cron', cron]] as const) {
+for (const [name, file] of [['members route pay link', readFileSync('src/lib/membership-pay-link.ts', 'utf8')], ['renewal cron', cron]] as const) {
   const ok2 = file.includes('const to = m.golfer?.email || m.inviteEmail;') && file.includes('email: to,');
   console.log(`${ok2 ? 'PASS' : 'FAIL'}  ${name} sends to the account's email first`);
   if (!ok2) process.exit(1);

@@ -1,36 +1,50 @@
 {
-  "generatedAt": "2026-10-30T18:48:53.294Z",
+  "generatedAt": "2026-10-30T19:52:27.687Z",
   "repo": {
-    "head": "5e27fe80",
+    "head": "7ea5f5b2",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 20,
+    "dirtyCount": 25,
     "dirty": [
-      "M  STATUS.artifact.html",
-      "M  STATUS.json",
-      "M  STATUS.md",
-      "MM docs/CODEMAP.md",
-      "MM docs/codemap.json",
-      "M  scripts/member-rates-db-test.ts",
-      "MM scripts/round-packs-db-test.ts",
-      "M  src/app/api/bookings/resident-rate/route.ts",
-      "M  src/app/api/bookings/route.ts",
-      "AM src/app/api/courses/[slug]/packs/route.ts",
-      " M src/app/api/operator/shop-sales/route.ts",
-      "M  src/app/book/BookClient.tsx",
-      "MM src/app/courses/[slug]/CourseBookingClient.tsx",
-      "M  src/app/courses/[slug]/account/AccountPortalClient.tsx",
-      "AM src/components/CoursePacks.tsx",
-      "M  src/components/dashboard/RoundPacks.tsx",
+      "M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M scripts/dead-ends-a-test.ts",
+      " M scripts/member-paytoken-test.ts",
+      " M scripts/members-import-test.ts",
+      " M scripts/walk1-fixes-test.ts",
+      " M src/app/api/membership/[id]/route.ts",
+      " M src/app/api/operator/members/route.ts",
+      " M src/app/api/operator/tiers/route.ts",
+      " M src/app/courses/[slug]/CourseBookingClient.tsx",
+      " M src/app/courses/[slug]/account/AccountPortalClient.tsx",
+      " M src/app/dashboard/members/page.tsx",
       " M src/lib/courses-data.ts",
       " M src/lib/public-course.ts",
-      " M src/lib/round-packs.ts",
-      " M src/lib/shop-sales.ts"
+      "?? prisma/migrations/20261030120000_tier_join_online/",
+      "?? scripts/membership-join-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "53505e47",
+        "date": "2026-10-30T15:03:00-04:00",
+        "subject": "Pricing 3/4 part B: round packs online (#260)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "248a5175",
+        "date": "2026-10-30T18:52:54+00:00",
+        "subject": "PRICE-3 part B: round packs online — buy on the course page, use when booking",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "e1ec15b2",
         "date": "2026-10-30T14:31:32-04:00",
@@ -848,6 +862,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "53505e47",
+      "date": "2026-10-30",
+      "subject": "Pricing 3/4 part B: round packs online (#260)"
+    },
+    {
+      "h": "248a5175",
+      "date": "2026-10-30",
+      "subject": "PRICE-3 part B: round packs online — buy on the course page, use when booking"
+    },
+    {
       "h": "e1ec15b2",
       "date": "2026-10-30",
       "subject": "Pricing 3/4 part A: round packs at the counter (#259)"
@@ -896,16 +920,6 @@
       "h": "c72b0b35",
       "date": "2026-10-30",
       "subject": "Stock line refreshes after a sale; the catalog permission says it covers deliveries"
-    },
-    {
-      "h": "2c3e1cdd",
-      "date": "2026-10-30",
-      "subject": "Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere"
-    },
-    {
-      "h": "1aa2c299",
-      "date": "2026-10-30",
-      "subject": "Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)"
     }
   ]
 }

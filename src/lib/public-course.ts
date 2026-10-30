@@ -16,7 +16,7 @@ export async function loadPublicCourse(slug: string) {
       teeSets: { orderBy: { sortOrder: 'asc' as const }, select: { name: true, yardage: true, rating: true, slope: true } },
       nines: { orderBy: { sortOrder: 'asc' as const }, select: { name: true, par: true } },
       // PRICE-3: whether the page shows round packs at all (so it doesn't ask when there are none).
-      _count: { select: { roundPacks: { where: { active: true, sellOnline: true } } } },
+      _count: { select: { roundPacks: { where: { active: true, sellOnline: true } }, membershipTiers: { where: { active: true, joinOnline: { in: ['instant', 'request'] }, annualFeeCents: { gt: 0 } } } } },
     },
   });
 
@@ -28,6 +28,9 @@ export async function loadPublicCourse(slug: string) {
   const cheapestCents = dbCourse.schedules.length > 0 ? Math.min(...dbCourse.schedules.map((s: { greenFeeWeekdayCents: number }) => s.greenFeeWeekdayCents)) : 0;
   // JSON round trip: the page receives exactly what the API sends (Dates as
   // ISO strings), so the client component sees one shape either way.
-  const sellsPacks = dbCourse._count.roundPacks > 0 && dbCourse.stripeAccountActive && !!dbCourse.stripeAccountId;
-  return JSON.parse(JSON.stringify({ ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks }));
+  const payable = dbCourse.stripeAccountActive && !!dbCourse.stripeAccountId;
+  const sellsPacks = dbCourse._count.roundPacks > 0 && payable;
+  // MEM-JOIN: whether the page shows memberships to join online.
+  const joinsOnline = dbCourse._count.membershipTiers > 0 && payable;
+  return JSON.parse(JSON.stringify({ ...normalizeDbCourse(dbCourse, centsToDollarsOr0(cheapestCents)), sells_packs: sellsPacks, joins_online: joinsOnline }));
 }

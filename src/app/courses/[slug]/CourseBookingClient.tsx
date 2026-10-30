@@ -1,5 +1,6 @@
 'use client';
 import { CoursePacks } from '@/components/CoursePacks';
+import { CourseJoin } from '@/components/CourseJoin';
 import { describePolicy, policyFrom, afterCutoffShort, insideWindowLine, policyMoney, type CancelPolicy } from '@/lib/cancel-policy';
 import { lastBookableDate } from '@/lib/booking-window';
 import { teeColour } from '@/lib/tee-colour';
@@ -1602,6 +1603,7 @@ export default function CourseDetailPage({
           ))}
 
           {/* PRICE-3: round packs the course sells online (nothing renders when it sells none). */}
+          {course.joins_online && <CourseJoin slug={slug} accent={accent} className="mt-14" />}
           {course.sells_packs && <CoursePacks slug={slug} accent={accent} className="mt-14" />}
 
           {/* About — a section under the sheet (B-1), not a tab */}

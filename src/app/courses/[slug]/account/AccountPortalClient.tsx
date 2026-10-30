@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Loader2, ArrowLeft, Receipt } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { CoursePacks } from '@/components/CoursePacks';
+import { CourseJoin } from '@/components/CourseJoin';
 
 type PortalBooking = {
   id: string; date: string; time: string; holes?: number;
@@ -221,6 +222,7 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
         )}
 
         {/* PRICE-3: rounds left here, and packs to buy. */}
+        <CourseJoin slug={slug} accent={accent} />
         <CoursePacks slug={slug} accent={accent} />
 
         <section>
