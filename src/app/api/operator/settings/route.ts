@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   // SP-A: the cancellation & card policy is the owner's alone (STAFF_POLICY_SPEC
   // A2) — a staff login with "Edit course settings" can change everything else.
-  const OWNER_ONLY_FIELDS = ['cancellationHours', 'checkInWindowHours', 'rainCheckPolicy', 'lateCancellationFee', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'twoFactorMethod', 'twoFactorPhone'];
+  const OWNER_ONLY_FIELDS = ['cancellationHours', 'checkInWindowHours', 'rainCheckPolicy', 'lateCancellationFee', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths', 'twoFactorMethod', 'twoFactorPhone'];
   // Who gets a member rate at the counter is the owner's call, like the policy.
   if (session.isStaff && 'counterMemberRate' in body) return NextResponse.json({ error: 'Only the course owner can change who gets a member rate at the counter.' }, { status: 403 });
   if (session.isStaff && OWNER_ONLY_FIELDS.some(k => k in body)) {
@@ -63,7 +63,7 @@ export async function PATCH(req: NextRequest) {
     'walkingAllowed','walkingNote','cartRequired',
     'cancellationHours','checkInWindowHours','rainCheckPolicy','publicAdvanceDays','timezone',
     // SP-B: the cancellation & card policy (money: noShowFee goes through courseMoneyFromWire below).
-    'lateFeeBasis','lateFeeTiming','noShowFeeBasis','autoNoShowMinutes',
+    'lateFeeBasis','lateFeeTiming','noShowFeeBasis','autoNoShowMinutes','onlineBlockNoShows','onlineBlockLateCancels','onlineBlockMonths',
     'dresscode','minPlayers','maxPlayers',
     'hasDrivingRange','drivingRangeType','rangeBallsFree','hasPuttingGreen','hasShortGameArea',
     'hasProShop','proShopPhone','restaurantType','hasCartGirl','hasLessons','hasClubRental',

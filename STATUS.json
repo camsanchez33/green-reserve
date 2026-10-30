@@ -1,28 +1,50 @@
 {
-  "generatedAt": "2026-10-29T23:33:44.848Z",
+  "generatedAt": "2026-10-30T00:22:03.812Z",
   "repo": {
-    "head": "65df5988",
+    "head": "dbf67c93",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 12,
+    "dirtyCount": 21,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M prisma/schema.prisma",
-      " M scripts/counter-rates-db-test.ts",
-      " M scripts/register-rounds-db-test.ts",
+      " M scripts/change-party-db-test.ts",
+      " M src/app/api/bookings/route.ts",
       " M src/app/api/operator/settings/route.ts",
+      " M src/app/api/operator/tee-times/route.ts",
       " M src/app/dashboard/page.tsx",
       " M src/app/dashboard/settings/page.tsx",
-      " M src/lib/counter-pay.ts",
+      " M src/lib/analytics.ts",
+      " M src/lib/data-reset.ts",
       " M src/lib/settings-validation.ts",
-      "?? prisma/migrations/20261029120000_counter_member_rate/",
-      "?? src/app/api/operator/counter-members/"
+      "?? prisma/migrations/20261030010000_golfer_record/",
+      "?? scripts/golfer-record-db-test.ts",
+      "?? src/app/api/operator/golfers/",
+      "?? src/app/dashboard/golfers/",
+      "?? src/lib/golfer-key.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "370f7fa4",
+        "date": "2026-10-29T19:46:11-04:00",
+        "subject": "Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bf2fdf53",
+        "date": "2026-10-29T23:33:47+00:00",
+        "subject": "Member rates at the counter: the member shows their membership, or the course allows any membership",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "65df5988",
         "date": "2026-10-29T21:02:19+00:00",
@@ -441,16 +463,16 @@
   },
   "specs": [
     {
-      "file": "CLAUDE.md",
+      "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-27",
       "ageDays": 1
     },
     {
-      "file": "DENSE_UI_SPEC.md",
+      "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-10-27",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -672,6 +694,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "370f7fa4",
+      "date": "2026-10-29",
+      "subject": "Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)"
+    },
+    {
+      "h": "bf2fdf53",
+      "date": "2026-10-29",
+      "subject": "Member rates at the counter: the member shows their membership, or the course allows any membership"
+    },
+    {
       "h": "65df5988",
       "date": "2026-10-29",
       "subject": "Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share"
@@ -720,16 +752,6 @@
       "h": "0dfd8bdf",
       "date": "2026-10-29",
       "subject": "Revamp 3: the 12 audit fixes (#250)"
-    },
-    {
-      "h": "92b9bfa6",
-      "date": "2026-10-29",
-      "subject": "Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused"
-    },
-    {
-      "h": "9e689d2b",
-      "date": "2026-10-29",
-      "subject": "Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked"
     }
   ]
 }

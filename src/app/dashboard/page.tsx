@@ -81,6 +81,8 @@ type Booking = {
   /** The round's parts, so part of a group is priced as the server charges it (lib/member-rates partyFees). */
   greenFeeTotal?: number; cartFeeTotal?: number; rangeBallsTotal?: number;
   residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null;
+  /** The golfer's latest staff notes, and this booking's (golfer record). */
+  notes?: string[];
 };
 /** POS-1a: what the card is charged beyond the round itself. */
 const shopExtra = (b: Booking) => (b.shopTotalCents ?? 0) + (b.shopFeeCents ?? 0) + (b.shopTaxCents ?? 0);
@@ -663,12 +665,15 @@ function DashboardPageInner() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[14.5px] text-ink">
-              <span className="font-semibold">{b.golferName}</span>
+              {/* The golfer record (Cam 2026-10-29), opened by this booking — the key never reaches the page. */}
+              <Link href={`/dashboard/golfers/b:${b.id}`} onClick={e => e.stopPropagation()} className="font-semibold hover:underline">{b.golferName}</Link>
               <span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span>
               {(b.residentPlayers ?? 0) > 0 && <span className="text-ink-muted"> · {b.residentPlayers} resident{b.residentPlayers === 1 ? '' : 's'}</span>}
               {(b.source === 'walk_in' || b.source === 'phone') && <span className="text-ink-muted"> · {b.source === 'phone' ? 'Phone' : 'Walk-in'}</span>}
             </p>
             {access.can('sheet.golfer_contact') && <p className="text-[12.5px] text-ink-muted truncate">{b.golferEmail.endsWith('@noemail.greenreserve.app') ? (b.golferPhone || 'No contact on file') : b.golferEmail}</p>}
+            {/* Staff notes on this golfer or this booking (dead end 25). */}
+            {(b.notes?.length ?? 0) > 0 && <p className="text-[12.5px] text-ink mt-0.5">{b.notes!.join(' · ')}</p>}
           </div>
           {access.can('money.payments') && <span className="shrink-0 text-[14px] font-semibold text-ink tabular-nums">${(due / 100).toFixed(2)}</span>}
         </div>

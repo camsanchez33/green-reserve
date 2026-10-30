@@ -24,6 +24,8 @@ const INT_RANGES: Record<string, [number, number]> = {
   publicAdvanceDays: [1, 365],
   memberAdvanceDays: [1, 365],
   memberGraceDays: [0, 365],
+  // Golfer record: the window the online-booking rule counts over.
+  onlineBlockMonths: [1, 36],
   establishedYear: [1700, new Date().getFullYear()],
 };
 const FLOAT_RANGES: Record<string, [number, number]> = {
@@ -91,6 +93,13 @@ export function validateSettingsPatch(body: Record<string, unknown>, allowed: st
       data[key] = n; continue;
     }
     // SP-B: automatic no-show — off (null / blank / 0) or minutes after the tee time.
+    // Golfer record (Cam 2026-10-29): after this many no-shows / late cancels a golfer can't book online. Blank or 0 = off.
+    if (key === 'onlineBlockNoShows' || key === 'onlineBlockLateCancels') {
+      if (v === null || v === '' || v === 0 || v === '0') { data[key] = null; continue; }
+      const n = Number(v);
+      if (!Number.isInteger(n) || n < 1 || n > 20) return { ok: false, error: 'The online-booking rule counts 1 to 20 — or leave it off.' };
+      data[key] = n; continue;
+    }
     if (key === 'autoNoShowMinutes') {
       if (v === null || v === '' || v === 0 || v === '0') { data[key] = null; continue; }
       const n = Number(v);

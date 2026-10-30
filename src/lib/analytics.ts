@@ -55,6 +55,7 @@ import { prisma } from './prisma';
 import { DEFAULT_TZ, isValidTimezone, todayIn, addDaysStr } from './course-time';
 import { teeToUtcMs } from './tee-time-utils';
 import { PLACEHOLDER_EMAIL_DOMAIN } from './email';
+import { golferKey } from './golfer-key';
 
 /** EV-1's event log went live on this day; metrics that need it start here. */
 export const EVENT_LOG_START = '2026-10-01';
@@ -73,14 +74,8 @@ const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 :
 const dowOf = (date: string) => new Date(date + 'T12:00:00Z').getUTCDay();
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000);
 
-function customerKey(b: { golferEmail: string; golferPhone: string; golferAccountId: string | null }): string | null {
-  const email = b.golferEmail.trim().toLowerCase();
-  if (email && !email.endsWith(PLACEHOLDER_EMAIL_DOMAIN)) return `e:${email}`;
-  const digits = b.golferPhone.replace(/\D/g, '');
-  if (digits.length >= 10) return `p:${digits.slice(-10)}`;
-  if (b.golferAccountId) return `a:${b.golferAccountId}`;
-  return null;
-}
+// One rule for who a golfer is, shared with the golfer record (lib/golfer-key).
+const customerKey = golferKey;
 
 /** Monday-start week key for a date string. */
 function weekOf(date: string): string {

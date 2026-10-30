@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { onlineBookingBlock } from '@/lib/golfer-record';
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { groupGreenFee } from '@/lib/residents';
@@ -185,6 +186,10 @@ export async function POST(req: NextRequest) {
   // SP-B: the course's policy decides the fee (per booking or per player), the
   // timing, the no-show fee — and whether a card is asked for at all. All of it
   // is copied onto the booking so a later policy change never reaches it.
+  // Golfer record (Cam 2026-10-29): the owner's block, or the course's no-show / late-cancel rule,
+  // stops booking online — before a card is saved or a seat taken. The counter still books them.
+  const onlineBlock = await onlineBookingBlock(teeTimeFull.courseId, { golferEmail: String(golferEmail ?? ''), golferPhone: String(golferPhone ?? ''), golferAccountId: golferSession?.golferId ?? null });
+  if (onlineBlock) return NextResponse.json({ error: onlineBlock }, { status: 403 });
   const policy = policyFrom(teeTimeFull.course);
   // FEE-AT-BOOKING: with GreenReserve's fee charged at booking, every online booking takes a card.
   const needsCard = cardAtBooking(policy);

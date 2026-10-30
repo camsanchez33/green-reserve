@@ -63,7 +63,7 @@ const NO_SAVE_BUTTON: Section[] = ['Course layout', 'Pro shop', 'Staff', 'Your a
 // "Edit course settings" never sends these (the API refuses them too).
 // Cam 2026-10-26: the time zone (every clock on the sheet) and the course type
 // (private turns off online booking) are the owner's too.
-const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'counterMemberRate', 'timezone', 'type'];
+const POLICY_FIELDS = ['cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy', 'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths', 'counterMemberRate', 'timezone', 'type'];
 
 // SD-8: Save used to PATCH the WHOLE form, so saving a dress-code chip also
 // re-sent every facility toggle and every price — two people editing different
@@ -81,7 +81,7 @@ const SECTION_FIELDS: Record<Section, string[]> = {
   'Prices & fees': [
     'hasMemberPricing', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired',
     'cancellationHours', 'lateCancellationFee', 'checkInWindowHours', 'rainCheckPolicy',
-    'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes',
+    'lateFeeBasis', 'lateFeeTiming', 'noShowFee', 'noShowFeeBasis', 'autoNoShowMinutes', 'onlineBlockNoShows', 'onlineBlockLateCancels', 'onlineBlockMonths',
   ],
   'Facilities': [
     'hasDrivingRange', 'drivingRangeType', 'rangeBallsFree', 'hasPuttingGreen', 'hasShortGameArea',
@@ -879,9 +879,19 @@ function SettingsPageInner() {
                 )}
                 <Toggle label="Mark no-shows automatically" checked={!!form.autoNoShowMinutes} onChange={() => set('autoNoShowMinutes', form.autoNoShowMinutes ? null : 30)}/>
                 {!!form.autoNoShowMinutes && (
-                  <Field label="Minutes after the tee time with nobody checked in" hint="Checked every hour. It only flags the group — nothing is charged until midnight, and “Still coming” or a check-in before then clears it.">
+                  <Field label="Minutes after the tee time with nobody checked in" hint="Checked hourly. Nothing is charged until midnight; “Still coming” or a check-in clears it.">
                     <FInput value={form.autoNoShowMinutes as number} onChange={v=>set('autoNoShowMinutes',Number(v))} type="number"/>
                   </Field>
+                )}
+                {/* Golfer record (Cam 2026-10-29): after too many missed rounds, booking is by phone. */}
+                <Toggle label="Repeat no-shows book by phone" checked={!!(form.onlineBlockNoShows || form.onlineBlockLateCancels)}
+                  onChange={() => { const on = !!(form.onlineBlockNoShows || form.onlineBlockLateCancels); set('onlineBlockNoShows', on ? null : 3); if (on) set('onlineBlockLateCancels', null); }}/>
+                {!!(form.onlineBlockNoShows || form.onlineBlockLateCancels) && (
+                  <div className="grid grid-cols-3 gap-3">
+                    <Field label="No-shows"><FInput value={(form.onlineBlockNoShows ?? '') as number} onChange={v=>set('onlineBlockNoShows', v === '' ? null : Number(v))} type="number"/></Field>
+                    <Field label="Late cancels"><FInput value={(form.onlineBlockLateCancels ?? '') as number} onChange={v=>set('onlineBlockLateCancels', v === '' ? null : Number(v))} type="number"/></Field>
+                    <Field label="Months"><FInput value={(form.onlineBlockMonths ?? 12) as number} onChange={v=>set('onlineBlockMonths',Number(v))} type="number"/></Field>
+                  </div>
                 )}
                 <Field label={formTerms.cardNeeded ? 'Check-in reminder (hours before the round)' : 'Pay link (hours before the round)'} hint={formTerms.cardNeeded ? 'Golfers get their check-in link this many hours before their tee time.' : 'Golfers get a link this many hours before their tee time to check in and pay.'}>
                   <FInput value={(form.checkInWindowHours ?? 3) as number} onChange={v=>set('checkInWindowHours',Number(v))} type="number"/>
