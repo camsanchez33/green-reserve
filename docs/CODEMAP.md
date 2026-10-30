@@ -490,7 +490,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/course-timeline-groups.ts` | 2 | 16 | BRAIN-1b: | `FEED_GROUPS`, `FeedGroup`, `FeedItem` |
 | `src/lib/courses-data.ts` | 2 | 331 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
 | `src/lib/cutoff-hold.ts` | 2 | 127 | The cancellation-window hold (SP-B timing "hold_at_cutoff"): | `chargeCutoffHold`, `HOLD_STALE_MS`, `HoldResult` |
-| `src/lib/data-reset.ts` | 2 | 158 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
+| `src/lib/data-reset.ts` | 2 | 159 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
 | `src/lib/golfer-record.ts` | 2 | 174 | The golfer record (Revamp 3, Cam 2026-10-29): | `autoBlockReason`, `golferRecord`, `GolferRecord`, `isLateCancel`, `onlineBookingBlock`, `recordKeys`, `recordKeysFor` |
 | `src/lib/inquiry-action-queue.ts` | 2 | 107 | The Overview action queue's inquiry rows. | `ActionQueueRow`, `buildInquiryQueueRows`, `QueueInquiry` |
 | `src/lib/inquiry-board.ts` | 2 | 85 | AW-6a (Cam 2026-10-21): | `BOARD_COLUMNS`, `BOARD_STUCK_DAYS`, `boardColumn`, `BoardColumn`, `BoardInquiry`, `LIVE_ON_BOARD_DAYS`, `nextStep`, `NextStep` +1 more |
