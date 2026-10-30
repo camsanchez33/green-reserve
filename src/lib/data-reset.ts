@@ -16,8 +16,9 @@ import { prisma } from './prisma';
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
-/** The launch wipe refuses from this moment: midnight Nov 1, 2026, Eastern. */
-export const WIPE_ALL_UNTIL = new Date('2026-11-01T04:00:00Z');
+/** The launch wipe refuses from this moment: midnight Dec 1, 2026, Eastern (EST, UTC−5).
+ *  Cam 2026-10-30 moved it from Nov 1: "push the deadline back" — Dec 1. */
+export const WIPE_ALL_UNTIL = new Date('2026-12-01T05:00:00Z');
 /** Typed exactly to confirm the launch wipe. */
 export const WIPE_CONFIRM_WORDS = 'WIPE TEST DATA';
 
@@ -76,7 +77,7 @@ export async function previewWipeAll(): Promise<{ wiped: TableCounts; kept: Tabl
  * one, Postgres refuses the whole statement instead of reaching into it.
  */
 export async function wipeAll(now = new Date(), db: Db = prisma): Promise<{ ok: true; cleared: TableCounts } | { ok: false; error: string }> {
-  if (!wipeAllOpen(now)) return { ok: false, error: 'The launch wipe closed on Nov 1 — real courses are on the site now. Reset a single test course instead.' };
+  if (!wipeAllOpen(now)) return { ok: false, error: 'The launch wipe closed on Dec 1 — real courses are on the site now. Reset a single test course instead.' };
   const cleared = await countTables(WIPED_TABLES, db);
   await db.$executeRawUnsafe(`TRUNCATE TABLE ${WIPED_TABLES.map(t => `"${t}"`).join(', ')} RESTRICT`);
   return { ok: true, cleared };

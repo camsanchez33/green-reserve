@@ -552,7 +552,7 @@ export default function AdminSystemPage() {
               )}
             </Section>
 
-            {/* TEST-1 (Cam 2026-10-22): the one-time launch wipe — owner only, closes Nov 1. */}
+            {/* TEST-1 (Cam 2026-10-22): the one-time launch wipe — owner only, closes Dec 1 (moved from Nov 1, Cam 2026-10-30). */}
             {isOwner && (
               <Section id="wipe" title="Before launch: clear test data">
                 <LaunchWipeCard />

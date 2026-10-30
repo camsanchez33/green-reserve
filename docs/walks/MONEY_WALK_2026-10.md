@@ -5,7 +5,7 @@ pay links, **Take cash**, walk-ins paying cash, the register, refunds, the card
 reader and the close-out. Every step says what you should see. Anything else is
 a bug — write down the step number and what you saw, and I'll fix it.
 
-Everything you make here is wiped by the launch wipe (closes Nov 1), so don't
+Everything you make here is wiped by the launch wipe (closes Dec 1), so don't
 clean up.
 
 ## Before you start (5 min)

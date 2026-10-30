@@ -2,7 +2,7 @@
 // Every schema model is named in exactly one of WIPED_TABLES / KEPT_TABLES; a
 // test course's activity is cleared while its setup and every other course
 // are untouched; a course not marked as a test is refused; the launch wipe
-// closes on Nov 1 and, run inside a transaction that is then rolled back,
+// closes on Dec 1 and, run inside a transaction that is then rolled back,
 // empties every wiped table and leaves the kept ones alone.
 // Needs a database. Run: npx tsx scripts/data-reset-db-test.ts
 import { readFileSync } from 'fs';
@@ -53,13 +53,13 @@ async function main() {
   check('the lists name only real tables', unknown.length === 0, unknown);
   check('the company side is kept', ['AdminUser', 'OwnerSession', 'AdminAuditLog', 'Expense', 'AdminGoal', 'AgreementVersion'].every(t => kept.has(t)));
 
-  // The launch wipe closes on Nov 1.
-  check('the launch wipe is open before Nov 1', wipeAllOpen(new Date('2026-10-31T23:00:00Z')));
-  check('the launch wipe is closed from midnight Nov 1 Eastern', !wipeAllOpen(WIPE_ALL_UNTIL) && !wipeAllOpen(new Date('2027-01-01T00:00:00Z')));
+  // The launch wipe closes on Dec 1 (moved from Nov 1, Cam 2026-10-30).
+  check('the launch wipe is open before Dec 1', wipeAllOpen(new Date('2026-10-31T23:00:00Z')));
+  check('the launch wipe is closed from midnight Dec 1 Eastern, open the minute before', WIPE_ALL_UNTIL.toISOString() === '2026-12-01T05:00:00.000Z' && !wipeAllOpen(WIPE_ALL_UNTIL) && wipeAllOpen(new Date('2026-12-01T04:59:00Z')) && !wipeAllOpen(new Date('2027-01-01T00:00:00Z')));
   const t = await seedCourse('test', true);
   const r = await seedCourse('real', false);
 
-  const late = await wipeAll(new Date('2026-11-02T00:00:00Z'));
+  const late = await wipeAll(new Date(WIPE_ALL_UNTIL.getTime() + 86_400_000));
   check('a late launch wipe is refused and clears nothing', !late.ok && (await prisma.course.count({ where: { slug: { startsWith: TAG } } })) === 2);
 
   // A course that isn't marked as a test is refused.
