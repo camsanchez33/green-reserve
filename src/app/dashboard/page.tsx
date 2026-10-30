@@ -1,4 +1,6 @@
 'use client';
+import { PackHolderPick, PACK_RATE } from '@/components/dashboard/RegisterPacks';
+import type { Holding } from '@/lib/round-packs';
 import { Card, CARD } from '@/components/ui/Card';
 import { partyFees } from '@/lib/member-rates';
 import Link from 'next/link';
@@ -1451,6 +1453,8 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   const [memberQ, setMemberQ] = useState('');
   const [memberHits, setMemberHits] = useState<{ id: string; name: string; tier: string }[]>([]);
   const [member, setMember] = useState<{ id: string; name: string; tier: string } | null>(null);
+  // PRICE-3: rounds from a golfer's round pack.
+  const [pack, setPack] = useState<Holding | null>(null);
   useEffect(() => { dfetch<{ tiers: { id: string; name: string }[] }>('/api/operator/counter-members').then(r => { if (r.ok) setTiers(r.data.tiers); }); }, []);
   useEffect(() => {
     if (rate !== 'member' || memberQ.trim().length < 2) { setMemberHits([]); return; }
@@ -1458,12 +1462,12 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
     return () => clearTimeout(t);
   }, [rate, memberQ]);
   const perCents: Record<string, number | null | undefined> = { resident: slot.residentRateCents, senior: slot.seniorRateCents, junior: slot.juniorRateCents };
-  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ['member', 'Member'], ...tiers.map(t => [`tier:${t.id}`, t.name])];
-  const sentRate = rate === 'member' ? (member ? `member:${member.id}` : 'standard') : rate;
+  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ['member', 'Member'], PACK_RATE, ...tiers.map(t => [`tier:${t.id}`, t.name])];
+  const sentRate = rate === 'member' ? (member ? `member:${member.id}` : 'standard') : rate === 'pack' ? (pack ? `pack:${pack.lineId}` : 'standard') : rate;
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
   // A membership is priced by the server (its member and guest rules); the rest show here.
   const green = rate in perCents && perCents[rate] != null ? (perCents[rate] as number) / 100 : slot.greenFee;
-  const total = rate.startsWith('tier:') || rate === 'member' ? null : (green + (cart ? slot.cartFee : 0)) * players;
+  const total = rate.startsWith('tier:') || rate === 'member' || rate === 'pack' ? null : (green + (cart ? slot.cartFee : 0)) * players;
 
   async function save() {
     setSaving(true); setErr('');
@@ -1510,7 +1514,7 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
       )}
       {rates.length > 1 && (
         <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Rate</span>
-          <select value={rate} onChange={e => { setRate(e.target.value); setMember(null); }} className={inp}>{rates.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+          <select value={rate} onChange={e => { setRate(e.target.value); setMember(null); setPack(null); }} className={inp}>{rates.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         </label>
       )}
       {rate === 'member' && (member ? (
@@ -1521,6 +1525,7 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
           {memberHits.map(m => <button key={m.id} type="button" onClick={() => { setMember(m); if (!name.trim()) setName(m.name); }} className="block w-full text-left px-2 py-1.5 text-[13px] text-ink hover:bg-paper">{m.name} <span className="text-ink-muted">· {m.tier}</span></button>)}
         </div>
       ))}
+      {rate === 'pack' && <PackHolderPick value={pack} onPick={h => { setPack(h); if (h && !name.trim()) setName(h.holderName); }} inputClass={inp} />}
       <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Promo code</span>
         <input value={promo} onChange={e => setPromo(e.target.value.toUpperCase())} className={inp} />
       </label>
@@ -1529,11 +1534,11 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
           <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Paying cash now — take it and check this group in
         </label>
       )}
-      <div className="text-[12.5px] text-ink-muted">Due: <b className="text-ink">{total === null ? 'member rate' : `$${total.toFixed(2)}`}</b> — cash, card reader or pay link. No booking fee.</div>
+      <div className="text-[12.5px] text-ink-muted">Due: <b className="text-ink">{total === null ? (rate === 'pack' ? PACK_RATE[1] : 'member rate') : `$${total.toFixed(2)}`}</b> — cash, card reader or pay link. No booking fee.</div>
       {err && <p className="text-sm text-bad">{err}</p>}
       <div className="flex gap-2 pt-1">
         <button onClick={onCancel} disabled={saving} className="flex-1 px-4 py-2.5 border border-line text-ink-soft hover:text-ink rounded-md text-[12.5px] font-medium transition-colors">Cancel</button>
-        <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0 || (rate === 'member' && !member)}
+        <button onClick={save} disabled={saving || name.trim().length < 2 || spots === 0 || (rate === 'member' && !member) || (rate === 'pack' && !pack)}
           className="flex-1 px-4 py-2.5 bg-pine hover:bg-pine-hover disabled:opacity-50 text-white rounded-md text-[12.5px] font-medium transition-colors">
           {saving ? 'Adding…' : source === 'walk_in' && checkInNow ? (total === null ? 'Add + take cash' : `Add + take $${total.toFixed(2)} cash`) : 'Add booking'}
         </button>

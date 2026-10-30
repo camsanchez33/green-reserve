@@ -8,6 +8,7 @@ import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { StaffPermissions } from '@/components/dashboard/StaffPermissions';
 import { ShopCatalog } from '@/components/dashboard/ShopCatalog';
+import { RoundPacks } from '@/components/dashboard/RoundPacks';
 import { CardReaderCard } from '@/components/dashboard/CardReaderCard';
 import { SalesTaxCard } from '@/components/dashboard/SalesTaxCard';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
@@ -1005,6 +1006,8 @@ function SettingsPageInner() {
             <div className="space-y-5">
               <SectionCard title="Pro shop">
                 <ShopCatalog />
+                {/* PRICE-3: round packs, sold at the register. */}
+                <RoundPacks />
               </SectionCard>
               {/* W2-7 part B: owner only — staff can't change anything Stripe. */}
               {access.loaded && !isStaffLogin && (

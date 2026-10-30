@@ -10,6 +10,7 @@
 // scan a barcode into the search box, ring up a custom amount, take money off
 // (shop.discount), enter the cash handed over for the change, send a receipt,
 // and refund a paid sale (money.refund) — cash recorded, card through Stripe.
+import { PackPicker, PackHolders } from '@/components/dashboard/RegisterPacks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
@@ -39,7 +40,7 @@ type Reader = { id: string; label: string; online: boolean; simulated: boolean }
 type RoundOnReader = { bookingId: string; readerId: string; label: string; dueCents: number; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
 /** A sale on the card reader: waiting for the card, or what happened. */
 type ReaderSale = { sale: Sale; readerId: string; state: 'waiting' | 'declined' | 'cancelled' | 'error'; message: string };
-type Custom = { key: string; name: string; priceCents: number; quantity: number };
+type Custom = { key: string; name: string; priceCents: number; quantity: number; roundPackId?: string };
 // POS-3 R2: green fees at the register — today's groups that owe, and walk-ins.
 type Owing = { bookingId: string; time: string; holes: number; golferName: string; players: number; dueCents: number; cardCents: number; noShow: boolean };
 type OpenTime = { teeTimeId: string; time: string; holes: number; round: string | null; spots: number; greenFeeCents: number; cartFeeCents: number; walkingAllowed: boolean; rates?: Record<'resident' | 'senior' | 'junior', number | null> };
@@ -86,6 +87,7 @@ export default function ShopPage() {
   // POS-3: custom amounts, a discount, the cash handed over, and the sale just taken (for its receipt).
   const [customs, setCustoms] = useState<Custom[]>([]);
   const [customForm, setCustomForm] = useState<{ name: string; amount: string } | null>(null);
+  const [packPick, setPackPick] = useState(false);
   const [discount, setDiscount] = useState<Discount | null>(null);
   const [tendered, setTendered] = useState('');
   const [justPaid, setJustPaid] = useState<Sale | null>(null);
@@ -154,7 +156,7 @@ export default function ShopPage() {
   const subtotal = lines.reduce((s, l) => s + l.item.priceCents * l.quantity, 0) + customs.reduce((s, c) => s + c.priceCents * c.quantity, 0);
   const salePayload = useMemo(() => [
     ...lines.map(l => ({ shopItemId: l.item.id, quantity: l.quantity })),
-    ...customs.map(c => ({ name: c.name, priceCents: c.priceCents, quantity: c.quantity })),
+    ...customs.map(c => (c.roundPackId ? { roundPackId: c.roundPackId, quantity: c.quantity } : { name: c.name, priceCents: c.priceCents, quantity: c.quantity })),
   ], [lines, customs]); // eslint-disable-line react-hooks/exhaustive-deps
   const discountPayload = discount && Number(discount.value) > 0
     ? (discount.mode === 'percent' ? { percent: Number(discount.value), note: discount.note } : { amountCents: toCents(discount.value), note: discount.note })
@@ -567,8 +569,12 @@ export default function ShopPage() {
               <Card className="p-5 lg:sticky lg:top-6">
                 <div className="flex items-baseline justify-between gap-2">
                   <h2 className="text-[15px] font-semibold text-ink">This sale</h2>
-                  <button type="button" onClick={() => setCustomForm(f => f ? null : { name: '', amount: '' })} aria-expanded={!!customForm} className={LINK}>Custom amount</button>
+                  <span className="flex gap-3">
+                    <button type="button" onClick={() => setPackPick(o => !o)} aria-expanded={packPick} className={LINK}>Round pack</button>
+                    <button type="button" onClick={() => setCustomForm(f => f ? null : { name: '', amount: '' })} aria-expanded={!!customForm} className={LINK}>Custom amount</button>
+                  </span>
                 </div>
+                {packPick && <PackPicker onClose={() => setPackPick(false)} onPick={p => setCustoms(cs => cs.some(c => c.roundPackId === p.id) ? cs.map(c => c.roundPackId === p.id ? { ...c, quantity: Math.min(99, c.quantity + 1) } : c) : [...cs, { key: `p${p.id}`, name: p.name, priceCents: p.priceCents, quantity: 1, roundPackId: p.id }])} />}
                 {customForm && (
                   <form className="mt-2 bg-paper/70 rounded-md p-3 flex flex-wrap gap-2 items-end" onSubmit={e => {
                     e.preventDefault();
@@ -583,7 +589,7 @@ export default function ShopPage() {
                     <button type="submit" className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-[13px] px-3 py-2">Add</button>
                   </form>
                 )}
-                {empty ? <p className="text-sm text-ink-soft mt-2">Tap or scan items to add them.</p> : (
+                {empty ? <p className="text-sm text-ink-soft mt-2">Tap or scan items.</p> : (
                   <ul className="mt-2 divide-y divide-line-soft">
                     {lines.map(l => (
                       <li key={l.item.id} className="flex items-center justify-between gap-2 py-2 text-sm">
@@ -860,6 +866,7 @@ export default function ShopPage() {
             {/* POS-3 R4: count the drawer at the end of the day. */}
             {/* SHOP-4: low stock, deliveries, reorder points and cost. */}
             {(access.can('shop.sell') || access.can('shop.catalog')) && <ShopStock refreshKey={loads} />}
+            {access.can('shop.sell') && <PackHolders />}
             {access.can('shop.close') && <RegisterClose />}
           </div>
         )}

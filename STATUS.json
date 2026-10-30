@@ -1,36 +1,50 @@
 {
-  "generatedAt": "2026-10-30T17:15:20.349Z",
+  "generatedAt": "2026-10-30T18:17:59.475Z",
   "repo": {
-    "head": "1887bc29",
+    "head": "f8fd1dd5",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 25,
+    "dirtyCount": 28,
     "dirty": [
       "M  STATUS.artifact.html",
       "M  STATUS.json",
       "M  STATUS.md",
       "MM docs/CODEMAP.md",
       "MM docs/codemap.json",
-      "A  prisma/migrations/20261030060000_last_minute/migration.sql",
+      "A  prisma/migrations/20261030090000_round_packs/migration.sql",
       "M  prisma/schema.prisma",
-      "AM scripts/last-minute-db-test.ts",
-      "M  scripts/member-rates-db-test.ts",
-      "M  scripts/promo-codes-db-test.ts",
-      "M  src/app/api/bookings/resident-rate/route.ts",
-      "M  src/app/api/bookings/route.ts",
-      " M src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "A  src/app/api/operator/last-minute/route.ts",
-      "M  src/app/api/preview/[courseId]/tee-times/route.ts",
-      "M  src/app/book/BookClient.tsx",
-      "M  src/app/courses/[slug]/CourseBookingClient.tsx",
-      "M  src/app/dashboard/schedules/page.tsx",
-      "A  src/components/dashboard/LastMinuteDeals.tsx",
-      " M src/lib/booking-residents.ts"
+      "AM scripts/round-packs-db-test.ts",
+      "M  src/app/api/operator/bookings/route.ts",
+      "A  src/app/api/operator/round-packs/route.ts",
+      "M  src/app/api/stripe/webhook/route.ts",
+      "M  src/app/dashboard/page.tsx",
+      "M  src/app/dashboard/settings/page.tsx",
+      "M  src/app/dashboard/shop/page.tsx",
+      "A  src/components/dashboard/RegisterPacks.tsx",
+      "A  src/components/dashboard/RoundPacks.tsx",
+      "M  src/lib/analytics.ts",
+      "M  src/lib/booking-residents.ts",
+      "M  src/lib/cancel-booking.ts",
+      "M  src/lib/change-party.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "2c5fcf28",
+        "date": "2026-10-30T13:23:06-04:00",
+        "subject": "Pricing 2/4: last-minute deals (#258)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f6fd22ff",
+        "date": "2026-10-30T17:16:13+00:00",
+        "subject": "PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "439c4e7b",
         "date": "2026-10-30T12:42:24-04:00",
@@ -820,6 +834,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "2c5fcf28",
+      "date": "2026-10-30",
+      "subject": "Pricing 2/4: last-minute deals (#258)"
+    },
+    {
+      "h": "f6fd22ff",
+      "date": "2026-10-30",
+      "subject": "PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled"
+    },
+    {
       "h": "439c4e7b",
       "date": "2026-10-30",
       "subject": "Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)"
@@ -868,16 +892,6 @@
       "h": "c5b84881",
       "date": "2026-10-30",
       "subject": "Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check"
-    },
-    {
-      "h": "7dda7589",
-      "date": "2026-10-30",
-      "subject": "Money ledger: one row for every dollar that moves; membership dues charged safely (#254)"
-    },
-    {
-      "h": "48be83aa",
-      "date": "2026-10-30",
-      "subject": "Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal)"
     }
   ]
 }

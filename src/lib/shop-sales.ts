@@ -30,11 +30,12 @@ import { recordMove } from './money-ledger';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
+export const PACK_NO_DISCOUNT = 'A round pack can’t be discounted — set its price in Settings → Pro shop.';
 /** A claim this old belongs to a request that is gone (longer than any function run). The sale's single PaymentIntent keeps a retry to one charge either way. */
 export const STALE_CHARGE_MS = 10 * 60 * 1000;
 
 /** A catalog item by id, or (POS-3) a custom amount with its own name and price. */
-export type SaleLineInput = { shopItemId?: string; name?: string; priceCents?: number; quantity: number };
+export type SaleLineInput = { shopItemId?: string; name?: string; priceCents?: number; quantity: number; roundPackId?: string };
 /** POS-3: money off the whole sale — a percent or an amount, and why. */
 export type DiscountInput = { percent?: unknown; amountCents?: unknown; note?: unknown } | null | undefined;
 export type RefundView = { id: string; amountCents: number; method: string; status: string; reason: string; restocked: boolean; error: string; createdBy: string; createdAt: string };
@@ -80,7 +81,9 @@ const LINES = { select: { name: true, unitPriceCents: true, quantity: true }, or
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
 
-type PricedLine = { shopItemId: string | null; reference: string; name: string; unitPriceCents: number; quantity: number; taxCategory: string };
+// PRICE-3: a round pack line carries the pack's terms (lib/round-packs); no tax, no stock, no discount.
+type PackTerms = { roundPackId: string; packRounds: number; packCoversCart: boolean; packGuests: boolean; packValidDays: number | null };
+type PricedLine = { shopItemId: string | null; reference: string; name: string; unitPriceCents: number; quantity: number; taxCategory: string; pack?: PackTerms };
 
 /**
  * This course's active, sellable items for the requested lines, priced from
@@ -92,11 +95,13 @@ async function priceLines(courseId: string, raw: unknown): Promise<Result<{ line
   if (!Array.isArray(raw) || raw.length === 0) return fail(400, 'Add at least one item.');
   if (raw.length > MAX_SALE_LINES) return fail(400, `A sale can have up to ${MAX_SALE_LINES} lines.`);
   const wanted = new Map<string, number>();
+  const wantedPacks = new Map<string, number>();
   const custom: PricedLine[] = [];
   for (const l of raw as Record<string, unknown>[]) {
     const id = typeof l?.shopItemId === 'string' ? l.shopItemId : '';
     const q = Number(l?.quantity);
     if (!Number.isInteger(q) || q < 1 || q > MAX_LINE_QUANTITY) return fail(400, `Each line needs a quantity of 1 to ${MAX_LINE_QUANTITY}.`);
+    if (typeof l?.roundPackId === 'string' && l.roundPackId) { wantedPacks.set(l.roundPackId, (wantedPacks.get(l.roundPackId) ?? 0) + q); continue; }
     if (!id) {
       const name = String(l?.name ?? '').replace(/\s+/g, ' ').trim().slice(0, 60);
       const price = Number(l?.priceCents);
@@ -113,7 +118,11 @@ async function priceLines(courseId: string, raw: unknown): Promise<Result<{ line
   // here, nor does an option of a hidden item.
   const items = wanted.size ? await prisma.shopItem.findMany({ where: { id: { in: [...wanted.keys()] }, courseId, active: true, options: { none: {} }, OR: [{ parentId: null }, { parent: { active: true } }] } }) : [];
   if (items.length !== wanted.size) return fail(404, 'One of those items is not in your shop any more — refresh and try again.');
-  const lines: PricedLine[] = [...items.map(i => ({ shopItemId: i.id, reference: i.id, name: i.name, unitPriceCents: i.priceCents, quantity: wanted.get(i.id)!, taxCategory: i.taxCategory })), ...custom];
+  // PRICE-3: this course's active round packs, priced from the catalog.
+  const packs = wantedPacks.size ? await prisma.roundPack.findMany({ where: { id: { in: [...wantedPacks.keys()] }, courseId, active: true } }) : [];
+  if (packs.length !== wantedPacks.size) return fail(404, 'That round pack is not on sale any more — refresh and try again.');
+  const packLines: PricedLine[] = packs.map(k => ({ shopItemId: null, reference: `pack-${k.id}`, name: k.name, unitPriceCents: k.priceCents, quantity: wantedPacks.get(k.id)!, taxCategory: 'general', pack: { roundPackId: k.id, packRounds: k.rounds, packCoversCart: k.coversCart, packGuests: k.guests, packValidDays: k.validDays } }));
+  const lines: PricedLine[] = [...items.map(i => ({ shopItemId: i.id, reference: i.id, name: i.name, unitPriceCents: i.priceCents, quantity: wanted.get(i.id)!, taxCategory: i.taxCategory })), ...custom, ...packLines];
   if (lines.some(l => l.unitPriceCents <= 0 || l.unitPriceCents > MAX_ITEM_PRICE_CENTS)) return fail(400, 'An item has a price that needs fixing in Settings → Pro shop.');
   const subtotalCents = lines.reduce((s, l) => s + l.unitPriceCents * l.quantity, 0);
   if (subtotalCents > MAX_SALE_CENTS) return fail(400, 'That sale is over $10,000 — check the quantities.');
@@ -163,7 +172,8 @@ export function spreadDiscount(amounts: number[], discountCents: number): number
 
 const taxLines = (lines: PricedLine[], discountCents = 0): TaxLine[] => {
   const after = spreadDiscount(lines.map(l => l.unitPriceCents * l.quantity), discountCents);
-  return lines.map((l, i) => ({ reference: l.reference, amountCents: after[i], quantity: l.quantity, category: l.taxCategory }))
+  return lines.map((l, i) => ({ reference: l.reference, amountCents: l.pack ? 0 : after[i], quantity: l.quantity, category: l.taxCategory }))
+    // PRICE-3: prepaid rounds are green fees, untaxed like green fees rung up at the register.
     // A line discounted to nothing has no tax to work out (Stripe wants a positive amount).
     .filter(l => l.amountCents > 0);
 };
@@ -183,6 +193,7 @@ async function taxFor(courseId: string, lines: TaxLine[], reuseId?: string) {
 export async function quoteSale(courseId: string, raw: unknown, discount?: DiscountInput): Promise<Result<{ subtotalCents: number; discountCents: number; taxCents: number; totalCents: number; taxCalculationId: string; taxUnavailable: boolean }>> {
   const p = await priceLines(courseId, raw);
   if (!p.ok) return p;
+  if (p.value.lines.some(l => l.pack) && hasDiscount(discount)) return fail(400, PACK_NO_DISCOUNT);
   const d = discountFor(p.value.subtotalCents, discount);
   if (!d.ok) return d;
   let q;
@@ -223,10 +234,14 @@ export async function createSale(opts: {
   const noItems = rounds.length > 0 && Array.isArray(opts.lines) && opts.lines.length === 0;
   const p = noItems ? { ok: true as const, value: { lines: [] as PricedLine[], subtotalCents: 0 } } : await priceLines(opts.courseId, opts.lines);
   if (!p.ok) return p;
+  const hasPack = p.value.lines.some(l => l.pack);
+  if (hasPack && hasDiscount(opts.discount)) return fail(400, PACK_NO_DISCOUNT);
+  // The pack's rounds are the customer's — found by their email when they book.
+  if (hasPack && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(opts.customerEmail ?? '').trim())) return fail(400, 'Add the customer’s email — the round pack is theirs, found by it when they book.');
   const d = discountFor(p.value.subtotalCents, opts.discount);
   if (!d.ok) return d;
   const lines = [
-    ...p.value.lines.map(({ taxCategory: _t, reference: _r, ...l }) => ({ ...l, bookingId: null as string | null })),
+    ...p.value.lines.map(({ taxCategory: _t, reference: _r, pack, ...l }) => ({ ...l, ...(pack ?? {}), bookingId: null as string | null })),
     ...rounds.map(r => ({ shopItemId: null, name: r.name.slice(0, 120), unitPriceCents: r.amountCents, quantity: 1, bookingId: r.bookingId })),
   ];
   // W2-7 part B: sales tax from Stripe Tax when the course has it on.
@@ -508,7 +523,7 @@ const isPaid = (status: string) => status === 'paid_cash' || status === 'paid_ca
  * share of the items after the sale's discount, plus their share of its tax — and the
  * lines it covers. Null with a reason when the return isn't possible.
  */
-export function returnAmount(sale: { discountCents: number; taxCents: number; lines: { id: string; unitPriceCents: number; quantity: number; returnedQty: number; bookingId: string | null }[] }, raw: unknown): { ok: true; cents: number; lines: { lineId: string; quantity: number }[] } | { ok: false; error: string } {
+export function returnAmount(sale: { discountCents: number; taxCents: number; lines: { id: string; unitPriceCents: number; quantity: number; returnedQty: number; bookingId: string | null; packRounds?: number; packRoundsUsed?: number }[] }, raw: unknown): { ok: true; cents: number; lines: { lineId: string; quantity: number }[] } | { ok: false; error: string } {
   if (!Array.isArray(raw) || !raw.length) return { ok: false, error: 'Pick what is coming back.' };
   const items = sale.lines.filter(l => !l.bookingId);
   const subtotal = items.reduce((n, l) => n + l.unitPriceCents * l.quantity, 0);
@@ -521,6 +536,8 @@ export function returnAmount(sale: { discountCents: number; taxCents: number; li
     if (!line) return { ok: false, error: 'That item isn’t on this sale.' };
     if (!Number.isInteger(q) || q < 1) return { ok: false, error: 'Enter how many are coming back.' };
     if (q > line.quantity - line.returnedQty) return { ok: false, error: `Only ${line.quantity - line.returnedQty} of that can still come back.` };
+    // PRICE-3: a round pack comes back only with its rounds unused.
+    if (line.packRounds && q > unusedPacks(line)) return { ok: false, error: unusedPacks(line) ? `Only ${unusedPacks(line)} of those packs are still unused.` : 'Rounds from this pack have been used — it can’t come back.' };
     if (out.some(o => o.lineId === line.id)) return { ok: false, error: 'Each item once, with its count.' };
     out.push({ lineId: line.id, quantity: q });
     gross += line.unitPriceCents * q;
@@ -531,12 +548,18 @@ export function returnAmount(sale: { discountCents: number; taxCents: number; li
   return { ok: true, cents: back + tax, lines: out };
 }
 
+/** PRICE-3: how many of a pack line's packs have no round used yet. */
+const unusedPacks = (l: { quantity: number; returnedQty: number; packRounds?: number; packRoundsUsed?: number }) =>
+  l.packRounds ? Math.floor((l.packRounds * (l.quantity - l.returnedQty) - (l.packRoundsUsed ?? 0)) / l.packRounds) : l.quantity - l.returnedQty;
+
 class ReturnRaceError extends Error {}
 
 export async function refundSale(courseId: string, saleId: string, input: { amountCents?: unknown; reason?: unknown; restock?: unknown; lines?: unknown }, actor: string): Promise<Result<{ status: 'done' | 'pending'; sale: SaleView }>> {
-  const s = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, include: { lines: { select: { id: true, unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true } } } });
+  const s = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, include: { lines: { select: { id: true, unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true, packRounds: true, packRoundsUsed: true } } } });
   if (!s) return fail(404, 'Sale not found.');
   if (!isPaid(s.status)) return fail(409, 'Only a paid sale can be refunded.');
+  // PRICE-3: a refund by amount would leave a round pack's rounds live — packs come back by item.
+  if (input.lines === undefined && s.lines.some(l => l.packRounds > 0 && l.quantity > l.returnedQty)) return fail(409, 'This sale has a round pack — return it by item, so its rounds end with the refund.');
   // POS-3 R2: green fees rung up here were paid at the counter on their own
   // bookings — they are not refunded from the register, only the items are.
   const items = s.totalCents - s.roundsCents;
@@ -562,6 +585,9 @@ export async function refundSale(courseId: string, saleId: string, input: { amou
       for (const rl of returned) {
         const ok = await tx.shopSaleLine.updateMany({ where: { id: rl.lineId, saleId, returnedQty: { lte: (s.lines.find(l => l.id === rl.lineId)?.quantity ?? 0) - rl.quantity } }, data: { returnedQty: { increment: rl.quantity } } });
         if (!ok.count) throw new ReturnRaceError();
+        // PRICE-3: under the write — the rounds left must still cover what was used (a booking may have just taken one).
+        const pk = await tx.shopSaleLine.findUnique({ where: { id: rl.lineId }, select: { packRounds: true, packRoundsUsed: true, quantity: true, returnedQty: true } });
+        if (pk && pk.packRounds > 0 && pk.packRoundsUsed > pk.packRounds * (pk.quantity - pk.returnedQty)) throw new ReturnRaceError();
         if (restock) { const l = await tx.shopSaleLine.findUnique({ where: { id: rl.lineId }, select: { shopItemId: true } }); if (l?.shopItemId) await takeStock(tx, l.shopItemId, -rl.quantity); }
       }
     } else if (restock) {
@@ -694,6 +720,7 @@ export async function voidCashSale(courseId: string, saleId: string): Promise<Re
   if (s.status !== 'paid_cash' || !s.paidAt) return fail(409, s.status === 'paid_card' ? 'A card sale is refunded, not voided.' : 'Only a paid cash sale can be voided.');
   if (s.roundsCents > 0) return fail(409, 'This sale paid green fees — undo those on the tee sheet, and refund the items.');
   if (s.refundedCents > 0) return fail(409, 'Part of this sale was refunded — refund the rest instead.');
+  if (await prisma.shopSaleLine.findFirst({ where: { saleId, packRoundsUsed: { gt: 0 } }, select: { id: true } })) return fail(409, 'Rounds from the round pack on this sale have been used — it can’t be voided.');
   const today = todayIn(s.course.timezone);
   if (todayIn(s.course.timezone, s.paidAt) !== today) return fail(409, 'A sale from an earlier day is refunded, not voided.');
   if (await prisma.registerClose.findFirst({ where: { courseId, day: today, createdAt: { gt: s.paidAt } }, select: { id: true } })) {
@@ -702,10 +729,12 @@ export async function voidCashSale(courseId: string, saleId: string): Promise<Re
   const r = await prisma.$transaction(async tx => {
     const done = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: 'paid_cash', refundedCents: 0 }, data: { status: 'void', voidedAt: new Date() } });
     if (!done.count) return null;
+    // PRICE-3: a booking that took a round in the same moment (it held this sale FOR SHARE, so it has committed) stops the void.
+    if (await tx.shopSaleLine.findFirst({ where: { saleId, packRoundsUsed: { gt: 0 } }, select: { id: true } })) throw new ReturnRaceError();
     const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true, returnedQty: true } });
     for (const l of lines) if (l.shopItemId && l.quantity - l.returnedQty > 0) await takeStock(tx, l.shopItemId, -(l.quantity - l.returnedQty));
     return true;
-  });
+  }).catch(err => { if (err instanceof ReturnRaceError) return null; throw err; });
   if (!r) return fail(409, 'This sale just changed — refresh and look again.');
   // The cash goes back in the drawer: the sale's whole total out (a void had nothing refunded on it).
   await recordMove({ courseId, what: 'shop', direction: 'out', method: 'cash', account: 'course', amountCents: s.totalCents, saleId, actor: 'staff', note: 'voided' });

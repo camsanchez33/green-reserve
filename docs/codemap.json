@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 606,
-    "routes": 278,
-    "libs": 212,
-    "models": 63,
+    "files": 610,
+    "routes": 279,
+    "libs": 213,
+    "models": 64,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -5251,7 +5251,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 365,
+      "lines": 368,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5295,6 +5295,7 @@
         "@/lib/prisma",
         "@/lib/register",
         "@/lib/session",
+        "@/lib/shop",
         "@/lib/staff-permissions",
         "@/lib/staff-refund",
         "@/lib/twilio",
@@ -6504,6 +6505,43 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/round-packs/route.ts",
+      "lines": 70,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/round-packs",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "NONE FOUND for POST/PATCH",
+      "imports": [
+        "@/lib/agreement-required",
+        "@/lib/prisma",
+        "@/lib/round-packs",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/round-rules/route.ts",
       "lines": 32,
       "purpose": "",
@@ -7538,7 +7576,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 169,
+      "lines": 175,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7560,6 +7598,7 @@
         "@/lib/money-ledger",
         "@/lib/prisma",
         "@/lib/refund-booking",
+        "@/lib/round-packs",
         "@/lib/stripe",
         "next/server",
         "stripe"
@@ -8454,7 +8493,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1671,
+      "lines": 1676,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8474,6 +8513,7 @@
         "@/components/dashboard/GolferMessageModal",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/MoveGroupModal",
+        "@/components/dashboard/RegisterPacks",
         "@/components/dashboard/ShopItemsForGroup",
         "@/components/dashboard/TeeSheetRows",
         "@/components/dashboard/Toast",
@@ -8489,6 +8529,7 @@
         "@/lib/format",
         "@/lib/late-add",
         "@/lib/member-rates",
+        "@/lib/round-packs",
         "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
@@ -8582,7 +8623,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1158,
+      "lines": 1161,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8602,6 +8643,7 @@
         "@/components/dashboard/CourseLayoutTab",
         "@/components/dashboard/CoursePreview",
         "@/components/dashboard/ImageUpload",
+        "@/components/dashboard/RoundPacks",
         "@/components/dashboard/SalesTaxCard",
         "@/components/dashboard/ShopCatalog",
         "@/components/dashboard/StaffNotice",
@@ -8630,7 +8672,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 891,
+      "lines": 898,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -8647,6 +8689,7 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/RegisterClose",
+        "@/components/dashboard/RegisterPacks",
         "@/components/dashboard/ShopStock",
         "@/components/dashboard/StaffNotice",
         "@/components/ui/Card",
@@ -10544,6 +10587,8 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/PromoCodes.tsx",
+        "src/components/dashboard/RegisterPacks.tsx",
+        "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
@@ -10665,6 +10710,75 @@
       ],
       "usedBy": [
         "src/app/dashboard/shop/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/RegisterPacks.tsx",
+      "lines": 108,
+      "purpose": "PRICE-3 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PACK_RATE",
+          "kind": "const"
+        },
+        {
+          "name": "PackHolderPick",
+          "kind": "component"
+        },
+        {
+          "name": "PackHolders",
+          "kind": "component"
+        },
+        {
+          "name": "PackPicker",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/round-packs",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
+        "src/app/dashboard/shop/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/RoundPacks.tsx",
+      "lines": 93,
+      "purpose": "PRICE-3 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "RoundPacks",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/round-packs",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/settings/page.tsx"
       ]
     },
     {
@@ -11759,6 +11873,7 @@
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
+        "src/components/dashboard/RegisterPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
@@ -12048,6 +12163,7 @@
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
+        "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopStock.tsx",
@@ -12127,6 +12243,8 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
+        "src/components/dashboard/RegisterPacks.tsx",
+        "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
@@ -13408,6 +13526,7 @@
         "src/app/api/operator/photos/route.ts",
         "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
+        "src/app/api/operator/round-packs/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/sales-tax/route.ts",
         "src/app/api/operator/schedule/route.ts",
@@ -13573,7 +13692,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 586,
+      "lines": 588,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -14407,7 +14526,7 @@
     },
     {
       "path": "src/lib/booking-residents.ts",
-      "lines": 66,
+      "lines": 67,
       "purpose": "RES-1 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -14855,7 +14974,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 354,
+      "lines": 359,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14883,6 +15002,7 @@
         "./no-show-fee",
         "./prisma",
         "./refund-booking",
+        "./round-packs",
         "./shop",
         "./stripe"
       ],
@@ -15178,7 +15298,7 @@
     },
     {
       "path": "src/lib/change-party.ts",
-      "lines": 138,
+      "lines": 147,
       "purpose": "A group's party size changes:",
       "brain": [],
       "exports": [
@@ -15206,6 +15326,7 @@
         "./member-rates",
         "./prisma",
         "./residents",
+        "./round-packs",
         "./terms"
       ],
       "usedBy": [
@@ -15365,7 +15486,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 511,
+      "lines": 517,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15589,7 +15710,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 243,
+      "lines": 265,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -15632,6 +15753,7 @@
         "./prisma",
         "./promo-codes",
         "./reader-rounds",
+        "./round-packs",
         "./round-shop-tax",
         "./stripe",
         "./tier-rates",
@@ -16924,6 +17046,8 @@
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
+        "src/components/dashboard/RegisterPacks.tsx",
+        "src/components/dashboard/RoundPacks.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
@@ -19675,7 +19799,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 275,
+      "lines": 285,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -19714,6 +19838,7 @@
         "./prisma",
         "./promo-codes",
         "./residents",
+        "./round-packs",
         "./tier-rates",
         "@prisma/client"
       ],
@@ -20518,6 +20643,7 @@
         "src/app/api/operator/promo-codes/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/residents/route.ts",
+        "src/app/api/operator/round-packs/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/shop-items/route.ts",
@@ -20620,6 +20746,7 @@
         "src/lib/refund-booking.ts",
         "src/lib/register-close.ts",
         "src/lib/register.ts",
+        "src/lib/round-packs.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
@@ -21249,6 +21376,106 @@
         "src/lib/member-session.ts",
         "src/lib/move-booking.ts",
         "src/lib/sample-data.ts"
+      ]
+    },
+    {
+      "path": "src/lib/round-packs.ts",
+      "lines": 185,
+      "purpose": "PRICE-3 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "endPacksRefundedOutside",
+          "kind": "fn"
+        },
+        {
+          "name": "findHoldings",
+          "kind": "fn"
+        },
+        {
+          "name": "giveBack",
+          "kind": "fn"
+        },
+        {
+          "name": "Holding",
+          "kind": "type"
+        },
+        {
+          "name": "holdingById",
+          "kind": "fn"
+        },
+        {
+          "name": "holdingsFor",
+          "kind": "fn"
+        },
+        {
+          "name": "listPacks",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_PACK_ROUNDS",
+          "kind": "const"
+        },
+        {
+          "name": "PACK_NO_CODE",
+          "kind": "const"
+        },
+        {
+          "name": "PackError",
+          "kind": "class"
+        },
+        {
+          "name": "packExpiresAt",
+          "kind": "fn"
+        },
+        {
+          "name": "packLeft",
+          "kind": "fn"
+        },
+        {
+          "name": "packPrice",
+          "kind": "fn"
+        },
+        {
+          "name": "PackRow",
+          "kind": "type"
+        },
+        {
+          "name": "packSeats",
+          "kind": "fn"
+        },
+        {
+          "name": "readPack",
+          "kind": "fn"
+        },
+        {
+          "name": "releaseBookingRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "takeRounds",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/operator/round-packs/route.ts",
+        "src/app/api/stripe/webhook/route.ts",
+        "src/app/dashboard/page.tsx",
+        "src/components/dashboard/RegisterPacks.tsx",
+        "src/components/dashboard/RoundPacks.tsx",
+        "src/lib/cancel-booking.ts",
+        "src/lib/change-party.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/move-booking.ts"
       ]
     },
     {
@@ -22000,6 +22227,7 @@
         "src/app/api/operator/register-close/route.ts",
         "src/app/api/operator/request-changes/route.ts",
         "src/app/api/operator/residents/route.ts",
+        "src/app/api/operator/round-packs/route.ts",
         "src/app/api/operator/round-rules/route.ts",
         "src/app/api/operator/sales-tax/route.ts",
         "src/app/api/operator/schedule/preview/route.ts",
@@ -22381,7 +22609,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 769,
+      "lines": 798,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -22423,6 +22651,10 @@
         },
         {
           "name": "MAX_SALE_LINES",
+          "kind": "const"
+        },
+        {
+          "name": "PACK_NO_DISCOUNT",
           "kind": "const"
         },
         {
@@ -22726,6 +22958,7 @@
         "src/app/api/admin/transactions/export/route.ts",
         "src/app/api/admin/transactions/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
+        "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/admin-course-page.ts",
@@ -24412,6 +24645,14 @@
           "type": "Int"
         },
         {
+          "name": "packLineId",
+          "type": "String?"
+        },
+        {
+          "name": "packRounds",
+          "type": "Int"
+        },
+        {
           "name": "greenFeeTotal",
           "type": "Int"
         },
@@ -24707,6 +24948,7 @@
         "src/lib/refund-booking.ts",
         "src/lib/register-close.ts",
         "src/lib/register.ts",
+        "src/lib/round-packs.ts",
         "src/lib/round-shop-tax.ts",
         "src/lib/sample-data.ts",
         "src/lib/sent-messages.ts",
@@ -25564,6 +25806,10 @@
         {
           "name": "promoCodes",
           "type": "PromoCode[]"
+        },
+        {
+          "name": "roundPacks",
+          "type": "RoundPack[]"
         }
       ],
       "writers": [
@@ -28294,6 +28540,71 @@
       ]
     },
     {
+      "name": "RoundPack",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "rounds",
+          "type": "Int"
+        },
+        {
+          "name": "priceCents",
+          "type": "Int"
+        },
+        {
+          "name": "coversCart",
+          "type": "Boolean"
+        },
+        {
+          "name": "guests",
+          "type": "Boolean"
+        },
+        {
+          "name": "validDays",
+          "type": "Int?"
+        },
+        {
+          "name": "sellOnline",
+          "type": "Boolean"
+        },
+        {
+          "name": "active",
+          "type": "Boolean"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/round-packs/route.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/round-packs/route.ts",
+        "src/lib/round-packs.ts",
+        "src/lib/shop-sales.ts"
+      ]
+    },
+    {
       "name": "SecurityEvent",
       "fields": [
         {
@@ -28641,6 +28952,7 @@
         "src/lib/golfer-record.ts",
         "src/lib/ledger-view.ts",
         "src/lib/register-close.ts",
+        "src/lib/round-packs.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
         "src/lib/shop-report.ts",
@@ -28689,6 +29001,30 @@
         {
           "name": "returnedQty",
           "type": "Int"
+        },
+        {
+          "name": "roundPackId",
+          "type": "String?"
+        },
+        {
+          "name": "packRounds",
+          "type": "Int"
+        },
+        {
+          "name": "packRoundsUsed",
+          "type": "Int"
+        },
+        {
+          "name": "packCoversCart",
+          "type": "Boolean"
+        },
+        {
+          "name": "packGuests",
+          "type": "Boolean"
+        },
+        {
+          "name": "packValidDays",
+          "type": "Int?"
         }
       ],
       "writers": [
@@ -28696,7 +29032,9 @@
       ],
       "readers": [
         "src/lib/register-close.ts",
-        "src/lib/shop-report.ts"
+        "src/lib/round-packs.ts",
+        "src/lib/shop-report.ts",
+        "src/lib/shop-sales.ts"
       ]
     },
     {

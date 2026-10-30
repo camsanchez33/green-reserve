@@ -39,6 +39,7 @@ import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
 import { promoFits, seatAfter } from './promo-codes';
 import { dealPct, dealSeat, dealRateSeat } from './last-minute';
+import { packPrice } from './round-packs';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 
 export type MovePricing = 'keep' | 'new_slot';
@@ -120,7 +121,7 @@ export async function moveBooking(opts: {
         select: {
           id: true, courseId: true, teeTimeId: true, players: true, status: true, source: true, checkedInAt: true, noShowAt: true, golferAccountId: true, golferEmail: true,
           paymentStatus: true, roundPaymentIntentId: true, readerStartedAt: true,
-          cartSelected: true, appliedRate: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, promoDiscountCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
+          cartSelected: true, appliedRate: true, packLineId: true, packRounds: true, memberRateCents: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, promoDiscountCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
           course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true } },
@@ -165,7 +166,7 @@ export async function moveBooking(opts: {
       let spot = memberSpot(null, rate);
       // A member rate whose tier is gone keeps what they paid a player — already after any code.
       let rateIsOwn = false;
-      if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') {
+      if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident' && b.appliedRate !== 'pack') {
         // Tier names aren't unique in the schema: take the oldest ACTIVE tier of
         // that name so the answer is deterministic (a tierId on Booking is the
         // proper fix; the tiers route now refuses duplicate names).
@@ -207,11 +208,20 @@ export async function moveBooking(opts: {
       const ratedResidents = groupGreenFee(b.players, ownSeat, residentN, resSeat);
       const ratedGreen = memberN ? splitTotal(b.players, memberN, ownSeat, pubSeat) : ratedResidents.greenFeeTotal;
       const residents = groupGreenFee(b.players, seat(ownSeat), residentN, resSeat == null ? null : seat(resSeat));
-      const newGreen = memberN ? splitTotal(b.players, memberN, seat(ownSeat), seat(pubSeat)) : residents.greenFeeTotal;
+      let newGreen = memberN ? splitTotal(b.players, memberN, seat(ownSeat), seat(pubSeat)) : residents.greenFeeTotal;
       spot = spot.memberRateCents != null ? { ...spot, memberRateCents: seat(ownSeat) } : spot;
       // CART-1: a group moved onto a cart-only time takes a cart there.
       const cartOn = b.cartSelected || slot.walkingAllowed === false;
-      const newCart = cartOn ? (memberN ? splitTotal(b.players, memberN, rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * b.players) : 0;
+      let newCart = cartOn ? (memberN ? splitTotal(b.players, memberN, rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * b.players) : 0;
+      // PRICE-3: a round pack's seats stay free on the new time (the rounds are already taken); the rest
+      // of the group pays the new time's public price.
+      if (b.appliedRate === 'pack' && b.packLineId) {
+        const line = await tx.shopSaleLine.findUnique({ where: { id: b.packLineId }, select: { packCoversCart: true } });
+        const guests = b.memberRateCents == null;
+        const p = packPrice({ players: b.players, seats: guests ? b.players : 1, guests, coversCart: !!line?.packCoversCart, publicGreen: pubSeat, cartFee: slot.cartFeeCents, cart: cartOn });
+        newGreen = p.greenFeeTotal; newCart = p.cartFeeTotal;
+        spot = { memberRateCents: p.memberRateCents, memberCartCents: p.memberCartCents } as typeof spot;
+      }
       const range = Math.round(b.rangeBallsTotal);
       const access = Math.round(b.accessFeeTotal); // per-player amount unchanged: same players
       // A round already paid (admin "collect payment" before check-in) keeps its
@@ -246,7 +256,7 @@ export async function moveBooking(opts: {
         data.lastMinutePct = lmPct;
         if (b.promoCodeId && !rateIsOwn) { data.promoCodeId = promo ? promo.id : null; data.promoDiscountCents = promo ? ratedGreen - newGreen : 0; }
         if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
-        if (memberN === 0 && b.appliedRate !== 'resident' && b.appliedRate !== 'standard') data.appliedRate = residents.residentPlayers > 0 ? 'resident' : 'standard';
+        if (memberN === 0 && b.appliedRate !== 'resident' && b.appliedRate !== 'standard' && b.appliedRate !== 'pack') data.appliedRate = residents.residentPlayers > 0 ? 'resident' : 'standard';
       }
       if (opts.terms) { data.termsAcceptedAt = now; data.termsVersion = opts.terms.version; }
       await tx.booking.update({ where: { id: b.id }, data });

@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-30 17:15 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 1887bc29</span>
-    <span>25 uncommitted</span>
+    <span>2026-10-30 18:17 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ f8fd1dd5</span>
+    <span>28 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">56 runs have shipped that the queue doesn't know about</div>
+<div class="lede">58 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">2c5fcf28</span><span>Pricing 2/4: last-minute deals (#258)</span></li>
+<li><span class="h">f6fd22ff</span><span>PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled</span></li>
 <li><span class="h">439c4e7b</span><span>Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)</span></li>
 <li><span class="h">f65525cf</span><span>A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice</span></li>
 <li><span class="h">6612c506</span><span>Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code</span></li>
@@ -193,7 +195,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>MM docs/CODEMAP.md</code></li><li><code>MM docs/codemap.json</code></li><li><code>A  prisma/migrations/20261030060000_last_minute/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>AM scripts/last-minute-db-test.ts</code></li><li><code>M  scripts/member-rates-db-test.ts</code></li><li><code>M  scripts/promo-codes-db-test.ts</code></li><li><code>M  src/app/api/bookings/resident-rate/route.ts</code></li><li><code>M  src/app/api/bookings/route.ts</code></li><li><code>M src/app/api/member/[courseSlug]/tee-times/route.ts</code></li><li><code>A  src/app/api/operator/last-minute/route.ts</code></li><li><code>M  src/app/api/preview/[courseId]/tee-times/route.ts</code></li><li><code>M  src/app/book/BookClient.tsx</code></li><li><code>M  src/app/courses/[slug]/CourseBookingClient.tsx</code></li><li><code>M  src/app/dashboard/schedules/page.tsx</code></li><li><code>A  src/components/dashboard/LastMinuteDeals.tsx</code></li><li><code>M src/lib/booking-residents.ts</code></li></ul>
+<ul class="plain"><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>MM docs/CODEMAP.md</code></li><li><code>MM docs/codemap.json</code></li><li><code>A  prisma/migrations/20261030090000_round_packs/migration.sql</code></li><li><code>M  prisma/schema.prisma</code></li><li><code>AM scripts/round-packs-db-test.ts</code></li><li><code>M  src/app/api/operator/bookings/route.ts</code></li><li><code>A  src/app/api/operator/round-packs/route.ts</code></li><li><code>M  src/app/api/stripe/webhook/route.ts</code></li><li><code>M  src/app/dashboard/page.tsx</code></li><li><code>M  src/app/dashboard/settings/page.tsx</code></li><li><code>M  src/app/dashboard/shop/page.tsx</code></li><li><code>A  src/components/dashboard/RegisterPacks.tsx</code></li><li><code>A  src/components/dashboard/RoundPacks.tsx</code></li><li><code>M  src/lib/analytics.ts</code></li><li><code>M  src/lib/booking-residents.ts</code></li><li><code>M  src/lib/cancel-booking.ts</code></li><li><code>M  src/lib/change-party.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -275,6 +277,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">2c5fcf28</td><td class="num">2026-10-30</td><td>Pricing 2/4: last-minute deals (#258)</td></tr>
+<tr><td class="num">f6fd22ff</td><td class="num">2026-10-30</td><td>PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled</td></tr>
 <tr><td class="num">439c4e7b</td><td class="num">2026-10-30</td><td>Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)</td></tr>
 <tr><td class="num">f65525cf</td><td class="num">2026-10-30</td><td>A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice</td></tr>
 <tr><td class="num">6612c506</td><td class="num">2026-10-30</td><td>Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code</td></tr>
@@ -285,8 +289,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">1aa2c299</td><td class="num">2026-10-30</td><td>Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)</td></tr>
 <tr><td class="num">001ba73f</td><td class="num">2026-10-30</td><td>Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits</td></tr>
 <tr><td class="num">c5b84881</td><td class="num">2026-10-30</td><td>Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check</td></tr>
-<tr><td class="num">7dda7589</td><td class="num">2026-10-30</td><td>Money ledger: one row for every dollar that moves; membership dues charged safely (#254)</td></tr>
-<tr><td class="num">48be83aa</td><td class="num">2026-10-30</td><td>Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

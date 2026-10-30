@@ -3,6 +3,7 @@ import { sendCancellationEmail, sendTeeTimeAlertEmail } from './email';
 import { refundOnConnectedAccount, chargeOnConnectedAccount } from './stripe';
 import { refundSeparateAccessFee, chargeAccessFeeSeparately } from './access-fee';
 import { refundBookingFee } from './booking-fee';
+import { releaseBookingRounds } from './round-packs';
 import { chargesOnLateCancel, holdsAtCutoff, bookingWindowHours } from './cancel-policy';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
@@ -346,6 +347,10 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     const r = keep ? null : await refundBookingFee(bookingId, 'all', opts.courseCalledOff ? `course called it off (${opts.courseCalledOff})` : waiveFee ? 'cancelled, fee waived' : 'cancelled before the cutoff');
     if (r && !r.ok) bookingFeeRefundFailed = `GreenReserve's booking fee could not be refunded (${r.error}) — GreenReserve will follow up.`;
   }
+
+  // PRICE-3: a round pack's rounds come back by the same rule as the booking fee — before the
+  // cutoff, or when the course calls it off or waives; a late cancel or a no-show uses them.
+  if (!(!waiveFee && !opts.courseCalledOff && (isLate || !!noShowCharge))) await releaseBookingRounds(bookingId);
 
   // A kept no-show charge reads as a fee kept on every screen, as in the email.
   // noShowFeeKeptCents: the screens name WHICH fee was kept (a no-show charge is not a late fee).

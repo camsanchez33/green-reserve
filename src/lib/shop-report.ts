@@ -20,7 +20,7 @@ export type ShopReport = {
   cost: boolean;
 };
 
-type Line = { shopItemId: string | null; name: string; unitPriceCents: number; qty: number; via: 'walkup' | 'round' };
+type Line = { shopItemId: string | null; name: string; unitPriceCents: number; qty: number; via: 'walkup' | 'round'; pack?: boolean };
 
 /** Pure: lines into items, categories and totals. `costOf` is the item's cost today, or null. */
 export function summarize(lines: Line[], meta: Map<string, { category: string; costCents: number | null }>, opts: { cost: boolean; discountsCents: number }): Omit<ShopReport, 'range' | 'cost'> {
@@ -28,9 +28,9 @@ export function summarize(lines: Line[], meta: Map<string, { category: string; c
   let walkUp = 0, onRounds = 0;
   for (const l of lines) {
     if (l.qty <= 0) continue;
-    const key = l.shopItemId ?? `custom:${l.name}`;
+    const key = l.shopItemId ?? `${l.pack ? 'pack' : 'custom'}:${l.name}`;
     const m = l.shopItemId ? meta.get(l.shopItemId) : undefined;
-    const row = by.get(key) ?? { key, name: l.name, category: m?.category || (l.shopItemId ? 'Other' : 'Custom amounts'), qty: 0, salesCents: 0, costKnown: m?.costCents != null, costTotal: 0 };
+    const row = by.get(key) ?? { key, name: l.name, category: m?.category || (l.shopItemId ? 'Other' : l.pack ? 'Round packs' : 'Custom amounts'), qty: 0, salesCents: 0, costKnown: m?.costCents != null, costTotal: 0 };
     const sold = l.unitPriceCents * l.qty;
     row.qty += l.qty; row.salesCents += sold;
     if (m?.costCents != null) row.costTotal += m.costCents * l.qty;
@@ -68,7 +68,7 @@ export async function shopReport(courseId: string, range: { from: string; to: st
   const [saleLines, sales, roundLines] = await Promise.all([
     prisma.shopSaleLine.findMany({
       where: { bookingId: null, sale: { courseId, status: { in: ['paid_cash', 'paid_card'] }, paidAt: inRange } },
-      select: { shopItemId: true, name: true, unitPriceCents: true, quantity: true, returnedQty: true }, take: 50_000,
+      select: { shopItemId: true, name: true, unitPriceCents: true, quantity: true, returnedQty: true, roundPackId: true }, take: 50_000,
     }),
     prisma.shopSale.findMany({ where: { courseId, status: { in: ['paid_cash', 'paid_card'] }, paidAt: inRange, discountCents: { gt: 0 } }, select: { discountCents: true } }),
     prisma.bookingShopItem.findMany({
@@ -77,7 +77,7 @@ export async function shopReport(courseId: string, range: { from: string; to: st
     }),
   ]);
   const lines: Line[] = [
-    ...saleLines.map(l => ({ shopItemId: l.shopItemId, name: l.name, unitPriceCents: l.unitPriceCents, qty: l.quantity - l.returnedQty, via: 'walkup' as const })),
+    ...saleLines.map(l => ({ shopItemId: l.shopItemId, name: l.name, unitPriceCents: l.unitPriceCents, qty: l.quantity - l.returnedQty, via: 'walkup' as const, pack: !!l.roundPackId })),
     ...roundLines.map(l => ({ shopItemId: l.shopItemId, name: l.name, unitPriceCents: l.unitPriceCents, qty: l.quantity, via: 'round' as const })),
   ];
   const ids = [...new Set(lines.map(l => l.shopItemId).filter((x): x is string => !!x))];
