@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 599,
-    "routes": 275,
-    "libs": 210,
-    "models": 62,
+    "files": 603,
+    "routes": 277,
+    "libs": 211,
+    "models": 63,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -3698,7 +3698,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 423,
+      "lines": 439,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3735,6 +3735,7 @@
         "@/lib/member-session",
         "@/lib/money",
         "@/lib/prisma",
+        "@/lib/promo-codes",
         "@/lib/rate-limit",
         "@/lib/residents",
         "@/lib/stripe",
@@ -5247,7 +5248,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 364,
+      "lines": 365,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6268,6 +6269,42 @@
       "guard": "file",
       "imports": [
         "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/promo-codes/route.ts",
+      "lines": 54,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/promo-codes",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/promo-codes",
         "@/lib/session",
         "next/server"
       ],
@@ -7381,6 +7418,32 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/promo/check/route.ts",
+      "lines": 26,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/promo/check",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/prisma",
+        "@/lib/promo-codes",
+        "@/lib/rate-limit",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
       "lines": 76,
       "purpose": "",
@@ -7494,7 +7557,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 745,
+      "lines": 776,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7523,6 +7586,7 @@
       "imports": [
         "@/components/CourseHeaderBar",
         "@/components/TrustNote",
+        "@/components/ui/field",
         "@/lib/booking-fees",
         "@/lib/cancel-policy",
         "@/lib/member-rates",
@@ -8356,7 +8420,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1666,
+      "lines": 1671,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8450,7 +8514,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 630,
+      "lines": 634,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -8467,6 +8531,7 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/PromoCodes",
         "@/components/dashboard/RoundRulesCard",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
@@ -10414,6 +10479,7 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
@@ -10479,6 +10545,34 @@
       ],
       "usedBy": [
         "src/components/OperatorSidebar.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/PromoCodes.tsx",
+      "lines": 115,
+      "purpose": "PRICE-1 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "PromoCodes",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/schedules/page.tsx"
       ]
     },
     {
@@ -11598,6 +11692,7 @@
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
+        "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/ShopStock.tsx",
@@ -11885,6 +11980,7 @@
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
+        "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
@@ -11943,6 +12039,7 @@
         "src/app/admin/profile/page.tsx",
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
+        "src/app/book/BookClient.tsx",
         "src/app/cam/page.tsx",
         "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/members/page.tsx",
@@ -11961,6 +12058,7 @@
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
+        "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
@@ -15421,7 +15519,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 216,
+      "lines": 230,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -15461,6 +15559,7 @@
         "./money-ledger",
         "./no-show-fee",
         "./prisma",
+        "./promo-codes",
         "./reader-rounds",
         "./round-shop-tax",
         "./stripe",
@@ -16751,6 +16850,7 @@
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
+        "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
@@ -16817,7 +16917,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 156,
+      "lines": 158,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -20294,6 +20394,7 @@
         "src/app/api/operator/photos/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/profile/route.ts",
+        "src/app/api/operator/promo-codes/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/round-rules/route.ts",
@@ -20316,6 +20417,7 @@
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
         "src/app/api/preview/send/route.ts",
+        "src/app/api/promo/check/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/app/courses/[slug]/page.tsx",
@@ -20388,6 +20490,7 @@
         "src/lib/owner-session.ts",
         "src/lib/page-review.ts",
         "src/lib/problems.ts",
+        "src/lib/promo-codes.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
         "src/lib/rate-limit.ts",
@@ -20491,6 +20594,64 @@
         "src/app/api/admin/nav-badges/route.ts",
         "src/app/api/admin/problems/route.ts",
         "src/app/api/admin/today/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/promo-codes.ts",
+      "lines": 110,
+      "purpose": "PRICE-1 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "applyPromo",
+          "kind": "fn"
+        },
+        {
+          "name": "listPromos",
+          "kind": "fn"
+        },
+        {
+          "name": "normCode",
+          "kind": "fn"
+        },
+        {
+          "name": "promoDiscount",
+          "kind": "fn"
+        },
+        {
+          "name": "promoFits",
+          "kind": "fn"
+        },
+        {
+          "name": "PromoRow",
+          "kind": "type"
+        },
+        {
+          "name": "readPromo",
+          "kind": "fn"
+        },
+        {
+          "name": "releaseUse",
+          "kind": "fn"
+        },
+        {
+          "name": "reserveUse",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/bookings/route.ts",
+        "src/app/api/operator/promo-codes/route.ts",
+        "src/app/api/promo/check/route.ts",
+        "src/lib/counter-pay.ts"
       ]
     },
     {
@@ -20636,6 +20797,7 @@
         "src/app/api/operator/sign/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/[courseId]/request-changes/route.ts",
+        "src/app/api/promo/check/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/app/api/shop-sale/[id]/route.ts",
         "src/lib/birdie/guardrails.ts",
@@ -21699,6 +21861,7 @@
         "src/app/api/operator/photos/route.ts",
         "src/app/api/operator/preview-link/route.ts",
         "src/app/api/operator/profile/route.ts",
+        "src/app/api/operator/promo-codes/route.ts",
         "src/app/api/operator/reader-rounds/route.ts",
         "src/app/api/operator/regenerate-tee-times/route.ts",
         "src/app/api/operator/register-close/route.ts",
@@ -24104,6 +24267,14 @@
           "type": "String"
         },
         {
+          "name": "promoCodeId",
+          "type": "String?"
+        },
+        {
+          "name": "promoDiscountCents",
+          "type": "Int"
+        },
+        {
           "name": "greenFeeTotal",
           "type": "Int"
         },
@@ -24392,6 +24563,7 @@
         "src/lib/no-show-fee.ts",
         "src/lib/operator-home.ts",
         "src/lib/operator-search.ts",
+        "src/lib/promo-codes.ts",
         "src/lib/reader-rounds.ts",
         "src/lib/real-courses.ts",
         "src/lib/receipt-charges.ts",
@@ -25231,6 +25403,10 @@
         {
           "name": "shopStockReceipts",
           "type": "ShopStockReceipt[]"
+        },
+        {
+          "name": "promoCodes",
+          "type": "PromoCode[]"
         }
       ],
       "writers": [
@@ -27764,6 +27940,100 @@
       ]
     },
     {
+      "name": "PromoCode",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "code",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "type": "Int"
+        },
+        {
+          "name": "startsOn",
+          "type": "String?"
+        },
+        {
+          "name": "endsOn",
+          "type": "String?"
+        },
+        {
+          "name": "days",
+          "type": "Int[]"
+        },
+        {
+          "name": "fromTime",
+          "type": "String?"
+        },
+        {
+          "name": "toTime",
+          "type": "String?"
+        },
+        {
+          "name": "maxUses",
+          "type": "Int?"
+        },
+        {
+          "name": "usesCount",
+          "type": "Int"
+        },
+        {
+          "name": "onePerGolfer",
+          "type": "Boolean"
+        },
+        {
+          "name": "withRates",
+          "type": "Boolean"
+        },
+        {
+          "name": "active",
+          "type": "Boolean"
+        },
+        {
+          "name": "note",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/promo-codes/route.ts",
+        "src/lib/data-reset.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/promo-codes/route.ts",
+        "src/app/api/promo/check/route.ts",
+        "src/lib/promo-codes.ts"
+      ]
+    },
+    {
       "name": "RateLimit",
       "fields": [
         {
@@ -28649,6 +28919,7 @@
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/preview/[courseId]/route.ts",
         "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/app/api/promo/check/route.ts",
         "src/lib/admin-home.ts",
         "src/lib/admin-today.ts",
         "src/lib/analytics.ts",

@@ -15,6 +15,7 @@ import { Loader2 } from 'lucide-react';
 import { ACCESS_FEE_PER_PLAYER, serviceFeeLabel, hoursLabel } from '@/lib/booking-fees';
 import { TrustNote } from '@/components/TrustNote';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
+import { INPUT_COMPACT } from '@/components/ui/field';
 import { describePolicy, policyFrom, afterCutoffLine, insideWindowLine, policyMoney, holdTodayLine, holdsAtCutoff, type CancelPolicy } from '@/lib/cancel-policy';
 
 // Deferred: only load Stripe when a card is actually needed (fee-policy courses).
@@ -155,6 +156,21 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [stripeWanted, setStripeWanted] = useState(false);
   // A required cart is the tee time's call (cart_required: its price-table cell can't be walked, CART-1).
   const [cartSelected, setCartSelected] = useState(cartParam);
+  // PRICE-1 (Cam 2026-10-30): a promo code, checked by the server before booking; the booking prices it again.
+  const [promoInput, setPromoInput] = useState('');
+  const [promo, setPromo] = useState<{ code: string; kind: string; value: number; withRates: boolean } | null>(null);
+  const [promoError, setPromoError] = useState('');
+  const [promoBusy, setPromoBusy] = useState(false);
+  async function checkPromo(teeTimeId: string) {
+    setPromoBusy(true); setPromoError('');
+    try {
+      const res = await fetch('/api/promo/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ teeTimeId, code: promoInput }) });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { setPromo(null); setPromoError(d.error || 'That code didn’t work.'); }
+      else setPromo(d);
+    } catch { setPromoError('Couldn’t check the code — try again.'); }
+    setPromoBusy(false);
+  }
   const [rangeBallsSize, setRangeBallsSize] = useState<'' | 'small' | 'medium' | 'large'>('');
 
   useEffect(() => {
@@ -348,7 +364,11 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
     : 0;
   const rangeBallsTotal = course.range_balls_free ? 0 : rangeBallsPrice;
   const accessTotal  = ACCESS_FEE_PER_PLAYER * players;
-  const total         = greenTotal + cartTotal + rangeBallsTotal + accessTotal;
+  // A code that doesn't work with member or resident rates takes nothing off one (the server says so too).
+  const promoBlocked = !!promo && !promo.withRates && (!!memberRate || residentFee != null);
+  const greenCents = Math.round(greenTotal * 100);
+  const promoOff = !promo || promoBlocked ? 0 : Math.min(greenCents, promo.kind === 'percent' ? Math.round(greenCents * promo.value / 100) : promo.value * players) / 100;
+  const total         = greenTotal - promoOff + cartTotal + rangeBallsTotal + accessTotal;
 
   // SP-B: the course's policy decides whether a card is asked for at all, and
   // describePolicy() is the same wording the course page and the email use.
@@ -432,12 +452,20 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 <div className="flex justify-between text-ink-soft"><span>Green fee (×{players})</span><span>${greenTotal.toFixed(2)}</span></div>
                 {memberRate && <p className="text-[12.5px] text-ink-muted -mt-1">{memberRate.name} rate ${memberRate.greenFee.toFixed(2)}{memberN < players ? ` for you; your guests pay $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
                 {residentFee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
+                {promoOff > 0 && <div className="flex justify-between text-ink-soft"><span>Code {promo!.code}</span><span>−${promoOff.toFixed(2)}</span></div>}
                 {cartTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
                 {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls ({rangeBallsSize})</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between text-ink-soft">
                   <span>{serviceFeeLabel(players)}</span>
                   <span>${accessTotal.toFixed(2)}</span>
                 </div>
+                <div className="flex gap-2 pt-1">
+                  <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); if (promo) setPromo(null); setPromoError(''); }} placeholder="Promo code" aria-label="Promo code"
+                    className={INPUT_COMPACT + ' flex-1 min-w-0'} />
+                  <button type="button" onClick={() => checkPromo(teeTime.id)} disabled={!promoInput.trim() || promoBusy} className="px-3 py-2 border border-line rounded-md text-sm font-medium text-ink hover:bg-paper disabled:opacity-50">{promoBusy ? 'Checking…' : 'Apply'}</button>
+                </div>
+                {promoError && <p role="alert" className="text-[12.5px] text-bad">{promoError}</p>}
+                {promoBlocked && <p className="text-[12.5px] text-ink-muted">Code {promo!.code} can’t be used with your {memberRate ? 'member' : 'resident'} rate.</p>}
                 {/* Two lines, always — the number people owe and the number
                     that leaves their account today are not the same number. */}
                 <div className="border-t border-line pt-3 space-y-1.5">
@@ -467,6 +495,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
                 accent={accent}
                 needsCard={terms.cardAtBooking}
+                promoCode={promo && !promoBlocked ? promo.code : ''}
                 courseName={course.name}
                 onConfirmed={setConfirmedData}
               />
@@ -491,7 +520,8 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   );
 }
 
-function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, needsCard, courseName, onConfirmed }: {
+function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, needsCard, courseName, onConfirmed, promoCode = '' }: {
+  promoCode?: string;
   teeTimeId: string;
   players: number;
   golfer: GolferProfile | null;
@@ -543,6 +573,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         ...(setupIntentId ? { setupIntentId } : {}),
         cartSelected,
         rangeBallsSize,
+        ...(promoCode ? { promoCode } : {}),
         termsAccepted: latest.current.agreed === true,
       }),
     });

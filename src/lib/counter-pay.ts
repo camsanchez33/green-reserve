@@ -19,6 +19,7 @@ import { READER_STALE_MS } from './checkin-booking';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
 import { recordMove } from './money-ledger';
 import { applyTierRates } from './tier-rates';
+import { applyPromo, reserveUse, releaseUse } from './promo-codes';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 
 export type CounterResult =
@@ -124,6 +125,8 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
 export type CounterBookingInput = {
   teeTimeId: string; golferName: string; golferEmail?: string; golferPhone?: string;
   players: number; cartSelected?: boolean; source?: 'walk_in' | 'phone';
+  /** PRICE-1: a promo code the golfer gave at the counter or on the phone. */
+  promoCode?: string;
   /** A walk-in who already played, recorded after the LATE_ADD_MINUTES cut-off (staff only). */
   late?: boolean;
   /**
@@ -182,6 +185,15 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     appliedRate = tier.name;
     rateRows = memberSpot(tier, r);
   } else if (rate !== 'standard') return { ok: false, status: 400, error: 'Pick a rate.' };
+  // PRICE-1 (Cam 2026-10-30): a promo code staff apply, by the same rules as online.
+  let promo: { id: string; discountCents: number } | null = null;
+  if (input.promoCode && String(input.promoCode).trim()) {
+    const p = await applyPromo(courseId, input.promoCode, { date: teeTime.date, time: teeTime.time, players, greenFeeTotalCents: greenFeeTotal, rateApplied: appliedRate !== 'standard', golferEmail: golferEmail || null });
+    if (!p.ok) return { ok: false, status: 400, error: p.error };
+    promo = { id: p.code.id, discountCents: p.discountCents };
+    greenFeeTotal -= p.discountCents;
+    if (!(await reserveUse(promo.id))) return { ok: false, status: 409, error: 'That code has just been used up.' };
+  }
   // No platform fee on a counter booking — nothing is collected online.
   const totalAmount = greenFeeTotal + cartFeeTotal;
   // CASH-1 (Cam 2026-10-25: "can't just be paid at counter"): a counter booking is
@@ -191,6 +203,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       teeTimeId: teeTime.id, courseId,
       golferName, golferEmail: golferEmail || `${source}+${Date.now()}@noemail.greenreserve.app`, golferPhone,
       players, appliedRate, ...rateRows,
+      ...(promo ? { promoCodeId: promo.id, promoDiscountCents: promo.discountCents } : {}),
       greenFeeTotal, cartFeeTotal, cartSelected: cart, accessFeeTotal: 0, totalAmount,
       checkInToken: golferEmail ? randomUUID() : null,
       paymentStatus: 'manual',
@@ -203,6 +216,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       teeTime: { date: teeTime.date, time: teeTime.time, holes: teeTime.holes },
       course: { name: c.name, address: c.address, city: c.city, state: c.state, slug: c.slug, cancellationHours: c.cancellationHours, confirmationNote: c.confirmationNote } };
   } catch (err) {
+    if (promo) await releaseUse(promo.id);
     if (err instanceof TeeTimeClaimError) {
       if (err.code === 'NOT_FOUND') return { ok: false, status: 404, error: 'Tee time not found' };
       if (err.code === 'BLOCKED') return { ok: false, status: 409, error: 'This tee time is blocked.' };

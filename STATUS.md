@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 15:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2c3e1cdd` · working tree **5 dirty file(s)**
+Generated 2026-10-30 16:19 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2607a042` · working tree **19 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 50 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 52 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ca86612a` | 2026-10-30 | Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256) |
+| `c72b0b35` | 2026-10-30 | Stock line refreshes after a sale; the catalog permission says it covers deliveries |
 | `2c3e1cdd` | 2026-10-30 | Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere |
 | `1aa2c299` | 2026-10-30 | Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255) |
 | `001ba73f` | 2026-10-30 | Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits |
@@ -65,13 +67,27 @@ Generated 2026-10-30 15:33 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (19 file(s))
 
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/lib/shop-stock.ts`
-- `M src/lib/staff-permissions.ts`
+- `M prisma/schema.prisma`
+- `M src/app/api/bookings/route.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/book/BookClient.tsx`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/lib/counter-pay.ts`
+- `M src/lib/data-reset.ts`
+- `?? prisma/migrations/20261030050000_promo_codes/`
+- `?? scripts/promo-codes-db-test.ts`
+- `?? src/app/api/operator/promo-codes/`
+- `?? src/app/api/promo/`
+- `?? src/components/dashboard/PromoCodes.tsx`
+- `?? src/lib/promo-codes.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -197,6 +213,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `ca86612a` 2026-10-30 — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)
+- `c72b0b35` 2026-10-30 — Stock line refreshes after a sale; the catalog permission says it covers deliveries
 - `2c3e1cdd` 2026-10-30 — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere
 - `1aa2c299` 2026-10-30 — Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)
 - `001ba73f` 2026-10-30 — Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits
@@ -207,8 +225,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `136a1ea6` 2026-10-30 — Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds
 - `5917aabf` 2026-10-30 — Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction
 - `89f0e830` 2026-10-29 — Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)
-- `388244d7` 2026-10-30 — Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode
-- `ffa0ec2a` 2026-10-30 — Golfer record: one course's view of a golfer, staff notes, online-booking block
 
 ---
 

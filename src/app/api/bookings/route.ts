@@ -3,6 +3,7 @@ import { onlineBookingBlock } from '@/lib/golfer-record';
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { groupGreenFee } from '@/lib/residents';
+import { applyPromo, reserveUse, releaseUse } from '@/lib/promo-codes';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
 import { describePolicy, policyFrom, cardAtBooking, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
@@ -25,7 +26,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted } = body;
+  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted, promoCode } = body;
 
   if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -162,8 +163,17 @@ export async function POST(req: NextRequest) {
   const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null
     ? await golferResident(teeTimeFull.courseId, teeTimeFull.date) : null;
   const priced = groupGreenFee(players, greenFeePerPlayerCents, resident ? 1 : 0, teeTimeFull.residentRateCents);
-  const greenFeeTotal  = appliedTier ? splitTotal(players, memberN, greenFeePerPlayerCents, teeTimeFull.greenFeeCents) : priced.greenFeeTotal;
+  const ratedGreenFeeTotal = appliedTier ? splitTotal(players, memberN, greenFeePerPlayerCents, teeTimeFull.greenFeeCents) : priced.greenFeeTotal;
   if (priced.residentPlayers > 0) appliedRate = 'resident';
+  // PRICE-1 (Cam 2026-10-30): a promo code comes off the green fee. Checked here, before any
+  // card is saved; its use is reserved just before the tee time is claimed.
+  let promo: { id: string; discountCents: number } | null = null;
+  if (promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') {
+    const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, players, greenFeeTotalCents: ratedGreenFeeTotal, rateApplied: !!appliedTier || priced.residentPlayers > 0, golferEmail: String(golferEmail) });
+    if (!p.ok) return NextResponse.json({ error: p.error, code: 'promo' }, { status: 400 });
+    promo = { id: p.code.id, discountCents: p.discountCents };
+  }
+  const greenFeeTotal = ratedGreenFeeTotal - (promo?.discountCents ?? 0);
   const cartFeeTotal   = wantsCart ? (appliedTier ? splitTotal(players, memberN, cartFeePerPlayerCents, teeTimeFull.cartFeeCents) : cartFeePerPlayerCents * players) : 0;
 
   let rangeBallsTotal = 0;
@@ -241,6 +251,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Your card could not be saved. Please check your details and try again.' }, { status: 402 });
   }
 
+  // PRICE-1: take one of the code's uses now; given back if the booking isn't made.
+  if (promo && !(await reserveUse(promo.id))) return NextResponse.json({ error: 'That code has just been used up.', code: 'promo' }, { status: 409 });
   // Atomically claim the tee time (Serializable isolation prevents double-booking)
   let claimed: { id: string; checkInToken: string | null };
   try {
@@ -254,6 +266,7 @@ export async function POST(req: NextRequest) {
       players,
       appliedRate,
       greenFeeTotal,
+      ...(promo ? { promoCodeId: promo.id, promoDiscountCents: promo.discountCents } : {}),
       residentPlayers:  priced.residentPlayers,
       residentRateCents: priced.residentRateCents,
       // The member's own spot when guests pay the public rate (lib/member-rates partyFees).
@@ -280,6 +293,7 @@ export async function POST(req: NextRequest) {
       termsVersion:     CURRENT_TERMS_VERSION,
     }, { type: 'golfer', id: golferSession?.golferId ?? null });
   } catch (err) {
+    if (promo) await releaseUse(promo.id);
     if (err instanceof TeeTimeClaimError) {
       if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
       if (err.code === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
@@ -302,6 +316,7 @@ export async function POST(req: NextRequest) {
     const fee = await chargeBookingFee(claimed.id);
     if (!fee.ok) {
       await releaseUnpaidBooking(claimed.id);
+      if (promo) await releaseUse(promo.id);
       return NextResponse.json({ error: `The booking fee couldn’t be charged: ${fee.error} Your tee time wasn’t booked — try another card.` }, { status: 402 });
     }
   }
@@ -391,6 +406,7 @@ export async function POST(req: NextRequest) {
     memberRate:     appliedTierName !== 'standard',
     residentPlayers: priced.residentPlayers,
     greenFeeTotal:  greenFeeTotal  / 100,
+    promoDiscount:  (promo?.discountCents ?? 0) / 100,
     cartFeeTotal:   cartFeeTotal   / 100,
     rangeBallsTotal: rangeBallsTotal / 100,
     accessFeeTotal: accessFeeTotal / 100,

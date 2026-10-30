@@ -706,7 +706,7 @@ function DashboardPageInner() {
           )}
           {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && (
             <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={link}
-              title="Text them a link to pay on their phone (Apple Pay, Google Pay or card); the booking fee is collected with the round">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
+              title="Text them a link to pay on their phone (Apple Pay, Google Pay or card)">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
           )}
           {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && (
             <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={link}
@@ -1443,6 +1443,8 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   const [err, setErr] = useState('');
   // Revamp 3 dead end 20: the rate staff pick — the time's standard, resident, senior or junior price, or a membership.
   const [rate, setRate] = useState('standard');
+  // PRICE-1: a promo code the golfer gives — priced and checked by the server.
+  const [promo, setPromo] = useState('');
   // Members (Cam 2026-10-29): the member shows their membership and is picked by name; a course
   // that allows it (Settings) can also pick any membership. Rate 'member' = picking one now.
   const [tiers, setTiers] = useState<{ id: string; name: string }[]>([]);
@@ -1466,7 +1468,7 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   async function save() {
     setSaving(true); setErr('');
     const r = await dfetch<{ emailSent: boolean | null; cashError?: string }>('/api/operator/bookings', {
-      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate: sentRate, checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
+      method: 'POST', body: JSON.stringify({ teeTimeId: slot.id, golferName: name, golferPhone: phone, golferEmail: email, players, cartSelected: cart, source, rate: sentRate, ...(promo.trim() ? { promoCode: promo.trim() } : {}), checkInNow: source === 'walk_in' && checkInNow, ...(late ? { late: true } : {}) }),
     });
     setSaving(false);
     if (!r.ok) { setErr(r.error); return; }
@@ -1519,6 +1521,9 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
           {memberHits.map(m => <button key={m.id} type="button" onClick={() => { setMember(m); if (!name.trim()) setName(m.name); }} className="block w-full text-left px-2 py-1.5 text-[13px] text-ink hover:bg-paper">{m.name} <span className="text-ink-muted">· {m.tier}</span></button>)}
         </div>
       ))}
+      <label className="block"><span className="block text-[13px] font-semibold text-ink mb-1">Promo code</span>
+        <input value={promo} onChange={e => setPromo(e.target.value.toUpperCase())} className={inp} />
+      </label>
       {source === 'walk_in' && (
         <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
           <input type="checkbox" checked={checkInNow} onChange={e => setCheckInNow(e.target.checked)} className="accent-pine" />Paying cash now — take it and check this group in
