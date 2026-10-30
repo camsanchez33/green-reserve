@@ -21,6 +21,7 @@ import { recordMove } from './money-ledger';
 import { applyTierRates } from './tier-rates';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoRow } from './promo-codes';
 import { dealPct, dealSeat, dealRateSeat } from './last-minute';
+import { addCharge } from './member-account';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from './round-packs';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 
@@ -42,10 +43,18 @@ export function counterDueCents(b: PartyBooking & { totalAmount: number; accessF
   return fees.greenFeeTotal + fees.cartFeeTotal + b.rangeBallsTotal + shop;
 }
 
-export async function settleAtCounter(courseId: string, bookingId: string, opts: { actor: EventActor; actorName: string; checkedInPlayers?: number }): Promise<CounterResult> {
+/** MEM-ACCT: what a group put on a member's account owes — the counter's price plus an online booking's GreenReserve fee (collected with the statement). */
+export function accountDueCents(b: Parameters<typeof counterDueCents>[0] & { feePaidCents?: number | null }, showed?: number): { amountCents: number; feeCents: number } {
+  const fee = Math.max(0, (b.accessFeeTotal ?? 0) - (b.feePaidCents ?? 0));
+  const feeCents = showed == null || showed >= b.players ? fee : (b.players > 0 ? Math.round((fee * showed) / b.players) : 0);
+  return { amountCents: counterDueCents(b, showed) + feeCents, feeCents };
+}
+
+export async function settleAtCounter(courseId: string, bookingId: string, opts: { actor: EventActor; actorName: string; checkedInPlayers?: number; onAccount?: { membershipId: string } }): Promise<CounterResult> {
   const booking = await prisma.booking.findFirst({
     where: { id: bookingId, courseId },
     select: { readerStartedAt: true, noShowAt: true, courseId: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
+      greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, feePaidCents: true,
       cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
   });
   if (!booking) return { ok: false, status: 404, error: 'Not found' };
@@ -74,19 +83,33 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   // reached, the round still closes and the tax stays as last quoted.
   await ensureShopTax(bookingId);
   const evBase = { bookingId, courseId, actor: opts.actor, teeTimeAt: teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time) };
-  const settled = await prisma.$transaction(async tx => {
-    // Only a booking still open to pay: two taps (sheet and register) settle it once.
-    const done = await tx.booking.updateMany({
-      // …and never while it is on the card reader (a claim taken since the check above).
-      where: { id: bookingId, courseId, status: 'confirmed', paymentStatus: { not: 'paid' }, readerStartedAt: null },
-      data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: true, paymentStatus: 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}),
-        // POS-1a: shop items are paid at the counter too; GreenReserve's shop fee is never collected in cash.
-        shopFeeCents: 0 },
+  // MEM-ACCT: on a member's account instead of cash — the line is written in the same transaction,
+  // so a refused charge (past the limit, not an active member) leaves the group unsettled.
+  const acct = opts.onAccount ? accountDueCents(booking, cip) : null;
+  class AccountRefused extends Error { constructor(public status: number, msg: string) { super(msg); } }
+  let settled: boolean;
+  try {
+    settled = await prisma.$transaction(async tx => {
+      // Only a booking still open to pay: two taps (sheet and register) settle it once.
+      const done = await tx.booking.updateMany({
+        // …and never while it is on the card reader (a claim taken since the check above).
+        where: { id: bookingId, courseId, status: 'confirmed', paymentStatus: { not: 'paid' }, readerStartedAt: null },
+        data: { status: 'completed', checkedInAt: new Date(), paidAt: new Date(), paidOffline: !acct, paymentStatus: acct ? 'on_account' : 'paid_offline', noShowAt: null, checkInFailReason: '', ...(cip !== undefined ? { checkedInPlayers: cip } : {}),
+          // POS-1a: shop items are paid at the counter too; GreenReserve's shop fee is never collected in cash.
+          shopFeeCents: 0 },
+      });
+      if (!done.count) return false;
+      if (acct && opts.onAccount) {
+        const line = await addCharge(tx, { courseId, membershipId: opts.onAccount.membershipId, kind: 'round', amountCents: acct.amountCents, feeCents: acct.feeCents, bookingId, note: `Round, ${cip ?? booking.players} player${(cip ?? booking.players) === 1 ? '' : 's'}`, createdBy: opts.actorName });
+        if (!line.ok) throw new AccountRefused(line.status, line.error);
+      }
+      await recordBookingEvent(tx, { ...evBase, type: 'checked_in', amountCents: booking.totalAmount, playerCount: cip ?? booking.players, metadata: acct ? { onAccount: true, membershipId: opts.onAccount!.membershipId } : { paidOffline: true } });
+      return true;
     });
-    if (!done.count) return false;
-    await recordBookingEvent(tx, { ...evBase, type: 'checked_in', amountCents: booking.totalAmount, playerCount: cip ?? booking.players, metadata: { paidOffline: true } });
-    return true;
-  });
+  } catch (err) {
+    if (err instanceof AccountRefused) return { ok: false, status: err.status, error: err.message };
+    throw err;
+  }
   if (!settled) return { ok: false, status: 409, error: 'This group was just checked in or changed — refresh and look again.' };
   // The tax on shop items paid at the counter goes on the course's tax record too (the hourly cron retries).
   await recordRoundShopTax(bookingId);
@@ -106,13 +129,14 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   // (Cam 2026-10-19, HOMEPAGE_SPEC §0a; PAY-2): it is counted on Admin →
   // Revenue instead. A booking fee already taken separately (a no-show
   // charge, then the group turned up and paid cash) goes back.
+  // On account, the fee is collected with the statement instead — a separate one taken earlier goes back the same way.
   let refundNote: string | null = null;
   if (await liveSeparateFee(bookingId)) {
     const r = await refundSeparateAccessFee(bookingId, 'paid at the counter — no GreenReserve fee on cash', 'operator', opts.actorName);
     if (!r.ok) refundNote = `GreenReserve's booking fee could not be refunded to the golfer's card (${r.error}) — GreenReserve will follow up.`;
   }
   const after = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { totalAmount: true, accessFeeTotal: true, players: true, shopTotalCents: true, shopTaxCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true } });
-  return { ok: true, amountCents: counterDueCents(after, cip), note: [holdNote, refundNote].filter(Boolean).join(' ') || null };
+  return { ok: true, amountCents: acct ? acct.amountCents : counterDueCents(after, cip), note: [holdNote, refundNote].filter(Boolean).join(' ') || null };
 }
 
 /**

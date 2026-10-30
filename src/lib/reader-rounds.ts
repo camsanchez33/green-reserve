@@ -34,7 +34,7 @@ const fail = (status: number, error: string) => ({ ok: false as const, status, e
 export type RoundReaderStatus = { status: 'waiting' | 'paid' | 'declined' | 'cancelled' | 'refunded' | 'open'; message?: string; dueCents?: number };
 
 const MONEY = { totalAmount: true, accessFeeTotal: true, feePaidCents: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true } as const;
-const done = (s: string) => s === 'paid' || s === 'paid_offline';
+const done = (s: string) => s === 'paid' || s === 'paid_offline' || s === 'on_account';
 
 /** End this claim (only the claim with this stamp) and unfreeze the items it froze. */
 async function release(bookingId: string, stamp: Date) {
@@ -61,7 +61,7 @@ export async function startRoundOnReader(courseId: string, bookingId: string, re
 
   const stamp = new Date();
   const claimed = await prisma.booking.updateMany({
-    where: { id: bookingId, courseId, status: 'confirmed', readerStartedAt: null, paymentStatus: { notIn: ['paid', 'paid_offline'] } },
+    where: { id: bookingId, courseId, status: 'confirmed', readerStartedAt: null, paymentStatus: { notIn: ['paid', 'paid_offline', 'on_account'] } },
     data: { readerStartedAt: stamp, readerId, readerIntentId: '' },
   });
   if (!claimed.count) return fail(409, 'This group changed at the same moment — refresh and try again.');

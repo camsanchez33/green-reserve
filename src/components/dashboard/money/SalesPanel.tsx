@@ -19,7 +19,7 @@ type Sales = {
   byHour: { hour: number; collectedCents: number }[];
   collectedCents: number; beforeCollectedCents: number;
   summary: { greenCents: number; cartCents: number; rangeCents: number; lateFeesKeptCents: number; shopOnRoundsCents: number; walkUpCents: number; walkUpSales: number; greenReserveFeesCents: number };
-  paid: { cardCents: number; counterCents: number; outstandingCents: number; outstandingGroups: number };
+  paid: { cardCents: number; counterCents: number; accountCents?: number; outstandingCents: number; outstandingGroups: number };
   todayByHour: { hour: number; collectedCents: number }[]; lastWeekByHour: { hour: number; collectedCents: number }[];
   todayCollectedCents: number; lastWeekCollectedCents: number;
   drawer: CloseView | null;
@@ -170,7 +170,7 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
       </div>
 
       <Card className="px-5 py-4 space-y-6">
-        {s.collectedCents === 0 ? <div className="h-28 flex items-center justify-center text-[13px] text-ink-muted">Fills in once rounds are paid</div> : (<>
+        {s.collectedCents === 0 ? <div className="h-28 flex items-center justify-center text-[13px] text-ink-muted">Fills in as rounds are paid</div> : (<>
           <div>
             <h3 className="text-[15px] font-semibold text-ink mb-2">Sales by {s.bucket === 'week' ? 'week' : 'day'}</h3>
             <Bars values={s.series.map(x => x.collectedCents)} labels={s.series.map(x => fmtDay(x.key))} aria={`Sales by ${s.bucket}`} highlightLast />
@@ -199,7 +199,7 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
             {s.summary.lateFeesKeptCents > 0 && <Row label="Late-cancel fees kept" value={usd2(s.summary.lateFeesKeptCents)} />}
             {s.summary.shopOnRoundsCents > 0 && <Row label="Shop items on rounds" value={usd2(s.summary.shopOnRoundsCents)} />}
             {s.summary.walkUpSales > 0 && <Row label={`Register sales · ${s.summary.walkUpSales}`} value={usd2(s.summary.walkUpCents)} />}
-            {s.summary.greenReserveFeesCents > 0 && <Row label="Booking fees golfers paid GreenReserve" value={usd2(s.summary.greenReserveFeesCents)} muted />}
+            {s.summary.greenReserveFeesCents > 0 && <Row label="GreenReserve booking fees" value={usd2(s.summary.greenReserveFeesCents)} muted />}
           </div>
         </Card>
 
@@ -213,6 +213,7 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
           <div className="divide-y divide-line-soft">
             <Row label="By card" value={usd2(s.paid.cardCents)} />
             <Row label="At the counter" value={usd2(s.paid.counterCents)} />
+            {!!s.paid.accountCents && <Row label="On accounts" value={usd2(s.paid.accountCents)} />}
             <Row label={`Not paid yet · ${s.paid.outstandingGroups}`} value={usd2(s.paid.outstandingCents)} />
           </div>
         </Card>

@@ -20,6 +20,7 @@ type ReceiptData = {
   cancellationFeeTotal: number; cancellationFeeCharged: boolean; createdAt: string;
   /** R-GOLF-010: what actually reached the card — from lib/receipt-charges. */
   paidOffline?: boolean;
+  onAccount?: boolean;
   roundRefunded?: boolean;
   charges?: { label: string; amountCents: number; refunded: boolean }[];
   chargedNowCents?: number;
@@ -86,19 +87,21 @@ function ReceiptPageInner() {
   const isCancelled = data.status === 'cancelled';
 
   const paidAtCourse = isCompleted && !!data.paidOffline;
+  const onAccount = isCompleted && !!data.onAccount;
   const charges = data.charges ?? [];
   const chargedNow = data.chargedNowCents ?? 0;
 
   // paymentStatus 'refunded' is also set when a cancelled booking's fee is waived — only a played round reads "Refunded".
   const refunded = !!data.roundRefunded && !isCancelled;
   const statusLabel = refunded ? 'Refunded'
+    : onAccount ? 'On your member account'
     : paidAtCourse ? 'Paid at the course'
     : isCompleted ? 'Paid at check-in'
     : isCancelled ? 'Cancelled'
     : 'Due at course';
 
   // The card block below says what the card took; these totals are the booking's price.
-  const totalLabel = refunded || paidAtCourse ? 'Booking total'
+  const totalLabel = refunded || paidAtCourse || onAccount ? 'Booking total'
     : isCompleted ? 'Total charged'
     : isCancelled ? 'Booking total (not charged)'
     : 'Estimated total due at course';
@@ -217,7 +220,7 @@ function ReceiptPageInner() {
               {/* Payment line */}
               {isCompleted && (
                 <div className="text-sm text-ink mb-5">
-                  {refunded ? 'Refunded' : paidAtCourse ? 'Paid at the course' : 'Paid at check-in'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
+                  {refunded ? 'Refunded' : onAccount ? 'On your member account' : paidAtCourse ? 'Paid at the course' : 'Paid at check-in'} · Booking #{data.bookingId.slice(0, 8).toUpperCase()}
                 </div>
               )}
               {!isCompleted && !isCancelled && (

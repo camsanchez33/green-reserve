@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 623,
-    "routes": 283,
-    "libs": 218,
-    "models": 65,
+    "files": 627,
+    "routes": 284,
+    "libs": 219,
+    "models": 66,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -3938,7 +3938,7 @@
     },
     {
       "path": "src/app/api/checkin/[bookingId]/route.ts",
-      "lines": 113,
+      "lines": 115,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5355,7 +5355,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 368,
+      "lines": 378,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5960,6 +5960,36 @@
       "imports": [
         "@/lib/last-minute",
         "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/member-accounts/route.ts",
+      "lines": 39,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/member-accounts",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/member-account",
         "@/lib/session",
         "next/server"
       ],
@@ -7389,7 +7419,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 166,
+      "lines": 179,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7423,6 +7453,7 @@
       "imports": [
         "@/lib/agreement-required",
         "@/lib/email",
+        "@/lib/member-account",
         "@/lib/membership-autorenew",
         "@/lib/membership-join",
         "@/lib/money",
@@ -7664,7 +7695,7 @@
     },
     {
       "path": "src/app/api/receipt/[bookingId]/route.ts",
-      "lines": 76,
+      "lines": 77,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7978,7 +8009,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 379,
+      "lines": 381,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8264,7 +8295,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 788,
+      "lines": 789,
       "purpose": "DENSE-1 (DENSE_UI_SPEC.md, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -8491,7 +8522,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 866,
+      "lines": 870,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8508,6 +8539,7 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/MemberAccount",
         "@/components/dashboard/MemberJoin",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
@@ -8646,7 +8678,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1676,
+      "lines": 1686,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8662,6 +8694,7 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/ChargeToAccount",
         "@/components/dashboard/GettingStartedChecklist",
         "@/components/dashboard/GolferMessageModal",
         "@/components/dashboard/LoadError",
@@ -9462,7 +9495,7 @@
     },
     {
       "path": "src/app/receipt/[bookingId]/page.tsx",
-      "lines": 262,
+      "lines": 265,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10537,6 +10570,30 @@
       ]
     },
     {
+      "path": "src/components/dashboard/ChargeToAccount.tsx",
+      "lines": 66,
+      "purpose": "MEM-ACCT (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ChargeToAccount",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/CourseLayoutTab.tsx",
       "lines": 495,
       "purpose": "Settings rework (Cam 2026-10-19:",
@@ -10831,6 +10888,34 @@
         "src/components/dashboard/money/PayoutsTable.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/MemberAccount.tsx",
+      "lines": 82,
+      "purpose": "MEM-ACCT (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "AccountFields",
+          "kind": "component"
+        },
+        {
+          "name": "MemberAccount",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/members/page.tsx"
       ]
     },
     {
@@ -11719,7 +11804,7 @@
     },
     {
       "path": "src/components/dashboard/money/PaymentsPanel.tsx",
-      "lines": 129,
+      "lines": 130,
       "purpose": "Money rework (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11850,7 +11935,7 @@
     },
     {
       "path": "src/components/dashboard/money/SalesPanel.tsx",
-      "lines": 240,
+      "lines": 241,
       "purpose": "DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today):",
       "brain": [],
       "exports": [
@@ -13971,7 +14056,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 588,
+      "lines": 590,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -14889,7 +14974,7 @@
     },
     {
       "path": "src/lib/booking-status.ts",
-      "lines": 77,
+      "lines": 78,
       "purpose": "Single source of truth for what to show a user (operator, staff, or golfer) given a booking's current status + paymentStatus pair.",
       "brain": [],
       "exports": [
@@ -15993,10 +16078,14 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 265,
+      "lines": 289,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
+        {
+          "name": "accountDueCents",
+          "kind": "fn"
+        },
         {
           "name": "CounterBookingInput",
           "kind": "type"
@@ -16030,6 +16119,7 @@
         "./claim-tee-time",
         "./course-time",
         "./last-minute",
+        "./member-account",
         "./member-rates",
         "./money-ledger",
         "./no-show-fee",
@@ -17323,10 +17413,12 @@
         "src/app/dashboard/shop/page.tsx",
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
+        "src/components/dashboard/ChargeToAccount.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
+        "src/components/dashboard/MemberAccount.tsx",
         "src/components/dashboard/MemberJoin.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
@@ -19636,6 +19728,61 @@
       ]
     },
     {
+      "path": "src/lib/member-account.ts",
+      "lines": 126,
+      "purpose": "MEM-ACCT (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "accountBalance",
+          "kind": "fn"
+        },
+        {
+          "name": "accountMembers",
+          "kind": "fn"
+        },
+        {
+          "name": "accountView",
+          "kind": "fn"
+        },
+        {
+          "name": "addCharge",
+          "kind": "fn"
+        },
+        {
+          "name": "creditAccount",
+          "kind": "fn"
+        },
+        {
+          "name": "fitsLimit",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_CREDIT_CENTS",
+          "kind": "const"
+        },
+        {
+          "name": "readAccountSettings",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./member-rates",
+        "./prisma",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/operator/member-accounts/route.ts",
+        "src/app/api/operator/tiers/route.ts",
+        "src/lib/counter-pay.ts"
+      ]
+    },
+    {
       "path": "src/lib/member-csv.ts",
       "lines": 101,
       "purpose": "Members → Import a list:",
@@ -19777,6 +19924,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/member-account.ts",
         "src/lib/member-session.ts",
         "src/lib/move-booking.ts",
         "src/lib/sample-data.ts"
@@ -21331,6 +21479,7 @@
         "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
         "src/lib/login-guard.ts",
+        "src/lib/member-account.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/member-stats.ts",
@@ -22126,7 +22275,7 @@
     },
     {
       "path": "src/lib/round-shop-tax.ts",
-      "lines": 146,
+      "lines": 147,
       "purpose": "W2-7 part B2 (Cam 2026-10-20:",
       "brain": [],
       "exports": [
@@ -22853,6 +23002,7 @@
         "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/home/route.ts",
         "src/app/api/operator/last-minute/route.ts",
+        "src/app/api/operator/member-accounts/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
@@ -26484,6 +26634,10 @@
         {
           "name": "demandPrices",
           "type": "DemandPrice[]"
+        },
+        {
+          "name": "memberCharges",
+          "type": "MemberCharge[]"
         }
       ],
       "writers": [
@@ -26614,6 +26768,7 @@
         "src/lib/golfer-record.ts",
         "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/member-account.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts",
         "src/lib/operator-search.ts",
@@ -27536,6 +27691,10 @@
         {
           "name": "createdAt",
           "type": "DateTime"
+        },
+        {
+          "name": "accountCharges",
+          "type": "MemberCharge[]"
         }
       ],
       "writers": [
@@ -27581,6 +27740,7 @@
         "src/lib/golfer-record.ts",
         "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/member-account.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/membership-autorenew.ts",
@@ -28462,6 +28622,71 @@
       ]
     },
     {
+      "name": "MemberCharge",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "membershipId",
+          "type": "String"
+        },
+        {
+          "name": "membership",
+          "type": "CourseMembership"
+        },
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "amountCents",
+          "type": "Int"
+        },
+        {
+          "name": "feeCents",
+          "type": "Int"
+        },
+        {
+          "name": "bookingId",
+          "type": "String?"
+        },
+        {
+          "name": "shopSaleId",
+          "type": "String?"
+        },
+        {
+          "name": "note",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "statementId",
+          "type": "String?"
+        }
+      ],
+      "writers": [],
+      "readers": [
+        "src/lib/member-account.ts"
+      ]
+    },
+    {
       "name": "MembershipTier",
       "fields": [
         {
@@ -28543,6 +28768,18 @@
         {
           "name": "autoRenewRetry",
           "type": "Boolean"
+        },
+        {
+          "name": "accountOn",
+          "type": "Boolean"
+        },
+        {
+          "name": "accountLimitCents",
+          "type": "Int?"
+        },
+        {
+          "name": "accountSettle",
+          "type": "String"
         },
         {
           "name": "active",

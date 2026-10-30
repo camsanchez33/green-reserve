@@ -53,7 +53,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'money.cancellations', group: 'Money', label: 'See cancellations', help: 'The list of cancelled bookings and any fees kept.' },
   { key: 'money.payments', group: 'Money', label: 'See payments', help: 'What was charged, per booking and in total.' },
   // R-AUTH-007: the two places staff can refund — event payments and pro shop sales (rounds are refunded by cancelling or "still coming").
-  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund event payments and pro shop sales.', requires: ['money.payments'], movesMoney: true },
+  { key: 'money.refund', group: 'Money', label: 'Issue refunds', help: 'Refund event payments and pro shop sales, and credit member accounts.', requires: ['money.payments'], movesMoney: true },
   // Revamp 3 (Cam 2026-10-29: "New staff permission"): refunding a paid round — off by default, given per person.
   { key: 'money.refund_rounds', group: 'Money', label: 'Refund rounds', help: 'Refund part or all of a round paid by card — your share, never GreenReserve’s fee. A reason is required.', requires: ['money.payments'], movesMoney: true },
   // 'Charge a fee by hand' (money.charge_fee) was removed (Cam 2026-10-26): no screen charges a fee by hand, so the

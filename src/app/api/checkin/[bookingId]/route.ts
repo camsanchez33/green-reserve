@@ -54,6 +54,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     status: booking.status,
     // R-GOLF-011: a round paid in cash at the counter is never "charged to your card".
     paidOffline: booking.paidOffline,
+    // MEM-ACCT: on a member's account — nothing was charged to a card.
+    onAccount: booking.paymentStatus === 'on_account',
     // POS-1a: what the card will be charged — the round plus any pro-shop items
     // the course added and their fee — with those lines listed.
     totalAmount: roundChargedTotal(booking),

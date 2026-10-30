@@ -1,5 +1,6 @@
 'use client';
 import { JoinOnlineSelect, JoinRequests, AutoRenewFields, AutoRenewStop } from '@/components/dashboard/MemberJoin';
+import { AccountFields, MemberAccount } from '@/components/dashboard/MemberAccount';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Check, X, ArrowLeft, RefreshCw } from 'lucide-react';
@@ -24,6 +25,7 @@ interface Tier {
   cartFeeWeekday: number | null; cartFeeWeekend: number | null;
   discountPct: number | null;
   advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean; joinOnline?: string; autoRenew?: boolean; autoRenewRetry?: boolean;
+  accountOn?: boolean; accountLimitCents?: number | null; accountLimit?: string | null;
   annualFee: number; initiationFee: number; termMonths: number;
   notes: string; active: boolean;
   _count?: { memberships: number };
@@ -436,6 +438,7 @@ function MembersPageInner() {
                   </label>
                   <JoinOnlineSelect value={tierForm.joinOnline} onChange={v => setTF('joinOnline', v)} className={iCls} />
                   <AutoRenewFields on={tierForm.autoRenew} retry={tierForm.autoRenewRetry} onChange={(k, v) => setTF(k, v)} />
+                  <AccountFields on={tierForm.accountOn} limit={tierForm.accountLimit} limitCents={tierForm.accountLimitCents} onChange={(k, v) => setTF(k, v)} className={iCls} />
                   <div>
                     <label className={lblCls}>Annual fee ($)</label>
                     <div className="relative">
@@ -769,6 +772,7 @@ function MembersPageInner() {
                                       </>}
                                       <button onClick={() => { setDetailsError(''); setEditDetails({ id: m.id, name: m.name, email: m.email, phone: m.phone, expiresAt: m.expiresAt ? m.expiresAt.slice(0, 10) : '', notes: m.notes }); }} className="text-[13px] font-medium text-pine hover:underline">Edit details</button>
                                       {m.autoRenew && <AutoRenewStop id={m.id} onChanged={loadAll} />}
+                                      {tiers.some(t => t.id === m.tierId && t.accountOn) && <MemberAccount id={m.id} canCredit={pageAccess.can('money.refund')} />}
                                       <button onClick={() => toggleMemberStatus(m)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{m.status === 'active' ? 'Make not active' : 'Make active'}</button>
                                       <button onClick={() => removeMember(m.id, m.name)} className="text-[13px] font-medium text-bad hover:underline">Remove</button>
                                     </div>

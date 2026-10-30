@@ -31,6 +31,7 @@ import GolferMessageModal from '@/components/dashboard/GolferMessageModal';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { timesTooClose } from '@/lib/tee-time-fit';
 import { formatTeeDay as fmtDate, formatTeeTime as fmtTime } from '@/lib/format';
+import { ChargeToAccount } from '@/components/dashboard/ChargeToAccount';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -168,6 +169,12 @@ function DashboardPageInner() {
   useEffect(() => {
     if (!access.loaded || !access.can('shop.sell')) return;
     dfetch<{ readers: unknown[] }>('/api/operator/card-readers').then(r => { if (r.ok) setHasReader(r.data.readers.length > 0); });
+  }, [access.loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  // MEM-ACCT: "On account" shows only when the course has members who can charge to one.
+  const [hasAccounts, setHasAccounts] = useState(false);
+  useEffect(() => {
+    if (!access.loaded || !access.can('sheet.counter_payment')) return;
+    dfetch<{ members: unknown[] }>('/api/operator/member-accounts').then(r => { if (r.ok) setHasAccounts(r.data.members.length > 0); });
   }, [access.loaded]); // eslint-disable-line react-hooks/exhaustive-deps
   // W2-9: events with checklist items past due show on the sheet's "needs doing" bar.
   const [eventsDue, setEventsDue] = useState<{ id: string; name: string; tasksOverdue: number }[]>([]);
@@ -702,6 +709,9 @@ function DashboardPageInner() {
           )}
           {b.status === 'confirmed' && b.paymentStatus !== 'manual' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && access.can('sheet.counter_payment') && (
             <button onClick={() => bookingLifecycle(b, 'take_cash')} disabled={rowBusy === b.id} className={link}>{rowBusy === b.id ? 'Saving…' : 'Take cash'}</button>
+          )}
+          {b.status === 'confirmed' && !b.noShowAt && !b.roundPaid && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasAccounts && access.can('sheet.counter_payment') && (
+            <ChargeToAccount booking={b} className={link} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); await loadTimes(selectedDate); }} />
           )}
           {b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasReader && selectedDate === today() && access.can('sheet.checkin') && access.can('shop.sell') && (
             <Link href={`/dashboard/shop?round=${b.id}`} className={link}>Card reader</Link>

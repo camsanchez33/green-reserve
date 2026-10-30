@@ -103,7 +103,8 @@ async function write(bookingId: string, key: string, data: { shopTaxCents: numbe
 export async function recordRoundShopTax(bookingId: string): Promise<void> {
   const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: { status: true, paymentStatus: true, paidOffline: true, shopTaxCents: true, shopTaxCalculationId: true, shopTaxTransactionId: true, shopTaxKey: true, course: { select: { stripeAccountId: true } }, shopItems: { select: { id: true, unitPriceCents: true, quantity: true, taxCategory: true } } } });
   if (!b || !b.shopTaxCalculationId || b.shopTaxTransactionId || !b.course.stripeAccountId) return;
-  if (!(b.paymentStatus === 'paid' || b.paidOffline)) return;
+  // MEM-ACCT: a round put on a member's account is a sale made at check-in, like cash.
+  if (!(b.paymentStatus === 'paid' || b.paidOffline || b.paymentStatus === 'on_account')) return;
   // Never record a quote made for different lines (a counter payment while Stripe was down).
   if (shopTaxKey(b.shopItems) !== b.shopTaxKey) {
     console.error(JSON.stringify({ ev: 'round_shop_tax.record.stale_quote', bookingId }));
@@ -124,7 +125,7 @@ export async function recordRoundShopTax(bookingId: string): Promise<void> {
 export async function recordPendingRoundShopTax(limit = 50): Promise<number> {
   const pending = await prisma.booking.findMany({
     // An expired calculation can never be recorded — leave it out (it's logged when it fails) so it can't starve the rest.
-    where: { shopTaxCalculationId: { not: '' }, shopTaxTransactionId: '', AND: [{ OR: [{ paymentStatus: 'paid' }, { paidOffline: true }] }, { OR: [{ shopTaxExpiresAt: null }, { shopTaxExpiresAt: { gte: new Date() } }] }] },
+    where: { shopTaxCalculationId: { not: '' }, shopTaxTransactionId: '', AND: [{ OR: [{ paymentStatus: 'paid' }, { paidOffline: true }, { paymentStatus: 'on_account' }] }, { OR: [{ shopTaxExpiresAt: null }, { shopTaxExpiresAt: { gte: new Date() } }] }] },
     select: { id: true }, take: limit, orderBy: { paidAt: 'asc' },
   });
   for (const b of pending) await recordRoundShopTax(b.id);
