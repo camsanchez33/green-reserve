@@ -33,7 +33,15 @@ export async function GET(
     tierName: string;
   }[] = [];
 
-  if (membership.lastPaidAt) {
+  // LEDGER-1: what was actually paid, payment by payment — from the ledger, once it has any.
+  const paidRows = await prisma.moneyMove.findMany({ where: { courseId: course.id, membershipId: membership.id, what: 'dues' }, orderBy: { at: 'desc' }, take: 50, select: { direction: true, method: true, amountCents: true, at: true } });
+  for (const r of paidRows) records.push({
+    type: r.direction === 'out' ? 'refund' : 'dues', amount: r.amountCents / 100, date: r.at,
+    status: r.direction === 'out' ? 'refunded' : r.method === 'card' ? 'paid' : 'paid_offline',
+    tierName: membership.tier?.name ?? membership.membershipType,
+  });
+
+  if (!paidRows.length && membership.lastPaidAt) {
     records.push({
       type: 'dues',
       amount: centsToDollarsOr0(membership.tier?.annualFeeCents),
@@ -44,6 +52,7 @@ export async function GET(
   }
 
   if (
+    !paidRows.length &&
     membership.startedAt && !membership.initiationWaived &&
     membership.tier?.initiationFeeCents &&
     membership.tier.initiationFeeCents > 0

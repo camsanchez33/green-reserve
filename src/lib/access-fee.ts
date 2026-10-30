@@ -27,6 +27,7 @@ import { ON_REAL_COURSE } from './real-courses';
 import { stripe } from './stripe';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEventSafe, teeTimeInstant } from './booking-events';
+import { recordMove } from './money-ledger';
 
 // EV-1: the separate fee's charge / refund in the analytics log. Stripe has
 // already confirmed by the time this runs, so it never fails the caller.
@@ -127,6 +128,8 @@ export async function chargeAccessFeeSeparately(bookingId: string, opts: {
     await recordPaymentEvent({ bookingId, kind: 'charge_failed', amountCents, stripeId: pi.id, actor: opts.actor, actorName: opts.actorName, detail: `GreenReserve fee: payment ${pi.status}` }).catch(() => {});
     return { ok: false, error: `The booking fee charge is ${pi.status}.` };
   }
+  // LEDGER-1: on GreenReserve's own account — all of it is GreenReserve's.
+  await recordMove({ courseId: b.courseId, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: pi.amount, stripeId: pi.id, bookingId, actor: opts.actor, note: `charged separately (${WHY_LABEL[opts.why]})` });
   await recordPaymentEvent({ bookingId, kind: 'fee_charged', amountCents, stripeId: pi.id, actor: opts.actor, actorName: opts.actorName, detail: `GreenReserve fee charged separately (${WHY_LABEL[opts.why]})` });
   await prisma.booking.update({ where: { id: bookingId }, data: { stripePaymentIntentId: pi.id } });
   await logFeeEvent(bookingId, 'fee_charged', amountCents, pi.id, opts.actor, opts.actorName, `booking_fee_${opts.why}`);
@@ -146,6 +149,8 @@ export async function refundSeparateAccessFee(bookingId: string, reason: string,
     await recordPaymentEvent({ bookingId, kind: 'refund_failed', amountCents: 0, stripeId: pi, actor, actorName, detail: `GreenReserve fee refund failed (${reason}): ${msg}` }).catch(() => {});
     return { ok: false, refunded: false, error: msg };
   }
+  const course = await prisma.booking.findUnique({ where: { id: bookingId }, select: { courseId: true } });
+  if (course) await recordMove({ courseId: course.courseId, what: 'booking_fee', direction: 'out', method: 'card', account: 'platform', amountCents: r.amount, stripeId: r.id, bookingId, actor, note: reason });
   // The webhook may have ledgered this refund id first (as fee_refunded) — one row per refund.
   const seen = await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } });
   if (!seen) await recordPaymentEvent({ bookingId, kind: 'fee_refunded', amountCents: r.amount, stripeId: r.id, actor, actorName, detail: `GreenReserve fee refunded: ${reason}` });

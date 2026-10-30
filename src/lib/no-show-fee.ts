@@ -25,6 +25,7 @@ import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventA
 import { chargeAccessFeeSeparately, type FeeChargeResult } from './access-fee';
 import { teeToUtcMs } from './tee-time-utils';
 import { todayIn } from './course-time';
+import { recordMove } from './money-ledger';
 
 export type NoShowResult = {
   /** GreenReserve's booking fee. */
@@ -104,6 +105,7 @@ export async function chargeNoShow(bookingId: string): Promise<NoShowResult> {
           description: `No-show fee - ${booking.course.name} - booking ${booking.id}`,
           idempotencyKey: `noshowfee-${booking.id}-${attempt}-${booking.stripePaymentMethodId}`,
         });
+        await recordMove({ courseId: booking.courseId, what: 'no_show_fee', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, stripeId: pi.id, bookingId, actor: 'cron' });
         await recordPaymentEvent({ bookingId, kind: 'no_show_fee', amountCents, stripeId: pi.id, actor: 'cron', detail: 'No-show fee (end of day — not checked in)' });
         await recordBookingEventSafe({ bookingId, courseId: booking.courseId, type: 'fee_charged', actor, amountCents, playerCount: booking.players, teeTimeAt, stripeId: pi.id, metadata: { reason: 'no_show_fee' } });
         courseFee = { charged: true, amountCents };
@@ -200,6 +202,7 @@ export async function refundNoShowFee(bookingId: string, actorName?: string): Pr
   if (!b?.course.stripeAccountId) return { ok: false, refunded: false, error: 'the course’s Stripe account is not connected' };
   try {
     const r = await stripe.refunds.create({ payment_intent: live.stripeId, metadata: { bookingId, kind: 'no_show_fee' } }, { stripeAccount: b.course.stripeAccountId, idempotencyKey: `noshowfee-refund-${bookingId}-${live.stripeId}` });
+    await recordMove({ courseId: b.courseId, what: 'no_show_fee', direction: 'out', method: 'card', account: 'course', amountCents: r.amount, stripeId: r.id, bookingId, actor: 'staff', note: actorName ?? '' });
     // After a failed refund the webhook also records this refund (by its id) — once is enough.
     if (!(await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } }))) {
       await recordPaymentEvent({ bookingId, kind: 'no_show_fee_refunded', amountCents: live.amountCents, stripeId: r.id, actor: 'operator', actorName, detail: 'No-show fee refunded (still coming)' });

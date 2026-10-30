@@ -16,6 +16,7 @@ import { prisma } from './prisma';
 import { chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
 import { recordBookingEventSafe } from './booking-events';
 import { recordPaymentEvent } from './refund-booking';
+import { recordMove } from './money-ledger';
 import { sendCancellationFeeChargedEmail } from './email';
 import { teeToUtcMs } from './tee-time-utils';
 import { holdsAtCutoff, bookingWindowHours } from './cancel-policy';
@@ -81,6 +82,9 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
     return 'declined';
   }
 
+  // LEDGER-1: the hold moved money the moment Stripe took it, whatever the booking did meanwhile.
+  await recordMove({ courseId: booking.courseId, what: 'hold', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, stripeId: pi.id, bookingId, actor: 'cron' });
+
   // EV-1: the money has moved, so this is ONE plain conditional update (no
   // transaction that could time out after the charge); the event is best-effort.
   const recorded = await prisma.booking.updateMany({
@@ -92,6 +96,7 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
     if (after?.cancellationFeeChargeId === pi.id) return 'recorded_elsewhere';
     try {
       const refund = await refundOnConnectedAccount({ paymentIntentId: pi.id, connectedAccountId: account });
+      await recordMove({ courseId: booking.courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: 'cron', note: 'the booking changed while the hold was charged' });
       await recordPaymentEvent({ bookingId, kind: 'refund', amountCents: refund.amount, stripeId: refund.id, actor: 'cron', detail: `Cutoff hold refunded — the booking changed while it was being charged (now ${after?.status ?? 'missing'} / ${after?.paymentStatus ?? '-'})` }).catch(() => {});
       console.log(JSON.stringify({ ev: 'cron.cancelfee.refunded_race', bookingId, paymentIntentId: pi.id }));
       return 'refunded';

@@ -25,6 +25,18 @@ import Stripe from 'stripe';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { ACCESS_FEE_CENTS, EVENT_FEE_ON } from './booking-fees';
+import { recordMove } from './money-ledger';
+
+/** LEDGER-1: a payment taken at the course is cash, or another way the course took it (a check, its own card machine). */
+const ledgerMethod = (m: string) => (m === 'cash' ? 'cash' : 'other') as 'cash' | 'other';
+
+/** LEDGER-1: a paid event payment, on the ledger once (a card payment by its PaymentIntent). */
+async function ledgerPaid(paymentId: string, actor: string) {
+  const p = await prisma.courseEventPayment.findUnique({ where: { id: paymentId }, select: { courseId: true, amountCents: true, feeCents: true, method: true, paymentIntentId: true, status: true } });
+  if (!p || p.status !== 'paid') return;
+  const card = p.method === 'link';
+  await recordMove({ courseId: p.courseId, what: 'event', direction: 'in', method: card ? 'card' : ledgerMethod(p.method), account: 'course', amountCents: card ? p.amountCents + p.feeCents : p.amountCents, platformFeeCents: card ? p.feeCents : 0, stripeId: card ? p.paymentIntentId || null : null, eventPaymentId: paymentId, actor });
+}
 
 export const MAX_EVENT_PAYMENT_CENTS = 10_000_000; // $100,000 — a typo guard
 export const STALE_CHARGE_MS = 10 * 60 * 1000;
@@ -144,6 +156,7 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
   };
   if (!player) {
     const p = await prisma.courseEventPayment.create({ data });
+    await ledgerPaid(p.id, 'staff');
     return { ok: true, value: { id: p.id } };
   }
   // A player's own payment: under the same lock as sending them a link, and
@@ -166,6 +179,7 @@ export async function recordCoursePayment(courseId: string, eventId: string, inp
     if (r.stop === 'paid') return fail(409, `${r.name} has already paid.`);
     return fail(409, `${r.name} has a pay link — mark that link paid instead, so they can\u2019t pay twice.`);
   }
+  await ledgerPaid(r.made.id, 'staff');
   return { ok: true, value: { id: r.made.id } };
 }
 
@@ -246,7 +260,7 @@ export async function settleOpenPayment(courseId: string, paymentId: string, to:
     const p = await prisma.courseEventPayment.findFirst({ where: { id: paymentId, courseId }, select: { status: true } });
     return fail(p ? 409 : 404, p ? whyNotOpen(p.status) : 'Payment not found.');
   }
-  if (to !== 'void') await confirmGroupOf(paymentId);
+  if (to !== 'void') { await ledgerPaid(paymentId, 'staff'); await confirmGroupOf(paymentId); }
   return { ok: true, value: null };
 }
 
@@ -359,10 +373,11 @@ async function paymentIntent(paymentId: string, existingId: string, amountCents:
 
 async function markPaid(paymentId: string, stamp: Date, paymentIntentId: string) {
   const done = await prisma.courseEventPayment.updateMany({ where: { id: paymentId, status: 'paying', chargeStartedAt: stamp }, data: { status: 'paid', paidAt: new Date(), paymentIntentId } });
-  if (done.count) { await confirmGroupOf(paymentId); return; }
+  if (done.count) { await ledgerPaid(paymentId, 'golfer'); await confirmGroupOf(paymentId); return; }
   // The money is taken; record it even if the claim went stale.
   console.error(JSON.stringify({ ev: 'event_payment.charge.claim_lost', paymentId, paymentIntentId }));
   await prisma.courseEventPayment.updateMany({ where: { id: paymentId, status: { in: ['open', 'paying'] } }, data: { status: 'paid', paidAt: new Date(), paymentIntentId } });
+  await ledgerPaid(paymentId, 'golfer');
   await confirmGroupOf(paymentId);
 }
 
@@ -412,6 +427,7 @@ export async function refundPayment(courseId: string, paymentId: string, input: 
   if (!refund) return fail(409, 'Someone else just refunded part of this — refresh and try again.');
   if (p.method !== 'link') {
     await prisma.courseEventRefund.update({ where: { id: refund.id }, data: { status: 'done' } });
+    await recordMove({ courseId, what: 'event', direction: 'out', method: ledgerMethod(p.method), account: 'course', amountCents, eventPaymentId: paymentId, actor: 'staff', note: str(input.reason, 300) });
     return { ok: true, value: { status: 'done' } };
   }
   return sendRefund(courseId, refund.id);
@@ -436,6 +452,7 @@ export async function sendRefund(courseId: string, refundId: string): Promise<Re
     const found = earlier.data.find(x => x.metadata?.eventRefundId === r.id && x.status !== 'failed' && x.status !== 'canceled');
     if (found) {
       await prisma.courseEventRefund.update({ where: { id: r.id }, data: { status: 'done', stripeRefundId: found.id, error: '' } });
+      await recordMove({ courseId, what: 'event', direction: 'out', method: 'card', account: 'course', amountCents: found.amount, stripeId: found.id, eventPaymentId: r.paymentId, actor: 'staff', note: r.reason });
       return { ok: true, value: { status: 'done' } };
     }
     const sr = await stripe.refunds.create(
@@ -443,6 +460,7 @@ export async function sendRefund(courseId: string, refundId: string): Promise<Re
       { stripeAccount: course.stripeAccountId, idempotencyKey: `event-refund-${r.id}` },
     );
     await prisma.courseEventRefund.update({ where: { id: r.id }, data: { status: 'done', stripeRefundId: sr.id, error: '' } });
+    await recordMove({ courseId, what: 'event', direction: 'out', method: 'card', account: 'course', amountCents: sr.amount, stripeId: sr.id, eventPaymentId: r.paymentId, actor: 'staff', note: r.reason });
     return { ok: true, value: { status: 'done' } };
   } catch (err) {
     if (err instanceof Stripe.errors.StripeInvalidRequestError || err instanceof Stripe.errors.StripeCardError) {

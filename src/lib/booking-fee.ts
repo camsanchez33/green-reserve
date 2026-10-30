@@ -22,6 +22,7 @@ import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant } from './booking-events';
+import { recordMove } from './money-ledger';
 
 export { feeCoveredCents } from './booking-fees';
 
@@ -66,6 +67,7 @@ export async function chargeBookingFee(bookingId: string): Promise<{ ok: true; a
     await stripe.paymentIntents.cancel(pi.id).catch(() => {});
     return { ok: false, error: 'Your card needs a step we can’t do here — try another card.' };
   }
+  await recordMove({ courseId: b.courseId, what: 'booking_fee', direction: 'in', method: 'card', account: 'platform', amountCents: pi.amount, stripeId: pi.id, bookingId, actor: 'golfer', note: 'charged at booking' });
   await prisma.booking.update({ where: { id: bookingId }, data: { feePaidCents: amountCents, feePaymentIntentId: pi.id } });
   await recordPaymentEvent({ bookingId, kind: 'fee_charged', amountCents, stripeId: pi.id, actor: 'system', detail: 'GreenReserve booking fee charged at booking' });
   await logEvent(bookingId, 'fee_charged', amountCents, pi.id, 'booking_fee_at_booking');
@@ -78,7 +80,7 @@ export async function chargeBookingFee(bookingId: string): Promise<{ ok: true; a
  * refunded before, so a retry can't refund twice. Never throws.
  */
 export async function refundBookingFee(bookingId: string, amount: number | 'all', reason: string, actor: 'operator' | 'admin' | 'system' | 'golfer' = 'system', actorName?: string, retried = false): Promise<{ ok: boolean; refundedCents: number; error?: string }> {
-  const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: { feePaidCents: true, feePaymentIntentId: true } });
+  const b = await prisma.booking.findUnique({ where: { id: bookingId }, select: { feePaidCents: true, feePaymentIntentId: true, courseId: true } });
   if (!b || !b.feePaymentIntentId || b.feePaidCents <= 0) return { ok: true, refundedCents: 0 };
   const cents = amount === 'all' ? b.feePaidCents : Math.min(Math.round(amount), b.feePaidCents);
   if (cents <= 0) return { ok: true, refundedCents: 0 };
@@ -99,6 +101,7 @@ export async function refundBookingFee(bookingId: string, amount: number | 'all'
     await recordPaymentEvent({ bookingId, kind: 'refund_failed', amountCents: cents, stripeId: b.feePaymentIntentId, actor: actor === 'golfer' ? 'golfer' : actor, actorName, detail: `GreenReserve booking fee refund failed (${reason}): ${msg}` }).catch(() => {});
     return { ok: false, refundedCents: 0, error: msg };
   }
+  await recordMove({ courseId: b.courseId, what: 'booking_fee', direction: 'out', method: 'card', account: 'platform', amountCents: r.amount, stripeId: r.id, bookingId, actor, note: reason });
   const seen = await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } });
   if (!seen) await recordPaymentEvent({ bookingId, kind: 'fee_refunded', amountCents: r.amount, stripeId: r.id, actor: actor === 'golfer' ? 'golfer' : actor, actorName, detail: `GreenReserve booking fee refunded: ${reason}` });
   await logEvent(bookingId, 'fee_refunded', r.amount, r.id, `booking_fee_refunded: ${reason}`);

@@ -19,6 +19,7 @@ import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { sendRefundEmail } from './email';
 import { roundChargedTotal, roundApplicationFeeCents } from './shop';
+import { recordMove, chargeWhat } from './money-ledger';
 import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 
 export type StaffRefundResult =
@@ -83,6 +84,8 @@ export async function refundRound(courseId: string, bookingId: string, opts: { a
     return fail(502, `Stripe refused the refund: ${message}`);
   }
   const full = amountCents >= left;
+  // LEDGER-1: the course's share back; GreenReserve keeps its fee (refund_application_fee: false).
+  await recordMove({ courseId, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: 'staff', note: reason });
   // Two taps at once send the same idempotency key, so Stripe returns one refund twice: record it once.
   if (await prisma.paymentEvent.findFirst({ where: { bookingId, kind: 'refund', stripeId: refund.id }, select: { id: true } })) {
     return { ok: true, refundId: refund.id, amountCents, full, emailSent: false };
@@ -122,6 +125,7 @@ export async function waiveLateFee(courseId: string, bookingId: string, opts: { 
     await prisma.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'cancellation_fee_charged', cancellationFeeApplies: b.cancellationFeeApplies } });
     return fail(502, `Stripe refused the refund: ${err instanceof Error ? err.message : String(err)}`);
   }
+  await recordMove({ courseId, what: await chargeWhat(b.cancellationFeeChargeId, 'late_fee'), direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: 'staff', note: reason });
   await recordBookingEventSafe({
     bookingId, courseId, type: 'fee_refunded', actor: opts.actor, amountCents: refund.amount, playerCount: b.players, stripeId: refund.id,
     teeTimeAt: teeTimeInstant(b.course.timezone, b.teeTime.date, b.teeTime.time), metadata: { reason: 'late_fee_waived_after', note: reason, by: opts.actorName },

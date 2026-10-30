@@ -4,14 +4,19 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 00:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ffa0ec2a` · working tree **7 dirty file(s)**
+Generated 2026-10-30 05:49 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `85c78bb8` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 39 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 44 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `85c78bb8` | 2026-10-30 | Test: dues paid at the shop read through paidUntilRenewal |
+| `136a1ea6` | 2026-10-30 | Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds |
+| `5917aabf` | 2026-10-30 | Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction |
+| `89f0e830` | 2026-10-29 | Golfer record: one course's view of a golfer, staff notes, online-booking block (#253) |
+| `388244d7` | 2026-10-30 | Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode |
 | `ffa0ec2a` | 2026-10-30 | Golfer record: one course's view of a golfer, staff notes, online-booking block |
 | `370f7fa4` | 2026-10-29 | Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252) |
 | `bf2fdf53` | 2026-10-29 | Member rates at the counter: the member shows their membership, or the course allows any membership |
@@ -58,11 +63,11 @@ Generated 2026-10-30 00:30 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/golfer-record-db-test.ts`
-- `M src/app/api/operator/golfers/[key]/route.ts`
-- `M src/app/dashboard/golfers/[key]/page.tsx`
-- `M src/lib/golfer-key.ts`
-- `M src/lib/golfer-record.ts`
+- `M scripts/money-ledger-test.ts`
+- `M scripts/walk1-fixes-test.ts`
+- `M src/app/api/cron/send-reminders/route.ts`
+- `M src/app/api/membership/[id]/route.ts`
+- `?? src/lib/membership-renewal.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -147,47 +152,52 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 1d |
-| `CLAUDE.md` | 1 | 2026-10-27 | 2d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 8d |
+| `CLAUDE.md` | 1 | 2026-10-30 | 0d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 2d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 9d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 3d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 4d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 6d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 6d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 7d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 7d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 7d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 7d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 7d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 7d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 7d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 8d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 8d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 8d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 8d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 9d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 9d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 9d |
 
 ## Recent commits
 
+- `85c78bb8` 2026-10-30 — Test: dues paid at the shop read through paidUntilRenewal
+- `136a1ea6` 2026-10-30 — Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds
+- `5917aabf` 2026-10-30 — Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction
+- `89f0e830` 2026-10-29 — Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)
+- `388244d7` 2026-10-30 — Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode
 - `ffa0ec2a` 2026-10-30 — Golfer record: one course's view of a golfer, staff notes, online-booking block
 - `370f7fa4` 2026-10-29 — Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)
 - `bf2fdf53` 2026-10-29 — Member rates at the counter: the member shows their membership, or the course allows any membership
@@ -195,11 +205,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `cfe7cb40` 2026-10-29 — WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings
 - `3d18ecd9` 2026-10-29 — Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)
 - `69bcbab8` 2026-10-29 — WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale
-- `7dcf8122` 2026-10-29 — Course page: no layout shift when the day's tee times load
-- `f226c81b` 2026-10-29 — WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party
-- `9de927a8` 2026-10-29 — WIP part B: staff refunds (course share) and giving back a kept late fee
-- `4e1d9c2c` 2026-10-29 — The dues link says why it didn't send; a search result opens Cancellations filtered
-- `06b64277` 2026-10-29 — Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations
 
 ---
 

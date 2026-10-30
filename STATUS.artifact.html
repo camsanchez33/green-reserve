@@ -117,14 +117,19 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-30 00:30 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ ffa0ec2a</span>
+    <span>2026-10-30 05:49 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 85c78bb8</span>
     <span>7 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">39 runs have shipped that the queue doesn't know about</div>
+<div class="lede">44 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">85c78bb8</span><span>Test: dues paid at the shop read through paidUntilRenewal</span></li>
+<li><span class="h">136a1ea6</span><span>Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds</span></li>
+<li><span class="h">5917aabf</span><span>Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction</span></li>
+<li><span class="h">89f0e830</span><span>Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)</span></li>
+<li><span class="h">388244d7</span><span>Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode</span></li>
 <li><span class="h">ffa0ec2a</span><span>Golfer record: one course's view of a golfer, staff notes, online-booking block</span></li>
 <li><span class="h">370f7fa4</span><span>Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)</span></li>
 <li><span class="h">bf2fdf53</span><span>Member rates at the counter: the member shows their membership, or the course allows any membership</span></li>
@@ -176,7 +181,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/golfer-record-db-test.ts</code></li><li><code>M src/app/api/operator/golfers/[key]/route.ts</code></li><li><code>M src/app/dashboard/golfers/[key]/page.tsx</code></li><li><code>M src/lib/golfer-key.ts</code></li><li><code>M src/lib/golfer-record.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/money-ledger-test.ts</code></li><li><code>M scripts/walk1-fixes-test.ts</code></li><li><code>M src/app/api/cron/send-reminders/route.ts</code></li><li><code>M src/app/api/membership/[id]/route.ts</code></li><li><code>?? src/lib/membership-renewal.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -218,46 +223,51 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 1d</td></tr>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 2d</td></tr>
-<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-30 &middot; 0d</td></tr>
+<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 2d</td></tr>
+<tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 3d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 4d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 6d</td></tr>
-<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 6d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
+<tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 7d</td></tr>
 <tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
 <tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
 <tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
 <tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
-<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
-<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
+<tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>ADMIN_V3_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>ADMIN_V4_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>ARCHITECTURE.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>BACKUP_OPS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>BIRDIE_AI_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>CODEMAP_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>COURSES_SHEET_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>COURSE_LAYOUT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>DESIGN_SYSTEM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>FB2_COPY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>FB3_FEE_PLAN_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>GOLFER_EDGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>GOLFER_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>HARDENING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>INQUIRY_CALL_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>INQUIRY_FORM_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>MANAGE_BOOKING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>PRIVATE_BILLING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>PRODUCTION_READINESS_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>REVIEW_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>SITE_DASHBOARD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
+<tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">85c78bb8</td><td class="num">2026-10-30</td><td>Test: dues paid at the shop read through paidUntilRenewal</td></tr>
+<tr><td class="num">136a1ea6</td><td class="num">2026-10-30</td><td>Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds</td></tr>
+<tr><td class="num">5917aabf</td><td class="num">2026-10-30</td><td>Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction</td></tr>
+<tr><td class="num">89f0e830</td><td class="num">2026-10-29</td><td>Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)</td></tr>
+<tr><td class="num">388244d7</td><td class="num">2026-10-30</td><td>Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode</td></tr>
 <tr><td class="num">ffa0ec2a</td><td class="num">2026-10-30</td><td>Golfer record: one course's view of a golfer, staff notes, online-booking block</td></tr>
 <tr><td class="num">370f7fa4</td><td class="num">2026-10-29</td><td>Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)</td></tr>
 <tr><td class="num">bf2fdf53</td><td class="num">2026-10-29</td><td>Member rates at the counter: the member shows their membership, or the course allows any membership</td></tr>
@@ -265,11 +275,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">cfe7cb40</td><td class="num">2026-10-29</td><td>WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings</td></tr>
 <tr><td class="num">3d18ecd9</td><td class="num">2026-10-29</td><td>Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)</td></tr>
 <tr><td class="num">69bcbab8</td><td class="num">2026-10-29</td><td>WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale</td></tr>
-<tr><td class="num">7dcf8122</td><td class="num">2026-10-29</td><td>Course page: no layout shift when the day's tee times load</td></tr>
-<tr><td class="num">f226c81b</td><td class="num">2026-10-29</td><td>WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party</td></tr>
-<tr><td class="num">9de927a8</td><td class="num">2026-10-29</td><td>WIP part B: staff refunds (course share) and giving back a kept late fee</td></tr>
-<tr><td class="num">4e1d9c2c</td><td class="num">2026-10-29</td><td>The dues link says why it didn't send; a search result opens Cancellations filtered</td></tr>
-<tr><td class="num">06b64277</td><td class="num">2026-10-29</td><td>Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

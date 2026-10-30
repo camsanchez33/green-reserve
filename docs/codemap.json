@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 588,
+    "files": 590,
     "routes": 272,
-    "libs": 205,
-    "models": 60,
+    "libs": 207,
+    "models": 61,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -4225,7 +4225,7 @@
     },
     {
       "path": "src/app/api/cron/send-reminders/route.ts",
-      "lines": 91,
+      "lines": 94,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4245,6 +4245,7 @@
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/email",
+        "@/lib/membership-renewal",
         "@/lib/money",
         "@/lib/prisma",
         "next/server"
@@ -4844,7 +4845,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/payments/route.ts",
-      "lines": 81,
+      "lines": 90,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4980,7 +4981,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 160,
+      "lines": 182,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5003,6 +5004,8 @@
       "guard": "token",
       "imports": [
         "@/lib/email",
+        "@/lib/membership-renewal",
+        "@/lib/money-ledger",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/stripe",
@@ -5704,7 +5707,7 @@
     },
     {
       "path": "src/app/api/operator/golfers/[key]/route.ts",
-      "lines": 91,
+      "lines": 92,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5817,7 +5820,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 322,
+      "lines": 326,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5855,6 +5858,7 @@
         "@/lib/email",
         "@/lib/member-stats",
         "@/lib/money",
+        "@/lib/money-ledger",
         "@/lib/prisma",
         "@/lib/session",
         "crypto",
@@ -7353,7 +7357,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 152,
+      "lines": 169,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7372,6 +7376,7 @@
       "imports": [
         "@/lib/access-fee",
         "@/lib/cron-log",
+        "@/lib/money-ledger",
         "@/lib/prisma",
         "@/lib/refund-booking",
         "@/lib/stripe",
@@ -11818,7 +11823,7 @@
     },
     {
       "path": "src/lib/access-fee.ts",
-      "lines": 187,
+      "lines": 192,
       "purpose": "FB-3 (Cam 2026-09-29, FB3_FEE_PLAN_SPEC.md option B).",
       "brain": [
         "separate-booking-fee"
@@ -11856,6 +11861,7 @@
       "guard": null,
       "imports": [
         "./booking-events",
+        "./money-ledger",
         "./prisma",
         "./real-courses",
         "./refund-booking",
@@ -13903,7 +13909,7 @@
     },
     {
       "path": "src/lib/booking-fee.ts",
-      "lines": 123,
+      "lines": 126,
       "purpose": "FEE-AT-BOOKING (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -13932,6 +13938,7 @@
       "imports": [
         "./booking-events",
         "./booking-fees",
+        "./money-ledger",
         "./prisma",
         "./refund-booking",
         "./stripe",
@@ -14495,7 +14502,7 @@
     },
     {
       "path": "src/lib/cancel-booking.ts",
-      "lines": 343,
+      "lines": 354,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14519,9 +14526,11 @@
         "./booking-fee",
         "./cancel-policy",
         "./email",
+        "./money-ledger",
         "./no-show-fee",
         "./prisma",
         "./refund-booking",
+        "./shop",
         "./stripe"
       ],
       "usedBy": [
@@ -15003,7 +15012,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 503,
+      "lines": 511,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -15035,6 +15044,7 @@
         "./booking-fees",
         "./email",
         "./member-rates",
+        "./money-ledger",
         "./no-show-fee",
         "./prisma",
         "./reader-rounds",
@@ -15226,7 +15236,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 214,
+      "lines": 216,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -15263,6 +15273,7 @@
         "./claim-tee-time",
         "./course-time",
         "./member-rates",
+        "./money-ledger",
         "./no-show-fee",
         "./prisma",
         "./reader-rounds",
@@ -16476,7 +16487,7 @@
     },
     {
       "path": "src/lib/cutoff-hold.ts",
-      "lines": 122,
+      "lines": 127,
       "purpose": "The cancellation-window hold (SP-B timing \"hold_at_cutoff\"):",
       "brain": [],
       "exports": [
@@ -16502,6 +16513,7 @@
         "./booking-events",
         "./cancel-policy",
         "./email",
+        "./money-ledger",
         "./prisma",
         "./refund-booking",
         "./stripe",
@@ -16613,7 +16625,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 154,
+      "lines": 155,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -17168,7 +17180,7 @@
     },
     {
       "path": "src/lib/event-payments.ts",
-      "lines": 466,
+      "lines": 484,
       "purpose": "W2-9b (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -17268,6 +17280,7 @@
       "guard": null,
       "imports": [
         "./booking-fees",
+        "./money-ledger",
         "./prisma",
         "./stripe",
         "crypto",
@@ -17866,7 +17879,7 @@
     },
     {
       "path": "src/lib/golfer-record.ts",
-      "lines": 162,
+      "lines": 174,
       "purpose": "The golfer record (Revamp 3, Cam 2026-10-29):",
       "brain": [],
       "exports": [
@@ -17888,6 +17901,14 @@
         },
         {
           "name": "onlineBookingBlock",
+          "kind": "fn"
+        },
+        {
+          "name": "recordKeys",
+          "kind": "fn"
+        },
+        {
+          "name": "recordKeysFor",
           "kind": "fn"
         }
       ],
@@ -18833,6 +18854,95 @@
       ]
     },
     {
+      "path": "src/lib/membership-renewal.ts",
+      "lines": 18,
+      "purpose": "When a paid membership's next term can be paid (LEDGER-1 review, Cam 2026-10-30).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "paidUntilRenewal",
+          "kind": "fn"
+        },
+        {
+          "name": "renewalWindowDays",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/cron/send-reminders/route.ts",
+        "src/app/api/membership/[id]/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/money-ledger.ts",
+      "lines": 101,
+      "purpose": "LEDGER-1 (Cam 2026-10-30, \"one new money table\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "chargeWhat",
+          "kind": "fn"
+        },
+        {
+          "name": "feeBackCents",
+          "kind": "fn"
+        },
+        {
+          "name": "mirrorMove",
+          "kind": "fn"
+        },
+        {
+          "name": "Move",
+          "kind": "type"
+        },
+        {
+          "name": "MoveMethod",
+          "kind": "type"
+        },
+        {
+          "name": "MoveWhat",
+          "kind": "type"
+        },
+        {
+          "name": "recordMove",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "@sentry/nextjs"
+      ],
+      "usedBy": [
+        "src/app/api/membership/[id]/route.ts",
+        "src/app/api/operator/members/route.ts",
+        "src/app/api/stripe/webhook/route.ts",
+        "src/lib/access-fee.ts",
+        "src/lib/booking-fee.ts",
+        "src/lib/cancel-booking.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/cutoff-hold.ts",
+        "src/lib/event-payments.ts",
+        "src/lib/no-show-fee.ts",
+        "src/lib/reader-rounds.ts",
+        "src/lib/refund-booking.ts",
+        "src/lib/register.ts",
+        "src/lib/shop-sales.ts",
+        "src/lib/staff-refund.ts"
+      ]
+    },
+    {
       "path": "src/lib/money-problems.ts",
       "lines": 89,
       "purpose": "",
@@ -19151,7 +19261,7 @@
     },
     {
       "path": "src/lib/no-show-fee.ts",
-      "lines": 215,
+      "lines": 218,
       "purpose": "SP-B (STAFF_POLICY_SPEC Part B4).",
       "brain": [],
       "exports": [
@@ -19205,6 +19315,7 @@
         "./access-fee",
         "./booking-events",
         "./course-time",
+        "./money-ledger",
         "./prisma",
         "./refund-booking",
         "./stripe",
@@ -19991,6 +20102,7 @@
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/member-stats.ts",
+        "src/lib/money-ledger.ts",
         "src/lib/money-problems.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
@@ -20258,7 +20370,7 @@
     },
     {
       "path": "src/lib/reader-rounds.ts",
-      "lines": 223,
+      "lines": 227,
       "purpose": "POS-3 R3b (Cam 2026-10-24, \"Ok go\"):",
       "brain": [],
       "exports": [
@@ -20292,6 +20404,7 @@
         "./booking-events",
         "./card-reader",
         "./checkin-booking",
+        "./money-ledger",
         "./no-show-fee",
         "./prisma",
         "./refund-booking",
@@ -20382,7 +20495,7 @@
     },
     {
       "path": "src/lib/refund-booking.ts",
-      "lines": 136,
+      "lines": 139,
       "purpose": "MP-6b.",
       "brain": [],
       "exports": [
@@ -20414,6 +20527,7 @@
       "guard": null,
       "imports": [
         "./email",
+        "./money-ledger",
         "./prisma",
         "./shop",
         "./stripe",
@@ -20481,7 +20595,7 @@
     },
     {
       "path": "src/lib/register.ts",
-      "lines": 122,
+      "lines": 125,
       "purpose": "POS-3 R2 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -20507,6 +20621,7 @@
         "./booking-events",
         "./counter-pay",
         "./format",
+        "./money-ledger",
         "./prisma",
         "./shop",
         "./shop-sales"
@@ -21653,7 +21768,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 753,
+      "lines": 769,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -21790,6 +21905,7 @@
       "imports": [
         "./booking-events",
         "./course-time",
+        "./money-ledger",
         "./prisma",
         "./sales-tax",
         "./shop",
@@ -21952,6 +22068,7 @@
         "src/app/api/operator/bookings/shop/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/admin-course-page.ts",
+        "src/lib/cancel-booking.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/operator-home.ts",
         "src/lib/reader-rounds.ts",
@@ -22067,7 +22184,7 @@
     },
     {
       "path": "src/lib/staff-refund.ts",
-      "lines": 131,
+      "lines": 135,
       "purpose": "Revamp 3 dead end 14 (Cam 2026-10-29):",
       "brain": [],
       "exports": [
@@ -22096,6 +22213,7 @@
       "imports": [
         "./booking-events",
         "./email",
+        "./money-ledger",
         "./prisma",
         "./shop",
         "./stripe",
@@ -24737,6 +24855,10 @@
         {
           "name": "registerCloses",
           "type": "RegisterClose[]"
+        },
+        {
+          "name": "moneyMoves",
+          "type": "MoneyMove[]"
         }
       ],
       "writers": [
@@ -25716,6 +25838,10 @@
           "type": "String"
         },
         {
+          "name": "duesChargeStartedAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "renewalRemindedAt",
           "type": "DateTime?"
         },
@@ -25736,6 +25862,7 @@
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/memberships/route.ts",
+        "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/lib/data-reset.ts",
@@ -26803,6 +26930,90 @@
         "src/lib/admin-action-queue.ts",
         "src/lib/data-reset.ts",
         "src/lib/submit-change-request.ts"
+      ]
+    },
+    {
+      "name": "MoneyMove",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "at",
+          "type": "DateTime"
+        },
+        {
+          "name": "what",
+          "type": "String"
+        },
+        {
+          "name": "direction",
+          "type": "String"
+        },
+        {
+          "name": "method",
+          "type": "String"
+        },
+        {
+          "name": "account",
+          "type": "String"
+        },
+        {
+          "name": "amountCents",
+          "type": "Int"
+        },
+        {
+          "name": "platformFeeCents",
+          "type": "Int"
+        },
+        {
+          "name": "stripeId",
+          "type": "String?"
+        },
+        {
+          "name": "bookingId",
+          "type": "String?"
+        },
+        {
+          "name": "saleId",
+          "type": "String?"
+        },
+        {
+          "name": "membershipId",
+          "type": "String?"
+        },
+        {
+          "name": "eventPaymentId",
+          "type": "String?"
+        },
+        {
+          "name": "actor",
+          "type": "String"
+        },
+        {
+          "name": "note",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/data-reset.ts"
+      ],
+      "readers": [
+        "src/app/api/member/[courseSlug]/payments/route.ts",
+        "src/lib/money-ledger.ts"
       ]
     },
     {

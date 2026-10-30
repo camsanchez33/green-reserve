@@ -5,7 +5,7 @@
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { golferKey, parseGolferKey } from '../src/lib/golfer-key';
-import { golferRecord, onlineBookingBlock, isLateCancel, autoBlockReason } from '../src/lib/golfer-record';
+import { golferRecord, recordKeysFor, onlineBookingBlock, isLateCancel, autoBlockReason } from '../src/lib/golfer-record';
 import { WIPED_TABLES } from '../src/lib/data-reset';
 
 const TAG = 'golferrecorddbtest';
@@ -86,6 +86,11 @@ async function cleanup() {
   await prisma.golferBlock.create({ data: { courseId: c.id, golferKey: 'p:2015550199', reason: 'No-shows by phone', blockedBy: 'owner@x' } });
   ok('a phone-keyed block holds online when the phone is given', !!(await onlineBookingBlock(c.id, { golferEmail: 'new@t.local', golferPhone: '(201) 555-0199' })));
   ok('…not for someone else', (await onlineBookingBlock(c.id, { golferEmail: 'new@t.local', golferPhone: '201-555-0100' })) === null);
+  // The record shows a block made under another of the golfer's keys.
+  const both = await book(c.id, day(9), { golferEmail: 'both@t.local', golferPhone: '201-555-0199' });
+  const viaEmail = await golferRecord(c.id, 'e:both@t.local', { money: false, contact: false });
+  ok('a record opened by email shows the block made under their phone', viaEmail?.onlineBlock?.reason === 'No-shows by phone', viaEmail?.onlineBlock);
+  ok('…and unblock clears it under every key', (await recordKeysFor(c.id, 'e:both@t.local')).includes('p:2015550199') && !!both);
   // Notes reach the record and the tee sheet.
   await prisma.golferNote.create({ data: { courseId: c.id, golferKey: key, body: 'Prefers a cart', createdBy: 'desk@x' } });
   ok('notes are on the record', (await golferRecord(c.id, key, { money: false, contact: false }))?.notes[0]?.body === 'Prefers a cart');
@@ -97,6 +102,7 @@ async function cleanup() {
   ok('the record route is gated on the tee sheet', route.includes("requirePermission(session, 'sheet.view')"));
   ok('…blocking is the owner\'s only', route.includes("if (session.isStaff) return NextResponse.json({ error: 'Only the course owner can stop a golfer booking online.' }, { status: 403 })"));
   ok('…a staff note is deleted only by its writer or the owner', route.includes('session.isStaff && n.createdBy !== who'));
+  ok('…unblock clears every key the golfer answers to', route.includes('golferKey: { in: await recordKeysFor(session.courseId, key) }'));
   ok('…the key (an email or phone) only with golfer contact', route.includes("...(contact ? { key: r.key } : {})"));
   ok('…links open it by booking, checked against this course', route.includes("where: { id: raw.slice(2), courseId: session.courseId }"));
   ok('the course\'s rule is owner-only in settings', /OWNER_ONLY_FIELDS[\s\S]{0,800}onlineBlockNoShows/.test(readFileSync('src/app/api/operator/settings/route.ts', 'utf8')));

@@ -95,6 +95,17 @@ export async function onlineBookingBlock(courseId: string, who: { golferEmail?: 
   return reason ? `Online booking isn’t available for you here after recent missed rounds. ${call}` : null;
 }
 
+/** Every key a record answers to: its own, plus the email, phone and account found on its bookings. */
+export function recordKeys(key: string, email: string, phone: string, accountId: string | null): string[] {
+  return [...new Set([key, ...golferKeys({ golferEmail: email, golferPhone: phone, golferAccountId: accountId })])];
+}
+
+/** The keys a record answers to, read from its bookings — unblock clears a block under any of them. */
+export async function recordKeysFor(courseId: string, key: string): Promise<string[]> {
+  const h = await historyOf(courseId, key);
+  return recordKeys(key, h.find(b => b.golferEmail && !b.golferEmail.includes('@noemail.'))?.golferEmail ?? '', h.find(b => b.golferPhone)?.golferPhone ?? '', h.find(b => b.golferAccountId)?.golferAccountId ?? null);
+}
+
 export type GolferRecord = Awaited<ReturnType<typeof golferRecord>>;
 
 /** One course's whole view of a golfer. Money and contact only for logins that may see them. */
@@ -121,7 +132,8 @@ export async function golferRecord(courseId: string, key: string, opts: { money:
       orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, totalCents: true, refundedCents: true, roundsCents: true, createdAt: true },
     }) : [],
     prisma.golferNote.findMany({ where: { courseId, golferKey: key }, orderBy: { createdAt: 'desc' }, take: 100, select: { id: true, body: true, bookingId: true, createdBy: true, createdAt: true } }),
-    prisma.golferBlock.findUnique({ where: { courseId_golferKey: { courseId, golferKey: key } }, select: { reason: true, blockedBy: true, blockedAt: true } }),
+    // Any key the golfer answers to, as onlineBookingBlock checks (a block made from a phone-only walk-in).
+    prisma.golferBlock.findFirst({ where: { courseId, golferKey: { in: recordKeys(key, email, phone, accountId) } }, orderBy: { blockedAt: 'desc' }, select: { reason: true, blockedBy: true, blockedAt: true } }),
     recentCounts(courseId, [key], course.timezone, course.onlineBlockMonths, history),
   ]);
 
