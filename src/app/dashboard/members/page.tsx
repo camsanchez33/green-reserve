@@ -227,7 +227,7 @@ function MembersPageInner() {
   const markDuesPaid = async (m: Member) => {
     if (!duesForm || duesForm.id !== m.id) return;
     const cents = Math.round(Number(duesForm.amount) * 100);
-    if (!duesForm.amount.trim() || !Number.isFinite(cents) || cents < 0) { setDuesError('Enter the amount taken.'); return; }
+    if (!duesForm.amount.trim() || !Number.isFinite(cents) || cents < 1) { setDuesError('Enter the amount taken.'); return; }
     setMemberBusy(m.id); setDuesError('');
     const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id: m.id, action: 'mark_paid', amountCents: cents, method: duesForm.method }) });
     setMemberBusy(null);

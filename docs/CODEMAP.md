@@ -229,7 +229,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/members/import` | operator | file | POST | `src/app/api/operator/members/import/route.ts` | 35 |
 | `/api/operator/members/remind-overdue` | operator | file | POST | `src/app/api/operator/members/remind-overdue/route.ts` | 76 |
 | `/api/operator/messages` | operator | file | GET PATCH POST | `src/app/api/operator/messages/route.ts` | 123 |
-| `/api/operator/money/ledger` | operator | file | GET | `src/app/api/operator/money/ledger/route.ts` | 45 |
+| `/api/operator/money/ledger` | operator | file | GET | `src/app/api/operator/money/ledger/route.ts` | 52 |
 | `/api/operator/money/overview` | operator | file | GET | `src/app/api/operator/money/overview/route.ts` | 37 |
 | `/api/operator/money/sales` | operator | file | GET | `src/app/api/operator/money/sales/route.ts` | 62 |
 | `/api/operator/monthly-reviews` | operator | file | GET | `src/app/api/operator/monthly-reviews/route.ts` | 29 |
@@ -480,7 +480,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-board.ts` | 2 | 85 | AW-6a (Cam 2026-10-21): | `BOARD_COLUMNS`, `BOARD_STUCK_DAYS`, `boardColumn`, `BoardColumn`, `BoardInquiry`, `LIVE_ON_BOARD_DAYS`, `nextStep`, `NextStep` +1 more |
 | `src/lib/inquiry-signin.ts` | 2 | 124 | SD-11 — the "are you trying to sign in?" challenge that sits between the public sign-up form and a course that already exists. | `CODE_TTL_SECONDS`, `codeMatches`, `cookieOptions`, `generateCode`, `inertChallenge`, `macCode`, `MAX_CODE_ATTEMPTS`, `newChallengeId` +5 more |
 | `src/lib/late-add.ts` | 2 | 13 | Cam 2026-10-27: | `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `lateForAdding` |
-| `src/lib/ledger-view.ts` | 2 | 187 | LEDGER-2 (Cam 2026-10-30: | `dayOf`, `dayStart`, `LEDGER_MAX_DAYS`, `ledgerCsv`, `LedgerDay`, `ledgerDays`, `LedgerRow`, `ledgerRows` +4 more |
+| `src/lib/ledger-view.ts` | 2 | 195 | LEDGER-2 (Cam 2026-10-30: | `dayOf`, `dayStart`, `LEDGER_MAX_DAYS`, `LEDGER_MAX_ROWS`, `ledgerCsv`, `LedgerDay`, `ledgerDays`, `LedgerRow` +6 more |
 | `src/lib/membership-renewal.ts` | 2 | 18 | When a paid membership's next term can be paid (LEDGER-1 review, Cam 2026-10-30). | `paidUntilRenewal`, `renewalWindowDays` |
 | `src/lib/no-fee-labels.ts` | 2 | 13 | Client-safe half of lib/cancel-fee-reason (no prisma): | `NO_FEE_LABEL`, `NoFeeReason` |
 | `src/lib/operator-search.ts` | 2 | 80 | DASH-C search (the mockups' "Find a golfer, booking or member"): | `bySearchOrder`, `operatorSearch`, `SearchResult` |
@@ -603,7 +603,7 @@ Sorted the same way.
 | `src/components/dashboard/members/ImportMembers.tsx` | 1 | 124 | Members → Import a list (Cam 2026-10-19). | `ImportMembers` |
 | `src/components/dashboard/members/ResidentsCard.tsx` | 1 | 169 | RES-1 (Cam 2026-10-19): | `ResidentsCard` |
 | `src/components/dashboard/money/CancellationsPanel.tsx` | 1 | 88 | Money rework (Cam 2026-10-19: | `CancellationsPanel` |
-| `src/components/dashboard/money/LedgerPanel.tsx` | 1 | 154 | LEDGER-2 (Cam 2026-10-30: | `LedgerPanel` |
+| `src/components/dashboard/money/LedgerPanel.tsx` | 1 | 157 | LEDGER-2 (Cam 2026-10-30: | `LedgerPanel` |
 | `src/components/dashboard/money/PaymentsPanel.tsx` | 1 | 129 | Money rework (Cam 2026-10-19: | `PaymentsPanel`, `paymentStatus` |
 | `src/components/dashboard/money/PayoutsPanel.tsx` | 1 | 102 | SD-8 — the Stripe card, moved here out of Settings. | `PayoutsPanel` |
 | `src/components/dashboard/money/SalesPanel.tsx` | 1 | 240 | DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today): | `SalesPanel` |

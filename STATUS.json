@@ -1,33 +1,31 @@
 {
-  "generatedAt": "2026-10-30T14:15:47.707Z",
+  "generatedAt": "2026-10-30T14:21:15.406Z",
   "repo": {
-    "head": "5fff5110",
+    "head": "c5b84881",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 17,
+    "dirtyCount": 8,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/money-ledger-test.ts",
+      " M scripts/ledger-view-db-test.ts",
       " M src/app/api/operator/members/route.ts",
+      " M src/app/api/operator/money/ledger/route.ts",
       " M src/app/dashboard/members/page.tsx",
-      " M src/app/dashboard/money/page.tsx",
-      " M src/components/dashboard/RegisterClose.tsx",
-      " M src/lib/register-close.ts",
-      "?? prisma/migrations/20261030030000_register_other_cash/",
-      "?? scripts/ledger-view-db-test.ts",
-      "?? src/app/api/operator/money/ledger/",
-      "?? src/components/dashboard/money/LedgerPanel.tsx",
-      "?? src/lib/ledger-view.ts"
+      " M src/components/dashboard/money/LedgerPanel.tsx",
+      " M src/lib/ledger-view.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "c5b84881",
+        "date": "2026-10-30T14:15:49+00:00",
+        "subject": "Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "7dda7589",
         "date": "2026-10-30T02:01:31-04:00",
@@ -747,6 +745,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "c5b84881",
+      "date": "2026-10-30",
+      "subject": "Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check"
+    },
+    {
       "h": "7dda7589",
       "date": "2026-10-30",
       "subject": "Money ledger: one row for every dollar that moves; membership dues charged safely (#254)"
@@ -800,11 +803,6 @@
       "h": "65df5988",
       "date": "2026-10-29",
       "subject": "Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share"
-    },
-    {
-      "h": "cfe7cb40",
-      "date": "2026-10-29",
-      "subject": "WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings"
     }
   ]
 }

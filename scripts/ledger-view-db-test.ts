@@ -67,6 +67,9 @@ async function cleanup() {
   const csv = await ledgerCsv(c.id, today, today) ?? '';
   ok('the CSV has a header and a line per movement, in dollars', csv.split('\r\n').filter(Boolean).length === 3 && csv.includes('103.00') && csv.includes('500.00') && !csv.includes('9.99'), csv);
   await recordMove({ courseId: c.id, what: 'dues', direction: 'in', method: 'cash', account: 'course', amountCents: 100, actor: 'staff', note: '=HYPERLINK("x")' });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 4000, platformFeeCents: 120, stripeId: 're_lv1', bookingId: b.id, actor: 'staff' });
+  const csv2 = await ledgerCsv(c.id, today, today) ?? '';
+  ok('money given back is a negative number the spreadsheet can add', csv2.includes(',-40.00,-1.20,') && !csv2.includes("'-40.00"), csv2);
   ok('…a note can\'t run as a spreadsheet formula', (await ledgerCsv(c.id, today, today) ?? '').includes(`'=HYPERLINK`));
 
   // The close-out counts cash dues.

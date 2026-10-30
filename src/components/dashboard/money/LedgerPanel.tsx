@@ -43,12 +43,15 @@ export function LedgerPanel() {
   }, []);
   useEffect(() => { load(null); }, [load]);
 
-  const openDay = async (day: string) => {
-    if (open === day) { setOpen(null); return; }
-    setOpen(day);
-    if (rows[day] && !('error' in rows[day])) return;
+  const fetchDay = async (day: string) => {
+    setRows(prev => { const n = { ...prev }; delete n[day]; return n; });
     const res = await dfetch<{ rows: LedgerRow[] }>(`/api/operator/money/ledger?day=${day}`);
     setRows(prev => ({ ...prev, [day]: res.ok ? res.data.rows : { error: res.error } }));
+  };
+  const openDay = (day: string) => {
+    if (open === day) { setOpen(null); return; }
+    setOpen(day);
+    if (!rows[day] || 'error' in rows[day]) fetchDay(day);
   };
 
   if (!data) return error ? <LoadError message={`Couldn't load the ledger — ${error}`} onRetry={() => load(range)} />
@@ -104,7 +107,7 @@ export function LedgerPanel() {
                     <tr className="border-b border-line-soft bg-paper/70">
                       <td colSpan={8} className="px-4 py-3">
                         {!r ? <div className="text-ink-muted">Loading…</div>
-                          : 'error' in r ? <LoadError message={`Couldn't load this day — ${r.error}`} onRetry={() => { setRows(p => { const n = { ...p }; delete n[d.day]; return n; }); setOpen(null); openDay(d.day); }} />
+                          : 'error' in r ? <LoadError message={`Couldn't load this day — ${r.error}`} onRetry={() => fetchDay(d.day)} />
                           : <DayRows rows={r} tz={data.tz} />}
                       </td>
                     </tr>

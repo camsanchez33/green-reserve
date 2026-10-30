@@ -5905,7 +5905,7 @@
     },
     {
       "path": "src/app/api/operator/money/ledger/route.ts",
-      "lines": 45,
+      "lines": 52,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11028,7 +11028,7 @@
     },
     {
       "path": "src/components/dashboard/money/LedgerPanel.tsx",
-      "lines": 154,
+      "lines": 157,
       "purpose": "LEDGER-2 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -18537,7 +18537,7 @@
     },
     {
       "path": "src/lib/ledger-view.ts",
-      "lines": 187,
+      "lines": 195,
       "purpose": "LEDGER-2 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -18551,6 +18551,10 @@
         },
         {
           "name": "LEDGER_MAX_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "LEDGER_MAX_ROWS",
           "kind": "const"
         },
         {
@@ -18588,6 +18592,10 @@
         {
           "name": "sumDay",
           "kind": "fn"
+        },
+        {
+          "name": "TooManyRows",
+          "kind": "class"
         }
       ],
       "route": null,

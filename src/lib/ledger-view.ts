@@ -16,7 +16,10 @@ import { stripe } from './stripe';
 import { teeTimeInstant } from './booking-events';
 import { addDaysStr, todayIn } from './course-time';
 
-export const LEDGER_MAX_DAYS = 92;
+/** A season fits (the date picker's "This season" preset). */
+export const LEDGER_MAX_DAYS = 366;
+/** More rows than this in one read is refused, never cut short. */
+export const LEDGER_MAX_ROWS = 20_000;
 
 export type LedgerDay = {
   day: string;
@@ -48,11 +51,15 @@ export const methodLabel = (m: string) => METHOD[m] ?? m;
 
 type Row = { id: string; at: Date; what: string; direction: string; method: string; account: string; amountCents: number; platformFeeCents: number; stripeId: string | null; bookingId: string | null; saleId: string | null; membershipId: string | null; eventPaymentId: string | null; actor: string; note: string };
 
+export class TooManyRows extends Error {}
+
 async function movesIn(courseId: string, from: Date, to: Date): Promise<Row[]> {
-  return prisma.moneyMove.findMany({
-    where: { courseId, at: { gte: from, lt: to } }, orderBy: { at: 'asc' }, take: 20_000,
+  const rows = await prisma.moneyMove.findMany({
+    where: { courseId, at: { gte: from, lt: to } }, orderBy: { at: 'asc' }, take: LEDGER_MAX_ROWS + 1,
     select: { id: true, at: true, what: true, direction: true, method: true, account: true, amountCents: true, platformFeeCents: true, stripeId: true, bookingId: true, saleId: true, membershipId: true, eventPaymentId: true, actor: true, note: true },
   });
+  if (rows.length > LEDGER_MAX_ROWS) throw new TooManyRows();
+  return rows;
 }
 
 /** Pure: a day's totals from its rows. */
@@ -92,7 +99,8 @@ async function stripeByDay(accountId: string | null, tz: string, from: Date, to:
     );
     let n = 0;
     for await (const t of list) {
-      if (++n > 5000) break;
+      // Too many to add up here: say "not checked" rather than a wrong total.
+      if (++n > 10_000) return null;
       if (t.currency !== 'usd') continue;
       // Card money moving: charges, refunds, dispute withdrawals and reinstatements.
       if (!['charge', 'payment', 'refund', 'payment_refund', 'adjustment', 'payment_failure_refund'].includes(t.type)) continue;
@@ -164,7 +172,7 @@ async function describe(courseId: string, rows: Row[]): Promise<LedgerRow[]> {
 const csvCell = (v: string | number) => {
   const t = String(v);
   // A leading = + - @ would run as a formula in a spreadsheet.
-  const safe = /^[=+\-@\t\r]/.test(t) && typeof v === 'string' ? `'${t}` : t;
+  const safe = /^[=+\-@\t\r]/.test(t) && !/^-?\d+(\.\d+)?$/.test(t) ? `'${t}` : t;
   return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 };
 

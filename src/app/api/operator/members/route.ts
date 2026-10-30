@@ -233,7 +233,7 @@ export async function PATCH(req: NextRequest) {
     // Without an amount (an older screen) it is what was due — this term, initiation on a first payment.
     const dueCents = (membership.tier?.annualFeeCents ?? 0) + (membership.lastPaidAt || membership.initiationWaived ? 0 : (membership.tier?.initiationFeeCents ?? 0));
     const takenCents = body.amountCents === undefined || body.amountCents === null || body.amountCents === '' ? dueCents : Number(body.amountCents);
-    if (!Number.isInteger(takenCents) || takenCents < 0 || takenCents > 10_000_000) return NextResponse.json({ error: 'Enter the amount taken (up to $100,000).' }, { status: 400 });
+    if (!Number.isInteger(takenCents) || takenCents < 1 || takenCents > 10_000_000) return NextResponse.json({ error: 'Enter the amount taken (up to $100,000).' }, { status: 400 });
     const method = body.method === 'check' ? 'check' : body.method === 'cash' || body.method === undefined ? 'cash' : null;
     if (!method) return NextResponse.json({ error: 'Say whether it was cash or a check.' }, { status: 400 });
     await recordMove({ courseId: session.courseId, what: 'dues', direction: 'in', method: method === 'cash' ? 'cash' : 'other', account: 'course', amountCents: takenCents, membershipId: id, actor: 'staff', note: method === 'check' ? 'check at the course' : 'cash at the course' });

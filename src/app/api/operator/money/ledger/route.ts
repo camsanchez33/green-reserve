@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { todayIn, addDaysStr } from '@/lib/course-time';
-import { ledgerDays, ledgerRows, ledgerCsv, LEDGER_MAX_DAYS } from '@/lib/ledger-view';
+import { ledgerDays, ledgerRows, ledgerCsv, LEDGER_MAX_DAYS, TooManyRows } from '@/lib/ledger-view';
 
 // LEDGER-2 (Cam 2026-10-30): the course's money ledger, read-only, its own course only,
 // money.payments (as Money → Payments).
@@ -12,6 +12,13 @@ import { ledgerDays, ledgerRows, ledgerCsv, LEDGER_MAX_DAYS } from '@/lib/ledger
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function GET(req: NextRequest) {
+  try { return await read(req); } catch (err) {
+    if (err instanceof TooManyRows) return NextResponse.json({ error: 'Too many payments in that range — pick a shorter one.' }, { status: 400 });
+    throw err;
+  }
+}
+
+async function read(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   { const denied = requirePermission(session, 'money.payments'); if (denied) return denied; }
