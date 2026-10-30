@@ -6607,7 +6607,7 @@
     },
     {
       "path": "src/app/api/operator/round-packs/route.ts",
-      "lines": 70,
+      "lines": 74,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7650,7 +7650,7 @@
     },
     {
       "path": "src/app/api/shop-sale/[id]/route.ts",
-      "lines": 33,
+      "lines": 43,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7673,6 +7673,7 @@
       "guard": "token",
       "imports": [
         "@/lib/rate-limit",
+        "@/lib/round-packs",
         "@/lib/shop-sales",
         "next/server"
       ],
@@ -9334,7 +9335,7 @@
     },
     {
       "path": "src/app/pay/shop/[id]/page.tsx",
-      "lines": 143,
+      "lines": 154,
       "purpose": "POS-2 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -10953,7 +10954,7 @@
     },
     {
       "path": "src/components/dashboard/RoundPacks.tsx",
-      "lines": 94,
+      "lines": 109,
       "purpose": "PRICE-3 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -21809,12 +21810,16 @@
     },
     {
       "path": "src/lib/round-packs.ts",
-      "lines": 204,
+      "lines": 288,
       "purpose": "PRICE-3 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
         {
           "name": "buyPackOnline",
+          "kind": "fn"
+        },
+        {
+          "name": "closeStalePackLinks",
           "kind": "fn"
         },
         {
@@ -21850,6 +21855,10 @@
           "kind": "const"
         },
         {
+          "name": "OpenLinks",
+          "kind": "type"
+        },
+        {
           "name": "PACK_NO_CODE",
           "kind": "const"
         },
@@ -21878,11 +21887,23 @@
           "kind": "fn"
         },
         {
+          "name": "packTermsText",
+          "kind": "fn"
+        },
+        {
           "name": "readPack",
           "kind": "fn"
         },
         {
           "name": "releaseBookingRounds",
+          "kind": "fn"
+        },
+        {
+          "name": "saleTerms",
+          "kind": "fn"
+        },
+        {
+          "name": "stalePackLinkBlock",
           "kind": "fn"
         },
         {
@@ -21905,6 +21926,7 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/operator/round-packs/route.ts",
+        "src/app/api/shop-sale/[id]/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/app/dashboard/page.tsx",
         "src/components/dashboard/RegisterPacks.tsx",
@@ -23046,7 +23068,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 800,
+      "lines": 802,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -29089,6 +29111,10 @@
           "type": "Boolean"
         },
         {
+          "name": "openLinks",
+          "type": "String"
+        },
+        {
           "name": "active",
           "type": "Boolean"
         },
@@ -29396,6 +29422,18 @@
         },
         {
           "name": "voidedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "voidNote",
+          "type": "String"
+        },
+        {
+          "name": "termsAgreed",
+          "type": "String"
+        },
+        {
+          "name": "termsAgreedAt",
           "type": "DateTime?"
         },
         {

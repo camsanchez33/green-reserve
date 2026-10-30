@@ -1464,6 +1464,11 @@ model ShopSale {
   chargeStartedAt   DateTime?
   paidAt            DateTime?
   voidedAt          DateTime?
+  /// PRICE-4: why the sale was voided, for the customer's pay page ("" = the pro shop voided it).
+  voidNote          String           @default("")
+  /// PRICE-4: the round-pack terms the customer agreed to on the pay page, and when ("" = none).
+  termsAgreed       String           @default("")
+  termsAgreedAt     DateTime?
   /// Who rang it up (staff/owner email).
   soldBy            String           @default("")
   createdAt         DateTime         @default(now())
@@ -1986,6 +1991,9 @@ model RoundPack {
   /// Days the rounds are good for after it is paid; null = no end.
   validDays  Int?
   sellOnline Boolean  @default(false)
+  /// PRICE-4: an unpaid pay link when the pack changes — 'keep' (holds the price it was sent at)
+  /// or 'current' (the link closes; the golfer buys again at the new price).
+  openLinks  String   @default("keep")
   active     Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

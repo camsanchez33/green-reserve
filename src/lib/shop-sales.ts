@@ -76,7 +76,7 @@ export const SALE_INCLUDE = {
   refunds: { select: { id: true, amountCents: true, method: true, status: true, reason: true, restocked: true, error: true, createdBy: true, createdAt: true }, orderBy: { createdAt: 'asc' as const } },
 };
 
-const LINES = { select: { name: true, unitPriceCents: true, quantity: true }, orderBy: { id: 'asc' as const } };
+const LINES = { select: { name: true, unitPriceCents: true, quantity: true, roundPackId: true, packRounds: true, packCoversCart: true, packGuests: true, packValidDays: true }, orderBy: { id: 'asc' as const } };
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -305,14 +305,14 @@ export const whyNotOpen = (status: string) =>
     : 'This sale was voided.';
 
 /** Void an unpaid link sale, or take cash for it at the counter instead. */
-export async function settleOpenSale(courseId: string, saleId: string, to: 'void' | 'paid_cash'): Promise<Result<SaleView>> {
+export async function settleOpenSale(courseId: string, saleId: string, to: 'void' | 'paid_cash', voidNote = ''): Promise<Result<SaleView>> {
   // PRICE-3: a golfer's own online purchase (a round pack) is paid on their link, never marked paid at the counter.
   const ONLINE_ONLY = 'The golfer bought this online — it’s paid on their own link. Void it if it’s not wanted.';
   const r = await prisma.$transaction(async tx => {
     const done = await tx.shopSale.updateMany({
       where: { id: saleId, courseId, status: 'open', ...(to === 'paid_cash' ? { soldBy: { not: 'online' } } : {}) },
       // The token stays: the customer's page then says the sale was paid or cancelled.
-      data: to === 'void' ? { status: 'void', voidedAt: new Date() } : { status: 'paid_cash', paidAt: new Date() },
+      data: to === 'void' ? { status: 'void', voidedAt: new Date(), voidNote: voidNote.slice(0, 200) } : { status: 'paid_cash', paidAt: new Date() },
     });
     const sale = await tx.shopSale.findFirst({ where: { id: saleId, courseId }, include: { ...SALE_INCLUDE, lines: { select: { id: true, name: true, unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true, shopItemId: true }, orderBy: { id: 'asc' } } } });
     if (!sale) return fail(404, 'Sale not found.');
@@ -350,11 +350,13 @@ export async function saleForPayPage(saleId: string, token: string) {
  * the page (as on the round pay link), attached to a throwaway platform
  * Customer and cloned onto the course's account.
  */
-export async function chargeSale(saleId: string, token: string, paymentMethodId: string, expectedTotalCents: number): Promise<Result<{ status: 'paid_card' | 'processing' }>> {
+export async function chargeSale(saleId: string, token: string, paymentMethodId: string, expectedTotalCents: number, terms: { text: string; agreed: boolean } = { text: '', agreed: false }): Promise<Result<{ status: 'paid_card' | 'processing' }>> {
   const sale = await saleForPayPage(saleId, token);
   if (!sale) return fail(404, 'This pay link is not valid any more. Ask the pro shop for a new one.');
   if (sale.status === 'paid_card' || sale.status === 'paid_cash') return fail(409, 'This sale is already paid. Thank you!');
   if (sale.status === 'void') return fail(409, 'The pro shop cancelled this sale.');
+  // PRICE-4: a round pack is paid only after the golfer ticks its terms (the route builds them: lib/round-packs saleTerms).
+  if (terms.text && !terms.agreed) return fail(400, 'Tick the box to agree to the round pack’s terms first.');
   if (!sale.course.stripeAccountId || !sale.course.stripeAccountActive) return fail(409, 'This course can’t take card payments yet — please pay at the pro shop.');
   if (Number(expectedTotalCents) !== sale.totalCents) return fail(409, 'The total changed since this page loaded — refresh to see it.');
   if (typeof paymentMethodId !== 'string' || !paymentMethodId.startsWith('pm_')) return fail(400, 'Card details are missing — try again.');
@@ -364,7 +366,7 @@ export async function chargeSale(saleId: string, token: string, paymentMethodId:
   const now = new Date();
   const claimed = await prisma.shopSale.updateMany({
     where: { id: saleId, payToken: token, OR: [{ status: 'open' }, { status: 'paying', chargeStartedAt: { lt: new Date(now.getTime() - STALE_CHARGE_MS) } }] },
-    data: { status: 'paying', chargeStartedAt: now },
+    data: { status: 'paying', chargeStartedAt: now, ...(terms.text ? { termsAgreed: terms.text.slice(0, 4000), termsAgreedAt: now } : {}) },
   });
   if (claimed.count === 0) return fail(409, 'A payment for this sale is already going through — wait a moment and refresh.');
   // Back to open ONLY when Stripe has definitely not taken the money.

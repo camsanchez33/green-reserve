@@ -12,7 +12,9 @@ let failed = 0;
 const check = (name: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); if (!ok) failed++; };
 
 check('prices come from the catalog, never the client', /findMany\(\{ where: \{ id: \{ in: \[\.\.\.wanted\.keys\(\)\] \}, courseId, active: true, options: \{ none: \{\} \}, OR: \[\{ parentId: null \}, \{ parent: \{ active: true \} \}\] \} \}\)/.test(lib) && /unitPriceCents: i\.priceCents/.test(lib));
-check('a charge claims the sale before touching Stripe', lib.indexOf("data: { status: 'paying', chargeStartedAt: now }") > 0 && lib.indexOf("data: { status: 'paying', chargeStartedAt: now }") < lib.indexOf('stripe.paymentIntents.confirm('));
+// PRICE-4: the claim may also carry the round-pack terms the customer agreed to.
+const claimAt = lib.search(/data: \{ status: 'paying', chargeStartedAt: now[,} ]/);
+check('a charge claims the sale before touching Stripe', claimAt > 0 && claimAt < lib.indexOf('stripe.paymentIntents.confirm('));
 check('void and took-cash only take an open sale', /where: \{ id: saleId, courseId, status: 'open'[ ,}]/.test(lib));
 check('a decline puts the sale back to open', /status: 'paying', chargeStartedAt: now \}, data: \{ status: 'open'/.test(lib));
 // POS-3 R3: a reader sale's intent has its own key (card_present) — still one per sale.

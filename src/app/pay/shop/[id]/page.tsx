@@ -15,7 +15,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 const cardStyle = { style: { base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } }, invalid: { color: '#A3452F' } } };
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
-type Sale = { status: 'open' | 'paid_cash' | 'paid_card' | 'void'; totalCents: number; taxCents?: number; discountCents?: number; discountNote?: string; courseName: string; brandColor: string; logoUrl: string; lines: { name: string; unitPriceCents: number; quantity: number }[] };
+type Sale = { status: 'open' | 'paid_cash' | 'paid_card' | 'void'; totalCents: number; taxCents?: number; discountCents?: number; discountNote?: string; courseName: string; brandColor: string; logoUrl: string; lines: { name: string; unitPriceCents: number; quantity: number }[]; terms?: string; voidNote?: string };
 
 function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; token: string; sale: Sale; onPaid: () => void; onError: (m: string) => void }) {
   const stripe = useStripe();
@@ -23,12 +23,16 @@ function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; tok
   const [loading, setLoading] = useState(false);
   const [wallet, setWallet] = useState<PaymentRequest | null>(null);
   const totalRef = useRef(sale.totalCents);
+  // PRICE-4: a round pack is paid only once its terms are ticked (the server checks too).
+  const needsTerms = !!sale.terms;
+  const [agreed, setAgreed] = useState(false);
+  const agreedRef = useRef(false);
 
   async function charge(paymentMethodId: string): Promise<boolean> {
     try {
       const res = await fetch(`/api/shop-sale/${saleId}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, paymentMethodId, expectedTotalCents: totalRef.current }),
+        body: JSON.stringify({ token, paymentMethodId, expectedTotalCents: totalRef.current, agreeTerms: agreedRef.current }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { onError(data.error || 'The payment didn’t go through. Try again or pay at the pro shop.'); return false; }
@@ -66,9 +70,16 @@ function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; tok
     }
   }
 
+  const ready = !needsTerms || agreed;
   return (
     <div className="space-y-4">
-      {wallet && (
+      {needsTerms && (
+        <div className="bg-paper/70 rounded-md p-3 text-[13px] text-ink space-y-2">
+          {sale.terms!.split('\n\n').map((t, i) => <p key={i}>{t}</p>)}
+          <label className="flex items-start gap-2 font-medium"><input type="checkbox" className="mt-0.5" checked={agreed} onChange={e => { setAgreed(e.target.checked); agreedRef.current = e.target.checked; }} />I agree to these terms</label>
+        </div>
+      )}
+      {wallet && ready && (
         <>
           <PaymentRequestButtonElement options={{ paymentRequest: wallet, style: { paymentRequestButton: { type: 'buy', theme: 'dark', height: '48px' } } }} />
           <div className="flex items-center gap-3 text-xs text-ink-muted"><span className="h-px flex-1 bg-line" />or pay with a card<span className="h-px flex-1 bg-line" /></div>
@@ -80,7 +91,7 @@ function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; tok
           <CardElement options={cardStyle} />
         </div>
       </div>
-      <button onClick={payByCard} disabled={loading || !stripe}
+      <button onClick={payByCard} disabled={loading || !stripe || !ready}
         className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-70"
         style={{ backgroundColor: sale.brandColor || '#173B2A' }}>
         {loading ? <><Loader2 size={16} className="animate-spin" /> Paying…</> : `Pay ${usd(sale.totalCents)}`}
@@ -115,7 +126,7 @@ function PayShopInner() {
       <div className="max-w-md mx-auto px-4 py-8">
         <Card className="p-5">
           <h1 className="font-serif text-[26px] font-semibold text-ink leading-tight">{done ? 'Paid. Thank you!' : sale.status === 'void' ? 'This sale was cancelled' : 'Your pro shop total'}</h1>
-          {sale.status === 'void' && <p className="text-sm text-ink-soft mt-2">Nothing was charged. Ask the pro shop if that’s a mistake.</p>}
+          {sale.status === 'void' && <p className="text-sm text-ink-soft mt-2">Nothing was charged. {sale.voidNote || 'Ask the pro shop if that’s a mistake.'}</p>}
           <ul className="divide-y divide-line-soft mt-4 text-sm">
             {sale.lines.map((l, i) => (
               <li key={i} className="flex justify-between gap-3 py-2"><span className="text-ink">{l.name}{l.quantity > 1 ? ` × ${l.quantity}` : ''}</span><span className="tabular-nums text-ink">{usd(l.unitPriceCents * l.quantity)}</span></li>

@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-30 21:07 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 694df8b8</span>
-    <span>23 uncommitted</span>
+    <span>2026-10-30 21:33 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 1fefe9f7</span>
+    <span>15 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">65 runs have shipped that the queue doesn't know about</div>
+<div class="lede">67 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">e1c241af</span><span>Membership auto-renew (course per tier, required consent, reminders) (#262)</span></li>
+<li><span class="h">d29ba970</span><span>MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box</span></li>
 <li><span class="h">53da712c</span><span>Membership tiers: join online (pay and join, or request to join) (#261)</span></li>
 <li><span class="h">91141923</span><span>Regenerate codemap and status board</span></li>
 <li><span class="h">0d9486fe</span><span>MEM-JOIN: join a membership tier online — pay and join, or request to join</span></li>
@@ -202,7 +204,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>MM docs/CODEMAP.md</code></li><li><code>MM docs/codemap.json</code></li><li><code>AM prisma/migrations/20261030140000_membership_auto_renew/migration.sql</code></li><li><code>MM prisma/schema.prisma</code></li><li><code>M  scripts/member-rates-db-test.ts</code></li><li><code>M  scripts/members-import-test.ts</code></li><li><code>AM scripts/membership-autorenew-db-test.ts</code></li><li><code>M  scripts/membership-join-db-test.ts</code></li><li><code>M  scripts/money-ledger-test.ts</code></li><li><code>MM src/app/api/cron/send-reminders/route.ts</code></li><li><code>A  src/app/api/membership/[id]/auto-renew/route.ts</code></li><li><code>M  src/app/api/membership/[id]/route.ts</code></li><li><code>MM src/app/api/operator/members/route.ts</code></li><li><code>MM src/app/api/operator/tiers/route.ts</code></li><li><code>M  src/app/dashboard/members/page.tsx</code></li><li><code>MM src/app/membership/[id]/page.tsx</code></li><li><code>M  src/components/dashboard/MemberJoin.tsx</code></li></ul>
+<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/shop-sales-test.ts</code></li><li><code>M src/app/api/operator/round-packs/route.ts</code></li><li><code>M src/app/api/shop-sale/[id]/route.ts</code></li><li><code>M src/app/pay/shop/[id]/page.tsx</code></li><li><code>M src/components/dashboard/RoundPacks.tsx</code></li><li><code>M src/lib/round-packs.ts</code></li><li><code>M src/lib/shop-sales.ts</code></li><li><code>?? prisma/migrations/20261030220000_pack_open_links/</code></li><li><code>?? scripts/pack-open-links-db-test.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -247,8 +249,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-30 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 2d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 9d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 3d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 4d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 4d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 6d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
@@ -284,6 +286,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">e1c241af</td><td class="num">2026-10-30</td><td>Membership auto-renew (course per tier, required consent, reminders) (#262)</td></tr>
+<tr><td class="num">d29ba970</td><td class="num">2026-10-30</td><td>MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box</td></tr>
 <tr><td class="num">53da712c</td><td class="num">2026-10-30</td><td>Membership tiers: join online (pay and join, or request to join) (#261)</td></tr>
 <tr><td class="num">91141923</td><td class="num">2026-10-30</td><td>Regenerate codemap and status board</td></tr>
 <tr><td class="num">0d9486fe</td><td class="num">2026-10-30</td><td>MEM-JOIN: join a membership tier online — pay and join, or request to join</td></tr>
@@ -294,8 +298,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">2c5fcf28</td><td class="num">2026-10-30</td><td>Pricing 2/4: last-minute deals (#258)</td></tr>
 <tr><td class="num">f6fd22ff</td><td class="num">2026-10-30</td><td>PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled</td></tr>
 <tr><td class="num">439c4e7b</td><td class="num">2026-10-30</td><td>Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)</td></tr>
-<tr><td class="num">f65525cf</td><td class="num">2026-10-30</td><td>A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice</td></tr>
-<tr><td class="num">6612c506</td><td class="num">2026-10-30</td><td>Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

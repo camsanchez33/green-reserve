@@ -1,36 +1,45 @@
 {
-  "generatedAt": "2026-10-30T21:07:14.042Z",
+  "generatedAt": "2026-10-30T21:33:25.541Z",
   "repo": {
-    "head": "694df8b8",
+    "head": "1fefe9f7",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 23,
+    "dirtyCount": 15,
     "dirty": [
-      "M  STATUS.artifact.html",
-      "M  STATUS.json",
-      "M  STATUS.md",
-      "MM docs/CODEMAP.md",
-      "MM docs/codemap.json",
-      "AM prisma/migrations/20261030140000_membership_auto_renew/migration.sql",
-      "MM prisma/schema.prisma",
-      "M  scripts/member-rates-db-test.ts",
-      "M  scripts/members-import-test.ts",
-      "AM scripts/membership-autorenew-db-test.ts",
-      "M  scripts/membership-join-db-test.ts",
-      "M  scripts/money-ledger-test.ts",
-      "MM src/app/api/cron/send-reminders/route.ts",
-      "A  src/app/api/membership/[id]/auto-renew/route.ts",
-      "M  src/app/api/membership/[id]/route.ts",
-      "MM src/app/api/operator/members/route.ts",
-      "MM src/app/api/operator/tiers/route.ts",
-      "M  src/app/dashboard/members/page.tsx",
-      "MM src/app/membership/[id]/page.tsx",
-      "M  src/components/dashboard/MemberJoin.tsx"
+      "M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
+      " M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M prisma/schema.prisma",
+      " M scripts/shop-sales-test.ts",
+      " M src/app/api/operator/round-packs/route.ts",
+      " M src/app/api/shop-sale/[id]/route.ts",
+      " M src/app/pay/shop/[id]/page.tsx",
+      " M src/components/dashboard/RoundPacks.tsx",
+      " M src/lib/round-packs.ts",
+      " M src/lib/shop-sales.ts",
+      "?? prisma/migrations/20261030220000_pack_open_links/",
+      "?? scripts/pack-open-links-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "e1c241af",
+        "date": "2026-10-30T17:16:10-04:00",
+        "subject": "Membership auto-renew (course per tier, required consent, reminders) (#262)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d29ba970",
+        "date": "2026-10-30T21:09:14+00:00",
+        "subject": "MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "53da712c",
         "date": "2026-10-30T16:16:10-04:00",
@@ -670,15 +679,15 @@
       "ageDays": 9
     },
     {
-      "file": "STAFF_POLICY_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-26",
-      "ageDays": 3
-    },
-    {
       "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-25",
+      "ageDays": 4
+    },
+    {
+      "file": "STAFF_POLICY_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-26",
       "ageDays": 4
     },
     {
@@ -883,6 +892,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e1c241af",
+      "date": "2026-10-30",
+      "subject": "Membership auto-renew (course per tier, required consent, reminders) (#262)"
+    },
+    {
+      "h": "d29ba970",
+      "date": "2026-10-30",
+      "subject": "MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box"
+    },
+    {
       "h": "53da712c",
       "date": "2026-10-30",
       "subject": "Membership tiers: join online (pay and join, or request to join) (#261)"
@@ -931,16 +950,6 @@
       "h": "439c4e7b",
       "date": "2026-10-30",
       "subject": "Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)"
-    },
-    {
-      "h": "f65525cf",
-      "date": "2026-10-30",
-      "subject": "A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice"
-    },
-    {
-      "h": "6612c506",
-      "date": "2026-10-30",
-      "subject": "Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code"
     }
   ]
 }
