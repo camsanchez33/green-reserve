@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
-import { readPack, listPacks, findHoldings } from '@/lib/round-packs';
+import { readPack, listPacks, findHoldings, closeStalePackLinks } from '@/lib/round-packs';
 
 // PRICE-3 (Cam 2026-10-30): the course's round packs. GET is for anyone who sells at the
 // register, books walk-ins or edits the catalog: the packs, and with ?q= (or ?holders=1)
@@ -49,7 +49,9 @@ export async function POST(req: NextRequest) {
 }
 
 // A pack already sold keeps the terms it was sold with (they are copied onto each sale line);
-// an edit changes what is sold from now on. A pack is turned off, never deleted.
+// an edit changes what is sold from now on. A pack is turned off, never deleted. PRICE-4: an
+// unpaid link keeps what it was sent at, unless the pack says 'current' — then links that no
+// longer match are closed and the answer says how many.
 export async function PATCH(req: NextRequest) {
   const g = await writeGate();
   if ('res' in g) return g.res;
@@ -65,5 +67,7 @@ export async function PATCH(req: NextRequest) {
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: 400 });
   const { active: _a, ...data } = r.data;
   await prisma.roundPack.updateMany({ where: { id: row.id, courseId: g.session.courseId }, data });
-  return NextResponse.json({ ok: true });
+  if (data.openLinks !== 'current') return NextResponse.json({ ok: true });
+  const links = await closeStalePackLinks(g.session.courseId, row.id);
+  return NextResponse.json({ ok: true, linksClosed: links.closed, linksNotClosed: links.failed });
 }

@@ -24,9 +24,14 @@
 //  • A pack replaces the rate: no member, resident, senior or junior rate and no promo code
 //    on the same booking. Other players pay the public price (a last-minute deal applies).
 //  • The booking fee ($1.50 a player) is charged as on any booking.
+//  • PRICE-4 (Cam 2026-10-30: "up to course and has to have terms"): each pack says what an
+//    unpaid pay link does when the pack changes — 'keep' holds what it was sent at; 'current'
+//    closes it (closeStalePackLinks, after every edit and before an online Buy reuses it) so
+//    the golfer buys again at the new price. The pay page shows packTermsText and the golfer
+//    ticks a required box; the text they agreed to is kept on the sale (termsAgreed).
 import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
-import { createSale } from './shop-sales';
+import { createSale, cancelSaleIntent, settleOpenSale } from './shop-sales';
 
 type Fail = { ok: false; error: string };
 const fail = (error: string): Fail => ({ ok: false, error });
@@ -35,7 +40,8 @@ type Tx = Prisma.TransactionClient;
 export const MAX_PACK_ROUNDS = 200;
 export const PACK_NO_CODE = 'A promo code can’t be used with a round pack.';
 
-export type PackRow = { id: string; name: string; rounds: number; priceCents: number; coversCart: boolean; guests: boolean; validDays: number | null; sellOnline: boolean; active: boolean };
+export type OpenLinks = 'keep' | 'current';
+export type PackRow = { id: string; name: string; rounds: number; priceCents: number; coversCart: boolean; guests: boolean; validDays: number | null; sellOnline: boolean; openLinks: OpenLinks; active: boolean };
 
 /** Validate a pack from Settings → Pro shop. */
 export function readPack(b: Record<string, unknown>): { ok: true; data: Omit<PackRow, 'id'> } | Fail {
@@ -47,7 +53,8 @@ export function readPack(b: Record<string, unknown>): { ok: true; data: Omit<Pac
   if (!Number.isInteger(priceCents) || priceCents < 100 || priceCents > 1_000_000) return fail('Enter a price from $1 to $10,000.');
   const validDays = b.validDays === '' || b.validDays == null ? null : Number(b.validDays);
   if (validDays !== null && (!Number.isInteger(validDays) || validDays < 1 || validDays > 3650)) return fail('Good for is a number of days, or blank for no end.');
-  return { ok: true, data: { name, rounds, priceCents, coversCart: b.coversCart === true, guests: b.guests === true, validDays, sellOnline: b.sellOnline === true, active: b.active !== false } };
+  const openLinks: OpenLinks = b.openLinks === 'current' ? 'current' : 'keep';
+  return { ok: true, data: { name, rounds, priceCents, coversCart: b.coversCart === true, guests: b.guests === true, validDays, sellOnline: b.sellOnline === true, openLinks, active: b.active !== false } };
 }
 
 export const listPacks = (courseId: string) => prisma.roundPack.findMany({ where: { courseId }, orderBy: [{ active: 'desc' }, { priceCents: 'asc' }] });
@@ -181,14 +188,91 @@ export async function endPacksRefundedOutside(paymentIntentId: string | null | u
  * link still works.)
  */
 export async function buyPackOnline(courseId: string, packId: string, golfer: { email: string; name: string; phone: string }): Promise<{ ok: true; saleId: string; payToken: string } | { ok: false; status: number; error: string }> {
-  const pack = await prisma.roundPack.findFirst({ where: { id: packId, courseId, active: true, sellOnline: true }, select: { id: true } });
+  const pack = await prisma.roundPack.findFirst({ where: { id: packId, courseId, active: true, sellOnline: true }, select: { id: true, openLinks: true } });
   if (!pack) return { ok: false, status: 404, error: 'That pack isn’t for sale online.' };
+  // PRICE-4: a course that reprices unpaid links closes any stale one first (a close an edit missed heals here).
+  if (pack.openLinks === 'current' && (await closeStalePackLinks(courseId, pack.id)).failed) return { ok: false, status: 409, error: 'That pack just changed — try again in a moment.' };
   const email = golfer.email.trim().toLowerCase();
   const open = await prisma.shopSale.findFirst({ where: { courseId, status: 'open', soldBy: 'online', customerEmail: email, payToken: { not: '' }, lines: { some: { roundPackId: pack.id } } }, orderBy: { createdAt: 'desc' }, select: { id: true, payToken: true } });
   if (open) return { ok: true, saleId: open.id, payToken: open.payToken };
   const sale = await createSale({ courseId, lines: [{ roundPackId: pack.id, quantity: 1 }], pay: 'link', soldBy: 'online', customerName: golfer.name, customerPhone: golfer.phone, customerEmail: email });
   if (!sale.ok) return { ok: false, status: sale.status, error: sale.error };
   return { ok: true, saleId: sale.value.id, payToken: sale.value.payToken };
+}
+
+type TermsLine = { name: string; packRounds: number; packCoversCart: boolean; packGuests: boolean; packValidDays: number | null };
+
+/** PRICE-4: what the golfer agrees to before paying for a pack — built only from what the sale line carries. */
+export function packTermsText(l: TermsLine, openLinks: OpenLinks, courseName: string): string {
+  return [
+    `${l.name}: ${l.packRounds} round${l.packRounds === 1 ? '' : 's'} at ${courseName}${l.packCoversCart ? ', cart included' : ''}.`,
+    l.packGuests ? 'For you and the players in your bookings — one round a player.' : 'For you only — one round a booking, for your own place in the group.',
+    l.packValidDays ? `Good for ${l.packValidDays} days from the day you pay; rounds not used by then end.` : 'No end date.',
+    'Use them when you book online or at the pro shop. A round comes back if you cancel before the cancellation cutoff; a late cancel or a no-show uses it.',
+    'The booking fee shown when you book still applies to each round.',
+    'Once a round from this pack is used, the pack can’t be refunded.',
+    openLinks === 'current' ? 'If the course changes this pack before you pay, this link closes and a new one is needed at the new price.' : 'The price on this link is held until you pay.',
+  ].join(' ');
+}
+
+/** PRICE-4: the terms for a sale's pack lines ("" when it has none), with each pack's own link rule. */
+export async function saleTerms(courseName: string, lines: (TermsLine & { roundPackId: string | null })[]): Promise<string> {
+  const packLines = lines.filter(l => l.roundPackId && l.packRounds > 0);
+  if (!packLines.length) return '';
+  const packs = await prisma.roundPack.findMany({ where: { id: { in: packLines.map(l => l.roundPackId!) } }, select: { id: true, openLinks: true } });
+  const rule = new Map(packs.map(p => [p.id, p.openLinks === 'current' ? 'current' as const : 'keep' as const]));
+  return packLines.map(l => packTermsText(l, rule.get(l.roundPackId!) ?? 'keep', courseName)).join('\n\n');
+}
+
+type PackNow = { name: string; rounds: number; priceCents: number; coversCart: boolean; guests: boolean; validDays: number | null };
+const lineMatchesPack = (l: TermsLine & { unitPriceCents: number }, p: PackNow) =>
+  l.name === p.name && l.unitPriceCents === p.priceCents && l.packRounds === p.rounds && l.packCoversCart === p.coversCart && l.packGuests === p.guests && l.packValidDays === p.validDays;
+
+/**
+ * PRICE-4: the pay route's own check before charging — a line of a 'current' pack that no longer
+ * matches it is never paid, even when the close after the edit failed: the link is closed here
+ * (best effort) and the payment refused either way. Null = fine to charge.
+ */
+export async function stalePackLinkBlock(courseId: string, lines: (TermsLine & { roundPackId: string | null; unitPriceCents: number })[]): Promise<string | null> {
+  const ids = [...new Set(lines.filter(l => l.roundPackId && l.packRounds > 0).map(l => l.roundPackId!))];
+  if (!ids.length) return null;
+  const packs = await prisma.roundPack.findMany({ where: { id: { in: ids }, courseId, openLinks: 'current' }, select: { id: true, name: true, rounds: true, priceCents: true, coversCart: true, guests: true, validDays: true } });
+  for (const p of packs) {
+    if (lines.every(l => l.roundPackId !== p.id || lineMatchesPack(l, p))) continue;
+    await closeStalePackLinks(courseId, p.id);
+    return 'The course changed this round pack before it was paid, so this link is closed. Nothing was charged.';
+  }
+  return null;
+}
+
+/**
+ * PRICE-4: close every unpaid link (status 'open') with a line for this pack that no longer matches
+ * it — its card intent stopped first, then the sale voided with a note the pay page shows. A
+ * payment already going through ('paying') is never touched. Never throws.
+ */
+export async function closeStalePackLinks(courseId: string, packId: string): Promise<{ closed: number; failed: number }> {
+  const pack = await prisma.roundPack.findFirst({ where: { id: packId, courseId }, select: { name: true, rounds: true, priceCents: true, coversCart: true, guests: true, validDays: true } });
+  if (!pack) return { closed: 0, failed: 0 };
+  const lines = await prisma.shopSaleLine.findMany({
+    where: { roundPackId: packId, sale: { courseId, status: 'open' } },
+    select: { saleId: true, name: true, unitPriceCents: true, packRounds: true, packCoversCart: true, packGuests: true, packValidDays: true, sale: { select: { soldBy: true } } },
+  });
+  const stale = new Map<string, string>();
+  for (const l of lines) {
+    if (!lineMatchesPack(l, pack)) stale.set(l.saleId, l.sale.soldBy === 'online' ? 'The course changed this round pack before it was paid — buy it again from the course’s page.' : 'The course changed this round pack before it was paid — ask the pro shop for a new link.');
+  }
+  let closed = 0, failed = 0;
+  for (const [saleId, note] of stale) {
+    try {
+      if (await cancelSaleIntent(courseId, saleId)) { failed++; continue; }
+      const r = await settleOpenSale(courseId, saleId, 'void', note);
+      if (r.ok) closed++; else failed++;
+    } catch (err) {
+      failed++;
+      console.error(JSON.stringify({ ev: 'round_pack.close_link.fail', saleId, error: err instanceof Error ? err.message : String(err) }));
+    }
+  }
+  return { closed, failed };
 }
 
 /** Rounds a booking gives back now: a cancel before the cutoff, or the course calling it off / waiving. */
