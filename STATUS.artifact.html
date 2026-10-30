@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-29 23:33 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 65df5988</span>
-    <span>12 uncommitted</span>
+    <span>2026-10-30 00:30 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ ffa0ec2a</span>
+    <span>7 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">36 runs have shipped that the queue doesn't know about</div>
+<div class="lede">39 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">ffa0ec2a</span><span>Golfer record: one course's view of a golfer, staff notes, online-booking block</span></li>
+<li><span class="h">370f7fa4</span><span>Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)</span></li>
+<li><span class="h">bf2fdf53</span><span>Member rates at the counter: the member shows their membership, or the course allows any membership</span></li>
 <li><span class="h">65df5988</span><span>Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share</span></li>
 <li><span class="h">cfe7cb40</span><span>WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings</span></li>
 <li><span class="h">3d18ecd9</span><span>Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)</span></li>
@@ -173,7 +176,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/counter-rates-db-test.ts</code></li><li><code>M scripts/register-rounds-db-test.ts</code></li><li><code>M src/app/api/operator/settings/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/settings/page.tsx</code></li><li><code>M src/lib/counter-pay.ts</code></li><li><code>M src/lib/settings-validation.ts</code></li><li><code>?? prisma/migrations/20261029120000_counter_member_rate/</code></li><li><code>?? src/app/api/operator/counter-members/</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/golfer-record-db-test.ts</code></li><li><code>M src/app/api/operator/golfers/[key]/route.ts</code></li><li><code>M src/app/dashboard/golfers/[key]/page.tsx</code></li><li><code>M src/lib/golfer-key.ts</code></li><li><code>M src/lib/golfer-record.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -215,8 +218,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
-<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 1d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 1d</td></tr>
+<tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 2d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 8d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 3d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 4d</td></tr>
@@ -255,6 +258,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 8d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">ffa0ec2a</td><td class="num">2026-10-30</td><td>Golfer record: one course's view of a golfer, staff notes, online-booking block</td></tr>
+<tr><td class="num">370f7fa4</td><td class="num">2026-10-29</td><td>Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)</td></tr>
+<tr><td class="num">bf2fdf53</td><td class="num">2026-10-29</td><td>Member rates at the counter: the member shows their membership, or the course allows any membership</td></tr>
 <tr><td class="num">65df5988</td><td class="num">2026-10-29</td><td>Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share</td></tr>
 <tr><td class="num">cfe7cb40</td><td class="num">2026-10-29</td><td>WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings</td></tr>
 <tr><td class="num">3d18ecd9</td><td class="num">2026-10-29</td><td>Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)</td></tr>
@@ -264,9 +270,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">9de927a8</td><td class="num">2026-10-29</td><td>WIP part B: staff refunds (course share) and giving back a kept late fee</td></tr>
 <tr><td class="num">4e1d9c2c</td><td class="num">2026-10-29</td><td>The dues link says why it didn't send; a search result opens Cancellations filtered</td></tr>
 <tr><td class="num">06b64277</td><td class="num">2026-10-29</td><td>Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations</td></tr>
-<tr><td class="num">0dfd8bdf</td><td class="num">2026-10-29</td><td>Revamp 3: the 12 audit fixes (#250)</td></tr>
-<tr><td class="num">92b9bfa6</td><td class="num">2026-10-29</td><td>Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused</td></tr>
-<tr><td class="num">9e689d2b</td><td class="num">2026-10-29</td><td>Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

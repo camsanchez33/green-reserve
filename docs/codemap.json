@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 584,
-    "routes": 270,
-    "libs": 203,
-    "models": 58,
+    "files": 588,
+    "routes": 272,
+    "libs": 205,
+    "models": 60,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -3698,7 +3698,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 418,
+      "lines": 423,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3730,6 +3730,7 @@
         "@/lib/course-time",
         "@/lib/demo-courses",
         "@/lib/email",
+        "@/lib/golfer-record",
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
@@ -5702,6 +5703,38 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/golfers/[key]/route.ts",
+      "lines": 91,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/golfers/[key]",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/golfer-key",
+        "@/lib/golfer-record",
+        "@/lib/prisma",
+        "@/lib/session",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/home/route.ts",
       "lines": 15,
       "purpose": "",
@@ -6971,7 +7004,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 153,
+      "lines": 166,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7004,6 +7037,7 @@
       "guard": "file",
       "imports": [
         "@/lib/course-time",
+        "@/lib/golfer-key",
         "@/lib/money",
         "@/lib/prisma",
         "@/lib/schedule-service",
@@ -7961,6 +7995,36 @@
       "usedBy": []
     },
     {
+      "path": "src/app/dashboard/golfers/[key]/page.tsx",
+      "lines": 148,
+      "purpose": "The golfer record (Revamp 3, Cam 2026-10-29):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "default (GolferRecordPage)",
+          "kind": "component"
+        }
+      ],
+      "route": "/dashboard/golfers/[key]",
+      "kind": "page",
+      "methods": [],
+      "auth": "operator",
+      "guard": "middleware",
+      "imports": [
+        "@/components/OperatorSidebar",
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/format",
+        "next/link",
+        "next/navigation",
+        "react"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/dashboard/home/page.tsx",
       "lines": 256,
       "purpose": "DASH-C Home (Cam 2026-10-22, \"very nice\" on the mockups):",
@@ -8201,7 +8265,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1661,
+      "lines": 1666,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8327,7 +8391,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1148,
+      "lines": 1158,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9417,6 +9481,7 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
@@ -10249,6 +10314,7 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
+        "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
@@ -11325,6 +11391,7 @@
         "src/app/contact/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -11611,6 +11678,7 @@
         "src/app/courses/[slug]/member/page.tsx",
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/login/page.tsx",
         "src/app/dashboard/members/page.tsx",
@@ -11690,6 +11758,7 @@
         "src/app/admin/revenue/page.tsx",
         "src/app/admin/set-password/page.tsx",
         "src/app/cam/page.tsx",
+        "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
@@ -13150,7 +13219,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "lines": 591,
+      "lines": 586,
       "purpose": "AN-1 (Cam 2026-10-01):",
       "brain": [],
       "exports": [
@@ -13211,6 +13280,7 @@
       "imports": [
         "./course-time",
         "./email",
+        "./golfer-key",
         "./prisma",
         "./tee-time-utils",
         "@prisma/client"
@@ -13222,6 +13292,7 @@
         "src/app/api/operator/sheet-money/route.ts",
         "src/app/dashboard/analytics/page.tsx",
         "src/lib/birdie/tools.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/member-stats.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts"
@@ -13817,6 +13888,7 @@
         "src/lib/claim-tee-time.ts",
         "src/lib/counter-pay.ts",
         "src/lib/cutoff-hold.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/move-booking.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/reader-rounds.ts",
@@ -15555,6 +15627,7 @@
       ],
       "usedBy": [
         "src/app/api/operator/residents/route.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/member-session.ts",
         "src/lib/operator-search.ts"
       ]
@@ -15998,6 +16071,7 @@
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/event-signup.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/member-rates.ts",
         "src/lib/monthly-review.ts",
         "src/lib/move-booking.ts",
@@ -16462,6 +16536,7 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/home/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
@@ -16538,7 +16613,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 150,
+      "lines": 154,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -17535,6 +17610,7 @@
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/dashboard/events/page.tsx",
+        "src/app/dashboard/golfers/[key]/page.tsx",
         "src/app/dashboard/members/page.tsx",
         "src/app/dashboard/messages/page.tsx",
         "src/app/dashboard/money/page.tsx",
@@ -17630,6 +17706,42 @@
         "src/app/api/admin/course-detail/route.ts",
         "src/app/api/admin/courses/route.ts",
         "src/app/api/admin/inquiries/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/golfer-key.ts",
+      "lines": 40,
+      "purpose": "Who a golfer is at a course:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "golferKey",
+          "kind": "fn"
+        },
+        {
+          "name": "golferKeys",
+          "kind": "fn"
+        },
+        {
+          "name": "keyMatch",
+          "kind": "fn"
+        },
+        {
+          "name": "parseGolferKey",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/operator/golfers/[key]/route.ts",
+        "src/app/api/operator/tee-times/route.ts",
+        "src/lib/analytics.ts",
+        "src/lib/golfer-record.ts"
       ]
     },
     {
@@ -17750,6 +17862,52 @@
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
         "src/lib/golfer-messages.ts"
+      ]
+    },
+    {
+      "path": "src/lib/golfer-record.ts",
+      "lines": 162,
+      "purpose": "The golfer record (Revamp 3, Cam 2026-10-29):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "autoBlockReason",
+          "kind": "fn"
+        },
+        {
+          "name": "golferRecord",
+          "kind": "fn"
+        },
+        {
+          "name": "GolferRecord",
+          "kind": "type"
+        },
+        {
+          "name": "isLateCancel",
+          "kind": "fn"
+        },
+        {
+          "name": "onlineBookingBlock",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./analytics",
+        "./booking-events",
+        "./course-group",
+        "./course-time",
+        "./golfer-key",
+        "./member-rates",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/bookings/route.ts",
+        "src/app/api/operator/golfers/[key]/route.ts"
       ]
     },
     {
@@ -18575,6 +18733,7 @@
         "src/lib/change-party.ts",
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/member-session.ts",
         "src/lib/move-booking.ts",
         "src/lib/sample-data.ts"
@@ -19737,6 +19896,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
+        "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
@@ -19825,6 +19985,7 @@
         "src/lib/frost-delay.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/lifecycle.ts",
         "src/lib/login-guard.ts",
         "src/lib/member-import.ts",
@@ -21129,6 +21290,7 @@
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
         "src/app/api/operator/golfer-messages/route.ts",
+        "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/home/route.ts",
         "src/app/api/operator/members/import/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
@@ -21176,7 +21338,7 @@
     },
     {
       "path": "src/lib/settings-validation.ts",
-      "lines": 144,
+      "lines": 153,
       "purpose": "SD-1.",
       "brain": [],
       "exports": [
@@ -23713,6 +23875,7 @@
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/operator/bookings/route.ts",
+        "src/app/api/operator/golfers/[key]/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/app/api/receipt/[bookingId]/route.ts",
         "src/lib/access-fee.ts",
@@ -23738,6 +23901,7 @@
         "src/lib/data-reset.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/frost-delay.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-stats.ts",
         "src/lib/no-show-fee.ts",
@@ -23818,6 +23982,7 @@
         "src/lib/course-timeline.ts",
         "src/lib/data-reset.ts",
         "src/lib/dispute-evidence.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/receipt-charges.ts"
       ]
@@ -24374,6 +24539,26 @@
           "type": "String"
         },
         {
+          "name": "onlineBlockNoShows",
+          "type": "Int?"
+        },
+        {
+          "name": "onlineBlockLateCancels",
+          "type": "Int?"
+        },
+        {
+          "name": "onlineBlockMonths",
+          "type": "Int"
+        },
+        {
+          "name": "golferNotes",
+          "type": "GolferNote[]"
+        },
+        {
+          "name": "golferBlocks",
+          "type": "GolferBlock[]"
+        },
+        {
           "name": "confirmationNote",
           "type": "String?"
         },
@@ -24667,6 +24852,7 @@
         "src/lib/event-payments.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/lifecycle.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts",
@@ -25580,6 +25766,7 @@
         "src/lib/checkin-booking.ts",
         "src/lib/counter-pay.ts",
         "src/lib/data-reset.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
@@ -25997,6 +26184,7 @@
       "readers": [
         "src/app/api/operator/residents/route.ts",
         "src/lib/data-reset.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/member-session.ts",
         "src/lib/operator-search.ts",
         "src/lib/sample-data.ts"
@@ -26249,6 +26437,92 @@
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/security-events.ts"
+      ]
+    },
+    {
+      "name": "GolferBlock",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "golferKey",
+          "type": "String"
+        },
+        {
+          "name": "reason",
+          "type": "String"
+        },
+        {
+          "name": "blockedBy",
+          "type": "String"
+        },
+        {
+          "name": "blockedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/golfers/[key]/route.ts",
+        "src/lib/data-reset.ts"
+      ],
+      "readers": [
+        "src/lib/golfer-record.ts"
+      ]
+    },
+    {
+      "name": "GolferNote",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "golferKey",
+          "type": "String"
+        },
+        {
+          "name": "bookingId",
+          "type": "String?"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/golfers/[key]/route.ts",
+        "src/lib/data-reset.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/golfers/[key]/route.ts",
+        "src/app/api/operator/tee-times/route.ts",
+        "src/lib/golfer-record.ts"
       ]
     },
     {
@@ -27325,6 +27599,7 @@
         "src/lib/analytics.ts",
         "src/lib/card-reader.ts",
         "src/lib/data-reset.ts",
+        "src/lib/golfer-record.ts",
         "src/lib/register-close.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",

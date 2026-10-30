@@ -149,6 +149,14 @@ model Course {
   /// member — they show their membership — and that membership's live rate applies. 'any': staff
   /// may pick any of the course's memberships for a walk-in or phone booking (the course's call).
   counterMemberRate String @default("member")
+  /// Golfer record (Cam 2026-10-29): a golfer with this many no-shows, or this many late
+  /// cancels, in the last onlineBlockMonths can't book online ("call the course"); the counter
+  /// still books them. Null = that rule is off.
+  onlineBlockNoShows     Int?
+  onlineBlockLateCancels Int?
+  onlineBlockMonths      Int     @default(12)
+  golferNotes            GolferNote[]
+  golferBlocks           GolferBlock[]
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
   confirmationNote           String?
@@ -1764,4 +1772,35 @@ model SecurityEvent {
   @@index([createdAt])
   @@index([kind, createdAt])
   @@index([ip, createdAt])
+}
+
+/// Golfer record (Cam 2026-10-29: "Anyone on the tee sheet"): a staff note on a golfer, or on
+/// one booking. Per course — a course never sees another's (golferKey: lib/golfer-key).
+model GolferNote {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  golferKey String
+  /// Set for a note on one booking ("birthday group"); null = on the golfer.
+  bookingId String?
+  body      String
+  createdBy String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([courseId, golferKey])
+  @@index([bookingId])
+}
+
+/// Golfer record: the owner stopped this golfer booking online at this course ("call the
+/// course"), with the reason. The counter can still book them.
+model GolferBlock {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  golferKey String
+  reason    String
+  blockedBy String   @default("")
+  blockedAt DateTime @default(now())
+
+  @@unique([courseId, golferKey])
 }

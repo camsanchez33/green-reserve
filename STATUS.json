@@ -1,28 +1,44 @@
 {
-  "generatedAt": "2026-10-29T23:33:44.848Z",
+  "generatedAt": "2026-10-30T00:30:38.771Z",
   "repo": {
-    "head": "65df5988",
+    "head": "ffa0ec2a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 12,
+    "dirtyCount": 7,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/counter-rates-db-test.ts",
-      " M scripts/register-rounds-db-test.ts",
-      " M src/app/api/operator/settings/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/lib/counter-pay.ts",
-      " M src/lib/settings-validation.ts",
-      "?? prisma/migrations/20261029120000_counter_member_rate/",
-      "?? src/app/api/operator/counter-members/"
+      " M scripts/golfer-record-db-test.ts",
+      " M src/app/api/operator/golfers/[key]/route.ts",
+      " M src/app/dashboard/golfers/[key]/page.tsx",
+      " M src/lib/golfer-key.ts",
+      " M src/lib/golfer-record.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "ffa0ec2a",
+        "date": "2026-10-30T00:22:15+00:00",
+        "subject": "Golfer record: one course's view of a golfer, staff notes, online-booking block",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "370f7fa4",
+        "date": "2026-10-29T19:46:11-04:00",
+        "subject": "Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bf2fdf53",
+        "date": "2026-10-29T23:33:47+00:00",
+        "subject": "Member rates at the counter: the member shows their membership, or the course allows any membership",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "65df5988",
         "date": "2026-10-29T21:02:19+00:00",
@@ -441,16 +457,16 @@
   },
   "specs": [
     {
-      "file": "CLAUDE.md",
+      "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-27",
       "ageDays": 1
     },
     {
-      "file": "DENSE_UI_SPEC.md",
+      "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-10-27",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -672,6 +688,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ffa0ec2a",
+      "date": "2026-10-30",
+      "subject": "Golfer record: one course's view of a golfer, staff notes, online-booking block"
+    },
+    {
+      "h": "370f7fa4",
+      "date": "2026-10-29",
+      "subject": "Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)"
+    },
+    {
+      "h": "bf2fdf53",
+      "date": "2026-10-29",
+      "subject": "Member rates at the counter: the member shows their membership, or the course allows any membership"
+    },
+    {
       "h": "65df5988",
       "date": "2026-10-29",
       "subject": "Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share"
@@ -715,21 +746,6 @@
       "h": "06b64277",
       "date": "2026-10-29",
       "subject": "Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations"
-    },
-    {
-      "h": "0dfd8bdf",
-      "date": "2026-10-29",
-      "subject": "Revamp 3: the 12 audit fixes (#250)"
-    },
-    {
-      "h": "92b9bfa6",
-      "date": "2026-10-29",
-      "subject": "Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused"
-    },
-    {
-      "h": "9e689d2b",
-      "date": "2026-10-29",
-      "subject": "Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked"
     }
   ]
 }

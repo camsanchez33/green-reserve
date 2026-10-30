@@ -5,6 +5,7 @@ import { dollarsToCentsOr0 } from '@/lib/money';
 import { teeTimeToWire } from '@/lib/schedule-wire';
 import { resolveDashboardSession, can, requirePermission } from '@/lib/session';
 import { setTeeTimeBlocked } from '@/lib/schedule-service';
+import { golferKey } from '@/lib/golfer-key';
 
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
       event: { select: { id: true, name: true } },
       ...(withBookings ? { bookings: {
       where: { status: { in: ['confirmed', 'completed'] } }, orderBy: { createdAt: 'asc' },
-      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true, cancellationFeeTotal: true, roundPaymentIntentId: true,
+      select: { id: true, golferName: true, golferEmail: true, golferPhone: true, golferAccountId: true, players: true, createdAt: true, status: true, paymentStatus: true, totalAmount: true, accessFeeTotal: true, checkInFailReason: true, source: true, noShowAt: true, paidOffline: true, checkedInPlayers: true, stripePaymentMethodId: true, cancellationFeeTotal: true, roundPaymentIntentId: true,
         // RES-1: residents in the group, and whether it is on a member rate.
         residentPlayers: true, appliedRate: true,
         // Part of a group checking in is priced on the sheet as the server charges it (lib/member-rates partyFees).
@@ -48,10 +49,22 @@ export async function GET(req: NextRequest) {
   // whether there is one (no card → offer "Send pay link").
   const contact = can(session, 'sheet.golfer_contact');
   type Row = { golferEmail: string; golferPhone: string; stripePaymentMethodId?: string; roundPaymentIntentId?: string; shopLockedAt?: Date | null };
+  // Golfer record (dead end 25): each group's latest staff notes — on the golfer, or on this booking.
+  const all = teeTimes.flatMap(t => ((t as { bookings?: (Row & { id: string; golferAccountId?: string | null })[] }).bookings ?? []));
+  const keyOf = new Map(all.map(b => [b.id, golferKey(b)]));
+  const keys = [...new Set([...keyOf.values()].filter((k): k is string => !!k))];
+  const noteRows = all.length ? await prisma.golferNote.findMany({
+    where: { courseId: session.courseId, OR: [{ golferKey: { in: keys }, bookingId: null }, { bookingId: { in: all.map(b => b.id) } }] },
+    orderBy: { createdAt: 'desc' }, take: 500, select: { golferKey: true, bookingId: true, body: true },
+  }) : [];
+  const notesFor = (id: string) => {
+    const k = keyOf.get(id);
+    return noteRows.filter(n => n.bookingId === id || (!n.bookingId && k && n.golferKey === k)).slice(0, 3).map(n => n.body);
+  };
   return NextResponse.json(teeTimes.map(t => {
-    const bookings = (t as { bookings?: Row[] }).bookings;
+    const bookings = (t as { bookings?: (Row & { id: string; golferAccountId?: string | null })[] }).bookings;
     if (!bookings) return t;
-    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, roundPaymentIntentId, shopLockedAt, ...b }) => ({ ...b, hasCard: !!stripePaymentMethodId, roundPaid: !!roundPaymentIntentId, shopLocked: !!shopLockedAt, hasPhone: b.golferPhone.replace(/\D/g, '').length >= 10, ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
+    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, roundPaymentIntentId, shopLockedAt, golferAccountId: _acct, ...b }) => ({ ...b, hasCard: !!stripePaymentMethodId, roundPaid: !!roundPaymentIntentId, shopLocked: !!shopLockedAt, hasPhone: b.golferPhone.replace(/\D/g, '').length >= 10, notes: notesFor(b.id), ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
   }));
 }
 

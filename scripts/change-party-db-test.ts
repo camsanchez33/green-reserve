@@ -5,7 +5,6 @@
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { changePartySize } from '../src/lib/change-party';
-import { addDaysStr, todayIn } from '../src/lib/course-time';
 
 const TAG = 'changepartydbtest';
 let failed = 0;
@@ -27,9 +26,9 @@ async function cleanup() {
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
   const mk = (s: string) => prisma.course.create({ data: { name: s, slug: `${TAG}-${s}`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC', cancellationHours: 24, lateCancellationFeeCents: 1000 } });
   const c = await mk('a'), other = await mk('b');
-  // Tomorrow morning: inside the 24-hour late-fee window.
-  const day = addDaysStr(todayIn('UTC'), 1);
-  const tt = await prisma.teeTime.create({ data: { courseId: c.id, date: day, time: '08:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 2 } });
+  // 12 hours from now: inside the 24-hour late-fee window at any time of day.
+  const at = new Date(Date.now() + 12 * 3_600_000).toISOString();
+  const tt = await prisma.teeTime.create({ data: { courseId: c.id, date: at.slice(0, 10), time: at.slice(11, 16), holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 2 } });
   const b = await prisma.booking.create({ data: { teeTimeId: tt.id, courseId: c.id, golferName: 'Two Ball', golferEmail: `${TAG}@t.local`, players: 2,
     greenFeeTotal: 10000, cartFeeTotal: 0, accessFeeTotal: 300, totalAmount: 10300, cancellationFeeTotal: 1000, status: 'confirmed', paymentStatus: 'card_on_file', checkInToken: 'tok' } });
 
