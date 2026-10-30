@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 617,
-    "routes": 281,
-    "libs": 215,
+    "files": 620,
+    "routes": 282,
+    "libs": 217,
     "models": 64,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4295,7 +4295,7 @@
     },
     {
       "path": "src/app/api/cron/send-reminders/route.ts",
-      "lines": 94,
+      "lines": 131,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4315,9 +4315,11 @@
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/email",
+        "@/lib/membership-autorenew",
         "@/lib/membership-renewal",
         "@/lib/money",
         "@/lib/prisma",
+        "@/lib/stripe",
         "next/server"
       ],
       "usedBy": []
@@ -5051,8 +5053,35 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/membership/[id]/auto-renew/route.ts",
+      "lines": 24,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/membership/[id]/auto-renew",
+      "kind": "api",
+      "methods": [
+        "POST"
+      ],
+      "auth": "public",
+      "guard": "public",
+      "imports": [
+        "@/lib/email",
+        "@/lib/membership-autorenew",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 184,
+      "lines": 174,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5075,6 +5104,8 @@
       "guard": "token",
       "imports": [
         "@/lib/email",
+        "@/lib/membership-autorenew",
+        "@/lib/membership-dues",
         "@/lib/membership-renewal",
         "@/lib/money-ledger",
         "@/lib/prisma",
@@ -5950,7 +5981,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 306,
+      "lines": 327,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5987,6 +6018,7 @@
         "@/lib/course-time",
         "@/lib/email",
         "@/lib/member-stats",
+        "@/lib/membership-autorenew",
         "@/lib/membership-join",
         "@/lib/membership-pay-link",
         "@/lib/money",
@@ -7315,7 +7347,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 146,
+      "lines": 166,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7348,6 +7380,8 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/email",
+        "@/lib/membership-autorenew",
         "@/lib/membership-join",
         "@/lib/money",
         "@/lib/prisma",
@@ -8413,7 +8447,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 863,
+      "lines": 866,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -9140,7 +9174,7 @@
     },
     {
       "path": "src/app/membership/[id]/page.tsx",
-      "lines": 205,
+      "lines": 238,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -10727,10 +10761,18 @@
     },
     {
       "path": "src/components/dashboard/MemberJoin.tsx",
-      "lines": 62,
+      "lines": 92,
       "purpose": "MEM-JOIN (Cam 2026-10-30:",
       "brain": [],
       "exports": [
+        {
+          "name": "AutoRenewFields",
+          "kind": "component"
+        },
+        {
+          "name": "AutoRenewStop",
+          "kind": "component"
+        },
         {
           "name": "JoinOnlineSelect",
           "kind": "component"
@@ -17426,7 +17468,7 @@
     },
     {
       "path": "src/lib/email.ts",
-      "lines": 2085,
+      "lines": 2128,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17484,6 +17526,22 @@
         },
         {
           "name": "sendAnnouncementEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendAutoRenewDeclinedEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendAutoRenewOffEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendAutoRenewOnEmail",
+          "kind": "fn"
+        },
+        {
+          "name": "sendAutoRenewReminderEmail",
           "kind": "fn"
         },
         {
@@ -17763,6 +17821,7 @@
         "src/app/api/inquiries/signin-verify/route.ts",
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/member/[courseSlug]/send-code/route.ts",
+        "src/app/api/membership/[id]/auto-renew/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/bookings/route.ts",
@@ -17773,6 +17832,7 @@
         "src/app/api/operator/members/route.ts",
         "src/app/api/operator/messages/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
+        "src/app/api/operator/tiers/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/send/route.ts",
         "src/lib/admin-checks.ts",
@@ -19632,6 +19692,109 @@
       ]
     },
     {
+      "path": "src/lib/membership-autorenew.ts",
+      "lines": 149,
+      "purpose": "MEM-RENEW (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "autoRenewTermsText",
+          "kind": "fn"
+        },
+        {
+          "name": "chargeRenewal",
+          "kind": "fn"
+        },
+        {
+          "name": "chargesDue",
+          "kind": "fn"
+        },
+        {
+          "name": "markReminded",
+          "kind": "fn"
+        },
+        {
+          "name": "memberContact",
+          "kind": "fn"
+        },
+        {
+          "name": "reminderLeadDays",
+          "kind": "fn"
+        },
+        {
+          "name": "remindersDue",
+          "kind": "fn"
+        },
+        {
+          "name": "renewalCents",
+          "kind": "fn"
+        },
+        {
+          "name": "RenewResult",
+          "kind": "type"
+        },
+        {
+          "name": "RETRY_DAYS",
+          "kind": "const"
+        },
+        {
+          "name": "STOP_DATA",
+          "kind": "component"
+        },
+        {
+          "name": "stopAutoRenew",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./membership-dues",
+        "./money-ledger",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/cron/send-reminders/route.ts",
+        "src/app/api/membership/[id]/auto-renew/route.ts",
+        "src/app/api/membership/[id]/route.ts",
+        "src/app/api/operator/members/route.ts",
+        "src/app/api/operator/tiers/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/membership-dues.ts",
+      "lines": 55,
+      "purpose": "Membership dues:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "amountsDue",
+          "kind": "fn"
+        },
+        {
+          "name": "recordPaidTerm",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma",
+        "./stripe",
+        "@prisma/client"
+      ],
+      "usedBy": [
+        "src/app/api/membership/[id]/route.ts",
+        "src/lib/membership-autorenew.ts"
+      ]
+    },
+    {
       "path": "src/lib/membership-join.ts",
       "lines": 92,
       "purpose": "MEM-JOIN (Cam 2026-10-30:",
@@ -19801,6 +19964,7 @@
         "src/lib/counter-pay.ts",
         "src/lib/cutoff-hold.ts",
         "src/lib/event-payments.ts",
+        "src/lib/membership-autorenew.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/reader-rounds.ts",
         "src/lib/refund-booking.ts",
@@ -20861,6 +21025,7 @@
         "src/app/api/member/[courseSlug]/session/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
+        "src/app/api/membership/[id]/auto-renew/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/agreement/route.ts",
@@ -20982,6 +21147,8 @@
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/member-stats.ts",
+        "src/lib/membership-autorenew.ts",
+        "src/lib/membership-dues.ts",
         "src/lib/membership-join.ts",
         "src/lib/membership-pay-link.ts",
         "src/lib/money-ledger.ts",
@@ -21305,6 +21472,7 @@
         "src/app/api/manage/[bookingId]/send-modified-email/route.ts",
         "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
+        "src/app/api/membership/[id]/auto-renew/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/agreement/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
@@ -23533,6 +23701,7 @@
         "src/app/api/admin/platform-stripe/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
+        "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
         "src/app/api/operator/stripe/connect/route.ts",
@@ -23549,6 +23718,7 @@
         "src/lib/email.ts",
         "src/lib/event-payments.ts",
         "src/lib/ledger-view.ts",
+        "src/lib/membership-dues.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
         "src/lib/reader-rounds.ts",
@@ -26167,6 +26337,7 @@
         "src/app/api/operator/stripe/dashboard-link/route.ts",
         "src/app/api/operator/stripe/payouts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
+        "src/app/api/operator/tiers/route.ts",
         "src/app/api/operator/upload/route.ts",
         "src/app/api/operator/weather-cancel/route.ts",
         "src/app/api/preview/[courseId]/approve/route.ts",
@@ -27076,6 +27247,46 @@
           "type": "DateTime?"
         },
         {
+          "name": "autoRenew",
+          "type": "Boolean"
+        },
+        {
+          "name": "autoRenewConsentAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "autoRenewTerms",
+          "type": "String"
+        },
+        {
+          "name": "savedCustomerId",
+          "type": "String"
+        },
+        {
+          "name": "savedPaymentMethodId",
+          "type": "String"
+        },
+        {
+          "name": "autoRenewRemindedFor",
+          "type": "DateTime?"
+        },
+        {
+          "name": "autoRenewRemindedCents",
+          "type": "Int?"
+        },
+        {
+          "name": "autoRenewFailedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "autoRenewRetryAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "autoRenewCancelledAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "initiationWaived",
           "type": "Boolean"
         },
@@ -27095,9 +27306,12 @@
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
         "src/app/api/operator/members/route.ts",
+        "src/app/api/operator/tiers/route.ts",
         "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
+        "src/lib/membership-autorenew.ts",
+        "src/lib/membership-dues.ts",
         "src/lib/membership-join.ts",
         "src/lib/sample-data.ts"
       ],
@@ -27115,6 +27329,7 @@
         "src/app/api/member/[courseSlug]/session/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/member/[courseSlug]/verify/route.ts",
+        "src/app/api/membership/[id]/auto-renew/route.ts",
         "src/app/api/membership/[id]/route.ts",
         "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/members/remind-overdue/route.ts",
@@ -27129,6 +27344,7 @@
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
+        "src/lib/membership-autorenew.ts",
         "src/lib/membership-join.ts",
         "src/lib/membership-pay-link.ts",
         "src/lib/operator-search.ts",
@@ -28027,6 +28243,14 @@
         {
           "name": "joinOnline",
           "type": "String"
+        },
+        {
+          "name": "autoRenew",
+          "type": "Boolean"
+        },
+        {
+          "name": "autoRenewRetry",
+          "type": "Boolean"
         },
         {
           "name": "active",

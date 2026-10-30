@@ -22,16 +22,40 @@ type DuesInfo = {
   alreadyPaid: boolean;
   expiresAt: string | null;
   stripeReady: boolean;
+  /** MEM-RENEW: this tier renews automatically (the box below is required), its terms, and whether it's on for this member. */
+  autoRenewTier?: boolean;
+  autoRenewTerms?: string;
+  autoRenewOn?: boolean;
 };
+
+/** MEM-RENEW: turn automatic renewal off from this link (no login — the link is the proof). */
+function AutoRenewOff({ id, token }: { id: string; token: string }) {
+  const [state, setState] = useState<'on' | 'busy' | 'off' | 'error'>('on');
+  async function off() {
+    setState('busy');
+    const r = await fetch(`/api/membership/${id}/auto-renew`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) }).catch(() => null);
+    setState(r && r.ok ? 'off' : 'error');
+  }
+  if (state === 'off') return <p className="text-sm text-ink mt-4">Automatic renewal is off. Your card won’t be charged; your membership runs to the end of the period you’ve paid for.</p>;
+  return (
+    <div className="mt-4 text-sm text-ink">
+      <p>Automatic renewal is on.</p>
+      <button onClick={off} disabled={state === 'busy'} className="mt-2 px-4 py-2 rounded-md border border-line text-ink hover:bg-paper disabled:opacity-50">{state === 'busy' ? 'Turning off…' : 'Turn off automatic renewal'}</button>
+      {state === 'error' && <p role="alert" className="text-bad mt-2">That didn’t work — try again, or contact the course.</p>}
+    </div>
+  );
+}
 
 function PayForm({ id, token, info, onPaid }: { id: string; token: string; info: DuesInfo; onPaid: (expiresAt: string | null, amount: number) => void }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [agree, setAgree] = useState(false);
 
   async function pay() {
     if (!stripe || !elements) return;
+    if (info.autoRenewTier && !agree) { setError('Tick the box to agree to automatic renewal.'); return; }
     setSubmitting(true);
     setError('');
     const card = elements.getElement(CardElement);
@@ -47,7 +71,7 @@ function PayForm({ id, token, info, onPaid }: { id: string; token: string; info:
     const res = await fetch(`/api/membership/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, paymentMethodId: paymentMethod.id }),
+      body: JSON.stringify({ token, paymentMethodId: paymentMethod.id, ...(info.autoRenewTier ? { autoRenewConsent: agree } : {}) }),
     });
     const data = await res.json();
     setSubmitting(false);
@@ -60,10 +84,18 @@ function PayForm({ id, token, info, onPaid }: { id: string; token: string; info:
       <div className="border border-line rounded-md px-3 py-3 bg-paper mb-3 focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
         <CardElement options={{ style: { base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } } } }} />
       </div>
+      {/* MEM-RENEW: the reminder and declined emails land here — a member on automatic renewal can turn it off before paying anything. */}
+      {info.autoRenewOn && <div className="mb-4"><AutoRenewOff id={id} token={token} /></div>}
+      {info.autoRenewTier && (
+        <label className="flex items-start gap-2 mb-3 text-[13px] text-ink cursor-pointer">
+          <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} className="mt-0.5 accent-pine" />
+          <span><span className="font-medium">I agree to automatic renewal.</span> {info.autoRenewTerms}</span>
+        </label>
+      )}
       {error && <p className="text-sm text-bad mb-3">{error}</p>}
       <button
         onClick={pay}
-        disabled={submitting || !stripe}
+        disabled={submitting || !stripe || (!!info.autoRenewTier && !agree)}
         className="w-full py-3.5 rounded-md font-medium text-white text-sm bg-pine hover:bg-pine-hover disabled:opacity-50 transition-colors"
       >
         {submitting ? 'Processing…' : `Pay $${info.total.toFixed(2)}`}
@@ -130,6 +162,7 @@ function MembershipPayInner({ params }: { params: Promise<{ id: string }> }) {
             {expiryLabel(exp) ? <> through <span className="font-medium text-ink">{expiryLabel(exp)}</span></> : null}.
           </p>
           {paid && <p className="text-ink text-xs mt-3">A receipt was emailed to you.</p>}
+          {(paid ? info.autoRenewTier : info.autoRenewOn) && <AutoRenewOff id={id} token={token} />}
         </div>
       </div>
     );

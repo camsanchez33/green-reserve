@@ -1,5 +1,5 @@
 'use client';
-import { JoinOnlineSelect, JoinRequests } from '@/components/dashboard/MemberJoin';
+import { JoinOnlineSelect, JoinRequests, AutoRenewFields, AutoRenewStop } from '@/components/dashboard/MemberJoin';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Check, X, ArrowLeft, RefreshCw } from 'lucide-react';
@@ -23,7 +23,7 @@ interface Tier {
   greenFeeWeekday: number | null; greenFeeWeekend: number | null;
   cartFeeWeekday: number | null; cartFeeWeekend: number | null;
   discountPct: number | null;
-  advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean; joinOnline?: string;
+  advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean; joinOnline?: string; autoRenew?: boolean; autoRenewRetry?: boolean;
   annualFee: number; initiationFee: number; termMonths: number;
   notes: string; active: boolean;
   _count?: { memberships: number };
@@ -38,6 +38,7 @@ interface Member {
   lastRound?: string | null;
   /** Imported members already belong: no joining fee in what they owe. */
   initiationWaived?: boolean;
+  autoRenew?: boolean;
   startedAt?: string | null;
   /** DENSE-5: checked-in rounds here since Jan 1 (course's timezone). */
   roundsThisYear?: number;
@@ -434,6 +435,7 @@ function MembersPageInner() {
                     Guests pay the member rate
                   </label>
                   <JoinOnlineSelect value={tierForm.joinOnline} onChange={v => setTF('joinOnline', v)} className={iCls} />
+                  <AutoRenewFields on={tierForm.autoRenew} retry={tierForm.autoRenewRetry} onChange={(k, v) => setTF(k, v)} />
                   <div>
                     <label className={lblCls}>Annual fee ($)</label>
                     <div className="relative">
@@ -766,6 +768,7 @@ function MembersPageInner() {
                                         {m.email && <button onClick={() => sendDuesLink(m)} disabled={memberBusy === m.id} className="text-[13px] font-medium text-pine hover:underline disabled:opacity-50">{memberBusy === m.id ? 'Sending…' : 'Email dues link'}</button>}
                                       </>}
                                       <button onClick={() => { setDetailsError(''); setEditDetails({ id: m.id, name: m.name, email: m.email, phone: m.phone, expiresAt: m.expiresAt ? m.expiresAt.slice(0, 10) : '', notes: m.notes }); }} className="text-[13px] font-medium text-pine hover:underline">Edit details</button>
+                                      {m.autoRenew && <AutoRenewStop id={m.id} onChanged={loadAll} />}
                                       <button onClick={() => toggleMemberStatus(m)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{m.status === 'active' ? 'Make not active' : 'Make active'}</button>
                                       <button onClick={() => removeMember(m.id, m.name)} className="text-[13px] font-medium text-bad hover:underline">Remove</button>
                                     </div>

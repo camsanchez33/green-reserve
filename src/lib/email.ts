@@ -1614,6 +1614,49 @@ export async function sendMemberMagicLink(data: {
   });
 }
 
+// MEM-RENEW (lib/membership-autorenew): the four auto-renew emails — on (the terms they agreed to),
+// the reminder before each renewal, a declined renewal (pay link), and off. Billing alias: money.
+const longDate = (d: Date | null) => (d ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '');
+const cents = (c: number) => `$${(c / 100).toFixed(2)}`;
+const manageButton = (link: string, label: string) => `<a href="${link}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:700;font-size:15px;margin:20px 0 12px;">${label}</a>`;
+
+export async function sendAutoRenewOnEmail(data: { name: string; email: string; courseName: string; tierName: string; terms: string; renewsOn: Date | null; totalCents: number; manageLink: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Automatic renewal is on</h1>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> will renew automatically${data.renewsOn ? ` on <strong>${longDate(data.renewsOn)}</strong>` : ''} for <strong>${cents(data.totalCents)}</strong>. These are the terms you agreed to:</p>
+    <p style="margin:0 0 8px;padding:14px;background:#F6F4EC;border-radius:6px;color:#3F453E;font-size:13.5px;line-height:1.5;">${data.terms}</p>
+    ${manageButton(data.manageLink, 'Manage or turn off automatic renewal')}
+  `, BILLING_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'membership_autorenew_on' }, from: FROM_BILLING, to: data.email, subject: `Automatic renewal is on — ${data.courseName}`, html });
+}
+
+export async function sendAutoRenewReminderEmail(data: { name: string; email: string; courseName: string; tierName: string; renewsOn: Date; totalCents: number; manageLink: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Your membership renews on ${longDate(data.renewsOn)}</h1>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> renews automatically on <strong>${longDate(data.renewsOn)}</strong>. <strong>${cents(data.totalCents)}</strong> will be charged to the card you saved. Nothing to do if you'd like to keep it.</p>
+    <p style="margin:0;color:#3F453E;font-size:15px;">Don't want to renew? Turn automatic renewal off before then — your membership runs to the end of the period you've paid for.</p>
+    ${manageButton(data.manageLink, 'Turn off automatic renewal')}
+  `, BILLING_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'membership_autorenew_reminder' }, from: FROM_BILLING, to: data.email, subject: `Your ${data.courseName} membership renews on ${longDate(data.renewsOn)}`, html });
+}
+
+export async function sendAutoRenewDeclinedEmail(data: { name: string; email: string; courseName: string; tierName: string; totalCents: number; payLink: string; retryOn: Date | null }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Your renewal didn't go through</h1>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — we couldn't charge <strong>${cents(data.totalCents)}</strong> to your saved card to renew your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong>.${data.retryOn ? ` We'll try the card once more on ${longDate(data.retryOn)}.` : ''} To keep your member rates, pay with another card:</p>
+    ${manageButton(data.payLink, 'Pay membership dues')}
+  `, BILLING_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'membership_autorenew_declined' }, from: FROM_BILLING, to: data.email, subject: `Your ${data.courseName} membership renewal didn't go through`, html });
+}
+
+export async function sendAutoRenewOffEmail(data: { name: string; email: string; courseName: string; tierName: string; endsOn: Date | null }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Automatic renewal is off</h1>
+    <p style="margin:0;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> won't renew automatically, and your card won't be charged.${data.endsOn ? ` Your membership runs through <strong>${longDate(data.endsOn)}</strong>.` : ''} You can renew any time from the course's reminder email.</p>
+  `, BILLING_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'membership_autorenew_off' }, from: FROM_BILLING, to: data.email, subject: `Automatic renewal is off — ${data.courseName}`, html });
+}
+
 export async function sendMembershipReceiptEmail(data: {
   name: string; email: string; courseName: string; tierName: string;
   amountPaid: number; serviceFee: number; expiresAt: Date | null;
