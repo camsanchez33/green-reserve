@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 593,
-    "routes": 273,
-    "libs": 208,
-    "models": 61,
+    "files": 599,
+    "routes": 275,
+    "libs": 210,
+    "models": 62,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -5101,6 +5101,33 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/analytics/shop/route.ts",
+      "lines": 28,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/analytics/shop",
+      "kind": "api",
+      "methods": [
+        "GET"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/course-time",
+        "@/lib/prisma",
+        "@/lib/session",
+        "@/lib/shop-report",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/announcements/dismiss/route.ts",
       "lines": 31,
       "purpose": "",
@@ -6805,6 +6832,36 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/operator/shop-stock/route.ts",
+      "lines": 40,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/shop-stock",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/session",
+        "@/lib/shop-stock",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/operator/sign/route.ts",
       "lines": 105,
       "purpose": "",
@@ -7918,7 +7975,7 @@
     },
     {
       "path": "src/app/dashboard/analytics/page.tsx",
-      "lines": 786,
+      "lines": 788,
       "purpose": "DENSE-1 (DENSE_UI_SPEC.md, Cam 2026-10-27:",
       "brain": [],
       "exports": [
@@ -7937,6 +7994,7 @@
         "@/components/dashboard/DateRangeButton",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/Toast",
+        "@/components/dashboard/analytics/ShopTab",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
         "@/lib/analytics",
@@ -8472,7 +8530,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 864,
+      "lines": 891,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -8489,6 +8547,7 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/RegisterClose",
+        "@/components/dashboard/ShopStock",
         "@/components/dashboard/StaffNotice",
         "@/components/ui/Card",
         "@/components/ui/StatusDot",
@@ -10355,6 +10414,8 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/ShopStock.tsx",
+        "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/members/ImportMembers.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx",
         "src/components/dashboard/money/LedgerPanel.tsx",
@@ -10569,6 +10630,35 @@
       ]
     },
     {
+      "path": "src/components/dashboard/ShopStock.tsx",
+      "lines": 135,
+      "purpose": "SHOP-4 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ShopStock",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "@/lib/shop-stock",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/shop/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/SignAgreements.tsx",
       "lines": 222,
       "purpose": "AGREEMENT_SPEC AG-2 §1 — the \"Sign\" step.",
@@ -10758,6 +10848,33 @@
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/members/ResidentsCard.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/analytics/ShopTab.tsx",
+      "lines": 96,
+      "purpose": "SHOP-4 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ShopTab",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/lib/analytics-terms",
+        "@/lib/dashboard-fetch",
+        "@/lib/shop-report",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/analytics/page.tsx"
       ]
     },
     {
@@ -11483,6 +11600,7 @@
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
+        "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
@@ -11770,6 +11888,7 @@
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
+        "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/SignAgreements.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/Toast.tsx",
@@ -11846,6 +11965,7 @@
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
+        "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
@@ -13260,7 +13380,7 @@
     },
     {
       "path": "src/lib/analytics-terms.ts",
-      "lines": 48,
+      "lines": 50,
       "purpose": "DENSE-1 (DENSE_UI_SPEC P2):",
       "brain": [],
       "exports": [
@@ -13282,7 +13402,8 @@
       "usedBy": [
         "src/app/dashboard/analytics/page.tsx",
         "src/app/dashboard/home/page.tsx",
-        "src/app/dashboard/members/page.tsx"
+        "src/app/dashboard/members/page.tsx",
+        "src/components/dashboard/analytics/ShopTab.tsx"
       ]
     },
     {
@@ -13964,6 +14085,7 @@
         "src/lib/register-close.ts",
         "src/lib/register.ts",
         "src/lib/sample-data.ts",
+        "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts",
         "src/lib/staff-refund.ts",
         "src/lib/tee-sheet-engine.ts",
@@ -16114,6 +16236,7 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
+        "src/app/api/operator/analytics/shop/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
@@ -16158,6 +16281,7 @@
         "src/lib/register-close.ts",
         "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
+        "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts",
         "src/lib/tee-sheet-engine.ts",
         "src/lib/weather-cancel.ts"
@@ -16631,7 +16755,9 @@
         "src/components/dashboard/SalesTaxCard.tsx",
         "src/components/dashboard/ShopCatalog.tsx",
         "src/components/dashboard/ShopItemsForGroup.tsx",
+        "src/components/dashboard/ShopStock.tsx",
         "src/components/dashboard/StaffPermissions.tsx",
+        "src/components/dashboard/analytics/ShopTab.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
@@ -16691,7 +16817,7 @@
     },
     {
       "path": "src/lib/data-reset.ts",
-      "lines": 155,
+      "lines": 156,
       "purpose": "TEST-1 (Cam 2026-10-22:",
       "brain": [],
       "exports": [
@@ -20137,6 +20263,7 @@
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/agreement/route.ts",
         "src/app/api/operator/analytics/route.ts",
+        "src/app/api/operator/analytics/shop/route.ts",
         "src/app/api/operator/announcements/dismiss/route.ts",
         "src/app/api/operator/announcements/route.ts",
         "src/app/api/operator/approve-page/route.ts",
@@ -20280,7 +20407,9 @@
         "src/lib/session.ts",
         "src/lib/sheet-token.ts",
         "src/lib/shop-catalog.ts",
+        "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts",
+        "src/lib/shop-stock.ts",
         "src/lib/shop.ts",
         "src/lib/staff-refund.ts",
         "src/lib/submit-change-request.ts",
@@ -21535,6 +21664,7 @@
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/agreement/route.ts",
         "src/app/api/operator/analytics/route.ts",
+        "src/app/api/operator/analytics/shop/route.ts",
         "src/app/api/operator/announcements/dismiss/route.ts",
         "src/app/api/operator/announcements/route.ts",
         "src/app/api/operator/approve-page/route.ts",
@@ -21586,6 +21716,7 @@
         "src/app/api/operator/shop-sales/quote/route.ts",
         "src/app/api/operator/shop-sales/rounds/route.ts",
         "src/app/api/operator/shop-sales/route.ts",
+        "src/app/api/operator/shop-stock/route.ts",
         "src/app/api/operator/sign/route.ts",
         "src/app/api/operator/staff/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
@@ -21915,6 +22046,44 @@
       ]
     },
     {
+      "path": "src/lib/shop-report.ts",
+      "lines": 88,
+      "purpose": "SHOP-4 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "shopReport",
+          "kind": "fn"
+        },
+        {
+          "name": "ShopReport",
+          "kind": "type"
+        },
+        {
+          "name": "ShopReportItem",
+          "kind": "type"
+        },
+        {
+          "name": "summarize",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./booking-events",
+        "./course-time",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/analytics/shop/route.ts",
+        "src/components/dashboard/analytics/ShopTab.tsx"
+      ]
+    },
+    {
       "path": "src/lib/shop-sales.ts",
       "lines": 769,
       "purpose": "POS-2 (Cam 2026-10-19:",
@@ -22068,6 +22237,54 @@
         "src/app/api/shop-sale/[id]/route.ts",
         "src/lib/card-reader.ts",
         "src/lib/register.ts"
+      ]
+    },
+    {
+      "path": "src/lib/shop-stock.ts",
+      "lines": 98,
+      "purpose": "SHOP-4 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "isLow",
+          "kind": "fn"
+        },
+        {
+          "name": "receiveStock",
+          "kind": "fn"
+        },
+        {
+          "name": "recentReceipts",
+          "kind": "fn"
+        },
+        {
+          "name": "setCost",
+          "kind": "fn"
+        },
+        {
+          "name": "setReorder",
+          "kind": "fn"
+        },
+        {
+          "name": "StockRow",
+          "kind": "type"
+        },
+        {
+          "name": "stockRows",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/shop-stock/route.ts",
+        "src/components/dashboard/ShopStock.tsx"
       ]
     },
     {
@@ -24305,6 +24522,7 @@
       ],
       "writers": [],
       "readers": [
+        "src/lib/shop-report.ts",
         "src/lib/shop.ts"
       ]
     },
@@ -25009,6 +25227,10 @@
         {
           "name": "moneyMoves",
           "type": "MoneyMove[]"
+        },
+        {
+          "name": "shopStockReceipts",
+          "type": "ShopStockReceipt[]"
         }
       ],
       "writers": [
@@ -25064,6 +25286,7 @@
         "src/app/api/member/[courseSlug]/verify/route.ts",
         "src/app/api/operator/active-course/route.ts",
         "src/app/api/operator/analytics/route.ts",
+        "src/app/api/operator/analytics/shop/route.ts",
         "src/app/api/operator/approve-page/route.ts",
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/counter-members/route.ts",
@@ -25142,6 +25365,7 @@
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",
         "src/lib/sent-messages.ts",
+        "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts",
         "src/lib/submit-change-request.ts",
         "src/lib/tee-sheet-engine.ts"
@@ -27809,6 +28033,14 @@
           "type": "String"
         },
         {
+          "name": "costCents",
+          "type": "Int?"
+        },
+        {
+          "name": "reorderAt",
+          "type": "Int?"
+        },
+        {
           "name": "createdAt",
           "type": "DateTime"
         },
@@ -27823,18 +28055,25 @@
         {
           "name": "saleLines",
           "type": "ShopSaleLine[]"
+        },
+        {
+          "name": "receipts",
+          "type": "ShopStockReceipt[]"
         }
       ],
       "writers": [
         "src/app/api/operator/shop-items/route.ts",
         "src/lib/sample-data.ts",
-        "src/lib/shop-catalog.ts"
+        "src/lib/shop-catalog.ts",
+        "src/lib/shop-stock.ts"
       ],
       "readers": [
         "src/app/api/operator/shop-items/route.ts",
         "src/lib/sample-data.ts",
         "src/lib/shop-catalog.ts",
-        "src/lib/shop-sales.ts"
+        "src/lib/shop-report.ts",
+        "src/lib/shop-sales.ts",
+        "src/lib/shop-stock.ts"
       ]
     },
     {
@@ -27975,6 +28214,7 @@
         "src/lib/register-close.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
+        "src/lib/shop-report.ts",
         "src/lib/shop-sales.ts"
       ]
     },
@@ -28026,7 +28266,8 @@
         "src/lib/sample-data.ts"
       ],
       "readers": [
-        "src/lib/register-close.ts"
+        "src/lib/register-close.ts",
+        "src/lib/shop-report.ts"
       ]
     },
     {
@@ -28100,6 +28341,57 @@
         "src/app/api/operator/shop-sales/route.ts",
         "src/lib/register-close.ts",
         "src/lib/shop-sales.ts"
+      ]
+    },
+    {
+      "name": "ShopStockReceipt",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "shopItemId",
+          "type": "String"
+        },
+        {
+          "name": "shopItem",
+          "type": "ShopItem"
+        },
+        {
+          "name": "quantity",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostCents",
+          "type": "Int?"
+        },
+        {
+          "name": "note",
+          "type": "String"
+        },
+        {
+          "name": "receivedBy",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/lib/data-reset.ts"
+      ],
+      "readers": [
+        "src/lib/shop-stock.ts"
       ]
     },
     {

@@ -3,6 +3,8 @@
 // the dotted label). Client-safe — no imports — and kept in step with the
 // definitions block at the top of lib/analytics.ts, which is the source of truth.
 export const TERMS = {
+  shopSold: 'Shop items paid for in these dates — walk-up sales, less returns, and items added to paid rounds. Before discounts and tax.',
+  shopMargin: 'What sold, less what those items cost you at the cost entered today. Items with no cost are left out.',
   revenue: 'Green fees, carts and range balls paid to your course for these dates. GreenReserve’s booking fee is the golfer’s and isn’t counted.',
   fill: 'Spots booked out of every spot you offered on tee times that weren’t blocked.',
   rounds: 'Golfers who checked in and paid. One golfer, one round.',

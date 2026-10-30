@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 14:21 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `c5b84881` · working tree **8 dirty file(s)**
+Generated 2026-10-30 15:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2c3e1cdd` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 47 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 50 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `2c3e1cdd` | 2026-10-30 | Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere |
+| `1aa2c299` | 2026-10-30 | Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255) |
+| `001ba73f` | 2026-10-30 | Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits |
 | `c5b84881` | 2026-10-30 | Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check |
 | `7dda7589` | 2026-10-30 | Money ledger: one row for every dollar that moves; membership dues charged safely (#254) |
 | `48be83aa` | 2026-10-30 | Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal) |
@@ -62,16 +65,13 @@ Generated 2026-10-30 14:21 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (5 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/ledger-view-db-test.ts`
-- `M src/app/api/operator/members/route.ts`
-- `M src/app/api/operator/money/ledger/route.ts`
-- `M src/app/dashboard/members/page.tsx`
-- `M src/components/dashboard/money/LedgerPanel.tsx`
-- `M src/lib/ledger-view.ts`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/lib/shop-stock.ts`
+- `M src/lib/staff-permissions.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -197,6 +197,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `2c3e1cdd` 2026-10-30 — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere
+- `1aa2c299` 2026-10-30 — Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)
+- `001ba73f` 2026-10-30 — Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits
 - `c5b84881` 2026-10-30 — Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check
 - `7dda7589` 2026-10-30 — Money ledger: one row for every dollar that moves; membership dues charged safely (#254)
 - `48be83aa` 2026-10-30 — Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal)
@@ -206,9 +209,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `89f0e830` 2026-10-29 — Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)
 - `388244d7` 2026-10-30 — Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode
 - `ffa0ec2a` 2026-10-30 — Golfer record: one course's view of a golfer, staff notes, online-booking block
-- `370f7fa4` 2026-10-29 — Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)
-- `bf2fdf53` 2026-10-29 — Member rates at the counter: the member shows their membership, or the course allows any membership
-- `65df5988` 2026-10-29 — Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share
 
 ---
 

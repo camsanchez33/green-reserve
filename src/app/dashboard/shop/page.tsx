@@ -15,6 +15,7 @@ import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
 import { StaffNotice } from '@/components/dashboard/StaffNotice';
 import { RegisterClose } from '@/components/dashboard/RegisterClose';
+import { ShopStock } from '@/components/dashboard/ShopStock';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
@@ -115,7 +116,10 @@ export default function ShopPage() {
   const [quoteError, setQuoteError] = useState('');
   const [quoteTry, setQuoteTry] = useState(0);
 
+  // SHOP-4: every reload of the sales also refreshes the Stock line (a sale can take the last one).
+  const [loads, setLoads] = useState(0);
   const load = useCallback(async () => {
+    setLoads(n => n + 1);
     setLoadError('');
     const [i, s] = await Promise.all([
       dfetch<{ items: Item[] }>('/api/operator/shop-items'),
@@ -191,6 +195,27 @@ export default function ShopPage() {
     if (skuHits(items ?? [], code).length > 1) { setError(`Code ${code.trim()} is on two items.`); return true; }
     return false;
   }
+
+  // SHOP-4 (Cam 2026-10-30, "scan to add"): a scanner works anywhere on the register,
+  // not only in the search box. A scanner types fast and ends with Enter; a person
+  // typing in a field is left alone.
+  const scanRef = useRef(scan);
+  scanRef.current = scan;
+  useEffect(() => {
+    let buf = '', last = 0;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const now = Date.now();
+      if (now - last > 60) buf = '';
+      last = now;
+      if (e.key === 'Enter') { if (buf.length >= 3 && scanRef.current(buf)) e.preventDefault(); buf = ''; return; }
+      if (e.key.length === 1) buf += e.key;
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   async function ringUp() {
     if (pay === 'reader' && hasRounds) return roundToReader();
@@ -833,6 +858,8 @@ export default function ShopPage() {
               </>; })()}
             </Card>
             {/* POS-3 R4: count the drawer at the end of the day. */}
+            {/* SHOP-4: low stock, deliveries, reorder points and cost. */}
+            {(access.can('shop.sell') || access.can('shop.catalog')) && <ShopStock refreshKey={loads} />}
             {access.can('shop.close') && <RegisterClose />}
           </div>
         )}

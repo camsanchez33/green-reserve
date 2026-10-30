@@ -25,12 +25,13 @@ import { LoadError } from '@/components/dashboard/LoadError';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { TERMS, type TermKey } from '@/lib/analytics-terms';
+import { ShopTab } from '@/components/dashboard/analytics/ShopTab';
 import type { Analytics } from '@/lib/analytics';
 
 type Headline = { collectedCents: number; expectedCents: number; fillPct: number | null; lostCents: number; noShowPct: number | null; cancelPct: number | null; customers: number; returningPct: number | null; bookings: number; avgLeadDays: number | null; roundsPlayed?: number; perRoundCents?: number | null };
 type SeriesRow = Analytics['revenue']['series'][number];
 type Data = Analytics & { headline: Headline; compare: { range: { from: string; to: string }; headline: Headline; series?: SeriesRow[] } | null };
-type Tab = 'revenue' | 'busy' | 'misses' | 'golfers' | 'booking';
+type Tab = 'revenue' | 'busy' | 'misses' | 'golfers' | 'booking' | 'shop';
 type Metric = 'revenue' | 'fill' | 'rounds' | 'perRound';
 
 const usd = (c: number | null | undefined) => c == null ? '—' : `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
@@ -45,7 +46,7 @@ const plural = (n: number, one: string, many = one + 's') => `${n.toLocaleString
 const spanDays = (r: { from: string; to: string }) => Math.round((Date.parse(r.to) - Date.parse(r.from)) / 86400000) + 1;
 
 function downloadCsv(name: string, header: string[], rows: (string | number | null)[][]) {
-  if (rows.length === 0) { toast('Nothing to download — this is empty for the dates you picked.', 'warn'); return; }
+  if (rows.length === 0) { toast('Nothing to download for these dates.', 'warn'); return; }
   const esc = (v: string | number | null) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   const blob = new Blob([[header, ...rows].map(r => r.map(esc).join(',')).join('\n')], { type: 'text/csv' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${name}.csv`; a.click(); URL.revokeObjectURL(a.href);
@@ -663,7 +664,7 @@ function BookingTab({ d }: { d: Data }) {
   );
 }
 
-const TABS: [Tab, string][] = [['revenue', 'Revenue'], ['busy', 'Busy times'], ['misses', 'No-shows & cancellations'], ['golfers', 'Golfers'], ['booking', 'How they book']];
+const TABS: [Tab, string][] = [['revenue', 'Revenue'], ['busy', 'Busy times'], ['misses', 'No-shows & cancellations'], ['golfers', 'Golfers'], ['booking', 'How they book'], ['shop', 'Pro shop']];
 
 function AnalyticsInner() {
   const [range, setRange] = useState<DateRange | null>(null);
@@ -771,6 +772,7 @@ function AnalyticsInner() {
                 {tab === 'misses' && <MissesTab d={d} />}
                 {tab === 'golfers' && <GolfersTab d={d} />}
                 {tab === 'booking' && <BookingTab d={d} />}
+                {tab === 'shop' && <ShopTab range={d.range} />}
               </Card>
             </div>
           )}
