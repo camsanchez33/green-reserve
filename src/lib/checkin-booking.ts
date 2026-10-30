@@ -155,7 +155,8 @@ async function chargeBooking(
   }
 
   // (A reader payment already moved the money on the course's account — record it whatever the flag says.)
-  if (!alreadyPaid && !opts?.cardPresent && (!booking.course.stripeAccountActive || !booking.course.stripeAccountId)) {
+  // PRICE-3: nor when nothing is owed (a group fully on a round pack) and no cart is being added.
+  if (!alreadyPaid && !opts?.cardPresent && !(roundChargeCents(booking) === 0 && !opts?.addCart) && (!booking.course.stripeAccountActive || !booking.course.stripeAccountId)) {
     return { error: 'Stripe setup incomplete — the operator needs to finish Stripe onboarding in dashboard Settings before card payments can be accepted.', status: 422 } as const;
   }
 
@@ -243,7 +244,7 @@ async function chargeBooking(
         const message = err instanceof Error ? err.message : 'Could not save card.';
         return { error: `Card setup failed: ${message}`, status: 402 } as const;
       }
-    } else if (!chargePaymentMethodId && !opts?.cardPresent) {
+    } else if (!chargePaymentMethodId && !opts?.cardPresent && roundChargeCents(booking) > 0) {
       return { error: 'No card on file -- enter card details to complete check-in.', status: 422 } as const;
     }
 
@@ -276,7 +277,12 @@ async function chargeBooking(
       return { error: 'The total changed since this page loaded — the course updated the round. Refresh to see the new total, then pay.', status: 409 } as const;
     }
 
-    if (opts?.cardPresent) {
+    if (!opts?.cardPresent && roundChargeCents(booking) === 0) {
+      // PRICE-3: nothing owed (a group fully on a round pack, a $0 rate) — no card charge;
+      // Stripe refuses $0 and the round would sit locked. The rest of check-in runs as usual.
+      chargedCents = 0;
+      console.log(JSON.stringify({ ev: `${ev}.nothing_owed`, bookingId }));
+    } else if (opts?.cardPresent) {
       // POS-3 R3b: the money moved on the reader. Record exactly what Stripe took.
       paymentIntentId = opts.cardPresent.paymentIntentId;
       chargedCents = opts.cardPresent.amountCents;

@@ -20,6 +20,7 @@ import { groupGreenFee, otherPerPlayerCents } from './residents';
 import { partyFees } from './member-rates';
 import { rulesFor, groupSizeError } from './booking-rules';
 import { refundBookingFee } from './booking-fee';
+import { giveBack } from './round-packs';
 
 export type PartyWho = { by: 'golfer'; golferId?: string | null; token?: string } | { by: 'staff'; courseId: string; actor: EventActor };
 
@@ -32,7 +33,7 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
           status: true, cartSelected: true, rangeBallsTotal: true,
           greenFeeTotal: true, cartFeeTotal: true, accessFeeTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true,
           cancellationFeeTotal: true, noShowFeeTotal: true, cancellationHoursAtBooking: true,
-          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true, feePaidCents: true, noShowAt: true,
+          paymentStatus: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true, feePaidCents: true, noShowAt: true, appliedRate: true, packLineId: true, packRounds: true,
           teeTime: { select: { date: true, time: true, greenFeeCents: true, cartFeeCents: true, product: { select: { minPlayers: true, maxPlayers: true } } } },
           course: { select: { timezone: true, cancellationHours: true, lateFeeBasis: true, noShowFeeBasis: true, noShowFeeCents: true, minPlayers: true, maxPlayers: true } },
         },
@@ -51,6 +52,9 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
       // W2-6 slice 3: the course's (or the round's) group size holds on a change too.
       const sizeError = groupSizeError(rulesFor(booking.course, booking.teeTime.product), newPlayers);
       if (sizeError) throw Object.assign(new Error(), { code: 'SIZE', msg: sizeError });
+      // PRICE-3: a group whose every player is on a round pack can't grow on it — the extra players book on their own.
+      const allOnPack = booking.appliedRate === 'pack' && booking.memberRateCents == null && booking.packRounds > 0;
+      if (allOnPack && newPlayers > booking.players) throw Object.assign(new Error(), { code: 'SIZE', msg: 'Everyone in this group is on a round pack — book the extra players as their own group.' });
       // A payment taken or started (or a hold already charged) carries the old party's price.
       if (booking.paymentStatus === 'paid' || booking.paymentStatus === 'cancellation_fee_charged' || booking.roundPaymentIntentId || booking.shopLockedAt || booking.readerStartedAt) throw Object.assign(new Error(), { code: 'PAID' }); // on the card reader: being charged at this size
       // Launch security review 2026-10-18: once the cutoff has passed at a course
@@ -95,11 +99,16 @@ export async function changePartySize(bookingId: string, newPlayers: number, who
       const accessFeeTotal = perPlayerAccess * newPlayers;
       const totalAmount = greenFeeTotal + cartFeeTotal + Math.round(booking.rangeBallsTotal) + accessFeeTotal;
 
+      // PRICE-3: players taken off a pack group before the cutoff get their rounds back; after it they are used.
+      const cutoffAt = teeTimeInstant(booking.course.timezone, booking.teeTime.date, booking.teeTime.time);
+      const packBack = allOnPack && !!cutoffAt && cutoffAt.getTime() - bookingWindowHours(booking, booking.course) * 3600_000 > Date.now() ? Math.min(booking.packRounds, booking.players - newPlayers) : 0;
+      if (packBack > 0) await giveBack(tx, booking.packLineId, packBack);
+
       // A golfer's own change re-stamps terms consent — the price just changed, so it's a fresh agreement.
       await tx.booking.update({
         where: { id: bookingId },
         data: {
-          players: newPlayers, greenFeeTotal, cartFeeTotal,
+          players: newPlayers, greenFeeTotal, cartFeeTotal, ...(packBack > 0 ? { packRounds: booking.packRounds - packBack } : {}),
           ...(res ? { residentPlayers: res.residentPlayers, residentRateCents: res.residentRateCents } : {}), accessFeeTotal, totalAmount, cancellationFeeTotal, noShowFeeTotal,
           ...(who.by === 'golfer' ? { termsAcceptedAt: new Date(), termsVersion: CURRENT_TERMS_VERSION } : {}),
         },

@@ -1,3 +1,4 @@
+import { roundChargeCents } from '@/lib/shop';
 import { NextRequest, NextResponse } from 'next/server';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from '@/lib/booking-events';
 import { prisma } from '@/lib/prisma';
@@ -222,8 +223,10 @@ export async function PATCH(req: NextRequest) {
     // ('manual') qualify too; one booked without an email has no token yet, so
     // it gets one here.
     const via = viaRaw === 'sms' ? 'sms' : 'email';
-    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
+    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
     if (!b || b.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be sent a pay link.' }, { status: 409 });
+    // PRICE-3: a group that owes nothing (fully on a round pack) is checked in, not sent a $0 link.
+    if (roundChargeCents(b) === 0) return NextResponse.json({ error: 'This group owes nothing — check them in.' }, { status: 409 });
     if (via === 'sms') {
       const digits = (b.golferPhone || '').replace(/\D/g, '');
       if (digits.length < 10) return NextResponse.json({ error: 'There’s no mobile number on this booking — take payment at the counter.' }, { status: 409 });

@@ -21,6 +21,7 @@ import { recordMove } from './money-ledger';
 import { applyTierRates } from './tier-rates';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoRow } from './promo-codes';
 import { dealPct, dealSeat, dealRateSeat } from './last-minute';
+import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from './round-packs';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 
 export type CounterResult =
@@ -136,7 +137,7 @@ export type CounterBookingInput = {
    * `member:<membershipId>` (the member showed their membership; it must be live) or, only
    * when the course allows it (Course.counterMemberRate 'any'), `tier:<id>`. Either way the
    * member is at the member rate and guests at the standard one unless the tier includes them.
-   * Absent = standard.
+   * Absent = standard. PRICE-3: `pack:<lineId>` = rounds from the golfer's round pack.
    */
   rate?: string;
 };
@@ -160,6 +161,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
   // first, then every seat below is priced after it (seatAfter), so the per-seat rates kept on
   // the booking add up to its total.
   let promoRow: PromoRow | null = null;
+  if (rate.startsWith('pack:') && input.promoCode && String(input.promoCode).trim()) return { ok: false, status: 400, error: PACK_NO_CODE };
   if (input.promoCode && String(input.promoCode).trim()) {
     const p = await applyPromo(courseId, input.promoCode, { date: teeTime.date, time: teeTime.time, rateApplied: rate !== 'standard', golferEmail: golferEmail || null });
     if (!p.ok) return { ok: false, status: 400, error: p.error };
@@ -174,6 +176,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
   let greenFeeTotal = seat(pub) * players;
   let cartFeeTotal = cart ? teeTime.cartFeeCents * players : 0;
   let appliedRate = 'standard';
+  let packUse: { lineId: string; rounds: number } | null = null;
   let rateRows: { residentPlayers?: number; residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null } = {};
   if (rate === 'resident' || rate === 'senior' || rate === 'junior') {
     const per = rate === 'resident' ? teeTime.residentRateCents : rate === 'senior' ? teeTime.seniorRateCents : teeTime.juniorRateCents;
@@ -202,10 +205,27 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
     cartFeeTotal = cart ? splitTotal(players, n, r.cartFeeCents, teeTime.cartFeeCents) : 0;
     appliedRate = tier.name;
     rateRows = memberSpot(tier, { greenFeeCents: seat(rated(r.greenFeeCents)), cartFeeCents: r.cartFeeCents });
+  } else if (rate.startsWith('pack:')) {
+    // PRICE-3: the golfer's round pack — its rounds are taken just below, before the booking is made.
+    const holding = await holdingById(courseId, rate.slice(5));
+    if (!holding) return { ok: false, status: 400, error: 'That round pack isn’t on your course.' };
+    const seats = packSeats(holding, players);
+    if (!seats.ok) return { ok: false, status: 400, error: seats.error };
+    const priced = packPrice({ players, seats: seats.seats, guests: holding.guests, coversCart: holding.coversCart, publicGreen: pub, cartFee: teeTime.cartFeeCents, cart });
+    ratedGreen = greenFeeTotal = priced.greenFeeTotal;
+    cartFeeTotal = priced.cartFeeTotal;
+    appliedRate = 'pack';
+    rateRows = { memberRateCents: priced.memberRateCents, memberCartCents: priced.memberCartCents };
+    packUse = { lineId: holding.lineId, rounds: seats.seats };
   } else if (rate !== 'standard') return { ok: false, status: 400, error: 'Pick a rate.' };
   const promo = promoRow ? { id: promoRow.id, discountCents: ratedGreen - greenFeeTotal } : null;
   if (promo && promo.discountCents <= 0) return { ok: false, status: 400, error: NOTHING_OFF };
   if (promo && !(await reserveUse(promo.id))) return { ok: false, status: 409, error: 'That code has just been used up.' };
+  if (packUse) {
+    const use = packUse;
+    try { await prisma.$transaction(tx => takeRounds(tx, courseId, use.lineId, use.rounds)); }
+    catch (err) { if (err instanceof PackError) return { ok: false, status: 409, error: err.message }; throw err; }
+  }
   // No platform fee on a counter booking — nothing is collected online.
   const totalAmount = greenFeeTotal + cartFeeTotal;
   // CASH-1 (Cam 2026-10-25: "can't just be paid at counter"): a counter booking is
@@ -217,6 +237,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       players, appliedRate, ...rateRows,
       ...(promo ? { promoCodeId: promo.id, promoDiscountCents: promo.discountCents } : {}),
       lastMinutePct,
+      ...(packUse ? { packLineId: packUse.lineId, packRounds: packUse.rounds } : {}),
       greenFeeTotal, cartFeeTotal, cartSelected: cart, accessFeeTotal: 0, totalAmount,
       checkInToken: golferEmail ? randomUUID() : null,
       paymentStatus: 'manual',
@@ -230,6 +251,7 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
       course: { name: c.name, address: c.address, city: c.city, state: c.state, slug: c.slug, cancellationHours: c.cancellationHours, confirmationNote: c.confirmationNote } };
   } catch (err) {
     if (promo) await releaseUse(promo.id);
+    if (packUse) await giveBack(prisma, packUse.lineId, packUse.rounds);
     if (err instanceof TeeTimeClaimError) {
       if (err.code === 'NOT_FOUND') return { ok: false, status: 404, error: 'Tee time not found' };
       if (err.code === 'BLOCKED') return { ok: false, status: 409, error: 'This tee time is blocked.' };

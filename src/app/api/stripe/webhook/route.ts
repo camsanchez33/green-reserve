@@ -1,3 +1,4 @@
+import { endPacksRefundedOutside } from '@/lib/round-packs';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
@@ -54,6 +55,11 @@ export async function POST(req: NextRequest) {
         for (const r of refundList) {
           if (r.status === 'failed' || r.status === 'canceled') continue;
           await mirrorMove(piOf(charge.payment_intent), { direction: 'out', amountCents: r.amount, stripeId: r.id, note: `refunded in Stripe (${r.reason ?? 'no reason given'})` });
+        }
+        // PRICE-3: a round pack sale refunded outside the register ends its packs (ours carry shopRefundId).
+        if (refundList.some(r => r.status !== 'failed' && r.status !== 'canceled' && !r.metadata?.shopRefundId)) {
+          const ended = await endPacksRefundedOutside(piOf(charge.payment_intent));
+          if (ended) console.log(JSON.stringify({ ev: 'round_packs.ended_by_outside_refund', paymentIntentId: piOf(charge.payment_intent), lines: ended }));
         }
         const booking = await bookingForPi(piOf(charge.payment_intent));
         if (!booking) break;

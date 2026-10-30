@@ -148,23 +148,23 @@ model Course {
   /// Cam 2026-10-29: who gets a member rate at the counter. 'member' (default): staff pick the
   /// member — they show their membership — and that membership's live rate applies. 'any': staff
   /// may pick any of the course's memberships for a walk-in or phone booking (the course's call).
-  counterMemberRate String @default("member")
+  counterMemberRate          String                @default("member")
   /// Golfer record (Cam 2026-10-29): a golfer with this many no-shows, or this many late
   /// cancels, in the last onlineBlockMonths can't book online ("call the course"); the counter
   /// still books them. Null = that rule is off.
-  onlineBlockNoShows     Int?
-  onlineBlockLateCancels Int?
-  onlineBlockMonths      Int     @default(12)
+  onlineBlockNoShows         Int?
+  onlineBlockLateCancels     Int?
+  onlineBlockMonths          Int                   @default(12)
   /// PRICE-2 (Cam 2026-10-30): last-minute deals — open times inside lastMinuteHours of going off cost lastMinutePct% less (lib/last-minute).
-  lastMinuteOn               Boolean  @default(false)
-  lastMinuteHours            Int      @default(3)
-  lastMinutePct              Int      @default(20)
+  lastMinuteOn               Boolean               @default(false)
+  lastMinuteHours            Int                   @default(3)
+  lastMinutePct              Int                   @default(20)
   /// Also at the counter (walk-ins and phone bookings), not only online.
-  lastMinuteCounter          Boolean  @default(true)
+  lastMinuteCounter          Boolean               @default(true)
   /// Off: a member or resident pays the lower of their rate and the deal. On: the deal comes off their rate.
-  lastMinuteStack            Boolean  @default(false)
-  golferNotes            GolferNote[]
-  golferBlocks           GolferBlock[]
+  lastMinuteStack            Boolean               @default(false)
+  golferNotes                GolferNote[]
+  golferBlocks               GolferBlock[]
   /// PERS-1: optional short note from the course, shown on the golfer's
   /// confirmation page and in the confirmation email ("Check in at the pro shop").
   confirmationNote           String?
@@ -227,6 +227,7 @@ model Course {
   moneyMoves                 MoneyMove[]
   shopStockReceipts          ShopStockReceipt[]
   promoCodes                 PromoCode[]
+  roundPacks                 RoundPack[]
 
   @@index([operatorId])
   @@index([groupId])
@@ -560,6 +561,9 @@ model Booking {
   promoDiscountCents         Int               @default(0)
   /// PRICE-2: the last-minute percent this booking got (0 = none).
   lastMinutePct              Int               @default(0)
+  /// PRICE-3: the round pack (a paid ShopSaleLine) this booking's rounds came from, and how many it took.
+  packLineId                 String?
+  packRounds                 Int               @default(0)
   // MP-3 run B1: these six were ALREADY cents, stored in a Float — the worst of
   // both worlds, and the direct cause of the x100 resend-email bug (MP-1 #1),
   // where a caller assumed dollars. Now Int, so the unit is in the type. Every
@@ -719,11 +723,11 @@ model TeeTimeSchedule {
 }
 
 model Blackout {
-  id       String @id @default(cuid())
-  courseId String
-  course   Course @relation(fields: [courseId], references: [id])
-  date     String
-  reason   String @default("")
+  id                String   @id @default(cuid())
+  courseId          String
+  course            Course   @relation(fields: [courseId], references: [id])
+  date              String
+  reason            String   @default("")
   /// Revamp 3 fix 11 (Cam 2026-10-29): the times this closure blocked in place (they
   /// held bookings). Reopening unblocks only these — never a time staff blocked by hand.
   blockedTeeTimeIds String[] @default([])
@@ -1063,13 +1067,13 @@ model AdminGoal {
 /// lib/twilio.ts; read by the course timeline.
 model SentMessage {
   id         String   @id @default(cuid())
-  channel    String   // "email" | "sms"
+  channel    String // "email" | "sms"
   kind       String
   to         String
   courseId   String?
   bookingId  String?
   inquiryId  String?
-  status     String   // "sent" | "failed"
+  status     String // "sent" | "failed"
   providerId String   @default("")
   error      String   @default("")
   createdAt  DateTime @default(now())
@@ -1360,36 +1364,36 @@ model CourseMessage {
 /// POS-1a (PLATFORM_ROADMAP_SPEC §4): a course's pro-shop catalog — apparel,
 /// balls, range buckets, rentals. POS-2 (Cam 2026-10-19): optional stock count.
 model ShopItem {
-  id          String            @id @default(cuid())
+  id          String             @id @default(cuid())
   courseId    String
-  course      Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course      Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
   name        String
-  category    String            @default("")
+  category    String             @default("")
   priceCents  Int
   /// Hidden from "Add to round" but kept, so past sales still name it.
-  active      Boolean           @default(true)
-  sortOrder   Int               @default(0)
+  active      Boolean            @default(true)
+  sortOrder   Int                @default(0)
   /// POS-2: how many are on the shelf; null = not counted. Paid walk-up sales
   /// and items added to a round take from it. Never blocks a sale.
   stockCount  Int?
   /// W2-7: the item's own code — SKU or barcode number (searchable; scanning later).
-  sku         String            @default("")
+  sku         String             @default("")
   /// W2-7 (Cam 2026-10-20): sizes/colors are OPTIONS of one item. An option is
   /// its own sellable row (own price, stock, SKU) under its parent; its name is
   /// "<parent> — <optionLabel>" so every sale line reads right. A parent with
   /// options is not sold itself — staff pick an option.
   parentId    String?
-  parent      ShopItem?         @relation("ShopItemOptions", fields: [parentId], references: [id], onDelete: Cascade)
-  options     ShopItem[]        @relation("ShopItemOptions")
-  optionLabel String            @default("")
+  parent      ShopItem?          @relation("ShopItemOptions", fields: [parentId], references: [id], onDelete: Cascade)
+  options     ShopItem[]         @relation("ShopItemOptions")
+  optionLabel String             @default("")
   /// W2-7 part B: how the item is taxed — a key of TAX_CATEGORIES in lib/sales-tax.ts (Stripe product tax code).
-  taxCategory String            @default("general")
+  taxCategory String             @default("general")
   /// SHOP-4 (Cam 2026-10-30): what one costs the course, for margin. Optional; only the owner sees it.
   costCents   Int?
   /// SHOP-4: show it as low stock once the count is at or below this; null = no alert.
   reorderAt   Int?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   sales       BookingShopItem[]
   saleLines   ShopSaleLine[]
   receipts    ShopStockReceipt[]
@@ -1402,52 +1406,52 @@ model ShopItem {
 /// paid in cash at the counter, or by a pay link the customer opens on their
 /// phone (a direct charge on the course's Stripe account, like a round).
 model ShopSale {
-  id               String         @id @default(cuid())
-  courseId         String
-  course           Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id                String           @id @default(cuid())
+  courseId          String
+  course            Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   /// open (pay link sent, not paid) | paid_cash | paid_card | void
-  status           String         @default("open")
+  status            String           @default("open")
   /// What the customer pays: the lines plus taxCents.
-  totalCents       Int
+  totalCents        Int
   /// W2-7 part B: sales tax on this sale (Stripe Tax), its calculation, and the
   /// tax transaction recorded on the course's account once paid ("" = not yet).
-  taxCents         Int            @default(0)
-  taxCalculationId String         @default("")
-  taxTransactionId String         @default("")
+  taxCents          Int              @default(0)
+  taxCalculationId  String           @default("")
+  taxTransactionId  String           @default("")
   /// Revamp 3 dead end 23: a paid cash sale voided the same day — its recorded tax reversed ("" = none, or not yet).
-  voidTaxReversalId String        @default("")
+  voidTaxReversalId String           @default("")
   /// Cam 2026-10-29: a cash sale rung up while Stripe Tax couldn't be reached —
   /// taken with no tax rather than blocked (cash is never blocked).
-  taxUnavailable   Boolean        @default(false)
-  customerName     String         @default("")
-  customerPhone    String         @default("")
-  customerEmail    String         @default("")
+  taxUnavailable    Boolean          @default(false)
+  customerName      String           @default("")
+  customerPhone     String           @default("")
+  customerEmail     String           @default("")
   /// The pay link's secret (open sales only); '' for cash.
-  payToken         String         @default("")
-  paymentIntentId  String         @default("")
+  payToken          String           @default("")
+  paymentIntentId   String           @default("")
   /// Set while a card charge is in flight (status 'paying'); a void waits for it.
-  chargeStartedAt  DateTime?
-  paidAt           DateTime?
-  voidedAt         DateTime?
+  chargeStartedAt   DateTime?
+  paidAt            DateTime?
+  voidedAt          DateTime?
   /// Who rang it up (staff/owner email).
-  soldBy           String         @default("")
-  createdAt        DateTime       @default(now())
+  soldBy            String           @default("")
+  createdAt         DateTime         @default(now())
   /// POS-3 (Cam 2026-10-24, "like Square"): money off the whole sale, and why.
-  discountCents    Int            @default(0)
-  discountNote     String         @default("")
+  discountCents     Int              @default(0)
+  discountNote      String           @default("")
   /// Cash handed over (cash sales), so the receipt shows the change; null = not entered.
   cashTenderedCents Int?
   /// Refunded so far (cash recorded, card through Stripe); never more than totalCents.
-  refundedCents    Int            @default(0)
+  refundedCents     Int              @default(0)
   /// The last receipt sent (email or text).
-  receiptSentAt    DateTime?
+  receiptSentAt     DateTime?
   /// POS-3 R2: green fees paid at the register in this sale (the rounds are
   /// their own bookings, paid at the counter; this part is not shop revenue).
-  roundsCents      Int            @default(0)
+  roundsCents       Int              @default(0)
   /// POS-3 R3: the card reader the sale is being paid on ("" = not a reader sale yet).
-  readerId         String         @default("")
-  refunds          ShopSaleRefund[]
-  lines            ShopSaleLine[]
+  readerId          String           @default("")
+  refunds           ShopSaleRefund[]
+  lines             ShopSaleLine[]
 
   @@index([courseId, createdAt])
 }
@@ -1467,6 +1471,15 @@ model ShopSaleLine {
   bookingId      String?
   /// Revamp 3 dead end 23 (Cam 2026-10-29): how many of this line came back as a return.
   returnedQty    Int       @default(0)
+  /// PRICE-3: a round pack sold on this line — copied from the pack when rung up. The holder is the
+  /// sale's customerEmail; rounds = packRounds × (quantity − returnedQty); packRoundsUsed taken by bookings.
+  roundPackId    String?
+  packRounds     Int       @default(0)
+  packRoundsUsed Int       @default(0)
+  packCoversCart Boolean   @default(false)
+  packGuests     Boolean   @default(false)
+  /// Days the rounds are good for from the sale's paidAt; null = no end.
+  packValidDays  Int?
 
   @@index([saleId])
   @@index([shopItemId])
@@ -1499,24 +1512,24 @@ model BookingShopItem {
 /// so each is emailed once when it starts and marked resolved when it clears;
 /// and one row per morning digest ("digest:YYYY-MM-DD"), so it goes out once.
 model AdminAlert {
-  id          String    @id @default(cuid())
-  key         String    @unique
-  kind        String // "urgent" | "digest"
-  title       String    @default("")
-  detail      String    @default("")
-  href        String    @default("")
-  firstSeenAt DateTime  @default(now())
-  lastSeenAt  DateTime  @default(now())
-  alertedAt   DateTime?
-  resolvedAt  DateTime?
+  id           String            @id @default(cuid())
+  key          String            @unique
+  kind         String // "urgent" | "digest"
+  title        String            @default("")
+  detail       String            @default("")
+  href         String            @default("")
+  firstSeenAt  DateTime          @default(now())
+  lastSeenAt   DateTime          @default(now())
+  alertedAt    DateTime?
+  resolvedAt   DateTime?
   /// BRAIN-2a (Cam 2026-10-22): the Problems page. Who is on it, the course it is
   /// about (when it is about one), and a snooze — never a manual "resolved": a
   /// problem clears only when the hourly check stops seeing it.
   ownerId      String?
-  ownerName    String    @default("")
+  ownerName    String            @default("")
   courseId     String?
   snoozedUntil DateTime?
-  snoozeReason String    @default("")
+  snoozeReason String            @default("")
   events       AdminAlertEvent[]
 
   @@index([kind, resolvedAt])
@@ -1527,48 +1540,48 @@ model AdminAlert {
 /// other group event. Saving it holds its tee times (blocked, TeeTime.eventId)
 /// and builds its prep checklist. Payments come in a later slice.
 model CourseEvent {
-  id                  String              @id @default(cuid())
+  id                  String               @id @default(cuid())
   courseId            String
-  course              Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course              Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
   name                String
   /// outing | tournament | league | other
-  kind                String              @default("outing")
+  kind                String               @default("outing")
   date                String // YYYY-MM-DD, the course's calendar day
   /// shotgun | tee_times
-  format              String              @default("shotgun")
+  format              String               @default("shotgun")
   /// Shotgun: when it starts. Tee times: the first tee time.
   startTime           String
   /// The window held on the tee sheet: every tee time from holdFrom to holdTo (inclusive).
   holdFrom            String
   holdTo              String
   /// The course set holdTo by hand (kept when the event is edited).
-  holdToCustom        Boolean             @default(false)
+  holdToCustom        Boolean              @default(false)
   /// Tee times only: which round's times are held (null = every round).
   productId           String?
   /// W2-9 (Cam 2026-10-22): false = the event closes the whole course in its
   /// window; true = it shares the course — only the nines in holdNineIds are
   /// held (empty = every nine) and the times in keepOpen stay bookable.
-  shareCourse         Boolean             @default(false)
-  holdNineIds         String[]            @default([])
-  keepOpen            String[]            @default([])
-  holes               Int                 @default(18)
-  groups              Int                 @default(0)
-  players             Int                 @default(0)
-  organizerName       String              @default("")
-  organizerEmail      String              @default("")
-  organizerPhone      String              @default("")
+  shareCourse         Boolean              @default(false)
+  holdNineIds         String[]             @default([])
+  keepOpen            String[]             @default([])
+  holes               Int                  @default(18)
+  groups              Int                  @default(0)
+  players             Int                  @default(0)
+  organizerName       String               @default("")
+  organizerEmail      String               @default("")
+  organizerPhone      String               @default("")
   /// What each player pays the course (cents); 0 = not set yet.
-  pricePerPlayerCents Int                 @default(0)
+  pricePerPlayerCents Int                  @default(0)
   /// What's included: cart, range, food, prizes … (the course's own words).
   includes            String[]
   /// The course's own deposit and refund terms for this event.
-  terms               String              @default("")
-  notes               String              @default("")
+  terms               String               @default("")
+  notes               String               @default("")
   /// planned | cancelled
-  status              String              @default("planned")
-  createdBy           String              @default("")
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  status              String               @default("planned")
+  createdBy           String               @default("")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
   tasks               CourseEventTask[]
   entrants            CourseEventPlayer[]
   teeTimes            TeeTime[]
@@ -1578,7 +1591,7 @@ model CourseEvent {
   /// Cam 2026-10-24: who pays the course — organizer (one bill: deposit and
   /// balance; players don't pay the course) or players (each pays on the sign-up
   /// page). '' = an event made before the question: every tool shows.
-  payer               String              @default("")
+  payer               String               @default("")
   /// Cam 2026-10-24: organizer events — the guaranteed headcount is due this
   /// many days before the event (null = the course doesn't ask for one). The
   /// balance bills the higher of the guarantee and the players on the list.
@@ -1586,15 +1599,15 @@ model CourseEvent {
   /// The number the organizer guaranteed; null = not given yet.
   guaranteedPlayers   Int?
   guaranteedAt        DateTime?
-  guaranteedBy        String              @default("")
+  guaranteedBy        String               @default("")
   /// W2-9d (Cam 2026-10-22): the public sign-up page, /events/[id]. Off until the course opens it.
-  signupOpen          Boolean             @default(false)
+  signupOpen          Boolean              @default(false)
   /// now = a spot is held 30 minutes while they pay; later = they sign up, the course collects after.
-  signupPay           String              @default("later")
+  signupPay           String               @default("later")
   /// Most players one person can sign up together (1–4).
-  signupMaxGroup      Int                 @default(4)
+  signupMaxGroup      Int                  @default(4)
   /// The course's own questions, asked of every player: [{ id, label, required }].
-  signupQuestions     Json                @default("[]")
+  signupQuestions     Json                 @default("[]")
 
   @@index([courseId, date])
 }
@@ -1616,28 +1629,28 @@ model CourseEventTask {
 
 /// W2-9: a player in an event, with their group and starting hole (pairings).
 model CourseEventPlayer {
-  id        String      @id @default(cuid())
+  id        String               @id @default(cuid())
   eventId   String
-  event     CourseEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event     CourseEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
   name      String
-  email     String      @default("")
-  phone     String      @default("")
+  email     String               @default("")
+  phone     String               @default("")
   /// 1-based group number; null = not in a group yet.
   groupNo   Int?
   /// Shotgun: the hole this group starts on. Tee times: null.
   startHole Int?
   payments  CourseEventPayment[]
   /// W2-9d: in = on the list; held = signed up online, a spot kept while they pay (until holdUntil); waitlist = the event was full.
-  status    String      @default("in")
+  status    String               @default("in")
   holdUntil DateTime?
   /// staff | signup
-  source    String      @default("staff")
+  source    String               @default("staff")
   /// Players signed up together share a key (they pay and are paired together).
-  groupKey  String      @default("")
+  groupKey  String               @default("")
   /// Answers to the course's sign-up questions: { questionId: answer }.
-  answers   Json        @default("{}")
-  sortOrder Int         @default(0)
-  createdAt DateTime    @default(now())
+  answers   Json                 @default("{}")
+  sortOrder Int                  @default(0)
+  createdAt DateTime             @default(now())
 
   @@index([eventId])
 }
@@ -1744,31 +1757,31 @@ model ShopSaleRefund {
 /// latest stands; nothing is edited. The figures are a snapshot of what the
 /// day's records said when it was counted (lib/register-close.ts).
 model RegisterClose {
-  id                String   @id @default(cuid())
-  courseId          String
-  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  courseId           String
+  course             Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   /// The course-local day closed (YYYY-MM-DD).
-  day               String
+  day                String
   /// Cash in the drawer when the day started.
-  openingFloatCents Int
+  openingFloatCents  Int
   /// Cash rung up at the register (items and green fees), paid_cash that day.
-  cashSalesCents    Int
+  cashSalesCents     Int
   /// Groups marked paid at the counter on the tee sheet that day (not through the register).
   counterRoundsCents Int
   /// LEDGER-2: cash taken that day outside the register — membership dues and event payments (MoneyMove), less their cash refunds.
   otherCashCents     Int      @default(0)
   /// Cash handed back for refunds that day.
-  cashRefundsCents  Int
+  cashRefundsCents   Int
   /// openingFloat + cashSales + counterRounds − cashRefunds.
-  expectedCashCents Int
-  countedCashCents  Int
+  expectedCashCents  Int
+  countedCashCents   Int
   /// counted − expected: over (+) or short (−).
-  differenceCents   Int
+  differenceCents    Int
   /// For reference: card taken that day (walk-up sales by reader or pay link, rounds by card).
-  cardCents         Int
-  note              String   @default("")
-  closedBy          String   @default("")
-  createdAt         DateTime @default(now())
+  cardCents          Int
+  note               String   @default("")
+  closedBy           String   @default("")
+  createdAt          DateTime @default(now())
 
   @@index([courseId, day])
 }
@@ -1875,17 +1888,17 @@ model MoneyMove {
 /// SHOP-4 (Cam 2026-10-30, "Low stock + receiving"): a delivery put on the shelf —
 /// how many came in and, when given, what each cost. Append-only.
 model ShopStockReceipt {
-  id         String   @id @default(cuid())
-  courseId   String
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  shopItemId String
-  shopItem   ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
-  quantity   Int
+  id            String   @id @default(cuid())
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  shopItemId    String
+  shopItem      ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+  quantity      Int
   /// What each one cost on this delivery, when entered.
   unitCostCents Int?
-  note       String   @default("")
-  receivedBy String   @default("")
-  createdAt  DateTime @default(now())
+  note          String   @default("")
+  receivedBy    String   @default("")
+  createdAt     DateTime @default(now())
 
   @@index([courseId, createdAt])
   @@index([shopItemId])
@@ -1897,31 +1910,54 @@ model ShopStockReceipt {
 /// a time of day, total uses, once per golfer. withRates: whether it also works on top
 /// of a member or resident rate (the course decides per code). Never deleted once used.
 model PromoCode {
-  id          String    @id @default(cuid())
-  courseId    String
-  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  courseId     String
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   /// Stored upper-case; unique per course.
-  code        String
+  code         String
   /// 'percent' (value 1–100) | 'amount' (value = cents off per player)
-  kind        String
-  value       Int
+  kind         String
+  value        Int
   /// Course-local dates (YYYY-MM-DD), inclusive; null = no limit.
-  startsOn    String?
-  endsOn      String?
+  startsOn     String?
+  endsOn       String?
   /// 0 = Sunday … 6 = Saturday; empty = every day.
-  days        Int[]     @default([])
+  days         Int[]    @default([])
   /// HH:MM, tee times from (inclusive) to (exclusive); null = all day.
-  fromTime    String?
-  toTime      String?
-  maxUses     Int?
-  usesCount   Int       @default(0)
+  fromTime     String?
+  toTime       String?
+  maxUses      Int?
+  usesCount    Int      @default(0)
   onePerGolfer Boolean  @default(false)
-  withRates   Boolean   @default(false)
-  active      Boolean   @default(true)
-  note        String    @default("")
-  createdBy   String    @default("")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  withRates    Boolean  @default(false)
+  active       Boolean  @default(true)
+  note         String   @default("")
+  createdBy    String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@unique([courseId, code])
+}
+
+/// PRICE-3 (Cam 2026-10-30: "Round packs" — sold "online + counter"; cart and guests "course
+/// decides per pack"; GreenReserve's $1.50 a player still charged on each round used): a prepaid
+/// bundle of rounds in the course's catalog. Sold as a line of a walk-up sale (lib/round-packs.ts).
+model RoundPack {
+  id         String   @id @default(cuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name       String
+  rounds     Int
+  priceCents Int
+  coversCart Boolean  @default(false)
+  /// Guests in the holder's booking can use rounds too (one round a player).
+  guests     Boolean  @default(false)
+  /// Days the rounds are good for after it is paid; null = no end.
+  validDays  Int?
+  sellOnline Boolean  @default(false)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([courseId])
 }
