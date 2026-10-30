@@ -19558,7 +19558,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 263,
+      "lines": 266,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [

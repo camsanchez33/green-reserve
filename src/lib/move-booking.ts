@@ -162,6 +162,8 @@ export async function moveBooking(opts: {
       // Cam 2026-10-29: how many of the group pay the member rate (the member alone unless the tier includes guests).
       let memberN = 0;
       let spot = memberSpot(null, rate);
+      // A member rate whose tier is gone keeps what they paid a player — already after any code.
+      let rateIsOwn = false;
       if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') {
         // Tier names aren't unique in the schema: take the oldest ACTIVE tier of
         // that name so the answer is deterministic (a tierId on Booking is the
@@ -183,6 +185,7 @@ export async function moveBooking(opts: {
           // A member rate whose tier is gone: keep what they paid per player.
           : { greenFeeCents: Math.round(b.greenFeeTotal / b.players), cartFeeCents: b.cartSelected ? Math.round(b.cartFeeTotal / b.players) : slot.cartFeeCents };
         memberN = lapsed ? 0 : tier ? memberPlayers(b.players, tier) : b.players;
+        rateIsOwn = !lapsed && !tier;
         spot = memberSpot(tier, rate);
       }
       // PRICE-1: a promo code on the booking carries to the new time when it still fits there
@@ -191,7 +194,7 @@ export async function moveBooking(opts: {
       const residentN = opts.residentPlayers ?? b.residentPlayers;
       const code = b.promoCodeId ? await tx.promoCode.findUnique({ where: { id: b.promoCodeId } }) : null;
       const promo = code && !promoFits({ ...code, maxUses: null, active: true }, slot, { rateApplied: memberN > 0 || (residentN > 0 && slot.residentRateCents != null) }) ? code : null;
-      const seat = (c: number) => (promo ? seatAfter(promo, c) : c);
+      const seat = (c: number) => (promo && !rateIsOwn ? seatAfter(promo, c) : c);
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
       const ratedResidents = groupGreenFee(b.players, rate.greenFeeCents, residentN, slot.residentRateCents);
       const ratedGreen = memberN ? splitTotal(b.players, memberN, rate.greenFeeCents, slot.greenFeeCents) : ratedResidents.greenFeeTotal;
@@ -232,7 +235,7 @@ export async function moveBooking(opts: {
         data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
         data.cartSelected = cartOn;
         data.memberRateCents = spot.memberRateCents; data.memberCartCents = spot.memberCartCents;
-        if (b.promoCodeId) { data.promoCodeId = promo ? promo.id : null; data.promoDiscountCents = promo ? ratedGreen - newGreen : 0; }
+        if (b.promoCodeId && !rateIsOwn) { data.promoCodeId = promo ? promo.id : null; data.promoDiscountCents = promo ? ratedGreen - newGreen : 0; }
         if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
         if (memberN === 0 && b.appliedRate !== 'resident' && b.appliedRate !== 'standard') data.appliedRate = residents.residentPlayers > 0 ? 'resident' : 'standard';
       }

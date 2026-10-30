@@ -91,6 +91,12 @@ const route2 = () => readFileSync('src/app/api/operator/promo-codes/route.ts', '
   if (eb.ok) await moveBooking({ bookingId: eb.id, newTeeTimeId: late.id, courseId: c.id, pricing: 'new_slot', actor: STAFF });
   const moved = eb.ok ? await prisma.booking.findUniqueOrThrow({ where: { id: eb.id } }) : null;
   ok('…moved and repriced to the afternoon, the code comes off: $50 and no code', moved?.greenFeeTotal === 5000 && moved.promoCodeId === null && moved.promoDiscountCents === 0, moved);
+  // A member whose tier is gone moves at what they paid a player — the code is not taken off twice (re-review).
+  const once = await createCounterBooking(c.id, { teeTimeId: slot.id, golferName: 'Mem', players: 1, rate: `member:${pat.id}`, promoCode: 'HALF' }, STAFF);
+  await prisma.membershipTier.update({ where: { id: tier.id }, data: { active: false } });
+  if (once.ok) await moveBooking({ bookingId: once.id, newTeeTimeId: late.id, courseId: c.id, pricing: 'new_slot', actor: STAFF });
+  const om = once.ok ? await prisma.booking.findUniqueOrThrow({ where: { id: once.id } }) : null;
+  ok('a member whose tier is gone keeps their $12.50 seat on a move — the code isn\'t taken off twice', once.ok && once.greenFeeTotal === 1250 && om?.greenFeeTotal === 1250, { once, om: om?.greenFeeTotal });
   void evening;
 
   // Uses never go over the limit, even at once.

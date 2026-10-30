@@ -426,7 +426,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/golfer-key.ts` | 4 | 40 | Who a golfer is at a course: | `golferKey`, `golferKeys`, `keyMatch`, `parseGolferKey` |
 | `src/lib/image-resize.ts` | 4 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/lifecycle.ts` | 4 | 416 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
-| `src/lib/move-booking.ts` | 4 | 263 | ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07): | `moveBooking`, `MoveCode`, `MoveFail`, `MoveOk`, `MovePricing` |
+| `src/lib/move-booking.ts` | 4 | 266 | ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07): | `moveBooking`, `MoveCode`, `MoveFail`, `MoveOk`, `MovePricing` |
 | `src/lib/platform-stripe.ts` | 4 | 58 |  | `fetchStripeFeeWindow`, `fetchStripeProcessingCostCents`, `StripeFeeWindow` |
 | `src/lib/public-tee-times.ts` | 4 | 92 | PERF-1: | `loadPublicTeeTimes`, `normalizeDbTeeTime`, `PublicTeeTimes` |
 | `src/lib/sales-tax.ts` | 4 | 176 | W2-7 part B (Cam 2026-10-20: | `isTaxCategory`, `quoteShopTax`, `recordPendingShopTax`, `recordShopSaleTax`, `reuseShopTaxQuote`, `setTaxOn`, `setUpTax`, `TAX_CATEGORIES` +6 more |
