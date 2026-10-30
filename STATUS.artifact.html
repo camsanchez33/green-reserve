@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-30 05:49 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 85c78bb8</span>
-    <span>7 uncommitted</span>
+    <span>2026-10-30 14:21 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ c5b84881</span>
+    <span>8 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">44 runs have shipped that the queue doesn't know about</div>
+<div class="lede">47 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">c5b84881</span><span>Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check</span></li>
+<li><span class="h">7dda7589</span><span>Money ledger: one row for every dollar that moves; membership dues charged safely (#254)</span></li>
+<li><span class="h">48be83aa</span><span>Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal)</span></li>
 <li><span class="h">85c78bb8</span><span>Test: dues paid at the shop read through paidUntilRenewal</span></li>
 <li><span class="h">136a1ea6</span><span>Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds</span></li>
 <li><span class="h">5917aabf</span><span>Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction</span></li>
@@ -181,7 +184,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/money-ledger-test.ts</code></li><li><code>M scripts/walk1-fixes-test.ts</code></li><li><code>M src/app/api/cron/send-reminders/route.ts</code></li><li><code>M src/app/api/membership/[id]/route.ts</code></li><li><code>?? src/lib/membership-renewal.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/ledger-view-db-test.ts</code></li><li><code>M src/app/api/operator/members/route.ts</code></li><li><code>M src/app/api/operator/money/ledger/route.ts</code></li><li><code>M src/app/dashboard/members/page.tsx</code></li><li><code>M src/components/dashboard/money/LedgerPanel.tsx</code></li><li><code>M src/lib/ledger-view.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -263,6 +266,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">c5b84881</td><td class="num">2026-10-30</td><td>Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check</td></tr>
+<tr><td class="num">7dda7589</td><td class="num">2026-10-30</td><td>Money ledger: one row for every dollar that moves; membership dues charged safely (#254)</td></tr>
+<tr><td class="num">48be83aa</td><td class="num">2026-10-30</td><td>Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal)</td></tr>
 <tr><td class="num">85c78bb8</td><td class="num">2026-10-30</td><td>Test: dues paid at the shop read through paidUntilRenewal</td></tr>
 <tr><td class="num">136a1ea6</td><td class="num">2026-10-30</td><td>Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds</td></tr>
 <tr><td class="num">5917aabf</td><td class="num">2026-10-30</td><td>Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction</td></tr>
@@ -272,9 +278,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">370f7fa4</td><td class="num">2026-10-29</td><td>Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)</td></tr>
 <tr><td class="num">bf2fdf53</td><td class="num">2026-10-29</td><td>Member rates at the counter: the member shows their membership, or the course allows any membership</td></tr>
 <tr><td class="num">65df5988</td><td class="num">2026-10-29</td><td>Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share</td></tr>
-<tr><td class="num">cfe7cb40</td><td class="num">2026-10-29</td><td>WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings</td></tr>
-<tr><td class="num">3d18ecd9</td><td class="num">2026-10-29</td><td>Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)</td></tr>
-<tr><td class="num">69bcbab8</td><td class="num">2026-10-29</td><td>WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -1735,6 +1735,8 @@ model RegisterClose {
   cashSalesCents    Int
   /// Groups marked paid at the counter on the tee sheet that day (not through the register).
   counterRoundsCents Int
+  /// LEDGER-2: cash taken that day outside the register — membership dues and event payments (MoneyMove), less their cash refunds.
+  otherCashCents     Int      @default(0)
   /// Cash handed back for refunds that day.
   cashRefundsCents  Int
   /// openingFloat + cashSales + counterRounds − cashRefunds.

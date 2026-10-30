@@ -229,9 +229,14 @@ export async function PATCH(req: NextRequest) {
     const base = membership.lastPaidAt && membership.expiresAt && membership.expiresAt.getTime() > Date.now() ? new Date(membership.expiresAt) : new Date();
     const newExpiry = new Date(base);
     newExpiry.setMonth(newExpiry.getMonth() + termMonths);
-    // LEDGER-1: dues taken at the course (cash or a check) — what was due for this term, initiation on a first payment.
-    const duesCents = (membership.tier?.annualFeeCents ?? 0) + (membership.lastPaidAt || membership.initiationWaived ? 0 : (membership.tier?.initiationFeeCents ?? 0));
-    await recordMove({ courseId: session.courseId, what: 'dues', direction: 'in', method: 'other', account: 'course', amountCents: duesCents, membershipId: id, actor: 'staff', note: 'marked paid at the course' });
+    // LEDGER-2 (Cam 2026-10-30, "Amount + cash or check"): what staff actually took, and how.
+    // Without an amount (an older screen) it is what was due — this term, initiation on a first payment.
+    const dueCents = (membership.tier?.annualFeeCents ?? 0) + (membership.lastPaidAt || membership.initiationWaived ? 0 : (membership.tier?.initiationFeeCents ?? 0));
+    const takenCents = body.amountCents === undefined || body.amountCents === null || body.amountCents === '' ? dueCents : Number(body.amountCents);
+    if (!Number.isInteger(takenCents) || takenCents < 1 || takenCents > 10_000_000) return NextResponse.json({ error: 'Enter the amount taken (up to $100,000).' }, { status: 400 });
+    const method = body.method === 'check' ? 'check' : body.method === 'cash' || body.method === undefined ? 'cash' : null;
+    if (!method) return NextResponse.json({ error: 'Say whether it was cash or a check.' }, { status: 400 });
+    await recordMove({ courseId: session.courseId, what: 'dues', direction: 'in', method: method === 'cash' ? 'cash' : 'other', account: 'course', amountCents: takenCents, membershipId: id, actor: 'staff', note: method === 'check' ? 'check at the course' : 'cash at the course' });
     const updated = await prisma.courseMembership.update({
       where: { id },
       data: {
