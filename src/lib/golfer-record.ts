@@ -13,7 +13,7 @@
 // A late cancel is one the golfer made inside the booking's own free-cancel window,
 // never one the course called off (weather, a closure).
 import { prisma } from './prisma';
-import { golferKey, keyMatch } from './golfer-key';
+import { golferKey, golferKeys, keyMatch } from './golfer-key';
 import { teeTimeInstant } from './booking-events';
 import { courseShareCents } from './analytics';
 import { membershipLive } from './member-rates';
@@ -44,11 +44,11 @@ async function historyOf(courseId: string, key: string, take = 400): Promise<His
   return rows.filter(b => golferKey(b) === key);
 }
 
-/** The cancelled bookings the course itself called off (weather, a closure) — never the golfer's late cancels. */
+/** The cancelled bookings that weren't the golfer's doing: the course called them off (weather, a closure), or staff removed one made by mistake (waived). */
 async function calledOff(ids: string[]): Promise<Set<string>> {
   if (!ids.length) return new Set();
   const ev = await prisma.bookingEvent.findMany({ where: { bookingId: { in: ids }, type: 'booking_cancelled' }, select: { bookingId: true, metadata: true } });
-  return new Set(ev.filter(e => !!(e.metadata as { courseCalledOff?: unknown } | null)?.courseCalledOff).map(e => e.bookingId));
+  return new Set(ev.filter(e => { const m = e.metadata as { courseCalledOff?: unknown; waived?: unknown } | null; return !!m?.courseCalledOff || !!m?.waived; }).map(e => e.bookingId));
 }
 
 /** Pure: cancelled by the golfer inside the booking's own free-cancel window. */
@@ -65,9 +65,11 @@ export function autoBlockReason(rule: { onlineBlockNoShows: number | null; onlin
   return null;
 }
 
-async function recentCounts(courseId: string, key: string, tz: string, months: number, history?: Hist[]) {
+async function recentCounts(courseId: string, keys: string[], tz: string, months: number, history?: Hist[]) {
   const since = Date.now() - Math.max(1, months) * MONTH_MS;
-  const rows = (history ?? await historyOf(courseId, key)).filter(b => b.createdAt.getTime() >= since || (b.cancelledAt?.getTime() ?? 0) >= since);
+  // Every key the golfer answers to, each booking once.
+  const all = history ?? [...new Map((await Promise.all(keys.map(k => historyOf(courseId, k)))).flat().map(b => [b.id, b])).values()];
+  const rows = all.filter(b => b.createdAt.getTime() >= since || (b.cancelledAt?.getTime() ?? 0) >= since);
   const off = await calledOff(rows.filter(b => b.status === 'cancelled').map(b => b.id));
   const noShows = rows.filter(b => b.noShowAt && b.noShowAt.getTime() >= since).length;
   const lateCancels = rows.filter(b => isLateCancel(b, teeTimeInstant(tz, b.teeTime.date, b.teeTime.time), off.has(b.id))).length;
@@ -79,17 +81,17 @@ async function recentCounts(courseId: string, key: string, tz: string, months: n
  * Null = they may. The counter never asks this.
  */
 export async function onlineBookingBlock(courseId: string, who: { golferEmail?: string | null; golferPhone?: string | null; golferAccountId?: string | null }): Promise<string | null> {
-  const key = golferKey(who);
-  if (!key) return null;
+  const keys = golferKeys(who);
+  if (!keys.length) return null;
   const [block, course] = await Promise.all([
-    prisma.golferBlock.findUnique({ where: { courseId_golferKey: { courseId, golferKey: key } }, select: { id: true } }),
+    prisma.golferBlock.findFirst({ where: { courseId, golferKey: { in: keys } }, select: { id: true } }),
     prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true, onlineBlockNoShows: true, onlineBlockLateCancels: true, onlineBlockMonths: true, phone: true, name: true } }),
   ]);
   if (!course) return null;
   const call = `Please call ${course.name}${course.phone ? ` at ${course.phone}` : ''} to book.`;
   if (block) return `Online booking isn’t available for you here. ${call}`;
   if (!course.onlineBlockNoShows && !course.onlineBlockLateCancels) return null;
-  const reason = autoBlockReason(course, await recentCounts(courseId, key, course.timezone, course.onlineBlockMonths));
+  const reason = autoBlockReason(course, await recentCounts(courseId, keys, course.timezone, course.onlineBlockMonths));
   return reason ? `Online booking isn’t available for you here after recent missed rounds. ${call}` : null;
 }
 
@@ -120,7 +122,7 @@ export async function golferRecord(courseId: string, key: string, opts: { money:
     }) : [],
     prisma.golferNote.findMany({ where: { courseId, golferKey: key }, orderBy: { createdAt: 'desc' }, take: 100, select: { id: true, body: true, bookingId: true, createdBy: true, createdAt: true } }),
     prisma.golferBlock.findUnique({ where: { courseId_golferKey: { courseId, golferKey: key } }, select: { reason: true, blockedBy: true, blockedAt: true } }),
-    recentCounts(courseId, key, course.timezone, course.onlineBlockMonths, history),
+    recentCounts(courseId, [key], course.timezone, course.onlineBlockMonths, history),
   ]);
 
   const played = history.filter(b => b.status === 'completed');

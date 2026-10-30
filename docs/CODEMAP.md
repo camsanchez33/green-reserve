@@ -223,7 +223,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/events/[id]/payments` | operator | file | POST | `src/app/api/operator/events/[id]/payments/route.ts` | 114 |
 | `/api/operator/frost-delay` | operator | file | POST | `src/app/api/operator/frost-delay/route.ts` | 33 |
 | `/api/operator/golfer-messages` | operator | file | GET POST | `src/app/api/operator/golfer-messages/route.ts` | 62 |
-| `/api/operator/golfers/[key]` | operator | file | GET POST | `src/app/api/operator/golfers/[key]/route.ts` | 90 |
+| `/api/operator/golfers/[key]` | operator | file | GET POST | `src/app/api/operator/golfers/[key]/route.ts` | 91 |
 | `/api/operator/home` | operator | file | GET | `src/app/api/operator/home/route.ts` | 15 |
 | `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 322 |
 | `/api/operator/members/import` | operator | file | POST | `src/app/api/operator/members/import/route.ts` | 35 |
@@ -293,7 +293,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/cancellations` | operator | middleware | page | `src/app/dashboard/cancellations/page.tsx` | 17 |
 | `/dashboard/events` | operator | middleware | page | `src/app/dashboard/events/page.tsx` | 176 |
 | `/dashboard/forgot-password` | operator | entry | page | `src/app/dashboard/forgot-password/page.tsx` | 63 |
-| `/dashboard/golfers/[key]` | operator | middleware | page | `src/app/dashboard/golfers/[key]/page.tsx` | 146 |
+| `/dashboard/golfers/[key]` | operator | middleware | page | `src/app/dashboard/golfers/[key]/page.tsx` | 148 |
 | `/dashboard/home` | operator | middleware | page | `src/app/dashboard/home/page.tsx` | 256 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 77 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 833 |
@@ -415,7 +415,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/demo-courses.ts` | 4 | 4 | Cam: | `DEMO_COURSE_SLUGS` |
 | `src/lib/event-payments.ts` | 4 | 466 | W2-9b (Cam 2026-10-22: | `chargeEventPayment`, `COURSE_METHODS`, `createPayLink`, `eventFeeFor`, `eventMoney`, `HOLD_MINUTES`, `holdProblem`, `MAX_EVENT_PAYMENT_CENTS` +14 more |
 | `src/lib/event-signup.ts` | 4 | 232 | W2-9d (Cam 2026-10-22): | `cleanQuestions`, `HOLD_MINUTES`, `lapseHolds`, `MAX_GROUP`, `MAX_QUESTIONS`, `moveOntoList`, `questionsOf`, `sendSignupConfirmation` +7 more |
-| `src/lib/golfer-key.ts` | 4 | 34 | Who a golfer is at a course: | `golferKey`, `keyMatch`, `parseGolferKey` |
+| `src/lib/golfer-key.ts` | 4 | 40 | Who a golfer is at a course: | `golferKey`, `golferKeys`, `keyMatch`, `parseGolferKey` |
 | `src/lib/image-resize.ts` | 4 | 33 | Client-side downscale so a 12MB phone photo never has to travel over the wire or blow the perf budget on the page that eventually renders it. | `downscaleImage` |
 | `src/lib/lifecycle.ts` | 4 | 416 |  | `archivePair`, `deleteInquiryOrPair`, `deletePair`, `forceDeleteOrphan`, `ForceDeleteResult`, `LifecycleResult`, `listAcknowledgedOrphans`, `ORPHAN_FLAG` +6 more |
 | `src/lib/move-booking.ts` | 4 | 251 | ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07): | `moveBooking`, `MoveCode`, `MoveFail`, `MoveOk`, `MovePricing` |
@@ -473,7 +473,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/courses-data.ts` | 2 | 324 |  | `Course`, `COURSES`, `generateTeeTimes`, `getCourseBySlug`, `searchCourses`, `TeeTime` |
 | `src/lib/cutoff-hold.ts` | 2 | 122 | The cancellation-window hold (SP-B timing "hold_at_cutoff"): | `chargeCutoffHold`, `HOLD_STALE_MS`, `HoldResult` |
 | `src/lib/data-reset.ts` | 2 | 154 | TEST-1 (Cam 2026-10-22: | `CourseResetPreview`, `KEPT_TABLES`, `previewCourseReset`, `previewWipeAll`, `resetTestCourse`, `TableCounts`, `WIPE_ALL_UNTIL`, `WIPE_CONFIRM_WORDS` +3 more |
-| `src/lib/golfer-record.ts` | 2 | 160 | The golfer record (Revamp 3, Cam 2026-10-29): | `autoBlockReason`, `golferRecord`, `GolferRecord`, `isLateCancel`, `onlineBookingBlock` |
+| `src/lib/golfer-record.ts` | 2 | 162 | The golfer record (Revamp 3, Cam 2026-10-29): | `autoBlockReason`, `golferRecord`, `GolferRecord`, `isLateCancel`, `onlineBookingBlock` |
 | `src/lib/inquiry-action-queue.ts` | 2 | 107 | The Overview action queue's inquiry rows. | `ActionQueueRow`, `buildInquiryQueueRows`, `QueueInquiry` |
 | `src/lib/inquiry-board.ts` | 2 | 85 | AW-6a (Cam 2026-10-21): | `BOARD_COLUMNS`, `BOARD_STUCK_DAYS`, `boardColumn`, `BoardColumn`, `BoardInquiry`, `LIVE_ON_BOARD_DAYS`, `nextStep`, `NextStep` +1 more |
 | `src/lib/inquiry-signin.ts` | 2 | 124 | SD-11 — the "are you trying to sign in?" challenge that sits between the public sign-up form and a course that already exists. | `CODE_TTL_SECONDS`, `codeMatches`, `cookieOptions`, `generateCode`, `inertChallenge`, `macCode`, `MAX_CODE_ATTEMPTS`, `newChallengeId` +5 more |

@@ -1,36 +1,30 @@
 {
-  "generatedAt": "2026-10-30T00:22:03.812Z",
+  "generatedAt": "2026-10-30T00:30:38.771Z",
   "repo": {
-    "head": "dbf67c93",
+    "head": "ffa0ec2a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 21,
+    "dirtyCount": 7,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/change-party-db-test.ts",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/operator/settings/route.ts",
-      " M src/app/api/operator/tee-times/route.ts",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/dashboard/settings/page.tsx",
-      " M src/lib/analytics.ts",
-      " M src/lib/data-reset.ts",
-      " M src/lib/settings-validation.ts",
-      "?? prisma/migrations/20261030010000_golfer_record/",
-      "?? scripts/golfer-record-db-test.ts",
-      "?? src/app/api/operator/golfers/",
-      "?? src/app/dashboard/golfers/",
-      "?? src/lib/golfer-key.ts"
+      " M scripts/golfer-record-db-test.ts",
+      " M src/app/api/operator/golfers/[key]/route.ts",
+      " M src/app/dashboard/golfers/[key]/page.tsx",
+      " M src/lib/golfer-key.ts",
+      " M src/lib/golfer-record.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "ffa0ec2a",
+        "date": "2026-10-30T00:22:15+00:00",
+        "subject": "Golfer record: one course's view of a golfer, staff notes, online-booking block",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "370f7fa4",
         "date": "2026-10-29T19:46:11-04:00",
@@ -694,6 +688,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "ffa0ec2a",
+      "date": "2026-10-30",
+      "subject": "Golfer record: one course's view of a golfer, staff notes, online-booking block"
+    },
+    {
       "h": "370f7fa4",
       "date": "2026-10-29",
       "subject": "Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)"
@@ -747,11 +746,6 @@
       "h": "06b64277",
       "date": "2026-10-29",
       "subject": "Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations"
-    },
-    {
-      "h": "0dfd8bdf",
-      "date": "2026-10-29",
-      "subject": "Revamp 3: the 12 audit fixes (#250)"
     }
   ]
 }

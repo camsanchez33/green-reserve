@@ -5704,7 +5704,7 @@
     },
     {
       "path": "src/app/api/operator/golfers/[key]/route.ts",
-      "lines": 90,
+      "lines": 91,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7996,7 +7996,7 @@
     },
     {
       "path": "src/app/dashboard/golfers/[key]/page.tsx",
-      "lines": 146,
+      "lines": 148,
       "purpose": "The golfer record (Revamp 3, Cam 2026-10-29):",
       "brain": [],
       "exports": [
@@ -17710,12 +17710,16 @@
     },
     {
       "path": "src/lib/golfer-key.ts",
-      "lines": 34,
+      "lines": 40,
       "purpose": "Who a golfer is at a course:",
       "brain": [],
       "exports": [
         {
           "name": "golferKey",
+          "kind": "fn"
+        },
+        {
+          "name": "golferKeys",
           "kind": "fn"
         },
         {
@@ -17862,7 +17866,7 @@
     },
     {
       "path": "src/lib/golfer-record.ts",
-      "lines": 160,
+      "lines": 162,
       "purpose": "The golfer record (Revamp 3, Cam 2026-10-29):",
       "brain": [],
       "exports": [

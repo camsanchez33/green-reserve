@@ -16,6 +16,12 @@ export function golferKey(b: { golferEmail?: string | null; golferPhone?: string
   return null;
 }
 
+/** Every key a booking request answers to — an owner's block on any of them holds (a phone-only walk-in, later booking online with an email). */
+export function golferKeys(b: { golferEmail?: string | null; golferPhone?: string | null; golferAccountId?: string | null }): string[] {
+  const keys = [golferKey({ golferEmail: b.golferEmail }), golferKey({ golferPhone: b.golferPhone }), golferKey({ golferAccountId: b.golferAccountId })];
+  return [...new Set(keys.filter((k): k is string => !!k))];
+}
+
 /** A key from a URL, checked: e:<email>, p:<10 digits> or a:<id>. */
 export function parseGolferKey(raw: string): string | null {
   const k = raw.trim();

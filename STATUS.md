@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 00:22 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `dbf67c93` · working tree **21 dirty file(s)**
+Generated 2026-10-30 00:30 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ffa0ec2a` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 38 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 39 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `ffa0ec2a` | 2026-10-30 | Golfer record: one course's view of a golfer, staff notes, online-booking block |
 | `370f7fa4` | 2026-10-29 | Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252) |
 | `bf2fdf53` | 2026-10-29 | Member rates at the counter: the member shows their membership, or the course allows any membership |
 | `65df5988` | 2026-10-29 | Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share |
@@ -53,28 +54,15 @@ Generated 2026-10-30 00:22 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (21 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/change-party-db-test.ts`
-- `M src/app/api/bookings/route.ts`
-- `M src/app/api/operator/settings/route.ts`
-- `M src/app/api/operator/tee-times/route.ts`
-- `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/settings/page.tsx`
-- `M src/lib/analytics.ts`
-- `M src/lib/data-reset.ts`
-- `M src/lib/settings-validation.ts`
-- `?? prisma/migrations/20261030010000_golfer_record/`
-- `?? scripts/golfer-record-db-test.ts`
-- `?? src/app/api/operator/golfers/`
-- `?? src/app/dashboard/golfers/`
-- `?? src/lib/golfer-key.ts`
+- `M scripts/golfer-record-db-test.ts`
+- `M src/app/api/operator/golfers/[key]/route.ts`
+- `M src/app/dashboard/golfers/[key]/page.tsx`
+- `M src/lib/golfer-key.ts`
+- `M src/lib/golfer-record.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -200,6 +188,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `ffa0ec2a` 2026-10-30 — Golfer record: one course's view of a golfer, staff notes, online-booking block
 - `370f7fa4` 2026-10-29 — Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)
 - `bf2fdf53` 2026-10-29 — Member rates at the counter: the member shows their membership, or the course allows any membership
 - `65df5988` 2026-10-29 — Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share
@@ -211,7 +200,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `9de927a8` 2026-10-29 — WIP part B: staff refunds (course share) and giving back a kept late fee
 - `4e1d9c2c` 2026-10-29 — The dues link says why it didn't send; a search result opens Cancellations filtered
 - `06b64277` 2026-10-29 — Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations
-- `0dfd8bdf` 2026-10-29 — Revamp 3: the 12 audit fixes (#250)
 
 ---
 

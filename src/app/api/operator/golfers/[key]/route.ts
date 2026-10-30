@@ -20,7 +20,8 @@ async function gate(params: Params['params']) {
   // A key carries an email or phone, so links from the sheet open the record by a booking
   // (b:<bookingId>) and the server works out who the golfer is — never shown to a login
   // without sheet.golfer_contact.
-  const raw = decodeURIComponent((await params).key);
+  // Next has already decoded the param — decoding again would throw on a literal %.
+  const raw = (await params).key;
   let key: string | null = null;
   if (raw.startsWith('b:')) {
     const b = await prisma.booking.findFirst({ where: { id: raw.slice(2), courseId: session.courseId }, select: { golferEmail: true, golferPhone: true, golferAccountId: true } });

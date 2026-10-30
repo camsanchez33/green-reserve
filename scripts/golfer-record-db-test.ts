@@ -54,13 +54,16 @@ async function cleanup() {
   const rain = await book(c.id, day(-3), { status: 'cancelled', cancelledAt: new Date(Date.now() - 3 * 86_400_000) });
   await prisma.bookingEvent.create({ data: { bookingId: rain.id, courseId: c.id, type: 'booking_cancelled', actorType: 'staff', metadata: { courseCalledOff: true } } });
   await book(c.id, day(7));
+  // Staff removing a booking made by mistake (waived) is not the golfer's late cancel.
+  const oops = await book(c.id, day(-2), { status: 'cancelled', cancelledAt: new Date(Date.now() - 2 * 86_400_000) });
+  await prisma.bookingEvent.create({ data: { bookingId: oops.id, courseId: c.id, type: 'booking_cancelled', actorType: 'staff', metadata: { waived: true } } });
   await book(other.id, day(-15), { status: 'completed', paymentStatus: 'paid' });
 
   const key = `e:${EMAIL}`;
   const rec = await golferRecord(c.id, key, { money: true, contact: true });
-  ok('the record counts this course\'s rounds, no-shows, late cancels and what\'s coming', !!rec && rec.counts.rounds === 1 && rec.counts.noShows === 1 && rec.counts.upcoming === 1 && rec.counts.cancels === 2, rec?.counts);
-  ok('…a cancel the course called off isn\'t a late cancel', rec?.counts.lateCancels === 1 && rec.bookings.find(b => b.id === rain.id)?.state === 'called_off' && rec.bookings.find(b => b.id === late.id)?.state === 'late_cancel', rec?.counts);
-  ok('…only this course\'s history (Cam: "only their own history")', rec?.bookings.length === 5);
+  ok('the record counts this course\'s rounds, no-shows, late cancels and what\'s coming', !!rec && rec.counts.rounds === 1 && rec.counts.noShows === 1 && rec.counts.upcoming === 1 && rec.counts.cancels === 3, rec?.counts);
+  ok('…a cancel the course called off isn\'t a late cancel', rec?.counts.lateCancels === 1 && rec.bookings.find(b => b.id === rain.id)?.state === 'called_off' && rec.bookings.find(b => b.id === late.id)?.state === 'late_cancel' && rec.bookings.find(b => b.id === oops.id)?.state !== 'late_cancel', rec?.counts);
+  ok('…only this course\'s history (Cam: "only their own history")', rec?.bookings.length === 6);
   ok('…spend is the course\'s share only', rec?.spend?.roundsCents === 10000, rec?.spend);
   const bare = await golferRecord(c.id, key, { money: false, contact: false });
   ok('no money or contact for a login without them', !!bare && !('spend' in bare) && !('email' in bare) && !('phone' in bare) && !bare.bookings.some(b => 'courseShareCents' in b));
@@ -79,6 +82,10 @@ async function cleanup() {
   const blocked = await golferRecord(c.id, key, { money: false, contact: false });
   ok('…and the record shows it with the reason', blocked?.onlineBlock?.by === 'owner' && blocked.onlineBlock.reason === 'Abusive to staff');
 
+  // A block on a phone-only record holds when they book online with an email and that phone.
+  await prisma.golferBlock.create({ data: { courseId: c.id, golferKey: 'p:2015550199', reason: 'No-shows by phone', blockedBy: 'owner@x' } });
+  ok('a phone-keyed block holds online when the phone is given', !!(await onlineBookingBlock(c.id, { golferEmail: 'new@t.local', golferPhone: '(201) 555-0199' })));
+  ok('…not for someone else', (await onlineBookingBlock(c.id, { golferEmail: 'new@t.local', golferPhone: '201-555-0100' })) === null);
   // Notes reach the record and the tee sheet.
   await prisma.golferNote.create({ data: { courseId: c.id, golferKey: key, body: 'Prefers a cart', createdBy: 'desk@x' } });
   ok('notes are on the record', (await golferRecord(c.id, key, { money: false, contact: false }))?.notes[0]?.body === 'Prefers a cart');

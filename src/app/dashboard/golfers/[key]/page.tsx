@@ -35,13 +35,15 @@ const STATE: Record<string, { label: string; tone: 'ok' | 'warn' | 'bad' | 'neut
 
 export default function GolferRecordPage() {
   const { key } = useParams<{ key: string }>();
+  // A literal % (not an escape) would make decodeURIComponent throw.
+  const decodedKey = (() => { try { return decodeURIComponent(key); } catch { return key; } })();
   const [rec, setRec] = useState<Rec | null>(null);
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState('');
   const [actionError, setActionError] = useState('');
   const [blockReason, setBlockReason] = useState<string | null>(null);
-  const url = `/api/operator/golfers/${encodeURIComponent(decodeURIComponent(key))}`;
+  const url = `/api/operator/golfers/${encodeURIComponent(decodedKey)}`;
 
   const load = useCallback(async () => {
     const r = await dfetch<Rec>(url);
