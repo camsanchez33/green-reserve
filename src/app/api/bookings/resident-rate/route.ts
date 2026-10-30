@@ -4,6 +4,7 @@ import { getGolferMembership, getMemberSession, golferResident } from '@/lib/mem
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive } from '@/lib/member-rates';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
+import { demandPctFor, onlinePublicSeat } from '@/lib/demand-pricing';
 import { holdingsFor } from '@/lib/round-packs';
 import { getGolferSession } from '@/lib/auth';
 
@@ -20,13 +21,15 @@ export async function GET(req: NextRequest) {
   if (!teeTimeId) return NextResponse.json({ residentGreenFee: null, member: null, packs: [] });
   const tt = await prisma.teeTime.findUnique({
     where: { id: teeTimeId },
-    select: { courseId: true, date: true, time: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true } } },
+    select: { courseId: true, date: true, time: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, id: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } } },
   });
   if (!tt) return NextResponse.json({ residentGreenFee: null, member: null, packs: [] });
   const grace = tt.course;
   // PRICE-2: inside a last-minute window the rate is priced as POST /api/bookings prices it.
   const pct = dealPct(tt.course, tt, 'online');
-  const rated = (cents: number) => dealRateSeat(pct, cents, tt.greenFeeCents, tt.course.lastMinuteStack);
+  // PRICE-5: never above the online public seat (the lower of the deal and the demand price).
+  const pub = onlinePublicSeat(tt.greenFeeCents, pct, await demandPctFor(tt.course, tt));
+  const rated = (cents: number) => Math.min(pub, dealRateSeat(pct, cents, tt.greenFeeCents, tt.course.lastMinuteStack));
   // PRICE-3: the signed-in golfer's own round packs at this course (their account email is the holder).
   const golfer = await getGolferSession();
   const packs = golfer?.email ? (await holdingsFor(tt.courseId, golfer.email)).map(h => ({ lineId: h.lineId, name: h.name, left: h.left, coversCart: h.coversCart, guests: h.guests, expiresAt: h.expiresAt })) : [];

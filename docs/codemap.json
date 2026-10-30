@@ -1,10 +1,10 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 620,
-    "routes": 282,
-    "libs": 217,
-    "models": 64,
+    "files": 623,
+    "routes": 283,
+    "libs": 218,
+    "models": 65,
     "orphans": 10,
     "ungatedRoutes": 3
   },
@@ -3671,7 +3671,7 @@
     },
     {
       "path": "src/app/api/bookings/resident-rate/route.ts",
-      "lines": 59,
+      "lines": 62,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3689,6 +3689,7 @@
       "guard": "public",
       "imports": [
         "@/lib/auth",
+        "@/lib/demand-pricing",
         "@/lib/last-minute",
         "@/lib/member-rates",
         "@/lib/member-session",
@@ -3701,7 +3702,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 483,
+      "lines": 489,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3731,6 +3732,7 @@
         "@/lib/cancel-policy",
         "@/lib/claim-tee-time",
         "@/lib/course-time",
+        "@/lib/demand-pricing",
         "@/lib/demo-courses",
         "@/lib/email",
         "@/lib/golfer-record",
@@ -4194,7 +4196,7 @@
     },
     {
       "path": "src/app/api/cron/generate-tee-times/route.ts",
-      "lines": 17,
+      "lines": 24,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4213,6 +4215,7 @@
       "imports": [
         "@/lib/cron-auth",
         "@/lib/cron-log",
+        "@/lib/demand-pricing",
         "@/lib/tee-sheet-engine",
         "next/server"
       ],
@@ -4752,7 +4755,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/available-times/route.ts",
-      "lines": 56,
+      "lines": 65,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4770,6 +4773,8 @@
       "guard": "file",
       "imports": [
         "@/lib/auth",
+        "@/lib/demand-pricing",
+        "@/lib/last-minute",
         "@/lib/manage-access",
         "@/lib/money",
         "@/lib/prisma",
@@ -4995,7 +5000,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "lines": 125,
+      "lines": 131,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5015,6 +5020,7 @@
         "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/course-time",
+        "@/lib/demand-pricing",
         "@/lib/last-minute",
         "@/lib/member-rates",
         "@/lib/member-session",
@@ -5659,6 +5665,42 @@
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/settings-validation",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/operator/demand-pricing/route.ts",
+      "lines": 85,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "PATCH",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/operator/demand-pricing",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "auth": "operator",
+      "guard": "file",
+      "imports": [
+        "@/lib/demand-pricing",
+        "@/lib/prisma",
+        "@/lib/session",
         "next/server"
       ],
       "usedBy": []
@@ -7539,7 +7581,7 @@
     },
     {
       "path": "src/app/api/preview/[courseId]/tee-times/route.ts",
-      "lines": 38,
+      "lines": 40,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7556,6 +7598,7 @@
       "auth": "public",
       "guard": "token",
       "imports": [
+        "@/lib/demand-pricing",
         "@/lib/preview-token",
         "@/lib/prisma",
         "@/lib/public-tee-times",
@@ -8699,7 +8742,7 @@
     },
     {
       "path": "src/app/dashboard/schedules/page.tsx",
-      "lines": 636,
+      "lines": 638,
       "purpose": "W2-6 Schedule simplification (Cam 2026-10-21:",
       "brain": [],
       "exports": [
@@ -8715,6 +8758,7 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/DemandPricing",
         "@/components/dashboard/LastMinuteDeals",
         "@/components/dashboard/LoadError",
         "@/components/dashboard/PromoCodes",
@@ -10615,6 +10659,34 @@
       ]
     },
     {
+      "path": "src/components/dashboard/DemandPricing.tsx",
+      "lines": 128,
+      "purpose": "PRICE-5 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "DemandPricing",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/LoadError",
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/components/ui/field",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/schedules/page.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/GettingStartedChecklist.tsx",
       "lines": 187,
       "purpose": "",
@@ -10746,6 +10818,7 @@
         "src/app/dashboard/money/page.tsx",
         "src/app/dashboard/page.tsx",
         "src/app/dashboard/schedules/page.tsx",
+        "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterPacks.tsx",
@@ -12070,6 +12143,7 @@
         "src/components/admin/OwnerTwoFactorCard.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
+        "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MemberJoin.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
@@ -12361,6 +12435,7 @@
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
+        "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MemberJoin.tsx",
@@ -12441,6 +12516,7 @@
         "src/components/admin/StepUpDialog.tsx",
         "src/components/admin/TestDataTools.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
+        "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
@@ -14732,7 +14808,7 @@
     },
     {
       "path": "src/lib/booking-residents.ts",
-      "lines": 67,
+      "lines": 69,
       "purpose": "RES-1 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -14752,6 +14828,7 @@
       "guard": null,
       "imports": [
         "./booking-events",
+        "./demand-pricing",
         "./last-minute",
         "./prisma",
         "./promo-codes",
@@ -16766,6 +16843,7 @@
         "src/lib/counter-pay.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/demand-pricing.ts",
         "src/lib/event-signup.ts",
         "src/lib/golfer-record.ts",
         "src/lib/ledger-view.ts",
@@ -17246,6 +17324,7 @@
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
+        "src/components/dashboard/DemandPricing.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
         "src/components/dashboard/MemberJoin.tsx",
@@ -17410,6 +17489,108 @@
       "guard": null,
       "imports": [],
       "usedBy": []
+    },
+    {
+      "path": "src/lib/demand-pricing.ts",
+      "lines": 151,
+      "purpose": "PRICE-5 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "Cell",
+          "kind": "type"
+        },
+        {
+          "name": "dealWins",
+          "kind": "fn"
+        },
+        {
+          "name": "DemandCourse",
+          "kind": "type"
+        },
+        {
+          "name": "demandDue",
+          "kind": "fn"
+        },
+        {
+          "name": "DemandMap",
+          "kind": "type"
+        },
+        {
+          "name": "DemandMode",
+          "kind": "type"
+        },
+        {
+          "name": "demandPctAt",
+          "kind": "fn"
+        },
+        {
+          "name": "demandPctFor",
+          "kind": "fn"
+        },
+        {
+          "name": "demandSeat",
+          "kind": "fn"
+        },
+        {
+          "name": "demandSettingsError",
+          "kind": "fn"
+        },
+        {
+          "name": "dowOfDate",
+          "kind": "fn"
+        },
+        {
+          "name": "loadDemand",
+          "kind": "fn"
+        },
+        {
+          "name": "MAX_WEEKLY_STEP",
+          "kind": "const"
+        },
+        {
+          "name": "onlinePublicSeat",
+          "kind": "fn"
+        },
+        {
+          "name": "readDemandMode",
+          "kind": "fn"
+        },
+        {
+          "name": "refreshDemand",
+          "kind": "fn"
+        },
+        {
+          "name": "suggestPcts",
+          "kind": "fn"
+        },
+        {
+          "name": "WEEKS_LOOKED_AT",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./course-time",
+        "./last-minute",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/bookings/resident-rate/route.ts",
+        "src/app/api/bookings/route.ts",
+        "src/app/api/cron/generate-tee-times/route.ts",
+        "src/app/api/manage/[bookingId]/available-times/route.ts",
+        "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/app/api/operator/demand-pricing/route.ts",
+        "src/app/api/preview/[courseId]/tee-times/route.ts",
+        "src/lib/booking-residents.ts",
+        "src/lib/move-booking.ts",
+        "src/lib/public-tee-times.ts"
+      ]
     },
     {
       "path": "src/lib/demo-courses.ts",
@@ -19191,10 +19372,12 @@
       "usedBy": [
         "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
+        "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/last-minute/route.ts",
         "src/lib/booking-residents.ts",
         "src/lib/counter-pay.ts",
+        "src/lib/demand-pricing.ts",
         "src/lib/move-booking.ts",
         "src/lib/public-tee-times.ts"
       ]
@@ -20219,7 +20402,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 285,
+      "lines": 292,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -20253,6 +20436,7 @@
         "./booking-events",
         "./cancel-policy",
         "./course-time",
+        "./demand-pricing",
         "./last-minute",
         "./member-rates",
         "./prisma",
@@ -21042,6 +21226,7 @@
         "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/demand-pricing/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
@@ -21135,6 +21320,7 @@
         "src/lib/cron-log.ts",
         "src/lib/cutoff-hold.ts",
         "src/lib/data-reset.ts",
+        "src/lib/demand-pricing.ts",
         "src/lib/dispute-evidence.ts",
         "src/lib/event-payments.ts",
         "src/lib/event-signup.ts",
@@ -21368,7 +21554,7 @@
     },
     {
       "path": "src/lib/public-tee-times.ts",
-      "lines": 100,
+      "lines": 105,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
@@ -21394,6 +21580,7 @@
         "@/lib/booking-rules",
         "@/lib/booking-window",
         "@/lib/course-time",
+        "@/lib/demand-pricing",
         "@/lib/last-minute",
         "@/lib/money",
         "@/lib/prisma"
@@ -22657,6 +22844,7 @@
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/course-shape/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/demand-pricing/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
@@ -25107,6 +25295,10 @@
           "type": "Int"
         },
         {
+          "name": "demandPct",
+          "type": "Int"
+        },
+        {
           "name": "packLineId",
           "type": "String?"
         },
@@ -26070,6 +26262,22 @@
           "type": "Boolean"
         },
         {
+          "name": "demandMode",
+          "type": "String"
+        },
+        {
+          "name": "demandFloorPct",
+          "type": "Int"
+        },
+        {
+          "name": "demandCeilingPct",
+          "type": "Int"
+        },
+        {
+          "name": "demandSuggestedAt",
+          "type": "DateTime?"
+        },
+        {
           "name": "golferNotes",
           "type": "GolferNote[]"
         },
@@ -26272,6 +26480,10 @@
         {
           "name": "roundPacks",
           "type": "RoundPack[]"
+        },
+        {
+          "name": "demandPrices",
+          "type": "DemandPrice[]"
         }
       ],
       "writers": [
@@ -26283,6 +26495,7 @@
         "src/app/api/admin/test-course/route.ts",
         "src/app/api/operator/conditions/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/demand-pricing/route.ts",
         "src/app/api/operator/last-minute/route.ts",
         "src/app/api/operator/settings/route.ts",
         "src/app/api/operator/stripe/callback/route.ts",
@@ -26292,6 +26505,7 @@
         "src/lib/agreement-sign.ts",
         "src/lib/approval-state.ts",
         "src/lib/card-reader.ts",
+        "src/lib/demand-pricing.ts",
         "src/lib/lifecycle.ts",
         "src/lib/sales-tax.ts"
       ],
@@ -26323,6 +26537,7 @@
         "src/app/api/courses/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/cron/monthly-review/route.ts",
+        "src/app/api/manage/[bookingId]/available-times/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/session/route.ts",
@@ -26335,6 +26550,7 @@
         "src/app/api/operator/bookings/route.ts",
         "src/app/api/operator/counter-members/route.ts",
         "src/app/api/operator/courses/route.ts",
+        "src/app/api/operator/demand-pricing/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
         "src/app/api/operator/events/route.ts",
         "src/app/api/operator/frost-delay/route.ts",
@@ -26391,6 +26607,7 @@
         "src/lib/course-shape-setup.ts",
         "src/lib/course-timeline.ts",
         "src/lib/data-reset.ts",
+        "src/lib/demand-pricing.ts",
         "src/lib/event-payments.ts",
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
@@ -27905,6 +28122,59 @@
       ],
       "readers": [
         "src/lib/cron-log.ts"
+      ]
+    },
+    {
+      "name": "DemandPrice",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "courseId",
+          "type": "String"
+        },
+        {
+          "name": "course",
+          "type": "Course"
+        },
+        {
+          "name": "dow",
+          "type": "Int"
+        },
+        {
+          "name": "hour",
+          "type": "Int"
+        },
+        {
+          "name": "pct",
+          "type": "Int"
+        },
+        {
+          "name": "suggestedPct",
+          "type": "Int"
+        },
+        {
+          "name": "fillPct",
+          "type": "Int"
+        },
+        {
+          "name": "courseFillPct",
+          "type": "Int"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ],
+      "writers": [
+        "src/app/api/operator/demand-pricing/route.ts",
+        "src/lib/demand-pricing.ts"
+      ],
+      "readers": [
+        "src/app/api/operator/demand-pricing/route.ts",
+        "src/lib/demand-pricing.ts"
       ]
     },
     {
@@ -29971,6 +30241,7 @@
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
         "src/lib/data-reset.ts",
+        "src/lib/demand-pricing.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/operator-home.ts",

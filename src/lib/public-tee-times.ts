@@ -6,7 +6,8 @@ import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
 import { rulesFor, walkingAllowedAt, type RuleCourse } from '@/lib/booking-rules';
-import { dealPct, dealSeat, type DealCourse } from '@/lib/last-minute';
+import { dealPct, type DealCourse } from '@/lib/last-minute';
+import { demandPctAt, onlinePublicSeat, dealWins, loadDemand, type DemandCourse, type DemandMap } from '@/lib/demand-pricing';
 
 /**
  * Maps a Prisma TeeTime row (camelCase, real availability counts) onto the
@@ -14,7 +15,7 @@ import { dealPct, dealSeat, type DealCourse } from '@/lib/last-minute';
  * reads green_fee, cart_fee, players_available, walking_allowed, status).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function normalizeDbTeeTime(t: any, course?: RuleCourse & Partial<DealCourse>) {
+export function normalizeDbTeeTime(t: any, course?: RuleCourse & Partial<DealCourse> & Partial<DemandCourse>, demand: DemandMap = null) {
   // W2-6 slice 3: the time's booking rules (the course's, or its round's own).
   // Spots are what ONE booking may take — capped at the group-size maximum — so
   // every players picker on the golfer pages respects it without knowing why.
@@ -44,12 +45,15 @@ export function normalizeDbTeeTime(t: any, course?: RuleCourse & Partial<DealCou
     // names after tsc went green — the same way B2b's normalize-course was.
     // Cents at rest, dollars on the wire (the UI formats dollars).
     // PRICE-2: inside the course's last-minute window the price shown is the deal price,
-    // with what it was (list_green_fee) for the struck-through old price.
+    // with what it was (list_green_fee) for the struck-through old price. PRICE-5: the demand
+    // price when it is lower (or there is no deal) — shown as the plain price, never as a deal.
     ...(() => {
       const pct = dealPct(course, t, 'online');
-      return pct > 0
-        ? { green_fee: centsToDollarsOr0(dealSeat(pct, t.greenFeeCents)), list_green_fee: centsToDollarsOr0(t.greenFeeCents), deal_pct: pct, deal_stack: !!course?.lastMinuteStack }
-        : { green_fee: centsToDollarsOr0(t.greenFeeCents), list_green_fee: null as number | null, deal_pct: 0, deal_stack: false };
+      const dem = course?.demandMode ? demandPctAt(course as DemandCourse, demand, t) : 0;
+      const price = onlinePublicSeat(t.greenFeeCents, pct, dem);
+      return dealWins(t.greenFeeCents, pct, dem)
+        ? { green_fee: centsToDollarsOr0(price), list_green_fee: centsToDollarsOr0(t.greenFeeCents), deal_pct: pct, deal_stack: !!course?.lastMinuteStack }
+        : { green_fee: centsToDollarsOr0(price), list_green_fee: null as number | null, deal_pct: 0, deal_stack: false };
     })(),
     cart_fee: centsToDollarsOr0(t.cartFeeCents),
     walking_allowed: walkingAllowedAt(t),
@@ -95,5 +99,6 @@ export async function loadPublicTeeTimes(slug: string, date: string): Promise<Pu
     // A round with a shorter window of its own isn't shown past it.
     .filter(t => withinWindow(date, rulesFor(dbCourse, t.product).publicAdvanceDays, new Date(), dbCourse.timezone));
 
-  return { ok: true, teeTimes: visible.map(t => normalizeDbTeeTime(t, dbCourse)) };
+  const demand = await loadDemand(dbCourse);
+  return { ok: true, teeTimes: visible.map(t => normalizeDbTeeTime(t, dbCourse, demand)) };
 }

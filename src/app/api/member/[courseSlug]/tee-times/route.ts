@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dealPct, dealSeat, dealRateSeat } from '@/lib/last-minute';
+import { dealPct, dealRateSeat } from '@/lib/last-minute';
+import { demandPctAt, onlinePublicSeat, dealWins, loadDemand } from '@/lib/demand-pricing';
 import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
@@ -79,6 +80,7 @@ export async function GET(
 
   const hasTierPrice = !!pricingTier && (pricingTier.greenFeeWeekdayCents != null || pricingTier.greenFeeWeekendCents != null || pricingTier.discountPct != null);
 
+  const demand = await loadDemand(course);
   return NextResponse.json(
     visible.map(t => {
       // W2-6 slice 3: the time's booking rules; spots are what one booking may take.
@@ -90,8 +92,12 @@ export async function GET(
       const rates = pricingTier ? applyTierRates(t, pricingTier) : null;
       const hasMemberRate = !!pricingTier && (hasTierPrice || t.memberRateCents != null);
       // PRICE-2: inside a last-minute window, priced as POST /api/bookings prices it (lib/last-minute).
+      // PRICE-5: the public seat is the lower of the deal and the demand price; a member never pays above it.
       const pct = dealPct(course, t, 'online');
-      const rated = (c: number) => dealRateSeat(pct, c, t.greenFeeCents, course.lastMinuteStack);
+      const dem = demandPctAt(course, demand, t);
+      const pub = onlinePublicSeat(t.greenFeeCents, pct, dem);
+      const rated = (c: number) => Math.min(pub, dealRateSeat(pct, c, t.greenFeeCents, course.lastMinuteStack));
+      const dealShown = dealWins(t.greenFeeCents, pct, dem);
 
       return {
         id: t.id,
@@ -102,10 +108,10 @@ export async function GET(
         product_label: t.product?.label ?? null,
         players_available: spotsLeft,
         // cents at rest, dollars on the wire — the course page renders these.
-        green_fee: centsToDollarsOr0(dealSeat(pct, t.greenFeeCents)),
-        list_green_fee: pct > 0 ? centsToDollarsOr0(t.greenFeeCents) : null,
-        deal_pct: pct,
-        member_green_fee: centsToDollarsOr0(rates ? rated(rates.greenFeeCents) : dealSeat(pct, t.greenFeeCents)),
+        green_fee: centsToDollarsOr0(pub),
+        list_green_fee: dealShown ? centsToDollarsOr0(t.greenFeeCents) : null,
+        deal_pct: dealShown ? pct : 0,
+        member_green_fee: centsToDollarsOr0(rates ? rated(rates.greenFeeCents) : pub),
         cart_fee: centsToDollarsOr0(rates?.cartFeeCents ?? t.cartFeeCents),
         walking_allowed: walkingAllowedAt(t),
         cart_required: !walkingAllowedAt(t),

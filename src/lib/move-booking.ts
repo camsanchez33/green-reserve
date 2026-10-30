@@ -38,7 +38,8 @@ import { groupGreenFee } from './residents';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
 import { promoFits, seatAfter } from './promo-codes';
-import { dealPct, dealSeat, dealRateSeat } from './last-minute';
+import { dealPct, dealRateSeat } from './last-minute';
+import { demandPctFor, onlinePublicSeat, dealWins } from './demand-pricing';
 import { packPrice } from './round-packs';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 
@@ -124,7 +125,7 @@ export async function moveBooking(opts: {
           cartSelected: true, appliedRate: true, packLineId: true, packRounds: true, memberRateCents: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, promoDiscountCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
-          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true } },
+          course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } },
         },
       });
       if (!b || (opts.courseId && b.courseId !== opts.courseId)) throw new MoveError('NOT_FOUND');
@@ -200,11 +201,16 @@ export async function moveBooking(opts: {
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
       // PRICE-2: a repriced move into the new time's last-minute window gets its deal (before any code).
       // A counter booking gets the deal only when the course gives it at the counter.
-      const lmPct = rateIsOwn ? 0 : dealPct(b.course, slot, golferMove || b.source === 'online' ? 'online' : 'counter', now);
+      const via = golferMove || b.source === 'online' ? 'online' : 'counter';
+      const lmPct = rateIsOwn ? 0 : dealPct(b.course, slot, via, now);
+      // PRICE-5: an online booking moved (or a golfer's own swap) gets the new time's demand price
+      // when it is lower than the deal (or there is none); a counter booking never does.
+      const dmPct = rateIsOwn || via !== 'online' ? 0 : await demandPctFor({ id: b.courseId, ...b.course }, slot);
       const stack = b.course.lastMinuteStack;
-      const pubSeat = dealSeat(lmPct, slot.greenFeeCents);
-      const ownSeat = rateIsOwn ? rate.greenFeeCents : memberN ? dealRateSeat(lmPct, rate.greenFeeCents, slot.greenFeeCents, stack) : dealSeat(lmPct, rate.greenFeeCents);
-      const resSeat = slot.residentRateCents == null ? null : dealRateSeat(lmPct, slot.residentRateCents, slot.greenFeeCents, stack);
+      const pubSeat = onlinePublicSeat(slot.greenFeeCents, lmPct, dmPct);
+      const ownSeat = rateIsOwn ? rate.greenFeeCents : memberN ? Math.min(pubSeat, dealRateSeat(lmPct, rate.greenFeeCents, slot.greenFeeCents, stack)) : onlinePublicSeat(rate.greenFeeCents, lmPct, dmPct);
+      const resSeat = slot.residentRateCents == null ? null : Math.min(pubSeat, dealRateSeat(lmPct, slot.residentRateCents, slot.greenFeeCents, stack));
+      const dealSet = dealWins(slot.greenFeeCents, lmPct, dmPct);
       const ratedResidents = groupGreenFee(b.players, ownSeat, residentN, resSeat);
       const ratedGreen = memberN ? splitTotal(b.players, memberN, ownSeat, pubSeat) : ratedResidents.greenFeeTotal;
       const residents = groupGreenFee(b.players, seat(ownSeat), residentN, resSeat == null ? null : seat(resSeat));
@@ -253,7 +259,8 @@ export async function moveBooking(opts: {
         data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
         data.cartSelected = cartOn;
         data.memberRateCents = spot.memberRateCents; data.memberCartCents = spot.memberCartCents;
-        data.lastMinutePct = lmPct;
+        data.lastMinutePct = dealSet ? lmPct : 0;
+        data.demandPct = dealSet ? 0 : dmPct;
         if (b.promoCodeId && !rateIsOwn) { data.promoCodeId = promo ? promo.id : null; data.promoDiscountCents = promo ? ratedGreen - newGreen : 0; }
         if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
         if (memberN === 0 && b.appliedRate !== 'resident' && b.appliedRate !== 'standard' && b.appliedRate !== 'pack') data.appliedRate = residents.residentPlayers > 0 ? 'resident' : 'standard';
