@@ -1,8 +1,8 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 610,
-    "routes": 279,
+    "files": 612,
+    "routes": 280,
     "libs": 213,
     "models": 64,
     "orphans": 10,
@@ -3671,7 +3671,7 @@
     },
     {
       "path": "src/app/api/bookings/resident-rate/route.ts",
-      "lines": 54,
+      "lines": 59,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3688,10 +3688,12 @@
       "auth": "public",
       "guard": "public",
       "imports": [
+        "@/lib/auth",
         "@/lib/last-minute",
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/prisma",
+        "@/lib/round-packs",
         "@/lib/tier-rates",
         "next/server"
       ],
@@ -3699,7 +3701,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 455,
+      "lines": 483,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3718,8 +3720,8 @@
         "GET",
         "POST"
       ],
-      "auth": "golfer",
-      "guard": "public for POST",
+      "auth": "member",
+      "guard": "file",
       "imports": [
         "@/lib/auth",
         "@/lib/booking-fee",
@@ -3740,6 +3742,7 @@
         "@/lib/promo-codes",
         "@/lib/rate-limit",
         "@/lib/residents",
+        "@/lib/round-packs",
         "@/lib/stripe",
         "@/lib/tee-time-utils",
         "@/lib/terms",
@@ -3987,6 +3990,38 @@
         "@/lib/auth",
         "@/lib/member-session",
         "@/lib/prisma",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
+      "path": "src/app/api/courses/[slug]/packs/route.ts",
+      "lines": 46,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/courses/[slug]/packs",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "golfer",
+      "guard": "public for GET",
+      "imports": [
+        "@/lib/auth",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "@/lib/round-packs",
         "next/server"
       ],
       "usedBy": []
@@ -6899,7 +6934,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 265,
+      "lines": 266,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7630,7 +7665,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 783,
+      "lines": 808,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7913,7 +7948,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1857,
+      "lines": 1861,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7928,6 +7963,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/CoursePacks",
         "@/components/TrustNote",
         "@/components/ui/StatusDot",
         "@/lib/booking-fees",
@@ -7953,7 +7989,7 @@
     },
     {
       "path": "src/app/courses/[slug]/account/AccountPortalClient.tsx",
-      "lines": 285,
+      "lines": 289,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7968,6 +8004,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/CoursePacks",
         "@/components/ui/StatusDot",
         "lucide-react",
         "next/link",
@@ -9551,6 +9588,31 @@
       ]
     },
     {
+      "path": "src/components/CoursePacks.tsx",
+      "lines": 63,
+      "purpose": "PRICE-3 (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CoursePacks",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/courses/[slug]/account/AccountPortalClient.tsx"
+      ]
+    },
+    {
       "path": "src/components/EmptyState.tsx",
       "lines": 22,
       "purpose": "",
@@ -10755,7 +10817,7 @@
     },
     {
       "path": "src/components/dashboard/RoundPacks.tsx",
-      "lines": 93,
+      "lines": 94,
       "purpose": "PRICE-3 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -11860,6 +11922,7 @@
         "src/app/g/[slug]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
+        "src/components/CoursePacks.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
         "src/components/admin/InquiryBoard.tsx",
@@ -13955,9 +14018,11 @@
         "src/app/api/auth/resend-verification/route.ts",
         "src/app/api/auth/reset-password/route.ts",
         "src/app/api/bookings/cancel/route.ts",
+        "src/app/api/bookings/resident-rate/route.ts",
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/auth/me/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
@@ -16817,7 +16882,7 @@
     },
     {
       "path": "src/lib/courses-data.ts",
-      "lines": 327,
+      "lines": 329,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -20577,6 +20642,7 @@
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
@@ -20914,7 +20980,7 @@
     },
     {
       "path": "src/lib/public-course.ts",
-      "lines": 31,
+      "lines": 34,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
@@ -21030,6 +21096,7 @@
         "src/app/api/cam/login/route.ts",
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
+        "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/event-signup/[id]/route.ts",
         "src/app/api/golfer/auth/otp/request/route.ts",
@@ -21380,10 +21447,14 @@
     },
     {
       "path": "src/lib/round-packs.ts",
-      "lines": 185,
+      "lines": 204,
       "purpose": "PRICE-3 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
+        {
+          "name": "buyPackOnline",
+          "kind": "fn"
+        },
         {
           "name": "endPacksRefundedOutside",
           "kind": "fn"
@@ -21464,9 +21535,13 @@
       "guard": null,
       "imports": [
         "./prisma",
+        "./shop-sales",
         "@prisma/client"
       ],
       "usedBy": [
+        "src/app/api/bookings/resident-rate/route.ts",
+        "src/app/api/bookings/route.ts",
+        "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/operator/round-packs/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/app/dashboard/page.tsx",
@@ -22609,7 +22684,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 798,
+      "lines": 800,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -22764,7 +22839,8 @@
         "src/app/api/operator/shop-sales/route.ts",
         "src/app/api/shop-sale/[id]/route.ts",
         "src/lib/card-reader.ts",
-        "src/lib/register.ts"
+        "src/lib/register.ts",
+        "src/lib/round-packs.ts"
       ]
     },
     {
@@ -25856,6 +25932,7 @@
         "src/app/api/alerts/route.ts",
         "src/app/api/birdie/chat/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
         "src/app/api/cron/monthly-review/route.ts",
@@ -27515,6 +27592,7 @@
         "src/app/api/admin/search/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/auth/me/route.ts",
         "src/app/api/golfer/auth/otp/verify/route.ts",
@@ -28599,6 +28677,7 @@
         "src/app/api/operator/round-packs/route.ts"
       ],
       "readers": [
+        "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/operator/round-packs/route.ts",
         "src/lib/round-packs.ts",
         "src/lib/shop-sales.ts"

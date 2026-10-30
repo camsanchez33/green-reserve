@@ -4,9 +4,10 @@
 // can't be voided or returned. Needs a database. Run: npx tsx scripts/round-packs-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { readPack, holdingsFor, takeRounds, packPrice, packSeats, PackError, packLeft, endPacksRefundedOutside, giveBack } from '../src/lib/round-packs';
+import { readPack, holdingsFor, takeRounds, packPrice, packSeats, PackError, packLeft, endPacksRefundedOutside, giveBack, buyPackOnline } from '../src/lib/round-packs';
 import { performCheckIn } from '../src/lib/checkin-booking';
-import { createSale, refundSale, voidCashSale } from '../src/lib/shop-sales';
+import { createSale, refundSale, voidCashSale, settleOpenSale } from '../src/lib/shop-sales';
+import { dealSeat } from '../src/lib/last-minute';
 import { createCounterBooking } from '../src/lib/counter-pay';
 import { changePartySize } from '../src/lib/change-party';
 import { performCancellation } from '../src/lib/cancel-booking';
@@ -150,6 +151,39 @@ const bk = (id: string) => prisma.booking.findUniqueOrThrow({ where: { id } });
   ok('$0 group: checked in, paid, nothing charged', !!ci && !('error' in ci && ci.error) && zr?.status === 'completed' && zr.paymentStatus === 'paid' && !zr.roundPaymentIntentId, { ci, zr });
   const ops = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
   ok('…and no $0 pay link is sent', ops.includes("if (roundChargeCents(b) === 0) return NextResponse.json({ error: 'This group owes nothing"));
+
+  // PART B: online — the holder is the signed-in golfer's account email.
+  const ob = await createSale({ courseId: c.id, lines: [{ roundPackId: four.id, quantity: 1 }], pay: 'cash', soldBy: 't', customerEmail: `${TAG}+ob@t.local` });
+  if (!ob.ok) throw new Error('ob');
+  let notYours = '';
+  try { await prisma.$transaction(tx => takeRounds(tx, c.id, ob.value.lines[0].id, 1, { email: `${TAG}+someone@t.local` })); } catch (e) { notYours = e instanceof PackError ? e.message : 'other'; }
+  ok('online: someone else\'s pack is refused', /someone else/.test(notYours), notYours);
+  await prisma.$transaction(tx => takeRounds(tx, c.id, ob.value.lines[0].id, 1, { email: `${TAG}+OB@t.local` }));
+  ok('…the holder\'s own (any case) is used', (await line(ob.value.lines[0].id)).packRoundsUsed === 1);
+  // Buying online (review BLOCK: one open sale per golfer and pack, never a pile on the register).
+  ok('a pack not sold online can\'t be bought online', !(await buyPackOnline(c.id, four.id, { email: `${TAG}+web@t.local`, name: 'Web', phone: '' })).ok);
+  await prisma.roundPack.update({ where: { id: four.id }, data: { sellOnline: true } });
+  ok('…nor another course\'s pack', !(await buyPackOnline(other.id, four.id, { email: `${TAG}+web@t.local`, name: 'Web', phone: '' })).ok);
+  const b1o = await buyPackOnline(c.id, four.id, { email: `${TAG}+WEB@t.local`, name: 'Web', phone: '' });
+  const so = b1o.ok ? await prisma.shopSale.findUniqueOrThrow({ where: { id: b1o.saleId }, include: { lines: true } }) : null;
+  ok('bought online: an open link sale, the account email (lower case) the holder, the pack\'s price, no tax', !!so && so.status === 'open' && so.soldBy === 'online' && so.customerEmail === `${TAG}+web@t.local` && so.totalCents === 18000 && so.taxCents === 0 && so.lines[0].roundPackId === four.id && !!so.payToken, so);
+  const b2o = await buyPackOnline(c.id, four.id, { email: `${TAG}+web@t.local`, name: 'Web', phone: '' });
+  ok('…buying again while it\'s unpaid gives the same link', b1o.ok && b2o.ok && b1o.saleId === b2o.saleId && b1o.payToken === b2o.payToken);
+  ok('…and no rounds until it\'s paid', (await holdingsFor(c.id, `${TAG}+web@t.local`)).length === 0);
+  const tookCash = b1o.ok ? await settleOpenSale(c.id, b1o.saleId, 'paid_cash') : null;
+  ok('…staff can\'t mark a golfer\'s online purchase paid in cash', !!tookCash && !tookCash.ok && /bought this online/.test(tookCash.error), tookCash);
+  ok('…but can void it', b1o.ok && (await settleOpenSale(c.id, b1o.saleId, 'void')).ok);
+  // The page and the server price a pack booking alike: the public seat at the deal price.
+  const dp = packPrice({ players: 3, seats: 1, guests: false, coversCart: false, publicGreen: dealSeat(20, 5000), cartFee: 2000, cart: true });
+  ok('holder + 2 guests in a 20% deal window: $80 green, $60 cart', dp.greenFeeTotal === 8000 && dp.cartFeeTotal === 6000, dp);
+
+  const bookRoute = readFileSync('src/app/api/bookings/route.ts', 'utf8');
+  ok('online booking: signed in, the holder\'s own pack, no code with it', bookRoute.includes("if (!golferSession?.email) return NextResponse.json({ error: 'Sign in to use your round pack.'") && bookRoute.includes('h.holderEmail.toLowerCase() !== golferSession.email.trim().toLowerCase()') && bookRoute.includes('PACK_NO_CODE'));
+  ok('…rounds taken as the holder, and given back if the booking isn\'t made', bookRoute.includes('takeRounds(tx, teeTimeFull.courseId, use.lineId, use.seats, { email: golferSession!.email })') && (bookRoute.match(/if \(pack\) await giveBack\(prisma, pack\.lineId, pack\.seats\);/g) ?? []).length === 2);
+  const buy = readFileSync('src/app/api/courses/[slug]/packs/route.ts', 'utf8');
+  ok('buying online: signed in, rate limited, a live course that isn\'t archived, the account email the holder', buy.includes("if (!golfer?.email) return NextResponse.json({ error: 'Sign in to buy") && buy.includes('rateLimit(`pack-buy:') && buy.includes("liveStatus: 'live', archivedAt: null") && buy.includes('buyPackOnline(course.id, packId, { email: golfer.email'));
+  const preview = readFileSync('src/app/api/bookings/resident-rate/route.ts', 'utf8');
+  ok('the booking page sees only the signed-in golfer\'s packs', preview.includes('golfer?.email ? (await holdingsFor(tt.courseId, golfer.email))'));
 
   // Wiring.
   const route = readFileSync('src/app/api/operator/round-packs/route.ts', 'utf8');

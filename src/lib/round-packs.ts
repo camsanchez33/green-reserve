@@ -26,6 +26,7 @@
 //  • The booking fee ($1.50 a player) is charged as on any booking.
 import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
+import { createSale } from './shop-sales';
 
 type Fail = { ok: false; error: string };
 const fail = (error: string): Fail => ({ ok: false, error });
@@ -170,6 +171,24 @@ export async function endPacksRefundedOutside(paymentIntentId: string | null | u
   if (!sale) return 0;
   // Counted as returned (not as used): rounds a cancel later gives back can't bring the pack back.
   return prisma.$executeRaw`UPDATE "ShopSaleLine" SET "returnedQty" = "quantity" WHERE "saleId" = ${sale.id} AND "roundPackId" IS NOT NULL AND "returnedQty" < "quantity"`;
+}
+
+/**
+ * A signed-in golfer buys a pack online: a walk-up sale on a pay link (/pay/shop/[id]), the
+ * golfer's account email the holder. Buying the same pack again while its link is still
+ * unpaid gives back that link — one open sale per golfer and pack, never a pile on the
+ * register. (The register stops listing an unpaid online sale after a day and a half; its
+ * link still works.)
+ */
+export async function buyPackOnline(courseId: string, packId: string, golfer: { email: string; name: string; phone: string }): Promise<{ ok: true; saleId: string; payToken: string } | { ok: false; status: number; error: string }> {
+  const pack = await prisma.roundPack.findFirst({ where: { id: packId, courseId, active: true, sellOnline: true }, select: { id: true } });
+  if (!pack) return { ok: false, status: 404, error: 'That pack isn’t for sale online.' };
+  const email = golfer.email.trim().toLowerCase();
+  const open = await prisma.shopSale.findFirst({ where: { courseId, status: 'open', soldBy: 'online', customerEmail: email, payToken: { not: '' }, lines: { some: { roundPackId: pack.id } } }, orderBy: { createdAt: 'desc' }, select: { id: true, payToken: true } });
+  if (open) return { ok: true, saleId: open.id, payToken: open.payToken };
+  const sale = await createSale({ courseId, lines: [{ roundPackId: pack.id, quantity: 1 }], pay: 'link', soldBy: 'online', customerName: golfer.name, customerPhone: golfer.phone, customerEmail: email });
+  if (!sale.ok) return { ok: false, status: sale.status, error: sale.error };
+  return { ok: true, saleId: sale.value.id, payToken: sale.value.payToken };
 }
 
 /** Rounds a booking gives back now: a cancel before the cutoff, or the course calling it off / waiving. */

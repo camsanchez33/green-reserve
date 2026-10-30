@@ -13,7 +13,7 @@ import type { PackRow } from '@/lib/round-packs';
 type Draft = { id?: string; name: string; rounds: string; price: string; coversCart: boolean; guests: boolean; validDays: string; sellOnline: boolean };
 const blank = (): Draft => ({ name: '', rounds: '10', price: '', coversCart: false, guests: false, validDays: '', sellOnline: false });
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
-const terms = (p: PackRow) => [`${p.rounds} rounds`, usd(p.priceCents), p.coversCart ? 'cart included' : '', p.guests ? 'guests too' : '', p.validDays ? `${p.validDays} days` : ''].filter(Boolean).join(' · ');
+const terms = (p: PackRow) => [`${p.rounds} rounds`, usd(p.priceCents), p.coversCart ? 'cart included' : '', p.guests ? 'guests too' : '', p.validDays ? `${p.validDays} days` : '', p.sellOnline ? 'online' : ''].filter(Boolean).join(' · ');
 
 export function RoundPacks() {
   const [packs, setPacks] = useState<PackRow[] | null>(null);
@@ -64,6 +64,7 @@ export function RoundPacks() {
           <div className="flex flex-col gap-2 justify-end">
             {box('coversCart', 'Covers the cart')}
             {box('guests', 'Guests can use rounds')}
+            {box('sellOnline', 'Sell online')}
           </div>
           {formError && <p role="alert" className="sm:col-span-2 text-[12.5px] text-bad">{formError}</p>}
           <div className="sm:col-span-2 flex gap-2">

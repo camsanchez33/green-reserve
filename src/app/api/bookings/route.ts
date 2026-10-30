@@ -5,6 +5,7 @@ import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/mem
 import { groupGreenFee } from '@/lib/residents';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoRow } from '@/lib/promo-codes';
 import { dealPct, dealSeat, dealRateSeat } from '@/lib/last-minute';
+import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from '@/lib/round-packs';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
 import { describePolicy, policyFrom, cardAtBooking, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
@@ -27,7 +28,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted, promoCode } = body;
+  const { teeTimeId, players: playersRaw, golferName, golferEmail, golferPhone, setupIntentId, cartSelected, rangeBallsSize, termsAccepted, promoCode, packLineId } = body;
 
   if (!teeTimeId || !playersRaw || !golferName || !golferEmail)
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -169,6 +170,21 @@ export async function POST(req: NextRequest) {
   // partial check-in or a party change. Checked here, before any card is saved; its use is
   // reserved just before the tee time is claimed.
   let promoRow: PromoRow | null = null;
+  // PRICE-3: rounds from the signed-in golfer's own round pack — they replace the rate, and no code goes with them.
+  const usePack = typeof packLineId === 'string' && packLineId !== '';
+  if (usePack && promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') return NextResponse.json({ error: PACK_NO_CODE, code: 'promo' }, { status: 400 });
+  let pack: { lineId: string; seats: number; greenFeeTotal: number; cartFeeTotal: number; memberRateCents: number | null; memberCartCents: number | null } | null = null;
+  if (usePack) {
+    if (!golferSession?.email) return NextResponse.json({ error: 'Sign in to use your round pack.', code: 'pack' }, { status: 401 });
+    const h = await holdingById(teeTimeFull.courseId, packLineId);
+    if (!h || h.holderEmail.toLowerCase() !== golferSession.email.trim().toLowerCase()) return NextResponse.json({ error: 'That round pack isn’t yours on this course.', code: 'pack' }, { status: 403 });
+    const s = packSeats(h, players);
+    if (!s.ok) return NextResponse.json({ error: s.error, code: 'pack' }, { status: 400 });
+    const pubPack = dealSeat(dealPct(teeTimeFull.course, teeTimeFull, 'online'), teeTimeFull.greenFeeCents);
+    const wants = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
+    const p = packPrice({ players, seats: s.seats, guests: h.guests, coversCart: h.coversCart, publicGreen: pubPack, cartFee: teeTimeFull.cartFeeCents, cart: wants });
+    pack = { lineId: h.lineId, seats: s.seats, ...p };
+  }
   if (promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') {
     const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, rateApplied: !!appliedTier || !!resident, golferEmail: String(golferEmail) });
     if (!p.ok) return NextResponse.json({ error: p.error, code: 'promo' }, { status: 400 });
@@ -184,11 +200,12 @@ export async function POST(req: NextRequest) {
   const ratedGreenFeeTotal = appliedTier ? splitTotal(players, memberN, ownSeat, pubSeat)
     : groupGreenFee(players, ownSeat, resident ? 1 : 0, resSeat).greenFeeTotal;
   const priced = groupGreenFee(players, seat(ownSeat), resident ? 1 : 0, resSeat == null ? null : seat(resSeat));
-  const greenFeeTotal = appliedTier ? splitTotal(players, memberN, seat(ownSeat), seat(pubSeat)) : priced.greenFeeTotal;
-  if (priced.residentPlayers > 0) appliedRate = 'resident';
+  const greenFeeTotal = pack ? pack.greenFeeTotal : appliedTier ? splitTotal(players, memberN, seat(ownSeat), seat(pubSeat)) : priced.greenFeeTotal;
+  if (pack) appliedRate = 'pack';
+  else if (priced.residentPlayers > 0) appliedRate = 'resident';
   const promo = promoRow ? { id: promoRow.id, discountCents: ratedGreenFeeTotal - greenFeeTotal } : null;
   if (promo && promo.discountCents <= 0) return NextResponse.json({ error: NOTHING_OFF, code: 'promo' }, { status: 400 });
-  const cartFeeTotal   = wantsCart ? (appliedTier ? splitTotal(players, memberN, cartFeePerPlayerCents, teeTimeFull.cartFeeCents) : cartFeePerPlayerCents * players) : 0;
+  const cartFeeTotal   = pack ? pack.cartFeeTotal : wantsCart ? (appliedTier ? splitTotal(players, memberN, cartFeePerPlayerCents, teeTimeFull.cartFeeCents) : cartFeePerPlayerCents * players) : 0;
 
   let rangeBallsTotal = 0;
   const ballsSize = String(rangeBallsSize || '');
@@ -267,6 +284,15 @@ export async function POST(req: NextRequest) {
 
   // PRICE-1: take one of the code's uses now; given back if the booking isn't made.
   if (promo && !(await reserveUse(promo.id))) return NextResponse.json({ error: 'That code has just been used up.', code: 'promo' }, { status: 409 });
+  // PRICE-3: take the pack's rounds now, as the holder; given back if the booking isn't made.
+  if (pack) {
+    const use = pack;
+    try { await prisma.$transaction(tx => takeRounds(tx, teeTimeFull.courseId, use.lineId, use.seats, { email: golferSession!.email })); }
+    catch (err) {
+      if (err instanceof PackError) return NextResponse.json({ error: err.message, code: 'pack' }, { status: 409 });
+      throw err;
+    }
+  }
   // Atomically claim the tee time (Serializable isolation prevents double-booking)
   let claimed: { id: string; checkInToken: string | null };
   try {
@@ -281,10 +307,10 @@ export async function POST(req: NextRequest) {
       appliedRate,
       greenFeeTotal,
       ...(promo ? { promoCodeId: promo.id, promoDiscountCents: promo.discountCents } : {}),
-      residentPlayers:  priced.residentPlayers,
-      residentRateCents: priced.residentRateCents,
-      // The member's own spot when guests pay the public rate (lib/member-rates partyFees).
-      ...memberSpot(appliedTier, { greenFeeCents: seat(ownSeat), cartFeeCents: cartFeePerPlayerCents }),
+      residentPlayers:  pack ? 0 : priced.residentPlayers,
+      residentRateCents: pack ? null : priced.residentRateCents,
+      // The member's own spot when guests pay the public rate (lib/member-rates partyFees); a pack holder's seat the same way.
+      ...(pack ? { memberRateCents: pack.memberRateCents, memberCartCents: pack.memberCartCents, packLineId: pack.lineId, packRounds: pack.seats } : memberSpot(appliedTier, { greenFeeCents: seat(ownSeat), cartFeeCents: cartFeePerPlayerCents })),
       lastMinutePct,
       cartFeeTotal,
       cartSelected:     wantsCart,
@@ -309,6 +335,7 @@ export async function POST(req: NextRequest) {
     }, { type: 'golfer', id: golferSession?.golferId ?? null });
   } catch (err) {
     if (promo) await releaseUse(promo.id);
+    if (pack) await giveBack(prisma, pack.lineId, pack.seats);
     if (err instanceof TeeTimeClaimError) {
       if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
       if (err.code === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
@@ -332,6 +359,7 @@ export async function POST(req: NextRequest) {
     if (!fee.ok) {
       await releaseUnpaidBooking(claimed.id);
       if (promo) await releaseUse(promo.id);
+      if (pack) await giveBack(prisma, pack.lineId, pack.seats);
       return NextResponse.json({ error: `The booking fee couldn’t be charged: ${fee.error} Your tee time wasn’t booked — try another card.` }, { status: 402 });
     }
   }

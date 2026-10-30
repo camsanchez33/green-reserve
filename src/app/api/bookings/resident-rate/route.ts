@@ -4,6 +4,8 @@ import { getGolferMembership, getMemberSession, golferResident } from '@/lib/mem
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive } from '@/lib/member-rates';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
+import { holdingsFor } from '@/lib/round-packs';
+import { getGolferSession } from '@/lib/auth';
 
 // What the booking page shows the signed-in golfer before they book — the same
 // rules POST /api/bookings applies, so the page can't show one price and charge
@@ -12,20 +14,22 @@ import { dealPct, dealRateSeat } from '@/lib/last-minute';
 //    cookie): the member's own spot at the member rate, guests at the public rate
 //    unless the tier includes them (Cam 2026-10-29, lib/member-rates);
 //  • otherwise RES-1: one player at the resident rate when their card is good.
-// Says nothing to anyone else.
+// PRICE-3: and the golfer's own round packs here. Says nothing to anyone else.
 export async function GET(req: NextRequest) {
   const teeTimeId = req.nextUrl.searchParams.get('teeTimeId') ?? '';
-  const none = NextResponse.json({ residentGreenFee: null, member: null });
-  if (!teeTimeId) return none;
+  if (!teeTimeId) return NextResponse.json({ residentGreenFee: null, member: null, packs: [] });
   const tt = await prisma.teeTime.findUnique({
     where: { id: teeTimeId },
     select: { courseId: true, date: true, time: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true } } },
   });
-  if (!tt) return none;
+  if (!tt) return NextResponse.json({ residentGreenFee: null, member: null, packs: [] });
   const grace = tt.course;
   // PRICE-2: inside a last-minute window the rate is priced as POST /api/bookings prices it.
   const pct = dealPct(tt.course, tt, 'online');
   const rated = (cents: number) => dealRateSeat(pct, cents, tt.greenFeeCents, tt.course.lastMinuteStack);
+  // PRICE-3: the signed-in golfer's own round packs at this course (their account email is the holder).
+  const golfer = await getGolferSession();
+  const packs = golfer?.email ? (await holdingsFor(tt.courseId, golfer.email)).map(h => ({ lineId: h.lineId, name: h.name, left: h.left, coversCart: h.coversCart, guests: h.guests, expiresAt: h.expiresAt })) : [];
 
   let tier: { name: string; guestsPayMemberRate: boolean; greenFeeWeekdayCents: number | null; greenFeeWeekendCents: number | null; cartFeeWeekdayCents: number | null; cartFeeWeekendCents: number | null; discountPct: number | null } | null = null;
   const golferMembership = await getGolferMembership(tt.courseId, grace);
@@ -46,8 +50,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       residentGreenFee: null,
       member: { name: tier.name, greenFee: rated(rates.greenFeeCents) / 100, cartFee: rates.cartFeeCents / 100, guestsMemberRate: tier.guestsPayMemberRate },
+      packs,
     });
   }
-  if (tt.residentRateCents == null || !(await golferResident(tt.courseId, tt.date))) return none;
-  return NextResponse.json({ residentGreenFee: rated(tt.residentRateCents) / 100, member: null });
+  if (tt.residentRateCents == null || !(await golferResident(tt.courseId, tt.date))) return NextResponse.json({ residentGreenFee: null, member: null, packs });
+  return NextResponse.json({ residentGreenFee: rated(tt.residentRateCents) / 100, member: null, packs });
 }
