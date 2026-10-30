@@ -1,36 +1,25 @@
 {
-  "generatedAt": "2026-10-30T19:52:27.687Z",
+  "generatedAt": "2026-10-30T20:03:08.958Z",
   "repo": {
-    "head": "7ea5f5b2",
+    "head": "0d9486fe",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 25,
+    "dirtyCount": 2,
     "dirty": [
-      "M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md",
-      " M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/dead-ends-a-test.ts",
-      " M scripts/member-paytoken-test.ts",
-      " M scripts/members-import-test.ts",
-      " M scripts/walk1-fixes-test.ts",
-      " M src/app/api/membership/[id]/route.ts",
-      " M src/app/api/operator/members/route.ts",
-      " M src/app/api/operator/tiers/route.ts",
-      " M src/app/courses/[slug]/CourseBookingClient.tsx",
-      " M src/app/courses/[slug]/account/AccountPortalClient.tsx",
-      " M src/app/dashboard/members/page.tsx",
-      " M src/lib/courses-data.ts",
-      " M src/lib/public-course.ts",
-      "?? prisma/migrations/20261030120000_tier_join_online/",
-      "?? scripts/membership-join-db-test.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "0d9486fe",
+        "date": "2026-10-30T20:02:07+00:00",
+        "subject": "MEM-JOIN: join a membership tier online — pay and join, or request to join",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "53505e47",
         "date": "2026-10-30T15:03:00-04:00",
@@ -862,6 +851,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0d9486fe",
+      "date": "2026-10-30",
+      "subject": "MEM-JOIN: join a membership tier online — pay and join, or request to join"
+    },
+    {
       "h": "53505e47",
       "date": "2026-10-30",
       "subject": "Pricing 3/4 part B: round packs online (#260)"
@@ -915,11 +909,6 @@
       "h": "ca86612a",
       "date": "2026-10-30",
       "subject": "Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)"
-    },
-    {
-      "h": "c72b0b35",
-      "date": "2026-10-30",
-      "subject": "Stock line refreshes after a sale; the catalog permission says it covers deliveries"
     }
   ]
 }

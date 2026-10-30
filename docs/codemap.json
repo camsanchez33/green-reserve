@@ -19633,7 +19633,7 @@
     },
     {
       "path": "src/lib/membership-join.ts",
-      "lines": 84,
+      "lines": 92,
       "purpose": "MEM-JOIN (Cam 2026-10-30:",
       "brain": [],
       "exports": [
