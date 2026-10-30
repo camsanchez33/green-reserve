@@ -109,7 +109,7 @@ const route2 = () => readFileSync('src/app/api/operator/promo-codes/route.ts', '
   // Wiring.
   const book = readFileSync('src/app/api/bookings/route.ts', 'utf8');
   ok('online: the code is checked before any card is saved, and the use given back if the booking isn\'t made', book.indexOf('applyPromo(') < book.indexOf('stripe.setupIntents.retrieve') && /catch \(err\) \{\n    if \(promo\) await releaseUse/.test(book) && /releaseUnpaidBooking\(claimed\.id\);\n      if \(promo\) await releaseUse/.test(book));
-  ok('…and priced on the server, seat by seat', book.includes('seat(greenFeePerPlayerCents)') && book.includes('memberSpot(appliedTier, { greenFeeCents: seat(greenFeePerPlayerCents)'));
+  ok('…and priced on the server, seat by seat', book.includes('seat(ownSeat)') && book.includes('memberSpot(appliedTier, { greenFeeCents: seat(ownSeat)'));
   const client = readFileSync('src/app/book/BookClient.tsx', 'utf8');
   ok('the wallet button sends the code it shows (no stale render)', client.includes('latest.current.promoCode ? { promoCode: latest.current.promoCode }'));
   ok('an edit never turns a code back on', route2().includes('const { code: _c, active: _a, ...data } = r.data;'));

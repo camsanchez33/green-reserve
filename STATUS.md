@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 16:34 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6612c506` · working tree **4 dirty file(s)**
+Generated 2026-10-30 17:15 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1887bc29` · working tree **25 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 54 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 56 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `439c4e7b` | 2026-10-30 | Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257) |
+| `f65525cf` | 2026-10-30 | A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice |
 | `6612c506` | 2026-10-30 | Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code |
 | `869ce75a` | 2026-10-30 | Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter |
 | `ca86612a` | 2026-10-30 | Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256) |
@@ -69,12 +71,28 @@ Generated 2026-10-30 16:34 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (25 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/promo-codes-db-test.ts`
-- `M src/lib/move-booking.ts`
+- `M  STATUS.artifact.html`
+- `M  STATUS.json`
+- `M  STATUS.md`
+- `MM docs/CODEMAP.md`
+- `MM docs/codemap.json`
+- `A  prisma/migrations/20261030060000_last_minute/migration.sql`
+- `M  prisma/schema.prisma`
+- `AM scripts/last-minute-db-test.ts`
+- `M  scripts/member-rates-db-test.ts`
+- `M  scripts/promo-codes-db-test.ts`
+- `M  src/app/api/bookings/resident-rate/route.ts`
+- `M  src/app/api/bookings/route.ts`
+- `M src/app/api/member/[courseSlug]/tee-times/route.ts`
+- `A  src/app/api/operator/last-minute/route.ts`
+- `M  src/app/api/preview/[courseId]/tee-times/route.ts`
+- `M  src/app/book/BookClient.tsx`
+- `M  src/app/courses/[slug]/CourseBookingClient.tsx`
+- `M  src/app/dashboard/schedules/page.tsx`
+- `A  src/components/dashboard/LastMinuteDeals.tsx`
+- `M src/lib/booking-residents.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -91,7 +109,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 99d | `b88c8bf3` | `RUN_QUEUE.md:2358` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 100d | `b88c8bf3` | `RUN_QUEUE.md:2358` |
 
 ## Not started — the actual queue
 
@@ -200,6 +218,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `439c4e7b` 2026-10-30 — Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)
+- `f65525cf` 2026-10-30 — A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice
 - `6612c506` 2026-10-30 — Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code
 - `869ce75a` 2026-10-30 — Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter
 - `ca86612a` 2026-10-30 — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)
@@ -210,8 +230,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c5b84881` 2026-10-30 — Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check
 - `7dda7589` 2026-10-30 — Money ledger: one row for every dollar that moves; membership dues charged safely (#254)
 - `48be83aa` 2026-10-30 — Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal)
-- `85c78bb8` 2026-10-30 — Test: dues paid at the shop read through paidUntilRenewal
-- `136a1ea6` 2026-10-30 — Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds
 
 ---
 

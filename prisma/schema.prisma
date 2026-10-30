@@ -155,6 +155,14 @@ model Course {
   onlineBlockNoShows     Int?
   onlineBlockLateCancels Int?
   onlineBlockMonths      Int     @default(12)
+  /// PRICE-2 (Cam 2026-10-30): last-minute deals — open times inside lastMinuteHours of going off cost lastMinutePct% less (lib/last-minute).
+  lastMinuteOn               Boolean  @default(false)
+  lastMinuteHours            Int      @default(3)
+  lastMinutePct              Int      @default(20)
+  /// Also at the counter (walk-ins and phone bookings), not only online.
+  lastMinuteCounter          Boolean  @default(true)
+  /// Off: a member or resident pays the lower of their rate and the deal. On: the deal comes off their rate.
+  lastMinuteStack            Boolean  @default(false)
   golferNotes            GolferNote[]
   golferBlocks           GolferBlock[]
   /// PERS-1: optional short note from the course, shown on the golfer's
@@ -550,6 +558,8 @@ model Booking {
   /// PRICE-1 (Cam 2026-10-30): a promo code used on this booking, and what it took off the green fee (already out of greenFeeTotal).
   promoCodeId                String?
   promoDiscountCents         Int               @default(0)
+  /// PRICE-2: the last-minute percent this booking got (0 = none).
+  lastMinutePct              Int               @default(0)
   // MP-3 run B1: these six were ALREADY cents, stored in a Float — the worst of
   // both worlds, and the direct cause of the x100 resend-email bug (MP-1 #1),
   // where a caller assumed dollars. Now Int, so the unit is in the type. Every

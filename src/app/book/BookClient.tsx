@@ -29,6 +29,7 @@ function getStripePromise() {
 export type LiveTeeTime = {
   id: string; date: string; time: string; holes: number; product_label?: string | null;
   players_available: number; green_fee: number; cart_fee: number; status: string;
+  list_green_fee?: number | null; deal_pct?: number;
   // W2-6 slice 3: this time's booking rules (the course's, or its round's own).
   cart_required?: boolean; min_players?: number; max_players?: number;
 };
@@ -454,6 +455,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
               <div className="border-t border-line pt-3 space-y-2">
                 <div className="flex justify-between text-ink-soft"><span>Green fee (×{players})</span><span>${greenTotal.toFixed(2)}</span></div>
+                {!!teeTime.deal_pct && teeTime.list_green_fee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Last-minute, {teeTime.deal_pct}% off: <span className="line-through">${teeTime.list_green_fee.toFixed(2)}</span> ${teeTime.green_fee.toFixed(2)} a player.</p>}
                 {memberRate && <p className="text-[12.5px] text-ink-muted -mt-1">{memberRate.name} rate ${memberRate.greenFee.toFixed(2)}{memberN < players ? ` for you; your guests pay $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
                 {residentFee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
                 {promoOff > 0 && <div className="flex justify-between text-ink-soft"><span>Code {promo!.code}</span><span>−${promoOff.toFixed(2)}</span></div>}

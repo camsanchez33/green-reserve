@@ -4,6 +4,7 @@ import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { groupGreenFee } from '@/lib/residents';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoRow } from '@/lib/promo-codes';
+import { dealPct, dealSeat, dealRateSeat } from '@/lib/last-minute';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
 import { describePolicy, policyFrom, cardAtBooking, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
@@ -173,11 +174,17 @@ export async function POST(req: NextRequest) {
     if (!p.ok) return NextResponse.json({ error: p.error, code: 'promo' }, { status: 400 });
     promoRow = p.code;
   }
+  // PRICE-2: a last-minute deal comes first (lib/last-minute) — each seat at its deal price —
+  // then any promo code off that.
+  const lastMinutePct = dealPct(teeTimeFull.course, teeTimeFull, 'online');
+  const pubSeat = dealSeat(lastMinutePct, teeTimeFull.greenFeeCents);
+  const ownSeat = appliedTier ? dealRateSeat(lastMinutePct, greenFeePerPlayerCents, teeTimeFull.greenFeeCents, teeTimeFull.course.lastMinuteStack) : pubSeat;
+  const resSeat = teeTimeFull.residentRateCents == null ? null : dealRateSeat(lastMinutePct, teeTimeFull.residentRateCents, teeTimeFull.greenFeeCents, teeTimeFull.course.lastMinuteStack);
   const seat = (c: number) => (promoRow ? seatAfter(promoRow, c) : c);
-  const ratedGreenFeeTotal = appliedTier ? splitTotal(players, memberN, greenFeePerPlayerCents, teeTimeFull.greenFeeCents)
-    : groupGreenFee(players, greenFeePerPlayerCents, resident ? 1 : 0, teeTimeFull.residentRateCents).greenFeeTotal;
-  const priced = groupGreenFee(players, seat(greenFeePerPlayerCents), resident ? 1 : 0, teeTimeFull.residentRateCents == null ? null : seat(teeTimeFull.residentRateCents));
-  const greenFeeTotal = appliedTier ? splitTotal(players, memberN, seat(greenFeePerPlayerCents), seat(teeTimeFull.greenFeeCents)) : priced.greenFeeTotal;
+  const ratedGreenFeeTotal = appliedTier ? splitTotal(players, memberN, ownSeat, pubSeat)
+    : groupGreenFee(players, ownSeat, resident ? 1 : 0, resSeat).greenFeeTotal;
+  const priced = groupGreenFee(players, seat(ownSeat), resident ? 1 : 0, resSeat == null ? null : seat(resSeat));
+  const greenFeeTotal = appliedTier ? splitTotal(players, memberN, seat(ownSeat), seat(pubSeat)) : priced.greenFeeTotal;
   if (priced.residentPlayers > 0) appliedRate = 'resident';
   const promo = promoRow ? { id: promoRow.id, discountCents: ratedGreenFeeTotal - greenFeeTotal } : null;
   if (promo && promo.discountCents <= 0) return NextResponse.json({ error: NOTHING_OFF, code: 'promo' }, { status: 400 });
@@ -277,7 +284,8 @@ export async function POST(req: NextRequest) {
       residentPlayers:  priced.residentPlayers,
       residentRateCents: priced.residentRateCents,
       // The member's own spot when guests pay the public rate (lib/member-rates partyFees).
-      ...memberSpot(appliedTier, { greenFeeCents: seat(greenFeePerPlayerCents), cartFeeCents: cartFeePerPlayerCents }),
+      ...memberSpot(appliedTier, { greenFeeCents: seat(ownSeat), cartFeeCents: cartFeePerPlayerCents }),
+      lastMinutePct,
       cartFeeTotal,
       cartSelected:     wantsCart,
       rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',
@@ -414,6 +422,7 @@ export async function POST(req: NextRequest) {
     residentPlayers: priced.residentPlayers,
     greenFeeTotal:  greenFeeTotal  / 100,
     promoDiscount:  (promo?.discountCents ?? 0) / 100,
+    lastMinutePct,
     cartFeeTotal:   cartFeeTotal   / 100,
     rangeBallsTotal: rangeBallsTotal / 100,
     accessFeeTotal: accessFeeTotal / 100,
