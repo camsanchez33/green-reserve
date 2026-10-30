@@ -217,6 +217,7 @@ model Course {
   shopSales                  ShopSale[]
   registerCloses             RegisterClose[]
   moneyMoves                 MoneyMove[]
+  shopStockReceipts          ShopStockReceipt[]
 
   @@index([operatorId])
   @@index([groupId])
@@ -1369,10 +1370,15 @@ model ShopItem {
   optionLabel String            @default("")
   /// W2-7 part B: how the item is taxed — a key of TAX_CATEGORIES in lib/sales-tax.ts (Stripe product tax code).
   taxCategory String            @default("general")
+  /// SHOP-4 (Cam 2026-10-30): what one costs the course, for margin. Optional; only the owner sees it.
+  costCents   Int?
+  /// SHOP-4: show it as low stock once the count is at or below this; null = no alert.
+  reorderAt   Int?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   sales       BookingShopItem[]
   saleLines   ShopSaleLine[]
+  receipts    ShopStockReceipt[]
 
   @@index([courseId])
   @@index([parentId])
@@ -1850,4 +1856,23 @@ model MoneyMove {
   @@index([courseId, at])
   @@index([bookingId])
   @@index([membershipId])
+}
+
+/// SHOP-4 (Cam 2026-10-30, "Low stock + receiving"): a delivery put on the shelf —
+/// how many came in and, when given, what each cost. Append-only.
+model ShopStockReceipt {
+  id         String   @id @default(cuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  shopItemId String
+  shopItem   ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+  quantity   Int
+  /// What each one cost on this delivery, when entered.
+  unitCostCents Int?
+  note       String   @default("")
+  receivedBy String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([courseId, createdAt])
+  @@index([shopItemId])
 }
