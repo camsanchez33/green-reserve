@@ -15,7 +15,8 @@ import Stripe from 'stripe';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { sendRefundEmail } from './email';
-import { roundChargedTotal } from './shop';
+import { roundChargedTotal, roundApplicationFeeCents } from './shop';
+import { recordMove, feeBackCents } from './money-ledger';
 
 export type PaymentEventKind =
   | 'refund' | 'refund_failed'
@@ -110,6 +111,8 @@ export async function refundBooking(bookingId: string, opts: {
   }
 
   const full = alreadyRefunded + amountCents >= charged;
+  // LEDGER-1: GreenReserve's application fee comes back pro rata (refund_application_fee: true).
+  await recordMove({ courseId: booking.courseId, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, platformFeeCents: feeBackCents(refund.amount, charged, roundApplicationFeeCents(booking)), stripeId: refund.id, bookingId, actor: opts.actor === 'operator' ? 'staff' : 'admin', note: reason });
   await prisma.$transaction([
     prisma.paymentEvent.create({
       data: { bookingId, kind: 'refund', amountCents, stripeId: refund.id, actor: opts.actor, actorName: opts.actorName, detail: reason },

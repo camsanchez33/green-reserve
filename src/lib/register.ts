@@ -10,6 +10,7 @@ import { formatTeeTime } from './format';
 import { settleAtCounter, createCounterBooking, counterDueCents, type CounterBookingInput } from './counter-pay';
 import { roundChargeCents } from './shop';
 import { createSale, quoteSale, type DiscountInput, type SaleView, TOTAL_CHANGED } from './shop-sales';
+import { recordMove } from './money-ledger';
 import type { EventActor } from './booking-events';
 
 export const MAX_REGISTER_ROUNDS = 8;
@@ -114,6 +115,8 @@ export async function ringUpCash(courseId: string, opts: {
   if (!sale.ok) {
     // The rounds are paid (checked in at the counter) even though the items couldn't be recorded.
     console.error(JSON.stringify({ ev: 'register.items_after_rounds.fail', courseId, settled: settled.map(s => s.bookingId), error: sale.error }));
+    // LEDGER-1: the rounds' cash was taken even with no sale to carry it.
+    for (const st of settled) await recordMove({ courseId, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: st.amountCents, bookingId: st.bookingId, actor: 'staff', note: `${opts.soldBy} — no sale recorded` });
     return { ok: false, status: sale.status, settled: settled.map(s => s.bookingId), error: `${settled.length ? `The ${settled.length === 1 ? 'round was' : `${settled.length} rounds were`} paid and checked in, but ` : ''}${sale.error.charAt(0).toLowerCase()}${sale.error.slice(1)}` };
   }
   const { payToken: _t, ...view } = sale.value;

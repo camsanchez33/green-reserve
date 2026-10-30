@@ -7,6 +7,8 @@ import { chargesOnLateCancel, holdsAtCutoff, bookingWindowHours } from './cancel
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { liveNoShowCharge, refundNoShowFee, chargeNoShow } from './no-show-fee';
+import { recordMove, feeBackCents } from './money-ledger';
+import { roundApplicationFeeCents } from './shop';
 
 export type CancellationOptions = {
   /**
@@ -75,6 +77,8 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
         connectedAccountId: booking.course.stripeAccountId,
       });
       roundRefunded = true;
+      // LEDGER-1: the whole round back, GreenReserve's application fee with it (refund_application_fee).
+      await recordMove({ courseId: booking.courseId, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, platformFeeCents: feeBackCents(refund.amount, booking.roundChargedCents ?? refund.amount, roundApplicationFeeCents(booking)), stripeId: refund.id, bookingId, actor: actor.type, note: 'paid round cancelled' });
       await recordBookingEventSafe({
         bookingId, courseId: booking.courseId, type: 'fee_refunded', actor,
         amountCents: refund.amount, playerCount: booking.checkedInPlayers ?? booking.players,
@@ -98,6 +102,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId });
       feeAlreadyCharged = false;
       feeWaivedRefunded = true;
+      await recordMove({ courseId: booking.courseId, what: holdsAtCutoff(booking) ? 'hold' : 'late_fee', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: actor.type, note: 'fee waived on cancel' });
       await recordBookingEventSafe({
         bookingId, courseId: booking.courseId, type: 'fee_refunded', actor,
         amountCents: refund.amount, playerCount: booking.players,
@@ -170,7 +175,12 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
         // the cron's PaymentIntent, this cancel records it, and the cron sees it
         // recorded (lib/cutoff-hold) instead of refunding a fee the golfer owes.
         for (let attempt = 0; ; attempt++) {
-          try { lateFee = await charge(); break; } catch (err) {
+          try {
+            lateFee = await charge();
+            // LEDGER-1: recorded the moment it's taken — a hold the cron charged under the same key is one row.
+            await recordMove({ courseId: booking.courseId, what: hold ? 'hold' : 'late_fee', direction: 'in', method: 'card', account: 'course', amountCents: Math.round(booking.cancellationFeeTotal), stripeId: lateFee.id, bookingId, actor: actor.type, note: 'kept on a late cancel' });
+            break;
+          } catch (err) {
             if (attempt >= 2 || !/in[- ]progress/i.test(err instanceof Error ? err.message : '')) throw err;
             await new Promise(r => setTimeout(r, 2000));
           }
@@ -237,6 +247,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
     if (lateFee && after?.cancellationFeeChargeId !== lateFee.id) {
       try {
         const refund = await refundOnConnectedAccount({ paymentIntentId: lateFee.id, connectedAccountId: booking.course.stripeAccountId as string });
+        await recordMove({ courseId: booking.courseId, what: hold ? 'hold' : 'late_fee', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: 'system', note: 'the booking changed while the fee was charged' });
         await recordPaymentEvent({ bookingId, kind: 'refund', amountCents: refund.amount, stripeId: refund.id, actor: 'system', detail: 'Late fee refunded — the booking was cancelled or checked in from another screen while it was being charged' }).catch(() => {});
       } catch (err) {
         await recordPaymentEvent({ bookingId, kind: 'refund_failed', amountCents: Math.round(booking.cancellationFeeTotal), stripeId: lateFee.id, actor: 'system', detail: `Late fee charged on a booking that changed meanwhile — refund it in Stripe: ${err instanceof Error ? err.message : String(err)}` }).catch(() => {});

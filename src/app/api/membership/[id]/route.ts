@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { stripe, chargeOnConnectedAccount, membershipFeeCents } from '@/lib/stripe';
 import { sendMembershipReceiptEmail } from '@/lib/email';
 import { rateLimit } from '@/lib/rate-limit';
+import { recordMove } from '@/lib/money-ledger';
+
+/** A dues claim older than this is from a request that died; a new payment may take over. */
+const DUES_CLAIM_STALE_MS = 10 * 60_000;
 
 // Public, token-gated membership dues payment — the member pays from the
 // link in their email, no login required. The payToken is the proof of
@@ -77,31 +81,39 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'This course is not set up for online payments yet — please pay at the pro shop.' }, { status: 422 });
   }
 
-  const { duesCents, feeCents, totalCents } = amountsDue(m);
-  if (duesCents <= 0) return NextResponse.json({ error: 'Nothing due on this membership.' }, { status: 409 });
+  if (amountsDue(m).duesCents <= 0) return NextResponse.json({ error: 'Nothing due on this membership.' }, { status: 409 });
 
-  // Launch security review 2026-10-18: the whole pay runs holding this
-  // membership's row lock, so a double click or a retry waits for the first
-  // payment and then hits the guards below instead of charging again.
-  return prisma.$transaction(async (tx) => {
-  await tx.$queryRaw`SELECT id FROM "CourseMembership" WHERE id = ${m.id} FOR UPDATE`;
-  const now = await tx.courseMembership.findUnique({ where: { id: m.id }, select: { status: true, paymentStatus: true, expiresAt: true, lastPaidAt: true } });
-  if (!now) return NextResponse.json({ error: 'Invalid or expired payment link.' }, { status: 404 });
-  // A membership the course deactivated is not revived by an old pay link.
-  if (now.status !== 'active') {
-    return NextResponse.json({ error: 'This membership is no longer active — please contact the course.' }, { status: 409 });
+  // LEDGER-1 (Cam 2026-10-30): the card used to be charged inside a database
+  // transaction holding the row lock — a timeout after Stripe took the money rolled
+  // the record back and left a paid member unpaid. Now: claim the membership (one
+  // payment at a time, like a shop or event pay link), charge outside any
+  // transaction, put the money on the ledger, then record the term.
+  const startedAt = new Date();
+  const claimed = await prisma.courseMembership.updateMany({
+    where: { id: m.id, status: 'active', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(Date.now() - DUES_CLAIM_STALE_MS) } }] },
+    data: { duesChargeStartedAt: startedAt },
+  });
+  if (!claimed.count) {
+    const s = await prisma.courseMembership.findUnique({ where: { id: m.id }, select: { status: true } });
+    return NextResponse.json({ error: s?.status !== 'active' ? 'This membership is no longer active — please contact the course.' : 'These dues are being paid right now — wait a moment and refresh.' }, { status: 409 });
   }
+  const release = () => prisma.courseMembership.updateMany({ where: { id: m.id, duesChargeStartedAt: startedAt }, data: { duesChargeStartedAt: null } });
+  const now = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { paymentStatus: true, expiresAt: true, lastPaidAt: true } });
   // A paid membership (online, or cash/check at the shop) can only be paid
   // again within its renewal window (30 days of expiry) — protects against
   // double-pays from old emails.
   if ((now.paymentStatus === 'paid' || now.paymentStatus === 'paid_offline') && now.expiresAt) {
     const daysLeft = (now.expiresAt.getTime() - Date.now()) / 86400000;
     if (daysLeft > 30) {
+      await release();
       return NextResponse.json({ error: 'These dues are already paid — nothing due until renewal.' }, { status: 409 });
     }
   }
+  // What is due is worked out from the row as it is now, under the claim.
+  const due = amountsDue({ ...m, lastPaidAt: now.lastPaidAt });
 
   let paymentIntentId: string;
+  let chargedCents: number;
   try {
     const customer = await stripe.customers.create({
       email: m.inviteEmail,
@@ -113,16 +125,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       customerId: customer.id,
       paymentMethodId,
       connectedAccountId: m.course.stripeAccountId,
-      amountCents: totalCents,
-      applicationFeeCents: feeCents,
+      amountCents: due.totalCents,
+      applicationFeeCents: due.feeCents,
       description: `Membership dues - ${m.tier?.name ?? m.membershipType} - ${m.course.name}`,
-      idempotencyKey: `membership-${m.id}-${paymentMethodId}`,
+      metadata: { membershipId: m.id },
+      // Per term: a retry of this term with this card replays the same charge; next year's renewal is its own.
+      idempotencyKey: `membership-${m.id}-${now.lastPaidAt ? now.lastPaidAt.getTime() : 'first'}-${paymentMethodId}`,
     });
     paymentIntentId = pi.id;
+    chargedCents = pi.amount;
   } catch (err) {
+    await release();
     const message = err instanceof Error ? err.message : 'Card could not be charged.';
     return NextResponse.json({ error: `Payment failed: ${message}` }, { status: 402 });
   }
+  // The money moved: on the ledger first, so nothing after this can lose it.
+  await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: chargedCents, platformFeeCents: due.feeCents, stripeId: paymentIntentId, membershipId: m.id, actor: 'golfer', note: `${m.tier?.name ?? m.membershipType}${due.initiationCents ? ' + initiation' : ''}` });
 
   // Term extends from expiry if renewing early, from today otherwise. A first
   // payment (nothing paid before) always starts today: the end date typed when
@@ -132,8 +150,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const newExpiry = new Date(base);
   newExpiry.setMonth(newExpiry.getMonth() + termMonths);
 
-  const updated = await tx.courseMembership.update({
-    where: { id: m.id },
+  // One plain update (no transaction to time out). Only if the term is still the one
+  // charged for: a replayed charge (same key) the first try already recorded is not a second term.
+  const recorded = await prisma.courseMembership.updateMany({
+    where: { id: m.id, lastPaidAt: now.lastPaidAt },
     data: {
       paymentStatus: 'paid',
       startedAt: m.startedAt ?? new Date(),
@@ -141,19 +161,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       lastPaymentIntentId: paymentIntentId,
       expiresAt: newExpiry,
       renewalRemindedAt: null,
+      duesChargeStartedAt: null,
     },
   });
+  if (!recorded.count) {
+    await release();
+    console.error(JSON.stringify({ ev: 'membership.pay.term_changed', membershipId: m.id, paymentIntentId }));
+  }
+  const updated = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { expiresAt: true } });
 
   after(sendMembershipReceiptEmail({
     name: m.inviteName,
     email: m.inviteEmail,
     courseName: m.course.name,
     tierName: m.tier?.name ?? m.membershipType,
-    amountPaid: totalCents / 100,
-    serviceFee: feeCents / 100,
+    amountPaid: chargedCents / 100,
+    serviceFee: due.feeCents / 100,
     expiresAt: updated.expiresAt,
   }).catch(console.error));
 
-  return NextResponse.json({ success: true, amountPaid: totalCents / 100, expiresAt: updated.expiresAt });
-  }, { timeout: 30_000, maxWait: 30_000 });
+  return NextResponse.json({ success: true, amountPaid: chargedCents / 100, expiresAt: updated.expiresAt });
 }

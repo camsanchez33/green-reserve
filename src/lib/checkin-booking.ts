@@ -8,6 +8,7 @@ import { refundSeparateAccessFee } from './access-fee';
 import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop';
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
+import { recordMove } from './money-ledger';
 
 /**
  * Charging a round, and checking a golfer in, are two different things.
@@ -324,6 +325,8 @@ async function chargeBooking(
               ? preCart
               : shopExtra > 0 ? {} : { totalAmount: prior.amount };
           await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, roundChargedCents: prior.amount, paymentStatus: 'paid', paidAt: new Date(prior.created * 1000), checkInFailReason: '', ...money } });
+          // LEDGER-1: the earlier charge is money that moved; the PaymentIntent id dedupes it.
+          await recordMove({ courseId: booking.courseId, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: prior.amount, platformFeeCents: prior.application_fee_amount ?? 0, stripeId: prior.id, bookingId, actor: actor.type, at: new Date(prior.created * 1000), note: 'found on Stripe after a lost reply' });
           return { error: 'This round was already charged on an earlier attempt (the confirmation was lost in transit). It is now recorded as paid — refresh and check in without a card.', status: 409 } as const;
         }
       } catch (err) {
@@ -388,6 +391,7 @@ async function chargeBooking(
           connectedAccountId: booking.course.stripeAccountId as string,
         });
         feeRefundOk = true;
+        await recordMove({ courseId: booking.courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: actor.type, note: 'hold given back at check-in' });
         // EV-1: the cutoff HOLD comes back at check-in — reporting nets this
         // against the cron's fee_charged (reason cutoff_hold).
         await recordBookingEventSafe({
@@ -433,6 +437,10 @@ async function chargeBooking(
         ...(mode.recordCheckIn ? { status: 'completed', checkedInAt: new Date(), noShowAt: null, ...(partialApplied ? { checkedInPlayers: showed } : {}) } : {}),
       },
     });
+    // LEDGER-1: the round's charge (card or reader), with GreenReserve's application fee.
+    if (paymentIntentId && chargedCents != null && !alreadyPaid) {
+      await recordMove({ courseId: booking.courseId, what: 'round', direction: 'in', method: opts?.cardPresent ? 'card_present' : 'card', account: 'course', amountCents: chargedCents, platformFeeCents: roundApplicationFeeCents(booking), stripeId: paymentIntentId, bookingId, actor: actor.type });
+    }
     if (mode.recordCheckIn) {
       await recordBookingEventSafe({
         bookingId, courseId: booking.courseId, type: 'checked_in', actor,

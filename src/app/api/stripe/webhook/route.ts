@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { findBookingByStripeId, recordPaymentEvent } from '@/lib/refund-booking';
 import { bookingIdForFeeCharge } from '@/lib/access-fee';
 import { logStripeWebhook } from '@/lib/cron-log';
+import { mirrorMove } from '@/lib/money-ledger';
 
 // MP-6b: this handled exactly ONE event type (account.updated), so the first
 // chargeback was invisible until the bank letter, and a refund issued from the
@@ -46,6 +47,11 @@ export async function POST(req: NextRequest) {
       // — or one we did, arriving a second time. Dedupe on the refund id.
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
+        // LEDGER-1: every refund of a charge on the ledger — shop, dues and events too, not only bookings.
+        for (const r of charge.refunds?.data ?? []) {
+          if (r.status === 'failed' || r.status === 'canceled') continue;
+          await mirrorMove(piOf(charge.payment_intent), { direction: 'out', amountCents: r.amount, stripeId: r.id, note: `refunded in Stripe (${r.reason ?? 'no reason given'})` });
+        }
         const booking = await bookingForPi(piOf(charge.payment_intent));
         if (!booking) break;
         // FB-3: a refund of GreenReserve's separately-charged fee is a
@@ -77,6 +83,15 @@ export async function POST(req: NextRequest) {
         if (charge.refunded && piOf(charge.payment_intent) === booking.roundPaymentIntentId) {
           await prisma.booking.update({ where: { id: booking.id }, data: { paymentStatus: 'refunded' } });
         }
+        break;
+      }
+
+      // LEDGER-1: a dispute takes the money out of the course's balance, and gives it back if the course wins.
+      case 'charge.dispute.funds_withdrawn':
+      case 'charge.dispute.funds_reinstated': {
+        const dispute = event.data.object as Stripe.Dispute;
+        const back = event.type === 'charge.dispute.funds_reinstated';
+        await mirrorMove(piOf(dispute.payment_intent), { direction: back ? 'in' : 'out', amountCents: dispute.amount, stripeId: `${dispute.id}:${back ? 'reinstated' : 'withdrawn'}`, note: back ? 'dispute won — money back' : `disputed: ${dispute.reason}` });
         break;
       }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { parseGolferKey, golferKey } from '@/lib/golfer-key';
-import { golferRecord } from '@/lib/golfer-record';
+import { golferRecord, recordKeysFor } from '@/lib/golfer-record';
 
 // The golfer record (Cam 2026-10-29). Everything is this course's only.
 //  GET     the record — anyone on the tee sheet; money with money.payments, email and
@@ -74,7 +74,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     // Cam 2026-10-29: blocking a golfer from booking online is the owner's call.
     if (session.isStaff) return NextResponse.json({ error: 'Only the course owner can stop a golfer booking online.' }, { status: 403 });
     if (body.action === 'unblock') {
-      await prisma.golferBlock.deleteMany({ where: { courseId: session.courseId, golferKey: key } });
+      // Clears a block under any key this golfer answers to — the record shows them all.
+      await prisma.golferBlock.deleteMany({ where: { courseId: session.courseId, golferKey: { in: await recordKeysFor(session.courseId, key) } } });
       return NextResponse.json({ ok: true });
     }
     const reason = String(body.reason ?? '').trim().slice(0, 300);

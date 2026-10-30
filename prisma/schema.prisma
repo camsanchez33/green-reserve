@@ -216,6 +216,7 @@ model Course {
   shopItems                  ShopItem[]
   shopSales                  ShopSale[]
   registerCloses             RegisterClose[]
+  moneyMoves                 MoneyMove[]
 
   @@index([operatorId])
   @@index([groupId])
@@ -471,6 +472,8 @@ model CourseMembership {
   payToken            String          @default("")
   lastPaidAt          DateTime?
   lastPaymentIntentId String          @default("")
+  /// LEDGER-1: set while a dues payment is being charged (claim-then-charge); a claim older than 10 minutes is stale.
+  duesChargeStartedAt DateTime?
   renewalRemindedAt   DateTime?
   /// Members import (Cam 2026-10-19): an existing member brought over from the
   /// course's own list has already joined, so no dues payment adds the tier's
@@ -1803,4 +1806,46 @@ model GolferBlock {
   blockedAt DateTime @default(now())
 
   @@unique([courseId, golferKey])
+}
+
+/// LEDGER-1 (Cam 2026-10-30, "one new money table"): one row per dollar that moved
+/// for a course — a card charge or refund, cash taken or given back, dues, shop and
+/// event payments, on the course's Stripe account or GreenReserve's. Written ONLY
+/// through recordMove() in src/lib/money-ledger.ts, at the moment the money moves;
+/// scripts/money-ledger-test.ts fails on a Stripe charge or refund that doesn't.
+/// APPEND-ONLY: a refund is its own row, never an edit. No foreign keys to the
+/// booking, sale, membership or event — the record outlives a deleted row.
+model MoneyMove {
+  id               String   @id @default(cuid())
+  courseId         String
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// When the money moved.
+  at               DateTime @default(now())
+  /// round | hold | late_fee | no_show_fee | booking_fee | shop | dues | event
+  what             String
+  /// in (the course or GreenReserve took it) | out (given back)
+  direction        String
+  /// card | card_present | cash | other (a check, a card machine)
+  method           String
+  /// course (the course's Stripe account, or its till) | platform (GreenReserve's account)
+  account          String
+  amountCents      Int
+  /// GreenReserve's part of this movement: the application fee taken (or given back on
+  /// a refund), or the whole amount on a platform-account row.
+  platformFeeCents Int      @default(0)
+  /// The PaymentIntent (charges) or Refund (refunds) id; null for cash. Unique, so a
+  /// retry or the webhook recording the same movement again is a no-op.
+  stripeId         String?  @unique
+  bookingId        String?
+  saleId           String?
+  membershipId     String?
+  eventPaymentId   String?
+  /// 'golfer' | 'staff' | 'admin' | 'cron' | 'stripe' | 'system'
+  actor            String   @default("system")
+  note             String   @default("")
+  createdAt        DateTime @default(now())
+
+  @@index([courseId, at])
+  @@index([bookingId])
+  @@index([membershipId])
 }

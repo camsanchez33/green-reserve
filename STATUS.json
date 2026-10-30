@@ -1,23 +1,50 @@
 {
-  "generatedAt": "2026-10-30T00:30:38.771Z",
+  "generatedAt": "2026-10-30T05:29:51.656Z",
   "repo": {
-    "head": "ffa0ec2a",
+    "head": "7077bf42",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 7,
+    "dirtyCount": 29,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M CLAUDE.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
+      " M prisma/schema.prisma",
       " M scripts/golfer-record-db-test.ts",
+      " M src/app/api/member/[courseSlug]/payments/route.ts",
+      " M src/app/api/membership/[id]/route.ts",
       " M src/app/api/operator/golfers/[key]/route.ts",
-      " M src/app/dashboard/golfers/[key]/page.tsx",
-      " M src/lib/golfer-key.ts",
-      " M src/lib/golfer-record.ts"
+      " M src/app/api/operator/members/route.ts",
+      " M src/app/api/stripe/webhook/route.ts",
+      " M src/lib/access-fee.ts",
+      " M src/lib/booking-fee.ts",
+      " M src/lib/cancel-booking.ts",
+      " M src/lib/checkin-booking.ts",
+      " M src/lib/counter-pay.ts",
+      " M src/lib/cutoff-hold.ts",
+      " M src/lib/data-reset.ts",
+      " M src/lib/event-payments.ts",
+      " M src/lib/golfer-record.ts",
+      " M src/lib/no-show-fee.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "89f0e830",
+        "date": "2026-10-29T20:39:13-04:00",
+        "subject": "Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "388244d7",
+        "date": "2026-10-30T00:30:41+00:00",
+        "subject": "Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "ffa0ec2a",
         "date": "2026-10-30T00:22:15+00:00",
@@ -457,13 +484,13 @@
   },
   "specs": [
     {
-      "file": "DENSE_UI_SPEC.md",
+      "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-10-27",
-      "ageDays": 1
+      "ageDays": 2
     },
     {
-      "file": "CLAUDE.md",
+      "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-27",
       "ageDays": 2
@@ -472,7 +499,7 @@
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -493,12 +520,6 @@
       "ageDays": 6
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 6
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -508,6 +529,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 7
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 7
     },
     {
@@ -538,155 +565,165 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 8
+      "ageDays": 9
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "89f0e830",
+      "date": "2026-10-29",
+      "subject": "Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)"
+    },
+    {
+      "h": "388244d7",
+      "date": "2026-10-30",
+      "subject": "Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode"
+    },
     {
       "h": "ffa0ec2a",
       "date": "2026-10-30",
@@ -736,16 +773,6 @@
       "h": "9de927a8",
       "date": "2026-10-29",
       "subject": "WIP part B: staff refunds (course share) and giving back a kept late fee"
-    },
-    {
-      "h": "4e1d9c2c",
-      "date": "2026-10-29",
-      "subject": "The dues link says why it didn't send; a search result opens Cancellations filtered"
-    },
-    {
-      "h": "06b64277",
-      "date": "2026-10-29",
-      "subject": "Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations"
     }
   ]
 }

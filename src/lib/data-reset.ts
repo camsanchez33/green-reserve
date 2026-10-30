@@ -35,7 +35,7 @@ export const WIPED_TABLES = [
   'AgreementAcceptance', 'ShopItem',
   // golfers and activity
   'GolferAccount', 'CourseResident', 'CourseMembership', 'TeeTime', 'Booking', 'TeeTimeAlert', 'PaymentEvent',
-  'BookingEvent', 'BookingShopItem', 'SentMessage', 'ShopSale', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'MonthlyReview',
+  'BookingEvent', 'BookingShopItem', 'SentMessage', 'ShopSale', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'MoneyMove', 'MonthlyReview',
   'GolferNote', 'GolferBlock',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund',
   // the pipeline
@@ -137,6 +137,7 @@ export async function resetTestCourse(courseId: string): Promise<{ ok: true; cle
     prisma.courseResident.deleteMany({ where: { courseId } }),
     prisma.shopSale.deleteMany({ where: { courseId } }),
     prisma.registerClose.deleteMany({ where: { courseId } }),
+    prisma.moneyMove.deleteMany({ where: { courseId } }),
     // An event's tasks, players, payments and refunds cascade; its held times were opened above.
     prisma.courseEvent.deleteMany({ where: { courseId } }),
     prisma.monthlyReview.deleteMany({ where: { courseId } }),

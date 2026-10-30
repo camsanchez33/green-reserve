@@ -26,6 +26,7 @@ import { MAX_ITEM_PRICE_CENTS, MAX_LINE_QUANTITY, takeStock, shopFeeFor } from '
 import { quoteShopTax, reuseShopTaxQuote, recordShopSaleTax, type TaxLine } from './sales-tax';
 import { todayIn, addDaysStr } from './course-time';
 import { teeTimeInstant } from './booking-events';
+import { recordMove } from './money-ledger';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
@@ -272,7 +273,12 @@ export async function createSale(opts: {
     if (opts.pay === 'cash') for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
     return s;
   });
-  if (opts.pay === 'cash') await recordShopSaleTax(sale.id); // never throws; the hourly cron retries
+  if (opts.pay === 'cash') {
+    // LEDGER-1: the cash taken — each round on its own booking, the items as one shop line.
+    for (const rd of rounds) await recordMove({ courseId: opts.courseId, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: rd.amountCents, bookingId: rd.bookingId, saleId: sale.id, actor: 'staff', note: opts.soldBy });
+    await recordMove({ courseId: opts.courseId, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: totalCents - roundsCents, saleId: sale.id, actor: 'staff', note: opts.soldBy });
+    await recordShopSaleTax(sale.id); // never throws; the hourly cron retries
+  }
   return { ok: true, value: { ...saleView(sale), payToken } };
 }
 
@@ -297,7 +303,10 @@ export async function settleOpenSale(courseId: string, saleId: string, to: 'void
     if (to === 'paid_cash') for (const l of sale.lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
     return { ok: true as const, value: saleView(sale) };
   });
-  if (r.ok && to === 'paid_cash') await recordShopSaleTax(saleId);
+  if (r.ok && to === 'paid_cash') {
+    await recordMove({ courseId, what: 'shop', direction: 'in', method: 'cash', account: 'course', amountCents: r.value.totalCents, saleId, actor: 'staff', note: 'pay link taken in cash' });
+    await recordShopSaleTax(saleId);
+  }
   return r;
 }
 
@@ -477,6 +486,9 @@ export async function markCardPaid(saleId: string, stamp: Date, paymentIntentId:
     const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true } });
     for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
   });
+  // LEDGER-1: the card took it (link or reader); the PaymentIntent id makes a second call a no-op.
+  const paid = await prisma.shopSale.findUnique({ where: { id: saleId }, select: { courseId: true, totalCents: true, readerId: true } });
+  if (paid) await recordMove({ courseId: paid.courseId, what: 'shop', direction: 'in', method: paid.readerId ? 'card_present' : 'card', account: 'course', amountCents: paid.totalCents, stripeId: paymentIntentId, saleId, actor: paid.readerId ? 'staff' : 'golfer' });
   await recordShopSaleTax(saleId); // never throws; the hourly cron retries
 }
 
@@ -559,6 +571,7 @@ export async function refundSale(courseId: string, saleId: string, input: { amou
     return r;
   }).catch(err => { if (err instanceof ReturnRaceError) return null; throw err; });
   if (!refund) return fail(409, 'Someone else just refunded part of this — refresh and try again.');
+  if (method === 'cash') await recordMove({ courseId, what: 'shop', direction: 'out', method: 'cash', account: 'course', amountCents, saleId, actor: 'staff', note: reason || actor });
   let status: 'done' | 'pending' = 'done';
   if (method === 'card') {
     const r = await sendShopRefund(courseId, refund.id);
@@ -617,6 +630,7 @@ export async function sendShopRefund(courseId: string, refundId: string): Promis
       { stripeAccount: account, idempotencyKey: `shop-refund-${r.id}` },
     );
     await prisma.shopSaleRefund.update({ where: { id: r.id }, data: { status: 'done', stripeRefundId: sr.id, error: '' } });
+    await recordMove({ courseId, what: 'shop', direction: 'out', method: 'card', account: 'course', amountCents: sr.amount, stripeId: sr.id, saleId: r.saleId, actor: 'staff', note: r.reason });
     return { ok: true, value: { status: 'done' } };
   } catch (err) {
     if (err instanceof Stripe.errors.StripeInvalidRequestError || err instanceof Stripe.errors.StripeCardError) {
@@ -693,6 +707,8 @@ export async function voidCashSale(courseId: string, saleId: string): Promise<Re
     return true;
   });
   if (!r) return fail(409, 'This sale just changed — refresh and look again.');
+  // The cash goes back in the drawer: the sale's whole total out (a void had nothing refunded on it).
+  await recordMove({ courseId, what: 'shop', direction: 'out', method: 'cash', account: 'course', amountCents: s.totalCents, saleId, actor: 'staff', note: 'voided' });
   await reverseVoidTax(saleId);
   const sale = await prisma.shopSale.findUniqueOrThrow({ where: { id: saleId }, include: SALE_INCLUDE });
   return { ok: true, value: saleView(sale) };

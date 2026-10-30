@@ -7,6 +7,7 @@ import { todayIn } from '@/lib/course-time';
 import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
+import { recordMove } from '@/lib/money-ledger';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaymentLinkEmail } from '@/lib/email';
 
 /**
@@ -228,6 +229,9 @@ export async function PATCH(req: NextRequest) {
     const base = membership.lastPaidAt && membership.expiresAt && membership.expiresAt.getTime() > Date.now() ? new Date(membership.expiresAt) : new Date();
     const newExpiry = new Date(base);
     newExpiry.setMonth(newExpiry.getMonth() + termMonths);
+    // LEDGER-1: dues taken at the course (cash or a check) — what was due for this term, initiation on a first payment.
+    const duesCents = (membership.tier?.annualFeeCents ?? 0) + (membership.lastPaidAt || membership.initiationWaived ? 0 : (membership.tier?.initiationFeeCents ?? 0));
+    await recordMove({ courseId: session.courseId, what: 'dues', direction: 'in', method: 'other', account: 'course', amountCents: duesCents, membershipId: id, actor: 'staff', note: 'marked paid at the course' });
     const updated = await prisma.courseMembership.update({
       where: { id },
       data: {

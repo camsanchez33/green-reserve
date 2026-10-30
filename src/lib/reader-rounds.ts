@@ -27,6 +27,7 @@ import { roundChargeCents, roundApplicationFeeCents } from './shop';
 import { recordPaymentEvent } from './refund-booking';
 import type { EventActor } from './booking-events';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
+import { recordMove } from './money-ledger';
 
 type Result<T> = { ok: true; value: T } | { ok: false; status: number; error: string };
 const fail = (status: number, error: string) => ({ ok: false as const, status, error });
@@ -122,7 +123,7 @@ export async function startRoundOnReader(courseId: string, bookingId: string, re
  * payment is refunded in full (GreenReserve's fee with it).
  */
 async function finalize(courseId: string, bookingId: string, pi: Stripe.PaymentIntent, stamp: Date, account: string, actor: EventActor): Promise<RoundReaderStatus> {
-  const b = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { status: true, paymentStatus: true, roundPaymentIntentId: true } });
+  const b = await prisma.booking.findUniqueOrThrow({ where: { id: bookingId }, select: { status: true, paymentStatus: true, roundPaymentIntentId: true, courseId: true } });
   if (b.roundPaymentIntentId === pi.id && done(b.paymentStatus)) {
     await release(bookingId, stamp).catch(() => {});
     return { status: 'paid' };
@@ -139,11 +140,14 @@ async function finalize(courseId: string, bookingId: string, pi: Stripe.PaymentI
     console.error(JSON.stringify({ ev: 'reader_round.record.fail', bookingId, paymentIntentId: pi.id, error: 'error' in r ? r.error : 'not recorded' }));
   }
   // Paid twice (or for a round no longer playing): give this one back.
+  // LEDGER-1: the tap took the money, so it is on the ledger before it goes back.
+  await recordMove({ courseId: b.courseId, what: 'round', direction: 'in', method: 'card_present', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? 0, stripeId: pi.id, bookingId, actor: actor.type, note: 'card reader, a second payment' });
   try {
     const refund = await stripe.refunds.create(
       { payment_intent: pi.id, refund_application_fee: true, metadata: { bookingId, why: 'reader_duplicate' } },
       { stripeAccount: account, idempotencyKey: `reader-dup-refund-${pi.id}` },
     );
+    await recordMove({ courseId: b.courseId, what: 'round', direction: 'out', method: 'card_present', account: 'course', amountCents: refund.amount, platformFeeCents: pi.application_fee_amount ?? 0, stripeId: refund.id, bookingId, actor: 'system', note: 'card reader, a second payment given back' });
     await recordPaymentEvent({ bookingId, kind: 'refund', amountCents: refund.amount, stripeId: refund.id, actor: 'system', detail: 'Card reader payment refunded — the round was already paid or cancelled' }).catch(() => {});
     await release(bookingId, stamp);
     return { status: 'refunded', message: 'This round was already paid or cancelled, so the card payment was refunded in full.' };

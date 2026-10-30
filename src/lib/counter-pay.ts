@@ -17,6 +17,7 @@ import { todayIn } from './course-time';
 import { randomUUID } from 'crypto';
 import { READER_STALE_MS } from './checkin-booking';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
+import { recordMove } from './money-ledger';
 import { applyTierRates } from './tier-rates';
 import { memberPlayers, splitTotal, memberSpot, partyFees, membershipLive, type PartyBooking } from './member-rates';
 
@@ -92,6 +93,7 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
   if (hadHoldFee && booking.course.stripeAccountId) {
     try {
       const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId as string, connectedAccountId: booking.course.stripeAccountId });
+      await recordMove({ courseId, what: 'hold', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: opts.actor.type, note: 'hold given back — paid at the counter' });
       await recordBookingEventSafe({ ...evBase, type: 'fee_refunded', amountCents: refund.amount, playerCount: booking.players, stripeId: refund.id, metadata: { reason: 'hold_refunded_at_checkin', paidOffline: true } });
     } catch (err) {
       holdNote = `The late-cancellation hold fee could not be refunded automatically (${err instanceof Error ? err.message : 'Stripe error'}) — GreenReserve will follow up.`;
