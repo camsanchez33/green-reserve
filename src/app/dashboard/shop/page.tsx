@@ -116,7 +116,10 @@ export default function ShopPage() {
   const [quoteError, setQuoteError] = useState('');
   const [quoteTry, setQuoteTry] = useState(0);
 
+  // SHOP-4: every reload of the sales also refreshes the Stock line (a sale can take the last one).
+  const [loads, setLoads] = useState(0);
   const load = useCallback(async () => {
+    setLoads(n => n + 1);
     setLoadError('');
     const [i, s] = await Promise.all([
       dfetch<{ items: Item[] }>('/api/operator/shop-items'),
@@ -856,7 +859,7 @@ export default function ShopPage() {
             </Card>
             {/* POS-3 R4: count the drawer at the end of the day. */}
             {/* SHOP-4: low stock, deliveries, reorder points and cost. */}
-            {(access.can('shop.sell') || access.can('shop.catalog')) && <ShopStock />}
+            {(access.can('shop.sell') || access.can('shop.catalog')) && <ShopStock refreshKey={loads} />}
             {access.can('shop.close') && <RegisterClose />}
           </div>
         )}

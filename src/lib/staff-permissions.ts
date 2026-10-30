@@ -69,7 +69,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'shop.discount', group: 'Pro shop', label: 'Give discounts', help: 'Take money off a walk-up sale (an amount or a percent), with a note saying why.', requires: ['shop.sell'], movesMoney: true },
   // POS-3 R4 (Cam 2026-10-24): count the drawer at the end of the day — Manager and Front desk.
   { key: 'shop.close', group: 'Pro shop', label: 'Close out the register', help: 'See the day’s cash and card totals, count the drawer and record any over or short.', requires: ['shop.sell'] },
-  { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop.', requires: ['settings.edit'] },
+  { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop, record deliveries and set reorder points.', requires: ['settings.edit'] },
   // W2-9 (Cam 2026-10-22): owner + staff given it; Manager has it, Front desk doesn't.
   { key: 'events.manage', group: 'Events', label: 'Run events', help: 'Set up outings and tournaments, hold their tee times, keep the checklist and the player list.' },
   { key: 'analytics.view', group: 'Course', label: 'See analytics', help: 'Revenue, utilization, no-shows and customers.' },

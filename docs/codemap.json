@@ -8530,7 +8530,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 888,
+      "lines": 891,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [

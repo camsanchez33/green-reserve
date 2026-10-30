@@ -30,7 +30,7 @@ async function sellable(courseId: string, itemId: string) {
   return { ok: true as const, value: row };
 }
 
-/** Every counted or reorder-tracked sellable row, low ones first. Cost only when asked (the owner). */
+/** Every active sellable row, low ones first. Cost only when asked (the owner). */
 export async function stockRows(courseId: string, opts: { cost: boolean }): Promise<StockRow[]> {
   const rows = await prisma.shopItem.findMany({
     where: { courseId, active: true, options: { none: {} }, OR: [{ parentId: null }, { parent: { active: true } }] },
@@ -61,7 +61,7 @@ export async function receiveStock(courseId: string, itemId: string, input: { qu
   if (!row.ok) return row;
   const note = String(input.note ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 200);
   const stockCount = await prisma.$transaction(async tx => {
-    // Not counted yet: counting starts at what came in. Atomic, so a sale at the same moment isn't lost.
+    // Not counted yet: counting starts at what came in (a sale of an uncounted item at that moment isn't counted).
     await tx.shopItem.updateMany({ where: { id: itemId, courseId, stockCount: null }, data: { stockCount: 0 } });
     const it = await tx.shopItem.update({ where: { id: itemId }, data: { stockCount: { increment: q }, ...(cost !== null ? { costCents: cost } : {}) }, select: { stockCount: true } });
     await tx.shopStockReceipt.create({ data: { courseId, shopItemId: itemId, quantity: q, unitCostCents: cost, note, receivedBy: by.slice(0, 200) } });
