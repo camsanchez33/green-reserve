@@ -25,7 +25,7 @@ ok('21: Paid at the shop and Email dues link on members who owe', members.includ
 ok('21: a member can be edited after adding — an invite\'s contact, never a linked account\'s', members.includes('Edit details') && route.includes('if (membership.golferId) return NextResponse.json({ error: \'This member signs in with their own account'));
 ok('21: a bad "runs until" date is refused, not a 500', route.includes("Pick the date it runs until, or leave it blank."));
 
-ok('21: the dues link never reports a send that did not happen (no Stripe, no email, nothing owed)', route.includes("if (sent !== 'sent') return NextResponse.json({ error: NOT_SENT[sent] }, { status: 409 });") && route.includes("return 'no_stripe';"));
+ok('21: the dues link never reports a send that did not happen (no Stripe, no email, nothing owed)', route.includes("if (sent !== 'sent') return NextResponse.json({ error: NOT_SENT[sent] }, { status: 409 });") && src('src/lib/membership-pay-link.ts').includes("return 'no_stripe';"));
 
 // 24. Close-out.
 const close = src('src/components/dashboard/RegisterClose.tsx');

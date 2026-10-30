@@ -1,4 +1,5 @@
 'use client';
+import { JoinOnlineSelect, JoinRequests } from '@/components/dashboard/MemberJoin';
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Check, X, ArrowLeft, RefreshCw } from 'lucide-react';
@@ -22,7 +23,7 @@ interface Tier {
   greenFeeWeekday: number | null; greenFeeWeekend: number | null;
   cartFeeWeekday: number | null; cartFeeWeekend: number | null;
   discountPct: number | null;
-  advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean;
+  advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean; joinOnline?: string;
   annualFee: number; initiationFee: number; termMonths: number;
   notes: string; active: boolean;
   _count?: { memberships: number };
@@ -432,6 +433,7 @@ function MembersPageInner() {
                     <input type="checkbox" className="accent-pine" checked={!!tierForm.guestsPayMemberRate} onChange={e => setTF('guestsPayMemberRate', e.target.checked)}/>
                     Guests pay the member rate
                   </label>
+                  <JoinOnlineSelect value={tierForm.joinOnline} onChange={v => setTF('joinOnline', v)} className={iCls} />
                   <div>
                     <label className={lblCls}>Annual fee ($)</label>
                     <div className="relative">
@@ -665,6 +667,9 @@ function MembersPageInner() {
               </div>
             </Card>
           )}
+
+          {/* MEM-JOIN: golfers joining online. */}
+          <JoinRequests members={members} canEdit={canEdit} onChanged={loadAll} />
 
           {/* The list */}
           {tiers.length === 0 ? (

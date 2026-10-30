@@ -1,6 +1,8 @@
 export type Course = {
   /** PRICE-3: the course sells round packs online (lib/public-course). */
   sells_packs?: boolean;
+  /** MEM-JOIN: the course offers memberships to join online (lib/public-course). */
+  joins_online?: boolean;
   id: number;
   slug: string;
   name: string;

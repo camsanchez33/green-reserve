@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { tierToWire } from '@/lib/tier-wire';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { readJoinMode, JOIN_NEEDS_DUES } from '@/lib/membership-join';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
-          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate } = body;
+          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
   // ACT-1 review: a booking records its tier by NAME, so two live tiers with one
@@ -42,8 +43,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Use either flat rates or a discount %, not both' }, { status: 400 });
   }
 
+  // MEM-JOIN: joined online only with dues to pay (lib/membership-join).
+  const join = joinOnline === undefined ? 'off' : readJoinMode(joinOnline);
+  if (!join) return NextResponse.json({ error: 'Pick how golfers join online.' }, { status: 400 });
+  if (join !== 'off' && dollarsToCentsOr0(annualFee) <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
+
   const tier = await prisma.membershipTier.create({
     data: {
+      joinOnline: join,
       courseId: session.courseId,
       name: name.trim(),
       color: color || '#1b4332',
@@ -85,9 +92,15 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: `You already have a tier called “${updates.name.trim()}”. Pick a different name.` }, { status: 409 });
   }
 
+  const join = updates.joinOnline === undefined ? tier.joinOnline : readJoinMode(updates.joinOnline);
+  if (!join) return NextResponse.json({ error: 'Pick how golfers join online.' }, { status: 400 });
+  const duesAfter = updates.annualFee != null ? dollarsToCentsOr0(updates.annualFee) : tier.annualFeeCents;
+  if (join !== 'off' && duesAfter <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
+
   const updated = await prisma.membershipTier.update({
     where: { id },
     data: {
+      joinOnline: join,
       name:               updates.name               ?? tier.name,
       color:              updates.color              ?? tier.color,
       greenFeeWeekdayCents: updates.greenFeeWeekday !== undefined ? dollarsToCents(updates.greenFeeWeekday) : tier.greenFeeWeekdayCents,

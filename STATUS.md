@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 18:48 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5e27fe80` · working tree **20 dirty file(s)**
+Generated 2026-10-30 20:03 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `0d9486fe` · working tree **2 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 60 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 63 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `0d9486fe` | 2026-10-30 | MEM-JOIN: join a membership tier online — pay and join, or request to join |
+| `53505e47` | 2026-10-30 | Pricing 3/4 part B: round packs online (#260) |
+| `248a5175` | 2026-10-30 | PRICE-3 part B: round packs online — buy on the course page, use when booking |
 | `e1ec15b2` | 2026-10-30 | Pricing 3/4 part A: round packs at the counter (#259) |
 | `bad4eb47` | 2026-10-30 | PRICE-3 part A: round packs — sold at the register, used at the counter |
 | `2c5fcf28` | 2026-10-30 | Pricing 2/4: last-minute deals (#258) |
@@ -75,31 +78,13 @@ Generated 2026-10-30 18:48 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (20 file(s))
+### Uncommitted working tree (2 file(s))
 
-- `M  STATUS.artifact.html`
-- `M  STATUS.json`
-- `M  STATUS.md`
-- `MM docs/CODEMAP.md`
-- `MM docs/codemap.json`
-- `M  scripts/member-rates-db-test.ts`
-- `MM scripts/round-packs-db-test.ts`
-- `M  src/app/api/bookings/resident-rate/route.ts`
-- `M  src/app/api/bookings/route.ts`
-- `AM src/app/api/courses/[slug]/packs/route.ts`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M  src/app/book/BookClient.tsx`
-- `MM src/app/courses/[slug]/CourseBookingClient.tsx`
-- `M  src/app/courses/[slug]/account/AccountPortalClient.tsx`
-- `AM src/components/CoursePacks.tsx`
-- `M  src/components/dashboard/RoundPacks.tsx`
-- `M src/lib/courses-data.ts`
-- `M src/lib/public-course.ts`
-- `M src/lib/round-packs.ts`
-- `M src/lib/shop-sales.ts`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -222,6 +207,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `0d9486fe` 2026-10-30 — MEM-JOIN: join a membership tier online — pay and join, or request to join
+- `53505e47` 2026-10-30 — Pricing 3/4 part B: round packs online (#260)
+- `248a5175` 2026-10-30 — PRICE-3 part B: round packs online — buy on the course page, use when booking
 - `e1ec15b2` 2026-10-30 — Pricing 3/4 part A: round packs at the counter (#259)
 - `bad4eb47` 2026-10-30 — PRICE-3 part A: round packs — sold at the register, used at the counter
 - `2c5fcf28` 2026-10-30 — Pricing 2/4: last-minute deals (#258)
@@ -231,9 +219,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `6612c506` 2026-10-30 — Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code
 - `869ce75a` 2026-10-30 — Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter
 - `ca86612a` 2026-10-30 — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)
-- `c72b0b35` 2026-10-30 — Stock line refreshes after a sale; the catalog permission says it covers deliveries
-- `2c3e1cdd` 2026-10-30 — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere
-- `1aa2c299` 2026-10-30 — Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)
 
 ---
 

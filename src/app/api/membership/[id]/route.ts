@@ -90,12 +90,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // transaction, put the money on the ledger, then record the term.
   const startedAt = new Date();
   const claimed = await prisma.courseMembership.updateMany({
-    where: { id: m.id, status: 'active', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(Date.now() - DUES_CLAIM_STALE_MS) } }] },
+    // MEM-JOIN: a golfer who joined online ('awaiting_payment') pays here too, and becomes active below.
+    where: { id: m.id, status: { in: ['active', 'awaiting_payment'] }, OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(Date.now() - DUES_CLAIM_STALE_MS) } }] },
     data: { duesChargeStartedAt: startedAt },
   });
   if (!claimed.count) {
     const s = await prisma.courseMembership.findUnique({ where: { id: m.id }, select: { status: true } });
-    return NextResponse.json({ error: s?.status !== 'active' ? 'This membership is no longer active — please contact the course.' : 'These dues are being paid right now — wait a moment and refresh.' }, { status: 409 });
+    return NextResponse.json({ error: s?.status !== 'active' && s?.status !== 'awaiting_payment' ? 'This membership is no longer active — please contact the course.' : 'These dues are being paid right now — wait a moment and refresh.' }, { status: 409 });
   }
   const release = () => prisma.courseMembership.updateMany({ where: { id: m.id, duesChargeStartedAt: startedAt }, data: { duesChargeStartedAt: null } });
   const now = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { paymentStatus: true, expiresAt: true, lastPaidAt: true } });
@@ -153,6 +154,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     where: { id: m.id, lastPaidAt: now.lastPaidAt },
     data: {
       paymentStatus: 'paid',
+      status: 'active',
       startedAt: m.startedAt ?? new Date(),
       lastPaidAt: new Date(),
       lastPaymentIntentId: paymentIntentId,

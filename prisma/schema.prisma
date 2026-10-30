@@ -420,6 +420,10 @@ model MembershipTier {
   /// Cam 2026-10-29 ("up to course"): whether the member's guests in the same booking also pay
   /// the member rate. Off: the member pays the member rate, everyone else the public rate.
   guestsPayMemberRate  Boolean            @default(false)
+  /// MEM-JOIN (Cam 2026-10-30: "Course decides per tier"): golfers join this tier from the course
+  /// page — 'off' | 'instant' (a member once the dues are paid) | 'request' (staff approve, then
+  /// the pay link goes out). Only a tier with dues to pay can be joined online.
+  joinOnline           String             @default("off")
   active               Boolean            @default(true)
   createdAt            DateTime           @default(now())
   memberships          CourseMembership[]
@@ -474,6 +478,9 @@ model CourseMembership {
   inviteName          String          @default("")
   invitePhone         String          @default("")
   inviteAccepted      Boolean         @default(false)
+  /// active | inactive | cancelled | pending (an old self-request) | MEM-JOIN: requested (asked to
+  /// join online, staff to approve) | awaiting_payment (joined online, dues not paid yet). Only
+  /// 'active' gets member rates (lib/member-rates membershipLive).
   status              String          @default("active")
   addedBy             String          @default("operator")
   expiresAt           DateTime?

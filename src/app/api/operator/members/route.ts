@@ -8,45 +8,9 @@ import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
 import { recordMove } from '@/lib/money-ledger';
-import { sendMemberInviteEmail, sendMemberLinkedNotification, sendMembershipPaymentLinkEmail } from '@/lib/email';
-
-/**
- * Send the dues payment link if the tier actually costs money and Stripe is connected.
- * Says why when it didn't (dead end 21: the staff button must never report a send that didn't happen).
- */
-async function maybeSendPayLink(membershipId: string, isRenewal = false): Promise<'sent' | 'no_tier' | 'no_email' | 'nothing_owed' | 'no_stripe'> {
-  const m = await prisma.courseMembership.findUnique({
-    where: { id: membershipId },
-    include: { tier: true, course: { select: { name: true, stripeAccountActive: true } }, golfer: { select: { email: true, firstName: true, lastName: true } } },
-  });
-  if (!m || !m.tier) return 'no_tier';
-  // The account's email wins over the invite address (a self-joined member has no invite address).
-  const to = m.golfer?.email || m.inviteEmail;
-  if (!to) return 'no_email';
-  // MP-3 B2a: compare in cents, convert to dollars only for the email, which
-  // renders $${annualFee.toFixed(2)}.
-  const initiationCents = m.lastPaidAt || m.initiationWaived ? 0 : m.tier.initiationFeeCents;
-  if (m.tier.annualFeeCents + initiationCents <= 0) return 'nothing_owed';
-  if (!m.course.stripeAccountActive) return 'no_stripe';
-  await sendMembershipPaymentLinkEmail({
-    name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '),
-    email: to,
-    courseName: m.course.name,
-    tierName: m.tier.name,
-    annualFee: centsToDollarsOr0(m.tier.annualFeeCents),
-    initiationFee: centsToDollarsOr0(initiationCents),
-    payLink: `${process.env.NEXT_PUBLIC_URL}/membership/${m.id}?token=${m.payToken}`,
-    isRenewal,
-  });
-  return 'sent';
-}
-
-const NOT_SENT: Record<Exclude<Awaited<ReturnType<typeof maybeSendPayLink>>, 'sent'>, string> = {
-  no_tier: 'Put them on a membership first — the link is for its dues.',
-  no_email: 'They have no email on file — add one with Edit details.',
-  nothing_owed: 'Their membership costs nothing, so there is no link to send.',
-  no_stripe: 'Connect Stripe first — the link takes a payment, and there is nowhere for the money to go yet.',
-};
+import { sendMemberInviteEmail, sendMemberLinkedNotification } from '@/lib/email';
+import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
+import { approveJoin, declineJoin } from '@/lib/membership-join';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -253,6 +217,17 @@ export async function PATCH(req: NextRequest) {
       },
     });
     return NextResponse.json(updated);
+  }
+  // MEM-JOIN: answer a golfer's request to join online — approve (the pay link goes out) or decline.
+  if (action === 'approve_join') {
+    const r = await approveJoin(session.courseId, id);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ success: true, sent: r.sent, note: r.note });
+  }
+  if (action === 'decline_join') {
+    const r = await declineJoin(session.courseId, id);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ success: true });
   }
   if (action === 'send_pay_link') {
     const isRenewal = !!membership.lastPaidAt;

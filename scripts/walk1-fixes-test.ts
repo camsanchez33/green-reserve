@@ -22,9 +22,9 @@ check('the counter confirm no longer says the fee goes on their card', !src('src
 
 const dues = code('src/app/api/membership/[id]/route.ts');
 // LEDGER-1 replaced the row lock (held across the Stripe charge) with a claim: one payment at a time.
-check('dues pay claims the membership first, one payment at a time', /where: \{ id: m\.id, status: 'active', OR: \[\{ duesChargeStartedAt: null \}/.test(dues));
+check('dues pay claims the membership first, one payment at a time', /where: \{ id: m\.id, status: \{ in: \['active', 'awaiting_payment'\] \}, OR: \[\{ duesChargeStartedAt: null \}/.test(dues));
 check('dues paid at the shop count as paid', code('src/lib/membership-renewal.ts').includes("p.paymentStatus !== 'paid_offline'") && dues.includes('paidUntilRenewal(now,'));
-check('a deactivated membership is not revived by paying', dues.includes("where: { id: m.id, status: 'active'") && !/data: \{[^}]*status:\s*'active'/.test(dues));
+check('a deactivated membership is not revived by paying', dues.includes("where: { id: m.id, status: { in: ['active', 'awaiting_payment'] }") && !dues.includes("'inactive'"));
 
 check('the root metadata sets no og:url for every page', !/openGraph:\s*\{[^}]*url:/.test(code('src/app/layout.tsx')));
 const course = code('src/app/courses/[slug]/page.tsx');

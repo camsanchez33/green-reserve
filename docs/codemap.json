@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 612,
-    "routes": 280,
-    "libs": 213,
+    "files": 617,
+    "routes": 281,
+    "libs": 215,
     "models": 64,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -3995,6 +3995,38 @@
       "usedBy": []
     },
     {
+      "path": "src/app/api/courses/[slug]/join/route.ts",
+      "lines": 46,
+      "purpose": "",
+      "brain": [],
+      "exports": [
+        {
+          "name": "GET",
+          "kind": "route"
+        },
+        {
+          "name": "POST",
+          "kind": "route"
+        }
+      ],
+      "route": "/api/courses/[slug]/join",
+      "kind": "api",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "auth": "golfer",
+      "guard": "public for GET",
+      "imports": [
+        "@/lib/auth",
+        "@/lib/membership-join",
+        "@/lib/prisma",
+        "@/lib/rate-limit",
+        "next/server"
+      ],
+      "usedBy": []
+    },
+    {
       "path": "src/app/api/courses/[slug]/packs/route.ts",
       "lines": 46,
       "purpose": "",
@@ -5020,7 +5052,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 182,
+      "lines": 184,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5918,7 +5950,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 331,
+      "lines": 306,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5955,6 +5987,8 @@
         "@/lib/course-time",
         "@/lib/email",
         "@/lib/member-stats",
+        "@/lib/membership-join",
+        "@/lib/membership-pay-link",
         "@/lib/money",
         "@/lib/money-ledger",
         "@/lib/prisma",
@@ -7281,7 +7315,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 133,
+      "lines": 146,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7314,6 +7348,7 @@
       "guard": "file",
       "imports": [
         "@/lib/agreement-required",
+        "@/lib/membership-join",
         "@/lib/money",
         "@/lib/prisma",
         "@/lib/session",
@@ -7948,7 +7983,7 @@
     },
     {
       "path": "src/app/courses/[slug]/CourseBookingClient.tsx",
-      "lines": 1861,
+      "lines": 1863,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7963,6 +7998,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/CourseJoin",
         "@/components/CoursePacks",
         "@/components/TrustNote",
         "@/components/ui/StatusDot",
@@ -7989,7 +8025,7 @@
     },
     {
       "path": "src/app/courses/[slug]/account/AccountPortalClient.tsx",
-      "lines": 289,
+      "lines": 291,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8004,6 +8040,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/CourseJoin",
         "@/components/CoursePacks",
         "@/components/ui/StatusDot",
         "lucide-react",
@@ -8376,7 +8413,7 @@
     },
     {
       "path": "src/app/dashboard/members/page.tsx",
-      "lines": 858,
+      "lines": 863,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8393,6 +8430,7 @@
       "imports": [
         "@/components/OperatorSidebar",
         "@/components/dashboard/LoadError",
+        "@/components/dashboard/MemberJoin",
         "@/components/dashboard/StaffNotice",
         "@/components/dashboard/Toast",
         "@/components/dashboard/members/ImportMembers",
@@ -9588,6 +9626,32 @@
       ]
     },
     {
+      "path": "src/components/CourseJoin.tsx",
+      "lines": 70,
+      "purpose": "MEM-JOIN (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CourseJoin",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "next/link",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/courses/[slug]/CourseBookingClient.tsx",
+        "src/app/courses/[slug]/account/AccountPortalClient.tsx"
+      ]
+    },
+    {
       "path": "src/components/CoursePacks.tsx",
       "lines": 63,
       "purpose": "PRICE-3 (Cam 2026-10-30:",
@@ -10659,6 +10723,36 @@
         "src/components/dashboard/money/PayoutsTable.tsx",
         "src/components/dashboard/money/SalesPanel.tsx",
         "src/components/dashboard/settings/WhoPaysWhat.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/MemberJoin.tsx",
+      "lines": 62,
+      "purpose": "MEM-JOIN (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "JoinOnlineSelect",
+          "kind": "component"
+        },
+        {
+          "name": "JoinRequests",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/ui/Card",
+        "@/components/ui/StatusDot",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/members/page.tsx"
       ]
     },
     {
@@ -11922,6 +12016,7 @@
         "src/app/g/[slug]/page.tsx",
         "src/app/pay/event/[id]/page.tsx",
         "src/app/pay/shop/[id]/page.tsx",
+        "src/components/CourseJoin.tsx",
         "src/components/CoursePacks.tsx",
         "src/components/admin/AgreementVersionsCard.tsx",
         "src/components/admin/CourseCheckInCard.tsx",
@@ -11933,6 +12028,7 @@
         "src/components/dashboard/CourseLayoutTab.tsx",
         "src/components/dashboard/DateRangeButton.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
+        "src/components/dashboard/MemberJoin.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
@@ -12224,6 +12320,7 @@
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/GettingStartedChecklist.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
+        "src/components/dashboard/MemberJoin.tsx",
         "src/components/dashboard/PromoCodes.tsx",
         "src/components/dashboard/RegisterClose.tsx",
         "src/components/dashboard/RoundPacks.tsx",
@@ -14022,6 +14119,7 @@
         "src/app/api/bookings/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/courses/[slug]/join/route.ts",
         "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/auth/me/route.ts",
@@ -16882,7 +16980,7 @@
     },
     {
       "path": "src/lib/courses-data.ts",
-      "lines": 329,
+      "lines": 331,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -17107,6 +17205,7 @@
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/GolferMessageModal.tsx",
         "src/components/dashboard/LastMinuteDeals.tsx",
+        "src/components/dashboard/MemberJoin.tsx",
         "src/components/dashboard/MoveGroupModal.tsx",
         "src/components/dashboard/OperatorSearch.tsx",
         "src/components/dashboard/PromoCodes.tsx",
@@ -17690,6 +17789,7 @@
         "src/lib/event-signup.ts",
         "src/lib/frost-delay.ts",
         "src/lib/golfer-messages.ts",
+        "src/lib/membership-pay-link.ts",
         "src/lib/monthly-review.ts",
         "src/lib/operator-home.ts",
         "src/lib/refund-booking.ts",
@@ -19532,6 +19632,95 @@
       ]
     },
     {
+      "path": "src/lib/membership-join.ts",
+      "lines": 92,
+      "purpose": "MEM-JOIN (Cam 2026-10-30:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "approveJoin",
+          "kind": "fn"
+        },
+        {
+          "name": "declineJoin",
+          "kind": "fn"
+        },
+        {
+          "name": "JOIN_NEEDS_DUES",
+          "kind": "const"
+        },
+        {
+          "name": "joinableTiers",
+          "kind": "fn"
+        },
+        {
+          "name": "JoinMode",
+          "kind": "type"
+        },
+        {
+          "name": "JoinResult",
+          "kind": "type"
+        },
+        {
+          "name": "joinTier",
+          "kind": "fn"
+        },
+        {
+          "name": "myMembership",
+          "kind": "fn"
+        },
+        {
+          "name": "readJoinMode",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./membership-pay-link",
+        "./prisma",
+        "crypto"
+      ],
+      "usedBy": [
+        "src/app/api/courses/[slug]/join/route.ts",
+        "src/app/api/operator/members/route.ts",
+        "src/app/api/operator/tiers/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/membership-pay-link.ts",
+      "lines": 45,
+      "purpose": "Membership dues pay links — sending one by email, and what to tell staff when it couldn't go.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "maybeSendPayLink",
+          "kind": "fn"
+        },
+        {
+          "name": "NOT_SENT",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./email",
+        "./money",
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/operator/members/route.ts",
+        "src/lib/membership-join.ts"
+      ]
+    },
+    {
       "path": "src/lib/membership-renewal.ts",
       "lines": 18,
       "purpose": "When a paid membership's next term can be paid (LEDGER-1 review, Cam 2026-10-30).",
@@ -19753,6 +19942,7 @@
         "src/lib/birdie/tools.ts",
         "src/lib/course-wire.ts",
         "src/lib/go-live-preflight.ts",
+        "src/lib/membership-pay-link.ts",
         "src/lib/normalize-course.ts",
         "src/lib/public-course.ts",
         "src/lib/public-tee-times.ts",
@@ -20642,6 +20832,7 @@
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/courses/[slug]/join/route.ts",
         "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/cancellation-cutoff/route.ts",
@@ -20791,6 +20982,8 @@
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/member-stats.ts",
+        "src/lib/membership-join.ts",
+        "src/lib/membership-pay-link.ts",
         "src/lib/money-ledger.ts",
         "src/lib/money-problems.ts",
         "src/lib/monthly-review.ts",
@@ -20980,7 +21173,7 @@
     },
     {
       "path": "src/lib/public-course.ts",
-      "lines": 34,
+      "lines": 37,
       "purpose": "PERF-1:",
       "brain": [],
       "exports": [
@@ -21096,6 +21289,7 @@
         "src/app/api/cam/login/route.ts",
         "src/app/api/cam/step-up/route.ts",
         "src/app/api/checkin/[bookingId]/route.ts",
+        "src/app/api/courses/[slug]/join/route.ts",
         "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/event-signup/[id]/route.ts",
@@ -25932,6 +26126,7 @@
         "src/app/api/alerts/route.ts",
         "src/app/api/birdie/chat/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/courses/[slug]/join/route.ts",
         "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/courses/route.ts",
         "src/app/api/cron/chase-onboarding/route.ts",
@@ -26903,6 +27098,7 @@
         "src/lib/data-reset.ts",
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
+        "src/lib/membership-join.ts",
         "src/lib/sample-data.ts"
       ],
       "readers": [
@@ -26933,6 +27129,8 @@
         "src/lib/lifecycle.ts",
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
+        "src/lib/membership-join.ts",
+        "src/lib/membership-pay-link.ts",
         "src/lib/operator-search.ts",
         "src/lib/sample-data.ts"
       ]
@@ -27592,6 +27790,7 @@
         "src/app/api/admin/search/route.ts",
         "src/app/api/bookings/setup-intent/route.ts",
         "src/app/api/courses/[slug]/account/route.ts",
+        "src/app/api/courses/[slug]/join/route.ts",
         "src/app/api/courses/[slug]/packs/route.ts",
         "src/app/api/golfer/auth/accept-invite/route.ts",
         "src/app/api/golfer/auth/me/route.ts",
@@ -27826,6 +28025,10 @@
           "type": "Boolean"
         },
         {
+          "name": "joinOnline",
+          "type": "String"
+        },
+        {
           "name": "active",
           "type": "Boolean"
         },
@@ -27853,6 +28056,7 @@
         "src/lib/analytics.ts",
         "src/lib/counter-pay.ts",
         "src/lib/member-import.ts",
+        "src/lib/membership-join.ts",
         "src/lib/sample-data.ts"
       ]
     },
