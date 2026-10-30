@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 05:29 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `7077bf42` · working tree **29 dirty file(s)**
+Generated 2026-10-30 05:46 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5917aabf` · working tree **7 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 41 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 42 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `5917aabf` | 2026-10-30 | Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction |
 | `89f0e830` | 2026-10-29 | Golfer record: one course's view of a golfer, staff notes, online-booking block (#253) |
 | `388244d7` | 2026-10-30 | Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode |
 | `ffa0ec2a` | 2026-10-30 | Golfer record: one course's view of a golfer, staff notes, online-booking block |
@@ -56,28 +57,15 @@ Generated 2026-10-30 05:29 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (29 file(s))
+### Uncommitted working tree (7 file(s))
 
-- `M CLAUDE.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/golfer-record-db-test.ts`
-- `M src/app/api/member/[courseSlug]/payments/route.ts`
+- `M scripts/money-ledger-test.ts`
 - `M src/app/api/membership/[id]/route.ts`
-- `M src/app/api/operator/golfers/[key]/route.ts`
-- `M src/app/api/operator/members/route.ts`
 - `M src/app/api/stripe/webhook/route.ts`
-- `M src/lib/access-fee.ts`
-- `M src/lib/booking-fee.ts`
 - `M src/lib/cancel-booking.ts`
-- `M src/lib/checkin-booking.ts`
-- `M src/lib/counter-pay.ts`
-- `M src/lib/cutoff-hold.ts`
-- `M src/lib/data-reset.ts`
-- `M src/lib/event-payments.ts`
-- `M src/lib/golfer-record.ts`
-- `M src/lib/no-show-fee.ts`
+- `M src/lib/money-ledger.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -162,7 +150,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-27 | 2d |
+| `CLAUDE.md` | 1 | 2026-10-30 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 2d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 9d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 3d |
@@ -203,6 +191,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `5917aabf` 2026-10-30 — Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction
 - `89f0e830` 2026-10-29 — Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)
 - `388244d7` 2026-10-30 — Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode
 - `ffa0ec2a` 2026-10-30 — Golfer record: one course's view of a golfer, staff notes, online-booking block
@@ -214,7 +203,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `69bcbab8` 2026-10-29 — WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale
 - `7dcf8122` 2026-10-29 — Course page: no layout shift when the day's tee times load
 - `f226c81b` 2026-10-29 — WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party
-- `9de927a8` 2026-10-29 — WIP part B: staff refunds (course share) and giving back a kept late fee
 
 ---
 

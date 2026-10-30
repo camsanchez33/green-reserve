@@ -7,7 +7,7 @@ import { chargesOnLateCancel, holdsAtCutoff, bookingWindowHours } from './cancel
 import { recordPaymentEvent } from './refund-booking';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
 import { liveNoShowCharge, refundNoShowFee, chargeNoShow } from './no-show-fee';
-import { recordMove, feeBackCents } from './money-ledger';
+import { recordMove, feeBackCents, chargeWhat } from './money-ledger';
 import { roundApplicationFeeCents } from './shop';
 
 export type CancellationOptions = {
@@ -102,7 +102,7 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       const refund = await refundOnConnectedAccount({ paymentIntentId: booking.cancellationFeeChargeId, connectedAccountId: booking.course.stripeAccountId });
       feeAlreadyCharged = false;
       feeWaivedRefunded = true;
-      await recordMove({ courseId: booking.courseId, what: holdsAtCutoff(booking) ? 'hold' : 'late_fee', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: actor.type, note: 'fee waived on cancel' });
+      await recordMove({ courseId: booking.courseId, what: await chargeWhat(booking.cancellationFeeChargeId, holdsAtCutoff(booking) ? 'hold' : 'late_fee'), direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: actor.type, note: 'fee waived on cancel' });
       await recordBookingEventSafe({
         bookingId, courseId: booking.courseId, type: 'fee_refunded', actor,
         amountCents: refund.amount, playerCount: booking.players,

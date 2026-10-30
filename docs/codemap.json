@@ -4980,7 +4980,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 185,
+      "lines": 197,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7355,7 +7355,7 @@
     },
     {
       "path": "src/app/api/stripe/webhook/route.ts",
-      "lines": 167,
+      "lines": 169,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -18853,7 +18853,7 @@
     },
     {
       "path": "src/lib/money-ledger.ts",
-      "lines": 96,
+      "lines": 101,
       "purpose": "LEDGER-1 (Cam 2026-10-30, \"one new money table\"):",
       "brain": [],
       "exports": [

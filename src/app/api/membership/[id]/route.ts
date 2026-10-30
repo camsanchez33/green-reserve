@@ -5,6 +5,22 @@ import { sendMembershipReceiptEmail } from '@/lib/email';
 import { rateLimit } from '@/lib/rate-limit';
 import { recordMove } from '@/lib/money-ledger';
 
+/**
+ * How close to the end of a paid term the member may pay the next one: 30 days, or a
+ * third of the term when that is shorter (a monthly tier: 10 days). Before LEDGER-1 a
+ * monthly member could pay twice in a row — every day of a 30-day term is "within 30
+ * days of expiry".
+ */
+function renewalWindowDays(termMonths: number) {
+  return Math.min(30, Math.max(1, Math.floor((termMonths * 30) / 3)));
+}
+function paidUntilRenewal(p: { paymentStatus: string; expiresAt: Date | null; lastPaidAt: Date | null }, termMonths: number) {
+  if (p.paymentStatus !== 'paid' && p.paymentStatus !== 'paid_offline') return false;
+  // Paid in the last day: never again so soon, whatever the term (a double tap, an old email).
+  if (p.lastPaidAt && Date.now() - p.lastPaidAt.getTime() < 86_400_000) return true;
+  return !!p.expiresAt && (p.expiresAt.getTime() - Date.now()) / 86_400_000 > renewalWindowDays(termMonths);
+}
+
 /** A dues claim older than this is from a request that died; a new payment may take over. */
 const DUES_CLAIM_STALE_MS = 10 * 60_000;
 
@@ -59,8 +75,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     paymentStatus: m.paymentStatus,
     // Paid, and not yet inside the 30-day renewal window the POST allows —
     // else the renewal link the reminder cron sends could never be paid.
-    alreadyPaid: (m.paymentStatus === 'paid' || m.paymentStatus === 'paid_offline')
-      && !(m.expiresAt && (m.expiresAt.getTime() - Date.now()) / 86400000 <= 30),
+    alreadyPaid: paidUntilRenewal(m, m.tier?.termMonths ?? 12),
     expiresAt: m.expiresAt,
     stripeReady: !!(m.course.stripeAccountActive && m.course.stripeAccountId),
   });
@@ -102,12 +117,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // A paid membership (online, or cash/check at the shop) can only be paid
   // again within its renewal window (30 days of expiry) — protects against
   // double-pays from old emails.
-  if ((now.paymentStatus === 'paid' || now.paymentStatus === 'paid_offline') && now.expiresAt) {
-    const daysLeft = (now.expiresAt.getTime() - Date.now()) / 86400000;
-    if (daysLeft > 30) {
-      await release();
-      return NextResponse.json({ error: 'These dues are already paid — nothing due until renewal.' }, { status: 409 });
-    }
+  if (paidUntilRenewal(now, m.tier?.termMonths ?? 12)) {
+    await release();
+    return NextResponse.json({ error: 'These dues are already paid — nothing due until renewal.' }, { status: 409 });
   }
   // What is due is worked out from the row as it is now, under the claim.
   const due = amountsDue({ ...m, lastPaidAt: now.lastPaidAt });

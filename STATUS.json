@@ -1,36 +1,30 @@
 {
-  "generatedAt": "2026-10-30T05:29:51.656Z",
+  "generatedAt": "2026-10-30T05:46:38.631Z",
   "repo": {
-    "head": "7077bf42",
+    "head": "5917aabf",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 29,
+    "dirtyCount": 7,
     "dirty": [
-      "M CLAUDE.md",
-      " M docs/CODEMAP.md",
+      "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
-      " M scripts/golfer-record-db-test.ts",
-      " M src/app/api/member/[courseSlug]/payments/route.ts",
+      " M scripts/money-ledger-test.ts",
       " M src/app/api/membership/[id]/route.ts",
-      " M src/app/api/operator/golfers/[key]/route.ts",
-      " M src/app/api/operator/members/route.ts",
       " M src/app/api/stripe/webhook/route.ts",
-      " M src/lib/access-fee.ts",
-      " M src/lib/booking-fee.ts",
       " M src/lib/cancel-booking.ts",
-      " M src/lib/checkin-booking.ts",
-      " M src/lib/counter-pay.ts",
-      " M src/lib/cutoff-hold.ts",
-      " M src/lib/data-reset.ts",
-      " M src/lib/event-payments.ts",
-      " M src/lib/golfer-record.ts",
-      " M src/lib/no-show-fee.ts"
+      " M src/lib/money-ledger.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "5917aabf",
+        "date": "2026-10-30T05:34:01+00:00",
+        "subject": "Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "89f0e830",
         "date": "2026-10-29T20:39:13-04:00",
@@ -486,8 +480,8 @@
     {
       "file": "CLAUDE.md",
       "openRefs": 1,
-      "lastTouched": "2026-10-27",
-      "ageDays": 2
+      "lastTouched": "2026-10-30",
+      "ageDays": 0
     },
     {
       "file": "DENSE_UI_SPEC.md",
@@ -715,6 +709,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "5917aabf",
+      "date": "2026-10-30",
+      "subject": "Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction"
+    },
+    {
       "h": "89f0e830",
       "date": "2026-10-29",
       "subject": "Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)"
@@ -768,11 +767,6 @@
       "h": "f226c81b",
       "date": "2026-10-29",
       "subject": "WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party"
-    },
-    {
-      "h": "9de927a8",
-      "date": "2026-10-29",
-      "subject": "WIP part B: staff refunds (course share) and giving back a kept late fee"
     }
   ]
 }

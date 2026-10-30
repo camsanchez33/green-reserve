@@ -81,6 +81,10 @@ async function cleanup() {
   ok('a ledger write that fails never throws (the money has already moved)', true);
 
   ok('a dashboard refund is recorded against the charge it came from', await mirrorMove('pi_l1', { direction: 'out', amountCents: 4000, stripeId: 're_dash1', note: 'refunded in Stripe' }) && (await prisma.moneyMove.findUnique({ where: { stripeId: 're_dash1' } }))?.bookingId === 'b1');
+  await mirrorMove('pi_l1', { direction: 'out', amountCents: 5150, stripeId: 're_ours1', note: 'refunded in Stripe' });
+  await recordMove({ courseId: c.id, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: 5150, platformFeeCents: 150, stripeId: 're_ours1', bookingId: 'b1', actor: 'staff', note: 'ours' });
+  const ours = await prisma.moneyMove.findUniqueOrThrow({ where: { stripeId: 're_ours1' } });
+  ok('our own refund arriving after the webhook\'s copy keeps GreenReserve\'s share', ours.platformFeeCents === 150 && ours.actor === 'staff', ours);
   ok('…a charge from before the ledger is skipped', !(await mirrorMove('pi_unknown', { direction: 'out', amountCents: 1, stripeId: 're_x', note: '' })));
 
   // Cash at the register: each round on its booking.
@@ -125,6 +129,15 @@ async function cleanup() {
   ok('…and the term is recorded, the claim gone', paid.paymentStatus === 'paid' && !!paid.lastPaidAt && paid.duesChargeStartedAt === null && !!paid.expiresAt);
   const again = await pay('pm_a');
   ok('paying again inside the term is refused, and nothing is charged', again.status === 409 && charges === 1);
+
+  // A monthly tier: paying again right after paying is refused (every day of a 30-day term is "within 30 days").
+  const monthly = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Monthly', annualFeeCents: 5000, termMonths: 1 } });
+  const mm = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: monthly.id, inviteName: 'Mo', inviteEmail: `${TAG}+mo@t.local`, status: 'active', payToken: 'tok2' } });
+  const payM = (pm: string) => POST(new NextRequest(`http://x/api/membership/${mm.id}`, { method: 'POST', body: JSON.stringify({ token: 'tok2', paymentMethodId: pm }) }), { params: Promise.resolve({ id: mm.id }) });
+  const before = charges;
+  const m1 = await payM('pm_m1');
+  const m2 = await payM('pm_m2');
+  ok('a monthly member paying twice in a row is charged once', m1.status === 200 && m2.status === 409 && charges === before + 1, { m1: m1.status, m2: m2.status, charges: charges - before });
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

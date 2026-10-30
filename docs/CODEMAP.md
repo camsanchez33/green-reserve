@@ -201,7 +201,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/member/[courseSlug]/session` | member | file | GET | `src/app/api/member/[courseSlug]/session/route.ts` | 80 |
 | `/api/member/[courseSlug]/tee-times` | member | file | GET | `src/app/api/member/[courseSlug]/tee-times/route.ts` | 119 |
 | `/api/member/[courseSlug]/verify` | member | token | GET | `src/app/api/member/[courseSlug]/verify/route.ts` | 67 |
-| `/api/membership/[id]` | public | token | GET POST | `src/app/api/membership/[id]/route.ts` | 185 |
+| `/api/membership/[id]` | public | token | GET POST | `src/app/api/membership/[id]/route.ts` | 197 |
 | `/api/operator/active-course` | operator | file | POST | `src/app/api/operator/active-course/route.ts` | 30 |
 | `/api/operator/agreement` | operator | file | GET POST | `src/app/api/operator/agreement/route.ts` | 38 |
 | `/api/operator/analytics` | operator | file | GET | `src/app/api/operator/analytics/route.ts` | 37 |
@@ -275,7 +275,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/preview/send` | admin | file | POST | `src/app/api/preview/send/route.ts` | 133 |
 | `/api/receipt/[bookingId]` | admin | file | GET | `src/app/api/receipt/[bookingId]/route.ts` | 76 |
 | `/api/shop-sale/[id]` | public | token | GET POST | `src/app/api/shop-sale/[id]/route.ts` | 33 |
-| `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 167 |
+| `/api/stripe/webhook` | public | secret header | POST | `src/app/api/stripe/webhook/route.ts` | 169 |
 | `/api/waitlist` | public | public | POST | `src/app/api/waitlist/route.ts` | 7 |
 | `/book` | public | public | page | `src/app/book/page.tsx` | 33 |
 | `/call/[token]` | public | public | page | `src/app/call/[token]/page.tsx` | 142 |
@@ -352,7 +352,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/booking-fees.ts` | 17 | 54 |  | `ACCESS_FEE_CENTS`, `ACCESS_FEE_PER_PLAYER`, `EVENT_FEE_LABEL`, `EVENT_FEE_ON`, `FEE_AT_BOOKING_ON`, `feeCoveredCents`, `hoursLabel`, `serviceFeeLabel` +3 more |
 | `src/lib/change-requests.ts` | 17 | 149 | Single source of truth for structured "request changes" data (V13b). | `APPROVED_MARKER`, `CATEGORY_LABEL`, `CHANGE_ADDRESSED_PREFIX`, `CHANGE_CATEGORIES`, `ChangeCategoryKey`, `ChangeItem`, `CHANGES_REQUESTED_PREFIX`, `computeOpenChanges` +14 more |
 | `src/lib/inquiry-status.ts` | 16 | 501 | Single source of truth for what every inquiry status means and which pipeline segment it belongs to. | `ACTIVE_STATUSES`, `ALIVE_STATUSES`, `ARCHIVED_STATUSES`, `CLOSED_REASONS`, `compareQueue`, `daysSince`, `decodeResubmit`, `diffResubmit` +24 more |
-| `src/lib/money-ledger.ts` | 16 | 96 | LEDGER-1 (Cam 2026-10-30, "one new money table"): | `chargeWhat`, `feeBackCents`, `mirrorMove`, `Move`, `MoveMethod`, `MoveWhat`, `recordMove` |
+| `src/lib/money-ledger.ts` | 16 | 101 | LEDGER-1 (Cam 2026-10-30, "one new money table"): | `chargeWhat`, `feeBackCents`, `mirrorMove`, `Move`, `MoveMethod`, `MoveWhat`, `recordMove` |
 | `src/lib/course-timeline.ts` | 15 | 364 |  | `AGREEMENT_ACCEPTED_PREFIX`, `AgreementAcceptedPayload`, `buildCourseFeed`, `CHECKIN_CALL_PREFIX`, `CheckInCallPayload`, `CURRENT_AGREEMENT_VERSION`, `DOCUMENT_UPLOADED_PREFIX`, `DocumentUploadedPayload` +26 more |
 | `src/lib/inquiry-call.ts` | 15 | 175 | INQUIRY_CALL_SPEC IC-1 §2 — the discovery-call agenda catalog, and the small derivations the sheet, the detail page and the queue share. | `AGENDA`, `AgendaItem`, `agendaStatus`, `AgendaStatusRow`, `callGate`, `CallLike`, `defaultAgenda`, `DIRECTION_LABEL` +13 more |
 | `src/lib/member-rates.ts` | 15 | 101 | Cam 2026-10-29 (Revamp 3 audit, fixes 1 and 2 — "up to course"): | `LapseRule`, `liveMembershipWhere`, `memberPlayers`, `membershipLive`, `memberSpot`, `PartyBooking`, `partyFees`, `splitTotal` |

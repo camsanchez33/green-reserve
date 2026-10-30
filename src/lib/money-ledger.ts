@@ -43,7 +43,7 @@ type Db = Pick<typeof prisma, 'moneyMove'>;
 export async function recordMove(m: Move, db: Db = prisma): Promise<void> {
   if (!Number.isFinite(m.amountCents) || m.amountCents <= 0) return;
   try {
-    await db.moneyMove.createMany({
+    const made = await db.moneyMove.createMany({
       data: [{
         courseId: m.courseId, what: m.what, direction: m.direction, method: m.method, account: m.account,
         amountCents: Math.round(m.amountCents),
@@ -56,6 +56,11 @@ export async function recordMove(m: Move, db: Db = prisma): Promise<void> {
       // The same Stripe object recorded twice (a retry, the webhook) is one row.
       skipDuplicates: true,
     });
+    // The webhook can record our own refund first (mirrorMove, actor 'stripe'), without
+    // GreenReserve's share — that placeholder takes this call's figures.
+    if (!made.count && m.stripeId && m.actor !== 'stripe') {
+      await db.moneyMove.updateMany({ where: { stripeId: m.stripeId, actor: 'stripe' }, data: { platformFeeCents: Math.max(0, Math.round(m.account === 'platform' ? m.amountCents : (m.platformFeeCents ?? 0))), actor: m.actor ?? 'system', note: (m.note ?? '').slice(0, 300) } });
+    }
   } catch (err) {
     console.error(JSON.stringify({ ev: 'money_ledger.write_failed', courseId: m.courseId, what: m.what, direction: m.direction, amountCents: m.amountCents, stripeId: m.stripeId ?? null, bookingId: m.bookingId ?? null, error: err instanceof Error ? err.message : String(err) }));
     Sentry.captureException(err, { tags: { area: 'money_ledger', what: m.what } });

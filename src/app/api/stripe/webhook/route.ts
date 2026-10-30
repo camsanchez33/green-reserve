@@ -47,8 +47,11 @@ export async function POST(req: NextRequest) {
       // — or one we did, arriving a second time. Dedupe on the refund id.
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
+        // Since Stripe API 2022-11-15 a charge in an event carries no refund list: ask for it
+        // (on the course's account when the charge is theirs).
+        const refundList = charge.refunds?.data ?? (await stripe.refunds.list({ charge: charge.id, limit: 100 }, event.account ? { stripeAccount: event.account } : undefined)).data;
         // LEDGER-1: every refund of a charge on the ledger — shop, dues and events too, not only bookings.
-        for (const r of charge.refunds?.data ?? []) {
+        for (const r of refundList) {
           if (r.status === 'failed' || r.status === 'canceled') continue;
           await mirrorMove(piOf(charge.payment_intent), { direction: 'out', amountCents: r.amount, stripeId: r.id, note: `refunded in Stripe (${r.reason ?? 'no reason given'})` });
         }
@@ -66,8 +69,7 @@ export async function POST(req: NextRequest) {
           prisma.paymentEvent.findFirst({ where: { bookingId: booking.id, stripeId: pi, kind: 'refund_failed' }, select: { id: true } }),
         ]) : [null, null];
         const kind = isFee ? 'fee_refunded' : noShowFee && refundFailed ? 'no_show_fee_refunded' : 'refund';
-        const refunds = charge.refunds?.data ?? [];
-        for (const r of refunds) {
+        for (const r of refundList) {
           const seen = await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } });
           if (seen) continue;
           await recordPaymentEvent({
