@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 20:03 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `0d9486fe` · working tree **2 dirty file(s)**
+Generated 2026-10-30 21:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `694df8b8` · working tree **23 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 63 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 65 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `53da712c` | 2026-10-30 | Membership tiers: join online (pay and join, or request to join) (#261) |
+| `91141923` | 2026-10-30 | Regenerate codemap and status board |
 | `0d9486fe` | 2026-10-30 | MEM-JOIN: join a membership tier online — pay and join, or request to join |
 | `53505e47` | 2026-10-30 | Pricing 3/4 part B: round packs online (#260) |
 | `248a5175` | 2026-10-30 | PRICE-3 part B: round packs online — buy on the course page, use when booking |
@@ -78,13 +80,31 @@ Generated 2026-10-30 20:03 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (2 file(s))
+### Uncommitted working tree (23 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
+- `M  STATUS.artifact.html`
+- `M  STATUS.json`
+- `M  STATUS.md`
+- `MM docs/CODEMAP.md`
+- `MM docs/codemap.json`
+- `AM prisma/migrations/20261030140000_membership_auto_renew/migration.sql`
+- `MM prisma/schema.prisma`
+- `M  scripts/member-rates-db-test.ts`
+- `M  scripts/members-import-test.ts`
+- `AM scripts/membership-autorenew-db-test.ts`
+- `M  scripts/membership-join-db-test.ts`
+- `M  scripts/money-ledger-test.ts`
+- `MM src/app/api/cron/send-reminders/route.ts`
+- `A  src/app/api/membership/[id]/auto-renew/route.ts`
+- `M  src/app/api/membership/[id]/route.ts`
+- `MM src/app/api/operator/members/route.ts`
+- `MM src/app/api/operator/tiers/route.ts`
+- `M  src/app/dashboard/members/page.tsx`
+- `MM src/app/membership/[id]/page.tsx`
+- `M  src/components/dashboard/MemberJoin.tsx`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -207,6 +227,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `53da712c` 2026-10-30 — Membership tiers: join online (pay and join, or request to join) (#261)
+- `91141923` 2026-10-30 — Regenerate codemap and status board
 - `0d9486fe` 2026-10-30 — MEM-JOIN: join a membership tier online — pay and join, or request to join
 - `53505e47` 2026-10-30 — Pricing 3/4 part B: round packs online (#260)
 - `248a5175` 2026-10-30 — PRICE-3 part B: round packs online — buy on the course page, use when booking
@@ -217,8 +239,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `439c4e7b` 2026-10-30 — Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)
 - `f65525cf` 2026-10-30 — A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice
 - `6612c506` 2026-10-30 — Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code
-- `869ce75a` 2026-10-30 — Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter
-- `ca86612a` 2026-10-30 — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)
 
 ---
 

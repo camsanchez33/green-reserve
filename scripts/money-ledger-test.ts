@@ -47,7 +47,7 @@ ok('the webhook mirrors Stripe-dashboard refunds and dispute money', /charge\.di
 ok('the ledger is cleared by the launch wipe and the test-course reset', WIPED_TABLES.includes('MoneyMove') && /moneyMove\.deleteMany/.test(code('src/lib/data-reset.ts')));
 const dues = code('src/app/api/membership/[id]/route.ts');
 ok('dues are no longer charged inside a database transaction', !/\$transaction/.test(dues) && /duesChargeStartedAt/.test(dues));
-ok('…the ledger is written before the term is recorded', dues.indexOf("what: 'dues'") > 0 && dues.indexOf("what: 'dues'") < dues.indexOf('lastPaymentIntentId: paymentIntentId'));
+ok('…the ledger is written before the term is recorded', dues.indexOf("what: 'dues'") > 0 && dues.indexOf("what: 'dues'") < dues.indexOf('recordPaidTerm(') && /lastPaymentIntentId: paymentIntentId/.test(code('src/lib/membership-dues.ts')));
 
 {
   const day = 86_400_000, t = Date.now(), paidLong = new Date(t - 5 * day);

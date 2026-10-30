@@ -20,6 +20,36 @@ export function JoinOnlineSelect({ value, onChange, className }: { value: string
   );
 }
 
+/** MEM-RENEW: the tier's automatic renewal (golfers agree when they pay) and what a declined renewal does. */
+export function AutoRenewFields({ on, retry, onChange }: { on: boolean | undefined; retry: boolean | undefined; onChange: (k: 'autoRenew' | 'autoRenewRetry', v: boolean) => void }) {
+  return (
+    <div className="col-span-2 space-y-1.5 text-[13.5px] text-ink">
+      <label className="flex items-center gap-2"><input type="checkbox" className="accent-pine" checked={!!on} onChange={e => onChange('autoRenew', e.target.checked)} />Renew automatically — golfers agree when they pay, and can turn it off</label>
+      {on && <label className="flex items-center gap-2 pl-6"><input type="checkbox" className="accent-pine" checked={retry !== false} onChange={e => onChange('autoRenewRetry', e.target.checked)} />If the card is declined, try once more 3 days later</label>}
+    </div>
+  );
+}
+
+/** MEM-RENEW: a member's automatic renewal on the Members row — staff can turn it off, never on. */
+export function AutoRenewStop({ id, onChanged }: { id: string; onChanged: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function stop() {
+    setBusy(true); setError('');
+    const r = await dfetch('/api/operator/members', { method: 'PATCH', body: JSON.stringify({ id, action: 'stop_auto_renew' }) });
+    setBusy(false);
+    if (!r.ok) { setError(r.error); return; }
+    onChanged();
+  }
+  return (
+    <span className="inline-flex items-center gap-2">
+      <StatusDot status="ok" label="Auto-renew on" />
+      <button onClick={stop} disabled={busy} className="text-[13px] font-medium text-ink-soft hover:text-ink disabled:opacity-50">{busy ? 'Turning off…' : 'Turn off'}</button>
+      {error && <span role="alert" className="text-[12.5px] text-bad">{error}</span>}
+    </span>
+  );
+}
+
 type Row = { id: string; name: string; email: string; tierName: string; status: string; createdAt: string };
 
 export function JoinRequests({ members, canEdit, onChanged }: { members: Row[]; canEdit: boolean; onChanged: () => void }) {

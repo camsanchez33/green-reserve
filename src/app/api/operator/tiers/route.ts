@@ -5,6 +5,8 @@ import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { tierToWire } from '@/lib/tier-wire';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { readJoinMode, JOIN_NEEDS_DUES } from '@/lib/membership-join';
+import { memberContact, STOP_DATA } from '@/lib/membership-autorenew';
+import { sendAutoRenewOffEmail } from '@/lib/email';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
-          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline } = body;
+          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline, autoRenew, autoRenewRetry } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
   // ACT-1 review: a booking records its tier by NAME, so two live tiers with one
@@ -51,6 +53,9 @@ export async function POST(req: NextRequest) {
   const tier = await prisma.membershipTier.create({
     data: {
       joinOnline: join,
+      // MEM-RENEW: golfers on this tier agree to automatic renewal when they pay (lib/membership-autorenew).
+      autoRenew: autoRenew === true && dollarsToCentsOr0(annualFee) > 0,
+      autoRenewRetry: autoRenewRetry !== false,
       courseId: session.courseId,
       name: name.trim(),
       color: color || '#1b4332',
@@ -101,6 +106,9 @@ export async function PATCH(req: NextRequest) {
     where: { id },
     data: {
       joinOnline: join,
+      // MEM-RENEW: turning it on changes what the next payer agrees to; turning it off stops it for everyone on it (below).
+      autoRenew: (typeof updates.autoRenew === 'boolean' ? updates.autoRenew : tier.autoRenew) && duesAfter > 0,
+      autoRenewRetry: typeof updates.autoRenewRetry === 'boolean' ? updates.autoRenewRetry : tier.autoRenewRetry,
       name:               updates.name               ?? tier.name,
       color:              updates.color              ?? tier.color,
       greenFeeWeekdayCents: updates.greenFeeWeekday !== undefined ? dollarsToCents(updates.greenFeeWeekday) : tier.greenFeeWeekdayCents,
@@ -118,6 +126,18 @@ export async function PATCH(req: NextRequest) {
       active:             updates.active             !== undefined ? updates.active : tier.active,
     },
   });
+  // MEM-RENEW: the course stopped automatic renewal on this tier — its members go back to pay-link renewals, and are told.
+  if (tier.autoRenew && !updated.autoRenew) {
+    const on = await prisma.courseMembership.findMany({ where: { tierId: tier.id, autoRenew: true }, select: { id: true, inviteName: true, inviteEmail: true, expiresAt: true, golfer: { select: { email: true, firstName: true, lastName: true } } } });
+    await prisma.courseMembership.updateMany({ where: { tierId: tier.id, autoRenew: true }, data: STOP_DATA() });
+    const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true } });
+    for (const m of on) {
+      const to = memberContact(m);
+      if (!to.email) continue;
+      try { await sendAutoRenewOffEmail({ name: to.name, email: to.email, courseName: course?.name ?? '', tierName: updated.name, endsOn: m.expiresAt }); }
+      catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.tier_off_email_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
+    }
+  }
   return NextResponse.json(tierToWire(updated));
 }
 

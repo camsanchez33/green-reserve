@@ -8,9 +8,10 @@ import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
 import { recordMove } from '@/lib/money-ledger';
-import { sendMemberInviteEmail, sendMemberLinkedNotification } from '@/lib/email';
+import { sendMemberInviteEmail, sendMemberLinkedNotification, sendAutoRenewOffEmail } from '@/lib/email';
 import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
 import { approveJoin, declineJoin } from '@/lib/membership-join';
+import { stopAutoRenew, STOP_DATA, memberContact } from '@/lib/membership-autorenew';
 
 export async function GET() {
   const session = await resolveDashboardSession();
@@ -56,6 +57,7 @@ export async function GET() {
     linked:         !!m.golferId,
     lastRound:      st?.lastRound ?? null,
     initiationWaived: m.initiationWaived,
+    autoRenew:      m.autoRenew,
     roundsThisYear: st?.roundsThisYear ?? 0,
     spendThisYearCents: st?.spendThisYearCents ?? null,
   }; });
@@ -210,6 +212,9 @@ export async function PATCH(req: NextRequest) {
         lastPaidAt: new Date(),
         expiresAt: newExpiry,
         renewalRemindedAt: null,
+        // MEM-RENEW: paid — any declined automatic renewal is settled, so the next term renews as agreed.
+        autoRenewFailedAt: null,
+        autoRenewRetryAt: null,
       },
       include: {
         golfer: { select: { firstName: true, lastName: true, email: true, phone: true } },
@@ -223,6 +228,11 @@ export async function PATCH(req: NextRequest) {
     const r = await approveJoin(session.courseId, id);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ success: true, sent: r.sent, note: r.note });
+  }
+  // MEM-RENEW: staff can turn a member's automatic renewal off (never on — only the golfer agrees to it).
+  if (action === 'stop_auto_renew') {
+    if (!(await stopAutoRenew(id, session.courseId))) return NextResponse.json({ error: 'Automatic renewal is already off.' }, { status: 409 });
+    return NextResponse.json({ success: true });
   }
   if (action === 'decline_join') {
     const r = await declineJoin(session.courseId, id);
@@ -261,6 +271,17 @@ export async function PATCH(req: NextRequest) {
     const tier = await prisma.membershipTier.findUnique({ where: { id: tierId } });
     if (!tier || tier.courseId !== session.courseId) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
+    }
+  }
+  // MEM-RENEW: the golfer agreed to renew THIS tier at its price. On another tier automatic renewal
+  // stops (they're told); they agree again if they pay on a tier that renews automatically.
+  if (tierId && tierId !== membership.tierId && membership.autoRenew) {
+    await prisma.courseMembership.updateMany({ where: { id, autoRenew: true }, data: STOP_DATA() });
+    const who = await prisma.courseMembership.findUnique({ where: { id }, select: { inviteName: true, inviteEmail: true, expiresAt: true, golfer: { select: { email: true, firstName: true, lastName: true } }, course: { select: { name: true } } } });
+    const to = who ? memberContact(who) : null;
+    if (who && to?.email) {
+      try { await sendAutoRenewOffEmail({ name: to.name, email: to.email, courseName: who.course.name, tierName: membership.tier?.name ?? 'membership', endsOn: who.expiresAt }); }
+      catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.tier_change_email_fail', membershipId: id, error: err instanceof Error ? err.message : String(err) })); }
     }
   }
 

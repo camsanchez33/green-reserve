@@ -424,6 +424,13 @@ model MembershipTier {
   /// page — 'off' | 'instant' (a member once the dues are paid) | 'request' (staff approve, then
   /// the pay link goes out). Only a tier with dues to pay can be joined online.
   joinOnline           String             @default("off")
+  /// MEM-RENEW (Cam 2026-10-30: auto-renew "up to course decision", the golfer told and agreeing):
+  /// golfers on this tier agree, with a required box when they pay, to have the dues charged to
+  /// that card each term until they cancel. Off = renewals by emailed pay link, as before.
+  autoRenew            Boolean            @default(false)
+  /// When an auto-renew charge is declined: true = email a pay link and try the card once more 3
+  /// days later; false = email a pay link only. Unpaid, it lapses after the term + grace days.
+  autoRenewRetry       Boolean            @default(true)
   active               Boolean            @default(true)
   createdAt            DateTime           @default(now())
   memberships          CourseMembership[]
@@ -464,41 +471,58 @@ model CourseResident {
 }
 
 model CourseMembership {
-  id                  String          @id @default(cuid())
-  golferId            String?
-  golfer              GolferAccount?  @relation(fields: [golferId], references: [id])
-  courseId            String
-  course              Course          @relation(fields: [courseId], references: [id])
-  tierId              String?
-  tier                MembershipTier? @relation(fields: [tierId], references: [id])
+  id                     String          @id @default(cuid())
+  golferId               String?
+  golfer                 GolferAccount?  @relation(fields: [golferId], references: [id])
+  courseId               String
+  course                 Course          @relation(fields: [courseId], references: [id])
+  tierId                 String?
+  tier                   MembershipTier? @relation(fields: [tierId], references: [id])
   // Fallback name when no tier selected, or for non-golfer-account members
-  membershipType      String          @default("member")
+  membershipType         String          @default("member")
   // For members without a GolferAccount — invite flow
-  inviteEmail         String          @default("")
-  inviteName          String          @default("")
-  invitePhone         String          @default("")
-  inviteAccepted      Boolean         @default(false)
+  inviteEmail            String          @default("")
+  inviteName             String          @default("")
+  invitePhone            String          @default("")
+  inviteAccepted         Boolean         @default(false)
   /// active | inactive | cancelled | pending (an old self-request) | MEM-JOIN: requested (asked to
   /// join online, staff to approve) | awaiting_payment (joined online, dues not paid yet). Only
   /// 'active' gets member rates (lib/member-rates membershipLive).
-  status              String          @default("active")
-  addedBy             String          @default("operator")
-  expiresAt           DateTime?
-  startedAt           DateTime?
+  status                 String          @default("active")
+  addedBy                String          @default("operator")
+  expiresAt              DateTime?
+  startedAt              DateTime?
   // Dues: unpaid | paid | paid_offline (cash/check at the shop) | comped
-  paymentStatus       String          @default("unpaid")
-  payToken            String          @default("")
-  lastPaidAt          DateTime?
-  lastPaymentIntentId String          @default("")
+  paymentStatus          String          @default("unpaid")
+  payToken               String          @default("")
+  lastPaidAt             DateTime?
+  lastPaymentIntentId    String          @default("")
   /// LEDGER-1: set while a dues payment is being charged (claim-then-charge); a claim older than 10 minutes is stale.
-  duesChargeStartedAt DateTime?
-  renewalRemindedAt   DateTime?
+  duesChargeStartedAt    DateTime?
+  renewalRemindedAt      DateTime?
+  /// MEM-RENEW: renew automatically on the saved card (lib/membership-autorenew). Only ever turned on
+  /// by the golfer ticking the box when they pay; turned off by them or by staff.
+  autoRenew              Boolean         @default(false)
+  autoRenewConsentAt     DateTime?
+  /// The exact terms the golfer agreed to, as shown to them.
+  autoRenewTerms         String          @default("")
+  /// The card saved when they agreed (a customer and card on GreenReserve's account, charged on the course's).
+  savedCustomerId        String          @default("")
+  savedPaymentMethodId   String          @default("")
+  /// The term end (expiresAt) the renewal reminder was sent for; a charge waits until it has been.
+  autoRenewRemindedFor   DateTime?
+  /// What the reminder said would be charged; a renewal at any other amount is reminded again first.
+  autoRenewRemindedCents Int?
+  /// The last declined renewal charge, and when the one retry is due (null = none).
+  autoRenewFailedAt      DateTime?
+  autoRenewRetryAt       DateTime?
+  autoRenewCancelledAt   DateTime?
   /// Members import (Cam 2026-10-19): an existing member brought over from the
   /// course's own list has already joined, so no dues payment adds the tier's
   /// one-time initiation fee and their history shows none.
-  initiationWaived    Boolean         @default(false)
-  notes               String          @default("")
-  createdAt           DateTime        @default(now())
+  initiationWaived       Boolean         @default(false)
+  notes                  String          @default("")
+  createdAt              DateTime        @default(now())
 
   @@unique([golferId, courseId])
   // MP-10 schema half: the overdue-dues surfaces filter by course + last payment.

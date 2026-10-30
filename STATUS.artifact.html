@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-30 20:03 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 0d9486fe</span>
-    <span>2 uncommitted</span>
+    <span>2026-10-30 21:07 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 694df8b8</span>
+    <span>23 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">63 runs have shipped that the queue doesn't know about</div>
+<div class="lede">65 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">53da712c</span><span>Membership tiers: join online (pay and join, or request to join) (#261)</span></li>
+<li><span class="h">91141923</span><span>Regenerate codemap and status board</span></li>
 <li><span class="h">0d9486fe</span><span>MEM-JOIN: join a membership tier online — pay and join, or request to join</span></li>
 <li><span class="h">53505e47</span><span>Pricing 3/4 part B: round packs online (#260)</span></li>
 <li><span class="h">248a5175</span><span>PRICE-3 part B: round packs online — buy on the course page, use when booking</span></li>
@@ -198,9 +200,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M  STATUS.artifact.html</code></li><li><code>M  STATUS.json</code></li><li><code>M  STATUS.md</code></li><li><code>MM docs/CODEMAP.md</code></li><li><code>MM docs/codemap.json</code></li><li><code>AM prisma/migrations/20261030140000_membership_auto_renew/migration.sql</code></li><li><code>MM prisma/schema.prisma</code></li><li><code>M  scripts/member-rates-db-test.ts</code></li><li><code>M  scripts/members-import-test.ts</code></li><li><code>AM scripts/membership-autorenew-db-test.ts</code></li><li><code>M  scripts/membership-join-db-test.ts</code></li><li><code>M  scripts/money-ledger-test.ts</code></li><li><code>MM src/app/api/cron/send-reminders/route.ts</code></li><li><code>A  src/app/api/membership/[id]/auto-renew/route.ts</code></li><li><code>M  src/app/api/membership/[id]/route.ts</code></li><li><code>MM src/app/api/operator/members/route.ts</code></li><li><code>MM src/app/api/operator/tiers/route.ts</code></li><li><code>M  src/app/dashboard/members/page.tsx</code></li><li><code>MM src/app/membership/[id]/page.tsx</code></li><li><code>M  src/components/dashboard/MemberJoin.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -282,6 +284,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">53da712c</td><td class="num">2026-10-30</td><td>Membership tiers: join online (pay and join, or request to join) (#261)</td></tr>
+<tr><td class="num">91141923</td><td class="num">2026-10-30</td><td>Regenerate codemap and status board</td></tr>
 <tr><td class="num">0d9486fe</td><td class="num">2026-10-30</td><td>MEM-JOIN: join a membership tier online — pay and join, or request to join</td></tr>
 <tr><td class="num">53505e47</td><td class="num">2026-10-30</td><td>Pricing 3/4 part B: round packs online (#260)</td></tr>
 <tr><td class="num">248a5175</td><td class="num">2026-10-30</td><td>PRICE-3 part B: round packs online — buy on the course page, use when booking</td></tr>
@@ -292,8 +296,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">439c4e7b</td><td class="num">2026-10-30</td><td>Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)</td></tr>
 <tr><td class="num">f65525cf</td><td class="num">2026-10-30</td><td>A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice</td></tr>
 <tr><td class="num">6612c506</td><td class="num">2026-10-30</td><td>Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code</td></tr>
-<tr><td class="num">869ce75a</td><td class="num">2026-10-30</td><td>Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter</td></tr>
-<tr><td class="num">ca86612a</td><td class="num">2026-10-30</td><td>Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

@@ -4,7 +4,9 @@ import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { paidUntilRenewal } from '@/lib/membership-renewal';
-import { sendReminderEmail, sendMembershipPaymentLinkEmail } from '@/lib/email';
+import { sendReminderEmail, sendMembershipPaymentLinkEmail, sendMembershipReceiptEmail, sendAutoRenewReminderEmail, sendAutoRenewDeclinedEmail } from '@/lib/email';
+import { remindersDue, markReminded, chargesDue, chargeRenewal, renewalCents, memberContact, RETRY_DAYS } from '@/lib/membership-autorenew';
+import { chargeOnConnectedAccount } from '@/lib/stripe';
 
 export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
   // cronRoute authorises before logging; the check stays here too so every
@@ -52,6 +54,8 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
   const expiring = await prisma.courseMembership.findMany({
     where: {
       status: 'active',
+      // MEM-RENEW: a member on automatic renewal gets its reminder below, not a pay link.
+      autoRenew: false,
       paymentStatus: { in: ['paid', 'paid_offline'] },
       renewalRemindedAt: null,
       expiresAt: { not: null, lte: cutoff, gte: now },
@@ -89,5 +93,38 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     }
   }
 
-  return NextResponse.json({ success: true, sent, total: tomorrowBookings.length, renewalsSent });
+  // ── MEM-RENEW: automatic renewals (lib/membership-autorenew) ──
+  // The reminder (30 days ahead yearly, 7 monthly) first; a renewal is charged only after its full
+  // notice has run. Declined: a pay link, and the one retry when the tier allows it.
+  const link = (m: { id: string; payToken: string }) => `${process.env.NEXT_PUBLIC_URL}/membership/${m.id}?token=${m.payToken}`;
+  let autoReminders = 0, autoRenewed = 0, autoDeclined = 0;
+  for (const m of await remindersDue(now)) {
+    const to = memberContact(m);
+    if (!to.email || !m.expiresAt || !m.tier) continue;
+    try {
+      await sendAutoRenewReminderEmail({ name: to.name, email: to.email, courseName: m.course.name, tierName: m.tier.name, renewsOn: m.expiresAt, totalCents: renewalCents(m.tier).totalCents, manageLink: link(m) });
+      await markReminded(m.id, m.expiresAt, renewalCents(m.tier).totalCents, now);
+      autoReminders++;
+    } catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.reminder_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
+  }
+  for (const m of await chargesDue(now)) {
+    const r = await chargeRenewal(m.id, chargeOnConnectedAccount, now);
+    const to = memberContact(m);
+    if (r.status === 'paid') {
+      autoRenewed++;
+      if (to.email && m.tier) {
+        try { await sendMembershipReceiptEmail({ name: to.name, email: to.email, courseName: m.course.name, tierName: m.tier.name, amountPaid: r.amountCents / 100, serviceFee: renewalCents(m.tier).feeCents / 100, expiresAt: r.expiresAt }); }
+        catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.receipt_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
+      }
+    } else if (r.status === 'declined') {
+      autoDeclined++;
+      console.error(JSON.stringify({ ev: 'membership.autorenew.declined', membershipId: m.id, retry: r.retry, error: r.error }));
+      if (to.email && m.tier) {
+        try { await sendAutoRenewDeclinedEmail({ name: to.name, email: to.email, courseName: m.course.name, tierName: m.tier.name, totalCents: renewalCents(m.tier).totalCents, payLink: link(m), retryOn: r.retry ? new Date(now.getTime() + RETRY_DAYS * 86_400_000) : null }); }
+        catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.declined_email_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
+      }
+    }
+  }
+
+  return NextResponse.json({ success: true, sent, total: tomorrowBookings.length, renewalsSent, autoReminders, autoRenewed, autoDeclined });
 });
