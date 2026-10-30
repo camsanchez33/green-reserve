@@ -3,6 +3,7 @@ import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
+import { paidUntilRenewal } from '@/lib/membership-renewal';
 import { sendReminderEmail, sendMembershipPaymentLinkEmail } from '@/lib/email';
 
 export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
@@ -62,6 +63,8 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
   let renewalsSent = 0;
   for (const m of expiring) {
     if (!m.tier || m.tier.annualFeeCents <= 0 || !m.course.stripeAccountActive) continue;
+    // Not yet payable (a monthly tier opens 10 days out): left unstamped, so it goes out the day the link works.
+    if (paidUntilRenewal(m, m.tier.termMonths)) continue;
     // The account's email wins over the invite address (a self-joined member has no invite address).
     const to = m.golfer?.email || m.inviteEmail;
     if (!to) continue;

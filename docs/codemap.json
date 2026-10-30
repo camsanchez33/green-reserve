@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 589,
+    "files": 590,
     "routes": 272,
-    "libs": 206,
+    "libs": 207,
     "models": 61,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -4225,7 +4225,7 @@
     },
     {
       "path": "src/app/api/cron/send-reminders/route.ts",
-      "lines": 91,
+      "lines": 94,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4245,6 +4245,7 @@
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/email",
+        "@/lib/membership-renewal",
         "@/lib/money",
         "@/lib/prisma",
         "next/server"
@@ -4980,7 +4981,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 197,
+      "lines": 182,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5003,6 +5004,7 @@
       "guard": "token",
       "imports": [
         "@/lib/email",
+        "@/lib/membership-renewal",
         "@/lib/money-ledger",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -18849,6 +18851,32 @@
       ],
       "usedBy": [
         "src/app/api/operator/members/route.ts"
+      ]
+    },
+    {
+      "path": "src/lib/membership-renewal.ts",
+      "lines": 18,
+      "purpose": "When a paid membership's next term can be paid (LEDGER-1 review, Cam 2026-10-30).",
+      "brain": [],
+      "exports": [
+        {
+          "name": "paidUntilRenewal",
+          "kind": "fn"
+        },
+        {
+          "name": "renewalWindowDays",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/api/cron/send-reminders/route.ts",
+        "src/app/api/membership/[id]/route.ts"
       ]
     },
     {

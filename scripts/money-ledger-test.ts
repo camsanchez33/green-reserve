@@ -12,6 +12,7 @@ import { stripe } from '../src/lib/stripe';
 import { recordMove, mirrorMove, feeBackCents } from '../src/lib/money-ledger';
 import { createSale } from '../src/lib/shop-sales';
 import { WIPED_TABLES } from '../src/lib/data-reset';
+import { paidUntilRenewal } from '../src/lib/membership-renewal';
 
 const TAG = 'moneyledgertest';
 let failed = 0;
@@ -48,6 +49,12 @@ const dues = code('src/app/api/membership/[id]/route.ts');
 ok('dues are no longer charged inside a database transaction', !/\$transaction/.test(dues) && /duesChargeStartedAt/.test(dues));
 ok('…the ledger is written before the term is recorded', dues.indexOf("what: 'dues'") > 0 && dues.indexOf("what: 'dues'") < dues.indexOf('lastPaymentIntentId: paymentIntentId'));
 
+{
+  const day = 86_400_000, t = Date.now(), paidLong = new Date(t - 5 * day);
+  const at = (left: number) => ({ paymentStatus: 'paid', expiresAt: new Date(t + left * day), lastPaidAt: paidLong });
+  ok('a monthly membership can be renewed from 10 days out, a yearly one from 30', !paidUntilRenewal(at(9), 1, t) && paidUntilRenewal(at(20), 1, t) && !paidUntilRenewal(at(29), 12, t) && paidUntilRenewal(at(31), 12, t));
+  ok('the renewal reminder waits for the same window (and is not stamped before it)', /if \(paidUntilRenewal\(m, m\.tier\.termMonths\)\) continue;/.test(code('src/app/api/cron/send-reminders/route.ts')));
+}
 ok('GreenReserve\'s fee back on a part refund is pro rata', feeBackCents(5000, 10000, 600) === 300 && feeBackCents(20000, 10000, 600) === 600 && feeBackCents(100, 0, 600) === 0);
 
 // ── 2. The ledger's rules, and the dues flow, against the database ──────────────
