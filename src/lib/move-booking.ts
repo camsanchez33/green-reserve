@@ -37,6 +37,7 @@ import { memberPlayers, splitTotal, memberSpot, membershipLive } from './member-
 import { groupGreenFee } from './residents';
 import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
+import { promoFits, seatAfter } from './promo-codes';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 
 export type MovePricing = 'keep' | 'new_slot';
@@ -118,7 +119,7 @@ export async function moveBooking(opts: {
         select: {
           id: true, courseId: true, teeTimeId: true, players: true, status: true, checkedInAt: true, noShowAt: true, golferAccountId: true, golferEmail: true,
           paymentStatus: true, roundPaymentIntentId: true, readerStartedAt: true,
-          cartSelected: true, appliedRate: true, residentPlayers: true, residentRateCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
+          cartSelected: true, appliedRate: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, promoDiscountCents: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, accessFeeTotal: true,
           cancellationHoursAtBooking: true, lateFeeTimingAtBooking: true, cancellationFeeTotal: true, cancellationFeeChargeId: true,
           teeTime: { select: { id: true, date: true, time: true, status: true, playersBooked: true, playersAvailable: true } },
           course: { select: { timezone: true, cancellationHours: true, memberGraceDays: true } },
@@ -161,6 +162,8 @@ export async function moveBooking(opts: {
       // Cam 2026-10-29: how many of the group pay the member rate (the member alone unless the tier includes guests).
       let memberN = 0;
       let spot = memberSpot(null, rate);
+      // A member rate whose tier is gone keeps what they paid a player — already after any code.
+      let rateIsOwn = false;
       if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident') {
         // Tier names aren't unique in the schema: take the oldest ACTIVE tier of
         // that name so the answer is deterministic (a tierId on Booking is the
@@ -182,11 +185,22 @@ export async function moveBooking(opts: {
           // A member rate whose tier is gone: keep what they paid per player.
           : { greenFeeCents: Math.round(b.greenFeeTotal / b.players), cartFeeCents: b.cartSelected ? Math.round(b.cartFeeTotal / b.players) : slot.cartFeeCents };
         memberN = lapsed ? 0 : tier ? memberPlayers(b.players, tier) : b.players;
+        rateIsOwn = !lapsed && !tier;
         spot = memberSpot(tier, rate);
       }
+      // PRICE-1: a promo code on the booking carries to the new time when it still fits there
+      // (its dates, days and hours; a use is already counted); otherwise it comes off. Seat by
+      // seat, as when it was booked (lib/promo-codes).
+      const residentN = opts.residentPlayers ?? b.residentPlayers;
+      const code = b.promoCodeId ? await tx.promoCode.findUnique({ where: { id: b.promoCodeId } }) : null;
+      const promo = code && !promoFits({ ...code, maxUses: null, active: true }, slot, { rateApplied: memberN > 0 || (residentN > 0 && slot.residentRateCents != null) }) ? code : null;
+      const seat = (c: number) => (promo && !rateIsOwn ? seatAfter(promo, c) : c);
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
-      const residents = groupGreenFee(b.players, rate.greenFeeCents, opts.residentPlayers ?? b.residentPlayers, slot.residentRateCents);
-      const newGreen = memberN ? splitTotal(b.players, memberN, rate.greenFeeCents, slot.greenFeeCents) : residents.greenFeeTotal;
+      const ratedResidents = groupGreenFee(b.players, rate.greenFeeCents, residentN, slot.residentRateCents);
+      const ratedGreen = memberN ? splitTotal(b.players, memberN, rate.greenFeeCents, slot.greenFeeCents) : ratedResidents.greenFeeTotal;
+      const residents = groupGreenFee(b.players, seat(rate.greenFeeCents), residentN, slot.residentRateCents == null ? null : seat(slot.residentRateCents));
+      const newGreen = memberN ? splitTotal(b.players, memberN, seat(rate.greenFeeCents), seat(slot.greenFeeCents)) : residents.greenFeeTotal;
+      spot = spot.memberRateCents != null ? { ...spot, memberRateCents: seat(spot.memberRateCents) } : spot;
       // CART-1: a group moved onto a cart-only time takes a cart there.
       const cartOn = b.cartSelected || slot.walkingAllowed === false;
       const newCart = cartOn ? (memberN ? splitTotal(b.players, memberN, rate.cartFeeCents, slot.cartFeeCents) : rate.cartFeeCents * b.players) : 0;
@@ -221,6 +235,7 @@ export async function moveBooking(opts: {
         data.residentPlayers = residents.residentPlayers; data.residentRateCents = residents.residentRateCents;
         data.cartSelected = cartOn;
         data.memberRateCents = spot.memberRateCents; data.memberCartCents = spot.memberCartCents;
+        if (b.promoCodeId && !rateIsOwn) { data.promoCodeId = promo ? promo.id : null; data.promoDiscountCents = promo ? ratedGreen - newGreen : 0; }
         if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
         if (memberN === 0 && b.appliedRate !== 'resident' && b.appliedRate !== 'standard') data.appliedRate = residents.residentPlayers > 0 ? 'resident' : 'standard';
       }

@@ -4,6 +4,7 @@
 // already pay. Members stay on their member rate (no stacking).
 import { prisma } from './prisma';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
+import { seatAfter } from './promo-codes';
 import { groupGreenFee, otherPerPlayerCents } from './residents';
 
 export type SetResidentsResult =
@@ -20,7 +21,7 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
       select: {
         id: true, courseId: true, status: true, players: true, appliedRate: true, paymentStatus: true, paidOffline: true,
         checkedInAt: true, noShowAt: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true,
-        greenFeeTotal: true, totalAmount: true, residentPlayers: true, residentRateCents: true,
+        greenFeeTotal: true, totalAmount: true, residentPlayers: true, residentRateCents: true, promoCodeId: true,
         teeTime: { select: { date: true, time: true, greenFeeCents: true, residentRateCents: true } },
         course: { select: { timezone: true } },
       },
@@ -34,8 +35,10 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
     if (b.teeTime.residentRateCents == null) return fail(409, 'This tee time has no resident price. Set one in Schedule.');
     if (n === b.residentPlayers) return { ok: true, residentPlayers: n, greenFeeTotal: b.greenFeeTotal, totalAmount: b.totalAmount };
 
-    const others = otherPerPlayerCents(b) ?? b.teeTime.greenFeeCents;
-    const priced = groupGreenFee(b.players, others, n, b.teeTime.residentRateCents);
+    // PRICE-1: a code on the booking that works with rates comes off the resident seat too (seat by seat).
+    const code = b.promoCodeId ? await tx.promoCode.findUnique({ where: { id: b.promoCodeId }, select: { kind: true, value: true, withRates: true } }) : null;
+    const others = otherPerPlayerCents(b) ?? (code ? seatAfter(code, b.teeTime.greenFeeCents) : b.teeTime.greenFeeCents);
+    const priced = groupGreenFee(b.players, others, n, code?.withRates ? seatAfter(code, b.teeTime.residentRateCents) : b.teeTime.residentRateCents);
     const totalAmount = b.totalAmount + (priced.greenFeeTotal - b.greenFeeTotal);
     // Conditional on the price and payment state just read: a charge that
     // started in between leaves this change undone, never half-applied.

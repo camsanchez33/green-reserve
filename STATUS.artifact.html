@@ -117,14 +117,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-30 15:33 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 2c3e1cdd</span>
-    <span>5 uncommitted</span>
+    <span>2026-10-30 16:34 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 6612c506</span>
+    <span>4 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">50 runs have shipped that the queue doesn't know about</div>
+<div class="lede">54 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">6612c506</span><span>Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code</span></li>
+<li><span class="h">869ce75a</span><span>Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter</span></li>
+<li><span class="h">ca86612a</span><span>Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)</span></li>
+<li><span class="h">c72b0b35</span><span>Stock line refreshes after a sale; the catalog permission says it covers deliveries</span></li>
 <li><span class="h">2c3e1cdd</span><span>Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere</span></li>
 <li><span class="h">1aa2c299</span><span>Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)</span></li>
 <li><span class="h">001ba73f</span><span>Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits</span></li>
@@ -187,7 +191,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/lib/shop-stock.ts</code></li><li><code>M src/lib/staff-permissions.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/promo-codes-db-test.ts</code></li><li><code>M src/lib/move-booking.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -269,6 +273,10 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">6612c506</td><td class="num">2026-10-30</td><td>Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code</td></tr>
+<tr><td class="num">869ce75a</td><td class="num">2026-10-30</td><td>Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter</td></tr>
+<tr><td class="num">ca86612a</td><td class="num">2026-10-30</td><td>Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)</td></tr>
+<tr><td class="num">c72b0b35</td><td class="num">2026-10-30</td><td>Stock line refreshes after a sale; the catalog permission says it covers deliveries</td></tr>
 <tr><td class="num">2c3e1cdd</td><td class="num">2026-10-30</td><td>Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere</td></tr>
 <tr><td class="num">1aa2c299</td><td class="num">2026-10-30</td><td>Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)</td></tr>
 <tr><td class="num">001ba73f</td><td class="num">2026-10-30</td><td>Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits</td></tr>
@@ -277,10 +285,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">48be83aa</td><td class="num">2026-10-30</td><td>Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal)</td></tr>
 <tr><td class="num">85c78bb8</td><td class="num">2026-10-30</td><td>Test: dues paid at the shop read through paidUntilRenewal</td></tr>
 <tr><td class="num">136a1ea6</td><td class="num">2026-10-30</td><td>Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds</td></tr>
-<tr><td class="num">5917aabf</td><td class="num">2026-10-30</td><td>Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction</td></tr>
-<tr><td class="num">89f0e830</td><td class="num">2026-10-29</td><td>Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)</td></tr>
-<tr><td class="num">388244d7</td><td class="num">2026-10-30</td><td>Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode</td></tr>
-<tr><td class="num">ffa0ec2a</td><td class="num">2026-10-30</td><td>Golfer record: one course's view of a golfer, staff notes, online-booking block</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

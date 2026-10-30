@@ -218,6 +218,7 @@ model Course {
   registerCloses             RegisterClose[]
   moneyMoves                 MoneyMove[]
   shopStockReceipts          ShopStockReceipt[]
+  promoCodes                 PromoCode[]
 
   @@index([operatorId])
   @@index([groupId])
@@ -546,6 +547,9 @@ model Booking {
   golferPhone                String            @default("")
   players                    Int
   appliedRate                String            @default("standard")
+  /// PRICE-1 (Cam 2026-10-30): a promo code used on this booking, and what it took off the green fee (already out of greenFeeTotal).
+  promoCodeId                String?
+  promoDiscountCents         Int               @default(0)
   // MP-3 run B1: these six were ALREADY cents, stored in a Float — the worst of
   // both worlds, and the direct cause of the x100 resend-email bug (MP-1 #1),
   // where a caller assumed dollars. Now Int, so the unit is in the type. Every
@@ -1875,4 +1879,39 @@ model ShopStockReceipt {
 
   @@index([courseId, createdAt])
   @@index([shopItemId])
+}
+
+/// PRICE-1 (Cam 2026-10-30, "Promo codes" — "all of this is up to the course"): a code a
+/// golfer types when booking online, or staff apply at the counter. Takes money off the
+/// green fee only — a percent, or an amount a player. Optional limits: dates, weekdays,
+/// a time of day, total uses, once per golfer. withRates: whether it also works on top
+/// of a member or resident rate (the course decides per code). Never deleted once used.
+model PromoCode {
+  id          String    @id @default(cuid())
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// Stored upper-case; unique per course.
+  code        String
+  /// 'percent' (value 1–100) | 'amount' (value = cents off per player)
+  kind        String
+  value       Int
+  /// Course-local dates (YYYY-MM-DD), inclusive; null = no limit.
+  startsOn    String?
+  endsOn      String?
+  /// 0 = Sunday … 6 = Saturday; empty = every day.
+  days        Int[]     @default([])
+  /// HH:MM, tee times from (inclusive) to (exclusive); null = all day.
+  fromTime    String?
+  toTime      String?
+  maxUses     Int?
+  usesCount   Int       @default(0)
+  onePerGolfer Boolean  @default(false)
+  withRates   Boolean   @default(false)
+  active      Boolean   @default(true)
+  note        String    @default("")
+  createdBy   String    @default("")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([courseId, code])
 }
