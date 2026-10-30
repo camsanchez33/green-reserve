@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 18:17 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f8fd1dd5` · working tree **28 dirty file(s)**
+Generated 2026-10-30 18:48 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5e27fe80` · working tree **20 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 58 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 60 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `e1ec15b2` | 2026-10-30 | Pricing 3/4 part A: round packs at the counter (#259) |
+| `bad4eb47` | 2026-10-30 | PRICE-3 part A: round packs — sold at the register, used at the counter |
 | `2c5fcf28` | 2026-10-30 | Pricing 2/4: last-minute deals (#258) |
 | `f6fd22ff` | 2026-10-30 | PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled |
 | `439c4e7b` | 2026-10-30 | Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257) |
@@ -73,28 +75,28 @@ Generated 2026-10-30 18:17 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (28 file(s))
+### Uncommitted working tree (20 file(s))
 
 - `M  STATUS.artifact.html`
 - `M  STATUS.json`
 - `M  STATUS.md`
 - `MM docs/CODEMAP.md`
 - `MM docs/codemap.json`
-- `A  prisma/migrations/20261030090000_round_packs/migration.sql`
-- `M  prisma/schema.prisma`
-- `AM scripts/round-packs-db-test.ts`
-- `M  src/app/api/operator/bookings/route.ts`
-- `A  src/app/api/operator/round-packs/route.ts`
-- `M  src/app/api/stripe/webhook/route.ts`
-- `M  src/app/dashboard/page.tsx`
-- `M  src/app/dashboard/settings/page.tsx`
-- `M  src/app/dashboard/shop/page.tsx`
-- `A  src/components/dashboard/RegisterPacks.tsx`
-- `A  src/components/dashboard/RoundPacks.tsx`
-- `M  src/lib/analytics.ts`
-- `M  src/lib/booking-residents.ts`
-- `M  src/lib/cancel-booking.ts`
-- `M  src/lib/change-party.ts`
+- `M  scripts/member-rates-db-test.ts`
+- `MM scripts/round-packs-db-test.ts`
+- `M  src/app/api/bookings/resident-rate/route.ts`
+- `M  src/app/api/bookings/route.ts`
+- `AM src/app/api/courses/[slug]/packs/route.ts`
+- `M src/app/api/operator/shop-sales/route.ts`
+- `M  src/app/book/BookClient.tsx`
+- `MM src/app/courses/[slug]/CourseBookingClient.tsx`
+- `M  src/app/courses/[slug]/account/AccountPortalClient.tsx`
+- `AM src/components/CoursePacks.tsx`
+- `M  src/components/dashboard/RoundPacks.tsx`
+- `M src/lib/courses-data.ts`
+- `M src/lib/public-course.ts`
+- `M src/lib/round-packs.ts`
+- `M src/lib/shop-sales.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -220,6 +222,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `e1ec15b2` 2026-10-30 — Pricing 3/4 part A: round packs at the counter (#259)
+- `bad4eb47` 2026-10-30 — PRICE-3 part A: round packs — sold at the register, used at the counter
 - `2c5fcf28` 2026-10-30 — Pricing 2/4: last-minute deals (#258)
 - `f6fd22ff` 2026-10-30 — PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled
 - `439c4e7b` 2026-10-30 — Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)
@@ -230,8 +234,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `c72b0b35` 2026-10-30 — Stock line refreshes after a sale; the catalog permission says it covers deliveries
 - `2c3e1cdd` 2026-10-30 — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere
 - `1aa2c299` 2026-10-30 — Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)
-- `001ba73f` 2026-10-30 — Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits
-- `c5b84881` 2026-10-30 — Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check
 
 ---
 

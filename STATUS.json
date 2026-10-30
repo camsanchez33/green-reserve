@@ -1,36 +1,50 @@
 {
-  "generatedAt": "2026-10-30T18:17:59.475Z",
+  "generatedAt": "2026-10-30T18:48:53.294Z",
   "repo": {
-    "head": "f8fd1dd5",
+    "head": "5e27fe80",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 28,
+    "dirtyCount": 20,
     "dirty": [
       "M  STATUS.artifact.html",
       "M  STATUS.json",
       "M  STATUS.md",
       "MM docs/CODEMAP.md",
       "MM docs/codemap.json",
-      "A  prisma/migrations/20261030090000_round_packs/migration.sql",
-      "M  prisma/schema.prisma",
-      "AM scripts/round-packs-db-test.ts",
-      "M  src/app/api/operator/bookings/route.ts",
-      "A  src/app/api/operator/round-packs/route.ts",
-      "M  src/app/api/stripe/webhook/route.ts",
-      "M  src/app/dashboard/page.tsx",
-      "M  src/app/dashboard/settings/page.tsx",
-      "M  src/app/dashboard/shop/page.tsx",
-      "A  src/components/dashboard/RegisterPacks.tsx",
-      "A  src/components/dashboard/RoundPacks.tsx",
-      "M  src/lib/analytics.ts",
-      "M  src/lib/booking-residents.ts",
-      "M  src/lib/cancel-booking.ts",
-      "M  src/lib/change-party.ts"
+      "M  scripts/member-rates-db-test.ts",
+      "MM scripts/round-packs-db-test.ts",
+      "M  src/app/api/bookings/resident-rate/route.ts",
+      "M  src/app/api/bookings/route.ts",
+      "AM src/app/api/courses/[slug]/packs/route.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      "M  src/app/book/BookClient.tsx",
+      "MM src/app/courses/[slug]/CourseBookingClient.tsx",
+      "M  src/app/courses/[slug]/account/AccountPortalClient.tsx",
+      "AM src/components/CoursePacks.tsx",
+      "M  src/components/dashboard/RoundPacks.tsx",
+      " M src/lib/courses-data.ts",
+      " M src/lib/public-course.ts",
+      " M src/lib/round-packs.ts",
+      " M src/lib/shop-sales.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "e1ec15b2",
+        "date": "2026-10-30T14:31:32-04:00",
+        "subject": "Pricing 3/4 part A: round packs at the counter (#259)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "bad4eb47",
+        "date": "2026-10-30T18:18:31+00:00",
+        "subject": "PRICE-3 part A: round packs — sold at the register, used at the counter",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "2c5fcf28",
         "date": "2026-10-30T13:23:06-04:00",
@@ -834,6 +848,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "e1ec15b2",
+      "date": "2026-10-30",
+      "subject": "Pricing 3/4 part A: round packs at the counter (#259)"
+    },
+    {
+      "h": "bad4eb47",
+      "date": "2026-10-30",
+      "subject": "PRICE-3 part A: round packs — sold at the register, used at the counter"
+    },
+    {
       "h": "2c5fcf28",
       "date": "2026-10-30",
       "subject": "Pricing 2/4: last-minute deals (#258)"
@@ -882,16 +906,6 @@
       "h": "1aa2c299",
       "date": "2026-10-30",
       "subject": "Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)"
-    },
-    {
-      "h": "001ba73f",
-      "date": "2026-10-30",
-      "subject": "Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits"
-    },
-    {
-      "h": "c5b84881",
-      "date": "2026-10-30",
-      "subject": "Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check"
     }
   ]
 }

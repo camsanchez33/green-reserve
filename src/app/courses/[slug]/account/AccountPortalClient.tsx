@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ArrowLeft, Receipt } from 'lucide-react';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { CoursePacks } from '@/components/CoursePacks';
 
 type PortalBooking = {
   id: string; date: string; time: string; holes?: number;
@@ -218,6 +219,9 @@ function PortalInner({ params }: { params: Promise<{ slug: string }> }) {
             <span>Member &mdash; {data.membership.tierName}</span>
           </div>
         )}
+
+        {/* PRICE-3: rounds left here, and packs to buy. */}
+        <CoursePacks slug={slug} accent={accent} />
 
         <section>
           <h2 className="text-[15px] font-semibold text-ink mb-3">Upcoming</h2>

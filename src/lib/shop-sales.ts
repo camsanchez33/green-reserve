@@ -306,15 +306,17 @@ export const whyNotOpen = (status: string) =>
 
 /** Void an unpaid link sale, or take cash for it at the counter instead. */
 export async function settleOpenSale(courseId: string, saleId: string, to: 'void' | 'paid_cash'): Promise<Result<SaleView>> {
+  // PRICE-3: a golfer's own online purchase (a round pack) is paid on their link, never marked paid at the counter.
+  const ONLINE_ONLY = 'The golfer bought this online — it’s paid on their own link. Void it if it’s not wanted.';
   const r = await prisma.$transaction(async tx => {
     const done = await tx.shopSale.updateMany({
-      where: { id: saleId, courseId, status: 'open' },
+      where: { id: saleId, courseId, status: 'open', ...(to === 'paid_cash' ? { soldBy: { not: 'online' } } : {}) },
       // The token stays: the customer's page then says the sale was paid or cancelled.
       data: to === 'void' ? { status: 'void', voidedAt: new Date() } : { status: 'paid_cash', paidAt: new Date() },
     });
     const sale = await tx.shopSale.findFirst({ where: { id: saleId, courseId }, include: { ...SALE_INCLUDE, lines: { select: { id: true, name: true, unitPriceCents: true, quantity: true, returnedQty: true, bookingId: true, shopItemId: true }, orderBy: { id: 'asc' } } } });
     if (!sale) return fail(404, 'Sale not found.');
-    if (done.count === 0) return fail(409, whyNotOpen(sale.status));
+    if (done.count === 0) return fail(409, sale.status === 'open' && sale.soldBy === 'online' ? ONLINE_ONLY : whyNotOpen(sale.status));
     if (to === 'paid_cash') for (const l of sale.lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
     return { ok: true as const, value: saleView(sale) };
   });

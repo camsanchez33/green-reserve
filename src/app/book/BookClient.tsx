@@ -205,15 +205,19 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   // Cam 2026-10-29: a signed-in member sees their member rate the same way (the booking charges it).
   const [residentFee, setResidentFee] = useState<number | null>(null);
   const [memberRate, setMemberRate] = useState<{ name: string; greenFee: number; cartFee: number; guestsMemberRate: boolean } | null>(null);
+  // PRICE-3: the signed-in golfer's round packs here, and the one they use ('' = none).
+  const [packs, setPacks] = useState<{ lineId: string; name: string; left: number; coversCart: boolean; guests: boolean }[]>([]);
+  const [packId, setPackId] = useState('');
   const ttId = teeTime?.id;
   useEffect(() => {
-    if (!golfer || !ttId) { setResidentFee(null); setMemberRate(null); return; }
+    if (!golfer || !ttId) { setResidentFee(null); setMemberRate(null); setPacks([]); setPackId(''); return; }
     fetch(`/api/bookings/resident-rate?teeTimeId=${encodeURIComponent(String(ttId))}`)
       .then(r => r.ok ? r.json() : null).then(d => {
         setResidentFee(typeof d?.residentGreenFee === 'number' ? d.residentGreenFee : null);
         setMemberRate(d?.member && typeof d.member.greenFee === 'number' ? d.member : null);
+        setPacks(Array.isArray(d?.packs) ? d.packs : []);
       })
-      .catch(() => { setResidentFee(null); setMemberRate(null); });
+      .catch(() => { setResidentFee(null); setMemberRate(null); setPacks([]); });
   }, [golfer, ttId]);
 
   const accent = course?.brand_color || '#173B2A';
@@ -356,9 +360,14 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   // Cents, so the total matches what the booking charges (lib/member-rates splitTotal).
   const memberN = memberRate ? (memberRate.guestsMemberRate ? players : Math.min(1, players)) : 0;
   const c = (d: number) => Math.round(d * 100);
-  const greenTotal  = memberRate ? splitTotal(players, memberN, c(memberRate.greenFee), c(teeTime.green_fee)) / 100
+  // PRICE-3: on a round pack the holder (or, when guests can use it, everyone) plays on the pack;
+  // the rest pay the public price. The server prices it the same way (lib/round-packs packPrice).
+  const pk = packId ? packs.find(p => p.lineId === packId) ?? null : null;
+  const packSeatsN = pk ? (pk.guests ? players : 1) : 0;
+  const packShort = !!pk && pk.guests && pk.left < players;
+  const greenTotal  = pk ? (players - packSeatsN) * teeTime.green_fee : memberRate ? splitTotal(players, memberN, c(memberRate.greenFee), c(teeTime.green_fee)) / 100
     : residentFee != null ? residentFee + teeTime.green_fee * (players - 1) : teeTime.green_fee * players;
-  const cartTotal    = withCart ? (memberRate ? splitTotal(players, memberN, c(memberRate.cartFee), c(teeTime.cart_fee)) / 100 : teeTime.cart_fee * players) : 0;
+  const cartTotal    = withCart ? pk ? (pk.coversCart ? players - packSeatsN : players) * teeTime.cart_fee : (memberRate ? splitTotal(players, memberN, c(memberRate.cartFee), c(teeTime.cart_fee)) / 100 : teeTime.cart_fee * players) : 0;
   const rangeBallsPrice = rangeBallsSize === 'small' ? course.range_balls_small_price
     : rangeBallsSize === 'medium' ? course.range_balls_medium_price
     : rangeBallsSize === 'large' ? course.range_balls_large_price
@@ -369,7 +378,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const promoBlocked = !!promo && !promo.withRates && (!!memberRate || residentFee != null);
   // Seat by seat, as the server prices it (lib/promo-codes seatAfter): each player's own rate less the code.
   const seatOff = (d: number) => { const s = c(d); return s - Math.max(0, s - (promo!.kind === 'percent' ? Math.round(s * promo!.value / 100) : promo!.value)); };
-  const promoOff = !promo || promoBlocked ? 0 : (memberRate
+  const promoOff = !promo || promoBlocked || pk ? 0 : (memberRate
     ? memberN * seatOff(memberRate.greenFee) + (players - memberN) * seatOff(teeTime.green_fee)
     : residentFee != null ? seatOff(residentFee) + (players - 1) * seatOff(teeTime.green_fee)
     : players * seatOff(teeTime.green_fee)) / 100;
@@ -456,8 +465,9 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
               <div className="border-t border-line pt-3 space-y-2">
                 <div className="flex justify-between text-ink-soft"><span>Green fee (×{players})</span><span>${greenTotal.toFixed(2)}</span></div>
                 {!!teeTime.deal_pct && teeTime.list_green_fee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Last-minute, {teeTime.deal_pct}% off: <span className="line-through">${teeTime.list_green_fee.toFixed(2)}</span> ${teeTime.green_fee.toFixed(2)} a player.</p>}
-                {memberRate && <p className="text-[12.5px] text-ink-muted -mt-1">{memberRate.name} rate ${memberRate.greenFee.toFixed(2)}{memberN < players ? ` for you; your guests pay $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
-                {residentFee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
+                {pk && <p className="text-[12.5px] text-ink-muted -mt-1">{packShort ? `Only ${pk.left} round${pk.left === 1 ? '' : 's'} left on your ${pk.name} — book ${pk.left} player${pk.left === 1 ? '' : 's'}.` : `${packSeatsN === players ? 'Everyone plays' : 'You play'} on your ${pk.name}${pk.coversCart ? ', cart included' : ''}.`}</p>}
+                {!pk && memberRate && <p className="text-[12.5px] text-ink-muted -mt-1">{memberRate.name} rate ${memberRate.greenFee.toFixed(2)}{memberN < players ? ` for you; your guests pay $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
+                {!pk && residentFee != null && <p className="text-[12.5px] text-ink-muted -mt-1">Resident rate for you (${residentFee.toFixed(2)}){players > 1 ? `; the rest of your group pays $${teeTime.green_fee.toFixed(2)} each` : ''}.</p>}
                 {promoOff > 0 && <div className="flex justify-between text-ink-soft"><span>Code {promo!.code}</span><span>−${promoOff.toFixed(2)}</span></div>}
                 {cartTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Cart fee (×{players})</span><span>${cartTotal.toFixed(2)}</span></div>}
                 {rangeBallsTotal > 0 && <div className="flex justify-between text-ink-soft"><span>Range balls ({rangeBallsSize})</span><span>${rangeBallsTotal.toFixed(2)}</span></div>}
@@ -465,11 +475,22 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                   <span>{serviceFeeLabel(players)}</span>
                   <span>${accessTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex gap-2 pt-1">
+                {packs.length > 0 && (
+                  <label className="flex items-center gap-2 text-sm text-ink pt-1">
+                    <input type="checkbox" checked={!!pk} onChange={e => setPackId(e.target.checked ? packs[0].lineId : '')} className="accent-pine" />
+                    Use my round pack
+                    {packs.length > 1 && pk ? (
+                      <select value={packId} onChange={e => setPackId(e.target.value)} aria-label="Which round pack" className={INPUT_COMPACT + ' ml-1'}>
+                        {packs.map(p => <option key={p.lineId} value={p.lineId}>{p.name} ({p.left} left)</option>)}
+                      </select>
+                    ) : <span className="text-ink-muted">({packs[0].name}, {packs[0].left} left)</span>}
+                  </label>
+                )}
+                {!pk && <div className="flex gap-2 pt-1">
                   <input value={promoInput} onChange={e => { setPromoInput(e.target.value.toUpperCase()); if (promo) setPromo(null); setPromoError(''); }} placeholder="Promo code" aria-label="Promo code"
                     className={INPUT_COMPACT + ' flex-1 min-w-0'} />
                   <button type="button" onClick={() => checkPromo(teeTime.id)} disabled={!promoInput.trim() || promoBusy} className="px-3 py-2 border border-line rounded-md text-sm font-medium text-ink hover:bg-paper disabled:opacity-50">{promoBusy ? 'Checking…' : 'Apply'}</button>
-                </div>
+                </div>}
                 {promoError && <p role="alert" className="text-[12.5px] text-bad">{promoError}</p>}
                 {promoBlocked && <p className="text-[12.5px] text-ink-muted">Code {promo!.code} can’t be used with your {memberRate ? 'member' : 'resident'} rate.</p>}
                 {/* Two lines, always — the number people owe and the number
@@ -501,7 +522,8 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 rangeBallsSize={rangeBallsTotal > 0 ? rangeBallsSize : ''}
                 accent={accent}
                 needsCard={terms.cardAtBooking}
-                promoCode={promo && !promoBlocked ? promo.code : ''}
+                promoCode={promo && !promoBlocked && !pk ? promo.code : ''}
+                packLineId={pk ? pk.lineId : ''}
                 courseName={course.name}
                 onConfirmed={setConfirmedData}
               />
@@ -526,8 +548,10 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   );
 }
 
-function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, needsCard, courseName, onConfirmed, promoCode = '' }: {
+function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '' }: {
   promoCode?: string;
+  /** PRICE-3: the golfer's round pack, when they use it. */
+  packLineId?: string;
   teeTimeId: string;
   players: number;
   golfer: GolferProfile | null;
@@ -562,8 +586,8 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
   // button (clickwrap). Nothing books — card form, Apple Pay or no card — until it is.
   const [agreed, setAgreed] = useState(false);
   // The wallet button's handler is registered once; it reads the code from here, never a stale render.
-  const latest = useRef({ name, email, phone, agreed, promoCode });
-  latest.current = { name, email, phone, agreed, promoCode };
+  const latest = useRef({ name, email, phone, agreed, promoCode, packLineId });
+  latest.current = { name, email, phone, agreed, promoCode, packLineId };
 
   /** Create the booking. setupIntentId when a card was saved for it. */
   async function book(who: { name: string; email: string; phone: string }, setupIntentId?: string): Promise<boolean> {
@@ -581,6 +605,7 @@ function CheckoutForm({ teeTimeId, players, golfer, cartSelected, rangeBallsSize
         cartSelected,
         rangeBallsSize,
         ...(latest.current.promoCode ? { promoCode: latest.current.promoCode } : {}),
+        ...(latest.current.packLineId ? { packLineId: latest.current.packLineId } : {}),
         termsAccepted: latest.current.agreed === true,
       }),
     });

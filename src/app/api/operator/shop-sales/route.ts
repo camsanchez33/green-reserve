@@ -49,7 +49,8 @@ export async function GET(req: NextRequest) {
     catch (err) { console.error(JSON.stringify({ ev: 'shop_sale.reconcile.fail', saleId: s.id, error: err instanceof Error ? err.message : String(err) })); }
   }
   const sales = await prisma.shopSale.findMany({
-    where: { courseId: g.session.courseId, OR: [{ createdAt: { gte: since } }, { status: { in: ['open', 'paying'] } }] },
+    // PRICE-3: a golfer's unpaid online pack sale isn't the counter's to chase — listed only while recent.
+    where: { courseId: g.session.courseId, OR: [{ createdAt: { gte: since } }, { status: { in: ['open', 'paying'] }, NOT: { status: 'open', soldBy: 'online' } }] },
     orderBy: { createdAt: 'desc' }, take: 200, include: SALE_INCLUDE,
   });
   return NextResponse.json({ sales: sales.map(saleView) });
