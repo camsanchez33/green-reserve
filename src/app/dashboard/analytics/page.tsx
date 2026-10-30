@@ -415,6 +415,7 @@ function RevenueTab({ d }: { d: Data }) {
           <div className="divide-y divide-line-soft">
             <Line label="By card" value={usd(d.revenue.cardCents)} />
             <Line label="At the counter" value={usd(d.revenue.counterCents)} />
+            {d.revenue.accountCents > 0 && <Line label="On member accounts" value={usd(d.revenue.accountCents)} />}
             <Line label="Not paid yet" sub={plural(d.revenue.outstandingBookings, 'group')} value={usd(d.revenue.outstandingCents)} />
             <Line label="Per round" sub={plural(d.revenue.roundsPlayed, 'round')} value={usd2(d.revenue.perRoundCents)} />
             {d.revenue.perAvailableTeeTimeCents != null && <Line label="Per tee time offered" value={usd2(d.revenue.perAvailableTeeTimeCents)} />}

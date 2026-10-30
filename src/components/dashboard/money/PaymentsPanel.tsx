@@ -23,6 +23,7 @@ export function paymentStatus(b: MoneyBooking, today: string, clock = '99:99'): 
   // paymentStatus is what was charged: collectPayment() can charge a round that is still 'confirmed'.
   if (b.paymentStatus === 'paid') return { label: 'Paid by card', tone: 'ok', group: 'paid' };
   if (b.paymentStatus === 'paid_offline') return { label: 'Paid at the counter', tone: 'ok', group: 'paid' };
+  if (b.paymentStatus === 'on_account') return { label: 'On account', tone: 'ok', group: 'paid' };
   if (b.paymentStatus === 'refunded') return { label: 'Refunded', tone: 'neutral', group: 'refunded' };
   // Still to play — later today counts too (course time), not only future days.
   if (b.teeTime.date > today || (b.teeTime.date === today && b.teeTime.time.slice(0, 5) > clock)) return { label: 'Not played yet', tone: 'neutral', group: 'upcoming' };
@@ -92,7 +93,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
 
       {rows.length === 0 ? (
         <Card className="py-12 text-center text-ink-soft text-[13.5px]">
-          {q || filter !== 'all' ? 'Nothing matches that.' : dateFilter ? `No bookings on ${fmtDate(dateFilter)}.` : 'No rounds played yet.'}
+          {q || filter !== 'all' ? 'Nothing matches that.' : dateFilter ? `No bookings on ${fmtDate(dateFilter)}.` : 'No rounds yet.'}
         </Card>
       ) : (
         <div className="space-y-4">
@@ -120,7 +121,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
           {visibleDays.length < days.length && (
             <button onClick={() => setShowAll(true)} className="w-full py-2.5 text-[13px] font-medium text-pine hover:underline">Show older days ({days.length - visibleDays.length} more)</button>
           )}
-          <p className="text-[12.5px] text-ink-muted">{capped ? 'Last 1,000 played rounds · ' : ''}Your course’s share, without GreenReserve’s booking fee</p>
+          <p className="text-[12.5px] text-ink-muted">{capped ? 'Last 1,000 played rounds · ' : ''}Your share, less the booking fee</p>
         </div>
       )}
     </>

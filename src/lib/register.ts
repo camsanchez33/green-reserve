@@ -19,7 +19,7 @@ export const MAX_REGISTER_ROUNDS = 8;
 export async function registerRounds(courseId: string, date: string, nowTime: string) {
   const [owing, open] = await Promise.all([
     prisma.booking.findMany({
-      where: { courseId, status: 'confirmed', paymentStatus: { notIn: ['paid', 'paid_offline'] }, teeTime: { date } },
+      where: { courseId, status: 'confirmed', paymentStatus: { notIn: ['paid', 'paid_offline', 'on_account'] }, teeTime: { date } },
       select: { id: true, golferName: true, players: true, totalAmount: true, accessFeeTotal: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, feePaidCents: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, noShowAt: true, teeTime: { select: { time: true, holes: true } } },
       orderBy: { teeTime: { time: 'asc' } },
     }),
@@ -74,7 +74,7 @@ export async function ringUpCash(courseId: string, opts: {
   }
   const groups = bookingIds.length ? await prisma.booking.findMany({ where: { id: { in: bookingIds }, courseId }, select: { id: true, status: true, paymentStatus: true } }) : [];
   if (groups.length !== bookingIds.length) return { ok: false, status: 404, error: 'One of those groups isn’t on your tee sheet — refresh and try again.' };
-  const done = groups.find(g => g.status !== 'confirmed' || g.paymentStatus === 'paid' || g.paymentStatus === 'paid_offline');
+  const done = groups.find(g => g.status !== 'confirmed' || g.paymentStatus === 'paid' || g.paymentStatus === 'paid_offline' || g.paymentStatus === 'on_account');
   if (done) return { ok: false, status: 409, error: 'One of those groups has already paid or checked in — refresh and try again.' };
 
   const settled: { bookingId: string; name: string; amountCents: number }[] = [];

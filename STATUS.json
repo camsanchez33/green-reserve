@@ -1,23 +1,50 @@
 {
-  "generatedAt": "2026-10-30T22:32:11.487Z",
+  "generatedAt": "2026-10-30T23:14:59.590Z",
   "repo": {
-    "head": "9aadbe4c",
+    "head": "9d060959",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 7,
+    "dirtyCount": 36,
     "dirty": [
-      "M CLAUDE.md",
+      "M STATUS.artifact.html",
+      " M STATUS.json",
+      " M STATUS.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M docs/walks/MONEY_WALK_2026-10.md",
-      " M scripts/data-reset-db-test.ts",
-      " M src/app/admin/system/page.tsx",
-      " M src/lib/data-reset.ts"
+      " M prisma/schema.prisma",
+      " M scripts/cash-at-counter-db-test.ts",
+      " M src/app/api/checkin/[bookingId]/route.ts",
+      " M src/app/api/operator/bookings/route.ts",
+      " M src/app/api/operator/money/sales/route.ts",
+      " M src/app/api/operator/tiers/route.ts",
+      " M src/app/api/receipt/[bookingId]/route.ts",
+      " M src/app/checkin/[bookingId]/page.tsx",
+      " M src/app/dashboard/analytics/page.tsx",
+      " M src/app/dashboard/home/page.tsx",
+      " M src/app/dashboard/members/page.tsx",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/receipt/[bookingId]/page.tsx",
+      " M src/components/dashboard/money/PaymentsPanel.tsx",
+      " M src/components/dashboard/money/SalesPanel.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "7a14850b",
+        "date": "2026-10-30T18:39:10-04:00",
+        "subject": "Launch wipe closes Dec 1 instead of Nov 1 (#265)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "6cc42bd6",
+        "date": "2026-10-30T22:32:14+00:00",
+        "subject": "TEST-1: launch wipe closes Dec 1 instead of Nov 1",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "d30b4479",
         "date": "2026-10-30T18:19:41-04:00",
@@ -912,6 +939,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "7a14850b",
+      "date": "2026-10-30",
+      "subject": "Launch wipe closes Dec 1 instead of Nov 1 (#265)"
+    },
+    {
+      "h": "6cc42bd6",
+      "date": "2026-10-30",
+      "subject": "TEST-1: launch wipe closes Dec 1 instead of Nov 1"
+    },
+    {
       "h": "d30b4479",
       "date": "2026-10-30",
       "subject": "Demand pricing: online public rate moves with each hour's fill (#264)"
@@ -960,16 +997,6 @@
       "h": "53505e47",
       "date": "2026-10-30",
       "subject": "Pricing 3/4 part B: round packs online (#260)"
-    },
-    {
-      "h": "248a5175",
-      "date": "2026-10-30",
-      "subject": "PRICE-3 part B: round packs online — buy on the course page, use when booking"
-    },
-    {
-      "h": "e1ec15b2",
-      "date": "2026-10-30",
-      "subject": "Pricing 3/4 part A: round packs at the counter (#259)"
     }
   ]
 }

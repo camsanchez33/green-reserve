@@ -236,6 +236,7 @@ model Course {
   promoCodes                 PromoCode[]
   roundPacks                 RoundPack[]
   demandPrices               DemandPrice[]
+  memberCharges              MemberCharge[]
 
   @@index([operatorId])
   @@index([groupId])
@@ -439,6 +440,12 @@ model MembershipTier {
   /// When an auto-renew charge is declined: true = email a pay link and try the card once more 3
   /// days later; false = email a pay link only. Unpaid, it lapses after the term + grace days.
   autoRenewRetry       Boolean            @default(true)
+  /// MEM-ACCT (Cam 2026-10-30: member billing — "course sets one per tier"): members on this tier
+  /// can put rounds, guests and shop sales on their account; null limit = none. How the account is
+  /// paid ('link' = an emailed statement, 'auto' = the saved card) — statements are MEM-ACCT part 2.
+  accountOn            Boolean            @default(false)
+  accountLimitCents    Int?
+  accountSettle        String             @default("link")
   active               Boolean            @default(true)
   createdAt            DateTime           @default(now())
   memberships          CourseMembership[]
@@ -531,6 +538,8 @@ model CourseMembership {
   initiationWaived       Boolean         @default(false)
   notes                  String          @default("")
   createdAt              DateTime        @default(now())
+
+  accountCharges         MemberCharge[]
 
   @@unique([golferId, courseId])
   // MP-10 schema half: the overdue-dues surfaces filter by course + last payment.
@@ -1988,6 +1997,33 @@ model PromoCode {
 /// PRICE-3 (Cam 2026-10-30: "Round packs" — sold "online + counter"; cart and guests "course
 /// decides per pack"; GreenReserve's $1.50 a player still charged on each round used): a prepaid
 /// bundle of rounds in the course's catalog. Sold as a line of a walk-up sale (lib/round-packs.ts).
+/// MEM-ACCT: one line on a member's account — a round (the whole group, guests included) or a
+/// shop sale put on account, or a credit staff give (negative). Append-only: a mistake is undone
+/// with a credit, never by deleting or editing a line. Paid through a statement (part 2).
+model MemberCharge {
+  id           String           @id @default(cuid())
+  courseId     String
+  course       Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  membershipId String
+  membership   CourseMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  /// round | shop | credit
+  kind         String
+  amountCents  Int
+  /// GreenReserve's booking fee inside amountCents (an online booking's), taken when the statement is paid.
+  feeCents     Int              @default(0)
+  bookingId    String?          @unique
+  shopSaleId   String?          @unique
+  note         String           @default("")
+  /// Who put it on (staff name), for the member's list.
+  createdBy    String           @default("")
+  createdAt    DateTime         @default(now())
+  /// Part 2: the statement this line was billed on (null = not billed yet).
+  statementId  String?
+
+  @@index([membershipId, createdAt])
+  @@index([courseId, createdAt])
+}
+
 /// PRICE-5: a course's demand price for one weekday and hour — what applies now (pct) and
 /// what the last 8 weeks suggest (suggestedPct), as a percent on the public rate.
 model DemandPrice {

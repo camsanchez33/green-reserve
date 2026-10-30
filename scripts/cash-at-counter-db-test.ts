@@ -94,7 +94,9 @@ async function cleanup() {
   const route = readFileSync('src/app/api/operator/bookings/route.ts', 'utf8');
   const sheet = readFileSync('src/app/dashboard/page.tsx', 'utf8');
   const counter = readFileSync('src/lib/counter-pay.ts', 'utf8');
-  ok('the tee sheet’s cash goes through the register (old tabs too)', route.includes("if (action === 'take_cash' || action === 'paid_offline')") && /take_cash[\s\S]{0,900}ringUpCash\(/.test(route) && !route.includes('settleAtCounter('));
+  ok('the tee sheet’s cash goes through the register (old tabs too)', route.includes("if (action === 'take_cash' || action === 'paid_offline')") && /take_cash[\s\S]{0,900}ringUpCash\(/.test(route)
+    // MEM-ACCT: the route settles a group itself only onto a member's account — never as cash.
+    && (route.match(/settleAtCounter\(/g) ?? []).length === (route.match(/settleAtCounter\([^)]*onAccount: \{ membershipId \}/g) ?? []).length);
   ok('a walk-in "paying cash now" is booked, then rung up', /if \(checkInNow\) \{\s*const cash = await ringUpCash\(/.test(route));
   ok('a counter booking can’t be created paid', !counter.slice(counter.indexOf('export async function createCounterBooking')).includes("'paid_offline'") && !counter.includes('paidNow'));
   ok('the tee sheet no longer offers "paid at counter"', !/paid at counter/i.test(sheet) && sheet.includes("bookingLifecycle(b, 'take_cash')") && sheet.includes('/dashboard/shop?round='));

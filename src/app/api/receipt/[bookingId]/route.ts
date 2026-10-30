@@ -67,6 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     cancellationFeeTotal: booking.cancellationFeeTotal,
     cancellationFeeCharged: !!booking.cancellationFeeChargeId,
     paidOffline: booking.paidOffline,
+    onAccount: booking.paymentStatus === 'on_account',
     roundRefunded: booking.paymentStatus === 'refunded',
     charges,
     chargedNowCents: chargedNowCents(charges),

@@ -131,7 +131,8 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   }
   const live = bookings.filter(b => b.status !== 'cancelled');
   const cancelled = bookings.filter(b => b.status === 'cancelled');
-  const collectedB = live.filter(b => b.status === 'completed' && (b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline'));
+  // MEM-ACCT: a round put on a member's account is settled at the counter; it is counted here and shown apart (accountCents).
+  const collectedB = live.filter(b => b.status === 'completed' && (b.paymentStatus === 'paid' || b.paymentStatus === 'paid_offline' || b.paymentStatus === 'on_account'));
   const refunded = (b: { paymentStatus: string }) => b.paymentStatus === 'refunded';
   const pastLive = live.filter(b => b.passed);
   // Money: a round refunded in full is settled, neither expected nor owed.
@@ -143,6 +144,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const collected = collectedB.reduce((s, b) => s + share(b), 0);
   const card = collectedB.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + share(b), 0);
   const counter = collectedB.filter(b => b.paymentStatus === 'paid_offline').reduce((s, b) => s + share(b), 0);
+  const onAccount = collectedB.filter(b => b.paymentStatus === 'on_account').reduce((s, b) => s + share(b), 0);
   const outstandingB = pastMoney.filter(b => !collectedSet.has(b) && !b.noShowAt);
   const outstanding = outstandingB.reduce((s, b) => s + share(b), 0);
   const noShowUnpaidB = pastMoney.filter(b => !collectedSet.has(b) && b.noShowAt);
@@ -430,7 +432,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
     range, courseName: L.courseName, today, eventLogStart: EVENT_LOG_START, graceMinutes: NO_SHOW_GRACE_MIN,
     revenue: {
       expectedCents: expected, collectedCents: collected, gapCents: expected - collected, gapPct: pct(expected - collected, expected),
-      cardCents: card, counterCents: counter, outstandingCents: outstanding, outstandingBookings: outstandingB.length, upcomingCents: upcoming,
+      cardCents: card, counterCents: counter, accountCents: onAccount, outstandingCents: outstanding, outstandingBookings: outstandingB.length, upcomingCents: upcoming,
       noShowUnpaidCents: noShowUnpaidB.reduce((s, b) => s + share(b), 0), noShowUnpaidBookings: noShowUnpaidB.length,
       // W2-8 (4): beyond the green fee — rounds with a cart, shop items on rounds, and walk-up shop sales (before tax).
       beyond: {

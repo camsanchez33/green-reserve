@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-30 22:32 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 9aadbe4c</span>
-    <span>7 uncommitted</span>
+    <span>2026-10-30 23:14 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 9d060959</span>
+    <span>36 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">71 runs have shipped that the queue doesn't know about</div>
+<div class="lede">73 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">7a14850b</span><span>Launch wipe closes Dec 1 instead of Nov 1 (#265)</span></li>
+<li><span class="h">6cc42bd6</span><span>TEST-1: launch wipe closes Dec 1 instead of Nov 1</span></li>
 <li><span class="h">d30b4479</span><span>Demand pricing: online public rate moves with each hour's fill (#264)</span></li>
 <li><span class="h">d2a912be</span><span>PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic</span></li>
 <li><span class="h">25de845f</span><span>Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)</span></li>
@@ -208,7 +210,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M CLAUDE.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M docs/walks/MONEY_WALK_2026-10.md</code></li><li><code>M scripts/data-reset-db-test.ts</code></li><li><code>M src/app/admin/system/page.tsx</code></li><li><code>M src/lib/data-reset.ts</code></li></ul>
+<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/cash-at-counter-db-test.ts</code></li><li><code>M src/app/api/checkin/[bookingId]/route.ts</code></li><li><code>M src/app/api/operator/bookings/route.ts</code></li><li><code>M src/app/api/operator/money/sales/route.ts</code></li><li><code>M src/app/api/operator/tiers/route.ts</code></li><li><code>M src/app/api/receipt/[bookingId]/route.ts</code></li><li><code>M src/app/checkin/[bookingId]/page.tsx</code></li><li><code>M src/app/dashboard/analytics/page.tsx</code></li><li><code>M src/app/dashboard/home/page.tsx</code></li><li><code>M src/app/dashboard/members/page.tsx</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/receipt/[bookingId]/page.tsx</code></li><li><code>M src/components/dashboard/money/PaymentsPanel.tsx</code></li><li><code>M src/components/dashboard/money/SalesPanel.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -290,6 +292,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">7a14850b</td><td class="num">2026-10-30</td><td>Launch wipe closes Dec 1 instead of Nov 1 (#265)</td></tr>
+<tr><td class="num">6cc42bd6</td><td class="num">2026-10-30</td><td>TEST-1: launch wipe closes Dec 1 instead of Nov 1</td></tr>
 <tr><td class="num">d30b4479</td><td class="num">2026-10-30</td><td>Demand pricing: online public rate moves with each hour's fill (#264)</td></tr>
 <tr><td class="num">d2a912be</td><td class="num">2026-10-30</td><td>PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic</td></tr>
 <tr><td class="num">25de845f</td><td class="num">2026-10-30</td><td>Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)</td></tr>
@@ -300,8 +304,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">91141923</td><td class="num">2026-10-30</td><td>Regenerate codemap and status board</td></tr>
 <tr><td class="num">0d9486fe</td><td class="num">2026-10-30</td><td>MEM-JOIN: join a membership tier online — pay and join, or request to join</td></tr>
 <tr><td class="num">53505e47</td><td class="num">2026-10-30</td><td>Pricing 3/4 part B: round packs online (#260)</td></tr>
-<tr><td class="num">248a5175</td><td class="num">2026-10-30</td><td>PRICE-3 part B: round packs online — buy on the course page, use when booking</td></tr>
-<tr><td class="num">e1ec15b2</td><td class="num">2026-10-30</td><td>Pricing 3/4 part A: round packs at the counter (#259)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

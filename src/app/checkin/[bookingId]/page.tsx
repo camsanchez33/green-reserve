@@ -30,6 +30,7 @@ type CheckInInfo = {
   hasCard: boolean;
   /** Paid in cash at the counter — never "charged to your card". */
   paidOffline?: boolean;
+  onAccount?: boolean;
   cartAddOnCents?: number;
 };
 
@@ -236,13 +237,14 @@ function CheckInPageInner() {
   if (info.status === 'completed' || result) {
     const charged = result?.totalCharged ?? info.totalAmount;
     const paidAtCounter = !result && !!info.paidOffline;
+    const onAccount = !result && !!info.onAccount;
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
         <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
           <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">You&apos;re checked in!</h1>
-            <p className="text-ink-soft mb-6 text-sm">{paidAtCounter ? 'Paid at the course. Enjoy your round.' : <>${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</>}</p>
+            <p className="text-ink-soft mb-6 text-sm">{onAccount ? 'On your member account. Enjoy your round.' : paidAtCounter ? 'Paid at the course. Enjoy your round.' : <>${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</>}</p>
             {result?.feeRefunded && (
               <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-6 text-left">
                 <p className="text-ok text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee has been refunded.</p>
@@ -255,7 +257,7 @@ function CheckInPageInner() {
                 <p className="text-warn text-xs">Your earlier ${(result.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the refund did not go through automatically. The course has been notified — if it hasn&apos;t appeared within a few days, contact them or {BILLING_EMAIL}.</p>
               </div>
             )}
-            <p className="text-xs text-ink mb-4">A receipt has been emailed to you.</p>
+            {!onAccount && <p className="text-xs text-ink mb-4">A receipt has been emailed to you.</p>}
             {token && (
               <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
                 className="text-sm font-medium hover:underline mb-6 block"

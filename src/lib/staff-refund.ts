@@ -57,7 +57,7 @@ export async function refundRound(courseId: string, bookingId: string, opts: { a
   const b = await bookingFor(courseId, bookingId);
   if (!b) return fail(404, 'Booking not found.');
   if (b.paymentStatus !== 'paid' || !b.roundPaymentIntentId) {
-    return fail(409, b.paymentStatus === 'paid_offline' ? 'This round was paid at the counter — give the cash back at the register.' : 'This round hasn’t been paid by card, so there is nothing to refund.');
+    return fail(409, b.paymentStatus === 'paid_offline' ? 'This round was paid at the counter — give the cash back at the register.' : b.paymentStatus === 'on_account' ? 'This round is on a member account — credit it back on Members.' : 'This round hasn’t been paid by card, so there is nothing to refund.');
   }
   if (!b.course.stripeAccountId) return fail(409, 'Connect Stripe first — the refund goes back through it.');
   const already = b.paymentEvents.reduce((s, e) => s + e.amountCents, 0);

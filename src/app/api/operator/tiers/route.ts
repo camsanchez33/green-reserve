@@ -5,6 +5,10 @@ import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
 import { tierToWire } from '@/lib/tier-wire';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { readJoinMode, JOIN_NEEDS_DUES } from '@/lib/membership-join';
+import { readAccountSettings } from '@/lib/member-account';
+
+/** MEM-ACCT: the account limit from the form (dollars): blank = no limit; anything unreadable is refused (NaN), never "no limit". */
+const limitCents = (v: unknown) => v === undefined ? undefined : v === '' || v === null ? null : (dollarsToCents(v as string) ?? Number.NaN);
 import { memberContact, STOP_DATA } from '@/lib/membership-autorenew';
 import { sendAutoRenewOffEmail } from '@/lib/email';
 
@@ -29,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
-          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline, autoRenew, autoRenewRetry } = body;
+          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline, autoRenew, autoRenewRetry, accountOn, accountLimit } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
   // ACT-1 review: a booking records its tier by NAME, so two live tiers with one
@@ -50,8 +54,13 @@ export async function POST(req: NextRequest) {
   if (!join) return NextResponse.json({ error: 'Pick how golfers join online.' }, { status: 400 });
   if (join !== 'off' && dollarsToCentsOr0(annualFee) <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
 
+  // MEM-ACCT: members on this tier can charge to an account, up to its limit (dollars on the wire; blank = none).
+  const acct = readAccountSettings({ accountOn, accountLimitCents: limitCents(accountLimit) });
+  if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });
+
   const tier = await prisma.membershipTier.create({
     data: {
+      ...acct.data,
       joinOnline: join,
       // MEM-RENEW: golfers on this tier agree to automatic renewal when they pay (lib/membership-autorenew).
       autoRenew: autoRenew === true && dollarsToCentsOr0(annualFee) > 0,
@@ -102,9 +111,13 @@ export async function PATCH(req: NextRequest) {
   const duesAfter = updates.annualFee != null ? dollarsToCentsOr0(updates.annualFee) : tier.annualFeeCents;
   if (join !== 'off' && duesAfter <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
 
+  const acct = readAccountSettings({ accountOn: updates.accountOn, accountLimitCents: limitCents(updates.accountLimit) });
+  if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });
+
   const updated = await prisma.membershipTier.update({
     where: { id },
     data: {
+      ...acct.data,
       joinOnline: join,
       // MEM-RENEW: turning it on changes what the next payer agrees to; turning it off stops it for everyone on it (below).
       autoRenew: (typeof updates.autoRenew === 'boolean' ? updates.autoRenew : tier.autoRenew) && duesAfter > 0,

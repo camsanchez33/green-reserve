@@ -28,6 +28,7 @@ export function getBookingStatus(status: string, paymentStatus: string): Booking
   if (status === 'completed') {
     // SD-5 / CASH-1: paid in store — cash at the register (older records: marked paid at the counter).
     if (paymentStatus === 'paid_offline') return { label: 'Checked In · Paid at the register', tone: 'emerald' };
+    if (paymentStatus === 'on_account') return { label: 'Checked In · On a member account', tone: 'emerald' };
     return { label: 'Checked In & Paid', tone: 'emerald' };
   }
 

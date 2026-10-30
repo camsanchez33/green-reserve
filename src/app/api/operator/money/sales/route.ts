@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       walkUpCents: r.beyond.walkUpCents, walkUpSales: r.beyond.walkUpSales,
       greenReserveFeesCents: r.greenReserveFeesCents,
     },
-    paid: { cardCents: r.cardCents, counterCents: r.counterCents, outstandingCents: r.outstandingCents, outstandingGroups: r.outstandingBookings },
+    paid: { cardCents: r.cardCents, counterCents: r.counterCents, accountCents: r.accountCents, outstandingCents: r.outstandingCents, outstandingGroups: r.outstandingBookings },
     todayByHour: day.revenue.byHour, lastWeekByHour: dayBefore.revenue.byHour,
     todayCollectedCents: day.revenue.collectedCents, lastWeekCollectedCents: dayBefore.revenue.collectedCents,
     drawer: closes[0] ?? null,

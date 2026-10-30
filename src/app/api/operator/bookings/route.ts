@@ -18,7 +18,7 @@ import { markNoShow, refundNoShowFee, roundPaid } from '@/lib/no-show-fee';
 import { sendSms } from '@/lib/twilio';
 import { normalizePhone } from '@/lib/golfer-otp';
 import { formatTeeTime } from '@/lib/format';
-import { createCounterBooking } from '@/lib/counter-pay';
+import { createCounterBooking, settleAtCounter } from '@/lib/counter-pay';
 import { ringUpCash } from '@/lib/register';
 import { noFeeReason, type CancelRecord } from '@/lib/cancel-fee-reason';
 
@@ -103,13 +103,13 @@ export async function PATCH(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers } = await req.json();
+  const { id, action, paymentMethodId, checkedInPlayers: cipRaw, waiveFee: waiveRaw, via: viaRaw, newTeeTimeId, reprice, dryRun, residentPlayers, cashTenderedCents, amountCents, reason, newPlayers, membershipId } = await req.json();
   const waiveFee = action === 'cancel' && waiveRaw === true;
   // SD-5: partial party — how many actually showed (1 .. players-1); absent = all.
   const cip = cipRaw == null ? undefined : Number(cipRaw);
   if (cip !== undefined && (!Number.isInteger(cip) || cip < 1)) return NextResponse.json({ error: 'Invalid headcount.' }, { status: 400 });
   // CASH-1: 'take_cash' (the old 'paid_offline' still arrives from open tabs — it is the same cash sale).
-  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players'];
+  const ACTIONS = ['cancel', 'checkin', 'no_show', 'still_coming', 'take_cash', 'paid_offline', 'send_pay_link', 'move', 'set_residents', 'refund_round', 'waive_late_fee', 'change_players', 'charge_account'];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json({ error: 'Missing id or unsupported action' }, { status: 400 });
   }
@@ -118,7 +118,9 @@ export async function PATCH(req: NextRequest) {
     // Revamp 3 dead end 14: refunding a paid round is its own permission; giving back a kept late fee is waiving it.
     refund_round: 'money.refund_rounds', waive_late_fee: 'sheet.waive_fee',
     // Dead end 19: a group's party size changes its price at the counter, like residents.
-    change_players: 'sheet.counter_payment' };
+    change_players: 'sheet.counter_payment',
+    // MEM-ACCT: the group's round on a member's account — paid at the counter, settled later.
+    charge_account: 'sheet.counter_payment' };
   const deniedAction = requirePermission(session, NEEDS[action]);
   if (deniedAction) return deniedAction;
   // SP-A: cancelling WITHOUT the late fee refunds a hold already taken — its own permission.
@@ -281,6 +283,14 @@ export async function PATCH(req: NextRequest) {
     const c = await refundNoShowFee(id, actorName); // SP-B: the course's no-show fee too
     const notes = [r.ok ? null : `The booking fee could not be refunded (${r.error}) — GreenReserve will follow up.`, c.ok ? null : `The no-show fee could not be refunded (${c.error}) — refund it from Stripe.`].filter(Boolean);
     return NextResponse.json({ success: true, ...(notes.length ? { fee: notes.join(' ') } : {}) });
+  }
+  if (action === 'charge_account') {
+    // MEM-ACCT (Cam 2026-10-30): the whole group — the member's guests included — on one member's
+    // account, checked in like cash at the counter (lib/counter-pay settleAtCounter).
+    if (typeof membershipId !== 'string' || !membershipId) return NextResponse.json({ error: 'Pick the member whose account it goes on.' }, { status: 400 });
+    const r = await settleAtCounter(session.courseId, id, { actor: staff, actorName, checkedInPlayers: cip, onAccount: { membershipId } });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ success: true, amountCents: r.amountCents, fee: r.note });
   }
   if (action === 'take_cash' || action === 'paid_offline') {
     // CASH-1 (Cam 2026-10-25: "can't just be paid at counter — it's either paid online

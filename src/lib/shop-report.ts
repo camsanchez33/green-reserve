@@ -72,7 +72,7 @@ export async function shopReport(courseId: string, range: { from: string; to: st
     }),
     prisma.shopSale.findMany({ where: { courseId, status: { in: ['paid_cash', 'paid_card'] }, paidAt: inRange, discountCents: { gt: 0 } }, select: { discountCents: true } }),
     prisma.bookingShopItem.findMany({
-      where: { booking: { courseId, paymentStatus: { in: ['paid', 'paid_offline'] }, paidAt: inRange } },
+      where: { booking: { courseId, paymentStatus: { in: ['paid', 'paid_offline', 'on_account'] }, paidAt: inRange } },
       select: { shopItemId: true, name: true, unitPriceCents: true, quantity: true }, take: 50_000,
     }),
   ]);

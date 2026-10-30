@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 22:32 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9aadbe4c` · working tree **7 dirty file(s)**
+Generated 2026-10-30 23:14 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9d060959` · working tree **36 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 71 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 73 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `7a14850b` | 2026-10-30 | Launch wipe closes Dec 1 instead of Nov 1 (#265) |
+| `6cc42bd6` | 2026-10-30 | TEST-1: launch wipe closes Dec 1 instead of Nov 1 |
 | `d30b4479` | 2026-10-30 | Demand pricing: online public rate moves with each hour's fill (#264) |
 | `d2a912be` | 2026-10-30 | PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic |
 | `25de845f` | 2026-10-30 | Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263) |
@@ -86,15 +88,28 @@ Generated 2026-10-30 22:32 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (36 file(s))
 
-- `M CLAUDE.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M docs/walks/MONEY_WALK_2026-10.md`
-- `M scripts/data-reset-db-test.ts`
-- `M src/app/admin/system/page.tsx`
-- `M src/lib/data-reset.ts`
+- `M prisma/schema.prisma`
+- `M scripts/cash-at-counter-db-test.ts`
+- `M src/app/api/checkin/[bookingId]/route.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/money/sales/route.ts`
+- `M src/app/api/operator/tiers/route.ts`
+- `M src/app/api/receipt/[bookingId]/route.ts`
+- `M src/app/checkin/[bookingId]/page.tsx`
+- `M src/app/dashboard/analytics/page.tsx`
+- `M src/app/dashboard/home/page.tsx`
+- `M src/app/dashboard/members/page.tsx`
+- `M src/app/dashboard/page.tsx`
+- `M src/app/receipt/[bookingId]/page.tsx`
+- `M src/components/dashboard/money/PaymentsPanel.tsx`
+- `M src/components/dashboard/money/SalesPanel.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -220,6 +235,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `7a14850b` 2026-10-30 — Launch wipe closes Dec 1 instead of Nov 1 (#265)
+- `6cc42bd6` 2026-10-30 — TEST-1: launch wipe closes Dec 1 instead of Nov 1
 - `d30b4479` 2026-10-30 — Demand pricing: online public rate moves with each hour's fill (#264)
 - `d2a912be` 2026-10-30 — PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic
 - `25de845f` 2026-10-30 — Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)
@@ -230,8 +247,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `91141923` 2026-10-30 — Regenerate codemap and status board
 - `0d9486fe` 2026-10-30 — MEM-JOIN: join a membership tier online — pay and join, or request to join
 - `53505e47` 2026-10-30 — Pricing 3/4 part B: round packs online (#260)
-- `248a5175` 2026-10-30 — PRICE-3 part B: round packs online — buy on the course page, use when booking
-- `e1ec15b2` 2026-10-30 — Pricing 3/4 part A: round packs at the counter (#259)
 
 ---
 
