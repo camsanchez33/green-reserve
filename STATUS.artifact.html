@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-30 21:33 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 1fefe9f7</span>
-    <span>15 uncommitted</span>
+    <span>2026-10-30 22:12 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 4366d36a</span>
+    <span>22 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">67 runs have shipped that the queue doesn't know about</div>
+<div class="lede">69 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">25de845f</span><span>Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)</span></li>
+<li><span class="h">b667583d</span><span>PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to</span></li>
 <li><span class="h">e1c241af</span><span>Membership auto-renew (course per tier, required consent, reminders) (#262)</span></li>
 <li><span class="h">d29ba970</span><span>MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box</span></li>
 <li><span class="h">53da712c</span><span>Membership tiers: join online (pay and join, or request to join) (#261)</span></li>
@@ -204,7 +206,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/shop-sales-test.ts</code></li><li><code>M src/app/api/operator/round-packs/route.ts</code></li><li><code>M src/app/api/shop-sale/[id]/route.ts</code></li><li><code>M src/app/pay/shop/[id]/page.tsx</code></li><li><code>M src/components/dashboard/RoundPacks.tsx</code></li><li><code>M src/lib/round-packs.ts</code></li><li><code>M src/lib/shop-sales.ts</code></li><li><code>?? prisma/migrations/20261030220000_pack_open_links/</code></li><li><code>?? scripts/pack-open-links-db-test.ts</code></li></ul>
+<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M src/app/api/bookings/resident-rate/route.ts</code></li><li><code>M src/app/api/bookings/route.ts</code></li><li><code>M src/app/api/cron/generate-tee-times/route.ts</code></li><li><code>M src/app/api/manage/[bookingId]/available-times/route.ts</code></li><li><code>M src/app/api/member/[courseSlug]/tee-times/route.ts</code></li><li><code>M src/app/api/preview/[courseId]/tee-times/route.ts</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li><li><code>M src/lib/booking-residents.ts</code></li><li><code>M src/lib/data-reset.ts</code></li><li><code>M src/lib/move-booking.ts</code></li><li><code>M src/lib/public-tee-times.ts</code></li><li><code>?? prisma/migrations/20261030230000_demand_pricing/</code></li><li><code>?? scripts/demand-pricing-db-test.ts</code></li><li><code>?? src/app/api/operator/demand-pricing/</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -251,14 +253,14 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 4d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 4d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 6d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 7d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 7d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 7d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
@@ -286,6 +288,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 9d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">25de845f</td><td class="num">2026-10-30</td><td>Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)</td></tr>
+<tr><td class="num">b667583d</td><td class="num">2026-10-30</td><td>PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to</td></tr>
 <tr><td class="num">e1c241af</td><td class="num">2026-10-30</td><td>Membership auto-renew (course per tier, required consent, reminders) (#262)</td></tr>
 <tr><td class="num">d29ba970</td><td class="num">2026-10-30</td><td>MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box</td></tr>
 <tr><td class="num">53da712c</td><td class="num">2026-10-30</td><td>Membership tiers: join online (pay and join, or request to join) (#261)</td></tr>
@@ -296,8 +300,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">e1ec15b2</td><td class="num">2026-10-30</td><td>Pricing 3/4 part A: round packs at the counter (#259)</td></tr>
 <tr><td class="num">bad4eb47</td><td class="num">2026-10-30</td><td>PRICE-3 part A: round packs — sold at the register, used at the counter</td></tr>
 <tr><td class="num">2c5fcf28</td><td class="num">2026-10-30</td><td>Pricing 2/4: last-minute deals (#258)</td></tr>
-<tr><td class="num">f6fd22ff</td><td class="num">2026-10-30</td><td>PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled</td></tr>
-<tr><td class="num">439c4e7b</td><td class="num">2026-10-30</td><td>Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

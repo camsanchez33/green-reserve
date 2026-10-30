@@ -163,6 +163,13 @@ model Course {
   lastMinuteCounter          Boolean               @default(true)
   /// Off: a member or resident pays the lower of their rate and the deal. On: the deal comes off their rate.
   lastMinuteStack            Boolean               @default(false)
+  /// PRICE-5 (Cam 2026-10-30): demand pricing — 'off' | 'suggest' (the course applies the weekly
+  /// suggestions) | 'auto' (they apply themselves). Online public rate only; never below the
+  /// floor or above the ceiling (percent of the course's own rate).
+  demandMode                 String                @default("off")
+  demandFloorPct             Int                   @default(80)
+  demandCeilingPct           Int                   @default(125)
+  demandSuggestedAt          DateTime?
   golferNotes                GolferNote[]
   golferBlocks               GolferBlock[]
   /// PERS-1: optional short note from the course, shown on the golfer's
@@ -228,6 +235,7 @@ model Course {
   shopStockReceipts          ShopStockReceipt[]
   promoCodes                 PromoCode[]
   roundPacks                 RoundPack[]
+  demandPrices               DemandPrice[]
 
   @@index([operatorId])
   @@index([groupId])
@@ -592,6 +600,8 @@ model Booking {
   promoDiscountCents         Int               @default(0)
   /// PRICE-2: the last-minute percent this booking got (0 = none).
   lastMinutePct              Int               @default(0)
+  /// PRICE-5: the demand percent on the public rate when this booking was priced (+ up, − down, 0 = none).
+  demandPct                  Int               @default(0)
   /// PRICE-3: the round pack (a paid ShopSaleLine) this booking's rounds came from, and how many it took.
   packLineId                 String?
   packRounds                 Int               @default(0)
@@ -1978,6 +1988,26 @@ model PromoCode {
 /// PRICE-3 (Cam 2026-10-30: "Round packs" — sold "online + counter"; cart and guests "course
 /// decides per pack"; GreenReserve's $1.50 a player still charged on each round used): a prepaid
 /// bundle of rounds in the course's catalog. Sold as a line of a walk-up sale (lib/round-packs.ts).
+/// PRICE-5: a course's demand price for one weekday and hour — what applies now (pct) and
+/// what the last 8 weeks suggest (suggestedPct), as a percent on the public rate.
+model DemandPrice {
+  id            String   @id @default(cuid())
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  /// 0 = Sunday … 6 = Saturday
+  dow           Int
+  /// 0–23, the tee time's hour
+  hour          Int
+  pct           Int      @default(0)
+  suggestedPct  Int      @default(0)
+  /// The hour's fill over the weeks looked at, and the course's overall (for the page)
+  fillPct       Int      @default(0)
+  courseFillPct Int      @default(0)
+  updatedAt     DateTime @updatedAt
+
+  @@unique([courseId, dow, hour])
+}
+
 model RoundPack {
   id         String   @id @default(cuid())
   courseId   String

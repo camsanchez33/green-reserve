@@ -6,6 +6,7 @@ import { prisma } from './prisma';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
 import { seatAfter } from './promo-codes';
 import { dealRateSeat } from './last-minute';
+import { onlinePublicSeat } from './demand-pricing';
 import { groupGreenFee, otherPerPlayerCents } from './residents';
 
 export type SetResidentsResult =
@@ -22,7 +23,7 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
       select: {
         id: true, courseId: true, status: true, players: true, appliedRate: true, paymentStatus: true, paidOffline: true,
         checkedInAt: true, noShowAt: true, roundPaymentIntentId: true, shopLockedAt: true, readerStartedAt: true,
-        greenFeeTotal: true, totalAmount: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, lastMinutePct: true,
+        greenFeeTotal: true, totalAmount: true, residentPlayers: true, residentRateCents: true, promoCodeId: true, lastMinutePct: true, demandPct: true,
         teeTime: { select: { date: true, time: true, greenFeeCents: true, residentRateCents: true } },
         course: { select: { timezone: true, lastMinuteStack: true } },
       },
@@ -41,7 +42,8 @@ export async function setBookingResidents(courseId: string, bookingId: string, c
     const code = b.promoCodeId ? await tx.promoCode.findUnique({ where: { id: b.promoCodeId }, select: { kind: true, value: true, withRates: true } }) : null;
     const others = otherPerPlayerCents(b) ?? (code ? seatAfter(code, b.teeTime.greenFeeCents) : b.teeTime.greenFeeCents);
     // PRICE-2: the booking's last-minute deal applies to the resident seat as it would have online.
-    const resSeat = dealRateSeat(b.lastMinutePct, b.teeTime.residentRateCents, b.teeTime.greenFeeCents, b.course.lastMinuteStack);
+    // PRICE-5: never above the public seat the booking was priced at (its deal or demand price).
+    const resSeat = Math.min(onlinePublicSeat(b.teeTime.greenFeeCents, b.lastMinutePct, b.demandPct), dealRateSeat(b.lastMinutePct, b.teeTime.residentRateCents, b.teeTime.greenFeeCents, b.course.lastMinuteStack));
     const priced = groupGreenFee(b.players, others, n, code?.withRates ? seatAfter(code, resSeat) : resSeat);
     const totalAmount = b.totalAmount + (priced.greenFeeTotal - b.greenFeeTotal);
     // Conditional on the price and payment state just read: a charge that

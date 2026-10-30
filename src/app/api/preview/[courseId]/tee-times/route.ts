@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { normalizeDbTeeTime } from '@/lib/public-tee-times';
+import { loadDemand } from '@/lib/demand-pricing';
 import { verifyViewToken } from '@/lib/preview-token';
 
 export async function GET(
@@ -32,6 +33,7 @@ export async function GET(
     : teeTimes;
 
   // The same mapping as the live page (lib/public-tee-times), so the preview shows the booking rules golfers get.
-  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { walkingAllowed: true, cartRequired: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true, timezone: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true } });
-  return NextResponse.json(visible.map(t => normalizeDbTeeTime(t, course ?? undefined)));
+  const course = await prisma.course.findUnique({ where: { id: courseId }, select: { walkingAllowed: true, cartRequired: true, minPlayers: true, maxPlayers: true, publicAdvanceDays: true, timezone: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, id: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } });
+  const demand = course ? await loadDemand(course) : null;
+  return NextResponse.json(visible.map(t => normalizeDbTeeTime(t, course ?? undefined, demand)));
 }

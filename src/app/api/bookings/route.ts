@@ -4,7 +4,8 @@ import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { groupGreenFee } from '@/lib/residents';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoRow } from '@/lib/promo-codes';
-import { dealPct, dealSeat, dealRateSeat } from '@/lib/last-minute';
+import { dealPct, dealRateSeat } from '@/lib/last-minute';
+import { demandPctFor, onlinePublicSeat, dealWins } from '@/lib/demand-pricing';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from '@/lib/round-packs';
 import { isPastIn } from '@/lib/course-time';
 import Stripe from 'stripe';
@@ -173,6 +174,14 @@ export async function POST(req: NextRequest) {
   // PRICE-3: rounds from the signed-in golfer's own round pack — they replace the rate, and no code goes with them.
   const usePack = typeof packLineId === 'string' && packLineId !== '';
   if (usePack && promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') return NextResponse.json({ error: PACK_NO_CODE, code: 'promo' }, { status: 400 });
+  // PRICE-2 + PRICE-5: the online public seat — the lower of a last-minute deal and the demand
+  // price (lib/demand-pricing); a member, resident or pack seat is never above it.
+  const lastMinutePct = dealPct(teeTimeFull.course, teeTimeFull, 'online');
+  const demandPct = await demandPctFor(teeTimeFull.course, teeTimeFull);
+  const pubSeat = onlinePublicSeat(teeTimeFull.greenFeeCents, lastMinutePct, demandPct);
+  // What the booking keeps: whichever of the two set the public price.
+  const dealSet = dealWins(teeTimeFull.greenFeeCents, lastMinutePct, demandPct);
+  const kept = { lastMinutePct: dealSet ? lastMinutePct : 0, demandPct: dealSet ? 0 : demandPct };
   let pack: { lineId: string; seats: number; greenFeeTotal: number; cartFeeTotal: number; memberRateCents: number | null; memberCartCents: number | null } | null = null;
   if (usePack) {
     if (!golferSession?.email) return NextResponse.json({ error: 'Sign in to use your round pack.', code: 'pack' }, { status: 401 });
@@ -180,9 +189,8 @@ export async function POST(req: NextRequest) {
     if (!h || h.holderEmail.toLowerCase() !== golferSession.email.trim().toLowerCase()) return NextResponse.json({ error: 'That round pack isn’t yours on this course.', code: 'pack' }, { status: 403 });
     const s = packSeats(h, players);
     if (!s.ok) return NextResponse.json({ error: s.error, code: 'pack' }, { status: 400 });
-    const pubPack = dealSeat(dealPct(teeTimeFull.course, teeTimeFull, 'online'), teeTimeFull.greenFeeCents);
     const wants = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
-    const p = packPrice({ players, seats: s.seats, guests: h.guests, coversCart: h.coversCart, publicGreen: pubPack, cartFee: teeTimeFull.cartFeeCents, cart: wants });
+    const p = packPrice({ players, seats: s.seats, guests: h.guests, coversCart: h.coversCart, publicGreen: pubSeat, cartFee: teeTimeFull.cartFeeCents, cart: wants });
     pack = { lineId: h.lineId, seats: s.seats, ...p };
   }
   if (promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') {
@@ -192,10 +200,8 @@ export async function POST(req: NextRequest) {
   }
   // PRICE-2: a last-minute deal comes first (lib/last-minute) — each seat at its deal price —
   // then any promo code off that.
-  const lastMinutePct = dealPct(teeTimeFull.course, teeTimeFull, 'online');
-  const pubSeat = dealSeat(lastMinutePct, teeTimeFull.greenFeeCents);
-  const ownSeat = appliedTier ? dealRateSeat(lastMinutePct, greenFeePerPlayerCents, teeTimeFull.greenFeeCents, teeTimeFull.course.lastMinuteStack) : pubSeat;
-  const resSeat = teeTimeFull.residentRateCents == null ? null : dealRateSeat(lastMinutePct, teeTimeFull.residentRateCents, teeTimeFull.greenFeeCents, teeTimeFull.course.lastMinuteStack);
+  const ownSeat = appliedTier ? Math.min(pubSeat, dealRateSeat(lastMinutePct, greenFeePerPlayerCents, teeTimeFull.greenFeeCents, teeTimeFull.course.lastMinuteStack)) : pubSeat;
+  const resSeat = teeTimeFull.residentRateCents == null ? null : Math.min(pubSeat, dealRateSeat(lastMinutePct, teeTimeFull.residentRateCents, teeTimeFull.greenFeeCents, teeTimeFull.course.lastMinuteStack));
   const seat = (c: number) => (promoRow ? seatAfter(promoRow, c) : c);
   const ratedGreenFeeTotal = appliedTier ? splitTotal(players, memberN, ownSeat, pubSeat)
     : groupGreenFee(players, ownSeat, resident ? 1 : 0, resSeat).greenFeeTotal;
@@ -311,7 +317,7 @@ export async function POST(req: NextRequest) {
       residentRateCents: pack ? null : priced.residentRateCents,
       // The member's own spot when guests pay the public rate (lib/member-rates partyFees); a pack holder's seat the same way.
       ...(pack ? { memberRateCents: pack.memberRateCents, memberCartCents: pack.memberCartCents, packLineId: pack.lineId, packRounds: pack.seats } : memberSpot(appliedTier, { greenFeeCents: seat(ownSeat), cartFeeCents: cartFeePerPlayerCents })),
-      lastMinutePct,
+      ...kept,
       cartFeeTotal,
       cartSelected:     wantsCart,
       rangeBallsSize:   rangeBallsTotal > 0 ? ballsSize : '',
@@ -450,7 +456,7 @@ export async function POST(req: NextRequest) {
     residentPlayers: priced.residentPlayers,
     greenFeeTotal:  greenFeeTotal  / 100,
     promoDiscount:  (promo?.discountCents ?? 0) / 100,
-    lastMinutePct,
+    ...kept,
     cartFeeTotal:   cartFeeTotal   / 100,
     rangeBallsTotal: rangeBallsTotal / 100,
     accessFeeTotal: accessFeeTotal / 100,

@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 21:33 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `1fefe9f7` · working tree **15 dirty file(s)**
+Generated 2026-10-30 22:12 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `4366d36a` · working tree **22 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 67 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 69 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `25de845f` | 2026-10-30 | Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263) |
+| `b667583d` | 2026-10-30 | PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to |
 | `e1c241af` | 2026-10-30 | Membership auto-renew (course per tier, required consent, reminders) (#262) |
 | `d29ba970` | 2026-10-30 | MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box |
 | `53da712c` | 2026-10-30 | Membership tiers: join online (pay and join, or request to join) (#261) |
@@ -82,7 +84,7 @@ Generated 2026-10-30 21:33 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (15 file(s))
+### Uncommitted working tree (22 file(s))
 
 - `M STATUS.artifact.html`
 - `M STATUS.json`
@@ -90,15 +92,20 @@ Generated 2026-10-30 21:33 UTC · branch `claude/walkthrough-2-prioritization-ui
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M prisma/schema.prisma`
-- `M scripts/shop-sales-test.ts`
-- `M src/app/api/operator/round-packs/route.ts`
-- `M src/app/api/shop-sale/[id]/route.ts`
-- `M src/app/pay/shop/[id]/page.tsx`
-- `M src/components/dashboard/RoundPacks.tsx`
-- `M src/lib/round-packs.ts`
-- `M src/lib/shop-sales.ts`
-- `?? prisma/migrations/20261030220000_pack_open_links/`
-- `?? scripts/pack-open-links-db-test.ts`
+- `M src/app/api/bookings/resident-rate/route.ts`
+- `M src/app/api/bookings/route.ts`
+- `M src/app/api/cron/generate-tee-times/route.ts`
+- `M src/app/api/manage/[bookingId]/available-times/route.ts`
+- `M src/app/api/member/[courseSlug]/tee-times/route.ts`
+- `M src/app/api/preview/[courseId]/tee-times/route.ts`
+- `M src/app/dashboard/schedules/page.tsx`
+- `M src/lib/booking-residents.ts`
+- `M src/lib/data-reset.ts`
+- `M src/lib/move-booking.ts`
+- `M src/lib/public-tee-times.ts`
+- `?? prisma/migrations/20261030230000_demand_pricing/`
+- `?? scripts/demand-pricing-db-test.ts`
+- `?? src/app/api/operator/demand-pricing/`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -188,14 +195,14 @@ This is the distinction a raw checkbox count gets wrong.
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 9d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 4d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 4d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 6d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 7d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 7d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 7d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 7d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 7d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 7d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 7d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 7d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 8d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 8d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 8d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 8d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 8d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 8d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 9d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 9d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 9d |
@@ -224,6 +231,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `25de845f` 2026-10-30 — Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)
+- `b667583d` 2026-10-30 — PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to
 - `e1c241af` 2026-10-30 — Membership auto-renew (course per tier, required consent, reminders) (#262)
 - `d29ba970` 2026-10-30 — MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box
 - `53da712c` 2026-10-30 — Membership tiers: join online (pay and join, or request to join) (#261)
@@ -234,8 +243,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `e1ec15b2` 2026-10-30 — Pricing 3/4 part A: round packs at the counter (#259)
 - `bad4eb47` 2026-10-30 — PRICE-3 part A: round packs — sold at the register, used at the counter
 - `2c5fcf28` 2026-10-30 — Pricing 2/4: last-minute deals (#258)
-- `f6fd22ff` 2026-10-30 — PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled
-- `439c4e7b` 2026-10-30 — Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)
 
 ---
 

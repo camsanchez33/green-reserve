@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-30T21:33:25.541Z",
+  "generatedAt": "2026-10-30T22:12:23.350Z",
   "repo": {
-    "head": "1fefe9f7",
+    "head": "4366d36a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 15,
+    "dirtyCount": 22,
     "dirty": [
       "M STATUS.artifact.html",
       " M STATUS.json",
@@ -11,21 +11,40 @@
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M prisma/schema.prisma",
-      " M scripts/shop-sales-test.ts",
-      " M src/app/api/operator/round-packs/route.ts",
-      " M src/app/api/shop-sale/[id]/route.ts",
-      " M src/app/pay/shop/[id]/page.tsx",
-      " M src/components/dashboard/RoundPacks.tsx",
-      " M src/lib/round-packs.ts",
-      " M src/lib/shop-sales.ts",
-      "?? prisma/migrations/20261030220000_pack_open_links/",
-      "?? scripts/pack-open-links-db-test.ts"
+      " M src/app/api/bookings/resident-rate/route.ts",
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/cron/generate-tee-times/route.ts",
+      " M src/app/api/manage/[bookingId]/available-times/route.ts",
+      " M src/app/api/member/[courseSlug]/tee-times/route.ts",
+      " M src/app/api/preview/[courseId]/tee-times/route.ts",
+      " M src/app/dashboard/schedules/page.tsx",
+      " M src/lib/booking-residents.ts",
+      " M src/lib/data-reset.ts",
+      " M src/lib/move-booking.ts",
+      " M src/lib/public-tee-times.ts",
+      "?? prisma/migrations/20261030230000_demand_pricing/",
+      "?? scripts/demand-pricing-db-test.ts",
+      "?? src/app/api/operator/demand-pricing/"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "25de845f",
+        "date": "2026-10-30T17:40:37-04:00",
+        "subject": "Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "b667583d",
+        "date": "2026-10-30T21:33:28+00:00",
+        "subject": "PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "e1c241af",
         "date": "2026-10-30T17:16:10-04:00",
@@ -694,18 +713,6 @@
       "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
-      "ageDays": 6
-    },
-    {
-      "file": "AGREEMENT_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
-      "ageDays": 7
-    },
-    {
-      "file": "CALL_SCHEDULING_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-22",
       "ageDays": 7
     },
     {
@@ -715,28 +722,40 @@
       "ageDays": 7
     },
     {
+      "file": "AGREEMENT_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 8
+    },
+    {
+      "file": "CALL_SCHEDULING_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-22",
+      "ageDays": 8
+    },
+    {
       "file": "ONBOARDING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 7
+      "ageDays": 8
     },
     {
       "file": "ONBOARDING_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 7
+      "ageDays": 8
     },
     {
       "file": "PUBLIC_SITE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 7
+      "ageDays": 8
     },
     {
       "file": "RECEIPT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
-      "ageDays": 7
+      "ageDays": 8
     },
     {
       "file": "ADMIN_MASTER_PLAN.md",
@@ -892,6 +911,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "25de845f",
+      "date": "2026-10-30",
+      "subject": "Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)"
+    },
+    {
+      "h": "b667583d",
+      "date": "2026-10-30",
+      "subject": "PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to"
+    },
+    {
       "h": "e1c241af",
       "date": "2026-10-30",
       "subject": "Membership auto-renew (course per tier, required consent, reminders) (#262)"
@@ -940,16 +969,6 @@
       "h": "2c5fcf28",
       "date": "2026-10-30",
       "subject": "Pricing 2/4: last-minute deals (#258)"
-    },
-    {
-      "h": "f6fd22ff",
-      "date": "2026-10-30",
-      "subject": "PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled"
-    },
-    {
-      "h": "439c4e7b",
-      "date": "2026-10-30",
-      "subject": "Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)"
     }
   ]
 }

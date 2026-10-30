@@ -4,6 +4,8 @@ import { centsToDollarsOr0 } from '@/lib/money';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { getGolferSession } from '@/lib/auth';
 import { canManageBooking } from '@/lib/manage-access';
+import { dealPct } from '@/lib/last-minute';
+import { demandPctAt, onlinePublicSeat, loadDemand } from '@/lib/demand-pricing';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -37,6 +39,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     include: { product: { select: { label: true } } },
   });
 
+  // PRICE-2 + PRICE-5: a golfer's own swap is priced as an online booking (lib/move-booking) —
+  // the new time's deal or demand price, whichever is lower — so the page shows that price.
+  const course = await prisma.course.findUniqueOrThrow({
+    where: { id: booking.courseId },
+    select: { id: true, timezone: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true },
+  });
+  const demand = await loadDemand(course);
   const available = teeTimes
     .filter(t => t.playersAvailable - t.playersBooked >= booking.players)
     .map(t => ({
@@ -47,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       spotsLeft: t.playersAvailable - t.playersBooked,
       // MP-3 B2c: cents at rest, dollars on the wire — the manage page renders
       // these with a dollars() formatter and was not changed.
-      greenFee: centsToDollarsOr0(t.greenFeeCents),
+      greenFee: centsToDollarsOr0(onlinePublicSeat(t.greenFeeCents, dealPct(course, t, 'online'), demandPctAt(course, demand, t))),
       cartFee: centsToDollarsOr0(t.cartFeeCents),
     }));
 
