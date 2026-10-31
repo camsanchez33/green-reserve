@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 630,
+    "files": 631,
     "routes": 286,
     "libs": 220,
     "models": 67,
@@ -7075,7 +7075,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 266,
+      "lines": 273,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8895,7 +8895,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 898,
+      "lines": 909,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -8911,6 +8911,7 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/AccountPicker",
         "@/components/dashboard/RegisterClose",
         "@/components/dashboard/RegisterPacks",
         "@/components/dashboard/ShopStock",
@@ -10574,6 +10575,34 @@
       ],
       "usedBy": [
         "src/components/birdie/BirdieWidget.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/AccountPicker.tsx",
+      "lines": 55,
+      "purpose": "MEM-ACCT 1b (Cam 2026-10-31:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "AccountMember",
+          "kind": "type"
+        },
+        {
+          "name": "AccountPicker",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/shop/page.tsx"
       ]
     },
     {
@@ -17480,6 +17509,7 @@
         "src/app/dashboard/schedules/page.tsx",
         "src/app/dashboard/shop/page.tsx",
         "src/components/AnnouncementBanner.tsx",
+        "src/components/dashboard/AccountPicker.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
         "src/components/dashboard/ChargeToAccount.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
@@ -19862,7 +19892,8 @@
       "usedBy": [
         "src/app/api/operator/member-accounts/route.ts",
         "src/app/api/operator/tiers/route.ts",
-        "src/lib/counter-pay.ts"
+        "src/lib/counter-pay.ts",
+        "src/lib/shop-sales.ts"
       ]
     },
     {
@@ -23600,7 +23631,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 802,
+      "lines": 848,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -23741,6 +23772,7 @@
       "imports": [
         "./booking-events",
         "./course-time",
+        "./member-account",
         "./money-ledger",
         "./prisma",
         "./sales-tax",
@@ -27979,7 +28011,8 @@
         "src/lib/membership-join.ts",
         "src/lib/membership-pay-link.ts",
         "src/lib/operator-search.ts",
-        "src/lib/sample-data.ts"
+        "src/lib/sample-data.ts",
+        "src/lib/shop-sales.ts"
       ]
     },
     {
@@ -28920,7 +28953,8 @@
       "writers": [],
       "readers": [
         "src/lib/member-account.ts",
-        "src/lib/member-statements.ts"
+        "src/lib/member-statements.ts",
+        "src/lib/shop-sales.ts"
       ]
     },
     {

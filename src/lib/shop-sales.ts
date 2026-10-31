@@ -14,6 +14,7 @@
 //   open ──(card claimed)──▶ paying ──(charged)──▶ paid_card
 //                              └──(declined)──▶ open
 //   open ──(void)──────────────▶ void
+//   (new) ──(on account)───────▶ paid_account   MEM-ACCT 1b: on a member's statement, no money taken now
 // Void / took-cash only take an 'open' sale and cancel its PaymentIntent
 // first; a charge that then finds the intent canceled stops ("ask for a new
 // link"). A charge claims the sale first, so two taps cannot both charge, and
@@ -27,6 +28,7 @@ import { quoteShopTax, reuseShopTaxQuote, recordShopSaleTax, type TaxLine } from
 import { todayIn, addDaysStr } from './course-time';
 import { teeTimeInstant } from './booking-events';
 import { recordMove } from './money-ledger';
+import { addCharge } from './member-account';
 
 export const MAX_SALE_CENTS = 1_000_000; // $10,000 — a typo guard
 export const MAX_SALE_LINES = 40;
@@ -210,7 +212,9 @@ export async function quoteSale(courseId: string, raw: unknown, discount?: Disco
 /** Ring up a sale. Cash is paid on the spot; a link sale waits for the customer. */
 export async function createSale(opts: {
   /** POS-3 R3: 'reader' = paid on the course's card reader (lib/card-reader.ts); open until the card goes through. */
-  courseId: string; lines: unknown; pay: 'cash' | 'link' | 'reader'; soldBy: string;
+  courseId: string; lines: unknown; pay: 'cash' | 'link' | 'reader' | 'account'; soldBy: string;
+  /** MEM-ACCT 1b (Cam 2026-10-31): 'account' = on this member's account, billed on their monthly statement. */
+  membershipId?: string;
   customerName?: string; customerPhone?: string; customerEmail?: string;
   /** The quote the counter showed (quoteSale); reused when it still matches, else tax is worked out again. */
   taxCalculationId?: string;
@@ -236,6 +240,13 @@ export async function createSale(opts: {
   if (!p.ok) return p;
   const hasPack = p.value.lines.some(l => l.pack);
   if (hasPack && hasDiscount(opts.discount)) return fail(400, PACK_NO_DISCOUNT);
+  if (hasPack && opts.pay === 'account') return fail(400, 'A round pack is paid in cash or by card, not on account.');
+  let member: { id: string; name: string } | null = null;
+  if (opts.pay === 'account') {
+    const m = opts.membershipId ? await prisma.courseMembership.findFirst({ where: { id: opts.membershipId, courseId: opts.courseId }, select: { id: true, inviteName: true, inviteEmail: true, golfer: { select: { firstName: true, lastName: true, email: true } } } }) : null;
+    if (!m) return fail(400, 'Pick the member whose account it goes on.');
+    member = { id: m.id, name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : '') || m.inviteName };
+  }
   // The pack's rounds are the customer's — found by their email when they book.
   if (hasPack && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(opts.customerEmail ?? '').trim())) return fail(400, 'Add the customer’s email — the round pack is theirs, found by it when they book.');
   const d = discountFor(p.value.subtotalCents, opts.discount);
@@ -255,11 +266,12 @@ export async function createSale(opts: {
   } catch (err) {
     console.error(JSON.stringify({ ev: 'sales_tax.quote.fail', courseId: opts.courseId, pay: opts.pay, error: err instanceof Error ? err.message : String(err) }));
     // Cash is never blocked (Cam 2026-10-29: "no tax on cash" when Stripe Tax is down) — taken without tax, marked on the sale.
-    if (opts.pay !== 'cash') return fail(502, TAX_DOWN);
+    // On account works the same way: nothing is charged now, so nothing waits on Stripe.
+    if (opts.pay !== 'cash' && opts.pay !== 'account') return fail(502, TAX_DOWN);
     taxUnavailable = true;
   }
   const totalCents = p.value.subtotalCents - d.value.discountCents + tax.taxCents + roundsCents;
-  if (opts.pay === 'cash' && opts.expectedItemsCents != null && opts.expectedItemsCents !== '' && Number(opts.expectedItemsCents) !== totalCents - roundsCents) return fail(409, TOTAL_CHANGED);
+  if ((opts.pay === 'cash' || opts.pay === 'account') && opts.expectedItemsCents != null && opts.expectedItemsCents !== '' && Number(opts.expectedItemsCents) !== totalCents - roundsCents) return fail(409, TOTAL_CHANGED);
   if (opts.pay !== 'cash' && totalCents <= 0) return fail(400, 'This sale comes to nothing — take it as cash instead.');
   if (opts.pay === 'reader' && totalCents < 50) return fail(400, 'Card payments start at $0.50 — take this one as cash.');
   if (opts.pay !== 'cash' && shopFeeFor(totalCents) > 0) return fail(400, 'Walk-up card payments are not set up for the shop fee yet.');
@@ -270,24 +282,37 @@ export async function createSale(opts: {
     cashTenderedCents = t;
   }
 
-  const name = String(opts.customerName ?? '').trim().slice(0, 80);
+  const name = (String(opts.customerName ?? '').trim() || member?.name || '').slice(0, 80);
   const phone = String(opts.customerPhone ?? '').trim().slice(0, 30);
   const email = String(opts.customerEmail ?? '').trim().toLowerCase().slice(0, 200);
   const payToken = opts.pay === 'link' ? randomUUID() : '';
+  const settledNow = opts.pay === 'cash' || opts.pay === 'account';
   const sale = await prisma.$transaction(async tx => {
     const s = await tx.shopSale.create({
       data: {
         courseId: opts.courseId, totalCents, taxCents: tax.taxCents, taxCalculationId: tax.calculationId, taxUnavailable, soldBy: opts.soldBy, customerName: name, customerPhone: phone, customerEmail: email, payToken,
-        status: opts.pay === 'cash' ? 'paid_cash' : 'open', paidAt: opts.pay === 'cash' ? new Date() : null,
+        status: opts.pay === 'cash' ? 'paid_cash' : opts.pay === 'account' ? 'paid_account' : 'open', paidAt: settledNow ? new Date() : null,
         discountCents: d.value.discountCents, discountNote: d.value.note, cashTenderedCents, roundsCents,
         lines: { create: lines },
       },
       include: SALE_INCLUDE,
     });
-    // Cash leaves the shelf now; a link sale only when it is paid. A custom amount takes no stock.
-    if (opts.pay === 'cash') for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
+    // Cash and on-account leave the shelf now; a link sale only when it is paid. A custom amount takes no stock.
+    if (settledNow) for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, l.quantity);
+    // MEM-ACCT 1b: the sale's line on the member's account, in the same transaction — refused (limit,
+    // past due, not active) means no sale at all.
+    if (member) {
+      const what = lines.map(l => l.quantity > 1 ? `${l.name} ×${l.quantity}` : l.name).join(', ');
+      const c = await addCharge(tx, { courseId: opts.courseId, membershipId: member.id, kind: 'shop', amountCents: totalCents, shopSaleId: s.id, note: `Pro shop: ${what}`, createdBy: opts.soldBy });
+      if (!c.ok) throw new AccountRefused(c.status, c.error);
+    }
     return s;
-  });
+  }).catch(err => { if (err instanceof AccountRefused) return err; throw err; });
+  if (sale instanceof AccountRefused) return fail(sale.status, sale.message);
+  if (opts.pay === 'account') {
+    // No money moved — the ledger gets it when the statement is paid. The sale's tax is owed now.
+    await recordShopSaleTax(sale.id);
+  }
   if (opts.pay === 'cash') {
     // LEDGER-1: the cash taken — each round on its own booking, the items as one shop line.
     for (const rd of rounds) await recordMove({ courseId: opts.courseId, what: 'round', direction: 'in', method: 'cash', account: 'course', amountCents: rd.amountCents, bookingId: rd.bookingId, saleId: sale.id, actor: 'staff', note: opts.soldBy });
@@ -297,11 +322,14 @@ export async function createSale(opts: {
   return { ok: true, value: { ...saleView(sale), payToken } };
 }
 
+class AccountRefused extends Error { constructor(public status: number, message: string) { super(message); } }
+
 /** Why staff can't void or take cash for a sale in this status. */
 export const whyNotOpen = (status: string) =>
   status === 'paying' ? 'The customer is paying right now — wait a moment and refresh.'
     : status === 'paid_card' ? 'This sale is already paid by card.'
     : status === 'paid_cash' ? 'This sale is already paid in cash.'
+    : status === 'paid_account' ? 'This sale is already on a member’s account.'
     : 'This sale was voided.';
 
 /** Void an unpaid link sale, or take cash for it at the counter instead. */
@@ -513,7 +541,7 @@ export async function markCardPaid(saleId: string, stamp: Date, paymentIntentId:
 
 // ── POS-3: refunds ──────────────────────────────────────────────────────────
 
-const isPaid = (status: string) => status === 'paid_cash' || status === 'paid_card';
+const isPaid = (status: string) => status === 'paid_cash' || status === 'paid_card' || status === 'paid_account';
 
 /**
  * Refund all or part of a paid walk-up sale. The amount is reserved on the
@@ -575,7 +603,10 @@ export async function refundSale(courseId: string, saleId: string, input: { amou
   const amountCents = byItem?.ok ? Math.min(byItem.cents, left) : input.amountCents == null || input.amountCents === '' ? left : Number(input.amountCents);
   if (!Number.isInteger(amountCents) || amountCents < 1) return fail(400, 'Enter the amount to refund.');
   if (amountCents > left) return fail(400, `At most $${(left / 100).toFixed(2)} can still be refunded on this sale${s.roundsCents ? ' (green fees are refunded from the tee sheet booking)' : ''}.`);
-  const method = s.status === 'paid_card' ? 'card' : 'cash';
+  // MEM-ACCT 1b: an on-account sale is refunded as a credit on the same member's account.
+  const method = s.status === 'paid_card' ? 'card' : s.status === 'paid_account' ? 'account' : 'cash';
+  const onAccount = method === 'account' ? await prisma.memberCharge.findUnique({ where: { shopSaleId: saleId }, select: { membershipId: true } }) : null;
+  if (method === 'account' && !onAccount) return fail(409, 'This sale’s account line is missing — credit the member on Members instead.');
   // By amount, the items go back only when the whole sale is refunded in one go; a return by item restocks its items.
   const restock = byItem?.ok ? input.restock !== false : input.restock === true && s.refundedCents === 0 && amountCents === items;
   const returned = byItem?.ok ? byItem.lines : null;
@@ -583,7 +614,11 @@ export async function refundSale(courseId: string, saleId: string, input: { amou
   const refund = await prisma.$transaction(async tx => {
     const reserved = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: s.status, refundedCents: { lte: items - amountCents } }, data: { refundedCents: { increment: amountCents } } });
     if (!reserved.count) return null;
-    const r = await tx.shopSaleRefund.create({ data: { saleId, courseId, amountCents, method, status: method === 'cash' ? 'done' : 'pending', reason, restocked: restock, createdBy: actor, ...(returned ? { returnedLines: returned } : {}) } });
+    const r = await tx.shopSaleRefund.create({ data: { saleId, courseId, amountCents, method, status: method === 'card' ? 'pending' : 'done', reason, restocked: restock, createdBy: actor, ...(returned ? { returnedLines: returned } : {}) } });
+    if (onAccount) {
+      const c = await addCharge(tx, { courseId, membershipId: onAccount.membershipId, kind: 'credit', amountCents: -amountCents, note: `Pro shop return${reason ? `: ${reason}` : ''}`, createdBy: actor });
+      if (!c.ok) throw new AccountRefused(c.status, c.error);
+    }
     if (returned) {
       // Never more back than was sold: the count is checked again under the write.
       for (const rl of returned) {
@@ -599,7 +634,8 @@ export async function refundSale(courseId: string, saleId: string, input: { amou
       for (const l of lines) if (l.shopItemId) await takeStock(tx, l.shopItemId, -l.quantity);
     }
     return r;
-  }).catch(err => { if (err instanceof ReturnRaceError) return null; throw err; });
+  }).catch(err => { if (err instanceof ReturnRaceError) return null; if (err instanceof AccountRefused) return err; throw err; });
+  if (refund instanceof AccountRefused) return fail(refund.status, refund.message);
   if (!refund) return fail(409, 'Someone else just refunded part of this — refresh and try again.');
   if (method === 'cash') await recordMove({ courseId, what: 'shop', direction: 'out', method: 'cash', account: 'course', amountCents, saleId, actor: 'staff', note: reason || actor });
   let status: 'done' | 'pending' = 'done';
@@ -721,27 +757,37 @@ export async function reversePendingShopRefundTax(limit = 50): Promise<number> {
 export async function voidCashSale(courseId: string, saleId: string): Promise<Result<SaleView>> {
   const s = await prisma.shopSale.findFirst({ where: { id: saleId, courseId }, include: { course: { select: { timezone: true, stripeAccountId: true } } } });
   if (!s) return fail(404, 'Sale not found.');
-  if (s.status !== 'paid_cash' || !s.paidAt) return fail(409, s.status === 'paid_card' ? 'A card sale is refunded, not voided.' : 'Only a paid cash sale can be voided.');
+  // MEM-ACCT 1b: an on-account sale rung up by mistake is voided the same way — its line comes off the account, if not billed yet.
+  const account = s.status === 'paid_account';
+  if ((s.status !== 'paid_cash' && !account) || !s.paidAt) return fail(409, s.status === 'paid_card' ? 'A card sale is refunded, not voided.' : 'Only a paid cash sale can be voided.');
   if (s.roundsCents > 0) return fail(409, 'This sale paid green fees — undo those on the tee sheet, and refund the items.');
   if (s.refundedCents > 0) return fail(409, 'Part of this sale was refunded — refund the rest instead.');
   if (await prisma.shopSaleLine.findFirst({ where: { saleId, packRoundsUsed: { gt: 0 } }, select: { id: true } })) return fail(409, 'Rounds from the round pack on this sale have been used — it can’t be voided.');
   const today = todayIn(s.course.timezone);
   if (todayIn(s.course.timezone, s.paidAt) !== today) return fail(409, 'A sale from an earlier day is refunded, not voided.');
-  if (await prisma.registerClose.findFirst({ where: { courseId, day: today, createdAt: { gt: s.paidAt } }, select: { id: true } })) {
+  if (!account && await prisma.registerClose.findFirst({ where: { courseId, day: today, createdAt: { gt: s.paidAt } }, select: { id: true } })) {
     return fail(409, 'Today’s drawer has been counted since this sale — refund it instead.');
   }
   const r = await prisma.$transaction(async tx => {
-    const done = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: 'paid_cash', refundedCents: 0 }, data: { status: 'void', voidedAt: new Date() } });
+    const done = await tx.shopSale.updateMany({ where: { id: saleId, courseId, status: s.status, refundedCents: 0 }, data: { status: 'void', voidedAt: new Date() } });
     if (!done.count) return null;
+    if (account) {
+      // The same lock addCharge and the statement close take, so a close can't bill the line as it comes off.
+      const ln = await tx.memberCharge.findUnique({ where: { shopSaleId: saleId }, select: { membershipId: true } });
+      if (ln) await tx.$queryRaw`SELECT id FROM "CourseMembership" WHERE id = ${ln.membershipId} FOR UPDATE`;
+      const off = await tx.memberCharge.deleteMany({ where: { shopSaleId: saleId, statementId: null } });
+      if (!off.count) throw new AccountRefused(409, 'This sale is already on a member’s statement — refund it instead.');
+    }
     // PRICE-3: a booking that took a round in the same moment (it held this sale FOR SHARE, so it has committed) stops the void.
     if (await tx.shopSaleLine.findFirst({ where: { saleId, packRoundsUsed: { gt: 0 } }, select: { id: true } })) throw new ReturnRaceError();
     const lines = await tx.shopSaleLine.findMany({ where: { saleId }, select: { shopItemId: true, quantity: true, returnedQty: true } });
     for (const l of lines) if (l.shopItemId && l.quantity - l.returnedQty > 0) await takeStock(tx, l.shopItemId, -(l.quantity - l.returnedQty));
     return true;
-  }).catch(err => { if (err instanceof ReturnRaceError) return null; throw err; });
+  }).catch(err => { if (err instanceof ReturnRaceError) return null; if (err instanceof AccountRefused) return err; throw err; });
+  if (r instanceof AccountRefused) return fail(r.status, r.message);
   if (!r) return fail(409, 'This sale just changed — refresh and look again.');
-  // The cash goes back in the drawer: the sale's whole total out (a void had nothing refunded on it).
-  await recordMove({ courseId, what: 'shop', direction: 'out', method: 'cash', account: 'course', amountCents: s.totalCents, saleId, actor: 'staff', note: 'voided' });
+  // The cash goes back in the drawer: the sale's whole total out (a void had nothing refunded on it). On account, no money moved.
+  if (!account) await recordMove({ courseId, what: 'shop', direction: 'out', method: 'cash', account: 'course', amountCents: s.totalCents, saleId, actor: 'staff', note: 'voided' });
   await reverseVoidTax(saleId);
   const sale = await prisma.shopSale.findUniqueOrThrow({ where: { id: saleId }, include: SALE_INCLUDE });
   return { ok: true, value: saleView(sale) };

@@ -128,7 +128,7 @@ export async function golferRecord(courseId: string, key: string, opts: { money:
     // Residents are one list across a course group (GRP-1).
     email ? groupCourseIds(courseId).then(ids => prisma.courseResident.findFirst({ where: { courseId: { in: ids }, email: { equals: email, mode: 'insensitive' } }, select: { name: true, cardNumber: true, expiresOn: true } })) : null,
     email || phone ? prisma.shopSale.findMany({
-      where: { courseId, status: { in: ['paid_cash', 'paid_card'] }, OR: [...(email ? [{ customerEmail: { equals: email, mode: 'insensitive' as const } }] : []), ...(phone ? [{ customerPhone: phone }] : [])] },
+      where: { courseId, status: { in: ['paid_cash', 'paid_card', 'paid_account'] }, OR: [...(email ? [{ customerEmail: { equals: email, mode: 'insensitive' as const } }] : []), ...(phone ? [{ customerPhone: phone }] : [])] },
       orderBy: { createdAt: 'desc' }, take: 50, select: { id: true, totalCents: true, refundedCents: true, roundsCents: true, createdAt: true },
     }) : [],
     prisma.golferNote.findMany({ where: { courseId, golferKey: key }, orderBy: { createdAt: 'desc' }, take: 100, select: { id: true, body: true, bookingId: true, createdBy: true, createdAt: true } }),
