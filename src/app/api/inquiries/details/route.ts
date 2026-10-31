@@ -1,3 +1,4 @@
+import { noteEmailFailed } from '@/lib/inquiry-email-failed';
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendDetailsSubmittedNotification, sendDetailsSheetConfirmationEmail } from '@/lib/email';
@@ -148,7 +149,7 @@ export async function POST(req: NextRequest) {
     email: inquiry.email,
     courseName: inquiry.courseName,
     details,
-  }).catch(err => console.error('Details sheet confirmation email failed:', err)));
+  }).catch(err => noteEmailFailed(inquiry.id, 'copy of their setup sheet', err)));
 
   return NextResponse.json({ success: true });
 }

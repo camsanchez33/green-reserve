@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 632,
+    "files": 635,
     "routes": 286,
-    "libs": 220,
+    "libs": 223,
     "models": 67,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -877,7 +877,7 @@
     },
     {
       "path": "src/app/admin/inquiries/[id]/page.tsx",
-      "lines": 2374,
+      "lines": 2380,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -905,6 +905,7 @@
         "@/lib/call-answers",
         "@/lib/change-requests",
         "@/lib/contact",
+        "@/lib/email-failed-notice",
         "@/lib/format",
         "@/lib/inquiry-board",
         "@/lib/inquiry-call",
@@ -918,7 +919,7 @@
     },
     {
       "path": "src/app/admin/inquiries/page.tsx",
-      "lines": 963,
+      "lines": 964,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2291,7 +2292,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1298,
+      "lines": 1307,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2341,6 +2342,7 @@
         "@/lib/operator-setup",
         "@/lib/prisma",
         "@/lib/rate-limit",
+        "@/lib/setup-sheet-recap",
         "@/lib/tee-sheet-engine",
         "bcryptjs",
         "crypto",
@@ -4610,7 +4612,7 @@
     },
     {
       "path": "src/app/api/inquiries/details/route.ts",
-      "lines": 155,
+      "lines": 156,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4639,6 +4641,7 @@
       "imports": [
         "@/lib/call-answers",
         "@/lib/email",
+        "@/lib/inquiry-email-failed",
         "@/lib/prisma",
         "@/lib/sheet-token",
         "next/server"
@@ -4647,7 +4650,7 @@
     },
     {
       "path": "src/app/api/inquiries/route.ts",
-      "lines": 298,
+      "lines": 299,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4667,6 +4670,7 @@
         "@/lib/call-invite",
         "@/lib/contact",
         "@/lib/email",
+        "@/lib/inquiry-email-failed",
         "@/lib/inquiry-status",
         "@/lib/prisma",
         "@/lib/rate-limit",
@@ -11169,7 +11173,7 @@
     },
     {
       "path": "src/components/dashboard/RegisterClose.tsx",
-      "lines": 176,
+      "lines": 194,
       "purpose": "POS-3 R4 (Cam 2026-10-24):",
       "brain": [],
       "exports": [
@@ -11189,6 +11193,7 @@
         "@/components/ui/field",
         "@/lib/course-time",
         "@/lib/dashboard-fetch",
+        "@/lib/ledger-words",
         "react"
       ],
       "usedBy": [
@@ -12061,7 +12066,7 @@
     },
     {
       "path": "src/components/dashboard/money/SalesPanel.tsx",
-      "lines": 241,
+      "lines": 242,
       "purpose": "DENSE-2 (Cam 2026-10-27, after Toast's Sales Summary and Stripe's Today):",
       "brain": [],
       "exports": [
@@ -17884,6 +17889,27 @@
       ]
     },
     {
+      "path": "src/lib/email-failed-notice.ts",
+      "lines": 9,
+      "purpose": "Launch walk (Cam 2026-10-31):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "emailFailedNotice",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/app/admin/inquiries/[id]/page.tsx"
+      ]
+    },
+    {
       "path": "src/lib/email.ts",
       "lines": 2158,
       "purpose": "",
@@ -19311,6 +19337,30 @@
       ]
     },
     {
+      "path": "src/lib/inquiry-email-failed.ts",
+      "lines": 16,
+      "purpose": "Launch walk (Cam 2026-10-31):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "noteEmailFailed",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/inquiries/details/route.ts",
+        "src/app/api/inquiries/route.ts"
+      ]
+    },
+    {
       "path": "src/lib/inquiry-needs.ts",
       "lines": 39,
       "purpose": "INQUIRY_CALL_SPEC IC-1 §3 — \"Still need from them\", the sheet's column.",
@@ -19738,6 +19788,27 @@
       "usedBy": [
         "src/app/api/operator/money/ledger/route.ts",
         "src/components/dashboard/money/LedgerPanel.tsx"
+      ]
+    },
+    {
+      "path": "src/lib/ledger-words.ts",
+      "lines": 4,
+      "purpose": "The money ledger's kinds (MoneyMove.what), in words — for staff screens that list ledger rows.",
+      "brain": [],
+      "exports": [
+        {
+          "name": "LEDGER_WHAT",
+          "kind": "const"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [],
+      "usedBy": [
+        "src/components/dashboard/RegisterClose.tsx"
       ]
     },
     {
@@ -21365,7 +21436,7 @@
     },
     {
       "path": "src/lib/page-review.ts",
-      "lines": 102,
+      "lines": 109,
       "purpose": "Cam 2026-10-27 (onboarding walk):",
       "brain": [],
       "exports": [
@@ -21400,6 +21471,7 @@
         "./facilities",
         "./prisma",
         "./setup-missing",
+        "./setup-sheet-recap",
         "./walking"
       ],
       "usedBy": [
@@ -21748,6 +21820,7 @@
         "src/lib/go-live-preflight.ts",
         "src/lib/golfer-messages.ts",
         "src/lib/golfer-record.ts",
+        "src/lib/inquiry-email-failed.ts",
         "src/lib/ledger-view.ts",
         "src/lib/lifecycle.ts",
         "src/lib/login-guard.ts",
@@ -22283,7 +22356,7 @@
     },
     {
       "path": "src/lib/register-close.ts",
-      "lines": 142,
+      "lines": 147,
       "purpose": "POS-3 R4 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -23406,7 +23479,7 @@
     },
     {
       "path": "src/lib/setup-sheet-recap.ts",
-      "lines": 110,
+      "lines": 130,
       "purpose": "Cam 2026-10-26 (onboarding walk):",
       "brain": [],
       "exports": [
@@ -23417,6 +23490,10 @@
         {
           "name": "SHEET_NEXT_STEPS",
           "kind": "const"
+        },
+        {
+          "name": "sheetPricesNotBuilt",
+          "kind": "fn"
         },
         {
           "name": "sheetRecap",
@@ -23430,8 +23507,10 @@
       "guard": null,
       "imports": [],
       "usedBy": [
+        "src/app/api/admin/inquiries/route.ts",
         "src/app/for-courses/details/page.tsx",
-        "src/lib/email.ts"
+        "src/lib/email.ts",
+        "src/lib/page-review.ts"
       ]
     },
     {
@@ -27841,7 +27920,9 @@
         "src/lib/admin-today.ts",
         "src/lib/approval-state.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/inquiry-email-failed.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/page-review.ts",
         "src/lib/submit-change-request.ts"
       ]
     },
@@ -28929,6 +29010,7 @@
         "src/app/api/preview/[courseId]/approve/route.ts",
         "src/app/api/preview/send/route.ts",
         "src/lib/course-timeline.ts",
+        "src/lib/inquiry-email-failed.ts",
         "src/lib/lifecycle.ts",
         "src/lib/submit-change-request.ts"
       ],

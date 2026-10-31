@@ -4,6 +4,7 @@
 // words golfers see, and the owner says "Looks right" or "Change this" per part.
 // Each part's key is a CHANGE_CATEGORIES key, so the notes go to GreenReserve as
 // one structured change request. Read-only: nothing here writes.
+import { sheetPricesNotBuilt } from './setup-sheet-recap';
 import { prisma } from './prisma';
 import { describePolicy, policyFrom } from './cancel-policy';
 import { facilityLines, type FacilityFields } from './facilities';
@@ -67,6 +68,12 @@ export async function pageReview(courseId: string): Promise<PageReview | null> {
     if (s.cartFeeCents || cartWe) rows.push({ label: many ? `Cart (${s.holes} holes)` : 'Cart', value: s.cartFeeCents === cartWe ? `${usd(s.cartFeeCents)} a player` : `${usd(s.cartFeeCents)} weekdays, ${usd(cartWe)} weekends` });
     return rows;
   });
+
+  // Launch walk (Cam 2026-10-31): prices from the course's setup sheet that aren't on the page yet.
+  const inq = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { detailsJson: true } });
+  let sheet: Record<string, unknown> = {};
+  try { sheet = inq?.detailsJson ? JSON.parse(inq.detailsJson) : {}; } catch { sheet = {}; }
+  for (const r of sheetPricesNotBuilt(sheet, c.schedules)) pricing.push({ label: `${r.label} (on your setup sheet, not on your page yet)`, value: r.value });
 
   const teeTimes: ReviewRow[] = c.schedules.map(s => ({
     label: many ? `${s.holes} holes` : 'Tee times',

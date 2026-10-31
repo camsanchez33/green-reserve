@@ -1,4 +1,5 @@
 'use client';
+import { emailFailedNotice } from '@/lib/email-failed-notice';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight, Copy, Archive, Save, RefreshCw, MoreHorizontal, Check, Phone } from 'lucide-react';
@@ -487,6 +488,11 @@ function InquiryDetailInner() {
           setApproveResult(d as ApproveResult);
         }
         if (act === 'add_note') setNoteText('');
+        // Launch walk (Cam 2026-10-31): the sheet / go-live email is awaited server-side — say when it didn't go.
+        // (The setup sheet's own result banner already says when its email failed.)
+        if (act === 'mark_live' && d.emailSent === false) {
+          setActionError(emailFailedNotice(d, inq?.email || ''));
+        }
         // The decline email is awaited server-side, so a bounce is knowable
         // here. Saying nothing would leave the founder believing a course was
         // told when it was not.

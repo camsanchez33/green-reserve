@@ -374,7 +374,8 @@ function InquiriesListInner() {
           : target?.builtCourseId
             ? await fetch('/api/admin/archive-course', { method: 'POST', headers: H(), body: JSON.stringify({ courseId: target.builtCourseId, action: 'archive', reason }) })
             : await fetch('/api/admin/inquiries', { method: 'POST', headers: H(), body: JSON.stringify({ id, action: 'reject' }) });
-        if (r.ok) { ok++; continue; }
+        // Launch walk: a sheet whose email didn't send isn't a success.
+        if (r.ok && (bulkPreview.kind !== 'send_sheet' || (await r.clone().json().catch(() => ({}))).emailSent !== false)) { ok++; continue; }
         failed++;
         // MP-5b: archiving a course with standing bookings is refused rather
         // than done silently. "1 failed" with no reason would send the founder

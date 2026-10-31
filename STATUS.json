@@ -1,17 +1,46 @@
 {
-  "generatedAt": "2026-10-31T19:16:20.597Z",
+  "generatedAt": "2026-10-31T19:47:42.954Z",
   "repo": {
-    "head": "51f33943",
+    "head": "0db65c3e",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 1,
+    "dirtyCount": 16,
     "dirty": [
-      "M scripts/isolation-test.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M src/app/admin/inquiries/[id]/page.tsx",
+      " M src/app/admin/inquiries/page.tsx",
+      " M src/app/api/admin/inquiries/route.ts",
+      " M src/app/api/inquiries/details/route.ts",
+      " M src/app/api/inquiries/route.ts",
+      " M src/components/dashboard/RegisterClose.tsx",
+      " M src/components/dashboard/money/SalesPanel.tsx",
+      " M src/lib/page-review.ts",
+      " M src/lib/register-close.ts",
+      " M src/lib/setup-sheet-recap.ts",
+      "?? scripts/launch-batch2-test.ts",
+      "?? src/lib/email-failed-notice.ts",
+      "?? src/lib/inquiry-email-failed.ts",
+      "?? src/lib/ledger-words.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "719073d5",
+        "date": "2026-10-31T15:22:48-04:00",
+        "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "94b6272a",
+        "date": "2026-10-31T19:16:22+00:00",
+        "subject": "Isolation test: pay link refused before the round's day, then the SMS checks on a round today",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "51f33943",
         "date": "2026-10-31T19:08:00+00:00",
@@ -1032,6 +1061,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "719073d5",
+      "date": "2026-10-31",
+      "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)"
+    },
+    {
+      "h": "94b6272a",
+      "date": "2026-10-31",
+      "subject": "Isolation test: pay link refused before the round's day, then the SMS checks on a round today"
+    },
+    {
       "h": "51f33943",
       "date": "2026-10-31",
       "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day"
@@ -1080,16 +1119,6 @@
       "h": "3eb06a6f",
       "date": "2026-10-31",
       "subject": "MEM-ACCT hardening: one Stripe payment per membership dues term"
-    },
-    {
-      "h": "0c3512ba",
-      "date": "2026-10-31",
-      "subject": "Member statements: one Stripe payment per statement (no double charges) (#268)"
-    },
-    {
-      "h": "96eb2291",
-      "date": "2026-10-31",
-      "subject": "MEM-ACCT hardening: one Stripe payment per member statement"
     }
   ]
 }

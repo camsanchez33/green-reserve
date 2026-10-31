@@ -7,6 +7,7 @@
 // what should be in the drawer show only once the count is saved, so nobody counts to
 // match; starting cash carries over from the last close-out; any of the last two weeks.
 // (Shown in the browser only after counting; the route still returns them for the reveal.)
+import { LEDGER_WHAT } from '@/lib/ledger-words';
 import { useCallback, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -21,6 +22,8 @@ type Summary = {
   otherCash?: { count: number; cents: number };
   cashRefunds: { count: number; cents: number };
   cashTakenCents: number;
+  /** Every cash movement of the day (money ledger), to trace a short drawer. */
+  cashMoves?: { at: string; what: string; amountCents: number; note: string }[];
   card: { shopCents: number; roundsCents: number; refundsCents: number; cents: number };
 };
 type Close = { id: string; day: string; openingFloatCents: number; expectedCashCents: number; countedCashCents: number; differenceCents: number; note: string; closedBy: string; createdAt: string };
@@ -107,6 +110,21 @@ export function RegisterClose() {
                   <li className="flex justify-between py-2 font-semibold text-ink"><span>Cash taken</span><span className="tabular-nums">{usd(summary.cashTakenCents)}</span></li>
                 </ul>
                 {summary.counterRounds.count > 0 && <p className="text-[12.5px] text-ink-muted mt-2">Counted as cash.</p>}
+                {/* Launch walk (Cam 2026-10-31): each cash payment, so a short drawer can be traced. */}
+                {(summary.cashMoves?.length ?? 0) > 0 && (
+                  <details className="mt-3 text-[13px]">
+                    <summary className="cursor-pointer text-pine font-medium">Cash payments · {summary.cashMoves!.length}</summary>
+                    <ul className="mt-1 divide-y divide-line-soft">
+                      {summary.cashMoves!.map((m, i) => (
+                        <li key={i} className="flex gap-3 py-1.5">
+                          <span className="tabular-nums text-ink-muted w-16 shrink-0">{new Date(m.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                          <span className="text-ink truncate">{LEDGER_WHAT[m.what] ?? m.what}{m.note ? ` · ${m.note}` : ''}</span>
+                          <span className="ml-auto tabular-nums">{usd(m.amountCents)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
                 </>}
                 <h3 className="text-[13.5px] font-semibold text-ink mt-5 mb-1">Card, for reference</h3>
                 <ul className="divide-y divide-line-soft text-sm">

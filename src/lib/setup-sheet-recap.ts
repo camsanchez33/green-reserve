@@ -107,3 +107,23 @@ export const SHEET_NEXT_STEPS: string[] = [
   'We send your dashboard login. You sign the operator agreement and connect Stripe so payments reach your bank.',
   'You go live, and golfers can book.',
 ];
+
+/**
+ * Launch walk (Cam 2026-10-31): prices the course gave on its setup sheet that the build doesn't
+ * turn into a schedule — a twilight rate (the sheet asks for no start time) and a 9-hole price.
+ * Listed in the build notes and on the onboarding price review until a schedule covers them.
+ */
+export function sheetPricesNotBuilt(details: Record<string, unknown>, schedules: { holes: number }[]): RecapRow[] {
+  const d = details;
+  const rows: RecapRow[] = [];
+  const twi = money(d.twilightFee);
+  // Twilight is a second window on the same round: covered only when two schedules share a hole count.
+  const twilightCovered = schedules.some((s, i) => schedules.some((t, j) => j !== i && t.holes === s.holes));
+  if (twi && !twilightCovered) rows.push({ label: 'Twilight', value: `${twi} — say when it starts and we'll add it` });
+  const nine = money(d.nineHoleFee);
+  if (str(d.holes) !== '9' && str(d.nineHoleSupport) === 'yes' && !schedules.some(s => s.holes === 9)) {
+    const which = { front: 'front nine', back: 'back nine', both: 'either nine' }[str(d.nineHoleWhich)] ?? '';
+    rows.push({ label: '9 holes', value: [nine, which].filter(Boolean).join(', ') || 'Yes' });
+  }
+  return rows;
+}
