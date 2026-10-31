@@ -1,36 +1,24 @@
 {
-  "generatedAt": "2026-10-31T19:07:58.645Z",
+  "generatedAt": "2026-10-31T19:16:20.597Z",
   "repo": {
-    "head": "bd473c2b",
+    "head": "51f33943",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 22,
+    "dirtyCount": 1,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/onboarding-review-step-test.ts",
-      " M src/app/api/admin/inquiries/route.ts",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/checkin/[bookingId]/route.ts",
-      " M src/app/api/cron/cancellation-cutoff/route.ts",
-      " M src/app/api/cron/hourly/route.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/home/route.ts",
-      " M src/app/book/BookClient.tsx",
-      " M src/app/checkin/[bookingId]/page.tsx",
-      " M src/app/dashboard/home/page.tsx",
-      " M src/app/dashboard/onboarding/page.tsx",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/manage/[bookingId]/page.tsx",
-      " M src/lib/cancel-policy.ts",
-      " M src/lib/course-time.ts",
-      " M src/lib/email.ts",
-      " M src/lib/operator-home.ts"
+      "M scripts/isolation-test.ts"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "51f33943",
+        "date": "2026-10-31T19:08:00+00:00",
+        "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "4bf11a39",
         "date": "2026-10-31T12:50:00-04:00",
@@ -1044,6 +1032,11 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "51f33943",
+      "date": "2026-10-31",
+      "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day"
+    },
+    {
       "h": "4bf11a39",
       "date": "2026-10-31",
       "subject": "Change member: move a wrong-member account charge (#272)"
@@ -1097,11 +1090,6 @@
       "h": "96eb2291",
       "date": "2026-10-31",
       "subject": "MEM-ACCT hardening: one Stripe payment per member statement"
-    },
-    {
-      "h": "f9a4eef5",
-      "date": "2026-10-31",
-      "subject": "Member accounts (part 2): monthly statements, paid by link or a saved card (#267)"
     }
   ]
 }
