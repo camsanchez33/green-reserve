@@ -7,7 +7,7 @@ import { paidUntilRenewal } from '@/lib/membership-renewal';
 import { sendReminderEmail, sendMembershipPaymentLinkEmail, sendMembershipReceiptEmail, sendAutoRenewReminderEmail, sendAutoRenewDeclinedEmail, sendStatementDeclinedEmail } from '@/lib/email';
 import { remindersDue, markReminded, chargesDue, chargeRenewal, renewalCents, memberContact, RETRY_DAYS } from '@/lib/membership-autorenew';
 import { closeStatements, emailStatement, autoChargesDue, autoChargeStatement, statementLink } from '@/lib/member-statements';
-import { chargeOnConnectedAccount, chargeOneIntent } from '@/lib/stripe';
+import { chargeOneIntent } from '@/lib/stripe';
 
 export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
   // cronRoute authorises before logging; the check stays here too so every
@@ -109,7 +109,7 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     } catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.reminder_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
   }
   for (const m of await chargesDue(now)) {
-    const r = await chargeRenewal(m.id, chargeOnConnectedAccount, now);
+    const r = await chargeRenewal(m.id, chargeOneIntent, now);
     const to = memberContact(m);
     if (r.status === 'paid') {
       autoRenewed++;

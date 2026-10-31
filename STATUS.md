@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 04:54 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2073f4b9` · working tree **12 dirty file(s)**
+Generated 2026-10-31 05:20 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `8df6ce86` · working tree **18 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 77 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 79 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `0c3512ba` | 2026-10-31 | Member statements: one Stripe payment per statement (no double charges) (#268) |
+| `96eb2291` | 2026-10-31 | MEM-ACCT hardening: one Stripe payment per member statement |
 | `f9a4eef5` | 2026-10-31 | Member accounts (part 2): monthly statements, paid by link or a saved card (#267) |
 | `f22a86ba` | 2026-10-31 | MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card |
 | `5b3f82a4` | 2026-10-30 | Member accounts (part 1): staff put a group's round on a member's account (#266) |
@@ -92,20 +94,26 @@ Generated 2026-10-31 04:54 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (12 file(s))
+### Uncommitted working tree (18 file(s))
 
 - `M STATUS.artifact.html`
 - `M STATUS.json`
 - `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/member-statements-db-test.ts`
+- `M prisma/schema.prisma`
+- `M scripts/ledger-view-db-test.ts`
+- `M scripts/member-rates-db-test.ts`
+- `M scripts/membership-autorenew-db-test.ts`
 - `M scripts/money-ledger-test.ts`
+- `M scripts/statement-intent-db-test.ts`
 - `M src/app/api/cron/send-reminders/route.ts`
-- `M src/app/api/statement/[id]/route.ts`
-- `M src/lib/member-statements.ts`
+- `M src/app/api/membership/[id]/route.ts`
+- `M src/app/api/operator/members/route.ts`
+- `M src/lib/membership-autorenew.ts`
+- `M src/lib/membership-dues.ts`
 - `M src/lib/stripe.ts`
-- `?? scripts/statement-intent-db-test.ts`
+- `?? prisma/migrations/20261031020000_dues_intent/`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -231,6 +239,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `0c3512ba` 2026-10-31 — Member statements: one Stripe payment per statement (no double charges) (#268)
+- `96eb2291` 2026-10-31 — MEM-ACCT hardening: one Stripe payment per member statement
 - `f9a4eef5` 2026-10-31 — Member accounts (part 2): monthly statements, paid by link or a saved card (#267)
 - `f22a86ba` 2026-10-31 — MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card
 - `5b3f82a4` 2026-10-30 — Member accounts (part 1): staff put a group's round on a member's account (#266)
@@ -241,8 +251,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `d2a912be` 2026-10-30 — PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic
 - `25de845f` 2026-10-30 — Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)
 - `b667583d` 2026-10-30 — PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to
-- `e1c241af` 2026-10-30 — Membership auto-renew (course per tier, required consent, reminders) (#262)
-- `d29ba970` 2026-10-30 — MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box
 
 ---
 

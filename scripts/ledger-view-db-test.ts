@@ -79,7 +79,8 @@ async function cleanup() {
   // Wiring.
   const route = readFileSync('src/app/api/operator/money/ledger/route.ts', 'utf8');
   ok('the ledger route is the session\'s course only, gated like Payments', route.includes("requirePermission(session, 'money.payments')") && !/courseId: (sp|req|body)/.test(route));
-  const members = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
+  // MEM-ACCT hardening: dues at the course moved to lib/membership-dues markDuesPaidAtCourse.
+  const members = readFileSync('src/lib/membership-dues.ts', 'utf8');
   ok('dues at the course record the amount taken and cash or check', members.includes("method: method === 'cash' ? 'cash' : 'other'") && members.includes('takenCents'));
   const page = readFileSync('src/app/dashboard/money/page.tsx', 'utf8');
   ok('Money has a Ledger tab under the Payments permission', page.includes("{ key: 'ledger', label: 'Ledger' }") && page.includes("ledger: 'money.payments'"));

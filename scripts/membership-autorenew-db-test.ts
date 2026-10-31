@@ -22,7 +22,7 @@ async function cleanup() {
 }
 
 const charges: { key: string; amount: number; fee: number }[] = [];
-const paying = async (o: { idempotencyKey: string; amountCents: number; applicationFeeCents: number }) => { charges.push({ key: o.idempotencyKey, amount: o.amountCents, fee: o.applicationFeeCents }); return { id: `pi_${TAG}_${charges.length}`, amount: o.amountCents, status: 'succeeded' }; };
+const paying = async (o: { intentKey: string; amountCents: number; applicationFeeCents: number }) => { charges.push({ key: o.intentKey, amount: o.amountCents, fee: o.applicationFeeCents }); return { id: `pi_${TAG}_${charges.length}`, amount: o.amountCents, status: 'succeeded' }; };
 const declining = async () => { throw new Error('Your card was declined.'); };
 
 (async () => {
@@ -101,7 +101,8 @@ const declining = async () => { throw new Error('Your card was declined.'); };
   await stopAutoRenew(s1.id, c.id);
   const s1a = await prisma.courseMembership.findUniqueOrThrow({ where: { id: s1.id } });
   ok('turned off after the reminder: the ordinary pay-link reminder still comes this term', s1a.renewalRemindedAt === null && !s1a.autoRenew);
-  const membersRoute = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
+  // Dues at the course moved to lib/membership-dues markDuesPaidAtCourse (MEM-ACCT hardening).
+  const membersRoute = readFileSync('src/app/api/operator/members/route.ts', 'utf8') + readFileSync('src/lib/membership-dues.ts', 'utf8');
   ok('a member moved to another tier stops renewing automatically and is told', membersRoute.includes('if (tierId && tierId !== membership.tierId && membership.autoRenew)') && membersRoute.includes('data: STOP_DATA()'));
   ok('cash at the shop settles a declined renewal, so the next term renews', /autoRenewFailedAt: null,\n\s+autoRenewRetryAt: null,/.test(membersRoute));
   const page = readFileSync('src/app/membership/[id]/page.tsx', 'utf8');
@@ -111,7 +112,7 @@ const declining = async () => { throw new Error('Your card was declined.'); };
   const pay = readFileSync('src/app/api/membership/[id]/route.ts', 'utf8');
   ok('the dues link takes the required box on an auto-renew tier, and keeps the exact terms and the card', pay.includes("if (m.tier?.autoRenew && autoRenewConsent !== true)") && pay.includes('autoRenewTerms: autoTerms') && pay.includes('savedPaymentMethodId: paymentMethodId'));
   const cron = readFileSync('src/app/api/cron/send-reminders/route.ts', 'utf8');
-  ok('auto-renew members get their reminder, not a pay link; charges and declines run daily', cron.includes('autoRenew: false,') && cron.includes('chargeRenewal(m.id, chargeOnConnectedAccount, now)') && cron.includes('sendAutoRenewDeclinedEmail'));
+  ok('auto-renew members get their reminder, not a pay link; charges and declines run daily', cron.includes('autoRenew: false,') && cron.includes('chargeRenewal(m.id, chargeOneIntent, now)') && cron.includes('sendAutoRenewDeclinedEmail'));
   const off = readFileSync('src/app/api/membership/[id]/auto-renew/route.ts', 'utf8');
   ok('turning it off from the email link needs the link\'s token, and is rate limited', off.includes('token !== m.payToken') && off.includes("rateLimit('membership:autorenew:"));
   const tiers = readFileSync('src/app/api/operator/tiers/route.ts', 'utf8');

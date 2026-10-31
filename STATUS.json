@@ -1,28 +1,48 @@
 {
-  "generatedAt": "2026-10-31T04:54:16.221Z",
+  "generatedAt": "2026-10-31T05:20:51.873Z",
   "repo": {
-    "head": "2073f4b9",
+    "head": "8df6ce86",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 12,
+    "dirtyCount": 18,
     "dirty": [
       "M STATUS.artifact.html",
       " M STATUS.json",
       " M STATUS.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/member-statements-db-test.ts",
+      " M prisma/schema.prisma",
+      " M scripts/ledger-view-db-test.ts",
+      " M scripts/member-rates-db-test.ts",
+      " M scripts/membership-autorenew-db-test.ts",
       " M scripts/money-ledger-test.ts",
+      " M scripts/statement-intent-db-test.ts",
       " M src/app/api/cron/send-reminders/route.ts",
-      " M src/app/api/statement/[id]/route.ts",
-      " M src/lib/member-statements.ts",
+      " M src/app/api/membership/[id]/route.ts",
+      " M src/app/api/operator/members/route.ts",
+      " M src/lib/membership-autorenew.ts",
+      " M src/lib/membership-dues.ts",
       " M src/lib/stripe.ts",
-      "?? scripts/statement-intent-db-test.ts"
+      "?? prisma/migrations/20261031020000_dues_intent/"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "0c3512ba",
+        "date": "2026-10-31T01:01:26-04:00",
+        "subject": "Member statements: one Stripe payment per statement (no double charges) (#268)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "96eb2291",
+        "date": "2026-10-31T04:54:18+00:00",
+        "subject": "MEM-ACCT hardening: one Stripe payment per member statement",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f9a4eef5",
         "date": "2026-10-31T00:34:02-04:00",
@@ -959,6 +979,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "0c3512ba",
+      "date": "2026-10-31",
+      "subject": "Member statements: one Stripe payment per statement (no double charges) (#268)"
+    },
+    {
+      "h": "96eb2291",
+      "date": "2026-10-31",
+      "subject": "MEM-ACCT hardening: one Stripe payment per member statement"
+    },
+    {
       "h": "f9a4eef5",
       "date": "2026-10-31",
       "subject": "Member accounts (part 2): monthly statements, paid by link or a saved card (#267)"
@@ -1007,16 +1037,6 @@
       "h": "b667583d",
       "date": "2026-10-30",
       "subject": "PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to"
-    },
-    {
-      "h": "e1c241af",
-      "date": "2026-10-30",
-      "subject": "Membership auto-renew (course per tier, required consent, reminders) (#262)"
-    },
-    {
-      "h": "d29ba970",
-      "date": "2026-10-30",
-      "subject": "MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box"
     }
   ]
 }

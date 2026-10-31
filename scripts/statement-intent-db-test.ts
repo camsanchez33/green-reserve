@@ -107,6 +107,16 @@ const card = (pm: string) => ({ customerId: 'cus_x', paymentMethodId: pm, actor:
   const zNew = (await row(z.id)).paymentIntentId;
   ok('a stopped intent never wedges the statement: a new intent, paid by card', zPaid.status === 'paid' && zNew !== zOld && intents.get(zNew)!.status === 'succeeded' && (await row(z.id)).status === 'paid', { zPaid, zOld, zNew });
 
+  // The amount changed (a course edited its dues) on an unpaid intent: stopped and replaced, never charged at the old price.
+  nextConfirm = 'decline';
+  let held = '';
+  const base = { intentKey: `${TAG}-dues-x`, onCreated: async (id: string) => { held = id; }, customerId: 'c', paymentMethodId: 'pm_9', connectedAccountId: 'acct_x', applicationFeeCents: 0, description: 'd', metadata: {} };
+  await chargeOneIntent({ ...base, existingIntentId: '', amountCents: 5000 }).catch(() => null);
+  const first = held;
+  nextConfirm = 'ok';
+  const changed = await chargeOneIntent({ ...base, existingIntentId: first, amountCents: 6000 });
+  ok('a changed amount: the old intent stopped, a new one at the new amount charged', intents.get(first)!.status === 'canceled' && changed.id !== first && changed.amount === 6000 && held === changed.id && changed.status === 'succeeded', { first, changed });
+
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }
   console.log('statement-intent-db: all passed');

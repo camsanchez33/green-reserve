@@ -203,7 +203,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/member/[courseSlug]/session` | member | file | GET | `src/app/api/member/[courseSlug]/session/route.ts` | 80 |
 | `/api/member/[courseSlug]/tee-times` | member | file | GET | `src/app/api/member/[courseSlug]/tee-times/route.ts` | 131 |
 | `/api/member/[courseSlug]/verify` | member | token | GET | `src/app/api/member/[courseSlug]/verify/route.ts` | 67 |
-| `/api/membership/[id]` | public | token | GET POST | `src/app/api/membership/[id]/route.ts` | 174 |
+| `/api/membership/[id]` | public | token | GET POST | `src/app/api/membership/[id]/route.ts` | 184 |
 | `/api/membership/[id]/auto-renew` | public | public | POST | `src/app/api/membership/[id]/auto-renew/route.ts` | 24 |
 | `/api/operator/active-course` | operator | file | POST | `src/app/api/operator/active-course/route.ts` | 30 |
 | `/api/operator/agreement` | operator | file | GET POST | `src/app/api/operator/agreement/route.ts` | 38 |
@@ -232,7 +232,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/api/operator/home` | operator | file | GET | `src/app/api/operator/home/route.ts` | 15 |
 | `/api/operator/last-minute` | operator | file | GET PATCH | `src/app/api/operator/last-minute/route.ts` | 39 |
 | `/api/operator/member-accounts` | operator | file | GET POST | `src/app/api/operator/member-accounts/route.ts` | 62 |
-| `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 327 |
+| `/api/operator/members` | operator | file | DELETE GET PATCH POST | `src/app/api/operator/members/route.ts` | 305 |
 | `/api/operator/members/import` | operator | file | POST | `src/app/api/operator/members/import/route.ts` | 35 |
 | `/api/operator/members/remind-overdue` | operator | file | POST | `src/app/api/operator/members/remind-overdue/route.ts` | 76 |
 | `/api/operator/messages` | operator | file | GET PATCH POST | `src/app/api/operator/messages/route.ts` | 123 |
@@ -354,7 +354,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/format.ts` | 51 | 78 | MP-9 (ADMIN_V4 V4-6 §3) — the one place admin pages format money and time. | `formatCents`, `formatDate`, `formatDateTime`, `formatEasternDate`, `formatEasternDay`, `formatMoney`, `formatRelative`, `formatStamp` +3 more |
 | `src/lib/admin-audit.ts` | 42 | 194 | BRAIN-1a (Cam 2026-10-22): | `ACTION_LABELS`, `auditAdmin`, `AuditEntry`, `bodyWithReason`, `changedFields`, `courseOfBooking`, `needReason`, `REASON_ACTIONS` +5 more |
 | `src/lib/dashboard-fetch.ts` | 41 | 43 | SD-10 (from the SD review). | `dfetch`, `DFetchResult` |
-| `src/lib/stripe.ts` | 34 | 141 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
+| `src/lib/stripe.ts` | 34 | 145 | Every charge, refund and SetupIntent GreenReserve makes goes through here. | `ACCESS_FEE_CENTS`, `chargeOnConnectedAccount`, `chargeOneIntent`, `MEMBERSHIP_FEE_RATE`, `membershipFeeCents`, `refundOnConnectedAccount`, `stripe` |
 | `src/lib/agreement-required.ts` | 31 | 124 | AGREEMENT_SPEC AG-3 — version bumps and re-acceptance. | `AGREEMENT_REQUIRED_MESSAGE`, `agreementDueByCourse`, `agreementOverdueCourses`, `agreementReacceptance`, `currentReacceptWindow`, `Reacceptance`, `ReacceptWindow`, `requireAgreementCurrent` +1 more |
 | `src/lib/auth.ts` | 31 | 202 |  | `DashboardSession`, `getGolferSession`, `getOperatorSession`, `signGolferToken`, `signMemberInviteToken`, `signPendingTwoFactorToken`, `signStaffResetToken`, `signStaffToken` +4 more |
 | `src/lib/money.ts` | 27 | 50 | Money conversions, in one place. | `centsToDollars`, `centsToDollarsOr0`, `dollarsToCents`, `dollarsToCentsOr0`, `fmtCents` |
@@ -420,7 +420,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/checkin-booking.ts` | 5 | 517 |  | `cartAddOnCentsFor`, `collectPayment`, `performCheckIn`, `READER_STALE_MS` |
 | `src/lib/course-plan.ts` | 5 | 295 | W2-6 Schedule simplification (Cam 2026-10-21: | `ALL_DAYS`, `autoName`, `blankPlan`, `checkPlan`, `checkRows`, `columnNames`, `CompiledRow`, `compilePlan` +11 more |
 | `src/lib/expenses.ts` | 5 | 88 | EXPENSE TRACKER (RUN_QUEUE "EXPENSE TRACKER / real P&L") — the manual half of the P&L: | `EXPENSE_CADENCE_LABEL`, `EXPENSE_CADENCES`, `EXPENSE_CATEGORIES`, `EXPENSE_CATEGORY_LABEL`, `ExpenseCadence`, `ExpenseCategory`, `isExpenseCadence`, `isExpenseCategory` +4 more |
-| `src/lib/membership-autorenew.ts` | 5 | 149 | MEM-RENEW (Cam 2026-10-30: | `autoRenewTermsText`, `chargeRenewal`, `chargesDue`, `markReminded`, `memberContact`, `reminderLeadDays`, `remindersDue`, `renewalCents` +4 more |
+| `src/lib/membership-autorenew.ts` | 5 | 156 | MEM-RENEW (Cam 2026-10-30: | `autoRenewTermsText`, `chargeRenewal`, `chargesDue`, `duesIntentKey`, `markReminded`, `memberContact`, `reminderLeadDays`, `remindersDue` +5 more |
 | `src/lib/operator-home.ts` | 5 | 159 | DASH-C Home (Cam 2026-10-22, "very nice" on the course dashboard mockups): | `DeclinedCard`, `declinedCards`, `HomeGroup`, `HomeSlot`, `operatorHome` |
 | `src/lib/tax-categories.ts` | 5 | 21 | W2-7 part B: | `isTaxCategory`, `TAX_CATEGORIES`, `TaxCategory`, `US_STATES` |
 | `src/lib/terms.ts` | 5 | 8 | Bump this whenever /terms materially changes so old bookings keep an honest record of which version the golfer actually agreed to. | `CURRENT_TERMS_VERSION` |
@@ -463,6 +463,7 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/login-guard.ts` | 3 | 45 | SEC-3 security audit (2026-10-26): | `failUnknownLogin`, `LOGIN_LOCKOUT_MS`, `LOGIN_MAX_ATTEMPTS`, `unknownLoginLockedUntil` |
 | `src/lib/member-account.ts` | 3 | 145 | MEM-ACCT (Cam 2026-10-30: | `accountBalance`, `accountMembers`, `accountView`, `addCharge`, `creditAccount`, `fitsLimit`, `MAX_CREDIT_CENTS`, `readAccountSettings` |
 | `src/lib/member-csv.ts` | 3 | 101 | Members → Import a list: | `ImportProblem`, `ImportRow`, `MAX_IMPORT_ROWS`, `parseCsv`, `parseCsvLines`, `readMemberCsv`, `toYmd` |
+| `src/lib/membership-dues.ts` | 3 | 126 | Membership dues: | `amountsDue`, `markDuesPaidAtCourse`, `recordPaidTerm` |
 | `src/lib/membership-join.ts` | 3 | 92 | MEM-JOIN (Cam 2026-10-30: | `approveJoin`, `declineJoin`, `JOIN_NEEDS_DUES`, `joinableTiers`, `JoinMode`, `JoinResult`, `joinTier`, `myMembership` +1 more |
 | `src/lib/monthly-review.ts` | 3 | 257 | BI-1 (PLATFORM_ROADMAP_SPEC §1, Cam 2026-10-07: | `allowedNumbers`, `buildFacts`, `claudeWriter`, `draftProblems`, `emailPendingReviews`, `isFullMonth`, `monthLabel`, `monthRange` +11 more |
 | `src/lib/normalize-course.ts` | 3 | 91 |  | `normalizeDbCourse` |
@@ -502,7 +503,6 @@ Sorted by how many files import them, so the load-bearing ones are first.
 | `src/lib/inquiry-signin.ts` | 2 | 124 | SD-11 — the "are you trying to sign in?" challenge that sits between the public sign-up form and a course that already exists. | `CODE_TTL_SECONDS`, `codeMatches`, `cookieOptions`, `generateCode`, `inertChallenge`, `macCode`, `MAX_CODE_ATTEMPTS`, `newChallengeId` +5 more |
 | `src/lib/late-add.ts` | 2 | 13 | Cam 2026-10-27: | `LATE_ADD_MESSAGE`, `LATE_ADD_MINUTES`, `lateForAdding` |
 | `src/lib/ledger-view.ts` | 2 | 195 | LEDGER-2 (Cam 2026-10-30: | `dayOf`, `dayStart`, `LEDGER_MAX_DAYS`, `LEDGER_MAX_ROWS`, `ledgerCsv`, `LedgerDay`, `ledgerDays`, `LedgerRow` +6 more |
-| `src/lib/membership-dues.ts` | 2 | 55 | Membership dues: | `amountsDue`, `recordPaidTerm` |
 | `src/lib/membership-pay-link.ts` | 2 | 45 | Membership dues pay links — sending one by email, and what to tell staff when it couldn't go. | `maybeSendPayLink`, `NOT_SENT` |
 | `src/lib/membership-renewal.ts` | 2 | 18 | When a paid membership's next term can be paid (LEDGER-1 review, Cam 2026-10-30). | `paidUntilRenewal`, `renewalWindowDays` |
 | `src/lib/no-fee-labels.ts` | 2 | 13 | Client-safe half of lib/cancel-fee-reason (no prisma): | `NO_FEE_LABEL`, `NoFeeReason` |
@@ -858,11 +858,11 @@ without opening anything.
 
 ### CourseMembership
 
-41 fields · 15 writer(s) · 34 reader(s)
+42 fields · 15 writer(s) · 35 reader(s)
 
-- fields: `id`, `golferId`, `golfer`, `courseId`, `course`, `tierId`, `tier`, `membershipType`, `inviteEmail`, `inviteName`, `invitePhone`, `inviteAccepted`, `status`, `addedBy`, `expiresAt`, `startedAt`, `paymentStatus`, `payToken`, `lastPaidAt`, `lastPaymentIntentId`, `duesChargeStartedAt`, `renewalRemindedAt`, `autoRenew`, `autoRenewConsentAt`, `autoRenewTerms`, `savedCustomerId`, `savedPaymentMethodId`, `autoRenewRemindedFor`, `autoRenewRemindedCents`, `autoRenewFailedAt`, `autoRenewRetryAt`, `autoRenewCancelledAt`, `initiationWaived`, `notes`, `createdAt`, `accountCharges`, `accountStatements`, `accountCustomerId`, `accountPaymentMethodId`, `accountCardConsentAt`, `accountCardTerms`
+- fields: `id`, `golferId`, `golfer`, `courseId`, `course`, `tierId`, `tier`, `membershipType`, `inviteEmail`, `inviteName`, `invitePhone`, `inviteAccepted`, `status`, `addedBy`, `expiresAt`, `startedAt`, `paymentStatus`, `payToken`, `lastPaidAt`, `lastPaymentIntentId`, `duesChargeStartedAt`, `duesIntentId`, `renewalRemindedAt`, `autoRenew`, `autoRenewConsentAt`, `autoRenewTerms`, `savedCustomerId`, `savedPaymentMethodId`, `autoRenewRemindedFor`, `autoRenewRemindedCents`, `autoRenewFailedAt`, `autoRenewRetryAt`, `autoRenewCancelledAt`, `initiationWaived`, `notes`, `createdAt`, `accountCharges`, `accountStatements`, `accountCustomerId`, `accountPaymentMethodId`, `accountCardConsentAt`, `accountCardTerms`
 - writers: `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/membership/[id]/route.ts`, `src/app/api/operator/members/remind-overdue/route.ts`, `src/app/api/operator/members/route.ts`, `src/app/api/operator/tiers/route.ts`, `src/app/api/statement/[id]/route.ts`, `src/lib/data-reset.ts`, `src/lib/lifecycle.ts`, `src/lib/member-import.ts`, `src/lib/membership-autorenew.ts`, `src/lib/membership-dues.ts`, `src/lib/membership-join.ts`, `src/lib/sample-data.ts`
-- readers: `src/app/api/admin/course-members/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/transactions/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/member/[courseSlug]/payments/route.ts`, `src/app/api/member/[courseSlug]/send-code/route.ts`, `src/app/api/member/[courseSlug]/session/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts` +22 more (see `docs/codemap.json`)
+- readers: `src/app/api/admin/course-members/route.ts`, `src/app/api/admin/courses/route.ts`, `src/app/api/admin/transactions/route.ts`, `src/app/api/bookings/resident-rate/route.ts`, `src/app/api/bookings/route.ts`, `src/app/api/cron/send-reminders/route.ts`, `src/app/api/golfer/auth/accept-invite/route.ts`, `src/app/api/golfer/memberships/route.ts`, `src/app/api/member/[courseSlug]/payments/route.ts`, `src/app/api/member/[courseSlug]/send-code/route.ts`, `src/app/api/member/[courseSlug]/session/route.ts`, `src/app/api/member/[courseSlug]/tee-times/route.ts` +23 more (see `docs/codemap.json`)
 
 ### CourseMessage
 

@@ -47,7 +47,11 @@ export function autoRenewTermsText(o: { courseName: string; tierName: string; te
   return `Your ${o.tierName} membership at ${o.courseName} renews automatically. ${usd(r.totalCents)} (${usd(r.duesCents)} dues + ${usd(r.feeCents)} GreenReserve service fee) will be charged to this card ${every(o.termMonths)} on your renewal date until you turn automatic renewal off. We'll email you ${lead} days before each renewal. You can turn it off any time before then from the link in that email or in your membership emails; your membership then runs to the end of the period you've paid for. The price can change only if the course changes its dues, and you'll be told in the reminder.`;
 }
 
-type Charger = (o: { customerId: string; paymentMethodId: string; connectedAccountId: string; amountCents: number; applicationFeeCents: number; description: string; idempotencyKey: string; metadata: Record<string, string> }) => Promise<{ id: string; amount: number; status: string }>;
+// The real one is lib/stripe chargeOneIntent: ONE PaymentIntent per term (duesIntentId), shared with the pay link.
+type Charger = (o: { existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown>; customerId: string; paymentMethodId: string; connectedAccountId: string; amountCents: number; applicationFeeCents: number; description: string; metadata: Record<string, string> }) => Promise<{ id: string; amount: number; status: string }>;
+
+/** The one intent's key for a membership's next term (the pay link and the renewal share it). */
+export const duesIntentKey = (id: string, lastPaidAt: Date | null) => `dues-intent-${id}-${lastPaidAt ? lastPaidAt.getTime() : 'first'}`;
 
 /** What turning it off writes (also used when a course turns it off on a tier, or a member changes tier). */
 export const STOP_DATA = () => ({ autoRenew: false, autoRenewCancelledAt: new Date(), autoRenewRetryAt: null, renewalRemindedAt: null, autoRenewRemindedFor: null, autoRenewRemindedCents: null });
@@ -110,17 +114,18 @@ export async function chargeRenewal(membershipId: string, charge: Charger, now =
   if (!claimed.count) return { status: 'skipped', why: 'being paid now' };
   const release = () => prisma.courseMembership.updateMany({ where: { id: m.id, duesChargeStartedAt: now }, data: { duesChargeStartedAt: null } });
   // Paid since (the pay link, or cash at the shop): nothing to charge.
-  const cur = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { lastPaidAt: true, expiresAt: true } });
+  const cur = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { lastPaidAt: true, expiresAt: true, duesIntentId: true } });
   if (cur.expiresAt && cur.expiresAt.getTime() > now.getTime()) { await release(); return { status: 'skipped', why: 'already renewed' }; }
   const r = renewalCents(m.tier);
   let pi: { id: string; amount: number; status: string };
   try {
     pi = await charge({
+      // One intent per term, shared with the pay link: a retry, a timeout or the member paying by link can never be a second charge.
+      existingIntentId: cur.duesIntentId, intentKey: duesIntentKey(m.id, cur.lastPaidAt),
+      onCreated: id => prisma.courseMembership.update({ where: { id: m.id }, data: { duesIntentId: id } }),
       customerId: m.savedCustomerId, paymentMethodId: m.savedPaymentMethodId, connectedAccountId: m.course.stripeAccountId,
       amountCents: r.totalCents, applicationFeeCents: r.feeCents,
       description: `Membership renewal - ${m.tier.name} - ${m.course.name}`,
-      // One charge per term: a retry of this term (same card) replays it; next term is its own.
-      idempotencyKey: `membership-renew-${m.id}-${cur.lastPaidAt ? cur.lastPaidAt.getTime() : 'first'}-${m.autoRenewFailedAt ? 'retry' : 'first'}`,
       metadata: { membershipId: m.id, autoRenew: 'true' },
     });
   } catch (err) {
@@ -128,6 +133,8 @@ export async function chargeRenewal(membershipId: string, charge: Charger, now =
     await prisma.courseMembership.update({ where: { id: m.id }, data: { duesChargeStartedAt: null, autoRenewFailedAt: now, autoRenewRetryAt: retry ? new Date(now.getTime() + RETRY_DAYS * DAY) : null } });
     return { status: 'declined', error: err instanceof Error ? err.message : 'Card declined', retry };
   }
+  // Still settling at Stripe: keep the claim; the next run (or the pay link) reads the same intent.
+  if (pi.status === 'processing') return { status: 'skipped', why: 'payment processing' };
   if (pi.status !== 'succeeded') {
     // Not a definite success (e.g. needs the golfer): treat as declined — no term until it's paid.
     const retry = m.tier.autoRenewRetry && !m.autoRenewFailedAt;

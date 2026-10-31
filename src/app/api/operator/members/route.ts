@@ -7,7 +7,7 @@ import { todayIn } from '@/lib/course-time';
 import { memberRoundStats } from '@/lib/member-stats';
 import { randomUUID } from 'crypto';
 import { signMemberInviteToken } from '@/lib/auth';
-import { recordMove } from '@/lib/money-ledger';
+import { markDuesPaidAtCourse } from '@/lib/membership-dues';
 import { sendMemberInviteEmail, sendMemberLinkedNotification, sendAutoRenewOffEmail } from '@/lib/email';
 import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
 import { approveJoin, declineJoin } from '@/lib/membership-join';
@@ -189,33 +189,11 @@ export async function PATCH(req: NextRequest) {
 
   // Staff actions
   if (action === 'mark_paid') {
-    // Cash/check at the pro shop — record it, no charge made.
-    const termMonths = membership.tier?.termMonths ?? 12;
-    // A first payment starts today; only a renewal extends from the end date (Cam 2026-10-29).
-    const base = membership.lastPaidAt && membership.expiresAt && membership.expiresAt.getTime() > Date.now() ? new Date(membership.expiresAt) : new Date();
-    const newExpiry = new Date(base);
-    newExpiry.setMonth(newExpiry.getMonth() + termMonths);
-    // LEDGER-2 (Cam 2026-10-30, "Amount + cash or check"): what staff actually took, and how.
-    // Without an amount (an older screen) it is what was due — this term, initiation on a first payment.
-    const dueCents = (membership.tier?.annualFeeCents ?? 0) + (membership.lastPaidAt || membership.initiationWaived ? 0 : (membership.tier?.initiationFeeCents ?? 0));
-    const takenCents = body.amountCents === undefined || body.amountCents === null || body.amountCents === '' ? dueCents : Number(body.amountCents);
-    if (!Number.isInteger(takenCents) || takenCents < 1 || takenCents > 10_000_000) return NextResponse.json({ error: 'Enter the amount taken (up to $100,000).' }, { status: 400 });
-    const method = body.method === 'check' ? 'check' : body.method === 'cash' || body.method === undefined ? 'cash' : null;
-    if (!method) return NextResponse.json({ error: 'Say whether it was cash or a check.' }, { status: 400 });
-    await recordMove({ courseId: session.courseId, what: 'dues', direction: 'in', method: method === 'cash' ? 'cash' : 'other', account: 'course', amountCents: takenCents, membershipId: id, actor: 'staff', note: method === 'check' ? 'check at the course' : 'cash at the course' });
-    const updated = await prisma.courseMembership.update({
+    // Cash/check at the pro shop — record it, no charge made (lib/membership-dues markDuesPaidAtCourse).
+    const r = await markDuesPaidAtCourse(session.courseId, id, { amountCents: body.amountCents, method: body.method });
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    const updated = await prisma.courseMembership.findUniqueOrThrow({
       where: { id },
-      data: {
-        paymentStatus: 'paid_offline',
-        status: 'active',
-        startedAt: membership.startedAt ?? new Date(),
-        lastPaidAt: new Date(),
-        expiresAt: newExpiry,
-        renewalRemindedAt: null,
-        // MEM-RENEW: paid — any declined automatic renewal is settled, so the next term renews as agreed.
-        autoRenewFailedAt: null,
-        autoRenewRetryAt: null,
-      },
       include: {
         golfer: { select: { firstName: true, lastName: true, email: true, phone: true } },
         tier:   { select: { id: true, name: true, color: true } },

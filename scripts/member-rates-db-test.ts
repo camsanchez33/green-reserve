@@ -94,9 +94,9 @@ async function cleanup() {
 
   // 3. First dues payment starts today; only a renewal extends from the end date.
   // The dues link and auto-renew record the term through lib/membership-dues (recordPaidTerm).
-  for (const f of ['src/lib/membership-dues.ts', 'src/app/api/operator/members/route.ts']) {
-    ok(`${f.split('/').pop()}: a first payment is one term from today`, /lastPaidAt && [\w.]*expiresAt && [\w.]*expiresAt\.getTime\(\) > Date\.now\(\)/.test(src(f)));
-  }
+  // Dues at the course (markDuesPaidAtCourse) live in lib/membership-dues too since MEM-ACCT hardening — both writers there.
+  const dues = src('src/lib/membership-dues.ts');
+  ok('membership-dues.ts: a first payment is one term from today (the pay link and the course)', (dues.match(/lastPaidAt && [\w.]*expiresAt && [\w.]*expiresAt\.getTime\(\) > (Date\.now\(\)|now\.getTime\(\))/g) ?? []).length >= 2 && src('src/app/api/operator/members/route.ts').includes('markDuesPaidAtCourse('));
 
   await cleanup();
   await prisma.$disconnect();
