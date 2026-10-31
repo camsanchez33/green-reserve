@@ -539,8 +539,9 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
             <p className="text-ink text-sm font-medium mb-1.5">Cancellation policy</p>
             <ul className="space-y-1">
               {terms.lines.map((l, i) => <li key={i} className="text-ink-soft text-xs leading-relaxed">{l}</li>)}
+              {/* Launch walk (Cam 2026-10-31): "or if you pay at the counter" deleted — nothing charges it since PAY-2. */}
               {terms.cardAtBooking && !FEE_AT_BOOKING_ON && (
-                <li className="text-ink-soft text-xs leading-relaxed">When a fee above is charged, or if you pay at the counter instead of checking in, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card too.</li>
+                <li className="text-ink-soft text-xs leading-relaxed">When a fee above is charged, the ${(ACCESS_FEE_PER_PLAYER * players).toFixed(2)} booking fee (${ACCESS_FEE_PER_PLAYER.toFixed(2)} per player) is charged to this card too.</li>
               )}
             </ul>
           </div>

@@ -16,7 +16,7 @@ export type PermissionKey =
   | 'members.view' | 'members.edit'
   | 'schedule.view' | 'schedule.edit'
   | 'analytics.view' | 'messages.use' | 'settings.edit'
-  | 'shop.sell' | 'shop.discount' | 'shop.catalog' | 'shop.close'
+  | 'shop.sell' | 'shop.discount' | 'shop.catalog' | 'shop.close' | 'shop.return'
   | 'events.manage';
 
 export interface PermissionDef {
@@ -69,6 +69,8 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'shop.discount', group: 'Pro shop', label: 'Give discounts', help: 'Take money off a walk-up sale (an amount or a percent), with a note saying why.', requires: ['shop.sell'], movesMoney: true },
   // POS-3 R4 (Cam 2026-10-24): count the drawer at the end of the day — Manager and Front desk.
   { key: 'shop.close', group: 'Pro shop', label: 'Close out the register', help: 'See the day’s cash and card totals, count the drawer and record any over or short.', requires: ['shop.sell'] },
+  // Launch walk (Cam 2026-10-31): the counter takes items back without the wider refund power — Front desk has it.
+  { key: 'shop.return', group: 'Pro shop', label: 'Return items', help: 'Take items back from a pro shop sale and give their money back the way it was paid. Refunding a typed amount needs Issue refunds.', requires: ['shop.sell'], movesMoney: true },
   { key: 'shop.catalog', group: 'Pro shop', label: 'Edit the shop catalog', help: 'Add items and change prices in Settings → Pro shop, record deliveries and set reorder points.', requires: ['settings.edit'] },
   // W2-9 (Cam 2026-10-22): owner + staff given it; Manager has it, Front desk doesn't.
   { key: 'events.manage', group: 'Events', label: 'Run events', help: 'Set up outings and tournaments, hold their tee times, keep the checklist and the player list.' },
@@ -87,7 +89,7 @@ export const PRESETS: { key: PresetKey; label: string; help: string; keys: Permi
   { key: 'starter', label: 'Starter', help: 'Sees the sheet, checks groups in, marks no-shows.',
     keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use'] },
   { key: 'front_desk', label: 'Front desk', help: 'Runs the counter: payments, walk-ins, cancellations, blocking, shop items.',
-    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'sheet.course_alert', 'money.cancellations', 'shop.sell', 'shop.close'] },
+    keys: ['sheet.view', 'sheet.checkin', 'sheet.no_show', 'messages.use', 'sheet.counter_payment', 'sheet.walkin', 'sheet.move', 'sheet.cancel', 'sheet.block', 'sheet.golfer_contact', 'sheet.message_golfers', 'sheet.course_alert', 'money.cancellations', 'shop.sell', 'shop.close', 'shop.return'] },
   // Cam 2026-10-29: "Refund rounds" is in no preset — the owner gives it person by person.
   { key: 'manager', label: 'Manager', help: 'Everything a staff login can be given, but refunding rounds.', keys: ALL_KEYS.filter(k => k !== 'money.refund_rounds') },
 ];

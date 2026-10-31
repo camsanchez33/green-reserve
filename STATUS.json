@@ -1,32 +1,37 @@
 {
-  "generatedAt": "2026-10-31T19:47:42.954Z",
+  "generatedAt": "2026-10-31T20:08:30.476Z",
   "repo": {
-    "head": "0db65c3e",
+    "head": "f88a3a85",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 16,
+    "dirtyCount": 7,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/admin/inquiries/[id]/page.tsx",
-      " M src/app/admin/inquiries/page.tsx",
-      " M src/app/api/admin/inquiries/route.ts",
-      " M src/app/api/inquiries/details/route.ts",
-      " M src/app/api/inquiries/route.ts",
-      " M src/components/dashboard/RegisterClose.tsx",
-      " M src/components/dashboard/money/SalesPanel.tsx",
-      " M src/lib/page-review.ts",
-      " M src/lib/register-close.ts",
-      " M src/lib/setup-sheet-recap.ts",
-      "?? scripts/launch-batch2-test.ts",
-      "?? src/lib/email-failed-notice.ts",
-      "?? src/lib/inquiry-email-failed.ts",
-      "?? src/lib/ledger-words.ts"
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/app/book/BookClient.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/lib/staff-permissions.ts",
+      "?? scripts/launch-batch3-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "f84e4be2",
+        "date": "2026-10-31T15:54:37-04:00",
+        "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "36872c8f",
+        "date": "2026-10-31T19:47:44+00:00",
+        "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "719073d5",
         "date": "2026-10-31T15:22:48-04:00",
@@ -1061,6 +1066,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f84e4be2",
+      "date": "2026-10-31",
+      "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)"
+    },
+    {
+      "h": "36872c8f",
+      "date": "2026-10-31",
+      "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails"
+    },
+    {
       "h": "719073d5",
       "date": "2026-10-31",
       "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)"
@@ -1109,16 +1124,6 @@
       "h": "59227acd",
       "date": "2026-10-31",
       "subject": "Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)"
-    },
-    {
-      "h": "14c84cbd",
-      "date": "2026-10-31",
-      "subject": "Membership dues: one Stripe payment per term (no double charges) (#269)"
-    },
-    {
-      "h": "3eb06a6f",
-      "date": "2026-10-31",
-      "subject": "MEM-ACCT hardening: one Stripe payment per membership dues term"
     }
   ]
 }
