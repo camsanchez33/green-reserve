@@ -15,7 +15,7 @@ export function AccountFields({ on, limit, limitCents, settle, onChange, classNa
   const shown = limit !== undefined ? (limit ?? '') : limitCents != null ? (limitCents / 100).toFixed(2) : '';
   return (
     <div className="col-span-2 flex flex-wrap items-end gap-x-4 gap-y-2 text-[13.5px] text-ink">
-      <label className="flex items-center gap-2"><input type="checkbox" className="accent-pine" checked={!!on} onChange={e => onChange('accountOn', e.target.checked)} />Member account — rounds and guests on account</label>
+      <label className="flex items-center gap-2"><input type="checkbox" className="accent-pine" checked={!!on} onChange={e => onChange('accountOn', e.target.checked)} />Member account — rounds, guests and shop on account</label>
       {on && <label className="text-[12.5px] text-ink-soft">Limit $ (blank = none)<input value={shown} onChange={e => onChange('accountLimit', e.target.value)} inputMode="decimal" className={className + ' block mt-1 w-28'} /></label>}
       {on && (
         <label className="text-[12.5px] text-ink-soft">Monthly statement

@@ -6,7 +6,8 @@
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { fitsLimit, accountBalance, accountMembers, creditAccount, readAccountSettings, accountView } from '../src/lib/member-account';
-import { createCounterBooking, settleAtCounter, accountDueCents } from '../src/lib/counter-pay';
+import { createCounterBooking, settleAtCounter, accountDueCents, roundNote } from '../src/lib/counter-pay';
+import { isBookingMode } from '../src/lib/booking-mode';
 import { addDaysStr, todayIn } from '../src/lib/course-time';
 import { WIPED_TABLES } from '../src/lib/data-reset';
 
@@ -54,6 +55,8 @@ const settle = (c: string, b: string, m: string) => settleAtCounter(c, b, { acto
   const r1 = await settle(c.id, b1, pat.id);
   const row = await prisma.booking.findUniqueOrThrow({ where: { id: b1 } });
   const line = await prisma.memberCharge.findUnique({ where: { bookingId: b1 } });
+  ok('the line says whose round and when (walkthrough 2026-10-31)', line?.note === roundNote('Group', { date: day, time: '09:00' }, 2) && roundNote('Tim Jones', { date: '2026-10-31', time: '16:20' }, 3) === 'Tim Jones · Oct 31, 4:20 PM · 3 players' && roundNote('A', { date: '2026-01-05', time: '00:05' }, 1) === 'A · Jan 5, 12:05 AM · 1 player', line?.note);
+  ok('a statement and the shop / event pay links are golfer pages (no marketing menu)', isBookingMode('/statement/x') && isBookingMode('/pay/shop/x') && isBookingMode('/pay/event/x') && !isBookingMode('/pricing'));
   ok('a group of two on the account: $100, checked in, on_account, not paid offline', r1.ok && r1.amountCents === 10000 && row.status === 'completed' && row.paymentStatus === 'on_account' && !row.paidOffline && line?.amountCents === 10000 && line.kind === 'round' && line.feeCents === 0 && line.createdBy === 'Front desk', { r1, ps: row.paymentStatus, line });
   ok('…settling it again is refused, with one line', !(await settle(c.id, b1, pat.id)).ok && (await prisma.memberCharge.count({ where: { bookingId: b1 } })) === 1);
 

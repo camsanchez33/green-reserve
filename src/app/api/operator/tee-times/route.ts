@@ -57,6 +57,12 @@ export async function GET(req: NextRequest) {
     where: { courseId: session.courseId, OR: [{ golferKey: { in: keys }, bookingId: null }, { bookingId: { in: all.map(b => b.id) } }] },
     orderBy: { createdAt: 'desc' }, take: 500, select: { golferKey: true, bookingId: true, body: true },
   }) : [];
+  // MEM-ACCT: whose account a round went on, for the time's card.
+  const onAccount = all.length ? await prisma.memberCharge.findMany({
+    where: { courseId: session.courseId, bookingId: { in: all.map(b => b.id) } },
+    select: { bookingId: true, membership: { select: { inviteName: true, golfer: { select: { firstName: true, lastName: true } } } } },
+  }) : [];
+  const accountOf = new Map(onAccount.map(c => [c.bookingId, (c.membership.golfer ? `${c.membership.golfer.firstName} ${c.membership.golfer.lastName}`.trim() : '') || c.membership.inviteName]));
   const notesFor = (id: string) => {
     const k = keyOf.get(id);
     return noteRows.filter(n => n.bookingId === id || (!n.bookingId && k && n.golferKey === k)).slice(0, 3).map(n => n.body);
@@ -64,7 +70,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(teeTimes.map(t => {
     const bookings = (t as { bookings?: (Row & { id: string; golferAccountId?: string | null })[] }).bookings;
     if (!bookings) return t;
-    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, roundPaymentIntentId, shopLockedAt, golferAccountId: _acct, ...b }) => ({ ...b, hasCard: !!stripePaymentMethodId, roundPaid: !!roundPaymentIntentId, shopLocked: !!shopLockedAt, hasPhone: b.golferPhone.replace(/\D/g, '').length >= 10, notes: notesFor(b.id), ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
+    return { ...t, bookings: bookings.map(({ stripePaymentMethodId, roundPaymentIntentId, shopLockedAt, golferAccountId: _acct, ...b }) => ({ ...b, hasCard: !!stripePaymentMethodId, roundPaid: !!roundPaymentIntentId, shopLocked: !!shopLockedAt, hasPhone: b.golferPhone.replace(/\D/g, '').length >= 10, notes: notesFor(b.id), accountName: accountOf.get(b.id) ?? '', ...(contact ? {} : { golferEmail: '', golferPhone: '' }) })) };
   }));
 }
 

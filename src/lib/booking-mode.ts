@@ -15,5 +15,7 @@ export function isBookingMode(pathname: string): boolean {
   if (pathname.startsWith('/manage/')) return true;
   if (pathname.startsWith('/receipt/')) return true;
   if (pathname.startsWith('/membership/')) return true;
+  // A member's statement and the shop / event pay links are the course's pages too.
+  if (pathname.startsWith('/statement/') || pathname.startsWith('/pay/')) return true;
   return false;
 }

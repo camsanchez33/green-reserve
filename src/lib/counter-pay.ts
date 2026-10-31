@@ -50,10 +50,19 @@ export function accountDueCents(b: Parameters<typeof counterDueCents>[0] & { fee
   return { amountCents: counterDueCents(b, showed) + feeCents, feeCents };
 }
 
+/** MEM-ACCT: a round's line on a member's account says whose round and when — "Tim Jones · Oct 31, 4:20 PM · 3 players". */
+export function roundNote(golferName: string, teeTime: { date: string; time: string }, players: number) {
+  const [y, m, d] = teeTime.date.split('-').map(Number);
+  const [h, min] = teeTime.time.split(':').map(Number);
+  const day = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const at = `${h % 12 || 12}:${String(min).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+  return [golferName.trim(), `${day}, ${at}`, `${players} player${players === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+}
+
 export async function settleAtCounter(courseId: string, bookingId: string, opts: { actor: EventActor; actorName: string; checkedInPlayers?: number; onAccount?: { membershipId: string } }): Promise<CounterResult> {
   const booking = await prisma.booking.findFirst({
     where: { id: bookingId, courseId },
-    select: { readerStartedAt: true, noShowAt: true, courseId: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
+    select: { readerStartedAt: true, noShowAt: true, courseId: true, golferName: true, status: true, paymentStatus: true, players: true, totalAmount: true, accessFeeTotal: true, shopTotalCents: true, shopTaxCents: true,
       greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, feePaidCents: true,
       cancellationFeeChargeId: true, teeTime: { select: { date: true, time: true } }, course: { select: { timezone: true, stripeAccountId: true } } },
   });
@@ -100,7 +109,7 @@ export async function settleAtCounter(courseId: string, bookingId: string, opts:
       });
       if (!done.count) return false;
       if (acct && opts.onAccount) {
-        const line = await addCharge(tx, { courseId, membershipId: opts.onAccount.membershipId, kind: 'round', amountCents: acct.amountCents, feeCents: acct.feeCents, bookingId, note: `Round, ${cip ?? booking.players} player${(cip ?? booking.players) === 1 ? '' : 's'}`, createdBy: opts.actorName });
+        const line = await addCharge(tx, { courseId, membershipId: opts.onAccount.membershipId, kind: 'round', amountCents: acct.amountCents, feeCents: acct.feeCents, bookingId, note: roundNote(booking.golferName, booking.teeTime, cip ?? booking.players), createdBy: opts.actorName });
         if (!line.ok) throw new AccountRefused(line.status, line.error);
       }
       await recordBookingEvent(tx, { ...evBase, type: 'checked_in', amountCents: booking.totalAmount, playerCount: cip ?? booking.players, metadata: acct ? { onAccount: true, membershipId: opts.onAccount!.membershipId } : { paidOffline: true } });
