@@ -4,131 +4,25 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 21:29 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `51c0942e` · working tree **10 dirty file(s)**
+Generated 2026-10-31 22:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `974a6d6a` · working tree **4 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 95 commit(s) since then are not mentioned anywhere in it:
+None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-| commit | date | subject |
-|---|---|---|
-| `5af344f0` | 2026-10-31 | Front desk "Return items" permission; drop the false counter-fee clause (#275) |
-| `847fd73c` | 2026-10-31 | Front desk "Return items" permission; drop the false counter-fee clause |
-| `f84e4be2` | 2026-10-31 | Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274) |
-| `36872c8f` | 2026-10-31 | Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails |
-| `719073d5` | 2026-10-31 | Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273) |
-| `94b6272a` | 2026-10-31 | Isolation test: pay link refused before the round's day, then the SMS checks on a round today |
-| `51f33943` | 2026-10-31 | Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day |
-| `4bf11a39` | 2026-10-31 | Change member: move a wrong-member account charge (#272) |
-| `13b505dc` | 2026-10-31 | Change member: move a wrong-member account charge to the right member |
-| `dea052d9` | 2026-10-31 | Member billing walkthrough fixes (#271) |
-| `e7cbdde5` | 2026-10-31 | Member billing walkthrough fixes: whose account, which round, golfer-page chrome |
-| `8f7d18ad` | 2026-10-31 | Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270) |
-| `60a67d17` | 2026-10-31 | Shop sales test: counter payment now gates cash, on account and the account void |
-| `59227acd` | 2026-10-31 | Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b) |
-| `14c84cbd` | 2026-10-31 | Membership dues: one Stripe payment per term (no double charges) (#269) |
-| `3eb06a6f` | 2026-10-31 | MEM-ACCT hardening: one Stripe payment per membership dues term |
-| `0c3512ba` | 2026-10-31 | Member statements: one Stripe payment per statement (no double charges) (#268) |
-| `96eb2291` | 2026-10-31 | MEM-ACCT hardening: one Stripe payment per member statement |
-| `f9a4eef5` | 2026-10-31 | Member accounts (part 2): monthly statements, paid by link or a saved card (#267) |
-| `f22a86ba` | 2026-10-31 | MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card |
-| `5b3f82a4` | 2026-10-30 | Member accounts (part 1): staff put a group's round on a member's account (#266) |
-| `8a2a1249` | 2026-10-30 | MEM-ACCT part 1: member accounts — staff put a group's round on a member's account |
-| `7a14850b` | 2026-10-30 | Launch wipe closes Dec 1 instead of Nov 1 (#265) |
-| `6cc42bd6` | 2026-10-30 | TEST-1: launch wipe closes Dec 1 instead of Nov 1 |
-| `d30b4479` | 2026-10-30 | Demand pricing: online public rate moves with each hour's fill (#264) |
-| `d2a912be` | 2026-10-30 | PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic |
-| `25de845f` | 2026-10-30 | Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263) |
-| `b667583d` | 2026-10-30 | PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to |
-| `e1c241af` | 2026-10-30 | Membership auto-renew (course per tier, required consent, reminders) (#262) |
-| `d29ba970` | 2026-10-30 | MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box |
-| `53da712c` | 2026-10-30 | Membership tiers: join online (pay and join, or request to join) (#261) |
-| `91141923` | 2026-10-30 | Regenerate codemap and status board |
-| `0d9486fe` | 2026-10-30 | MEM-JOIN: join a membership tier online — pay and join, or request to join |
-| `53505e47` | 2026-10-30 | Pricing 3/4 part B: round packs online (#260) |
-| `248a5175` | 2026-10-30 | PRICE-3 part B: round packs online — buy on the course page, use when booking |
-| `e1ec15b2` | 2026-10-30 | Pricing 3/4 part A: round packs at the counter (#259) |
-| `bad4eb47` | 2026-10-30 | PRICE-3 part A: round packs — sold at the register, used at the counter |
-| `2c5fcf28` | 2026-10-30 | Pricing 2/4: last-minute deals (#258) |
-| `f6fd22ff` | 2026-10-30 | PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled |
-| `439c4e7b` | 2026-10-30 | Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257) |
-| `f65525cf` | 2026-10-30 | A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice |
-| `6612c506` | 2026-10-30 | Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code |
-| `869ce75a` | 2026-10-30 | Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter |
-| `ca86612a` | 2026-10-30 | Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256) |
-| `c72b0b35` | 2026-10-30 | Stock line refreshes after a sale; the catalog permission says it covers deliveries |
-| `2c3e1cdd` | 2026-10-30 | Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere |
-| `1aa2c299` | 2026-10-30 | Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255) |
-| `001ba73f` | 2026-10-30 | Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits |
-| `c5b84881` | 2026-10-30 | Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check |
-| `7dda7589` | 2026-10-30 | Money ledger: one row for every dollar that moves; membership dues charged safely (#254) |
-| `48be83aa` | 2026-10-30 | Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal) |
-| `85c78bb8` | 2026-10-30 | Test: dues paid at the shop read through paidUntilRenewal |
-| `136a1ea6` | 2026-10-30 | Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds |
-| `5917aabf` | 2026-10-30 | Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction |
-| `89f0e830` | 2026-10-29 | Golfer record: one course's view of a golfer, staff notes, online-booking block (#253) |
-| `388244d7` | 2026-10-30 | Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode |
-| `ffa0ec2a` | 2026-10-30 | Golfer record: one course's view of a golfer, staff notes, online-booking block |
-| `370f7fa4` | 2026-10-29 | Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252) |
-| `bf2fdf53` | 2026-10-29 | Member rates at the counter: the member shows their membership, or the course allows any membership |
-| `65df5988` | 2026-10-29 | Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share |
-| `cfe7cb40` | 2026-10-29 | WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings |
-| `3d18ecd9` | 2026-10-29 | Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251) |
-| `69bcbab8` | 2026-10-29 | WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale |
-| `7dcf8122` | 2026-10-29 | Course page: no layout shift when the day's tee times load |
-| `f226c81b` | 2026-10-29 | WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party |
-| `9de927a8` | 2026-10-29 | WIP part B: staff refunds (course share) and giving back a kept late fee |
-| `4e1d9c2c` | 2026-10-29 | The dues link says why it didn't send; a search result opens Cancellations filtered |
-| `06b64277` | 2026-10-29 | Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations |
-| `0dfd8bdf` | 2026-10-29 | Revamp 3: the 12 audit fixes (#250) |
-| `92b9bfa6` | 2026-10-29 | Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused |
-| `9e689d2b` | 2026-10-29 | Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked |
-| `1f56429b` | 2026-10-29 | Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5 |
-| `28e44ab2` | 2026-10-29 | Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team |
-| `447cb1bd` | 2026-10-29 | Status board |
-| `e02ea5d4` | 2026-10-29 | One code, one shop item; an oversold count says so |
-| `fa151d17` | 2026-10-29 | The booking window turns over at the course's midnight, not UTC's |
-| `57e64d2d` | 2026-10-29 | "Not paid yet" is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds |
-| `9bcc13b3` | 2026-10-29 | A cash sale records the total the register showed, or nothing |
-| `6ed720e1` | 2026-10-29 | A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing |
-| `af4b9fc3` | 2026-10-29 | Cash at the register is never blocked by sales tax |
-| `bee3bc29` | 2026-10-29 | A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight |
-| `ec1f63b8` | 2026-10-29 | A price change reaches every bookable day and the open spots of booked times |
-| `64c39edb` | 2026-10-29 | An unsigned Operator Agreement no longer locks staff out of the tee sheet |
-| `59b616cd` | 2026-10-29 | Member pricing: the member alone gets the member rate unless the tier includes guests; rates end after the membership does (course grace days); a first dues payment is one term |
-| `d0b0c181` | 2026-10-28 | Fill a test course with sample data; never email a placeholder address or text a fictional number (#249) |
-| `09422b74` | 2026-10-28 | Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill |
-| `161d3d7f` | 2026-10-28 | Fill a test course with sample data; never email a placeholder address or text a fictional number |
-| `fa0add63` | 2026-10-27 | DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247) |
-| `187a1ba4` | 2026-10-27 | DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246) |
-| `b8440aa6` | 2026-10-27 | Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245) |
-| `8061878d` | 2026-10-27 | No cancelling after the tee time: check in or no-show (charged at midnight) (#244) |
-| `e8e2a2e6` | 2026-10-27 | DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243) |
-| `531516a0` | 2026-10-27 | DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242) |
-| `92087fca` | 2026-10-27 | DENSE-4: the tee sheet is seat rows (#241) |
-| `6eced458` | 2026-10-27 | Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240) |
+### Uncommitted working tree (4 file(s))
 
-**Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
+- `M RUN_QUEUE.md`
+- `M STATUS.artifact.html`
+- `M STATUS.json`
+- `M STATUS.md`
 
-### Uncommitted working tree (10 file(s))
-
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M src/app/api/operator/events/[id]/route.ts`
-- `M src/app/dashboard/events/page.tsx`
-- `M src/app/globals.css`
-- `M src/components/dashboard/events/EventDetail.tsx`
-- `?? prisma/migrations/20261031030000_event_player_checkin/`
-- `?? scripts/event-day-test.ts`
-- `?? src/components/dashboard/events/EventDay.tsx`
-
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
-- **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:48`
+- **ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 ** — `RUN_QUEUE.md:102`
   - PARTIALLY BUILT — shipped: BI-1 #92, ACT-1 #93, ACT-2 #94, MSG-1 v1 #95, SHEET-2 #97–99, POS-1a #106. Now: POS-1b. After launch: OUT-1, FB-1, PWA-1.
 
 ## Built but not signed off
@@ -138,25 +32,25 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 101d | `b88c8bf3` | `RUN_QUEUE.md:2358` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 101d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
-1. DENSE — Cam 2026-10-27: "too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin". Lots of data, almost no sent — `RUN_QUEUE.md:47`
-2. WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone). — `RUN_QUEUE.md:50`
-3. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:57`
-4. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:236`
-5. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:339`
-6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:2994`
+1. DENSE — Cam 2026-10-27: "too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin". Lots of data, almost no sent — `RUN_QUEUE.md:101`
+2. WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone). — `RUN_QUEUE.md:104`
+3. RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checke — `RUN_QUEUE.md:111`
+4. LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed — `RUN_QUEUE.md:290`
+5. CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf — `RUN_QUEUE.md:393`
+6. SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done. — `RUN_QUEUE.md:3048`
 
 ## Waiting on you (not on a build)
 
-- CAM: live walks before launch (code merged — `RUN_QUEUE.md:50`
-- Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th — `RUN_QUEUE.md:57`
-- Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) — `RUN_QUEUE.md:236`
-- CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf course name") to the demo event, so homepage demo inquiries arrive  — `RUN_QUEUE.md:339`
-- CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c — `RUN_QUEUE.md:2358`
-- CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars — `RUN_QUEUE.md:2994`
+- CAM: live walks before launch (code merged — `RUN_QUEUE.md:104`
+- Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th — `RUN_QUEUE.md:111`
+- Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) — `RUN_QUEUE.md:290`
+- CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` ("Golf course name") to the demo event, so homepage demo inquiries arrive  — `RUN_QUEUE.md:393`
+- CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c — `RUN_QUEUE.md:2412`
+- CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars — `RUN_QUEUE.md:3048`
 
 ## Revise campaign (page-by-page pass)
 
@@ -211,14 +105,14 @@ This is the distinction a raw checkbox count gets wrong.
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 10d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 5d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 5d |
-| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 7d |
-| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 8d |
-| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 8d |
+| `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 8d |
-| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 8d |
-| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 8d |
-| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 8d |
-| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 8d |
+| `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 9d |
+| `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 9d |
+| `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 9d |
+| `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 9d |
+| `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 9d |
+| `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 9d |
 | `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 10d |
 | `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 10d |
 | `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 10d |
@@ -247,6 +141,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `74475da5` 2026-10-31 — Event day: check-in, day view, cart signs (#276)
+- `23c14e34` 2026-10-31 — Event day: check-in, day view, cart signs
 - `5af344f0` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause (#275)
 - `847fd73c` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause
 - `f84e4be2` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)
@@ -257,9 +153,7 @@ This is the distinction a raw checkbox count gets wrong.
 - `4bf11a39` 2026-10-31 — Change member: move a wrong-member account charge (#272)
 - `13b505dc` 2026-10-31 — Change member: move a wrong-member account charge to the right member
 - `dea052d9` 2026-10-31 — Member billing walkthrough fixes (#271)
-- `e7cbdde5` 2026-10-31 — Member billing walkthrough fixes: whose account, which round, golfer-page chrome
-- `8f7d18ad` 2026-10-31 — Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)
 
 ---
 
-**Totals:** 298 done · 1 awaiting review · 1 in flight · 6 not started · 7 revise pages open · 17 ideas · 7 parked.
+**Totals:** 345 done · 1 awaiting review · 1 in flight · 6 not started · 7 revise pages open · 17 ideas · 7 parked.
