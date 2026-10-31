@@ -104,10 +104,10 @@ function EventsInner() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-screen bg-white md:overflow-hidden print:h-auto print:overflow-visible">
       <style>{PRINT_CSS}</style>
       <OperatorSidebar active="events" />
-      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8">
+      <main className="flex-1 md:overflow-y-auto pb-24 md:pb-8 print:overflow-visible">
         {!canRun ? <StaffNotice what="events" view="events.manage" /> : (
           <div className="px-4 sm:px-10 py-7 space-y-5">
             {loadError && (
