@@ -7082,7 +7082,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 273,
+      "lines": 276,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7852,7 +7852,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 810,
+      "lines": 811,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8904,7 +8904,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 909,
+      "lines": 911,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -24160,7 +24160,7 @@
     },
     {
       "path": "src/lib/staff-permissions.ts",
-      "lines": 150,
+      "lines": 152,
       "purpose": "SP-A (STAFF_POLICY_SPEC Part A).",
       "brain": [],
       "exports": [

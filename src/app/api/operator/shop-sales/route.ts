@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
-import { resolveDashboardSession, requirePermission } from '@/lib/session';
+import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { createSale, findSales, voidCashSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, type SaleView } from '@/lib/shop-sales';
 import { rateLimit } from '@/lib/rate-limit';
 import { ringUpCash } from '@/lib/register';
@@ -15,7 +15,8 @@ import { sendShopSalePayLinkEmail, sendShopReceiptEmail, isPlaceholderEmail } fr
 // round paid at the counter). Only card pay links need a current agreement —
 // cash is never blocked. The course is always the session's.
 // POS-3 (Cam 2026-10-24): a discount needs shop.discount; a refund needs
-// money.refund (cash recorded, card through Stripe); receipts go to whoever
+// money.refund (cash recorded, card through Stripe) — or, for a return by item,
+// shop.return (Cam 2026-10-31); receipts go to whoever
 // asks, by email or text.
 // POS-3 R3: pay 'reader' sends the sale to the course's card reader (shop.sell,
 // a current agreement and Stripe, as for a pay link); the register then asks
@@ -220,14 +221,16 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ sale: r.value });
   }
   if (body.action === 'refund') {
-    const denied = requirePermission(g.session, 'money.refund');
+    // Launch walk (Cam 2026-10-31): a return by item needs Return items or Issue refunds; a typed amount, Issue refunds.
+    const byItem = Array.isArray(body.lines) && body.lines.length > 0;
+    const denied = byItem && can(g.session, 'shop.return') ? null : requirePermission(g.session, 'money.refund');
     if (denied) return denied;
     const r = await refundSale(g.session.courseId, id, { amountCents: body.amountCents, reason: body.reason, restock: body.restock, lines: body.lines }, g.session.email);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json(r.value);
   }
   if (body.action === 'refund_retry') {
-    const denied = requirePermission(g.session, 'money.refund');
+    const denied = can(g.session, 'shop.return') ? null : requirePermission(g.session, 'money.refund');
     if (denied) return denied;
     const refundId = typeof body.refundId === 'string' ? body.refundId : '';
     const owned = await prisma.shopSaleRefund.findFirst({ where: { id: refundId, saleId: id, courseId: g.session.courseId }, select: { id: true } });

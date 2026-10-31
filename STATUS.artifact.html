@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-31 19:47 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 0db65c3e</span>
-    <span>16 uncommitted</span>
+    <span>2026-10-31 20:08 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ f88a3a85</span>
+    <span>7 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">91 runs have shipped that the queue doesn't know about</div>
+<div class="lede">93 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">f84e4be2</span><span>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)</span></li>
+<li><span class="h">36872c8f</span><span>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails</span></li>
 <li><span class="h">719073d5</span><span>Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)</span></li>
 <li><span class="h">94b6272a</span><span>Isolation test: pay link refused before the round's day, then the SMS checks on a round today</span></li>
 <li><span class="h">51f33943</span><span>Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day</span></li>
@@ -228,7 +230,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/admin/inquiries/[id]/page.tsx</code></li><li><code>M src/app/admin/inquiries/page.tsx</code></li><li><code>M src/app/api/admin/inquiries/route.ts</code></li><li><code>M src/app/api/inquiries/details/route.ts</code></li><li><code>M src/app/api/inquiries/route.ts</code></li><li><code>M src/components/dashboard/RegisterClose.tsx</code></li><li><code>M src/components/dashboard/money/SalesPanel.tsx</code></li><li><code>M src/lib/page-review.ts</code></li><li><code>M src/lib/register-close.ts</code></li><li><code>M src/lib/setup-sheet-recap.ts</code></li><li><code>?? scripts/launch-batch2-test.ts</code></li><li><code>?? src/lib/email-failed-notice.ts</code></li><li><code>?? src/lib/inquiry-email-failed.ts</code></li><li><code>?? src/lib/ledger-words.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/app/book/BookClient.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/lib/staff-permissions.ts</code></li><li><code>?? scripts/launch-batch3-test.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -310,6 +312,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">f84e4be2</td><td class="num">2026-10-31</td><td>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)</td></tr>
+<tr><td class="num">36872c8f</td><td class="num">2026-10-31</td><td>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails</td></tr>
 <tr><td class="num">719073d5</td><td class="num">2026-10-31</td><td>Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)</td></tr>
 <tr><td class="num">94b6272a</td><td class="num">2026-10-31</td><td>Isolation test: pay link refused before the round's day, then the SMS checks on a round today</td></tr>
 <tr><td class="num">51f33943</td><td class="num">2026-10-31</td><td>Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day</td></tr>
@@ -320,8 +324,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">8f7d18ad</td><td class="num">2026-10-31</td><td>Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)</td></tr>
 <tr><td class="num">60a67d17</td><td class="num">2026-10-31</td><td>Shop sales test: counter payment now gates cash, on account and the account void</td></tr>
 <tr><td class="num">59227acd</td><td class="num">2026-10-31</td><td>Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)</td></tr>
-<tr><td class="num">14c84cbd</td><td class="num">2026-10-31</td><td>Membership dues: one Stripe payment per term (no double charges) (#269)</td></tr>
-<tr><td class="num">3eb06a6f</td><td class="num">2026-10-31</td><td>MEM-ACCT hardening: one Stripe payment per membership dues term</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

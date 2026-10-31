@@ -9,7 +9,7 @@
 // POS-3 (Cam 2026-10-24: "look at how Shopify runs their POS or … Square"):
 // scan a barcode into the search box, ring up a custom amount, take money off
 // (shop.discount), enter the cash handed over for the change, send a receipt,
-// and refund a paid sale (money.refund) — cash recorded, card through Stripe.
+// and refund a paid sale (money.refund; items only with shop.return) — cash recorded, card through Stripe.
 import { PackPicker, PackHolders } from '@/components/dashboard/RegisterPacks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -390,6 +390,8 @@ export default function ShopPage() {
   const canSell = access.can('shop.sell');
   const canDiscount = access.can('shop.discount');
   const canRefund = access.can('money.refund');
+  // Launch walk (Cam 2026-10-31): "Return items" takes items back; a typed amount needs Issue refunds.
+  const canReturn = canRefund || access.can('shop.return');
   // Recording cash is the counter-payment power, as on the tee sheet.
   const canCash = access.can('sheet.counter_payment');
   // Rounds at the register are cash for now (rounds on the card reader come next).
@@ -811,7 +813,7 @@ export default function ShopPage() {
                         <div className="flex items-center gap-3 shrink-0">
                           <StatusDot status={st.tone} label={st.label} />
                           {isPaid(s) && <button onClick={() => { setReceipt(receipt?.id === s.id ? null : { id: s.id, via: s.customerEmail || !s.customerPhone ? 'email' : 'sms', to: s.customerEmail || s.customerPhone }); setError(''); }} disabled={!!busy} className={LINK}>Receipt</button>}
-                          {isPaid(s) && canRefund && left > 0 && <button onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setError(''); }} disabled={!!busy} className={LINK}>Refund</button>}
+                          {isPaid(s) && (canRefund || (canReturn && s.lines.some(l => !l.round && l.quantity > l.returnedQty))) && left > 0 && <button onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setError(''); }} disabled={!!busy} className={LINK}>Refund</button>}
                           {/* Dead end 23: a cash sale rung up by mistake, the same day (the server also checks the close-out). */}
                           {(s.status === 'paid_cash' || s.status === 'paid_account') && !s.roundsCents && s.refundedCents === 0 && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString() && <button onClick={() => act(s, 'void_cash')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
                           {s.status === 'open' && (
@@ -828,7 +830,7 @@ export default function ShopPage() {
                         {pending.map(r => (
                           <div key={r.id} className="flex flex-wrap items-center gap-3 mt-1.5 text-[12.5px]">
                             <StatusDot status="warn" label={`Refund ${usd(r.amountCents)} not confirmed by Stripe yet`} />
-                            {canRefund && <button onClick={() => retryRefund(s, r.id)} disabled={!!busy} className={LINK}>{busy === 'retry' + r.id ? 'Asking Stripe…' : 'Try again'}</button>}
+                            {canReturn && <button onClick={() => retryRefund(s, r.id)} disabled={!!busy} className={LINK}>{busy === 'retry' + r.id ? 'Asking Stripe…' : 'Try again'}</button>}
                           </div>
                         ))}
                         {receipt?.id === s.id && justPaid?.id !== s.id && (
@@ -836,19 +838,19 @@ export default function ShopPage() {
                         )}
                         {refund?.id === s.id && (
                           <div className="mt-2 bg-paper/70 rounded-md p-3 space-y-2 max-w-md">
-                            <div className="grid grid-cols-[110px_1fr] gap-2">
-                              <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Amount</span>
+                            <div className={canRefund ? 'grid grid-cols-[110px_1fr] gap-2' : ''}>
+                              {canRefund && <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Amount</span>
                                 <div className="relative"><span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm">$</span>
-                                  <input value={refund.amount} onChange={e => setRefund({ ...refund, amount: e.target.value, confirm: false, restock: toCents(e.target.value) === itemsCents && s.refundedCents === 0 ? refund.restock : false })} inputMode="decimal" className={INPUT + ' w-full pl-6'} /></div></label>
+                                  <input value={refund.amount} onChange={e => setRefund({ ...refund, amount: e.target.value, confirm: false, restock: toCents(e.target.value) === itemsCents && s.refundedCents === 0 ? refund.restock : false })} inputMode="decimal" className={INPUT + ' w-full pl-6'} /></div></label>}
                               <label className="block"><span className="block text-[12.5px] font-medium text-ink mb-1">Reason <span className="font-normal text-ink-muted">(for your records)</span></span>
                                 <input value={refund.reason} onChange={e => setRefund({ ...refund, reason: e.target.value })} maxLength={300} className={INPUT + ' w-full'} /></label>
                             </div>
-                            {s.refundedCents === 0 && toCents(refund.amount) === itemsCents && s.lines.some(l => !/ round · /.test(l.name)) && (
+                            {canRefund && s.refundedCents === 0 && toCents(refund.amount) === itemsCents && s.lines.some(l => !/ round · /.test(l.name)) && (
                               <label className="flex items-center gap-2 text-[13px] text-ink"><input type="checkbox" checked={refund.restock} onChange={e => setRefund({ ...refund, restock: e.target.checked })} className="accent-pine" />Put the items back on the shelf</label>
                             )}
                             {s.lines.some(l => !l.round && l.quantity > l.returnedQty) && (
                               <div className="space-y-1">
-                                <span className="block text-[12.5px] font-medium text-ink">Or return items</span>
+                                <span className="block text-[12.5px] font-medium text-ink">Return items</span>
                                 {s.lines.filter(l => !l.round && l.quantity > l.returnedQty).map(l => (
                                   <label key={l.id} className="flex items-center justify-between gap-2 text-[13px] text-ink">
                                     <span className="truncate">{l.name} <span className="text-ink-muted">· {usd(l.unitPriceCents)}{l.returnedQty ? ` · ${l.returnedQty} back` : ''}</span></span>
@@ -861,7 +863,7 @@ export default function ShopPage() {
                             <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'To their card, for good.' : s.status === 'paid_account' ? 'To their account.' : 'Hand the cash back.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
                             <div className="flex gap-2">
                               {(() => { const byItem = Object.values(refund.returns ?? {}).some(q => Number(q) > 0); return !refund.confirm
-                                ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!byItem && !toCents(refund.amount)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">{byItem ? 'Return these items' : `Refund $${refund.amount || '0'}`}</button>
+                                ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!byItem && (!canRefund || !toCents(refund.amount))} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">{byItem ? 'Return these items' : `Refund $${refund.amount || '0'}`}</button>
                                 : <button onClick={() => doRefund(s)} disabled={!!busy} className="px-3 py-2 rounded-md text-[13px] font-medium bg-bad text-white disabled:opacity-50">{busy === 'refund' + s.id ? 'Refunding…' : byItem ? 'Yes, refund their share and restock' : `Yes, refund $${refund.amount}`}</button>; })()}
                               <button onClick={() => setRefund(null)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper">Close</button>
                             </div>
