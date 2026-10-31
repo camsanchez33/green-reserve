@@ -1,25 +1,38 @@
 {
-  "generatedAt": "2026-10-31T16:43:13.816Z",
+  "generatedAt": "2026-10-31T19:16:20.597Z",
   "repo": {
-    "head": "5242dc79",
+    "head": "51f33943",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 9,
+    "dirtyCount": 1,
     "dirty": [
-      "M docs/CODEMAP.md",
-      " M docs/codemap.json",
-      " M scripts/member-account-db-test.ts",
-      " M src/app/api/operator/member-accounts/route.ts",
-      " M src/app/dashboard/members/page.tsx",
-      " M src/app/dashboard/page.tsx",
-      " M src/components/dashboard/MemberAccount.tsx",
-      " M src/lib/member-account.ts",
-      "?? src/components/dashboard/ChangeAccount.tsx"
+      "M scripts/isolation-test.ts"
     ],
-    "looksLikeRunInProgress": true
+    "looksLikeRunInProgress": false
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "51f33943",
+        "date": "2026-10-31T19:08:00+00:00",
+        "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "4bf11a39",
+        "date": "2026-10-31T12:50:00-04:00",
+        "subject": "Change member: move a wrong-member account charge (#272)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "13b505dc",
+        "date": "2026-10-31T16:43:15+00:00",
+        "subject": "Change member: move a wrong-member account charge to the right member",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "dea052d9",
         "date": "2026-10-31T12:19:04-04:00",
@@ -1019,6 +1032,21 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "51f33943",
+      "date": "2026-10-31",
+      "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day"
+    },
+    {
+      "h": "4bf11a39",
+      "date": "2026-10-31",
+      "subject": "Change member: move a wrong-member account charge (#272)"
+    },
+    {
+      "h": "13b505dc",
+      "date": "2026-10-31",
+      "subject": "Change member: move a wrong-member account charge to the right member"
+    },
+    {
       "h": "dea052d9",
       "date": "2026-10-31",
       "subject": "Member billing walkthrough fixes (#271)"
@@ -1062,21 +1090,6 @@
       "h": "96eb2291",
       "date": "2026-10-31",
       "subject": "MEM-ACCT hardening: one Stripe payment per member statement"
-    },
-    {
-      "h": "f9a4eef5",
-      "date": "2026-10-31",
-      "subject": "Member accounts (part 2): monthly statements, paid by link or a saved card (#267)"
-    },
-    {
-      "h": "f22a86ba",
-      "date": "2026-10-31",
-      "subject": "MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card"
-    },
-    {
-      "h": "5b3f82a4",
-      "date": "2026-10-30",
-      "subject": "Member accounts (part 1): staff put a group's round on a member's account (#266)"
     }
   ]
 }

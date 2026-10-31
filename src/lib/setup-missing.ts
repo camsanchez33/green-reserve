@@ -5,8 +5,9 @@
 // Client-safe: no Prisma or Node imports. A null count means "not loaded" and
 // never reports the item missing.
 
-export type MissingKey = 'logo' | 'hero' | 'description' | 'phone' | 'gallery' | 'teesets' | 'holes';
-export type MissingItem = { key: MissingKey; title: string; why: string; action: string; section: string };
+export type MissingKey = 'logo' | 'hero' | 'description' | 'phone' | 'gallery' | 'teesets' | 'holes' | 'payments';
+/** href: where the fix lives when it isn't a Settings section. */
+export type MissingItem = { key: MissingKey; title: string; why: string; action: string; section: string; href?: string };
 
 const ITEMS: Record<MissingKey, Omit<MissingItem, 'key'>> = {
   logo: { title: 'Add your logo', why: 'It sits beside your name on your booking page and every email.', action: 'Add logo', section: 'Your course' },
@@ -16,7 +17,15 @@ const ITEMS: Record<MissingKey, Omit<MissingItem, 'key'>> = {
   gallery: { title: 'Add gallery photos', why: 'Up to 8 photos in the Photos section of your booking page.', action: 'Add photos', section: 'Your course' },
   teesets: { title: 'Add your tees', why: 'Golfers see each tee’s yardage, rating and slope on your booking page.', action: 'Add tees', section: 'Course layout' },
   holes: { title: 'Say how many holes and the par', why: 'Shown at the top of your booking page.', action: 'Set it', section: 'Course layout' },
+  // Launch walk (Cam 2026-10-31): the one thing that blocks going live, never on the booking-page list itself.
+  payments: { title: 'Connect payments', why: 'Your course can’t go live until card payments reach your bank.', action: 'Connect', section: 'Payouts', href: '/dashboard/money?tab=payouts' },
 };
+
+/** The tee sheet's not-live banner, once the page is approved but payments aren't connected. */
+export const PAYMENTS_BLOCK_LIVE = 'You approved your page. Connect payments in Money → Payouts to go live.';
+
+/** Home's checklist: payments first when Stripe isn't connected, then the booking-page items. */
+export const paymentsMissing = (stripeActive: boolean): MissingItem[] => stripeActive ? [] : [{ key: 'payments', ...ITEMS.payments }];
 
 export type SetupFacts = {
   logoUrl?: unknown; heroImageUrl?: unknown; description?: unknown; phone?: unknown;

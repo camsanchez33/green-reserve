@@ -18,6 +18,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { signOtpChallenge } from '../src/lib/golfer-otp';
+import { todayIn } from '../src/lib/course-time';
 
 const BASE_URL = process.env.TEST_URL || 'http://localhost:3000';
 const prisma = new PrismaClient();
@@ -267,6 +268,13 @@ async function main() {
   {
     const textIt = (cookie: string) => api('/api/operator/bookings', { method: 'PATCH', cookie, body: { id: bookingA.id, action: 'send_pay_link', via: 'sms' } });
     checkStatus('Op B cannot text a pay link for Course A\'s booking → 404', (await textIt(cookieB)).status, 404);
+    // Launch walk (Cam 2026-10-31): the link opens on the round's day, so a round days ahead is refused…
+    const early = await textIt(cookieA);
+    checkStatus('Text pay link before the round\'s day → 409', early.status, 409);
+    check('…saying it opens on the day of the round', /opens on the day of the round/.test(early.text));
+    // …and the checks below run on a round today (the course's own date), put back after.
+    const roundDate = (await prisma.teeTime.findUniqueOrThrow({ where: { id: bookingA.teeTimeId } })).date;
+    await prisma.teeTime.update({ where: { id: bookingA.teeTimeId }, data: { date: todayIn('America/Los_Angeles') } });
     await prisma.booking.update({ where: { id: bookingA.id }, data: { golferPhone: '' } });
     checkStatus('Text pay link with no number on the booking → 409', (await textIt(cookieA)).status, 409);
     await prisma.booking.update({ where: { id: bookingA.id }, data: { golferPhone: '(555) 010-1234' } });
@@ -275,6 +283,7 @@ async function main() {
     // reason), never report success it didn't have.
     checkStatus('Text pay link without SMS set up says so → 502', sent.status, 502);
     await prisma.booking.update({ where: { id: bookingA.id }, data: { golferPhone: '' } });
+    await prisma.teeTime.update({ where: { id: bookingA.teeTimeId }, data: { date: roundDate } });
   }
 
   console.log('\n── Golfer sign-in code is single-use ─────────────────────────────');

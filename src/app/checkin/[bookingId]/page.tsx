@@ -32,6 +32,8 @@ type CheckInInfo = {
   paidOffline?: boolean;
   onAccount?: boolean;
   cartAddOnCents?: number;
+  /** The round's date while it's still ahead: check-in and paying open that day. */
+  opensOn?: string | null;
 };
 
 function fmtTime(t: string) {
@@ -301,7 +303,7 @@ function CheckInPageInner() {
         </div>
       </div>
       {/* B-5: a cart for a booking that has none, priced at the tee time's cart fee. */}
-      {cartAddOn > 0 && (
+      {cartAddOn > 0 && !info.opensOn && (
         <label className="mt-3 flex items-center justify-between gap-3 bg-white border border-line rounded-md px-3.5 py-3 cursor-pointer">
           <span className="text-sm text-ink">
             <span className="font-medium">Add a cart today?</span>
@@ -310,6 +312,20 @@ function CheckInPageInner() {
           <input type="checkbox" checked={addCart} onChange={e => setAddCart(e.target.checked)} className="w-5 h-5" style={{ accentColor: info.brandColor || '#173B2A' }} disabled={checkingIn} />
         </label>
       )}
+    </div>
+  );
+
+  // Launch walk (Cam 2026-10-31): check-in and paying open on the round's day.
+  if (info.opensOn) return (
+    <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
+      <div className="max-w-lg w-full bg-white rounded-lg border border-line overflow-hidden">
+        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+        <div className="p-8">
+          <h1 className="text-[30px] font-serif leading-none text-ink mb-2">See you {new Date(`${info.opensOn}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}</h1>
+          <p className="text-ink-soft text-sm mb-6">Use this link that day to check in and pay.</p>
+          {summary}
+        </div>
+      </div>
     </div>
   );
 

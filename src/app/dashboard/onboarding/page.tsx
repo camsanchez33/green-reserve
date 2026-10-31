@@ -215,11 +215,11 @@ function OnboardingInner() {
         {/* Step 4 — Done */}
         {step === 4 && (
           <div className="bg-white rounded-lg shadow-card p-10 text-center">
-            <h2 className="text-[30px] font-serif font-semibold leading-none text-ink mb-2">Setup complete</h2>
+            <h2 className="text-[30px] font-serif font-semibold leading-none text-ink mb-2">{pageStatus === 'approved' && isConnected ? 'Setup complete' : 'Almost there'}</h2>
             <p className="text-sm text-ink mb-2">{pageStatus === 'approved' && isConnected
               ? 'Your page is approved and payments are connected. GreenReserve will check everything and take your course live — usually within 1 business day.'
               : `Before your course goes live: ${todo.join(' and ')}. Your dashboard’s checklist has ${todo.length === 1 ? 'it' : 'both'}.`}</p>
-            <p className="text-xs text-ink-soft mb-6">We&apos;ll email you a full walkthrough of your dashboard once you&apos;re live.</p>
+            <p className="text-xs text-ink-soft mb-6">We&apos;ll email you a walkthrough once you&apos;re live.</p>
             <button onClick={() => router.push('/dashboard')}
               className="w-full bg-pine hover:bg-pine-hover text-white py-3 rounded-md font-medium text-[13px] transition-colors">
               Go to Dashboard

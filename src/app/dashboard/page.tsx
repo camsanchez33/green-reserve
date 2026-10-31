@@ -32,6 +32,7 @@ import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { timesTooClose } from '@/lib/tee-time-fit';
 import { formatTeeDay as fmtDate, formatTeeTime as fmtTime } from '@/lib/format';
 import { ChargeToAccount } from '@/components/dashboard/ChargeToAccount';
+import { PAYMENTS_BLOCK_LIVE } from '@/lib/setup-missing';
 import { ChangeAccount } from '@/components/dashboard/ChangeAccount';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -722,11 +723,11 @@ function DashboardPageInner() {
           {b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasReader && selectedDate === today() && access.can('sheet.checkin') && access.can('shop.sell') && (
             <Link href={`/dashboard/shop?round=${b.id}`} className={link}>Card reader</Link>
           )}
-          {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && (
+          {b.status === 'confirmed' && b.hasCard === false && access.can('sheet.checkin') && b.hasPhone && selectedDate <= today() && (
             <button onClick={() => sendPayLink(b, 'sms')} disabled={rowBusy === b.id} className={link}
               title="Text them a link to pay on their phone (Apple Pay, Google Pay or card); the booking fee is collected with the round">{rowBusy === b.id ? 'Sending…' : 'Text pay link'}</button>
           )}
-          {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && (
+          {b.status === 'confirmed' && b.hasCard === false && b.paymentStatus !== 'manual' && access.can('sheet.checkin') && !b.golferEmail.endsWith('@noemail.greenreserve.app') && selectedDate <= today() && (
             <button onClick={() => sendPayLink(b)} disabled={rowBusy === b.id} className={link}
               title="Email them their link to check in and pay online — the booking fee is collected with the round">{rowBusy === b.id ? 'Sending…' : 'Email pay link'}</button>
           )}
@@ -803,7 +804,7 @@ function DashboardPageInner() {
           <div className="bg-pine/5 border-b border-pine/20 px-6 py-3">
             <div className="flex items-center gap-2 text-sm text-ink-soft flex-wrap">
                             <span>{pageApprovalStatus === 'approved'
-                              ? 'You approved your page. We’ll check everything and take your course live.'
+                              ? stripeAccountActive ? 'You approved your page. We’ll check everything and take your course live.' : PAYMENTS_BLOCK_LIVE
                               : pageApprovalStatus === 'changes_requested'
                                 ? 'We’re making your changes and will send your page back for you to approve.'
                                 : 'Your course isn’t live yet. Golfers can book once you approve your page.'}</span>

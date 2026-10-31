@@ -11,7 +11,7 @@ import { moveBooking } from '@/lib/move-booking';
 import { setBookingResidents } from '@/lib/booking-residents';
 import { refundRound, waiveLateFee } from '@/lib/staff-refund';
 import { changePartySize } from '@/lib/change-party';
-import { isPastIn, todayIn } from '@/lib/course-time';
+import { isPastIn, todayIn, payLinkOpensOn } from '@/lib/course-time';
 import { randomUUID } from 'crypto';
 import { refundSeparateAccessFee } from '@/lib/access-fee';
 import { markNoShow, refundNoShowFee, roundPaid } from '@/lib/no-show-fee';
@@ -225,8 +225,10 @@ export async function PATCH(req: NextRequest) {
     // ('manual') qualify too; one booked without an email has no token yet, so
     // it gets one here.
     const via = viaRaw === 'sms' ? 'sms' : 'email';
-    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
+    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, course: { select: { name: true, timezone: true } }, teeTime: { select: { date: true, time: true } } } });
     if (!b || b.status !== 'confirmed') return NextResponse.json({ error: 'Only a confirmed booking can be sent a pay link.' }, { status: 409 });
+    // Launch walk (Cam 2026-10-31): the pay link opens on the round's day — a link sent earlier wouldn't work yet.
+    if (payLinkOpensOn(b.course.timezone, b.teeTime.date)) return NextResponse.json({ error: 'The pay link opens on the day of the round — send it then, or take payment at the counter.' }, { status: 409 });
     // PRICE-3: a group that owes nothing (fully on a round pack) is checked in, not sent a $0 link.
     if (roundChargeCents(b) === 0) return NextResponse.json({ error: 'This group owes nothing — check them in.' }, { status: 409 });
     if (via === 'sms') {

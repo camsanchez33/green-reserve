@@ -31,7 +31,7 @@ const m = missingSetup({ logoUrl: '', heroImageUrl: 'x', description: 'd', phone
 ok('missing items read off real data (unloaded counts never report missing)', m.map(i => i.key).join() === 'logo,gallery');
 ok('each links to its Settings section', settingsHref(m[0].section) === '/dashboard/settings?section=Your%20course');
 const home = readFileSync('src/app/dashboard/home/page.tsx', 'utf8');
-ok('Home shows Finish setting up, linking into Settings', home.includes('<FinishSetup items={home.setupMissing.map(') && home.includes('router.push(settingsHref(i.section))'));
+ok('Home shows Finish setting up, linking into Settings', home.includes('<FinishSetup items={home.setupMissing.map(') && home.includes('router.push(i.href ?? settingsHref(i.section))'));
 ok('…only for logins that can edit settings', readFileSync('src/app/api/operator/home/route.ts', 'utf8').includes("setup: can(session, 'settings.edit')"));
 ok('Settings reads the same list', readFileSync('src/app/dashboard/settings/page.tsx', 'utf8').includes('missingSetup({'));
 

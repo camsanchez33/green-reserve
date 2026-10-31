@@ -21,6 +21,16 @@ export function isValidTimezone(tz: string): boolean {
 }
 
 /** YYYY-MM-DD of `now` in the course's timezone. */
+/**
+ * Launch walk (Cam 2026-10-31, "pay link opens on the day"): paying on the golfer's check-in link
+ * checks the group in, so it opens from the start of the round's day in the course's time zone.
+ * The round's date while it is still ahead, else null. One rule for the link, the staff pay link
+ * and the hourly check-in email.
+ */
+export function payLinkOpensOn(tz: string | null | undefined, roundDate: string, now: Date = new Date()): string | null {
+  return todayIn(tz, now) < roundDate ? roundDate : null;
+}
+
 export function todayIn(tz: string | null | undefined, now: Date = new Date()): string {
   const zone = tz && isValidTimezone(tz) ? tz : DEFAULT_TZ;
   return now.toLocaleDateString('en-CA', { timeZone: zone });

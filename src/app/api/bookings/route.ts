@@ -7,7 +7,7 @@ import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoR
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
 import { demandPctFor, onlinePublicSeat, dealWins } from '@/lib/demand-pricing';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from '@/lib/round-packs';
-import { isPastIn } from '@/lib/course-time';
+import { isPastIn, payLinkOpensOn } from '@/lib/course-time';
 import Stripe from 'stripe';
 import { describePolicy, policyFrom, cardAtBooking, lateFeeTotalCents, noShowTotalCents as noShowFeeCents } from '@/lib/cancel-policy';
 import { FEE_AT_BOOKING_ON } from '@/lib/booking-fees';
@@ -115,7 +115,8 @@ export async function POST(req: NextRequest) {
       appliedTier     = membership.tier;
     }
   }
-  if (!resolvedGreenFeeOverride) {
+  // A $0 member rate is a rate (review 2026-10-31): only no membership falls through to the member cookie.
+  if (appliedTier == null) {
     const memberSession = await getMemberSession();
     if (memberSession && memberSession.courseId === teeTimeFull.courseId) {
       const membership = await prisma.courseMembership.findUnique({
@@ -428,7 +429,8 @@ export async function POST(req: NextRequest) {
           lateFeeTiming: policy.lateFeeTiming,
         }).catch(console.error);
       }
-    } else if (cancellationFeeTotal <= 0 && minsUntilCutoff < 165) {
+    // Launch walk (Cam 2026-10-31): the check-in link opens on the round's day — before then the hourly run sends it that day.
+    } else if (cancellationFeeTotal <= 0 && minsUntilCutoff < 165 && !payLinkOpensOn(teeTimeFull.course.timezone, teeTimeFull.date)) {
       // FB-3: keyed on the course having no hold fee, not on a missing card —
       // every booking saves a card now.
       await sendCheckInAvailableEmail({

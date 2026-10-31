@@ -1117,8 +1117,11 @@ async function handleAction(
           const name = str(p.name) || (type === 'other' ? str(p.otherType, 'Other') : PASS_TYPE_LABELS[type] || 'Membership');
           const perRound = str(p.perRound) === 'yes';
           const isFlatOverride = perRound && str(p.perRoundType) !== 'separate';
-          const perRoundWeekday = isFlatOverride ? flt(p.perRoundWeekday || p.perRoundFee, 0) : null;
-          const perRoundWeekend = isFlatOverride ? flt(p.perRoundWeekend, perRoundWeekday ?? 0) : null;
+          // Launch walk (Cam 2026-10-31): "Do holders pay a green fee per round?" No means their
+          // rounds are free — a $0 member green fee, not the public price.
+          const noGreenFee = str(p.perRound) === 'no';
+          const perRoundWeekday = isFlatOverride ? flt(p.perRoundWeekday || p.perRoundFee, 0) : noGreenFee ? 0 : null;
+          const perRoundWeekend = isFlatOverride ? flt(p.perRoundWeekend, perRoundWeekday ?? 0) : noGreenFee ? 0 : null;
 
           const notesParts: string[] = [];
           if (str(p.includes)) notesParts.push(str(p.includes));
@@ -1130,6 +1133,7 @@ async function handleAction(
             );
             if (str(p.perRoundCartIncluded) === 'yes') notesParts.push('Cart included');
           }
+          if (noGreenFee) notesParts.push('No green fee per round');
           if (type === 'resident_card') {
             if (str(p.residentWho)) notesParts.push(`Qualifies: ${str(p.residentWho)}`);
             notesParts.push(

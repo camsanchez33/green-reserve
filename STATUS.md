@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 16:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5242dc79` · working tree **9 dirty file(s)**
+Generated 2026-10-31 19:16 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `51f33943` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 86 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 89 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `51f33943` | 2026-10-31 | Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day |
+| `4bf11a39` | 2026-10-31 | Change member: move a wrong-member account charge (#272) |
+| `13b505dc` | 2026-10-31 | Change member: move a wrong-member account charge to the right member |
 | `dea052d9` | 2026-10-31 | Member billing walkthrough fixes (#271) |
 | `e7cbdde5` | 2026-10-31 | Member billing walkthrough fixes: whose account, which round, golfer-page chrome |
 | `8f7d18ad` | 2026-10-31 | Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270) |
@@ -101,20 +104,12 @@ Generated 2026-10-31 16:43 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M scripts/member-account-db-test.ts`
-- `M src/app/api/operator/member-accounts/route.ts`
-- `M src/app/dashboard/members/page.tsx`
-- `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/MemberAccount.tsx`
-- `M src/lib/member-account.ts`
-- `?? src/components/dashboard/ChangeAccount.tsx`
+- `M scripts/isolation-test.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -237,6 +232,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `51f33943` 2026-10-31 — Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day
+- `4bf11a39` 2026-10-31 — Change member: move a wrong-member account charge (#272)
+- `13b505dc` 2026-10-31 — Change member: move a wrong-member account charge to the right member
 - `dea052d9` 2026-10-31 — Member billing walkthrough fixes (#271)
 - `e7cbdde5` 2026-10-31 — Member billing walkthrough fixes: whose account, which round, golfer-page chrome
 - `8f7d18ad` 2026-10-31 — Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)
@@ -246,9 +244,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `3eb06a6f` 2026-10-31 — MEM-ACCT hardening: one Stripe payment per membership dues term
 - `0c3512ba` 2026-10-31 — Member statements: one Stripe payment per statement (no double charges) (#268)
 - `96eb2291` 2026-10-31 — MEM-ACCT hardening: one Stripe payment per member statement
-- `f9a4eef5` 2026-10-31 — Member accounts (part 2): monthly statements, paid by link or a saved card (#267)
-- `f22a86ba` 2026-10-31 — MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card
-- `5b3f82a4` 2026-10-30 — Member accounts (part 1): staff put a group's round on a member's account (#266)
 
 ---
 
