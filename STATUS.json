@@ -1,36 +1,42 @@
 {
-  "generatedAt": "2026-10-31T04:26:34.918Z",
+  "generatedAt": "2026-10-31T04:54:16.221Z",
   "repo": {
-    "head": "6cda80f4",
+    "head": "2073f4b9",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 22,
+    "dirtyCount": 12,
     "dirty": [
       "M STATUS.artifact.html",
       " M STATUS.json",
       " M STATUS.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M prisma/schema.prisma",
+      " M scripts/member-statements-db-test.ts",
+      " M scripts/money-ledger-test.ts",
       " M src/app/api/cron/send-reminders/route.ts",
-      " M src/app/api/operator/member-accounts/route.ts",
-      " M src/app/api/operator/tiers/route.ts",
-      " M src/app/dashboard/members/page.tsx",
-      " M src/components/dashboard/MemberAccount.tsx",
-      " M src/lib/data-reset.ts",
-      " M src/lib/email.ts",
-      " M src/lib/ledger-view.ts",
-      " M src/lib/member-account.ts",
-      " M src/lib/money-ledger.ts",
-      " M src/lib/register-close.ts",
-      "?? prisma/migrations/20261031010000_member_statements/",
-      "?? scripts/member-statements-db-test.ts",
-      "?? src/app/api/statement/"
+      " M src/app/api/statement/[id]/route.ts",
+      " M src/lib/member-statements.ts",
+      " M src/lib/stripe.ts",
+      "?? scripts/statement-intent-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "f9a4eef5",
+        "date": "2026-10-31T00:34:02-04:00",
+        "subject": "Member accounts (part 2): monthly statements, paid by link or a saved card (#267)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "f22a86ba",
+        "date": "2026-10-31T04:26:37+00:00",
+        "subject": "MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "5b3f82a4",
         "date": "2026-10-30T19:22:15-04:00",
@@ -953,6 +959,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f9a4eef5",
+      "date": "2026-10-31",
+      "subject": "Member accounts (part 2): monthly statements, paid by link or a saved card (#267)"
+    },
+    {
+      "h": "f22a86ba",
+      "date": "2026-10-31",
+      "subject": "MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card"
+    },
+    {
       "h": "5b3f82a4",
       "date": "2026-10-30",
       "subject": "Member accounts (part 1): staff put a group's round on a member's account (#266)"
@@ -1001,16 +1017,6 @@
       "h": "d29ba970",
       "date": "2026-10-30",
       "subject": "MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box"
-    },
-    {
-      "h": "53da712c",
-      "date": "2026-10-30",
-      "subject": "Membership tiers: join online (pay and join, or request to join) (#261)"
-    },
-    {
-      "h": "91141923",
-      "date": "2026-10-30",
-      "subject": "Regenerate codemap and status board"
     }
   ]
 }

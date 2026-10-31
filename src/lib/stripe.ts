@@ -76,6 +76,51 @@ export async function chargeOnConnectedAccount(opts: {
   );
 }
 
+/**
+ * MEM-ACCT hardening (Cam 2026-10-31): ONE PaymentIntent per thing being paid (a statement), on the
+ * course's account, created once (its own idempotency key) and stored by the caller — every attempt,
+ * with any card, confirms that same intent. Stripe lets an intent succeed only once, so a retry after
+ * a crash or a timeout, a second tab, or a new card can never be a second charge. A thrown error is
+ * checked against the intent before it counts as a decline (a timeout may have charged).
+ */
+export async function chargeOneIntent(opts: {
+  existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown>;
+  customerId: string; paymentMethodId: string; connectedAccountId: string;
+  amountCents: number; applicationFeeCents: number; description: string; metadata?: Record<string, string>;
+}): Promise<{ id: string; amount: number; status: string }> {
+  const acct = { stripeAccount: opts.connectedAccountId };
+  let pi = opts.existingIntentId
+    ? await stripe.paymentIntents.retrieve(opts.existingIntentId, {}, acct)
+    : await stripe.paymentIntents.create({
+        amount: opts.amountCents, currency: 'usd', payment_method_types: ['card'],
+        application_fee_amount: opts.applicationFeeCents > 0 ? opts.applicationFeeCents : undefined,
+        description: opts.description, metadata: opts.metadata,
+      }, { ...acct, idempotencyKey: opts.intentKey });
+  if (!opts.existingIntentId) await opts.onCreated(pi.id);
+  // Stopped (staff took cash, then the mark didn't happen): a canceled intent can't be paid, so a fresh
+  // one replaces it — still one live intent, and the old one can never charge.
+  if (pi.status === 'canceled') {
+    pi = await stripe.paymentIntents.create({
+      amount: opts.amountCents, currency: 'usd', payment_method_types: ['card'],
+      application_fee_amount: opts.applicationFeeCents > 0 ? opts.applicationFeeCents : undefined,
+      description: opts.description, metadata: opts.metadata,
+    }, { ...acct, idempotencyKey: `${opts.intentKey}-after-${pi.id}` });
+    await opts.onCreated(pi.id);
+  }
+  if (pi.status === 'succeeded' || pi.status === 'processing') return pi;
+  if (pi.amount !== opts.amountCents) throw new Error('The amount changed since this payment was started — refresh and try again.');
+  try {
+    const cloned = await stripe.paymentMethods.create({ customer: opts.customerId, payment_method: opts.paymentMethodId }, { ...acct, idempotencyKey: `${pi.id}-${opts.paymentMethodId}-pm` });
+    pi = await stripe.paymentIntents.confirm(pi.id, { payment_method: cloned.id, off_session: true }, { ...acct, idempotencyKey: `${pi.id}-${opts.paymentMethodId}-confirm` });
+    return pi;
+  } catch (err) {
+    // A timeout or a lost reply may still have charged: the intent says.
+    const now = await stripe.paymentIntents.retrieve(pi.id, {}, acct).catch(() => null);
+    if (now && (now.status === 'succeeded' || now.status === 'processing')) return now;
+    throw err;
+  }
+}
+
 /** Refunds a charge that was created via chargeOnConnectedAccount — must be issued against the same connected account, not the platform account. */
 export async function refundOnConnectedAccount(opts: {
   paymentIntentId: string;

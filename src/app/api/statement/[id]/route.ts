@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { stripe, chargeOnConnectedAccount } from '@/lib/stripe';
+import { stripe, chargeOneIntent } from '@/lib/stripe';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { statementForPage, chargeStatement, statementCardTerms, statementLink, nextCharge } from '@/lib/member-statements';
 import { sendStatementPaidEmail } from '@/lib/email';
@@ -58,9 +58,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? `That card can’t be used — ${err.message}` : 'That card can’t be used — try another.' }, { status: 402 });
   }
-  const paid = await chargeStatement(st.id, { customerId, paymentMethodId: pm, idempotencyKey: `statement-${st.id}-${pm}`, actor: 'golfer' }, chargeOnConnectedAccount);
+  const paid = await chargeStatement(st.id, { customerId, paymentMethodId: pm, actor: 'golfer' }, chargeOneIntent);
   if (paid.status === 'declined') return NextResponse.json({ error: `Payment failed: ${paid.error}` }, { status: 402 });
-  if (paid.status === 'skipped') return NextResponse.json({ error: paid.why === 'being paid now' ? 'This statement is being paid right now — wait a moment and refresh.' : 'This statement can’t be paid right now — refresh and look again.' }, { status: 409 });
+  if (paid.status === 'skipped') return NextResponse.json({ error: paid.why === 'payment processing' ? 'Your bank is still processing this payment. Please don’t pay again — check back in a few minutes.' : paid.why === 'being paid now' ? 'This statement is being paid right now — wait a moment and refresh.' : 'This statement can’t be paid right now — refresh and look again.' }, { status: 409 });
 
   // The separate box: keep this card, and the exact words they agreed to, for later statements.
   if (saveCard) {

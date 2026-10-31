@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 04:26 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6cda80f4` · working tree **22 dirty file(s)**
+Generated 2026-10-31 04:54 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2073f4b9` · working tree **12 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 75 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 77 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `f9a4eef5` | 2026-10-31 | Member accounts (part 2): monthly statements, paid by link or a saved card (#267) |
+| `f22a86ba` | 2026-10-31 | MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card |
 | `5b3f82a4` | 2026-10-30 | Member accounts (part 1): staff put a group's round on a member's account (#266) |
 | `8a2a1249` | 2026-10-30 | MEM-ACCT part 1: member accounts — staff put a group's round on a member's account |
 | `7a14850b` | 2026-10-30 | Launch wipe closes Dec 1 instead of Nov 1 (#265) |
@@ -90,28 +92,20 @@ Generated 2026-10-31 04:26 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (22 file(s))
+### Uncommitted working tree (12 file(s))
 
 - `M STATUS.artifact.html`
 - `M STATUS.json`
 - `M STATUS.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M prisma/schema.prisma`
+- `M scripts/member-statements-db-test.ts`
+- `M scripts/money-ledger-test.ts`
 - `M src/app/api/cron/send-reminders/route.ts`
-- `M src/app/api/operator/member-accounts/route.ts`
-- `M src/app/api/operator/tiers/route.ts`
-- `M src/app/dashboard/members/page.tsx`
-- `M src/components/dashboard/MemberAccount.tsx`
-- `M src/lib/data-reset.ts`
-- `M src/lib/email.ts`
-- `M src/lib/ledger-view.ts`
-- `M src/lib/member-account.ts`
-- `M src/lib/money-ledger.ts`
-- `M src/lib/register-close.ts`
-- `?? prisma/migrations/20261031010000_member_statements/`
-- `?? scripts/member-statements-db-test.ts`
-- `?? src/app/api/statement/`
+- `M src/app/api/statement/[id]/route.ts`
+- `M src/lib/member-statements.ts`
+- `M src/lib/stripe.ts`
+- `?? scripts/statement-intent-db-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -237,6 +231,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `f9a4eef5` 2026-10-31 — Member accounts (part 2): monthly statements, paid by link or a saved card (#267)
+- `f22a86ba` 2026-10-31 — MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card
 - `5b3f82a4` 2026-10-30 — Member accounts (part 1): staff put a group's round on a member's account (#266)
 - `8a2a1249` 2026-10-30 — MEM-ACCT part 1: member accounts — staff put a group's round on a member's account
 - `7a14850b` 2026-10-30 — Launch wipe closes Dec 1 instead of Nov 1 (#265)
@@ -247,8 +243,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `b667583d` 2026-10-30 — PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to
 - `e1c241af` 2026-10-30 — Membership auto-renew (course per tier, required consent, reminders) (#262)
 - `d29ba970` 2026-10-30 — MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box
-- `53da712c` 2026-10-30 — Membership tiers: join online (pay and join, or request to join) (#261)
-- `91141923` 2026-10-30 — Regenerate codemap and status board
 
 ---
 

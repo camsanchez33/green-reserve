@@ -10,6 +10,8 @@
 //    member may tick a box there to have that card charged for later statements. With a card
 //    saved, a statement is charged 3 days after it closes (the email says when); a decline emails
 //    the pay link and tries once more 3 days later. Staff can mark one paid at the shop.
+//  • ONE PaymentIntent per statement (lib/stripe chargeOneIntent): every attempt — the pay link with
+//    any card, the automatic charge, its retry — confirms the same intent, so nothing can charge twice.
 //  • Every payment is claimed first (chargeStartedAt), charged outside any transaction, put on the
 //    ledger (MoneyMove 'account'), then marked paid. GreenReserve's application fee is the booking
 //    fees carried on the lines (feeCents), never more than the statement.
@@ -19,6 +21,7 @@ import { prisma } from './prisma';
 import { todayIn } from './course-time';
 import { teeTimeInstant } from './booking-events';
 import { recordMove } from './money-ledger';
+import { stripe } from './stripe';
 
 export const DUE_DAYS = 15;
 export const AUTO_CHARGE_DAYS = 3;
@@ -81,12 +84,13 @@ export async function closeStatements(courseId: string, now = new Date()): Promi
   return { closed, skipped, ids };
 }
 
-type Charger = (o: { customerId: string; paymentMethodId: string; connectedAccountId: string; amountCents: number; applicationFeeCents: number; description: string; idempotencyKey: string; metadata: Record<string, string> }) => Promise<{ id: string; amount: number; status: string }>;
+// The real one is lib/stripe chargeOneIntent: ONE PaymentIntent per statement (paymentIntentId), every attempt confirming it.
+export type Charger = (o: { existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown>; customerId: string; paymentMethodId: string; connectedAccountId: string; amountCents: number; applicationFeeCents: number; description: string; metadata: Record<string, string> }) => Promise<{ id: string; amount: number; status: string }>;
 export type PayResult = { status: 'paid'; amountCents: number } | { status: 'declined'; error: string } | { status: 'skipped'; why: string };
 
 /** Charge one statement to a card: claim, charge, ledger, mark paid. The caller says which card and key. */
-export async function chargeStatement(statementId: string, card: { customerId: string; paymentMethodId: string; idempotencyKey: string; actor: 'golfer' | 'system' }, charge: Charger, now = new Date()): Promise<PayResult> {
-  const st = await prisma.memberStatement.findUnique({ where: { id: statementId }, select: { id: true, courseId: true, membershipId: true, period: true, totalCents: true, feeCents: true, status: true, course: { select: { name: true, stripeAccountId: true, stripeAccountActive: true } } } });
+export async function chargeStatement(statementId: string, card: { customerId: string; paymentMethodId: string; actor: 'golfer' | 'system' }, charge: Charger, now = new Date()): Promise<PayResult> {
+  const st = await prisma.memberStatement.findUnique({ where: { id: statementId }, select: { id: true, courseId: true, membershipId: true, period: true, totalCents: true, feeCents: true, status: true, paymentIntentId: true, course: { select: { name: true, stripeAccountId: true, stripeAccountActive: true } } } });
   if (!st || st.status !== 'open') return { status: 'skipped', why: 'already paid' };
   if (!st.course.stripeAccountId || !st.course.stripeAccountActive) return { status: 'skipped', why: 'course not taking payments' };
   const claimed = await prisma.memberStatement.updateMany({ where: { id: st.id, status: 'open', OR: [{ chargeStartedAt: null }, { chargeStartedAt: { lt: new Date(now.getTime() - STALE_MS) } }] }, data: { chargeStartedAt: now } });
@@ -95,15 +99,19 @@ export async function chargeStatement(statementId: string, card: { customerId: s
   let pi: { id: string; amount: number; status: string };
   try {
     pi = await charge({
+      existingIntentId: st.paymentIntentId, intentKey: `statement-intent-${st.id}`,
+      onCreated: id => prisma.memberStatement.update({ where: { id: st.id }, data: { paymentIntentId: id } }),
       customerId: card.customerId, paymentMethodId: card.paymentMethodId, connectedAccountId: st.course.stripeAccountId,
       amountCents: st.totalCents, applicationFeeCents: st.feeCents,
       description: `Member account ${st.period} - ${st.course.name}`,
-      idempotencyKey: card.idempotencyKey, metadata: { statementId: st.id, membershipId: st.membershipId },
+      metadata: { statementId: st.id, membershipId: st.membershipId },
     });
   } catch (err) {
     await release();
     return { status: 'declined', error: err instanceof Error ? err.message : 'Card declined' };
   }
+  // Stripe is still settling it: keep the claim (a later run or the member's next try reads the same intent).
+  if (pi.status === 'processing') return { status: 'skipped', why: 'payment processing' };
   if (pi.status !== 'succeeded') { await release(); return { status: 'declined', error: `The card needs the member (${pi.status}).` }; }
   // The money moved: on the ledger first.
   await recordMove({ courseId: st.courseId, what: 'account', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: st.feeCents, stripeId: pi.id, membershipId: st.membershipId, actor: card.actor, note: `Statement ${st.period}` });
@@ -127,7 +135,7 @@ export async function autoChargesDue(now = new Date()) {
 
 /** Charge one due automatic statement; a decline sets the one retry (or ends the tries). */
 export async function autoChargeStatement(s: Awaited<ReturnType<typeof autoChargesDue>>[number], charge: Charger, now = new Date()): Promise<PayResult & { retryAt?: Date | null }> {
-  const r = await chargeStatement(s.id, { customerId: s.membership.accountCustomerId, paymentMethodId: s.membership.accountPaymentMethodId, idempotencyKey: `statement-${s.id}-${s.membership.accountPaymentMethodId}-${s.autoFailedAt ? 'retry' : 'first'}`, actor: 'system' }, charge, now);
+  const r = await chargeStatement(s.id, { customerId: s.membership.accountCustomerId, paymentMethodId: s.membership.accountPaymentMethodId, actor: 'system' }, charge, now);
   if (r.status !== 'declined') return r;
   const retryAt = s.autoFailedAt ? null : new Date(now.getTime() + RETRY_DAYS * DAY - 3_600_000);
   await prisma.memberStatement.update({ where: { id: s.id }, data: { autoFailedAt: now, autoRetryAt: retryAt } });
@@ -138,10 +146,32 @@ export async function autoChargeStatement(s: Awaited<ReturnType<typeof autoCharg
 export async function markStatementPaidOffline(courseId: string, statementId: string, method: unknown, now = new Date()) {
   const how = method === 'check' ? 'check' : method === 'cash' || method === undefined ? 'cash' : null;
   if (!how) return { ok: false as const, status: 400, error: 'Say whether it was cash or a check.' };
-  const st = await prisma.memberStatement.findFirst({ where: { id: statementId, courseId }, select: { id: true, totalCents: true, membershipId: true, period: true, status: true, chargeStartedAt: true } });
+  const st = await prisma.memberStatement.findFirst({ where: { id: statementId, courseId }, select: { id: true, totalCents: true, feeCents: true, membershipId: true, period: true, status: true, chargeStartedAt: true, paymentIntentId: true, course: { select: { stripeAccountId: true } } } });
   if (!st) return { ok: false as const, status: 404, error: 'That statement isn’t on this course.' };
-  const done = await prisma.memberStatement.updateMany({ where: { id: st.id, status: 'open', OR: [{ chargeStartedAt: null }, { chargeStartedAt: { lt: new Date(now.getTime() - STALE_MS) } }] }, data: { status: 'paid_offline', paidAt: now, autoRetryAt: null } });
-  if (!done.count) return { ok: false as const, status: 409, error: st.status === 'open' ? 'A card payment for it is going through — wait a few minutes.' : 'That statement is already paid.' };
+  // Claim it first (one payment at a time), so a card payment in flight is never stopped mid-way.
+  const claimed = await prisma.memberStatement.updateMany({ where: { id: st.id, status: 'open', OR: [{ chargeStartedAt: null }, { chargeStartedAt: { lt: new Date(now.getTime() - STALE_MS) } }] }, data: { chargeStartedAt: now } });
+  if (!claimed.count) return { ok: false as const, status: 409, error: st.status === 'open' ? 'A card payment for it is going through — wait a few minutes.' : 'That statement is already paid.' };
+  const release = () => prisma.memberStatement.updateMany({ where: { id: st.id, chargeStartedAt: now }, data: { chargeStartedAt: null } });
+  // A card payment was started on it: ask Stripe, and stop it so it can never go through after the
+  // cash is taken (the pro-shop pay link does the same, lib/shop-sales cancelSaleIntent).
+  if (st.paymentIntentId && st.course.stripeAccountId) {
+    const acct = { stripeAccount: st.course.stripeAccountId };
+    let pi;
+    try { pi = await stripe.paymentIntents.retrieve(st.paymentIntentId, {}, acct); }
+    catch (err) { await release(); return { ok: false as const, status: 502, error: `Couldn’t check the card payment (${err instanceof Error ? err.message : 'Stripe error'}) — try again.` }; }
+    if (pi.status === 'succeeded') {
+      await recordMove({ courseId, what: 'account', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: st.feeCents, stripeId: pi.id, membershipId: st.membershipId, actor: 'system', note: `Statement ${st.period}` });
+      await prisma.memberStatement.updateMany({ where: { id: st.id, status: 'open', chargeStartedAt: now }, data: { status: 'paid', paidAt: now, chargeStartedAt: null, autoRetryAt: null } });
+      return { ok: false as const, status: 409, error: 'This statement was just paid by card — nothing to take.' };
+    }
+    if (pi.status === 'processing') { await release(); return { ok: false as const, status: 409, error: 'A card payment for it is still going through — wait a few minutes.' }; }
+    if (pi.status !== 'canceled') {
+      try { await stripe.paymentIntents.cancel(pi.id, {}, acct); }
+      catch (err) { await release(); return { ok: false as const, status: 502, error: `Couldn’t stop the card payment (${err instanceof Error ? err.message : 'Stripe error'}) — nothing was changed. Try again.` }; }
+    }
+  }
+  const done = await prisma.memberStatement.updateMany({ where: { id: st.id, status: 'open', chargeStartedAt: now }, data: { status: 'paid_offline', paidAt: now, chargeStartedAt: null, autoRetryAt: null } });
+  if (!done.count) return { ok: false as const, status: 409, error: 'That statement just changed — refresh and look again.' };
   await recordMove({ courseId, what: 'account', direction: 'in', method: how === 'cash' ? 'cash' : 'other', account: 'course', amountCents: st.totalCents, membershipId: st.membershipId, actor: 'staff', note: `Statement ${st.period}, ${how} at the course` });
   return { ok: true as const };
 }

@@ -20076,7 +20076,7 @@
     },
     {
       "path": "src/lib/member-statements.ts",
-      "lines": 188,
+      "lines": 218,
       "purpose": "MEM-ACCT part 2 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -20091,6 +20091,10 @@
         {
           "name": "autoChargeStatement",
           "kind": "fn"
+        },
+        {
+          "name": "Charger",
+          "kind": "type"
         },
         {
           "name": "chargeStatement",
@@ -20156,6 +20160,7 @@
         "./email",
         "./money-ledger",
         "./prisma",
+        "./stripe",
         "crypto"
       ],
       "usedBy": [
@@ -24195,7 +24200,7 @@
     },
     {
       "path": "src/lib/stripe.ts",
-      "lines": 96,
+      "lines": 141,
       "purpose": "Every charge, refund and SetupIntent GreenReserve makes goes through here.",
       "brain": [
         "money-movement"
@@ -24207,6 +24212,10 @@
         },
         {
           "name": "chargeOnConnectedAccount",
+          "kind": "fn"
+        },
+        {
+          "name": "chargeOneIntent",
           "kind": "fn"
         },
         {
@@ -24258,6 +24267,7 @@
         "src/lib/email.ts",
         "src/lib/event-payments.ts",
         "src/lib/ledger-view.ts",
+        "src/lib/member-statements.ts",
         "src/lib/membership-dues.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/platform-stripe.ts",
