@@ -4,14 +4,17 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 05:20 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `8df6ce86` · working tree **18 dirty file(s)**
+Generated 2026-10-31 06:11 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `59227acd` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 79 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 82 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `59227acd` | 2026-10-31 | Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b) |
+| `14c84cbd` | 2026-10-31 | Membership dues: one Stripe payment per term (no double charges) (#269) |
+| `3eb06a6f` | 2026-10-31 | MEM-ACCT hardening: one Stripe payment per membership dues term |
 | `0c3512ba` | 2026-10-31 | Member statements: one Stripe payment per statement (no double charges) (#268) |
 | `96eb2291` | 2026-10-31 | MEM-ACCT hardening: one Stripe payment per member statement |
 | `f9a4eef5` | 2026-10-31 | Member accounts (part 2): monthly statements, paid by link or a saved card (#267) |
@@ -94,29 +97,12 @@ Generated 2026-10-31 05:20 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (18 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M scripts/ledger-view-db-test.ts`
-- `M scripts/member-rates-db-test.ts`
-- `M scripts/membership-autorenew-db-test.ts`
-- `M scripts/money-ledger-test.ts`
-- `M scripts/statement-intent-db-test.ts`
-- `M src/app/api/cron/send-reminders/route.ts`
-- `M src/app/api/membership/[id]/route.ts`
-- `M src/app/api/operator/members/route.ts`
-- `M src/lib/membership-autorenew.ts`
-- `M src/lib/membership-dues.ts`
-- `M src/lib/stripe.ts`
-- `?? prisma/migrations/20261031020000_dues_intent/`
+- `M scripts/shop-sales-test.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -239,6 +225,9 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `59227acd` 2026-10-31 — Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)
+- `14c84cbd` 2026-10-31 — Membership dues: one Stripe payment per term (no double charges) (#269)
+- `3eb06a6f` 2026-10-31 — MEM-ACCT hardening: one Stripe payment per membership dues term
 - `0c3512ba` 2026-10-31 — Member statements: one Stripe payment per statement (no double charges) (#268)
 - `96eb2291` 2026-10-31 — MEM-ACCT hardening: one Stripe payment per member statement
 - `f9a4eef5` 2026-10-31 — Member accounts (part 2): monthly statements, paid by link or a saved card (#267)
@@ -248,9 +237,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `7a14850b` 2026-10-30 — Launch wipe closes Dec 1 instead of Nov 1 (#265)
 - `6cc42bd6` 2026-10-30 — TEST-1: launch wipe closes Dec 1 instead of Nov 1
 - `d30b4479` 2026-10-30 — Demand pricing: online public rate moves with each hour's fill (#264)
-- `d2a912be` 2026-10-30 — PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic
-- `25de845f` 2026-10-30 — Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)
-- `b667583d` 2026-10-30 — PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to
 
 ---
 

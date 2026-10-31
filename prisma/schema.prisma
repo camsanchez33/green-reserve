@@ -1470,7 +1470,7 @@ model ShopSale {
   id                String           @id @default(cuid())
   courseId          String
   course            Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  /// open (pay link sent, not paid) | paid_cash | paid_card | void
+  /// open (pay link sent, not paid) | paid_cash | paid_card | paid_account (MEM-ACCT 1b: on a member's statement) | void
   status            String           @default("open")
   /// What the customer pays: the lines plus taxCents.
   totalCents        Int

@@ -20,6 +20,7 @@ import { ShopStock } from '@/components/dashboard/ShopStock';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
+import { AccountPicker, type AccountMember } from '@/components/dashboard/AccountPicker';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import { shopTree, matches, bySku, skuHits, stockWords, type FlatItem, type TreeItem } from '@/lib/shop-tree';
@@ -50,13 +51,14 @@ type Quote = { key: string; subtotalCents: number; discountCents: number; taxCen
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
-const isPaid = (s: Sale) => s.status === 'paid_cash' || s.status === 'paid_card';
+const isPaid = (s: Sale) => s.status === 'paid_cash' || s.status === 'paid_card' || s.status === 'paid_account';
 const LINK = 'text-[12.5px] text-pine font-medium hover:underline disabled:opacity-50';
 const clock = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
 const time = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 const STATUS: Record<string, { label: string; tone: 'ok' | 'warn' | 'neutral' }> = {
   paid_cash: { label: 'Paid in cash', tone: 'ok' },
   paid_card: { label: 'Paid by card', tone: 'ok' },
+  paid_account: { label: 'On account', tone: 'ok' },
   open: { label: 'Waiting on pay link', tone: 'warn' },
   paying: { label: 'Paying now', tone: 'warn' },
   void: { label: 'Voided', tone: 'neutral' },
@@ -68,7 +70,10 @@ export default function ShopPage() {
   const [sales, setSales] = useState<Sale[] | null>(null);
   const [loadError, setLoadError] = useState('');
   const [cart, setCart] = useState<Record<string, number>>({});
-  const [pay, setPay] = useState<'cash' | 'reader' | 'sms' | 'email'>('cash');
+  const [pay, setPay] = useState<'cash' | 'reader' | 'sms' | 'email' | 'account'>('cash');
+  // MEM-ACCT 1b: the member whose account an "On account" sale goes on; whether any tier has accounts.
+  const [accountMember, setAccountMember] = useState<AccountMember | null>(null);
+  const [accountsOn, setAccountsOn] = useState(false);
   // POS-3 R3: the course's card readers (Settings → Pro shop) and the sale on one now.
   const [readers, setReaders] = useState<Reader[]>([]);
   const [readerId, setReaderId] = useState('');
@@ -183,7 +188,7 @@ export default function ShopPage() {
   const due = (itemsEmpty ? 0 : priced ? priced.totalCents : subtotal) + roundsCents;
   // Stripe Tax down: cash still goes through, with no tax (Cam 2026-10-29); a pay link or the reader waits.
   const noTax = !itemsEmpty && !!priced?.taxUnavailable;
-  const ready = itemsEmpty ? hasRounds : !!priced && (!noTax || pay === 'cash');
+  const ready = itemsEmpty ? hasRounds : !!priced && (!noTax || pay === 'cash' || pay === 'account');
   const tenderedCents = toCents(tendered);
   const add = (id: string, d: number) => setCart(c => { const q = Math.max(0, Math.min(99, (c[id] ?? 0) + d)); const n = { ...c }; if (q) n[id] = q; else delete n[id]; return n; });
   const addCustom = (key: string, d: number) => setCustoms(cs => cs.map(c => c.key === key ? { ...c, quantity: Math.max(0, Math.min(99, c.quantity + d)) } : c).filter(c => c.quantity > 0));
@@ -228,10 +233,10 @@ export default function ShopPage() {
         lines: salePayload, discount: itemsEmpty ? undefined : discountPayload,
         bookingIds: pickedRounds.map(o => o.bookingId),
         walkIns: walkIns.map(w => ({ teeTimeId: w.teeTimeId, golferName: w.golferName, players: w.players, cartSelected: w.cart, rate: w.rate })),
-        pay: pay === 'cash' || pay === 'reader' ? pay : 'link', via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
+        pay: pay === 'cash' || pay === 'reader' || pay === 'account' ? pay : 'link', membershipId: pay === 'account' ? accountMember?.id : undefined, via: pay === 'email' ? 'email' : 'sms', readerId: pay === 'reader' ? readerId : undefined, taxCalculationId: priced?.taxCalculationId || undefined,
         cashTenderedCents: pay === 'cash' && tenderedCents ? tenderedCents : undefined,
         // The total on screen: if the tax has changed since, nothing is rung up and the new total shows.
-        expectedItemsCents: pay === 'cash' && !itemsEmpty && priced ? priced.totalCents : undefined,
+        expectedItemsCents: (pay === 'cash' || pay === 'account') && !itemsEmpty && priced ? priced.totalCents : undefined,
         customerName: customer.name, customerPhone: customer.phone, customerEmail: customer.email,
       }),
     });
@@ -244,13 +249,13 @@ export default function ShopPage() {
       if (/^The (round was|\d+ rounds were) paid/.test(r.error)) { setPicked([]); setWalkIns([]); loadRounds(); load(); }
       return;
     }
-    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setPicked([]); setWalkIns([]);
+    setCart({}); setCustoms([]); setDiscount(null); setTendered(''); setCustomer({ name: '', phone: '', email: '' }); setPicked([]); setWalkIns([]); setAccountMember(null);
     if (hasRounds) loadRounds();
     if (r.data.skipped?.length) setError(`Not rung up: ${r.data.skipped.join(' ')} The total below is what was taken.`);
     if (r.data.notes?.length) setNote(r.data.notes.join(' '));
     if (pay === 'reader') setOnReader({ sale: r.data.sale, readerId, state: r.data.readerError ? 'error' : 'waiting', message: r.data.readerError ?? '' });
     else if (r.data.sendError) setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from the list below, or take cash.`);
-    else if (pay === 'cash') { setJustPaid(r.data.sale); setReceipt({ id: r.data.sale.id, via: 'email', to: '' }); }
+    else if (pay === 'cash' || pay === 'account') { setJustPaid(r.data.sale); setReceipt({ id: r.data.sale.id, via: 'email', to: '' }); }
     else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows as paid below when they pay.`);
     load();
     searchRef.current?.focus();
@@ -357,7 +362,7 @@ export default function ShopPage() {
     setBusy('');
     if (!r.ok) { setError(r.error); load(); return; }
     setRefund(null);
-    setNote(r.data.status === 'pending' ? 'Sent to Stripe — not confirmed yet.' : sale.status === 'paid_card' ? 'Refunded to their card.' : 'Refund recorded — hand the cash back.');
+    setNote(r.data.status === 'pending' ? 'Sent to Stripe — not confirmed yet.' : sale.status === 'paid_card' ? 'Refunded to their card.' : sale.status === 'paid_account' ? 'Credited.' : 'Hand the cash back.');
     load(); if (hist) loadHistory(hist);
   }
 
@@ -372,7 +377,7 @@ export default function ShopPage() {
 
   async function act(sale: Sale, action: 'void' | 'paid_cash' | 'resend' | 'void_cash', via?: 'sms' | 'email') {
     if (action === 'void' && !confirm(`Void this ${usd(sale.totalCents)} sale?${sale.link ? ' The pay link stops working.' : ''}`)) return;
-    if (action === 'void_cash' && !confirm(`Void this ${usd(sale.totalCents)} cash sale and hand the cash back?`)) return;
+    if (action === 'void_cash' && !confirm(`Void this ${usd(sale.totalCents)} sale?${sale.status === 'paid_cash' ? ' Hand the cash back.' : ''}`)) return;
     if (onReader?.sale.id === sale.id) setOnReader(null);
     setBusy(sale.id); setError(''); setNote('');
     const r = await dfetch('/api/operator/shop-sales', { method: 'PATCH', body: JSON.stringify({ id: sale.id, action, via }) });
@@ -391,8 +396,13 @@ export default function ShopPage() {
   // POS-3 R3b: one group (no items, no walk-in) can go on the card reader; other mixes of rounds are cash.
   const canCheckin = access.can('sheet.checkin');
   const oneRoundForReader = pickedRounds.length === 1 && walkIns.length === 0 && itemsEmpty && canCheckin;
-  const payChoices = ([['cash', 'Cash'], ['reader', 'Card reader'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const)
-    .filter(([k]) => (k !== 'cash' || canCash) && (k !== 'reader' || readers.length > 0) && (!hasRounds || k === 'cash' || (k === 'reader' && oneRoundForReader)));
+  const payChoices = ([['cash', 'Cash'], ['reader', 'Card reader'], ['account', 'On account'], ['sms', 'Text them a pay link'], ['email', 'Email them a pay link']] as const)
+    .filter(([k]) => (k !== 'cash' || canCash) && (k !== 'reader' || readers.length > 0) && (k !== 'account' || (canCash && accountsOn)) && (!hasRounds || k === 'cash' || (k === 'reader' && oneRoundForReader)));
+  // MEM-ACCT 1b: "On account" shows only when some tier has member accounts on.
+  useEffect(() => {
+    if (!access.loaded || !canCash) return;
+    dfetch<{ members: AccountMember[] }>('/api/operator/member-accounts?q=').then(r => setAccountsOn(r.ok && r.data.members.length > 0));
+  }, [access.loaded, canCash]);
   useEffect(() => { if (hasRounds) setPay(p => (p === 'reader' && oneRoundForReader ? p : 'cash')); }, [hasRounds, oneRoundForReader]);
   // Rounds: cash needs counter payment; the card reader needs check-in (CASH-1).
   useEffect(() => { if (access.loaded && (canCash || canCheckin)) loadRounds(); }, [access.loaded, canCash, canCheckin, loadRounds]);
@@ -693,6 +703,7 @@ export default function ShopPage() {
                           : <p className="text-[13px] text-bad mt-2">That’s {usd(due - tenderedCents)} short.</p>)}
                       </div>
                     )}
+                    {pay === 'account' && <AccountPicker picked={accountMember} onPick={setAccountMember} className={INPUT} />}
                     {(pay === 'sms' || pay === 'email') && (
                       <div className="space-y-2">
                         <input value={customer.name} onChange={e => setCustomer(c => ({ ...c, name: e.target.value }))} placeholder="Name (optional)" aria-label="Customer name" className={INPUT + ' w-full'} />
@@ -702,11 +713,11 @@ export default function ShopPage() {
                         <p className="text-[12.5px] text-ink-muted">They pay on their phone. The money goes to your Stripe account.</p>
                       </div>
                     )}
-                    {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
+                    {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' || pay === 'account' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
                     {quoteError && <p className="text-[13px] text-bad" role="alert">{quoteError} <button type="button" onClick={() => { setQuoteError(''); setQuoteTry(n => n + 1); }} className="underline font-medium">Try again</button></p>}
-                    <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
+                    <button onClick={ringUp} disabled={!payChoices.some(([k]) => k === pay) || busy === 'sale' || needContact || !ready || (pay === 'cash' && tenderedCents > 0 && tenderedCents < due) || (pay === 'account' && !accountMember) || (pay === 'reader' && (!readerId || onReader?.state === 'waiting' || roundOnReader?.state === 'waiting'))}
                       className="w-full bg-pine hover:bg-pine-hover text-white font-medium rounded-md text-sm py-2.5 disabled:opacity-50">
-                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
+                      {busy === 'sale' ? 'Saving…' : pay === 'cash' ? `Take ${usd(due)} cash` : pay === 'account' ? `${usd(due)} on account` : pay === 'reader' ? `Charge ${usd(due)} on the reader` : `Send ${usd(due)} pay link`}
                     </button>
                   </div>
                 )}
@@ -757,7 +768,7 @@ export default function ShopPage() {
                 )}
                 {justPaid && (
                   <div className="mt-4 border-l-[3px] border-ok pl-3 space-y-2">
-                    <p className="text-[14px] text-ink"><span className="font-semibold tabular-nums">{usd(justPaid.totalCents)}</span> {justPaid.status === 'paid_card' ? 'paid by card' : 'in cash'} — recorded.
+                    <p className="text-[14px] text-ink"><span className="font-semibold tabular-nums">{usd(justPaid.totalCents)}</span> {justPaid.status === 'paid_card' ? 'paid by card' : justPaid.status === 'paid_account' ? 'on account' : 'in cash'} — recorded.
                       {justPaid.cashTenderedCents != null && <> Change: <span className="font-semibold tabular-nums">{usd(justPaid.cashTenderedCents - justPaid.totalCents)}</span>.</>}</p>
                     {receipt?.id === justPaid.id && <ReceiptForm receipt={receipt} setReceipt={setReceipt} onSend={sendReceipt} busy={busy === 'receipt' + justPaid.id} onSkip={() => { setReceipt(null); setJustPaid(null); }} />}
                   </div>
@@ -802,7 +813,7 @@ export default function ShopPage() {
                           {isPaid(s) && <button onClick={() => { setReceipt(receipt?.id === s.id ? null : { id: s.id, via: s.customerEmail || !s.customerPhone ? 'email' : 'sms', to: s.customerEmail || s.customerPhone }); setError(''); }} disabled={!!busy} className={LINK}>Receipt</button>}
                           {isPaid(s) && canRefund && left > 0 && <button onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setError(''); }} disabled={!!busy} className={LINK}>Refund</button>}
                           {/* Dead end 23: a cash sale rung up by mistake, the same day (the server also checks the close-out). */}
-                          {s.status === 'paid_cash' && !s.roundsCents && s.refundedCents === 0 && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString() && <button onClick={() => act(s, 'void_cash')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
+                          {(s.status === 'paid_cash' || s.status === 'paid_account') && !s.roundsCents && s.refundedCents === 0 && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString() && <button onClick={() => act(s, 'void_cash')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
                           {s.status === 'open' && (
                             <>
                               {s.link
@@ -847,7 +858,7 @@ export default function ShopPage() {
                                 ))}
                               </div>
                             )}
-                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'Goes back to their card. It can’t be undone.' : 'Recorded only — hand the cash back yourself.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
+                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'Back to their card, for good.' : s.status === 'paid_account' ? 'Credited.' : 'Hand the cash back yourself.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
                             <div className="flex gap-2">
                               {(() => { const byItem = Object.values(refund.returns ?? {}).some(q => Number(q) > 0); return !refund.confirm
                                 ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!byItem && !toCents(refund.amount)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">{byItem ? 'Return these items' : `Refund $${refund.amount || '0'}`}</button>

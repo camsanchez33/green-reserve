@@ -117,14 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-31 05:20 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 8df6ce86</span>
-    <span>18 uncommitted</span>
+    <span>2026-10-31 06:11 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 59227acd</span>
+    <span>1 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">79 runs have shipped that the queue doesn't know about</div>
+<div class="lede">82 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">59227acd</span><span>Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)</span></li>
+<li><span class="h">14c84cbd</span><span>Membership dues: one Stripe payment per term (no double charges) (#269)</span></li>
+<li><span class="h">3eb06a6f</span><span>MEM-ACCT hardening: one Stripe payment per membership dues term</span></li>
 <li><span class="h">0c3512ba</span><span>Member statements: one Stripe payment per statement (no double charges) (#268)</span></li>
 <li><span class="h">96eb2291</span><span>MEM-ACCT hardening: one Stripe payment per member statement</span></li>
 <li><span class="h">f9a4eef5</span><span>Member accounts (part 2): monthly statements, paid by link or a saved card (#267)</span></li>
@@ -214,9 +217,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M scripts/ledger-view-db-test.ts</code></li><li><code>M scripts/member-rates-db-test.ts</code></li><li><code>M scripts/membership-autorenew-db-test.ts</code></li><li><code>M scripts/money-ledger-test.ts</code></li><li><code>M scripts/statement-intent-db-test.ts</code></li><li><code>M src/app/api/cron/send-reminders/route.ts</code></li><li><code>M src/app/api/membership/[id]/route.ts</code></li><li><code>M src/app/api/operator/members/route.ts</code></li><li><code>M src/lib/membership-autorenew.ts</code></li><li><code>M src/lib/membership-dues.ts</code></li><li><code>M src/lib/stripe.ts</code></li><li><code>?? prisma/migrations/20261031020000_dues_intent/</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M scripts/shop-sales-test.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -298,6 +301,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">59227acd</td><td class="num">2026-10-31</td><td>Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)</td></tr>
+<tr><td class="num">14c84cbd</td><td class="num">2026-10-31</td><td>Membership dues: one Stripe payment per term (no double charges) (#269)</td></tr>
+<tr><td class="num">3eb06a6f</td><td class="num">2026-10-31</td><td>MEM-ACCT hardening: one Stripe payment per membership dues term</td></tr>
 <tr><td class="num">0c3512ba</td><td class="num">2026-10-31</td><td>Member statements: one Stripe payment per statement (no double charges) (#268)</td></tr>
 <tr><td class="num">96eb2291</td><td class="num">2026-10-31</td><td>MEM-ACCT hardening: one Stripe payment per member statement</td></tr>
 <tr><td class="num">f9a4eef5</td><td class="num">2026-10-31</td><td>Member accounts (part 2): monthly statements, paid by link or a saved card (#267)</td></tr>
@@ -307,9 +313,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">7a14850b</td><td class="num">2026-10-30</td><td>Launch wipe closes Dec 1 instead of Nov 1 (#265)</td></tr>
 <tr><td class="num">6cc42bd6</td><td class="num">2026-10-30</td><td>TEST-1: launch wipe closes Dec 1 instead of Nov 1</td></tr>
 <tr><td class="num">d30b4479</td><td class="num">2026-10-30</td><td>Demand pricing: online public rate moves with each hour's fill (#264)</td></tr>
-<tr><td class="num">d2a912be</td><td class="num">2026-10-30</td><td>PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic</td></tr>
-<tr><td class="num">25de845f</td><td class="num">2026-10-30</td><td>Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)</td></tr>
-<tr><td class="num">b667583d</td><td class="num">2026-10-30</td><td>PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

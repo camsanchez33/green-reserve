@@ -125,7 +125,7 @@ export async function quoteShopTax(courseId: string, lines: TaxLine[]): Promise<
 export async function recordShopSaleTax(saleId: string): Promise<void> {
   const sale = await prisma.shopSale.findUnique({ where: { id: saleId }, select: { status: true, taxCents: true, taxCalculationId: true, taxTransactionId: true, course: { select: { stripeAccountId: true } } } });
   if (!sale || !sale.taxCalculationId || sale.taxTransactionId || !sale.course.stripeAccountId) return;
-  if (sale.status !== 'paid_cash' && sale.status !== 'paid_card') return;
+  if (sale.status !== 'paid_cash' && sale.status !== 'paid_card' && sale.status !== 'paid_account') return;
   try {
     const tx = await stripe.tax.transactions.createFromCalculation(
       { calculation: sale.taxCalculationId, reference: `shop-sale-${saleId}`, metadata: { shopSaleId: saleId } },
@@ -140,7 +140,7 @@ export async function recordShopSaleTax(saleId: string): Promise<void> {
 /** Hourly: record tax for paid sales that don't have it yet (a failed or interrupted first try). */
 export async function recordPendingShopTax(limit = 50): Promise<number> {
   const pending = await prisma.shopSale.findMany({
-    where: { status: { in: ['paid_cash', 'paid_card'] }, taxCalculationId: { not: '' }, taxTransactionId: '' },
+    where: { status: { in: ['paid_cash', 'paid_card', 'paid_account'] }, taxCalculationId: { not: '' }, taxTransactionId: '' },
     select: { id: true }, take: limit, orderBy: { paidAt: 'asc' },
   });
   for (const s of pending) await recordShopSaleTax(s.id);

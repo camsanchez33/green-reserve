@@ -20,6 +20,8 @@ import { sendShopSalePayLinkEmail, sendShopReceiptEmail, isPlaceholderEmail } fr
 // POS-3 R3: pay 'reader' sends the sale to the course's card reader (shop.sell,
 // a current agreement and Stripe, as for a pay link); the register then asks
 // reader_status until it is paid, declined or cancelled.
+// MEM-ACCT 1b (Cam 2026-10-31): pay 'account' puts the items on a member's account (their
+// monthly statement) — sheet.counter_payment like cash, and like cash never waits on Stripe.
 
 async function gate() {
   const session = await resolveDashboardSession();
@@ -82,11 +84,11 @@ export async function POST(req: NextRequest) {
   const g = await gate();
   if ('res' in g) return g.res;
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-  const pay = body.pay === 'cash' ? 'cash' : body.pay === 'link' ? 'link' : body.pay === 'reader' ? 'reader' : null;
+  const pay = body.pay === 'cash' ? 'cash' : body.pay === 'link' ? 'link' : body.pay === 'reader' ? 'reader' : body.pay === 'account' ? 'account' : null;
   if (!pay) return NextResponse.json({ error: 'Choose cash, the card reader or a pay link.' }, { status: 400 });
   const readerId = typeof body.readerId === 'string' ? body.readerId : '';
   if (pay === 'reader' && !readerId) return NextResponse.json({ error: 'Pick a card reader.' }, { status: 400 });
-  if (pay === 'cash') {
+  if (pay === 'cash' || pay === 'account') {
     const denied = requirePermission(g.session, 'sheet.counter_payment');
     if (denied) return denied;
   } else {
@@ -101,6 +103,7 @@ export async function POST(req: NextRequest) {
   const bookingIds = Array.isArray(body.bookingIds) ? body.bookingIds.filter((x): x is string => typeof x === 'string') : [];
   const walkIns = Array.isArray(body.walkIns) ? body.walkIns as Record<string, unknown>[] : [];
   if (bookingIds.length || walkIns.length) {
+    if (pay === 'account') return NextResponse.json({ error: 'Put a round on account from its tee time on the tee sheet; the register puts items on account.' }, { status: 400 });
     if (pay !== 'cash') return NextResponse.json({ error: 'Rounds are paid in cash at the register for now — send a pay link from the tee sheet instead.' }, { status: 400 });
     if (walkIns.length) { const denied = requirePermission(g.session, 'sheet.walkin'); if (denied) return denied; }
     const r = await ringUpCash(g.session.courseId, {
@@ -118,7 +121,7 @@ export async function POST(req: NextRequest) {
   const via = body.via === 'email' ? 'email' : 'sms';
   const course = await prisma.course.findUnique({ where: { id: g.session.courseId }, select: { name: true, stripeAccountId: true, stripeAccountActive: true } });
   if (!course) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
-  if (pay !== 'cash' && (!course.stripeAccountId || !course.stripeAccountActive)) {
+  if ((pay === 'link' || pay === 'reader') && (!course.stripeAccountId || !course.stripeAccountActive)) {
     return NextResponse.json({ error: `Connect Stripe on Money → Payouts before ${pay === 'reader' ? 'taking cards' : 'sending pay links'}. Cash works now.` }, { status: 409 });
   }
   if (pay === 'link') {
@@ -133,11 +136,12 @@ export async function POST(req: NextRequest) {
     customerName: body.customerName as string, customerPhone: body.customerPhone as string, customerEmail: body.customerEmail as string,
     taxCalculationId: typeof body.taxCalculationId === 'string' ? body.taxCalculationId : undefined,
     discount: body.discount as never, cashTenderedCents: pay === 'cash' ? body.cashTenderedCents : undefined,
-    expectedItemsCents: pay === 'cash' ? body.expectedItemsCents : undefined,
+    expectedItemsCents: pay === 'cash' || pay === 'account' ? body.expectedItemsCents : undefined,
+    membershipId: pay === 'account' && typeof body.membershipId === 'string' ? body.membershipId : undefined,
   });
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   const { payToken, ...sale } = r.value;
-  if (pay === 'cash') return NextResponse.json({ sale });
+  if (pay === 'cash' || pay === 'account') return NextResponse.json({ sale });
   if (pay === 'reader') {
     const started = await startReaderPayment(g.session.courseId, sale.id, readerId);
     // The sale exists either way: the register offers the reader again, cash, or void.
@@ -208,6 +212,9 @@ export async function PATCH(req: NextRequest) {
   }
   // Dead end 23 (Cam 2026-10-29: "Same day, before close-out", anyone with the shop permission).
   if (body.action === 'void_cash') {
+    // MEM-ACCT 1b: taking a sale off a member's account needs the power that put it on.
+    const acct = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId, status: 'paid_account' }, select: { id: true } });
+    if (acct) { const denied = requirePermission(g.session, 'sheet.counter_payment'); if (denied) return denied; }
     const r = await voidCashSale(g.session.courseId, id);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ sale: r.value });
@@ -234,13 +241,13 @@ export async function PATCH(req: NextRequest) {
   if (body.action === 'receipt') {
     const s = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId }, include: { ...SALE_INCLUDE, course: { select: { name: true, timezone: true } } } });
     if (!s) return NextResponse.json({ error: 'Sale not found.' }, { status: 404 });
-    if (s.status !== 'paid_cash' && s.status !== 'paid_card') return NextResponse.json({ error: 'A receipt is for a paid sale.' }, { status: 409 });
+    if (s.status !== 'paid_cash' && s.status !== 'paid_card' && s.status !== 'paid_account') return NextResponse.json({ error: 'A receipt is for a paid sale.' }, { status: 409 });
     if (!(await rateLimit(`shop-receipt:course:${g.session.courseId}`, 120, 3600))) return NextResponse.json({ error: 'Too many receipts this hour — try again later.' }, { status: 429 });
     if (!(await rateLimit(`shop-receipt:sale:${id}`, 5, 3600))) return NextResponse.json({ error: 'This receipt has been sent 5 times this hour.' }, { status: 429 });
     const via = body.via === 'sms' ? 'sms' : 'email';
     const to = String(body.to ?? '').trim() || (via === 'sms' ? s.customerPhone : s.customerEmail);
     const v = saleView(s);
-    const paidWith = s.status === 'paid_card' ? 'Card' : 'Cash';
+    const paidWith = s.status === 'paid_card' ? 'Card' : s.status === 'paid_account' ? 'On account' : 'Cash';
     const paidAt = (s.paidAt ?? s.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: s.course.timezone || 'America/New_York' });
     try {
       if (via === 'sms') {
@@ -248,7 +255,7 @@ export async function PATCH(req: NextRequest) {
         const phone = normalizePhone(to);
         if (!phone.startsWith('+1')) return NextResponse.json({ error: 'Receipts can only be texted to US and Canadian numbers — email it instead.' }, { status: 400 });
         const items = v.lines.reduce((n, l) => n + l.quantity, 0);
-        await sendSms(phone, `${s.course.name} receipt: ${items} item${items === 1 ? '' : 's'}, $${(s.totalCents / 100).toFixed(2)} paid by ${paidWith.toLowerCase()}${s.refundedCents ? `, $${(s.refundedCents / 100).toFixed(2)} refunded` : ''}. Ref ${s.id.slice(-8).toUpperCase()}. Thank you! Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
+        await sendSms(phone, `${s.course.name} receipt: ${items} item${items === 1 ? '' : 's'}, $${(s.totalCents / 100).toFixed(2)} ${s.status === 'paid_account' ? 'on your account' : `paid by ${paidWith.toLowerCase()}`}${s.refundedCents ? `, $${(s.refundedCents / 100).toFixed(2)} refunded` : ''}. Ref ${s.id.slice(-8).toUpperCase()}. Thank you! Reply STOP to opt out.`, { kind: 'shop_receipt_text', courseId: g.session.courseId });
       } else {
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || isPlaceholderEmail(to)) return NextResponse.json({ error: 'Enter an email address for the receipt.' }, { status: 400 });
         await sendShopReceiptEmail({ email: to.toLowerCase(), name: s.customerName, courseName: s.course.name, courseId: g.session.courseId, saleId: s.id, lines: v.lines,

@@ -334,7 +334,7 @@ export async function computeAnalytics(courseId: string, range: Range, now: Date
   const cartRounds = collectedB.filter(b => b.cartFeeTotal > 0).length;
   const shopOnRounds = collectedB.reduce((n, b) => n + b.shopTotalCents, 0);
   const walkUps = await prisma.shopSale.findMany({
-    where: { courseId, status: { in: ['paid_cash', 'paid_card'] }, paidAt: { gte: new Date(teeMs(range.from, '00:00')), lt: new Date(teeMs(addDaysStr(range.to, 1), '00:00')) } },
+    where: { courseId, status: { in: ['paid_cash', 'paid_card', 'paid_account'] }, paidAt: { gte: new Date(teeMs(range.from, '00:00')), lt: new Date(teeMs(addDaysStr(range.to, 1), '00:00')) } },
     select: { totalCents: true, taxCents: true, refundedCents: true, roundsCents: true },
   });
   const walkUp = walkUpNet(walkUps);
