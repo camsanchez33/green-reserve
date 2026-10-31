@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { stripe, chargeOnConnectedAccount, membershipFeeCents } from '@/lib/stripe';
+import { stripe, chargeOneIntent, membershipFeeCents } from '@/lib/stripe';
 import { sendMembershipReceiptEmail } from '@/lib/email';
 import { rateLimit } from '@/lib/rate-limit';
 import { recordMove } from '@/lib/money-ledger';
 import { paidUntilRenewal } from '@/lib/membership-renewal';
 import { amountsDue, recordPaidTerm } from '@/lib/membership-dues';
-import { autoRenewTermsText, renewalCents } from '@/lib/membership-autorenew';
+import { autoRenewTermsText, renewalCents, duesIntentKey } from '@/lib/membership-autorenew';
 import { sendAutoRenewOnEmail } from '@/lib/email';
 
 /** A dues claim older than this is from a request that died; a new payment may take over. */
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: s?.status !== 'active' && s?.status !== 'awaiting_payment' ? 'This membership is no longer active — please contact the course.' : 'These dues are being paid right now — wait a moment and refresh.' }, { status: 409 });
   }
   const release = () => prisma.courseMembership.updateMany({ where: { id: m.id, duesChargeStartedAt: startedAt }, data: { duesChargeStartedAt: null } });
-  const now = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { paymentStatus: true, expiresAt: true, lastPaidAt: true } });
+  const now = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { paymentStatus: true, expiresAt: true, lastPaidAt: true, duesIntentId: true } });
   // A paid membership (online, or cash/check at the shop) can only be paid
   // again within its renewal window (30 days of expiry) — protects against
   // double-pays from old emails.
@@ -108,6 +108,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   let paymentIntentId: string;
   let chargedCents: number;
+  let chargedFeeCents: number;
   let customerId = '';
   try {
     const customer = await stripe.customers.create({
@@ -117,7 +118,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
     await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
     customerId = customer.id;
-    const pi = await chargeOnConnectedAccount({
+    // ONE intent per term (lib/stripe chargeOneIntent), shared with the automatic renewal: a retry with
+    // any card, a second tab or a lost reply can never be a second charge.
+    const pi = await chargeOneIntent({
+      existingIntentId: now.duesIntentId, intentKey: duesIntentKey(m.id, now.lastPaidAt),
+      onCreated: intentId => prisma.courseMembership.update({ where: { id: m.id }, data: { duesIntentId: intentId } }),
       customerId: customer.id,
       paymentMethodId,
       connectedAccountId: m.course.stripeAccountId,
@@ -125,18 +130,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       applicationFeeCents: due.feeCents,
       description: `Membership dues - ${m.tier?.name ?? m.membershipType} - ${m.course.name}`,
       metadata: { membershipId: m.id },
-      // Per term: a retry of this term with this card replays the same charge; next year's renewal is its own.
-      idempotencyKey: `membership-${m.id}-${now.lastPaidAt ? now.lastPaidAt.getTime() : 'first'}-${paymentMethodId}`,
     });
+    if (pi.status === 'processing') {
+      // Still settling at Stripe: the claim stays, so nothing can be paid twice meanwhile.
+      return NextResponse.json({ error: 'Your bank is still processing this payment. Please don’t pay again — check back in a few minutes.' }, { status: 409 });
+    }
+    if (pi.status !== 'succeeded') { await release(); return NextResponse.json({ error: 'Payment failed: the card needs another step this page can’t do — try another card.' }, { status: 402 }); }
     paymentIntentId = pi.id;
     chargedCents = pi.amount;
+    // What Stripe actually took for GreenReserve (a payment recovered after the dues changed keeps its own fee).
+    chargedFeeCents = pi.application_fee_amount ?? due.feeCents;
   } catch (err) {
     await release();
     const message = err instanceof Error ? err.message : 'Card could not be charged.';
     return NextResponse.json({ error: `Payment failed: ${message}` }, { status: 402 });
   }
   // The money moved: on the ledger first, so nothing after this can lose it.
-  await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: chargedCents, platformFeeCents: due.feeCents, stripeId: paymentIntentId, membershipId: m.id, actor: 'golfer', note: `${m.tier?.name ?? m.membershipType}${due.initiationCents ? ' + initiation' : ''}` });
+  await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: chargedCents, platformFeeCents: chargedFeeCents, stripeId: paymentIntentId, membershipId: m.id, actor: 'golfer', note: `${m.tier?.name ?? m.membershipType}${due.initiationCents ? ' + initiation' : ''}` });
 
   // MEM-RENEW: with the golfer's agreement, keep the card and the exact terms; any earlier declined renewal is settled.
   const autoRenewData = m.tier?.autoRenew

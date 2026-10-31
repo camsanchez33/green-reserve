@@ -87,7 +87,7 @@ export async function chargeOneIntent(opts: {
   existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown>;
   customerId: string; paymentMethodId: string; connectedAccountId: string;
   amountCents: number; applicationFeeCents: number; description: string; metadata?: Record<string, string>;
-}): Promise<{ id: string; amount: number; status: string }> {
+}): Promise<{ id: string; amount: number; status: string; application_fee_amount?: number | null }> {
   const acct = { stripeAccount: opts.connectedAccountId };
   let pi = opts.existingIntentId
     ? await stripe.paymentIntents.retrieve(opts.existingIntentId, {}, acct)
@@ -97,8 +97,13 @@ export async function chargeOneIntent(opts: {
         description: opts.description, metadata: opts.metadata,
       }, { ...acct, idempotencyKey: opts.intentKey });
   if (!opts.existingIntentId) await opts.onCreated(pi.id);
-  // Stopped (staff took cash, then the mark didn't happen): a canceled intent can't be paid, so a fresh
-  // one replaces it — still one live intent, and the old one can never charge.
+  // The amount changed since it was made (a course edited its dues): an unpaid intent is stopped and
+  // replaced below, never confirmed at the old price.
+  if (pi.status !== 'canceled' && pi.status !== 'succeeded' && pi.status !== 'processing' && pi.amount !== opts.amountCents) {
+    pi = await stripe.paymentIntents.cancel(pi.id, {}, acct);
+  }
+  // Stopped (staff took cash, then the mark didn't happen; or the amount changed): a canceled intent
+  // can't be paid, so a fresh one replaces it — still one live intent, and the old one can never charge.
   if (pi.status === 'canceled') {
     pi = await stripe.paymentIntents.create({
       amount: opts.amountCents, currency: 'usd', payment_method_types: ['card'],
@@ -108,7 +113,6 @@ export async function chargeOneIntent(opts: {
     await opts.onCreated(pi.id);
   }
   if (pi.status === 'succeeded' || pi.status === 'processing') return pi;
-  if (pi.amount !== opts.amountCents) throw new Error('The amount changed since this payment was started — refresh and try again.');
   try {
     const cloned = await stripe.paymentMethods.create({ customer: opts.customerId, payment_method: opts.paymentMethodId }, { ...acct, idempotencyKey: `${pi.id}-${opts.paymentMethodId}-pm` });
     pi = await stripe.paymentIntents.confirm(pi.id, { payment_method: cloned.id, off_session: true }, { ...acct, idempotencyKey: `${pi.id}-${opts.paymentMethodId}-confirm` });

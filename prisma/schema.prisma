@@ -515,6 +515,9 @@ model CourseMembership {
   lastPaymentIntentId    String          @default("")
   /// LEDGER-1: set while a dues payment is being charged (claim-then-charge); a claim older than 10 minutes is stale.
   duesChargeStartedAt    DateTime?
+  /// MEM-ACCT hardening (Cam 2026-10-31): the ONE PaymentIntent for the term being paid — the pay link and
+  /// the automatic renewal confirm the same one (lib/stripe chargeOneIntent). Cleared when the term is recorded.
+  duesIntentId           String          @default("")
   renewalRemindedAt      DateTime?
   /// MEM-RENEW: renew automatically on the saved card (lib/membership-autorenew). Only ever turned on
   /// by the golfer ticking the box when they pay; turned off by them or by staff.

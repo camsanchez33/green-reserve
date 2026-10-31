@@ -42,7 +42,7 @@ ok('cash paths write the ledger: the register, a cash sale, a sale taken in cash
   const sales = code('src/lib/shop-sales.ts');
   return /method: 'cash'[^\n]*what: 'shop'|what: 'shop', direction: 'in', method: 'cash'/.test(sales) && /note: 'voided'/.test(sales) && /pay link taken in cash/.test(sales) && /recordMove\(/.test(code('src/lib/register.ts'));
 })());
-ok('dues taken at the course write the ledger', /what: 'dues', direction: 'in', method: method === 'cash' \? 'cash' : 'other'/.test(code('src/app/api/operator/members/route.ts')));
+ok('dues taken at the course write the ledger', /what: 'dues', direction: 'in', method: method === 'cash' \? 'cash' : 'other'/.test(code('src/lib/membership-dues.ts')) && code('src/app/api/operator/members/route.ts').includes('markDuesPaidAtCourse('));
 ok('the webhook mirrors Stripe-dashboard refunds and dispute money', /charge\.dispute\.funds_withdrawn/.test(code('src/app/api/stripe/webhook/route.ts')) && /mirrorMove\(/.test(code('src/app/api/stripe/webhook/route.ts')));
 ok('the ledger is cleared by the launch wipe and the test-course reset', WIPED_TABLES.includes('MoneyMove') && /moneyMove\.deleteMany/.test(code('src/lib/data-reset.ts')));
 const dues = code('src/app/api/membership/[id]/route.ts');
@@ -110,12 +110,22 @@ async function cleanup() {
   s.customers.create = async () => ({ id: 'cus_x' });
   s.paymentMethods.attach = async () => ({ id: 'pm_x' });
   s.paymentMethods.create = async () => ({ id: 'pm_clone' });
+  // MEM-ACCT hardening: dues are ONE intent per term — created once, then confirmed (lib/stripe chargeOneIntent).
+  const intents = new Map<string, { id: string; amount: number; status: string }>();
+  let made = 0;
   s.paymentIntents.create = async (p: { amount: number }, o: { idempotencyKey: string }) => {
+    const prior = seen.get(o.idempotencyKey); if (prior) return { ...intents.get(prior.id)! };
+    const pi = { id: `pi_dues_${++made}`, amount: p.amount, status: 'requires_payment_method' };
+    intents.set(pi.id, pi); seen.set(o.idempotencyKey, pi); return { ...pi };
+  };
+  s.paymentIntents.retrieve = async (id: string) => ({ ...intents.get(id)! });
+  s.paymentIntents.cancel = async (id: string) => { intents.get(id)!.status = 'canceled'; return { ...intents.get(id)! }; };
+  s.paymentIntents.confirm = async (id: string) => {
+    const pi = intents.get(id)!;
     if (failNext) { failNext = false; throw Object.assign(new Error('Your card was declined.'), { type: 'StripeCardError' }); }
-    const prior = seen.get(o.idempotencyKey); if (prior) return prior;
     await new Promise(r => setTimeout(r, 50));
-    const pi = { id: `pi_dues_${++charges}`, amount: p.amount };
-    seen.set(o.idempotencyKey, pi); return pi;
+    if (pi.status !== 'succeeded') { pi.status = 'succeeded'; charges++; }
+    return { ...pi };
   };
   // Outside a request, after() has no scope: run the receipt email inline and drop it.
   (createRequire(__filename)('next/server') as { after: (p: Promise<unknown>) => void }).after = (p: Promise<unknown>) => { void Promise.resolve(p).catch(() => {}); };
@@ -130,6 +140,7 @@ async function cleanup() {
   const [r1, r2] = await Promise.all([pay('pm_a'), pay('pm_b')]);
   const statuses = [r1.status, r2.status].sort();
   ok('two payments at once: one charges, the other is told it is being paid', charges === 1 && statuses[0] === 200 && statuses[1] === 409, { charges, statuses });
+  ok('…the declined card and the paying one confirmed the SAME intent for the term', made === 1, made);
   const paid = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id } });
   const row = await prisma.moneyMove.findFirst({ where: { membershipId: m.id } });
   ok('the dues are on the ledger with the amount paid (dues + 1%) and GreenReserve\'s 1%', !!row && row.amountCents === 101000 && row.platformFeeCents === 1000 && row.what === 'dues', row);
@@ -145,6 +156,29 @@ async function cleanup() {
   const m1 = await payM('pm_m1');
   const m2 = await payM('pm_m2');
   ok('a monthly member paying twice in a row is charged once', m1.status === 200 && m2.status === 409 && charges === before + 1, { m1: m1.status, m2: m2.status, charges: charges - before });
+
+  // Staff take dues at the course (lib/membership-dues markDuesPaidAtCourse) with a card payment started.
+  const { markDuesPaidAtCourse } = await import('../src/lib/membership-dues');
+  const mkDues = async (name: string, intent: { status: string } | null, extra: Record<string, unknown> = {}) => {
+    const row = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: tier.id, inviteName: name, inviteEmail: `${TAG}+${name}@t.local`, status: 'active', ...extra } });
+    if (intent) { const id = `pi_desk_${name}`; intents.set(id, { id, amount: 101000, status: intent.status }); await prisma.courseMembership.update({ where: { id: row.id }, data: { duesIntentId: id } }); }
+    return row;
+  };
+  await prisma.course.update({ where: { id: c.id }, data: { stripeAccountId: 'acct_desk' } });
+  const found = await mkDues('found', { status: 'succeeded' });
+  const fr = await markDuesPaidAtCourse(c.id, found.id, { method: 'cash' });
+  const fRow = await prisma.courseMembership.findUniqueOrThrow({ where: { id: found.id } });
+  const fMoves = await prisma.moneyMove.findMany({ where: { membershipId: found.id } });
+  ok('cash taken while the card had already paid: refused; the card payment recorded once, the term paid by card', !fr.ok && fr.status === 409 && fRow.paymentStatus === 'paid' && fRow.duesIntentId === '' && fRow.duesChargeStartedAt === null && fMoves.length === 1 && fMoves[0].method === 'card' && fMoves[0].stripeId === 'pi_desk_found', { fr, ps: fRow.paymentStatus, fMoves });
+  const unpaid = await mkDues('unpaid', { status: 'requires_payment_method' });
+  const ur = await markDuesPaidAtCourse(c.id, unpaid.id, { method: 'check', amountCents: 100000 });
+  const uRow = await prisma.courseMembership.findUniqueOrThrow({ where: { id: unpaid.id } });
+  const uMove = await prisma.moneyMove.findFirst({ where: { membershipId: unpaid.id } });
+  ok('cash after a declined card: the card payment stopped, the term paid at the course, the check on the ledger', ur.ok && intents.get('pi_desk_unpaid')!.status === 'canceled' && uRow.paymentStatus === 'paid_offline' && uRow.duesIntentId === '' && !!uRow.expiresAt && uMove?.method === 'other' && uMove.amountCents === 100000, { ur, ps: uRow.paymentStatus });
+  const busy = await mkDues('busy', { status: 'requires_payment_method' }, { duesChargeStartedAt: new Date() });
+  const br = await markDuesPaidAtCourse(c.id, busy.id, { method: 'cash' });
+  ok('cash while a card payment is going through: refused, nothing stopped or written', !br.ok && br.status === 409 && intents.get('pi_desk_busy')!.status === 'requires_payment_method' && (await prisma.moneyMove.count({ where: { membershipId: busy.id } })) === 0 && (await prisma.courseMembership.findUniqueOrThrow({ where: { id: busy.id } })).paymentStatus !== 'paid_offline');
+  ok('another course can\'t take it', !(await markDuesPaidAtCourse('nope', busy.id, { method: 'cash' })).ok);
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

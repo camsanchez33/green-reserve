@@ -5088,7 +5088,7 @@
     },
     {
       "path": "src/app/api/membership/[id]/route.ts",
-      "lines": 174,
+      "lines": 184,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6056,7 +6056,7 @@
     },
     {
       "path": "src/app/api/operator/members/route.ts",
-      "lines": 327,
+      "lines": 305,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6094,10 +6094,10 @@
         "@/lib/email",
         "@/lib/member-stats",
         "@/lib/membership-autorenew",
+        "@/lib/membership-dues",
         "@/lib/membership-join",
         "@/lib/membership-pay-link",
         "@/lib/money",
-        "@/lib/money-ledger",
         "@/lib/prisma",
         "@/lib/session",
         "crypto",
@@ -20204,7 +20204,7 @@
     },
     {
       "path": "src/lib/membership-autorenew.ts",
-      "lines": 149,
+      "lines": 156,
       "purpose": "MEM-RENEW (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -20218,6 +20218,10 @@
         },
         {
           "name": "chargesDue",
+          "kind": "fn"
+        },
+        {
+          "name": "duesIntentKey",
           "kind": "fn"
         },
         {
@@ -20277,12 +20281,16 @@
     },
     {
       "path": "src/lib/membership-dues.ts",
-      "lines": 55,
+      "lines": 126,
       "purpose": "Membership dues:",
       "brain": [],
       "exports": [
         {
           "name": "amountsDue",
+          "kind": "fn"
+        },
+        {
+          "name": "markDuesPaidAtCourse",
           "kind": "fn"
         },
         {
@@ -20296,12 +20304,14 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./money-ledger",
         "./prisma",
         "./stripe",
         "@prisma/client"
       ],
       "usedBy": [
         "src/app/api/membership/[id]/route.ts",
+        "src/app/api/operator/members/route.ts",
         "src/lib/membership-autorenew.ts"
       ]
     },
@@ -20466,7 +20476,6 @@
       ],
       "usedBy": [
         "src/app/api/membership/[id]/route.ts",
-        "src/app/api/operator/members/route.ts",
         "src/app/api/stripe/webhook/route.ts",
         "src/lib/access-fee.ts",
         "src/lib/booking-fee.ts",
@@ -20477,6 +20486,7 @@
         "src/lib/event-payments.ts",
         "src/lib/member-statements.ts",
         "src/lib/membership-autorenew.ts",
+        "src/lib/membership-dues.ts",
         "src/lib/no-show-fee.ts",
         "src/lib/reader-rounds.ts",
         "src/lib/refund-booking.ts",
@@ -24200,7 +24210,7 @@
     },
     {
       "path": "src/lib/stripe.ts",
-      "lines": 141,
+      "lines": 145,
       "purpose": "Every charge, refund and SetupIntent GreenReserve makes goes through here.",
       "brain": [
         "money-movement"
@@ -27833,6 +27843,10 @@
           "type": "DateTime?"
         },
         {
+          "name": "duesIntentId",
+          "type": "String"
+        },
+        {
           "name": "renewalRemindedAt",
           "type": "DateTime?"
         },
@@ -27961,6 +27975,7 @@
         "src/lib/member-import.ts",
         "src/lib/member-session.ts",
         "src/lib/membership-autorenew.ts",
+        "src/lib/membership-dues.ts",
         "src/lib/membership-join.ts",
         "src/lib/membership-pay-link.ts",
         "src/lib/operator-search.ts",
