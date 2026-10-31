@@ -16,6 +16,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { membershipLive } from './member-rates';
+import { pastDue } from './member-statements';
 
 type Tx = Prisma.TransactionClient;
 type Fail = { ok: false; status: number; error: string };
@@ -27,10 +28,13 @@ export const MAX_CREDIT_CENTS = 1_000_000;
 export const fitsLimit = (balanceCents: number, amountCents: number, limitCents: number | null) =>
   amountCents <= 0 || limitCents == null || balanceCents + amountCents <= limitCents;
 
-/** The member's balance: every line not billed on a statement yet. */
+/** The member's balance: every line not billed on a statement yet, plus statements not paid yet (part 2). */
 export async function accountBalance(membershipId: string, db: Tx | typeof prisma = prisma): Promise<number> {
-  const r = await db.memberCharge.aggregate({ where: { membershipId, statementId: null }, _sum: { amountCents: true } });
-  return r._sum.amountCents ?? 0;
+  const [r, open] = await Promise.all([
+    db.memberCharge.aggregate({ where: { membershipId, statementId: null }, _sum: { amountCents: true } }),
+    db.memberStatement.aggregate({ where: { membershipId, status: 'open' }, _sum: { totalCents: true } }),
+  ]);
+  return (r._sum.amountCents ?? 0) + (open._sum.totalCents ?? 0);
 }
 
 /** The course's members who can charge to an account right now, with their balance and limit (the counter's picker). */
@@ -48,8 +52,14 @@ export async function accountMembers(courseId: string, q = '') {
     take: 40,
   });
   const live = rows.filter(m => membershipLive(m, course));
-  const sums = live.length ? await prisma.memberCharge.groupBy({ by: ['membershipId'], where: { membershipId: { in: live.map(m => m.id) }, statementId: null }, _sum: { amountCents: true } }) : [];
-  const bal = new Map(sums.map(s => [s.membershipId, s._sum.amountCents ?? 0]));
+  const ids = live.map(m => m.id);
+  const [sums, open] = ids.length ? await Promise.all([
+    prisma.memberCharge.groupBy({ by: ['membershipId'], where: { membershipId: { in: ids }, statementId: null }, _sum: { amountCents: true } }),
+    prisma.memberStatement.groupBy({ by: ['membershipId'], where: { membershipId: { in: ids }, status: 'open' }, _sum: { totalCents: true } }),
+  ]) : [[], []];
+  const bal = new Map<string, number>();
+  for (const s of sums) bal.set(s.membershipId, s._sum.amountCents ?? 0);
+  for (const s of open) bal.set(s.membershipId, (bal.get(s.membershipId) ?? 0) + (s._sum.totalCents ?? 0));
   return live.map(m => ({
     id: m.id,
     name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : '') || m.inviteName,
@@ -76,6 +86,8 @@ export async function addCharge(tx: Tx, line: { courseId: string; membershipId: 
     if (!m.tier?.accountOn) return fail(409, 'This member’s tier doesn’t have an account — turn it on in Members → Tiers.');
     if (!membershipLive(m, m.course, now)) return fail(409, 'This membership isn’t active, so nothing can go on its account.');
   }
+  // Part 2: a statement left unpaid past its due date stops new charges until it is paid.
+  if (line.kind !== 'credit' && await pastDue(line.membershipId, tx, now)) return fail(409, 'This member has a statement past due — it needs paying before anything else goes on the account.');
   const balance = await accountBalance(line.membershipId, tx);
   if (!fitsLimit(balance, line.amountCents, m.tier?.accountLimitCents ?? null)) {
     const lim = m.tier!.accountLimitCents!;
@@ -99,19 +111,26 @@ export async function creditAccount(courseId: string, membershipId: string, amou
 
 /** A member's account for the Members page: balance, limit and the lines not yet billed, newest first. */
 export async function accountView(courseId: string, membershipId: string) {
-  const m = await prisma.courseMembership.findFirst({ where: { id: membershipId, courseId }, select: { id: true, tier: { select: { accountOn: true, accountLimitCents: true, accountSettle: true } } } });
+  const m = await prisma.courseMembership.findFirst({ where: { id: membershipId, courseId }, select: { id: true, accountPaymentMethodId: true, tier: { select: { accountOn: true, accountLimitCents: true, accountSettle: true } } } });
   if (!m) return null;
   const lines = await prisma.memberCharge.findMany({
     where: { membershipId, statementId: null }, orderBy: { createdAt: 'desc' }, take: 200,
     select: { id: true, kind: true, amountCents: true, note: true, createdBy: true, createdAt: true, bookingId: true, shopSaleId: true },
   });
-  return { accountOn: !!m.tier?.accountOn, limitCents: m.tier?.accountLimitCents ?? null, settle: m.tier?.accountSettle ?? 'link', balanceCents: lines.reduce((s, l) => s + l.amountCents, 0), lines };
+  const statements = await prisma.memberStatement.findMany({ where: { membershipId }, orderBy: { period: 'desc' }, take: 24, select: { id: true, period: true, totalCents: true, status: true, dueAt: true, paidAt: true, autoChargeAt: true, autoFailedAt: true } });
+  const unbilled = lines.reduce((s, l) => s + l.amountCents, 0);
+  const openCents = statements.filter(s => s.status === 'open').reduce((s, x) => s + x.totalCents, 0);
+  return { accountOn: !!m.tier?.accountOn, limitCents: m.tier?.accountLimitCents ?? null, settle: m.tier?.accountSettle ?? 'link', balanceCents: unbilled + openCents, unbilledCents: unbilled, lines, statements, cardSaved: !!m.accountPaymentMethodId };
 }
 
 /** Validate a tier's account settings (Members → Tiers). */
-// How the account is paid (accountSettle) is set with statements, in part 2.
-export function readAccountSettings(b: Record<string, unknown>): { ok: true; data: { accountOn?: boolean; accountLimitCents?: number | null } } | { ok: false; error: string } {
-  const data: { accountOn?: boolean; accountLimitCents?: number | null } = {};
+export function readAccountSettings(b: Record<string, unknown>): { ok: true; data: { accountOn?: boolean; accountLimitCents?: number | null; accountSettle?: string } } | { ok: false; error: string } {
+  const data: { accountOn?: boolean; accountLimitCents?: number | null; accountSettle?: string } = {};
+  // Part 2: how statements are paid — 'link' (an emailed pay link) or 'auto' (the card the member saved for it).
+  if (b.accountSettle !== undefined) {
+    if (b.accountSettle !== 'link' && b.accountSettle !== 'auto') return { ok: false, error: 'Pick how statements are paid.' };
+    data.accountSettle = b.accountSettle;
+  }
   if (b.accountOn !== undefined) data.accountOn = b.accountOn === true;
   if (b.accountLimitCents !== undefined) {
     if (b.accountLimitCents === null || b.accountLimitCents === '') data.accountLimitCents = null;

@@ -237,6 +237,7 @@ model Course {
   roundPacks                 RoundPack[]
   demandPrices               DemandPrice[]
   memberCharges              MemberCharge[]
+  memberStatements           MemberStatement[]
 
   @@index([operatorId])
   @@index([groupId])
@@ -540,6 +541,13 @@ model CourseMembership {
   createdAt              DateTime        @default(now())
 
   accountCharges         MemberCharge[]
+  accountStatements      MemberStatement[]
+  /// MEM-ACCT part 2 (Cam 2026-10-30: "separate box on first statement"): the card the member agreed,
+  /// with its own box, to have charged for their account statements — never the auto-renew card.
+  accountCustomerId      String          @default("")
+  accountPaymentMethodId String          @default("")
+  accountCardConsentAt   DateTime?
+  accountCardTerms       String          @default("")
 
   @@unique([golferId, courseId])
   // MP-10 schema half: the overdue-dues surfaces filter by course + last payment.
@@ -2019,9 +2027,43 @@ model MemberCharge {
   createdAt    DateTime         @default(now())
   /// Part 2: the statement this line was billed on (null = not billed yet).
   statementId  String?
+  statement    MemberStatement? @relation(fields: [statementId], references: [id], onDelete: SetNull)
 
   @@index([membershipId, createdAt])
   @@index([courseId, createdAt])
+}
+
+/// MEM-ACCT part 2: one month of a member's account, closed on the 1st (the course's day), due 15
+/// days later. Paid on its pay link (/statement/[id]), by the member's saved card 3 days after it
+/// closes when their tier charges automatically, or at the shop. Its lines point to it (MemberCharge.statementId).
+model MemberStatement {
+  id              String           @id @default(cuid())
+  courseId        String
+  course          Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  membershipId    String
+  membership      CourseMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  /// The month billed, YYYY-MM
+  period          String
+  closedAt        DateTime
+  dueAt           DateTime
+  totalCents      Int
+  /// GreenReserve's booking fees carried on the lines — the application fee when it is paid by card.
+  feeCents        Int              @default(0)
+  /// open | paid | paid_offline
+  status          String           @default("open")
+  payToken        String           @unique
+  paymentIntentId String           @default("")
+  paidAt          DateTime?
+  chargeStartedAt DateTime?
+  /// When the saved card is charged (null = pay link only), the last decline, and the one retry.
+  autoChargeAt    DateTime?
+  autoFailedAt    DateTime?
+  autoRetryAt     DateTime?
+  createdAt       DateTime         @default(now())
+  lines           MemberCharge[]
+
+  @@unique([membershipId, period])
+  @@index([courseId, status])
 }
 
 /// PRICE-5: a course's demand price for one weekday and hour — what applies now (pct) and

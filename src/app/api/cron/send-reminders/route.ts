@@ -4,8 +4,9 @@ import { cronRoute } from '@/lib/cron-log';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
 import { paidUntilRenewal } from '@/lib/membership-renewal';
-import { sendReminderEmail, sendMembershipPaymentLinkEmail, sendMembershipReceiptEmail, sendAutoRenewReminderEmail, sendAutoRenewDeclinedEmail } from '@/lib/email';
+import { sendReminderEmail, sendMembershipPaymentLinkEmail, sendMembershipReceiptEmail, sendAutoRenewReminderEmail, sendAutoRenewDeclinedEmail, sendStatementDeclinedEmail } from '@/lib/email';
 import { remindersDue, markReminded, chargesDue, chargeRenewal, renewalCents, memberContact, RETRY_DAYS } from '@/lib/membership-autorenew';
+import { closeStatements, emailStatement, autoChargesDue, autoChargeStatement, statementLink } from '@/lib/member-statements';
 import { chargeOnConnectedAccount } from '@/lib/stripe';
 
 export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
@@ -126,5 +127,34 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     }
   }
 
-  return NextResponse.json({ success: true, sent, total: tomorrowBookings.length, renewalsSent, autoReminders, autoRenewed, autoDeclined });
+  // ── MEM-ACCT part 2: member account statements (lib/member-statements) ──
+  // Last month closes on the 1st (any later day catches up); each new statement is emailed. Then
+  // the automatic charges due (3 days after closing, or the one retry), a decline emailing the link.
+  let statementsClosed = 0, statementsPaid = 0, statementsDeclined = 0;
+  // Any course with lines not billed yet — a course that turned accounts off still bills what was put on them.
+  const acctCourses = await prisma.course.findMany({ where: { memberCharges: { some: { statementId: null } } }, select: { id: true } });
+  for (const c of acctCourses) {
+    const r = await closeStatements(c.id, now);
+    statementsClosed += r.closed;
+    for (const sid of r.ids) {
+      try { await emailStatement(sid); }
+      catch (err) { console.error(JSON.stringify({ ev: 'member_statement.email_fail', statementId: sid, error: err instanceof Error ? err.message : String(err) })); }
+    }
+  }
+  for (const s of await autoChargesDue(now)) {
+    const r = await autoChargeStatement(s, chargeOnConnectedAccount, now);
+    if (r.status === 'paid') statementsPaid++;
+    else if (r.status === 'declined') {
+      statementsDeclined++;
+      console.error(JSON.stringify({ ev: 'member_statement.auto.declined', statementId: s.id, retry: !!r.retryAt, error: r.error }));
+      const st = await prisma.memberStatement.findUniqueOrThrow({ where: { id: s.id }, select: { id: true, payToken: true, period: true, totalCents: true, dueAt: true, course: { select: { name: true } }, membership: { select: { inviteName: true, inviteEmail: true, golfer: { select: { email: true, firstName: true, lastName: true } } } } } });
+      const to = memberContact(st.membership);
+      if (to.email) {
+        try { await sendStatementDeclinedEmail({ name: to.name, email: to.email, courseName: st.course.name, period: st.period, totalCents: st.totalCents, dueAt: st.dueAt, retryOn: r.retryAt ?? null, payLink: statementLink(st) }); }
+        catch (err) { console.error(JSON.stringify({ ev: 'member_statement.declined_email_fail', statementId: s.id, error: err instanceof Error ? err.message : String(err) })); }
+      }
+    }
+  }
+
+  return NextResponse.json({ success: true, sent, total: tomorrowBookings.length, renewalsSent, autoReminders, autoRenewed, autoDeclined, statementsClosed, statementsPaid, statementsDeclined });
 });

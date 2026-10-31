@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { accountMembers, accountView, creditAccount } from '@/lib/member-account';
+import { markStatementPaidOffline, emailStatement } from '@/lib/member-statements';
 
 // MEM-ACCT (Cam 2026-10-30): member accounts. GET ?q= is the counter's picker (who can charge to an
 // account, with balance and limit) — for anyone who takes counter payments or sees members.
 // GET ?membershipId= is one member's account (members.view). POST credits an amount back, with a
-// reason (money.refund — it takes money off what the member owes). This course only.
+// reason (money.refund — it takes money off what the member owes). Part 2: action 'mark_paid'
+// (a statement paid at the shop, cash or check) and 'email_statement', both members.edit like
+// dues paid at the shop. This course only.
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -28,9 +32,28 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const b = await req.json().catch(() => ({})) as { membershipId?: unknown; amountCents?: unknown; reason?: unknown; action?: unknown; statementId?: unknown; method?: unknown };
+  if (b.action === 'mark_paid' || b.action === 'email_statement') {
+    const d = requirePermission(session, 'members.edit');
+    if (d) return d;
+    if (typeof b.statementId !== 'string' || !b.statementId) return NextResponse.json({ error: 'Pick a statement.' }, { status: 400 });
+    const own = await prisma.memberStatement.findFirst({ where: { id: b.statementId, courseId: session.courseId }, select: { id: true } });
+    if (!own) return NextResponse.json({ error: 'That statement isn’t on this course.' }, { status: 404 });
+    if (b.action === 'mark_paid') {
+      const r = await markStatementPaidOffline(session.courseId, own.id, b.method);
+      if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+      return NextResponse.json({ ok: true });
+    }
+    try {
+      const r = await emailStatement(own.id);
+      if (r === 'no_email') return NextResponse.json({ error: 'This member has no email — add one in Edit details.' }, { status: 409 });
+      return NextResponse.json({ ok: true });
+    } catch (err) {
+      return NextResponse.json({ error: `The email couldn’t be sent (${err instanceof Error ? err.message : 'email error'}) — try again.` }, { status: 502 });
+    }
+  }
   const denied = requirePermission(session, 'money.refund');
   if (denied) return denied;
-  const b = await req.json().catch(() => ({})) as { membershipId?: unknown; amountCents?: unknown; reason?: unknown };
   if (typeof b.membershipId !== 'string' || !b.membershipId) return NextResponse.json({ error: 'Pick a member.' }, { status: 400 });
   const r = await creditAccount(session.courseId, b.membershipId, b.amountCents, b.reason, session.email);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });

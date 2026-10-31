@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-30 23:14 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `9d060959` · working tree **36 dirty file(s)**
+Generated 2026-10-31 04:26 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `6cda80f4` · working tree **22 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 73 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 75 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `5b3f82a4` | 2026-10-30 | Member accounts (part 1): staff put a group's round on a member's account (#266) |
+| `8a2a1249` | 2026-10-30 | MEM-ACCT part 1: member accounts — staff put a group's round on a member's account |
 | `7a14850b` | 2026-10-30 | Launch wipe closes Dec 1 instead of Nov 1 (#265) |
 | `6cc42bd6` | 2026-10-30 | TEST-1: launch wipe closes Dec 1 instead of Nov 1 |
 | `d30b4479` | 2026-10-30 | Demand pricing: online public rate moves with each hour's fill (#264) |
@@ -88,7 +90,7 @@ Generated 2026-10-30 23:14 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (36 file(s))
+### Uncommitted working tree (22 file(s))
 
 - `M STATUS.artifact.html`
 - `M STATUS.json`
@@ -96,20 +98,20 @@ Generated 2026-10-30 23:14 UTC · branch `claude/walkthrough-2-prioritization-ui
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M prisma/schema.prisma`
-- `M scripts/cash-at-counter-db-test.ts`
-- `M src/app/api/checkin/[bookingId]/route.ts`
-- `M src/app/api/operator/bookings/route.ts`
-- `M src/app/api/operator/money/sales/route.ts`
+- `M src/app/api/cron/send-reminders/route.ts`
+- `M src/app/api/operator/member-accounts/route.ts`
 - `M src/app/api/operator/tiers/route.ts`
-- `M src/app/api/receipt/[bookingId]/route.ts`
-- `M src/app/checkin/[bookingId]/page.tsx`
-- `M src/app/dashboard/analytics/page.tsx`
-- `M src/app/dashboard/home/page.tsx`
 - `M src/app/dashboard/members/page.tsx`
-- `M src/app/dashboard/page.tsx`
-- `M src/app/receipt/[bookingId]/page.tsx`
-- `M src/components/dashboard/money/PaymentsPanel.tsx`
-- `M src/components/dashboard/money/SalesPanel.tsx`
+- `M src/components/dashboard/MemberAccount.tsx`
+- `M src/lib/data-reset.ts`
+- `M src/lib/email.ts`
+- `M src/lib/ledger-view.ts`
+- `M src/lib/member-account.ts`
+- `M src/lib/money-ledger.ts`
+- `M src/lib/register-close.ts`
+- `?? prisma/migrations/20261031010000_member_statements/`
+- `?? scripts/member-statements-db-test.ts`
+- `?? src/app/api/statement/`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -195,46 +197,48 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-30 | 0d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 2d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 9d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 4d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 3d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 10d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 4d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 7d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 7d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 8d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 8d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 8d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 8d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 8d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 8d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 8d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 9d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 9d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 9d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 9d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 10d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 10d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 10d |
 
 ## Recent commits
 
+- `5b3f82a4` 2026-10-30 — Member accounts (part 1): staff put a group's round on a member's account (#266)
+- `8a2a1249` 2026-10-30 — MEM-ACCT part 1: member accounts — staff put a group's round on a member's account
 - `7a14850b` 2026-10-30 — Launch wipe closes Dec 1 instead of Nov 1 (#265)
 - `6cc42bd6` 2026-10-30 — TEST-1: launch wipe closes Dec 1 instead of Nov 1
 - `d30b4479` 2026-10-30 — Demand pricing: online public rate moves with each hour's fill (#264)
@@ -245,8 +249,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `d29ba970` 2026-10-30 — MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box
 - `53da712c` 2026-10-30 — Membership tiers: join online (pay and join, or request to join) (#261)
 - `91141923` 2026-10-30 — Regenerate codemap and status board
-- `0d9486fe` 2026-10-30 — MEM-JOIN: join a membership tier online — pay and join, or request to join
-- `53505e47` 2026-10-30 — Pricing 3/4 part B: round packs online (#260)
 
 ---
 
