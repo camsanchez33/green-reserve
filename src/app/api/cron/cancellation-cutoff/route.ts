@@ -1,3 +1,4 @@
+import { payLinkOpensOn } from '@/lib/course-time';
 import { holdsAtCutoff, bookingWindowHours } from '@/lib/cancel-policy';
 import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
@@ -75,6 +76,9 @@ export const GET = cronRoute('cancellation-cutoff', async (req: NextRequest) => 
       }
     } else {
       // ── No fee policy: email only ────────────────────────────────────────────
+      // Launch walk (Cam 2026-10-31): the check-in link opens on the round's day, so the email waits for it
+      // (unclaimed, so the hourly run sends it that day).
+      if (payLinkOpensOn(tz, booking.teeTime.date, now)) continue;
       // R-CRON-007: claimed, sent, and put back for the next run if the send fails
       // (this used to swallow a failed send after marking the booking emailed).
       try {

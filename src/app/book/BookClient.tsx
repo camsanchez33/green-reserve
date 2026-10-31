@@ -210,7 +210,9 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   const [packId, setPackId] = useState('');
   const ttId = teeTime?.id;
   useEffect(() => {
-    if (!golfer || !ttId) { setResidentFee(null); setMemberRate(null); setPacks([]); setPackId(''); return; }
+    // Launch walk (Cam 2026-10-31): asked with no golfer sign-in too — a member signed in by the
+    // member link (gr_member) is charged the member rate, so this page has to show it.
+    if (!ttId) { setResidentFee(null); setMemberRate(null); setPacks([]); setPackId(''); return; }
     fetch(`/api/bookings/resident-rate?teeTimeId=${encodeURIComponent(String(ttId))}`)
       .then(r => r.ok ? r.json() : null).then(d => {
         setResidentFee(typeof d?.residentGreenFee === 'number' ? d.residentGreenFee : null);

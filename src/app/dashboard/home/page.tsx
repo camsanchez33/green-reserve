@@ -125,7 +125,7 @@ export default function DashboardHome() {
 
           {/* Cam 2026-10-27: what's still missing from the booking page, each linking to its Settings section. */}
           {home && home.setupMissing.length > 0 && (
-            <div className="-mb-3"><FinishSetup items={home.setupMissing.map(i => ({ ...i, onClick: () => router.push(settingsHref(i.section)) }))} /></div>
+            <div className="-mb-3"><FinishSetup items={home.setupMissing.map(i => ({ ...i, onClick: () => router.push(i.href ?? settingsHref(i.section)) }))} /></div>
           )}
 
           {home && (

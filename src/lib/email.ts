@@ -335,7 +335,7 @@ export async function sendCancellationFeeChargedEmail(data: {
       You didn't cancel your ${data.date} at ${data.time} tee time at ${data.courseName} before the free-cancellation window closed, so we charged your card $${(data.feeAmount / 100).toFixed(2)} to hold your spot.
     </p>
     <div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#2F6B45;font-size:14px;font-weight:600;">This fee is refunded automatically when you check in and pay for your round — tap the button below to check in now.</p>
+      <p style="margin:0;color:#2F6B45;font-size:14px;font-weight:600;">This fee is refunded automatically when you check in and pay for your round — use the button below on the day of your round.</p>
     </div>
     ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Check In &amp; Pay &rarr;</a>` : ''}
     <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ID: ${data.bookingId}</p>

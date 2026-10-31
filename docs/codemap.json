@@ -2291,7 +2291,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1294,
+      "lines": 1298,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3702,7 +3702,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 489,
+      "lines": 491,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3938,7 +3938,7 @@
     },
     {
       "path": "src/app/api/checkin/[bookingId]/route.ts",
-      "lines": 115,
+      "lines": 122,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3962,6 +3962,7 @@
       "imports": [
         "@/lib/checkin-booking",
         "@/lib/checkin-errors",
+        "@/lib/course-time",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/round-shop-tax",
@@ -4136,7 +4137,7 @@
     },
     {
       "path": "src/app/api/cron/cancellation-cutoff/route.ts",
-      "lines": 93,
+      "lines": 97,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4155,6 +4156,7 @@
       "imports": [
         "@/lib/cancel-policy",
         "@/lib/check-in-email",
+        "@/lib/course-time",
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/cutoff-hold",
@@ -4223,7 +4225,7 @@
     },
     {
       "path": "src/app/api/cron/hourly/route.ts",
-      "lines": 204,
+      "lines": 207,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4250,6 +4252,7 @@
         "@/lib/call-invite",
         "@/lib/cancel-policy",
         "@/lib/check-in-email",
+        "@/lib/course-time",
         "@/lib/cron-auth",
         "@/lib/cron-log",
         "@/lib/cron-windows",
@@ -5356,7 +5359,7 @@
     },
     {
       "path": "src/app/api/operator/bookings/route.ts",
-      "lines": 378,
+      "lines": 380,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7845,7 +7848,7 @@
     },
     {
       "path": "src/app/book/BookClient.tsx",
-      "lines": 808,
+      "lines": 810,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8045,7 +8048,7 @@
     },
     {
       "path": "src/app/checkin/[bookingId]/page.tsx",
-      "lines": 381,
+      "lines": 397,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8714,7 +8717,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1692,
+      "lines": 1693,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8753,6 +8756,7 @@
         "@/lib/late-add",
         "@/lib/member-rates",
         "@/lib/round-packs",
+        "@/lib/setup-missing",
         "@/lib/tee-time-fit",
         "@/lib/use-dashboard-access",
         "@stripe/react-stripe-js",
@@ -9261,7 +9265,7 @@
     },
     {
       "path": "src/app/manage/[bookingId]/page.tsx",
-      "lines": 581,
+      "lines": 583,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16986,7 +16990,7 @@
     },
     {
       "path": "src/lib/course-time.ts",
-      "lines": 46,
+      "lines": 56,
       "purpose": "SD-3 — course-local time.",
       "brain": [],
       "exports": [
@@ -17011,6 +17015,10 @@
           "kind": "fn"
         },
         {
+          "name": "payLinkOpensOn",
+          "kind": "fn"
+        },
+        {
           "name": "todayIn",
           "kind": "fn"
         },
@@ -17028,6 +17036,9 @@
       "usedBy": [
         "src/app/api/birdie/chat/route.ts",
         "src/app/api/bookings/route.ts",
+        "src/app/api/checkin/[bookingId]/route.ts",
+        "src/app/api/cron/cancellation-cutoff/route.ts",
+        "src/app/api/cron/hourly/route.ts",
         "src/app/api/member/[courseSlug]/tee-times/route.ts",
         "src/app/api/operator/analytics/route.ts",
         "src/app/api/operator/analytics/shop/route.ts",
@@ -23346,7 +23357,7 @@
     },
     {
       "path": "src/lib/setup-missing.ts",
-      "lines": 42,
+      "lines": 51,
       "purpose": "What is still missing from a course's booking page, each with the Settings section that fixes it.",
       "brain": [],
       "exports": [
@@ -23360,6 +23371,14 @@
         },
         {
           "name": "missingSetup",
+          "kind": "fn"
+        },
+        {
+          "name": "PAYMENTS_BLOCK_LIVE",
+          "kind": "const"
+        },
+        {
+          "name": "paymentsMissing",
           "kind": "fn"
         },
         {
@@ -23379,6 +23398,7 @@
       "imports": [],
       "usedBy": [
         "src/app/dashboard/home/page.tsx",
+        "src/app/dashboard/page.tsx",
         "src/app/dashboard/settings/page.tsx",
         "src/lib/operator-home.ts",
         "src/lib/page-review.ts"

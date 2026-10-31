@@ -252,7 +252,7 @@ export function describePolicy(p: CancelPolicy, feeAtBooking: boolean = FEE_AT_B
   } else if (card) {
     lines.push('Your card is saved at booking. Nothing else is charged until you play.');
   } else {
-    lines.push(`No card needed to book. Check in and pay online with the link in your confirmation email — we’ll send it again ${hours(p.checkInWindowHours)} before your round.`);
+    lines.push(`No card needed to book. On the day of your round, check in and pay online with the link in your confirmation email — we’ll send it again ${hours(p.checkInWindowHours)} before your round.`);
   }
   const headline = late
     ? `Free cancellation until ${hours(p.cancellationHours)} before · then ${money(p.lateCancellationFeeCents)}${basis(p.lateFeeBasis)}`

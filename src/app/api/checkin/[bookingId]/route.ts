@@ -5,6 +5,11 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { golferCheckInError } from '@/lib/checkin-errors';
 import { roundChargeCents, roundChargedTotal, shopLinesFor } from '@/lib/shop';
 import { ensureShopTax } from '@/lib/round-shop-tax';
+import { payLinkOpensOn } from '@/lib/course-time';
+
+// Launch walk (Cam 2026-10-31, "pay link opens on the day"): paying here checks the group in, so the
+// link opens from the start of the round's day in the course's time zone — never days ahead.
+const opensOn = (b: { teeTime: { date: string }; course: { timezone: string } }) => payLinkOpensOn(b.course.timezone, b.teeTime.date);
 
 // Public, token-gated check-in endpoint — the golfer doesn't need to be
 // logged in (they may be checking in from a different device than they
@@ -16,7 +21,7 @@ async function authorize(bookingId: string, token: string | null) {
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true, cartFeeCents: true, product: { select: { label: true } } } },
-      course: { select: { name: true, slug: true, address: true, city: true, state: true, brandColor: true, heroImageUrl: true, logoUrl: true } },
+      course: { select: { name: true, slug: true, address: true, city: true, state: true, brandColor: true, heroImageUrl: true, logoUrl: true, timezone: true } },
     },
   });
   if (!booking || booking.checkInToken !== token) return null;
@@ -52,6 +57,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     holes: booking.teeTime.holes,
     productLabel: booking.teeTime.product?.label ?? null,
     status: booking.status,
+    opensOn: booking.status === 'confirmed' ? opensOn(booking) : null,
     // R-GOLF-011: a round paid in cash at the counter is never "charged to your card".
     paidOffline: booking.paidOffline,
     // MEM-ACCT: on a member's account — nothing was charged to a card.
@@ -84,6 +90,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   const { token, paymentMethodId, addCart, expectedTotalCents } = await req.json().catch(() => ({ token: null, paymentMethodId: undefined, addCart: false, expectedTotalCents: undefined }));
   const booking = await authorize(bookingId, token);
   if (!booking) return NextResponse.json({ error: 'Invalid or expired check-in link.' }, { status: 404 });
+  if (booking.status === 'confirmed' && opensOn(booking)) return NextResponse.json({ error: 'Check-in opens on the day of your round.' }, { status: 409 });
   // B-5: a cart cannot be added online once the round is paid — say so rather
   // than checking in silently without it.
   if (addCart === true && (await cartAddOnCentsFor(booking)) === 0) {

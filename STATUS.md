@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 16:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5242dc79` · working tree **9 dirty file(s)**
+Generated 2026-10-31 19:07 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `bd473c2b` · working tree **22 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 86 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 88 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `4bf11a39` | 2026-10-31 | Change member: move a wrong-member account charge (#272) |
+| `13b505dc` | 2026-10-31 | Change member: move a wrong-member account charge to the right member |
 | `dea052d9` | 2026-10-31 | Member billing walkthrough fixes (#271) |
 | `e7cbdde5` | 2026-10-31 | Member billing walkthrough fixes: whose account, which round, golfer-page chrome |
 | `8f7d18ad` | 2026-10-31 | Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270) |
@@ -101,17 +103,28 @@ Generated 2026-10-31 16:43 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (9 file(s))
+### Uncommitted working tree (22 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/member-account-db-test.ts`
-- `M src/app/api/operator/member-accounts/route.ts`
-- `M src/app/dashboard/members/page.tsx`
+- `M scripts/onboarding-review-step-test.ts`
+- `M src/app/api/admin/inquiries/route.ts`
+- `M src/app/api/bookings/route.ts`
+- `M src/app/api/checkin/[bookingId]/route.ts`
+- `M src/app/api/cron/cancellation-cutoff/route.ts`
+- `M src/app/api/cron/hourly/route.ts`
+- `M src/app/api/operator/bookings/route.ts`
+- `M src/app/api/operator/home/route.ts`
+- `M src/app/book/BookClient.tsx`
+- `M src/app/checkin/[bookingId]/page.tsx`
+- `M src/app/dashboard/home/page.tsx`
+- `M src/app/dashboard/onboarding/page.tsx`
 - `M src/app/dashboard/page.tsx`
-- `M src/components/dashboard/MemberAccount.tsx`
-- `M src/lib/member-account.ts`
-- `?? src/components/dashboard/ChangeAccount.tsx`
+- `M src/app/manage/[bookingId]/page.tsx`
+- `M src/lib/cancel-policy.ts`
+- `M src/lib/course-time.ts`
+- `M src/lib/email.ts`
+- `M src/lib/operator-home.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -237,6 +250,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4bf11a39` 2026-10-31 — Change member: move a wrong-member account charge (#272)
+- `13b505dc` 2026-10-31 — Change member: move a wrong-member account charge to the right member
 - `dea052d9` 2026-10-31 — Member billing walkthrough fixes (#271)
 - `e7cbdde5` 2026-10-31 — Member billing walkthrough fixes: whose account, which round, golfer-page chrome
 - `8f7d18ad` 2026-10-31 — Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)
@@ -247,8 +262,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `0c3512ba` 2026-10-31 — Member statements: one Stripe payment per statement (no double charges) (#268)
 - `96eb2291` 2026-10-31 — MEM-ACCT hardening: one Stripe payment per member statement
 - `f9a4eef5` 2026-10-31 — Member accounts (part 2): monthly statements, paid by link or a saved card (#267)
-- `f22a86ba` 2026-10-31 — MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card
-- `5b3f82a4` 2026-10-30 — Member accounts (part 1): staff put a group's round on a member's account (#266)
 
 ---
 

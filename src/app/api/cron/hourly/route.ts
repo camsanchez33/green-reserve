@@ -1,3 +1,4 @@
+import { payLinkOpensOn } from '@/lib/course-time';
 import { NextRequest, NextResponse } from 'next/server';
 import { cronAuthFailure } from '@/lib/cron-auth';
 import { cronRoute } from '@/lib/cron-log';
@@ -131,6 +132,8 @@ export const GET = cronRoute('hourly', async (req: NextRequest) => {
     const minsToTee = (teeToUtcMs(booking.teeTime.date, booking.teeTime.time, booking.course.timezone) - now.getTime()) / 60000;
     const windowMins = booking.course.checkInWindowHours * 60;
     if (!checkInEmailDue(minsToTee, windowMins)) continue;
+    // Launch walk (Cam 2026-10-31): the link opens on the round's day, so it's sent that day.
+    if (payLinkOpensOn(booking.course.timezone, booking.teeTime.date, now)) continue;
 
     // R-CRON-007: claimed, sent, and put back for the next run if the send fails.
     try {

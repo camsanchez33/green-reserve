@@ -43,6 +43,7 @@ type BookingInfo = {
   noShowKept?: boolean;
 };
 
+// Cents, like every other amount on this page (the route sends dollars; converted on load).
 type AvailableSlot = {
   id: string; time: string; holes: number; productLabel?: string | null; spotsLeft: number;
   greenFee: number; cartFee: number;
@@ -187,7 +188,8 @@ function ManagePageInner() {
       const res = await fetch(`/api/manage/${bookingId}/available-times?token=${encodeURIComponent(token)}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setSlots(data);
+      // Launch walk (Cam 2026-10-31): the list showed $1.35 for $135 — the route sends dollars.
+      setSlots((data as AvailableSlot[]).map(t => ({ ...t, greenFee: Math.round(t.greenFee * 100), cartFee: Math.round(t.cartFee * 100) })));
     } catch (e) { setSwapError((e as Error).message || 'Could not load available times.'); }
     setSlotsLoading(false);
   }

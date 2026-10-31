@@ -4,7 +4,7 @@
 // other operational tab free of numbers; Home is the one exception Cam approved.
 // Money uses computeAnalytics()'s definitions (collected / outstanding), never a
 // new sum. The route decides which parts a login may see.
-import { missingSetup } from './setup-missing';
+import { paymentsMissing, missingSetup } from './setup-missing';
 import { prisma } from './prisma';
 import { todayIn, clockIn, addDaysStr } from './course-time';
 import { computeAnalytics, bookingPace, NO_SHOW_GRACE_MIN } from './analytics';
@@ -63,9 +63,9 @@ export async function declinedCards(courseId: string, withAmounts: boolean, take
 export type HomeGroup = { id: string; name: string; players: number; paymentStatus: string; checkedIn: boolean };
 export type HomeSlot = { time: string; open: number; groups: HomeGroup[] };
 
-export async function operatorHome(courseId: string, opts: { money: boolean; messages: boolean; setup?: boolean }, now = new Date()) {
+export async function operatorHome(courseId: string, opts: { money: boolean; messages: boolean; setup?: boolean; owner?: boolean }, now = new Date()) {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: {
-    timezone: true, name: true, logoUrl: true, heroImageUrl: true, description: true, phone: true, holes: true, par: true,
+    timezone: true, name: true, logoUrl: true, heroImageUrl: true, description: true, phone: true, holes: true, par: true, stripeAccountActive: true,
     _count: { select: { photos: true, teeSets: true } },
   } });
   const tz = course?.timezone;
@@ -147,7 +147,7 @@ export async function operatorHome(courseId: string, opts: { money: boolean; mes
     unreadMessages: unread,
     comingUp,
     // What is still missing from the booking page (lib/setup-missing), for logins that can fix it in Settings.
-    setupMissing: opts.setup && course ? missingSetup({ ...course, galleryCount: course._count.photos, teeSetCount: course._count.teeSets }) : [],
+    setupMissing: opts.setup && course ? [...(opts.owner ? paymentsMissing(course.stripeAccountActive) : []), ...missingSetup({ ...course, galleryCount: course._count.photos, teeSetCount: course._count.teeSets })] : [],
   };
 }
 
