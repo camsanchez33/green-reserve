@@ -2125,3 +2125,33 @@ export async function sendEventSignupEmail(data: {
     ...(data.replyTo ? { replyTo: data.replyTo } : {}),
   });
 }
+
+// MEM-ACCT part 2: member account statements (billing@ — money is owed or moved).
+const monthName = (period: string) => { const [y, m] = period.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }); };
+
+export async function sendStatementEmail(data: { name: string; email: string; courseName: string; period: string; totalCents: number; lineCount: number; dueAt: Date; chargeOn: Date | null; payLink: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Your ${monthName(data.period)} statement</h1>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — your member account at <strong>${data.courseName}</strong> comes to <strong>${cents(data.totalCents)}</strong> for ${monthName(data.period)} (${data.lineCount} item${data.lineCount === 1 ? '' : 's'}).${data.chargeOn ? ` It will be charged to your saved card on <strong>${longDate(data.chargeOn)}</strong>; to pay another way, use the link before then.` : ` It's due by <strong>${longDate(data.dueAt)}</strong>.`}</p>
+    ${manageButton(data.payLink, data.chargeOn ? 'See the statement' : 'Pay the statement')}
+  `, BILLING_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'member_statement' }, from: FROM_BILLING, to: data.email, subject: `Your ${data.courseName} statement — ${monthName(data.period)}`, html });
+}
+
+export async function sendStatementDeclinedEmail(data: { name: string; email: string; courseName: string; period: string; totalCents: number; dueAt: Date; retryOn: Date | null; payLink: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Your statement didn't go through</h1>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — we couldn't charge <strong>${cents(data.totalCents)}</strong> to your saved card for your ${monthName(data.period)} statement at <strong>${data.courseName}</strong>.${data.retryOn ? ` We'll try the card once more on ${longDate(data.retryOn)}.` : ''} It's due by <strong>${longDate(data.dueAt)}</strong>; after that nothing more can go on your account until it's paid.</p>
+    ${manageButton(data.payLink, 'Pay the statement')}
+  `, BILLING_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'member_statement_declined' }, from: FROM_BILLING, to: data.email, subject: `Your ${data.courseName} statement didn't go through`, html });
+}
+
+export async function sendStatementPaidEmail(data: { name: string; email: string; courseName: string; period: string; amountCents: number; cardSaved: boolean; link: string }) {
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Statement paid</h1>
+    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — <strong>${cents(data.amountCents)}</strong> was charged to your card for your ${monthName(data.period)} statement at <strong>${data.courseName}</strong>.${data.cardSaved ? ` This card will be charged for your next statements, 3 days after each one is emailed; you can turn that off from any statement.` : ''}</p>
+    ${manageButton(data.link, 'See the statement')}
+  `, BILLING_EMAIL);
+  await getResend().emails.send({ meta: { kind: 'member_statement_paid' }, from: FROM_BILLING, to: data.email, subject: `Statement paid — ${data.courseName}`, html });
+}

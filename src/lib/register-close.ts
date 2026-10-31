@@ -80,7 +80,7 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
       select: { roundChargedCents: true, totalAmount: true, accessFeeTotal: true, feePaidCents: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true },
     }),
     // Cash that never went through the register: dues and event payments.
-    prisma.moneyMove.findMany({ where: { courseId, method: 'cash', what: { in: ['dues', 'event'] }, at: inDay }, select: { direction: true, amountCents: true } }),
+    prisma.moneyMove.findMany({ where: { courseId, method: 'cash', what: { in: ['dues', 'event', 'account'] }, at: inDay }, select: { direction: true, amountCents: true } }),
   ]);
   // Rounds the register rang up are already in its cash sales.
   const viaRegister = counterAll.length

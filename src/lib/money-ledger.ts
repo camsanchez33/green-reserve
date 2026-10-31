@@ -14,7 +14,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { prisma } from './prisma';
 
-export type MoveWhat = 'round' | 'hold' | 'late_fee' | 'no_show_fee' | 'booking_fee' | 'shop' | 'dues' | 'event';
+export type MoveWhat = 'round' | 'hold' | 'late_fee' | 'no_show_fee' | 'booking_fee' | 'shop' | 'dues' | 'event' | 'account';
 export type MoveMethod = 'card' | 'card_present' | 'cash' | 'other';
 
 export type Move = {

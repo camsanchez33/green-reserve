@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-30T23:14:59.590Z",
+  "generatedAt": "2026-10-31T04:26:34.918Z",
   "repo": {
-    "head": "9d060959",
+    "head": "6cda80f4",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 36,
+    "dirtyCount": 22,
     "dirty": [
       "M STATUS.artifact.html",
       " M STATUS.json",
@@ -11,26 +11,40 @@
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M prisma/schema.prisma",
-      " M scripts/cash-at-counter-db-test.ts",
-      " M src/app/api/checkin/[bookingId]/route.ts",
-      " M src/app/api/operator/bookings/route.ts",
-      " M src/app/api/operator/money/sales/route.ts",
+      " M src/app/api/cron/send-reminders/route.ts",
+      " M src/app/api/operator/member-accounts/route.ts",
       " M src/app/api/operator/tiers/route.ts",
-      " M src/app/api/receipt/[bookingId]/route.ts",
-      " M src/app/checkin/[bookingId]/page.tsx",
-      " M src/app/dashboard/analytics/page.tsx",
-      " M src/app/dashboard/home/page.tsx",
       " M src/app/dashboard/members/page.tsx",
-      " M src/app/dashboard/page.tsx",
-      " M src/app/receipt/[bookingId]/page.tsx",
-      " M src/components/dashboard/money/PaymentsPanel.tsx",
-      " M src/components/dashboard/money/SalesPanel.tsx"
+      " M src/components/dashboard/MemberAccount.tsx",
+      " M src/lib/data-reset.ts",
+      " M src/lib/email.ts",
+      " M src/lib/ledger-view.ts",
+      " M src/lib/member-account.ts",
+      " M src/lib/money-ledger.ts",
+      " M src/lib/register-close.ts",
+      "?? prisma/migrations/20261031010000_member_statements/",
+      "?? scripts/member-statements-db-test.ts",
+      "?? src/app/api/statement/"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "5b3f82a4",
+        "date": "2026-10-30T19:22:15-04:00",
+        "subject": "Member accounts (part 1): staff put a group's round on a member's account (#266)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "8a2a1249",
+        "date": "2026-10-30T23:15:02+00:00",
+        "subject": "MEM-ACCT part 1: member accounts — staff put a group's round on a member's account",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "7a14850b",
         "date": "2026-10-30T18:39:10-04:00",
@@ -717,19 +731,13 @@
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-27",
-      "ageDays": 2
+      "ageDays": 3
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
-    },
-    {
-      "file": "OPERATOR_REWORK_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-25",
-      "ageDays": 4
+      "ageDays": 10
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -738,13 +746,13 @@
       "ageDays": 4
     },
     {
-      "file": "ADMIN_V5_SPEC.md",
+      "file": "OPERATOR_REWORK_SPEC.md",
       "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 7
+      "lastTouched": "2026-10-25",
+      "ageDays": 5
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
+      "file": "ADMIN_V5_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-23",
       "ageDays": 7
@@ -759,6 +767,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 8
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 8
     },
     {
@@ -789,155 +803,165 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 9
+      "ageDays": 10
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "5b3f82a4",
+      "date": "2026-10-30",
+      "subject": "Member accounts (part 1): staff put a group's round on a member's account (#266)"
+    },
+    {
+      "h": "8a2a1249",
+      "date": "2026-10-30",
+      "subject": "MEM-ACCT part 1: member accounts — staff put a group's round on a member's account"
+    },
     {
       "h": "7a14850b",
       "date": "2026-10-30",
@@ -987,16 +1011,6 @@
       "h": "91141923",
       "date": "2026-10-30",
       "subject": "Regenerate codemap and status board"
-    },
-    {
-      "h": "0d9486fe",
-      "date": "2026-10-30",
-      "subject": "MEM-JOIN: join a membership tier online — pay and join, or request to join"
-    },
-    {
-      "h": "53505e47",
-      "date": "2026-10-30",
-      "subject": "Pricing 3/4 part B: round packs online (#260)"
     }
   ]
 }

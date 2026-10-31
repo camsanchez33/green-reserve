@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
-          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline, autoRenew, autoRenewRetry, accountOn, accountLimit } = body;
+          discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline, autoRenew, autoRenewRetry, accountOn, accountLimit, accountSettle } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
   // ACT-1 review: a booking records its tier by NAME, so two live tiers with one
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   if (join !== 'off' && dollarsToCentsOr0(annualFee) <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
 
   // MEM-ACCT: members on this tier can charge to an account, up to its limit (dollars on the wire; blank = none).
-  const acct = readAccountSettings({ accountOn, accountLimitCents: limitCents(accountLimit) });
+  const acct = readAccountSettings({ accountOn, accountLimitCents: limitCents(accountLimit), accountSettle });
   if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });
 
   const tier = await prisma.membershipTier.create({
@@ -111,7 +111,7 @@ export async function PATCH(req: NextRequest) {
   const duesAfter = updates.annualFee != null ? dollarsToCentsOr0(updates.annualFee) : tier.annualFeeCents;
   if (join !== 'off' && duesAfter <= 0) return NextResponse.json({ error: JOIN_NEEDS_DUES }, { status: 400 });
 
-  const acct = readAccountSettings({ accountOn: updates.accountOn, accountLimitCents: limitCents(updates.accountLimit) });
+  const acct = readAccountSettings({ accountOn: updates.accountOn, accountLimitCents: limitCents(updates.accountLimit), accountSettle: updates.accountSettle });
   if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });
 
   const updated = await prisma.membershipTier.update({
