@@ -4,14 +4,15 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 06:06 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `89f31cfa` · working tree **15 dirty file(s)**
+Generated 2026-10-31 06:11 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `59227acd` · working tree **1 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 81 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 82 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `59227acd` | 2026-10-31 | Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b) |
 | `14c84cbd` | 2026-10-31 | Membership dues: one Stripe payment per term (no double charges) (#269) |
 | `3eb06a6f` | 2026-10-31 | MEM-ACCT hardening: one Stripe payment per membership dues term |
 | `0c3512ba` | 2026-10-31 | Member statements: one Stripe payment per statement (no double charges) (#268) |
@@ -96,26 +97,12 @@ Generated 2026-10-31 06:06 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (15 file(s))
+### Uncommitted working tree (1 file(s))
 
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
-- `M prisma/schema.prisma`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/lib/analytics.ts`
-- `M src/lib/golfer-record.ts`
-- `M src/lib/sales-tax.ts`
-- `M src/lib/shop-report.ts`
-- `M src/lib/shop-sales.ts`
-- `?? scripts/shop-on-account-db-test.ts`
-- `?? src/components/dashboard/AccountPicker.tsx`
+- `M scripts/shop-sales-test.ts`
 
-**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
-the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
+Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
+these actually are first.
 
 ## In flight
 
@@ -238,6 +225,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `59227acd` 2026-10-31 — Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)
 - `14c84cbd` 2026-10-31 — Membership dues: one Stripe payment per term (no double charges) (#269)
 - `3eb06a6f` 2026-10-31 — MEM-ACCT hardening: one Stripe payment per membership dues term
 - `0c3512ba` 2026-10-31 — Member statements: one Stripe payment per statement (no double charges) (#268)
@@ -249,7 +237,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `7a14850b` 2026-10-30 — Launch wipe closes Dec 1 instead of Nov 1 (#265)
 - `6cc42bd6` 2026-10-30 — TEST-1: launch wipe closes Dec 1 instead of Nov 1
 - `d30b4479` 2026-10-30 — Demand pricing: online public rate moves with each hour's fill (#264)
-- `d2a912be` 2026-10-30 — PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic
 
 ---
 
