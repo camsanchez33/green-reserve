@@ -255,7 +255,7 @@ export default function ShopPage() {
     if (r.data.notes?.length) setNote(r.data.notes.join(' '));
     if (pay === 'reader') setOnReader({ sale: r.data.sale, readerId, state: r.data.readerError ? 'error' : 'waiting', message: r.data.readerError ?? '' });
     else if (r.data.sendError) setError(`Sale saved, but ${r.data.sendError.charAt(0).toLowerCase()}${r.data.sendError.slice(1)} Send it again from the list below, or take cash.`);
-    else if (pay === 'cash' || pay === 'account') { setJustPaid(r.data.sale); setReceipt({ id: r.data.sale.id, via: 'email', to: '' }); }
+    else if (pay === 'cash' || pay === 'account') { setJustPaid(r.data.sale); setReceipt({ id: r.data.sale.id, via: 'email', to: r.data.sale.customerEmail || '' }); }
     else setNote(`Pay link ${pay === 'sms' ? 'texted' : 'emailed'}. It shows as paid below when they pay.`);
     load();
     searchRef.current?.focus();
@@ -858,7 +858,7 @@ export default function ShopPage() {
                                 ))}
                               </div>
                             )}
-                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'Back to their card, for good.' : s.status === 'paid_account' ? 'Credited.' : 'Hand the cash back yourself.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
+                            <p className="text-[12.5px] text-ink-soft">{s.status === 'paid_card' ? 'To their card, for good.' : s.status === 'paid_account' ? 'To their account.' : 'Hand the cash back.'} Up to {usd(left)} can be refunded{s.roundsCents ? ' — green fees are refunded from the booking on the tee sheet' : ''}.</p>
                             <div className="flex gap-2">
                               {(() => { const byItem = Object.values(refund.returns ?? {}).some(q => Number(q) > 0); return !refund.confirm
                                 ? <button onClick={() => setRefund({ ...refund, confirm: true })} disabled={!byItem && !toCents(refund.amount)} className="px-3 py-2 rounded-md text-[13px] font-medium bg-white border border-line text-ink hover:bg-paper disabled:opacity-50">{byItem ? 'Return these items' : `Refund $${refund.amount || '0'}`}</button>

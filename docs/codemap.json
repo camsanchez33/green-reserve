@@ -7377,7 +7377,7 @@
     },
     {
       "path": "src/app/api/operator/tee-times/route.ts",
-      "lines": 166,
+      "lines": 172,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8714,7 +8714,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1686,
+      "lines": 1688,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -14962,7 +14962,7 @@
     },
     {
       "path": "src/lib/booking-mode.ts",
-      "lines": 20,
+      "lines": 22,
       "purpose": "Course-world pages:",
       "brain": [],
       "exports": [
@@ -16174,7 +16174,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 289,
+      "lines": 298,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -16196,6 +16196,10 @@
         },
         {
           "name": "createCounterBooking",
+          "kind": "fn"
+        },
+        {
+          "name": "roundNote",
           "kind": "fn"
         },
         {
@@ -28952,6 +28956,7 @@
       ],
       "writers": [],
       "readers": [
+        "src/app/api/operator/tee-times/route.ts",
         "src/lib/member-account.ts",
         "src/lib/member-statements.ts",
         "src/lib/shop-sales.ts"

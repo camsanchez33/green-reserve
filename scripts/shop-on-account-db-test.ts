@@ -52,7 +52,7 @@ async function cleanup() {
 
   const a = await sell(pat.id, 2);
   const line = a.ok ? await prisma.memberCharge.findUnique({ where: { shopSaleId: a.value.id } }) : null;
-  ok('two balls on Pat\'s account: paid_account, $40, the member\'s name on the sale', a.ok && a.value.status === 'paid_account' && a.value.totalCents === 4000 && a.value.customerName === 'Pat Member', a);
+  ok('two balls on Pat\'s account: paid_account, $40, the member\'s name and email on the sale (for the receipt)', a.ok && a.value.status === 'paid_account' && a.value.totalCents === 4000 && a.value.customerName === 'Pat Member' && a.value.customerEmail === `${TAG}+pat@t.local`, a);
   ok('…one shop line on the account, saying what it was', line?.kind === 'shop' && line.amountCents === 4000 && line.membershipId === pat.id && /Balls ×2/.test(line.note) && line.createdBy === 'Front desk', line);
   ok('…stock taken; balance $40', (await stock()) === 8 && (await accountBalance(pat.id)) === 4000);
   ok('…no money in the ledger yet (it moves when the statement is paid)', (await prisma.moneyMove.count({ where: { courseId: c.id } })) === 0);

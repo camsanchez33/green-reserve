@@ -241,11 +241,11 @@ export async function createSale(opts: {
   const hasPack = p.value.lines.some(l => l.pack);
   if (hasPack && hasDiscount(opts.discount)) return fail(400, PACK_NO_DISCOUNT);
   if (hasPack && opts.pay === 'account') return fail(400, 'A round pack is paid in cash or by card, not on account.');
-  let member: { id: string; name: string } | null = null;
+  let member: { id: string; name: string; email: string } | null = null;
   if (opts.pay === 'account') {
     const m = opts.membershipId ? await prisma.courseMembership.findFirst({ where: { id: opts.membershipId, courseId: opts.courseId }, select: { id: true, inviteName: true, inviteEmail: true, golfer: { select: { firstName: true, lastName: true, email: true } } } }) : null;
     if (!m) return fail(400, 'Pick the member whose account it goes on.');
-    member = { id: m.id, name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : '') || m.inviteName };
+    member = { id: m.id, name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : '') || m.inviteName, email: m.golfer?.email || m.inviteEmail || '' };
   }
   // The pack's rounds are the customer's — found by their email when they book.
   if (hasPack && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(opts.customerEmail ?? '').trim())) return fail(400, 'Add the customer’s email — the round pack is theirs, found by it when they book.');
@@ -284,7 +284,7 @@ export async function createSale(opts: {
 
   const name = (String(opts.customerName ?? '').trim() || member?.name || '').slice(0, 80);
   const phone = String(opts.customerPhone ?? '').trim().slice(0, 30);
-  const email = String(opts.customerEmail ?? '').trim().toLowerCase().slice(0, 200);
+  const email = (String(opts.customerEmail ?? '').trim() || member?.email || '').toLowerCase().slice(0, 200);
   const payToken = opts.pay === 'link' ? randomUUID() : '';
   const settledNow = opts.pay === 'cash' || opts.pay === 'account';
   const sale = await prisma.$transaction(async tx => {

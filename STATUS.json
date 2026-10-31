@@ -1,17 +1,41 @@
 {
-  "generatedAt": "2026-10-31T06:11:56.644Z",
+  "generatedAt": "2026-10-31T16:12:08.154Z",
   "repo": {
-    "head": "59227acd",
+    "head": "ac844c1a",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 1,
+    "dirtyCount": 11,
     "dirty": [
-      "M scripts/shop-sales-test.ts"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/member-account-db-test.ts",
+      " M scripts/shop-on-account-db-test.ts",
+      " M src/app/api/operator/tee-times/route.ts",
+      " M src/app/dashboard/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/components/dashboard/MemberAccount.tsx",
+      " M src/lib/booking-mode.ts",
+      " M src/lib/counter-pay.ts",
+      " M src/lib/shop-sales.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-27T13:43:44-04:00",
     "unrecorded": [
+      {
+        "h": "8f7d18ad",
+        "date": "2026-10-31T02:18:36-04:00",
+        "subject": "Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "60a67d17",
+        "date": "2026-10-31T06:11:58+00:00",
+        "subject": "Shop sales test: counter payment now gates cash, on account and the account void",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "59227acd",
         "date": "2026-10-31T06:06:23+00:00",
@@ -983,6 +1007,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "8f7d18ad",
+      "date": "2026-10-31",
+      "subject": "Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)"
+    },
+    {
+      "h": "60a67d17",
+      "date": "2026-10-31",
+      "subject": "Shop sales test: counter payment now gates cash, on account and the account void"
+    },
+    {
       "h": "59227acd",
       "date": "2026-10-31",
       "subject": "Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)"
@@ -1031,16 +1065,6 @@
       "h": "7a14850b",
       "date": "2026-10-30",
       "subject": "Launch wipe closes Dec 1 instead of Nov 1 (#265)"
-    },
-    {
-      "h": "6cc42bd6",
-      "date": "2026-10-30",
-      "subject": "TEST-1: launch wipe closes Dec 1 instead of Nov 1"
-    },
-    {
-      "h": "d30b4479",
-      "date": "2026-10-30",
-      "subject": "Demand pricing: online public rate moves with each hour's fill (#264)"
     }
   ]
 }

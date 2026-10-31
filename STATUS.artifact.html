@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-31 06:11 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 59227acd</span>
-    <span>1 uncommitted</span>
+    <span>2026-10-31 16:12 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ ac844c1a</span>
+    <span>11 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">82 runs have shipped that the queue doesn't know about</div>
+<div class="lede">84 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">8f7d18ad</span><span>Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)</span></li>
+<li><span class="h">60a67d17</span><span>Shop sales test: counter payment now gates cash, on account and the account void</span></li>
 <li><span class="h">59227acd</span><span>Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)</span></li>
 <li><span class="h">14c84cbd</span><span>Membership dues: one Stripe payment per term (no double charges) (#269)</span></li>
 <li><span class="h">3eb06a6f</span><span>MEM-ACCT hardening: one Stripe payment per membership dues term</span></li>
@@ -217,9 +219,9 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card">
-<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
-<ul class="plain"><li><code>M scripts/shop-sales-test.ts</code></li></ul>
+<div class="card flag">
+<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/member-account-db-test.ts</code></li><li><code>M scripts/shop-on-account-db-test.ts</code></li><li><code>M src/app/api/operator/tee-times/route.ts</code></li><li><code>M src/app/dashboard/page.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/components/dashboard/MemberAccount.tsx</code></li><li><code>M src/lib/booking-mode.ts</code></li><li><code>M src/lib/counter-pay.ts</code></li><li><code>M src/lib/shop-sales.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -301,6 +303,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">8f7d18ad</td><td class="num">2026-10-31</td><td>Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)</td></tr>
+<tr><td class="num">60a67d17</td><td class="num">2026-10-31</td><td>Shop sales test: counter payment now gates cash, on account and the account void</td></tr>
 <tr><td class="num">59227acd</td><td class="num">2026-10-31</td><td>Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)</td></tr>
 <tr><td class="num">14c84cbd</td><td class="num">2026-10-31</td><td>Membership dues: one Stripe payment per term (no double charges) (#269)</td></tr>
 <tr><td class="num">3eb06a6f</td><td class="num">2026-10-31</td><td>MEM-ACCT hardening: one Stripe payment per membership dues term</td></tr>
@@ -311,8 +315,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">5b3f82a4</td><td class="num">2026-10-30</td><td>Member accounts (part 1): staff put a group's round on a member's account (#266)</td></tr>
 <tr><td class="num">8a2a1249</td><td class="num">2026-10-30</td><td>MEM-ACCT part 1: member accounts — staff put a group's round on a member's account</td></tr>
 <tr><td class="num">7a14850b</td><td class="num">2026-10-30</td><td>Launch wipe closes Dec 1 instead of Nov 1 (#265)</td></tr>
-<tr><td class="num">6cc42bd6</td><td class="num">2026-10-30</td><td>TEST-1: launch wipe closes Dec 1 instead of Nov 1</td></tr>
-<tr><td class="num">d30b4479</td><td class="num">2026-10-30</td><td>Demand pricing: online public rate moves with each hour's fill (#264)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

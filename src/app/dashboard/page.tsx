@@ -54,6 +54,8 @@ type TeeTime = {
 type Booking = {
   id: string; golferName: string; golferEmail: string; players: number; createdAt: string;
   status: string; paymentStatus: string; totalAmount: number; accessFeeTotal?: number;
+  /** MEM-ACCT: the member whose account the round went on ('' = none). */
+  accountName?: string;
   // SD-4: set by a failed check-in charge; cleared when a charge goes through.
   checkInFailReason?: string;
   // SD-5 lifecycle
@@ -691,7 +693,7 @@ function DashboardPageInner() {
             ? <><StatusDot status="bad" /><span>No-show</span></>
             : declined
               ? <><StatusDot status="bad" /><span>Card declined<span className="text-ink-muted"> · {b.checkInFailReason}</span></span></>
-              : <><StatusDot {...statusDot(bStatus.tone)} /><span>{bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}</span></>}
+              : <><StatusDot {...statusDot(bStatus.tone)} /><span>{b.paymentStatus === 'on_account' && b.accountName ? `Checked In · on ${b.accountName}’s account` : bStatus.label}{bStatus.sublabel && b.status === 'confirmed' && <span className="text-ink-muted"> · {bStatus.sublabel}</span>}</span></>}
         </p>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2" onClick={e => e.stopPropagation()}>
