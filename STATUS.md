@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 16:12 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ac844c1a` · working tree **11 dirty file(s)**
+Generated 2026-10-31 16:43 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `5242dc79` · working tree **9 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 84 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 86 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `dea052d9` | 2026-10-31 | Member billing walkthrough fixes (#271) |
+| `e7cbdde5` | 2026-10-31 | Member billing walkthrough fixes: whose account, which round, golfer-page chrome |
 | `8f7d18ad` | 2026-10-31 | Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270) |
 | `60a67d17` | 2026-10-31 | Shop sales test: counter payment now gates cash, on account and the account void |
 | `59227acd` | 2026-10-31 | Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b) |
@@ -99,19 +101,17 @@ Generated 2026-10-31 16:12 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (9 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/member-account-db-test.ts`
-- `M scripts/shop-on-account-db-test.ts`
-- `M src/app/api/operator/tee-times/route.ts`
+- `M src/app/api/operator/member-accounts/route.ts`
+- `M src/app/dashboard/members/page.tsx`
 - `M src/app/dashboard/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
 - `M src/components/dashboard/MemberAccount.tsx`
-- `M src/lib/booking-mode.ts`
-- `M src/lib/counter-pay.ts`
-- `M src/lib/shop-sales.ts`
+- `M src/lib/member-account.ts`
+- `?? src/components/dashboard/ChangeAccount.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -128,7 +128,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 100d | `b88c8bf3` | `RUN_QUEUE.md:2358` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 101d | `b88c8bf3` | `RUN_QUEUE.md:2358` |
 
 ## Not started — the actual queue
 
@@ -237,6 +237,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `dea052d9` 2026-10-31 — Member billing walkthrough fixes (#271)
+- `e7cbdde5` 2026-10-31 — Member billing walkthrough fixes: whose account, which round, golfer-page chrome
 - `8f7d18ad` 2026-10-31 — Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)
 - `60a67d17` 2026-10-31 — Shop sales test: counter payment now gates cash, on account and the account void
 - `59227acd` 2026-10-31 — Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)
@@ -247,8 +249,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `f9a4eef5` 2026-10-31 — Member accounts (part 2): monthly statements, paid by link or a saved card (#267)
 - `f22a86ba` 2026-10-31 — MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card
 - `5b3f82a4` 2026-10-30 — Member accounts (part 1): staff put a group's round on a member's account (#266)
-- `8a2a1249` 2026-10-30 — MEM-ACCT part 1: member accounts — staff put a group's round on a member's account
-- `7a14850b` 2026-10-30 — Launch wipe closes Dec 1 instead of Nov 1 (#265)
 
 ---
 

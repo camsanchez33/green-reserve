@@ -32,6 +32,7 @@ import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { timesTooClose } from '@/lib/tee-time-fit';
 import { formatTeeDay as fmtDate, formatTeeTime as fmtTime } from '@/lib/format';
 import { ChargeToAccount } from '@/components/dashboard/ChargeToAccount';
+import { ChangeAccount } from '@/components/dashboard/ChangeAccount';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 const iCls = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors';
@@ -714,6 +715,9 @@ function DashboardPageInner() {
           )}
           {b.status === 'confirmed' && !b.noShowAt && !b.roundPaid && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasAccounts && access.can('sheet.counter_payment') && (
             <ChargeToAccount booking={b} className={link} onDone={async (msg, note) => { if (note) toast(note, 'warn'); toast(msg, 'ok'); await loadTimes(selectedDate); }} />
+          )}
+          {b.paymentStatus === 'on_account' && access.can('sheet.counter_payment') && (
+            <ChangeAccount target={{ bookingId: b.id }} className={link} inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink placeholder-ink-faint focus:border-pine/40 focus:ring-2 focus:ring-pine/10" onDone={async msg => { toast(msg, 'ok'); await loadTimes(selectedDate); }} />
           )}
           {b.status === 'confirmed' && b.paymentStatus !== 'paid' && b.paymentStatus !== 'paid_offline' && hasReader && selectedDate === today() && access.can('sheet.checkin') && access.can('shop.sell') && (
             <Link href={`/dashboard/shop?round=${b.id}`} className={link}>Card reader</Link>

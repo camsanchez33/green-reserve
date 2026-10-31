@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
-import { accountMembers, accountView, creditAccount } from '@/lib/member-account';
+import { accountMembers, accountView, creditAccount, moveCharge } from '@/lib/member-account';
 import { markStatementPaidOffline, emailStatement } from '@/lib/member-statements';
 
 // MEM-ACCT (Cam 2026-10-30): member accounts. GET ?q= is the counter's picker (who can charge to an
@@ -10,6 +10,8 @@ import { markStatementPaidOffline, emailStatement } from '@/lib/member-statement
 // reason (money.refund — it takes money off what the member owes). Part 2: action 'mark_paid'
 // (a statement paid at the shop, cash or check) and 'email_statement', both members.edit like
 // dues paid at the shop. This course only.
+// Cam 2026-10-31: action 'move_charge' moves a round or shop sale put on the wrong member's account
+// to the right one (by chargeId, or the round's bookingId) — sheet.counter_payment, the power that put it on.
 export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -32,7 +34,16 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const b = await req.json().catch(() => ({})) as { membershipId?: unknown; amountCents?: unknown; reason?: unknown; action?: unknown; statementId?: unknown; method?: unknown };
+  const b = await req.json().catch(() => ({})) as { membershipId?: unknown; amountCents?: unknown; reason?: unknown; action?: unknown; statementId?: unknown; method?: unknown; chargeId?: unknown; bookingId?: unknown; toMembershipId?: unknown };
+  if (b.action === 'move_charge') {
+    const d = requirePermission(session, 'sheet.counter_payment');
+    if (d) return d;
+    const byBooking = typeof b.bookingId === 'string' && b.bookingId ? await prisma.memberCharge.findFirst({ where: { bookingId: b.bookingId, courseId: session.courseId }, select: { id: true } }) : null;
+    if (typeof b.bookingId === 'string' && b.bookingId && !byBooking) return NextResponse.json({ error: 'That round isn’t on an account.' }, { status: 404 });
+    const r = await moveCharge(session.courseId, byBooking?.id ?? b.chargeId, b.toMembershipId, session.email);
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json({ ok: true, balanceCents: r.balanceCents });
+  }
   if (b.action === 'mark_paid' || b.action === 'email_statement') {
     const d = requirePermission(session, 'members.edit');
     if (d) return d;
