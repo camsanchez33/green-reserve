@@ -85,14 +85,32 @@ const badCharge = async () => { calls++; throw new Error('Your card was declined
   // Paid on the pay link: claimed once, ledgered with the carried fees, then paid.
   calls = 0;
   const [p1, p2] = await Promise.all([
-    chargeStatement(st.id, { customerId: 'cus_y', paymentMethodId: 'pm_1', idempotencyKey: 'k1', actor: 'golfer' }, async o => { await new Promise(r => setTimeout(r, 150)); return okCharge(o); }),
-    chargeStatement(st.id, { customerId: 'cus_y', paymentMethodId: 'pm_2', idempotencyKey: 'k2', actor: 'golfer' }, async o => { await new Promise(r => setTimeout(r, 150)); return okCharge(o); }),
+    chargeStatement(st.id, { customerId: 'cus_y', paymentMethodId: 'pm_1', actor: 'golfer' }, async o => { await new Promise(r => setTimeout(r, 150)); return okCharge(o); }),
+    chargeStatement(st.id, { customerId: 'cus_y', paymentMethodId: 'pm_2', actor: 'golfer' }, async o => { await new Promise(r => setTimeout(r, 150)); return okCharge(o); }),
   ]);
   const paidSt = await prisma.memberStatement.findUniqueOrThrow({ where: { id: st.id } });
   const mv = await prisma.moneyMove.findMany({ where: { courseId: c.id, what: 'account' } });
   ok('two taps at once: one charge, $131.50, paid', calls === 1 && [p1, p2].filter(x => x.status === 'paid').length === 1 && paidSt.status === 'paid' && !!paidSt.paidAt && paidSt.paymentIntentId.startsWith('pi_'), { calls, p1, p2 });
   ok('…on the ledger as member account money with GreenReserve\'s $4.50', mv.length === 1 && mv[0].amountCents === 13150 && mv[0].platformFeeCents === 450 && mv[0].method === 'card' && mv[0].direction === 'in');
-  ok('…no longer past due; paying again is refused', !(await pastDue(pat.id, prisma, late)) && (await chargeStatement(st.id, { customerId: 'c', paymentMethodId: 'pm_3', idempotencyKey: 'k3', actor: 'golfer' }, okCharge)).status === 'skipped');
+  ok('…no longer past due; paying again is refused', !(await pastDue(pat.id, prisma, late)) && (await chargeStatement(st.id, { customerId: 'c', paymentMethodId: 'pm_3', actor: 'golfer' }, okCharge)).status === 'skipped');
+
+  // One intent per statement: a decline, then a second card, confirm the SAME intent; a lost reply is read back.
+  const one = await prisma.memberStatement.create({ data: { courseId: c.id, membershipId: kim.id, period: '2026-08', closedAt: now, dueAt: new Date(now.getTime() + 30 * DAY), totalCents: 1800, payToken: `${TAG}-one` } });
+  const seen: string[] = [];
+  const stripeLike = (outcome: 'decline' | 'ok') => async (o: Parameters<typeof okCharge>[0] & { existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown> }) => {
+    const id = o.existingIntentId || `pi_${o.intentKey}`;
+    if (!o.existingIntentId) await o.onCreated(id);
+    seen.push(id);
+    if (outcome === 'decline') throw new Error('declined');
+    return { id, amount: o.amountCents, status: 'succeeded' };
+  };
+  await chargeStatement(one.id, { customerId: 'c', paymentMethodId: 'pm_a', actor: 'golfer' }, stripeLike('decline') as never);
+  const paidOne = await chargeStatement(one.id, { customerId: 'c', paymentMethodId: 'pm_b', actor: 'golfer' }, stripeLike('ok') as never);
+  ok('a declined card then another card: one intent, created once, paid once', seen.length === 2 && seen[0] === seen[1] && seen[0] === `pi_statement-intent-${one.id}` && paidOne.status === 'paid' && (await prisma.memberStatement.findUniqueOrThrow({ where: { id: one.id } })).paymentIntentId === seen[0], seen);
+  const procSt = await prisma.memberStatement.create({ data: { courseId: c.id, membershipId: kim.id, period: '2026-07', closedAt: now, dueAt: new Date(now.getTime() + 30 * DAY), totalCents: 900, payToken: `${TAG}-proc` } });
+  const proc = await chargeStatement(procSt.id, { customerId: 'c', paymentMethodId: 'pm_c', actor: 'system' }, (async (o: { amountCents: number; onCreated: (id: string) => Promise<unknown> }) => { await o.onCreated('pi_proc'); return { id: 'pi_proc', amount: o.amountCents, status: 'processing' }; }) as never);
+  const procRow = await prisma.memberStatement.findUniqueOrThrow({ where: { id: procSt.id } });
+  ok('a payment still processing keeps its claim (no second try, not shown as declined)', proc.status === 'skipped' && procRow.status === 'open' && !!procRow.chargeStartedAt && !procRow.autoFailedAt);
 
   // Paid at the shop.
   ok('marked paid at the shop: needs cash or check', !(await markStatementPaidOffline(c.id, leeSt.id, 'venmo')).ok);
@@ -106,16 +124,19 @@ const badCharge = async () => { calls++; throw new Error('Your card was declined
   const after = await daySummary(c.id, todayIn('UTC'));
   ok('a statement paid in cash is in the day\'s expected cash', before.ok && after.ok && after.value.otherCash.cents - before.value.otherCash.cents === 2500, { b: before.ok && before.value.otherCash, a: after.ok && after.value.otherCash });
   ok('…twice is refused; another course can\'t', !(await markStatementPaidOffline(c.id, leeSt.id, 'cash')).ok && !(await markStatementPaidOffline('nope', leeSt.id, 'cash')).ok);
+  // The Stripe side is driven for real in scripts/statement-intent-db-test.ts; here: the claim comes before any stop.
+  ok('paid at the shop: claimed first, then the card payment checked and stopped', (() => { const f = readFileSync('src/lib/member-statements.ts', 'utf8'); const fn = f.slice(f.indexOf('export async function markStatementPaidOffline')); return fn.indexOf('const claimed = await prisma.memberStatement.updateMany') > 0 && fn.indexOf('const claimed') < fn.indexOf('paymentIntents.cancel(') && fn.indexOf('paymentIntents.cancel(') < fn.indexOf("status: 'paid_offline'"); })());
   ok('the statement page needs its token', (await statementForPage(st.id, 'wrong')) === null && !!(await statementForPage(st.id, st.payToken)));
 
   // Wiring.
   const route = readFileSync('src/app/api/statement/[id]/route.ts', 'utf8');
+  ok('the pay link and the automatic charge both use one intent per statement', route.includes('chargeOneIntent);') && !route.includes('chargeOnConnectedAccount'));
   ok('the pay link: saving the card needs the separate box, only on an automatic tier; it can be turned off', route.includes("const saveCard = body.saveCard === true && m.tier?.accountSettle === 'auto';") && route.includes("if (saveCard && body.agree !== true)") && route.includes("body.action === 'stop_card'") && route.includes('expectedTotalCents'));
   const page = readFileSync('src/app/statement/[id]/page.tsx', 'utf8');
   ok('the box is never ticked for them', page.includes('const [saveCard, setSaveCard] = useState(false);'));
   const cron = readFileSync('src/app/api/cron/send-reminders/route.ts', 'utf8');
   ok('the cron bills any course with unbilled lines — accounts turned off or not', cron.includes('memberCharges: { some: { statementId: null } }'));
-  ok('the daily cron closes, emails, and charges', cron.includes('closeStatements(c.id, now)') && cron.includes('emailStatement(sid)') && cron.includes('autoChargeStatement(s, chargeOnConnectedAccount, now)') && cron.includes('sendStatementDeclinedEmail'));
+  ok('the daily cron closes, emails, and charges', cron.includes('closeStatements(c.id, now)') && cron.includes('emailStatement(sid)') && cron.includes('autoChargeStatement(s, chargeOneIntent, now)') && cron.includes('sendStatementDeclinedEmail'));
   const api = readFileSync('src/app/api/operator/member-accounts/route.ts', 'utf8');
   ok('staff: paid at the shop and email again need members.edit and stay on this course', api.includes("requirePermission(session, 'members.edit')") && api.includes('where: { id: b.statementId, courseId: session.courseId }'));
 

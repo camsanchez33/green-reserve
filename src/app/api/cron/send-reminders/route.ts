@@ -7,7 +7,7 @@ import { paidUntilRenewal } from '@/lib/membership-renewal';
 import { sendReminderEmail, sendMembershipPaymentLinkEmail, sendMembershipReceiptEmail, sendAutoRenewReminderEmail, sendAutoRenewDeclinedEmail, sendStatementDeclinedEmail } from '@/lib/email';
 import { remindersDue, markReminded, chargesDue, chargeRenewal, renewalCents, memberContact, RETRY_DAYS } from '@/lib/membership-autorenew';
 import { closeStatements, emailStatement, autoChargesDue, autoChargeStatement, statementLink } from '@/lib/member-statements';
-import { chargeOnConnectedAccount } from '@/lib/stripe';
+import { chargeOnConnectedAccount, chargeOneIntent } from '@/lib/stripe';
 
 export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
   // cronRoute authorises before logging; the check stays here too so every
@@ -142,7 +142,7 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     }
   }
   for (const s of await autoChargesDue(now)) {
-    const r = await autoChargeStatement(s, chargeOnConnectedAccount, now);
+    const r = await autoChargeStatement(s, chargeOneIntent, now);
     if (r.status === 'paid') statementsPaid++;
     else if (r.status === 'declined') {
       statementsDeclined++;

@@ -19,7 +19,7 @@ let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
 
 // ── 1. Every Stripe charge or refund writes the ledger ─────────────────────────
-const MONEY_CALL = /paymentIntents\.(create|capture|confirm)|chargeOnConnectedAccount\(|refunds\.create|refundOnConnectedAccount\(/g;
+const MONEY_CALL = /paymentIntents\.(create|capture|confirm)|chargeOnConnectedAccount\(|chargeOneIntent\(|refunds\.create|refundOnConnectedAccount\(/g;
 const LEDGER = /recordMove\(|ledgerPaid\(/g;
 // Files whose calls are recorded somewhere else, and where.
 const RECORDED_ELSEWHERE: Record<string, { by: RegExp; why: string }> = {
