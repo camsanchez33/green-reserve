@@ -1,3 +1,4 @@
+import { sheetPricesNotBuilt } from '@/lib/setup-sheet-recap';
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
@@ -511,13 +512,15 @@ async function handleAction(
         // again on day 9" isn't invisible in Activity.
         await logEvent(inquiryId, from, from, 'admin', `Setup sheet resent by ${adminName}`);
       }
-      after(sendDetailsRequestEmail({
-        contactName: inquiry.contactName,
-        email: inquiry.email,
-        courseName: inquiry.courseName,
-        detailsLink,
-      }).catch(emailErr => console.error('Details request email failed:', emailErr)));
-      return NextResponse.json({ success: true, detailsLink });
+      // Launch walk (Cam 2026-10-31): awaited, so a failed send is said, with the link to send by hand.
+      let emailError = '';
+      try {
+        await sendDetailsRequestEmail({ contactName: inquiry.contactName, email: inquiry.email, courseName: inquiry.courseName, detailsLink });
+      } catch (emailErr) {
+        emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
+        console.error('Details request email failed:', emailErr);
+      }
+      return NextResponse.json({ success: true, detailsLink, emailSent: !emailError, ...(emailError ? { emailError } : {}) });
     } catch (e) {
       return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
     }
@@ -632,11 +635,14 @@ async function handleAction(
         const goLiveFn = hasDashboardAccess ? sendGoLiveSimpleEmail : sendCourseLiveOrientationEmail;
         // after(): un-awaited, the email and its welcomeEmailSentAt stamp died
         // whenever the function froze after the response (review 2026-09-29).
-        after(goLiveFn({
-          operatorName: inquiry.contactName, operatorEmail: inquiry.email,
-          courseName: inquiry.courseName, courseSlug: builtCourse.slug,
-        }).then(() => prisma.course.update({ where: { id: inquiry.builtCourseId! }, data: { welcomeEmailSentAt: new Date() } }))
-          .catch(emailErr => console.error('Go-live email failed:', emailErr)));
+        // Launch walk (Cam 2026-10-31): awaited, so the employee is told when the course wasn't.
+        try {
+          await goLiveFn({ operatorName: inquiry.contactName, operatorEmail: inquiry.email, courseName: inquiry.courseName, courseSlug: builtCourse.slug });
+          await prisma.course.update({ where: { id: inquiry.builtCourseId! }, data: { welcomeEmailSentAt: new Date() } });
+        } catch (emailErr) {
+          console.error('Go-live email failed:', emailErr);
+          return NextResponse.json({ success: true, emailSent: false, emailError: emailErr instanceof Error ? emailErr.message : String(emailErr) });
+        }
       }
       return NextResponse.json({ success: true });
     } catch (e) {
@@ -907,6 +913,9 @@ async function handleAction(
           needsReview.push(`Tier "${tierName}": priced ${str(p.feePeriod) === 'per_punch' ? 'per punch' : 'per season'} — verify the billing period in Member Management`);
         }
       }
+
+      // Launch walk (Cam 2026-10-31): sheet prices the build doesn't make a schedule for.
+      for (const r of sheetPricesNotBuilt(d, [{ holes }])) needsReview.push(`From the sheet, not built: ${r.label} ${r.value} — add it in Schedules`);
 
       const adminNotes = needsReview.length > 0
         ? `[BUILD NOTES]\n${needsReview.map(n => `• ${n}`).join('\n')}`

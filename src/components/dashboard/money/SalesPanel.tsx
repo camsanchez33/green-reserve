@@ -197,7 +197,7 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
             {s.summary.rangeCents > 0 && <Row label="Range balls" value={usd2(s.summary.rangeCents)} />}
             <Row label="Rounds" value={usd2(s.collectedCents)} strong />
             {s.summary.lateFeesKeptCents > 0 && <Row label="Late-cancel fees kept" value={usd2(s.summary.lateFeesKeptCents)} />}
-            {s.summary.shopOnRoundsCents > 0 && <Row label="Shop items on rounds" value={usd2(s.summary.shopOnRoundsCents)} />}
+            {s.summary.shopOnRoundsCents > 0 && <Row label="Shop on rounds" value={usd2(s.summary.shopOnRoundsCents)} />}
             {s.summary.walkUpSales > 0 && <Row label={`Register sales · ${s.summary.walkUpSales}`} value={usd2(s.summary.walkUpCents)} />}
             {s.summary.greenReserveFeesCents > 0 && <Row label="GreenReserve booking fees" value={usd2(s.summary.greenReserveFeesCents)} muted />}
           </div>
@@ -223,8 +223,9 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
             <h3 className="text-[15px] font-semibold text-ink mb-1">Cash drawer · {fmtDay(d.day)}</h3>
             <div className="divide-y divide-line-soft">
               <Row label="Starting cash" value={usd2(d.openingFloatCents)} />
-              <Row label="Register cash sales" value={usd2(d.cashSalesCents)} />
-              <Row label="Rounds paid in cash" value={usd2(d.counterRoundsCents)} />
+              <Row label="Cash sales" value={usd2(d.cashSalesCents)} />
+              {d.counterRoundsCents !== 0 && <Row label="Paid at counter" value={usd2(d.counterRoundsCents)} />}
+              {d.otherCashCents !== 0 && <Row label="Dues and events" value={usd2(d.otherCashCents)} />}
               {d.cashRefundsCents > 0 && <Row label="Cash refunds" value={usd2(-d.cashRefundsCents)} />}
               <Row label="Expected" value={usd2(d.expectedCashCents)} strong />
               <Row label="Counted" value={usd2(d.countedCashCents)} />

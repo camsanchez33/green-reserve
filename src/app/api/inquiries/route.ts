@@ -1,3 +1,4 @@
+import { noteEmailFailed } from '@/lib/inquiry-email-failed';
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendInquiryNotification, sendInquiryConfirmation, sendInquiryAlreadyBuilt } from '@/lib/email';
@@ -277,7 +278,7 @@ export async function POST(req: NextRequest) {
   })).catch(err => console.error('Inquiry notification email failed:', err)));
 
   after(sendInquiryConfirmation(emailData)
-    .catch(err => console.error('Inquiry confirmation email failed:', err)));
+    .catch(err => noteEmailFailed(inquiry.id, 'inquiry confirmation and call invite', err)));
 
   // Byte-identical to every duplicate path above. (FB-1 review: returning this
   // inquiry's call link here, and nothing on the duplicate paths, told anyone

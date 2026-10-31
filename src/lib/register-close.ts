@@ -38,6 +38,8 @@ export type DaySummary = {
   /** Cash taken, before the starting float: sales + counter rounds + other cash − refunds. */
   cashTakenCents: number;
   card: { shopCents: number; roundsCents: number; refundsCents: number; cents: number };
+  /** Launch walk (Cam 2026-10-31): every cash movement of the day from the money ledger, so a short drawer can be traced. */
+  cashMoves: { at: string; what: string; amountCents: number; note: string }[];
 };
 export type CloseView = {
   id: string; day: string; openingFloatCents: number; expectedCashCents: number; countedCashCents: number; differenceCents: number;
@@ -98,6 +100,8 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
   };
   const shopCard = sum(cardSales.map(x => x.totalCents));
   const roundsCard = sum(cardRounds.map(b => b.roundChargedCents ?? roundChargeCents(b)));
+  const cashMoves = (await prisma.moneyMove.findMany({ where: { courseId, method: 'cash', at: inDay }, orderBy: { at: 'asc' }, take: 500, select: { at: true, what: true, direction: true, amountCents: true, note: true } }))
+    .map(m => ({ at: m.at.toISOString(), what: m.what, amountCents: (m.direction === 'out' ? -1 : 1) * m.amountCents, note: m.note }));
   const cardRefunds = sum(refunds.filter(r => r.method === 'card').map(r => r.amountCents));
   return {
     ok: true,
@@ -105,6 +109,7 @@ export async function daySummary(courseId: string, day?: string): Promise<Result
       day: cd.value.day, today: cd.value.today, ...s,
       cashTakenCents: s.cashSales.cents + s.counterRounds.cents + s.otherCash.cents - s.cashRefunds.cents,
       card: { shopCents: shopCard, roundsCents: roundsCard, refundsCents: cardRefunds, cents: shopCard + roundsCard - cardRefunds },
+      cashMoves,
     },
   };
 }
