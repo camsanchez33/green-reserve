@@ -2,7 +2,7 @@
 // W2-9 Events: one event — what it holds on the tee sheet, its prep checklist,
 // and its players with their groups. Every write shows its pending state and
 // then the result or the server's reason (dfetch never throws).
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { shotgunLabels, groupStartTime } from '@/lib/course-events';
 import { Card } from '@/components/ui/Card';
 import { StatusDot } from '@/components/ui/StatusDot';
@@ -12,12 +12,15 @@ import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { KINDS } from './EventSetup';
 import EventMoney, { type EventPayment, type Money } from './EventMoney';
 import EventSignup, { type SignupQuestion } from './EventSignup';
+import { EventDay, CartSigns } from './EventDay';
 
 export type EventTask = { id: string; label: string; dueDate: string | null; doneAt: string | null; doneBy: string };
 export type EventPlayer = {
   id: string; name: string; email: string; phone: string; groupNo: number | null; startHole: number | null;
   /** W2-9d: in = on the list; held = signed up online and paying (until holdUntil); waitlist; lapsed = the hold ran out unpaid. */
   status: string; holdUntil: string | null; source: string; groupKey: string; answers: Record<string, string>;
+  /** Event day: when they were checked in; null = not here yet. */
+  checkedInAt?: string | null;
 };
 export type EventFull = {
   id: string; name: string; kind: string; date: string; format: string; startTime: string; holdFrom: string; holdTo: string; holdToCustom: boolean; shareCourse: boolean; holdNineIds: string[]; keepOpen: string[];
@@ -55,6 +58,10 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const [paste, setPaste] = useState('');
   const [size, setSize] = useState(4);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  // Event day: what the next print shows — the pairings sheet or a cart sign per group.
+  const [printWhat, setPrintWhat] = useState<'pairings' | 'signs'>('pairings');
+  const printNow = (what: 'pairings' | 'signs') => { setPrintWhat(what); setTimeout(() => window.print(), 50); };
+  useEffect(() => { const back = () => setPrintWhat('pairings'); window.addEventListener('afterprint', back); return () => window.removeEventListener('afterprint', back); }, []);
   const live = e.status === 'planned';
   // W2-9c: players' own payments.
   const price = e.pricePerPlayerCents ? (e.pricePerPlayerCents / 100).toFixed(2) : '';
@@ -147,6 +154,15 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
 
       {(error || note) && (
         <p role={error ? 'alert' : 'status'} className={'print:hidden text-[13.5px] ' + (error ? 'text-bad' : 'text-ink')}>{error || note}</p>
+      )}
+
+      {/* Event day (Cam 2026-10-31): on the event's date, who's here and who still owes, first. */}
+      {live && e.date === today && onList.length > 0 && (
+        <EventDay groups={sortedGroups} ungrouped={ungrouped} startOf={startOf} onList={onList} busy={busy}
+          owes={p => playersPay && stateOf(p) !== 'paid' && stateOf(p) !== 'paying'}
+          onCheck={(ids, on, key) => { act(key, { action: 'checkin', playerIds: ids, on }); }}
+          onTakePayment={p => { setPaidHere({ id: p.id, amount: price, method: 'cash' }); document.getElementById(`player-${p.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}
+          onPrintSigns={() => printNow('signs')} />
       )}
 
       <div className="grid lg:grid-cols-[1fr_1fr] gap-5 print:hidden">
@@ -264,7 +280,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             </button>
             {sortedGroups.length > 0 && <>
               <button disabled={!!busy} onClick={() => act('clear', { action: 'pairings_clear' })} className={SECONDARY}>Clear groups</button>
-              <button onClick={() => window.print()} className={SECONDARY}>Print pairings</button>
+              <button onClick={() => printNow('pairings')} className={SECONDARY}>Print pairings</button>
               <button disabled={!!busy} onClick={() => act('send', { action: 'pairings_send' }, r => {
                 const sent = Number(r.sent ?? 0); const failed = (r.failed as string[] | undefined) ?? []; const none = Number(r.noEmail ?? 0); const notSent = (r.notSent as string[] | undefined) ?? [];
                 return [`Emailed ${sent} player${sent === 1 ? '' : 's'} their group.`, notSent.length ? `Ran out of time before emailing ${notSent.join(', ')} — press it again for them, or print theirs.` : '', failed.length ? `Couldn’t reach ${failed.join(', ')} — try again or print theirs.` : '', none ? `${none} without an email — give them a printed copy.` : ''].filter(Boolean).join(' ');
@@ -288,13 +304,14 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
           </div>
         )}
 
-        {/* What prints: the pairings sheet alone. */}
-        <div className="hidden print:block mb-4">
+        {/* What prints: the pairings sheet alone, or (event day) a cart sign per group. */}
+        {printWhat === 'signs' && <CartSigns eventName={e.name} groups={sortedGroups} startOf={startOf} />}
+        <div className={'hidden mb-4 ' + (printWhat === 'signs' ? '' : 'print:block')}>
           <h1 className="font-serif text-[26px] font-semibold text-ink">{e.name}</h1>
           <p className="text-[14px] text-ink">{formatTeeDay(e.date)} · {e.format === 'shotgun' ? `Shotgun at ${formatTeeTime(e.startTime)}` : `Tee times from ${formatTeeTime(e.startTime)}`}</p>
         </div>
         {sortedGroups.length > 0 && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4 print:grid-cols-3">
+          <div className={'grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4 print:grid-cols-3' + (printWhat === 'signs' ? ' print:hidden' : '')}>
             {sortedGroups.map(([g, ps]) => (
               <div key={g} className="bg-paper/70 rounded-md px-3.5 py-3 break-inside-avoid">
                 <div className="text-[13.5px] font-semibold text-ink">Group {g} <span className="font-normal text-ink-soft">· {startOf(g, ps[0]?.startHole ?? null)}</span></div>
@@ -313,7 +330,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
               </tr></thead>
               <tbody className="divide-y divide-line-soft">
                 {[...sortedGroups.flatMap(([, ps]) => ps), ...ungrouped].map(p => (
-                  <tr key={p.id}>
+                  <tr key={p.id} id={`player-${p.id}`}>
                     <td className="py-2 pr-3 text-ink">{p.name}{answersOf(p) && <div className="text-[12px] text-ink-muted">{answersOf(p)}</div>}</td>
                     <td className="py-2 pr-3 text-ink-soft">{[p.email, p.phone].filter(Boolean).join(' · ') || '—'}</td>
                     <td className="py-2 pr-3">

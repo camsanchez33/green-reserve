@@ -1708,6 +1708,8 @@ model CourseEventPlayer {
   payments  CourseEventPayment[]
   /// W2-9d: in = on the list; held = signed up online, a spot kept while they pay (until holdUntil); waitlist = the event was full.
   status    String               @default("in")
+  /// Event day (Cam 2026-10-31): when staff checked them in on the day; null = not here yet.
+  checkedInAt DateTime?
   holdUntil DateTime?
   /// staff | signup
   source    String               @default("staff")

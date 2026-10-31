@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-31 20:08 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ f88a3a85</span>
-    <span>7 uncommitted</span>
+    <span>2026-10-31 21:29 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 51c0942e</span>
+    <span>10 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">93 runs have shipped that the queue doesn't know about</div>
+<div class="lede">95 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">5af344f0</span><span>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause (#275)</span></li>
+<li><span class="h">847fd73c</span><span>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause</span></li>
 <li><span class="h">f84e4be2</span><span>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)</span></li>
 <li><span class="h">36872c8f</span><span>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails</span></li>
 <li><span class="h">719073d5</span><span>Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)</span></li>
@@ -230,7 +232,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/app/book/BookClient.tsx</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li><li><code>M src/lib/staff-permissions.ts</code></li><li><code>?? scripts/launch-batch3-test.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M src/app/api/operator/events/[id]/route.ts</code></li><li><code>M src/app/dashboard/events/page.tsx</code></li><li><code>M src/app/globals.css</code></li><li><code>M src/components/dashboard/events/EventDetail.tsx</code></li><li><code>?? prisma/migrations/20261031030000_event_player_checkin/</code></li><li><code>?? scripts/event-day-test.ts</code></li><li><code>?? src/components/dashboard/events/EventDay.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -275,8 +277,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-30 &middot; 0d</td></tr>
 <tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 3d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 10d</td></tr>
-<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 4d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 5d</td></tr>
+<tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 5d</td></tr>
 <tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 7d</td></tr>
 <tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
 <tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
@@ -312,6 +314,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">5af344f0</td><td class="num">2026-10-31</td><td>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause (#275)</td></tr>
+<tr><td class="num">847fd73c</td><td class="num">2026-10-31</td><td>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause</td></tr>
 <tr><td class="num">f84e4be2</td><td class="num">2026-10-31</td><td>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)</td></tr>
 <tr><td class="num">36872c8f</td><td class="num">2026-10-31</td><td>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails</td></tr>
 <tr><td class="num">719073d5</td><td class="num">2026-10-31</td><td>Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)</td></tr>
@@ -322,8 +326,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">dea052d9</td><td class="num">2026-10-31</td><td>Member billing walkthrough fixes (#271)</td></tr>
 <tr><td class="num">e7cbdde5</td><td class="num">2026-10-31</td><td>Member billing walkthrough fixes: whose account, which round, golfer-page chrome</td></tr>
 <tr><td class="num">8f7d18ad</td><td class="num">2026-10-31</td><td>Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)</td></tr>
-<tr><td class="num">60a67d17</td><td class="num">2026-10-31</td><td>Shop sales test: counter payment now gates cash, on account and the account void</td></tr>
-<tr><td class="num">59227acd</td><td class="num">2026-10-31</td><td>Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

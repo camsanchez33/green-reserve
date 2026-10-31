@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 20:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `f88a3a85` · working tree **7 dirty file(s)**
+Generated 2026-10-31 21:29 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `51c0942e` · working tree **10 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-27**. 93 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-27**. 95 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `5af344f0` | 2026-10-31 | Front desk "Return items" permission; drop the false counter-fee clause (#275) |
+| `847fd73c` | 2026-10-31 | Front desk "Return items" permission; drop the false counter-fee clause |
 | `f84e4be2` | 2026-10-31 | Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274) |
 | `36872c8f` | 2026-10-31 | Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails |
 | `719073d5` | 2026-10-31 | Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273) |
@@ -108,15 +110,18 @@ Generated 2026-10-31 20:08 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (7 file(s))
+### Uncommitted working tree (10 file(s))
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/book/BookClient.tsx`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/lib/staff-permissions.ts`
-- `?? scripts/launch-batch3-test.ts`
+- `M prisma/schema.prisma`
+- `M src/app/api/operator/events/[id]/route.ts`
+- `M src/app/dashboard/events/page.tsx`
+- `M src/app/globals.css`
+- `M src/components/dashboard/events/EventDetail.tsx`
+- `?? prisma/migrations/20261031030000_event_player_checkin/`
+- `?? scripts/event-day-test.ts`
+- `?? src/components/dashboard/events/EventDay.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -204,8 +209,8 @@ This is the distinction a raw checkbox count gets wrong.
 | `CLAUDE.md` | 1 | 2026-10-30 | 0d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 3d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 10d |
-| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 4d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 5d |
+| `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 5d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 7d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 8d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 8d |
@@ -242,6 +247,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `5af344f0` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause (#275)
+- `847fd73c` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause
 - `f84e4be2` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)
 - `36872c8f` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails
 - `719073d5` 2026-10-31 — Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)
@@ -252,8 +259,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `dea052d9` 2026-10-31 — Member billing walkthrough fixes (#271)
 - `e7cbdde5` 2026-10-31 — Member billing walkthrough fixes: whose account, which round, golfer-page chrome
 - `8f7d18ad` 2026-10-31 — Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)
-- `60a67d17` 2026-10-31 — Shop sales test: counter payment now gates cash, on account and the account void
-- `59227acd` 2026-10-31 — Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)
 
 ---
 

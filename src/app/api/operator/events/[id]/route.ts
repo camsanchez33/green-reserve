@@ -109,7 +109,7 @@ type Body = EventInput & {
   groupKey?: string;
   action?: string; preview?: boolean;
   taskId?: string; label?: string; dueDate?: string | null; done?: boolean;
-  playerId?: string; text?: string; groupNo?: number | null; startHole?: number | null; size?: number;
+  playerId?: string; playerIds?: unknown; on?: boolean; text?: string; groupNo?: number | null; startHole?: number | null; size?: number;
 };
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -228,6 +228,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         }
         const r = await prisma.courseEventPlayer.deleteMany({ where: { id: String(body.playerId ?? ''), eventId: id } });
         if (!r.count) return bad('That player is gone — refresh the page.', 404);
+        break;
+      }
+      // Event day (Cam 2026-10-31): check players in as they arrive — one, or a whole group — or undo it.
+      case 'checkin': {
+        const ids = Array.isArray(body.playerIds) ? (body.playerIds as unknown[]).filter((x): x is string => typeof x === 'string').slice(0, 250) : [];
+        if (!ids.length) return bad('Pick who to check in.');
+        const r = await prisma.courseEventPlayer.updateMany({ where: { id: { in: ids }, eventId: id, status: 'in' }, data: { checkedInAt: body.on === false ? null : new Date() } });
+        if (!r.count) return bad('Those players are gone — refresh the page.', 404);
         break;
       }
       case 'player_set': {

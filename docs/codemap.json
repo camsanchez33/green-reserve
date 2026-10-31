@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 635,
+    "files": 636,
     "routes": 286,
     "libs": 223,
     "models": 67,
@@ -5747,7 +5747,7 @@
     },
     {
       "path": "src/app/api/operator/events/[id]/route.ts",
-      "lines": 303,
+      "lines": 311,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -11638,8 +11638,36 @@
       ]
     },
     {
+      "path": "src/components/dashboard/events/EventDay.tsx",
+      "lines": 73,
+      "purpose": "Event day (Cam 2026-10-31:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "CartSigns",
+          "kind": "component"
+        },
+        {
+          "name": "EventDay",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./EventDetail",
+        "@/components/ui/Card"
+      ],
+      "usedBy": [
+        "src/components/dashboard/events/EventDetail.tsx"
+      ]
+    },
+    {
       "path": "src/components/dashboard/events/EventDetail.tsx",
-      "lines": 383,
+      "lines": 400,
       "purpose": "W2-9 Events:",
       "brain": [],
       "exports": [
@@ -11670,6 +11698,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "./EventDay",
         "./EventMoney",
         "./EventSetup",
         "./EventSignup",
@@ -11683,6 +11712,7 @@
       ],
       "usedBy": [
         "src/app/dashboard/events/page.tsx",
+        "src/components/dashboard/events/EventDay.tsx",
         "src/components/dashboard/events/EventSignup.tsx"
       ]
     },
@@ -12369,6 +12399,7 @@
         "src/components/dashboard/RegisterPacks.tsx",
         "src/components/dashboard/RoundRulesCard.tsx",
         "src/components/dashboard/ShopStock.tsx",
+        "src/components/dashboard/events/EventDay.tsx",
         "src/components/dashboard/events/EventDetail.tsx",
         "src/components/dashboard/events/EventMoney.tsx",
         "src/components/dashboard/events/EventSetup.tsx",
@@ -27522,6 +27553,10 @@
         {
           "name": "status",
           "type": "String"
+        },
+        {
+          "name": "checkedInAt",
+          "type": "DateTime?"
         },
         {
           "name": "holdUntil",
