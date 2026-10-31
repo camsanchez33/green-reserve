@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { StatusDot } from '@/components/ui/StatusDot';
+import { ChangeAccount } from '@/components/dashboard/ChangeAccount';
 
 const usd = (c: number) => `${c < 0 ? '−' : ''}$${(Math.abs(c) / 100).toFixed(2)}`;
 
@@ -34,7 +35,7 @@ type Statement = { id: string; period: string; totalCents: number; status: strin
 type View = { balanceCents: number; unbilledCents: number; limitCents: number | null; lines: Line[]; statements: Statement[]; cardSaved: boolean };
 const monthOf = (p: string) => { const [y, m] = p.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' }); };
 
-export function MemberAccount({ id, canCredit, canEdit }: { id: string; canCredit: boolean; canEdit: boolean }) {
+export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id: string; canCredit: boolean; canEdit: boolean; canMove?: boolean }) {
   const [view, setView] = useState<View | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
@@ -101,6 +102,7 @@ export function MemberAccount({ id, canCredit, canEdit }: { id: string; canCredi
                       <span className="text-ink">{l.note || l.kind}</span>
                       {l.createdBy && <span className="text-ink-muted">{l.createdBy}</span>}
                       <span className="ml-auto tabular-nums text-ink">{usd(l.amountCents)}</span>
+                      {canMove && l.kind !== 'credit' && <ChangeAccount target={{ chargeId: l.id }} className="text-pine font-medium hover:underline" inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink" onDone={() => load()} />}
                     </li>
                   ))}
                 </ul>

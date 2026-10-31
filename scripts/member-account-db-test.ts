@@ -5,7 +5,7 @@
 // Needs a database. Run: npx tsx scripts/member-account-db-test.ts
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { fitsLimit, accountBalance, accountMembers, creditAccount, readAccountSettings, accountView } from '../src/lib/member-account';
+import { fitsLimit, accountBalance, accountMembers, creditAccount, readAccountSettings, accountView, moveCharge } from '../src/lib/member-account';
 import { createCounterBooking, settleAtCounter, accountDueCents, roundNote } from '../src/lib/counter-pay';
 import { isBookingMode } from '../src/lib/booking-mode';
 import { addDaysStr, todayIn } from '../src/lib/course-time';
@@ -19,6 +19,8 @@ const STAFF = { type: 'staff' as const, id: null };
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
   await prisma.memberCharge.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.memberStatement.deleteMany({ where: { courseId: { in: ids } } });
+  await prisma.shopSale.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.bookingEvent.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
@@ -87,6 +89,35 @@ const settle = (c: string, b: string, m: string) => settleAtCounter(c, b, { acto
   const r3 = await settle(c.id, b3, pat.id);
   const l3 = await prisma.memberCharge.findUnique({ where: { bookingId: b3 } });
   ok('an online booking: $51.50 on account, the $1.50 fee carried for the statement', r3.ok && l3?.amountCents === 5150 && l3.feeCents === 150, l3);
+
+  // Cam 2026-10-31 "move to the right member": the line moves, the round stays checked in.
+  const kim = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: tier.id, inviteName: 'Kim Member', inviteEmail: `${TAG}+kim@t.local`, status: 'active' } });
+  const before = await accountBalance(pat.id);
+  await prisma.memberCharge.update({ where: { id: l3!.id }, data: { createdAt: new Date('2026-10-28T15:00:00Z') } });
+  const mv = await moveCharge(c.id, l3!.id, kim.id, 'Front desk');
+  const l3b = await prisma.memberCharge.findUnique({ where: { bookingId: b3 } });
+  ok('a round on the wrong account moves: off Pat, on Kim, same amount and fee, still checked in', mv.ok && l3b?.membershipId === kim.id && l3b.amountCents === 5150 && l3b.feeCents === 150 && (await accountBalance(pat.id)) === before - 5150 && (await accountBalance(kim.id)) === 5150 && (await prisma.booking.findUniqueOrThrow({ where: { id: b3 } })).paymentStatus === 'on_account', { mv, l3b });
+  ok('…keeping its date, so it is billed in the month it happened (review)', l3b?.createdAt.toISOString() === '2026-10-28T15:00:00.000Z', l3b?.createdAt);
+  ok('…to another course\'s member: refused before anything is locked', !(await moveCharge(c.id, l3b!.id, (await prisma.courseMembership.findFirstOrThrow({ where: { courseId: other.id } })).id, 'x')).ok);
+  ok('…to the same member, to a member without an account, or to an inactive one: refused, nothing moves', !(await moveCharge(c.id, l3b!.id, kim.id, 'x')).ok && !(await moveCharge(c.id, l3b!.id, off.id, 'x')).ok && !(await moveCharge(c.id, l3b!.id, gone.id, 'x')).ok && (await prisma.memberCharge.findUnique({ where: { bookingId: b3 } }))?.membershipId === kim.id);
+  await prisma.membershipTier.update({ where: { id: tier.id }, data: { accountLimitCents: 5000 } });
+  const tooMuch = await moveCharge(c.id, l3b!.id, pat.id, 'x');
+  ok('…past the new member\'s limit: refused with the reason, the line stays where it was', !tooMuch.ok && /limit/.test(tooMuch.error) && (await prisma.memberCharge.findUnique({ where: { bookingId: b3 } }))?.membershipId === kim.id, tooMuch);
+  await prisma.membershipTier.update({ where: { id: tier.id }, data: { accountLimitCents: null } });
+  const cred = await prisma.memberCharge.findFirstOrThrow({ where: { membershipId: pat.id, kind: 'credit' } });
+  ok('a credit doesn\'t move; another course\'s charge isn\'t found', !(await moveCharge(c.id, cred.id, kim.id, 'x')).ok && (await moveCharge(other.id, l3b!.id, pat.id, 'x')).ok === false);
+  const st = await prisma.memberStatement.create({ data: { courseId: c.id, membershipId: kim.id, period: '2026-09', totalCents: 5150, closedAt: new Date(), dueAt: new Date(Date.now() + 864e5), payToken: `${TAG}-mv` } });
+  await prisma.memberCharge.update({ where: { bookingId: b3 }, data: { statementId: st.id } });
+  const billed = await moveCharge(c.id, l3b!.id, pat.id, 'x');
+  ok('already on a statement: refused (credit it there instead)', !billed.ok && /statement/.test(billed.error), billed);
+  await prisma.memberCharge.update({ where: { bookingId: b3 }, data: { statementId: null } });
+  await prisma.memberStatement.delete({ where: { id: st.id } });
+  const sale = await prisma.shopSale.create({ data: { courseId: c.id, status: 'paid_account', totalCents: 1200, paidAt: new Date(), soldBy: 'x', customerName: 'Pat Member', customerEmail: `${TAG}+pat@t.local` } });
+  const sl = await prisma.memberCharge.create({ data: { courseId: c.id, membershipId: pat.id, kind: 'shop', amountCents: 1200, shopSaleId: sale.id, note: 'Pro shop: Hat' } });
+  const ms = await moveCharge(c.id, sl.id, kim.id, 'x');
+  const sale2 = await prisma.shopSale.findUniqueOrThrow({ where: { id: sale.id } });
+  ok('a shop sale moves too, and its receipt goes to the new member', ms.ok && sale2.customerName === 'Kim Member' && sale2.customerEmail === `${TAG}+kim@t.local` && (await prisma.memberCharge.findUnique({ where: { shopSaleId: sale.id } }))?.membershipId === kim.id, sale2);
+  ok('moving needs counter payments (the power that put it on)', readFileSync('src/app/api/operator/member-accounts/route.ts', 'utf8').includes("if (b.action === 'move_charge') {\n    const d = requirePermission(session, 'sheet.counter_payment');"));
 
   // Wiring.
   ok('the golfer\'s check-in and receipt never say "charged to your card" for an account round', readFileSync('src/app/api/checkin/[bookingId]/route.ts', 'utf8').includes("onAccount: booking.paymentStatus === 'on_account'") && readFileSync('src/app/checkin/[bookingId]/page.tsx', 'utf8').includes("onAccount ? 'On your member account.") && (readFileSync('src/app/receipt/[bookingId]/page.tsx', 'utf8').match(/onAccount \? 'On your member account'/g) ?? []).length === 2);

@@ -1,7 +1,7 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 631,
+    "files": 632,
     "routes": 286,
     "libs": 220,
     "models": 67,
@@ -5968,7 +5968,7 @@
     },
     {
       "path": "src/app/api/operator/member-accounts/route.ts",
-      "lines": 62,
+      "lines": 73,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8714,7 +8714,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1688,
+      "lines": 1692,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8730,6 +8730,7 @@
       "guard": "middleware",
       "imports": [
         "@/components/OperatorSidebar",
+        "@/components/dashboard/ChangeAccount",
         "@/components/dashboard/ChargeToAccount",
         "@/components/dashboard/GettingStartedChecklist",
         "@/components/dashboard/GolferMessageModal",
@@ -10602,7 +10603,8 @@
         "react"
       ],
       "usedBy": [
-        "src/app/dashboard/shop/page.tsx"
+        "src/app/dashboard/shop/page.tsx",
+        "src/components/dashboard/ChangeAccount.tsx"
       ]
     },
     {
@@ -10659,6 +10661,32 @@
       ],
       "usedBy": [
         "src/app/dashboard/settings/page.tsx"
+      ]
+    },
+    {
+      "path": "src/components/dashboard/ChangeAccount.tsx",
+      "lines": 33,
+      "purpose": "MEM-ACCT (Cam 2026-10-31, \"move to the right member\"):",
+      "brain": [],
+      "exports": [
+        {
+          "name": "ChangeAccount",
+          "kind": "component"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "@/components/dashboard/AccountPicker",
+        "@/lib/dashboard-fetch",
+        "react"
+      ],
+      "usedBy": [
+        "src/app/dashboard/page.tsx",
+        "src/components/dashboard/MemberAccount.tsx"
       ]
     },
     {
@@ -10984,7 +11012,7 @@
     },
     {
       "path": "src/components/dashboard/MemberAccount.tsx",
-      "lines": 123,
+      "lines": 125,
       "purpose": "MEM-ACCT (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -11003,6 +11031,7 @@
       "auth": null,
       "guard": null,
       "imports": [
+        "@/components/dashboard/ChangeAccount",
         "@/components/ui/StatusDot",
         "@/lib/dashboard-fetch",
         "react"
@@ -17515,6 +17544,7 @@
         "src/components/AnnouncementBanner.tsx",
         "src/components/dashboard/AccountPicker.tsx",
         "src/components/dashboard/CardReaderCard.tsx",
+        "src/components/dashboard/ChangeAccount.tsx",
         "src/components/dashboard/ChargeToAccount.tsx",
         "src/components/dashboard/DeclinedCardList.tsx",
         "src/components/dashboard/DemandPricing.tsx",
@@ -19845,7 +19875,7 @@
     },
     {
       "path": "src/lib/member-account.ts",
-      "lines": 145,
+      "lines": 182,
       "purpose": "MEM-ACCT (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -19876,6 +19906,10 @@
         {
           "name": "MAX_CREDIT_CENTS",
           "kind": "const"
+        },
+        {
+          "name": "moveCharge",
+          "kind": "fn"
         },
         {
           "name": "readAccountSettings",
@@ -28956,6 +28990,7 @@
       ],
       "writers": [],
       "readers": [
+        "src/app/api/operator/member-accounts/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/member-account.ts",
         "src/lib/member-statements.ts",
