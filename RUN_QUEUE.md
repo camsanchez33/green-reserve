@@ -38,6 +38,60 @@ FIRST ACTION of every run: commit any dirty doc files (same rule) BEFORE reading
 - [x] POS-1a (c4800f7, #106) — pro-shop catalog; items ride the round's charge; SHOP_FEE_ON = false
 - [x] Fix re-sign banner (9e4bf52, #107) — banner clears after signing the new Operator Agreement
 
+## Shipped 2026-10-26..31 (recorded 2026-10-31)
+
+Merged PRs, oldest first: the squash commit, then the branch commits it carried (#229–#239 by squash commit only; they merged before the queue's last edit).
+
+- [x] #229 (e1ce6066, 2026-10-26) — Check-in email retried after a failed send (R-CRON-007); schedule interval must be a whole number >= 1 (R-BOOK-011)
+- [x] #230 (eb9b40b1, 2026-10-26) — Admin Problems: failed refunds and declined cancellation holds (R-PAY-010)
+- [x] #231 (ee9402b3, 2026-10-26) — Staff switches do what they say (R-AUTH-007)
+- [x] #232 (356403fd, 2026-10-26) — Onboarding walk: leaner sign-up screens, reply to a course from the admin, new questions are your move
+- [x] #233 (4d8194b5, 2026-10-26) — See a built course's page before sending the preview
+- [x] #234 (4960a76e, 2026-10-26) — Setup sheet: recap screen + email, honest cancellation wording, clearer days, uniform cards, resume where you left off
+- [x] #235 (23e81ffe, 2026-10-26) — Owners get a 'Set your password' link, never a password; onboarding starts with Review your page
+- [x] #236 (13634fec, 2026-10-26) — An emailed sign-in code confirms the owner's email (no separate verify link)
+- [x] #237 (18082d87, 2026-10-27) — DENSE-1: Analytics — lots of data, almost no sentences; DENSE spec; words-guard
+- [x] #238 (c5210ef2, 2026-10-27) — Onboarding walks the owner through their booking page part by part; Finish setting up on Home
+- [x] #239 (c155fec9, 2026-10-27) — Page decision for courses built without an inquiry lives on the course
+- [x] #240 (6eced458, 2026-10-27) — Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited · branch: 581de703
+- [x] #241 (92087fca, 2026-10-27) — DENSE-4: the tee sheet is seat rows
+- [x] #242 (531516a0, 2026-10-27) — DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet
+- [x] #243 (e8e2a2e6, 2026-10-27) — DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons
+- [x] #244 (8061878d, 2026-10-27) — No cancelling after the tee time: check in or no-show (charged at midnight)
+- [x] #245 (b8440aa6, 2026-10-27) — Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet
+- [x] #246 (187a1ba4, 2026-10-27) — DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only
+- [x] #247 (fa0add63, 2026-10-27) — DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend
+- [x] #249 (d0b0c181, 2026-10-28) — Fill a test course with sample data; never email a placeholder address or text a fictional number · branch: 09422b74 161d3d7f
+- [x] #250 (0dfd8bdf, 2026-10-29) — Revamp 3: the 12 audit fixes · branch: 92b9bfa6 9e689d2b 1f56429b 28e44ab2 447cb1bd e02ea5d4 fa151d17 57e64d2d 9bcc13b3 6ed720e1 af4b9fc3 bee3bc29 ec1f63b8 64c39edb 59b616cd
+- [x] #251 (3d18ecd9, 2026-10-29) — Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu · branch: 7dcf8122 4e1d9c2c 06b64277
+- [x] #252 (370f7fa4, 2026-10-29) — Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void · branch: bf2fdf53 65df5988 cfe7cb40 69bcbab8 f226c81b 9de927a8
+- [x] #253 (89f0e830, 2026-10-29) — Golfer record: one course's view of a golfer, staff notes, online-booking block · branch: 388244d7 ffa0ec2a
+- [x] #254 (7dda7589, 2026-10-30) — Money ledger: one row for every dollar that moves; membership dues charged safely · branch: 48be83aa 85c78bb8 136a1ea6 5917aabf
+- [x] #255 (1aa2c299, 2026-10-30) — Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check · branch: 001ba73f c5b84881
+- [x] #256 (ca86612a, 2026-10-30) — Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere · branch: c72b0b35 2c3e1cdd
+- [x] #257 (439c4e7b, 2026-10-30) — Promo codes: made on Schedule, used online and at the counter, priced seat by seat · branch: f65525cf 6612c506 869ce75a
+- [x] #258 (2c5fcf28, 2026-10-30) — Pricing 2/4: last-minute deals · branch: f6fd22ff
+- [x] #259 (e1ec15b2, 2026-10-30) — Pricing 3/4 part A: round packs at the counter · branch: bad4eb47
+- [x] #260 (53505e47, 2026-10-30) — Pricing 3/4 part B: round packs online · branch: 248a5175
+- [x] #261 (53da712c, 2026-10-30) — Membership tiers: join online (pay and join, or request to join) · branch: 91141923 0d9486fe
+- [x] #262 (e1c241af, 2026-10-30) — Membership auto-renew (course per tier, required consent, reminders) · branch: d29ba970
+- [x] #263 (25de845f, 2026-10-30) — Round packs: unpaid link price is the course's choice, golfer agrees to terms · branch: b667583d
+- [x] #264 (d30b4479, 2026-10-30) — Demand pricing: online public rate moves with each hour's fill · branch: d2a912be
+- [x] #265 (7a14850b, 2026-10-30) — Launch wipe closes Dec 1 instead of Nov 1 · branch: 6cc42bd6
+- [x] #266 (5b3f82a4, 2026-10-30) — Member accounts (part 1): staff put a group's round on a member's account · branch: 8a2a1249
+- [x] #267 (f9a4eef5, 2026-10-31) — Member accounts (part 2): monthly statements, paid by link or a saved card · branch: f22a86ba
+- [x] #268 (0c3512ba, 2026-10-31) — Member statements: one Stripe payment per statement (no double charges) · branch: 96eb2291
+- [x] #269 (14c84cbd, 2026-10-31) — Membership dues: one Stripe payment per term (no double charges) · branch: 3eb06a6f
+- [x] #270 (8f7d18ad, 2026-10-31) — Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) · branch: 60a67d17 59227acd
+- [x] #271 (dea052d9, 2026-10-31) — Member billing walkthrough fixes · branch: e7cbdde5
+- [x] #272 (4bf11a39, 2026-10-31) — Change member: move a wrong-member account charge · branch: 13b505dc
+- [x] #273 (719073d5, 2026-10-31) — Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day · branch: 94b6272a 51f33943
+- [x] #274 (f84e4be2, 2026-10-31) — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails · branch: 36872c8f
+- [x] #275 (5af344f0, 2026-10-31) — Front desk "Return items" permission; drop the false counter-fee clause · branch: 847fd73c
+- [x] #276 (74475da5, 2026-10-31) — Event day: check-in, day view, cart signs · branch: 23c14e34
+
+Waiting on Cam from this stretch: re-apply the Front desk preset to existing staff so they get Return items (#275); a legal read of the booking terms; `CALCOM_BOOKING_URL`; blob storage in prod; Stripe test keys (sk_test_/pk_test_) in the environment for the card walk.
+
 ## In progress
 
 (nothing running)

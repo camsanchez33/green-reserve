@@ -117,112 +117,12 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-10-31 21:29 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 51c0942e</span>
-    <span>10 uncommitted</span>
+    <span>2026-10-31 22:08 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 974a6d6a</span>
+    <span>4 uncommitted</span>
   </div>
 </header>
-<div class="alarm">
-<div class="lede">95 runs have shipped that the queue doesn't know about</div>
-<p class="note">RUN_QUEUE.md was last committed 2026-10-27. These commits appear nowhere in it.</p>
-<ul>
-<li><span class="h">5af344f0</span><span>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause (#275)</span></li>
-<li><span class="h">847fd73c</span><span>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause</span></li>
-<li><span class="h">f84e4be2</span><span>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)</span></li>
-<li><span class="h">36872c8f</span><span>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails</span></li>
-<li><span class="h">719073d5</span><span>Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)</span></li>
-<li><span class="h">94b6272a</span><span>Isolation test: pay link refused before the round's day, then the SMS checks on a round today</span></li>
-<li><span class="h">51f33943</span><span>Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day</span></li>
-<li><span class="h">4bf11a39</span><span>Change member: move a wrong-member account charge (#272)</span></li>
-<li><span class="h">13b505dc</span><span>Change member: move a wrong-member account charge to the right member</span></li>
-<li><span class="h">dea052d9</span><span>Member billing walkthrough fixes (#271)</span></li>
-<li><span class="h">e7cbdde5</span><span>Member billing walkthrough fixes: whose account, which round, golfer-page chrome</span></li>
-<li><span class="h">8f7d18ad</span><span>Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)</span></li>
-<li><span class="h">60a67d17</span><span>Shop sales test: counter payment now gates cash, on account and the account void</span></li>
-<li><span class="h">59227acd</span><span>Pro shop on account: put register sales on a member's statement (MEM-ACCT 1b)</span></li>
-<li><span class="h">14c84cbd</span><span>Membership dues: one Stripe payment per term (no double charges) (#269)</span></li>
-<li><span class="h">3eb06a6f</span><span>MEM-ACCT hardening: one Stripe payment per membership dues term</span></li>
-<li><span class="h">0c3512ba</span><span>Member statements: one Stripe payment per statement (no double charges) (#268)</span></li>
-<li><span class="h">96eb2291</span><span>MEM-ACCT hardening: one Stripe payment per member statement</span></li>
-<li><span class="h">f9a4eef5</span><span>Member accounts (part 2): monthly statements, paid by link or a saved card (#267)</span></li>
-<li><span class="h">f22a86ba</span><span>MEM-ACCT part 2: member account statements — monthly on the 1st, paid by link or a saved card</span></li>
-<li><span class="h">5b3f82a4</span><span>Member accounts (part 1): staff put a group's round on a member's account (#266)</span></li>
-<li><span class="h">8a2a1249</span><span>MEM-ACCT part 1: member accounts — staff put a group's round on a member's account</span></li>
-<li><span class="h">7a14850b</span><span>Launch wipe closes Dec 1 instead of Nov 1 (#265)</span></li>
-<li><span class="h">6cc42bd6</span><span>TEST-1: launch wipe closes Dec 1 instead of Nov 1</span></li>
-<li><span class="h">d30b4479</span><span>Demand pricing: online public rate moves with each hour's fill (#264)</span></li>
-<li><span class="h">d2a912be</span><span>PRICE-5: demand pricing — online public rate moves with each hour's fill, course picks suggest or automatic</span></li>
-<li><span class="h">25de845f</span><span>Round packs: unpaid link price is the course's choice, golfer agrees to terms (#263)</span></li>
-<li><span class="h">b667583d</span><span>PRICE-4: round-pack price on an unpaid link is the course's choice, with terms the golfer agrees to</span></li>
-<li><span class="h">e1c241af</span><span>Membership auto-renew (course per tier, required consent, reminders) (#262)</span></li>
-<li><span class="h">d29ba970</span><span>MEM-RENEW: membership auto-renew — course per tier, golfer agrees with a required box</span></li>
-<li><span class="h">53da712c</span><span>Membership tiers: join online (pay and join, or request to join) (#261)</span></li>
-<li><span class="h">91141923</span><span>Regenerate codemap and status board</span></li>
-<li><span class="h">0d9486fe</span><span>MEM-JOIN: join a membership tier online — pay and join, or request to join</span></li>
-<li><span class="h">53505e47</span><span>Pricing 3/4 part B: round packs online (#260)</span></li>
-<li><span class="h">248a5175</span><span>PRICE-3 part B: round packs online — buy on the course page, use when booking</span></li>
-<li><span class="h">e1ec15b2</span><span>Pricing 3/4 part A: round packs at the counter (#259)</span></li>
-<li><span class="h">bad4eb47</span><span>PRICE-3 part A: round packs — sold at the register, used at the counter</span></li>
-<li><span class="h">2c5fcf28</span><span>Pricing 2/4: last-minute deals (#258)</span></li>
-<li><span class="h">f6fd22ff</span><span>PRICE-2: last-minute deals — N% off open tee times within N hours, course-controlled</span></li>
-<li><span class="h">439c4e7b</span><span>Promo codes: made on Schedule, used online and at the counter, priced seat by seat (#257)</span></li>
-<li><span class="h">f65525cf</span><span>A member whose tier is gone keeps what they paid on a move — the code isn't taken off twice</span></li>
-<li><span class="h">6612c506</span><span>Promo review fixes: priced seat by seat so a partial check-in, a party change and residents keep the code; the wallet button sends the code; an edit never turns a code back on; a repriced move carries or drops the code</span></li>
-<li><span class="h">869ce75a</span><span>Promo codes: a course makes codes on Schedule; golfers apply them online, staff at the counter</span></li>
-<li><span class="h">ca86612a</span><span>Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere (#256)</span></li>
-<li><span class="h">c72b0b35</span><span>Stock line refreshes after a sale; the catalog permission says it covers deliveries</span></li>
-<li><span class="h">2c3e1cdd</span><span>Pro shop: cost, reorder points and deliveries, a low-stock line, a sales report, scan anywhere</span></li>
-<li><span class="h">1aa2c299</span><span>Money → Ledger: every day matched against Stripe, every movement, CSV; dues at the shop record amount and cash or check (#255)</span></li>
-<li><span class="h">001ba73f</span><span>Ledger review fixes: refunds are negative numbers in the CSV; a day's Retry reloads it; a range with too many rows is refused, not cut; dues taken must be above $0; a season fits</span></li>
-<li><span class="h">c5b84881</span><span>Money ledger page: days matched against Stripe, every movement, CSV; dues at the course record amount and cash or check</span></li>
-<li><span class="h">7dda7589</span><span>Money ledger: one row for every dollar that moves; membership dues charged safely (#254)</span></li>
-<li><span class="h">48be83aa</span><span>Renewal reminder waits for the window its link can be paid in (one rule, lib/membership-renewal)</span></li>
-<li><span class="h">85c78bb8</span><span>Test: dues paid at the shop read through paidUntilRenewal</span></li>
-<li><span class="h">136a1ea6</span><span>Ledger review fixes: a monthly member can't pay twice in a row; our refund keeps GreenReserve's share after the webhook's copy; the webhook asks Stripe for a charge's refunds</span></li>
-<li><span class="h">5917aabf</span><span>Money ledger: one MoneyMove row for every dollar that moves; dues charged outside a transaction</span></li>
-<li><span class="h">89f0e830</span><span>Golfer record: one course's view of a golfer, staff notes, online-booking block (#253)</span></li>
-<li><span class="h">388244d7</span><span>Golfer record review fixes: waived removals aren't late cancels; blocks hold across email/phone/account; no double decode</span></li>
-<li><span class="h">ffa0ec2a</span><span>Golfer record: one course's view of a golfer, staff notes, online-booking block</span></li>
-<li><span class="h">370f7fa4</span><span>Daily dead ends, part B: staff refunds, party size, counter rates, shop history, returns and void (#252)</span></li>
-<li><span class="h">bf2fdf53</span><span>Member rates at the counter: the member shows their membership, or the course allows any membership</span></li>
-<li><span class="h">65df5988</span><span>Part B review fixes: Refund rounds in no preset, no party or resident change while on the card reader, two refunds at once can't pass the course's share</span></li>
-<li><span class="h">cfe7cb40</span><span>WIP part B: counter rates — resident, senior, junior and membership prices for walk-ins and phone bookings</span></li>
-<li><span class="h">3d18ecd9</span><span>Daily dead ends, part A: declined cards, live tee sheet, search, dues, close-out, phone menu (#251)</span></li>
-<li><span class="h">69bcbab8</span><span>WIP part B: shop sale history and lookup, returns by item, same-day void of a cash sale</span></li>
-<li><span class="h">7dcf8122</span><span>Course page: no layout shift when the day's tee times load</span></li>
-<li><span class="h">f226c81b</span><span>WIP part B: staff change a group's party size; a card check-in from the card form takes a partial party</span></li>
-<li><span class="h">9de927a8</span><span>WIP part B: staff refunds (course share) and giving back a kept late fee</span></li>
-<li><span class="h">4e1d9c2c</span><span>The dues link says why it didn't send; a search result opens Cancellations filtered</span></li>
-<li><span class="h">06b64277</span><span>Daily dead ends, part A: declined cards, a live tee sheet, search, dues, close-out, phone menu, cancellations</span></li>
-<li><span class="h">0dfd8bdf</span><span>Revamp 3: the 12 audit fixes (#250)</span></li>
-<li><span class="h">92b9bfa6</span><span>Messaging: a mobile number counts only when texting is on, and a send that reaches nobody is refused</span></li>
-<li><span class="h">9e689d2b</span><span>Closing a day says who is booked; reopening asks first and unblocks only what the closure blocked</span></li>
-<li><span class="h">1f56429b</span><span>Tests: the Members Expired rule and a booked time's repricing follow fixes 2 and 5</span></li>
-<li><span class="h">28e44ab2</span><span>Events: shotgun starts split 1A/1B, a group is never given another's tee time, a captain pays for the team</span></li>
-<li><span class="h">447cb1bd</span><span>Status board</span></li>
-<li><span class="h">e02ea5d4</span><span>One code, one shop item; an oversold count says so</span></li>
-<li><span class="h">fa151d17</span><span>The booking window turns over at the course's midnight, not UTC's</span></li>
-<li><span class="h">57e64d2d</span><span>&quot;Not paid yet&quot; is what is owed: marked no-shows and refunded rounds aside, and the list behind it is played rounds</span></li>
-<li><span class="h">9bcc13b3</span><span>A cash sale records the total the register showed, or nothing</span></li>
-<li><span class="h">6ed720e1</span><span>A schedule save updates open tee times in place instead of re-creating the horizon; tests pin partial cash pricing</span></li>
-<li><span class="h">af4b9fc3</span><span>Cash at the register is never blocked by sales tax</span></li>
-<li><span class="h">bee3bc29</span><span>A member's group keeps its split when its size changes or part of it checks in; rates lapse at the course's own midnight</span></li>
-<li><span class="h">ec1f63b8</span><span>A price change reaches every bookable day and the open spots of booked times</span></li>
-<li><span class="h">64c39edb</span><span>An unsigned Operator Agreement no longer locks staff out of the tee sheet</span></li>
-<li><span class="h">59b616cd</span><span>Member pricing: the member alone gets the member rate unless the tier includes guests; rates end after the membership does (course grace days); a first dues payment is one term</span></li>
-<li><span class="h">d0b0c181</span><span>Fill a test course with sample data; never email a placeholder address or text a fictional number (#249)</span></li>
-<li><span class="h">09422b74</span><span>Sample data: export lists only Stripe-traceable late fees; test mark stays while sample data is on; batched, retry-safe fill</span></li>
-<li><span class="h">161d3d7f</span><span>Fill a test course with sample data; never email a placeholder address or text a fictional number</span></li>
-<li><span class="h">fa0add63</span><span>DENSE-5 Members: number strip and a sortable table with renewal, rounds and spend (#247)</span></li>
-<li><span class="h">187a1ba4</span><span>DENSE-3 Home: trend lines, next 14 days, checked-in state, Next payout only (#246)</span></li>
-<li><span class="h">b8440aa6</span><span>Fix main's red Tests: noshow-eod-test used a tee time that hadn't gone off yet (#245)</span></li>
-<li><span class="h">8061878d</span><span>No cancelling after the tee time: check in or no-show (charged at midnight) (#244)</span></li>
-<li><span class="h">e8e2a2e6</span><span>DENSE-2 Money sales view, past tee times out of the way, honest day strip and cancellation reasons (#243)</span></li>
-<li><span class="h">531516a0</span><span>DENSE-4b: the tee sheet's day strip — players, checked in, paid, not paid yet (#242)</span></li>
-<li><span class="h">92087fca</span><span>DENSE-4: the tee sheet is seat rows (#241)</span></li>
-<li><span class="h">6eced458</span><span>Courses built by hand are never Orphaned or swept; resend sign-in code is rate-limited (#240)</span></li>
-</ul></div>
 <div class="tiles">
-  <div class="tile t-good"><span class="n">298</span><span class="l">Done</span></div>
+  <div class="tile t-good"><span class="n">345</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">1</span><span class="l">Awaiting review</span></div>
   <div class="tile t-alarm"><span class="n">1</span><span class="l">In flight</span></div>
   <div class="tile t-idle"><span class="n">6</span><span class="l">Not started</span></div>
@@ -230,18 +130,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
   <div class="tile t-idle"><span class="n">17</span><span class="l">Ideas parked</span></div>
 </div>
 <section><h2>Working tree right now</h2>
-<div class="card flag">
-<h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M prisma/schema.prisma</code></li><li><code>M src/app/api/operator/events/[id]/route.ts</code></li><li><code>M src/app/dashboard/events/page.tsx</code></li><li><code>M src/app/globals.css</code></li><li><code>M src/components/dashboard/events/EventDetail.tsx</code></li><li><code>?? prisma/migrations/20261031030000_event_player_checkin/</code></li><li><code>?? scripts/event-day-test.ts</code></li><li><code>?? src/components/dashboard/events/EventDay.tsx</code></li></ul>
+<div class="card">
+<h3>Uncommitted changes</h3><p>Docs get committed, source gets discarded &mdash; check what these are first.</p>
+<ul class="plain"><li><code>M RUN_QUEUE.md</code></li><li><code>M STATUS.artifact.html</code></li><li><code>M STATUS.json</code></li><li><code>M STATUS.md</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
-<div class="row"><span class="idx">1</span><span class="t">DENSE — Cam 2026-10-27: &quot;too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin&quot;. Lots of data, almost no sentences. Plan, princip</span><span class="where">:47</span></div>
-<div class="row"><span class="idx">2</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:50</span></div>
-<div class="row"><span class="idx">3</span><span class="t">RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against the code).</span><span class="where">:57</span></div>
-<div class="row"><span class="idx">4</span><span class="t">LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed</span><span class="where">:236</span></div>
-<div class="row"><span class="idx">5</span><span class="t">CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf</span><span class="where">:339</span></div>
-<div class="row"><span class="idx">6</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:2994</span></div>
+<div class="row"><span class="idx">1</span><span class="t">DENSE — Cam 2026-10-27: &quot;too much words on the pages … think OpenTable, Stripe, Lightspeed, Toast … apply across all tabs on both dashboard and admin&quot;. Lots of data, almost no sentences. Plan, princip</span><span class="where">:101</span></div>
+<div class="row"><span class="idx">2</span><span class="t">WALKS — CAM: live walks before launch (code merged; each needs real Stripe/Resend/phone).</span><span class="where">:104</span></div>
+<div class="row"><span class="idx">3</span><span class="t">RV-LEDGER — Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against the code).</span><span class="where">:111</span></div>
+<div class="row"><span class="idx">4</span><span class="t">LEGAL-ENTITY — GreenReserve LLC exists (NY, DOS ID 8033928, filed</span><span class="where">:290</span></div>
+<div class="row"><span class="idx">5</span><span class="t">CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf</span><span class="where">:393</span></div>
+<div class="row"><span class="idx">6</span><span class="t">SETUP — CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars; verify on /admin/system. Blob and Birdie done.</span><span class="where">:3048</span></div>
 </div></section>
 <section><h2>Revise campaign &mdash; page by page</h2>
 <p class="note">15 pages closed, 7 open. One page in flight at a time.</p>
@@ -258,7 +158,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>In flight</h2>
 <div class="card flag"><h3>ROADMAP-1 — Cam 2026-10-07: build beyond the tee sheet, AI/BI first. The plan, order and open decisions live in `PLATFORM_ROADMAP_SPEC.md`: BI-1 monthly AI review (BUILT) → ACT-1 move a group → ACT-2 </h3>
 <p>PARTIALLY BUILT — shipped: BI-1 #92, ACT-1 #93, ACT-2 #94, MSG-1 v1 #95, SHEET-2 #97–99, POS-1a #106. Now: POS-1b. After launch: OUT-1, FB-1, PWA-1.</p>
-<p class="note"><code>RUN_QUEUE.md:48</code></p></div>
+<p class="note"><code>RUN_QUEUE.md:102</code></p></div>
 </section>
 <section><h2>Built, not signed off</h2>
 <p class="note">The box is open because <code>/gr-review</code> hasn't run &mdash; not because the code is missing.</p>
@@ -266,7 +166,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <div class="row"><span class="t">BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge)</span><span class="age">101d</span><span class="where">b88c8bf3</span></div>
 </div></section>
 <section><h2>Waiting on you, not on a build</h2>
-<ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:50</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:57</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:236</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:339</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2358</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:2994</span></li></ul>
+<ul class="plain"><li>CAM: live walks before launch (code merged <span class="where">:104</span></li><li>Cam: decide the open review-ledger items from 2026-10-05 (REVIEW_LEDGER) that were never queued — verify each against the code before building (this list was not checked against th <span class="where">:111</span></li><li>Cam: which business address to publish, and confirming the Terms' governing law moves from New Jersey to New York (LLC is NY) <span class="where">:290</span></li><li>CAM: add the courseName booking question in Cal-com — add a booking question with identifier `courseName` (&quot;Golf course name&quot;) to the demo event, so homepage demo inquiries arrive  <span class="where">:393</span></li><li>CAM: open /admin/courses → acknowledged orphans → Force delete DaisyLinks (or fold into the PRELAUNCH purge) Loop fix is code-verified: sweepOrphanCourses skips archived [ORPHAN] c <span class="where">:2412</span></li><li>CAM: Twilio A2P 10DLC registration (or verified toll-free) + TWILIO_* env vars <span class="where">:3048</span></li></ul>
 </section>
 <section><h2>Parked, with triggers</h2><ul class="plain"><li>Role-shaped admin (parked 2026-08-26 — TRIGGER: first employee account provisioned)</li><li>Future admin tabs (from brainstorm 2026-07-09 — each has a TRIGGER, don't build early)</li><li>MP-4f — actorName strings onto real rows (parked 2026-10-17 — TRIGGER: after launch, with Cam present for the backfill)</li><li>Golfer course directory /courses (parked — TRIGGER: Cam wants browse/search)</li><li>PB — private-club billing (parked 2026-10-17 — TRIGGER: Cam sets prices AND first private club signs)</li><li>EV-2 — operator analytics reports (parked — TRIGGER: a live operator names the questions)</li><li>Operator 2FA backup codes + staff sessionVersion (parked 2026-10-17 — TRIGGER: after launch, attended migration)</li></ul></section>
 </div></div>
@@ -279,14 +179,14 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 5d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 5d</td></tr>
-<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 7d</td></tr>
-<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
-<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
+<tr><td><code>ADMIN_V5_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 8d</td></tr>
 <tr><td><code>HOMEPAGE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-23 &middot; 8d</td></tr>
-<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
-<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
-<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
-<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 8d</td></tr>
+<tr><td><code>AGREEMENT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 9d</td></tr>
+<tr><td><code>CALL_SCHEDULING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 9d</td></tr>
+<tr><td><code>ONBOARDING_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 9d</td></tr>
+<tr><td><code>ONBOARDING_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 9d</td></tr>
+<tr><td><code>PUBLIC_SITE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 9d</td></tr>
+<tr><td><code>RECEIPT_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-22 &middot; 9d</td></tr>
 <tr><td><code>ADMIN_MASTER_PLAN.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 <tr><td><code>ADMIN_REBUILD_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 <tr><td><code>ADMIN_V2_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
@@ -314,6 +214,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">74475da5</td><td class="num">2026-10-31</td><td>Event day: check-in, day view, cart signs (#276)</td></tr>
+<tr><td class="num">23c14e34</td><td class="num">2026-10-31</td><td>Event day: check-in, day view, cart signs</td></tr>
 <tr><td class="num">5af344f0</td><td class="num">2026-10-31</td><td>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause (#275)</td></tr>
 <tr><td class="num">847fd73c</td><td class="num">2026-10-31</td><td>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause</td></tr>
 <tr><td class="num">f84e4be2</td><td class="num">2026-10-31</td><td>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)</td></tr>
@@ -324,8 +226,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">4bf11a39</td><td class="num">2026-10-31</td><td>Change member: move a wrong-member account charge (#272)</td></tr>
 <tr><td class="num">13b505dc</td><td class="num">2026-10-31</td><td>Change member: move a wrong-member account charge to the right member</td></tr>
 <tr><td class="num">dea052d9</td><td class="num">2026-10-31</td><td>Member billing walkthrough fixes (#271)</td></tr>
-<tr><td class="num">e7cbdde5</td><td class="num">2026-10-31</td><td>Member billing walkthrough fixes: whose account, which round, golfer-page chrome</td></tr>
-<tr><td class="num">8f7d18ad</td><td class="num">2026-10-31</td><td>Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
