@@ -310,7 +310,7 @@ this script with a non-zero exit — that is the point of the tag.
 | `/dashboard/home` | operator | middleware | page | `src/app/dashboard/home/page.tsx` | 256 |
 | `/dashboard/login` | operator | entry | page | `src/app/dashboard/login/page.tsx` | 77 |
 | `/dashboard/members` | operator | middleware | page | `src/app/dashboard/members/page.tsx` | 870 |
-| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 196 |
+| `/dashboard/messages` | operator | middleware | page | `src/app/dashboard/messages/page.tsx` | 195 |
 | `/dashboard/money` | operator | middleware | page | `src/app/dashboard/money/page.tsx` | 269 |
 | `/dashboard/onboarding` | operator | **NONE FOUND** | page | `src/app/dashboard/onboarding/page.tsx` | 241 |
 | `/dashboard/outings` | operator | middleware | page | `src/app/dashboard/outings/page.tsx` | 5 |
