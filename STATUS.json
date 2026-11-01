@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-01T17:57:39.759Z",
+  "generatedAt": "2026-11-01T18:04:18.875Z",
   "repo": {
-    "head": "600f2ce9",
+    "head": "dfddc597",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 5,
     "dirty": [
@@ -9,13 +9,27 @@
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
       " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/messages/page.tsx"
+      " M src/app/dashboard/settings/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "6d571671",
+        "date": "2026-11-01T13:04:05-05:00",
+        "subject": "DENSE-9 Messages: the intro is the reply-time line and the email (#284)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "d74792b2",
+        "date": "2026-11-01T17:57:41+00:00",
+        "subject": "DENSE-9 Messages: the intro is the reply-time line and the email",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "fe34fcb1",
         "date": "2026-11-01T12:41:57-05:00",
@@ -497,6 +511,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "6d571671",
+      "date": "2026-11-01",
+      "subject": "DENSE-9 Messages: the intro is the reply-time line and the email (#284)"
+    },
+    {
+      "h": "d74792b2",
+      "date": "2026-11-01",
+      "subject": "DENSE-9 Messages: the intro is the reply-time line and the email"
+    },
+    {
       "h": "fe34fcb1",
       "date": "2026-11-01",
       "subject": "DENSE-8 Events: the list is a table with what each event still owes (#283)"
@@ -545,16 +569,6 @@
       "h": "5db27c7b",
       "date": "2026-11-01",
       "subject": "Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online"
-    },
-    {
-      "h": "46be1bc6",
-      "date": "2026-10-31",
-      "subject": "Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)"
-    },
-    {
-      "h": "efef5f62",
-      "date": "2026-11-01",
-      "subject": "Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day"
     }
   ]
 }

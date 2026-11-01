@@ -514,9 +514,8 @@ function SettingsPageInner() {
           {active==='Your course' && (
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-start">
               <SectionCard title="How you look">
-                <p className="text-sm text-ink-soft -mt-1">What golfers see first. Logo and photo save on upload; the colour saves with the button above.</p>
-                <ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square works best (a PNG with a transparent background is ideal). Max 8MB — large photos are auto-resized."/>
-                <Field label="Your colour" hint="One accent colour. It tints your dashboard and the buttons on your booking page. Click the swatch to pick.">
+                <ImageUpload label="Your logo" kind="logo" value={(form.logoUrl as string)||''} onUploaded={url=>setForm(f=>({...f,logoUrl:url}))} hint="Square; a transparent PNG is best. Max 8MB. Saves on upload."/>
+                <Field label="Your colour" hint="Tints your dashboard and booking page buttons.">
                   <div className="flex items-center gap-2">
                     <input type="color" value={(form.brandColor as string) || '#173B2A'} onChange={e => set('brandColor', e.target.value)}
                       className="w-10 h-10 rounded-full border border-line cursor-pointer p-0.5 bg-paper"/>
@@ -525,10 +524,10 @@ function SettingsPageInner() {
                       className="bg-paper border border-line rounded-md px-3 py-2.5 text-sm font-mono text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-32"/>
                   </div>
                 </Field>
-                <ImageUpload label="Your course photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="A wide landscape shot — it sits behind your course name as the banner. Max 8MB — large photos are auto-resized."/>
+                <ImageUpload label="Your course photo" kind="hero" value={(form.heroImageUrl as string)||''} onUploaded={url=>setForm(f=>({...f,heroImageUrl:url}))} hint="Wide landscape, behind your course name. Max 8MB. Saves on upload."/>
                 {/* PERS-1: the golfer's checkout, confirmation, check-in and manage pages wear the photo,
                     logo and colour above automatically. This note is the one thing they add. */}
-                <Field label="A note for golfers after they book" hint="Optional. Shown on the confirmation page and in the confirmation email — e.g. where to check in or park. 400 characters.">
+                <Field label="A note for golfers after they book" hint="Shown after booking and in the confirmation email. 400 characters.">
                   <textarea value={(form.confirmationNote as string) || ''} onChange={e => set('confirmationNote', e.target.value)} rows={3} maxLength={400}
                     placeholder="Check in at the pro shop 15 minutes before your tee time. Carts are behind the clubhouse."
                     className={INPUT + ' w-full'}/>
@@ -551,7 +550,7 @@ function SettingsPageInner() {
                   logoUrl={(form.logoUrl as string) || ''}
                   heroImageUrl={(form.heroImageUrl as string) || ''}
                 />
-                <p className="text-[12px] text-ink-soft mt-2">Updates as you type. The real page shows your live tee times and prices.</p>
+                <p className="text-[12px] text-ink-soft mt-2">Sample times and prices; your real page shows yours.</p>
               </div>
             </div>
           )}
@@ -560,7 +559,7 @@ function SettingsPageInner() {
           {active==='Your course' && (
             <div className="space-y-5">
               <SectionCard title="Course identity">
-                <p className="text-sm text-ink-soft -mt-1">Your name and address are what golfers search for, so we change them with you. Everything else here you edit yourself.</p>
+                <p className="text-sm text-ink-soft -mt-1">Name and address changes go through us.</p>
                 <dl className="divide-y divide-line-soft border border-line rounded-md">
                   {IDENTITY_ROWS.map(r => (
                     <div key={r.key} className="flex items-baseline gap-3 px-3 py-2.5">
@@ -620,9 +619,9 @@ function SettingsPageInner() {
                       {String(form.description ?? '').trim() ? 'Ask the assistant to improve it' : 'Ask the assistant to write it'}
                     </button>
                   )}
-                  <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="Tell golfers what makes your course special — history, signature holes, views, etc."/>
+                  <textarea value={(form.description as string)||''} onChange={e=>set('description',e.target.value)} rows={4} className={iCls + ' resize-none'} placeholder="History, signature holes, views"/>
                 </Field>
-                <Field label="Gift Card URL" hint="Where golfers buy gift cards. Adds a button to your course page.">
+                <Field label="Gift Card URL" hint="Adds a gift card button to your course page.">
                   <FInput value={(form.giftCardUrl as string)||''} onChange={v=>set('giftCardUrl',v)} placeholder="https://"/>
                 </Field>
               </SectionCard>
@@ -643,7 +642,7 @@ function SettingsPageInner() {
           {active==='Your course' && (
             <div className="space-y-5">
               <SectionCard title="Gallery Photos">
-                <p className="text-sm text-ink-soft -mt-1">Add up to 8 photos of your course. These appear in the Photos section of your booking page. Uploads save immediately.</p>
+                <p className="text-sm text-ink-soft -mt-1">Up to 8 photos. Each saves on upload.</p>
                 {photoErr && (
                   <div className="flex items-center gap-2 bg-bad/5 border border-bad/20 text-bad rounded-md px-4 py-3 text-sm">
                     <StatusDot status="bad" />{photoErr}
@@ -694,7 +693,7 @@ function SettingsPageInner() {
                   rules underneath are unchanged. */}
               <WhoPaysWhat accessLoaded={access.loaded} accessFailed={!!access.failed} canSeeSchedule={access.can('schedule.view')} canSeeMembers={access.can('members.view')} />
               <SectionCard title="Who gets their own price">
-                <p className="text-sm text-ink-soft -mt-2">Everyone pays your public price unless they are one of these. Public prices, and any period like twilight, are set in <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Schedule</Link>.</p>
+                <p className="text-sm text-ink-soft -mt-2">Public prices and periods like twilight are set in <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Schedule</Link>.</p>
                 <div className="border-t border-line-soft pt-4">
                   <Toggle label="Members" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
                   <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasMemberPricing
@@ -792,7 +791,6 @@ function SettingsPageInner() {
                       </div>
                     )}
                   </Card>
-                  <p className="text-[12px] text-ink-soft mt-2">Updates as you type. Shown in the About section of your booking page.</p>
                 </div>
               </div>
             </div>
@@ -914,7 +912,6 @@ function SettingsPageInner() {
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
               <Card className="p-5">
                 <h2 className="text-[15px] font-semibold text-ink">What your course has</h2>
-                <p className="text-sm text-ink-soft mt-1 mb-3">Tick everything golfers can use. It shows on your booking page.</p>
                 {FACILITY_GROUPS.map(g => (
                   <div key={g.title} className="border-t border-line-soft pt-3 mt-3 first-of-type:border-0">
                     <h3 className="text-[13px] font-semibold text-ink mb-1">{g.title}</h3>
@@ -996,7 +993,7 @@ function SettingsPageInner() {
                     <ul className="list-disc pl-5 space-y-0.5 text-ink">{facilityPreview.map((l, i) => <li key={i}>{l}</li>)}</ul>
                   ) : <p className="text-ink-soft">Nothing ticked yet, so golfers see no Facilities section.</p>}
                 </Card>
-                <p className="text-[12px] text-ink-soft mt-2">Updates as you tick. Prices here are shown to golfers, never charged.</p>
+                <p className="text-[12px] text-ink-soft mt-2">Facility prices are shown, never charged.</p>
               </div>
             </div>
           )}
@@ -1030,7 +1027,7 @@ function SettingsPageInner() {
               {/* SP-A: who works here and what each person may do — the owner's alone. */}
               <SectionCard title="Staff & permissions">
                 {isStaffLogin
-                  ? <p className="text-sm text-ink-soft">Staff accounts and what each person can do are managed from the course owner&apos;s login.</p>
+                  ? <p className="text-sm text-ink-soft">Staff and their access are managed from the owner&apos;s login.</p>
                   : <StaffPermissions />}
               </SectionCard>
             </div>
@@ -1046,7 +1043,7 @@ function SettingsPageInner() {
                   <p className="mt-1 text-sm text-ink-soft">
                     {isStaffLogin
                       ? <>You are signed in as staff at {String(form.name || 'this course')}. The course owner decides what you can see and change.</>
-                      : <>This is the owner login for {String(form.name || 'your course')}: the admin for your own course. You can change everything here, and you decide what each staff login can do in <button type="button" onClick={() => goTo('Staff')} className="text-pine underline">Staff</button>.</>}
+                      : <>Owner login for {String(form.name || 'your course')}. What each staff login can do is set in <button type="button" onClick={() => goTo('Staff')} className="text-pine underline">Staff</button>.</>}
                   </p>
                 </Card>
               )}
@@ -1060,7 +1057,7 @@ function SettingsPageInner() {
                 </div>
                 {/* Staff logins are a separate account: the password and two-step
                     routes here are the owner's only (both refuse staff). */}
-                {isStaffLogin && <p className="border-t border-line-soft pt-4 text-sm text-ink-soft">Your password and sign-in codes are set up by the course owner. Ask them if you need a new password.</p>}
+                {isStaffLogin && <p className="border-t border-line-soft pt-4 text-sm text-ink-soft">The course owner sets your password and sign-in codes.</p>}
                 {!isStaffLogin && <div className="border-t border-line-soft pt-4">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <div>
