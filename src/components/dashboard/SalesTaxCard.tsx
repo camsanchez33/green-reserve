@@ -39,7 +39,7 @@ export function SalesTaxCard({ homeState }: { homeState: string }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-ink-soft -mt-1">Stripe works out the sales tax on pro-shop items — rung up on the Pro shop page or added to a group&apos;s round from the tee sheet — from your course&apos;s address and what the item is (clothing, snacks and drinks are taxed differently in some states), adds it to the total, and keeps a record for your tax returns. You still file and pay the tax yourself. Green fees, carts and the booking fee are not taxed here.</p>
+      <p className="text-sm text-ink-soft -mt-1">Stripe adds sales tax to pro-shop items from your address and the item type, and keeps the record. You still file and pay it. Green fees, carts and the booking fee aren&apos;t taxed here.</p>
       {loadError && (
         <div className="rounded-md bg-bad/5 border border-bad/20 px-4 py-2.5 flex items-center justify-between gap-3">
           <p className="text-xs text-bad">{loadError}</p>
@@ -71,7 +71,7 @@ export function SalesTaxCard({ homeState }: { homeState: string }) {
             </div>
           )}
           {s.missing.length > 0 && <p className="text-[12.5px] text-ink-muted">Stripe still needs: {s.missing.join(', ').replace(/_/g, ' ')}.</p>}
-          <p className="text-[12.5px] text-ink-muted">Uses your course address on file. Your Stripe account is the seller, so the tax is collected for you; Stripe Tax charges a small fee. If you refund a card sale in Stripe, note it for your return — the tax record isn't reversed automatically yet.</p>
+          <p className="text-[12.5px] text-ink-muted">Stripe Tax charges a small fee. A refund made in the Stripe dashboard, not at the register, isn&apos;t reversed on the tax record — note it for your return.</p>
         </>
       )}
       {error && <p className="text-xs text-bad">{error}</p>}

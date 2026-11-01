@@ -113,7 +113,7 @@ export function StaffPermissions({ onCount }: { onCount?: (n: number) => void })
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-[13.5px] text-ink-soft">Each person gets their own login. Pick a starting point, then turn individual permissions on or off. Staff, Stripe, your agreement and your cancellation policy always stay with your login.</p>
+        <p className="text-[13.5px] text-ink-soft">One login each. Pick a starting point, then adjust. Staff, Stripe, your agreement and your cancellation policy stay with your login.</p>
       </div>
 
       {loadError && (

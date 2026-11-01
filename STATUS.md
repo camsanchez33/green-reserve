@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 18:04 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `dfddc597` · working tree **5 dirty file(s)**
+Generated 2026-11-01 18:10 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `2a058f27` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 14 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 16 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `bda21776` | 2026-11-01 | DENSE-10 Settings part 1: labels over sentences (#285) |
+| `e4bc0f02` | 2026-11-01 | DENSE-10 Settings part 1: labels over sentences |
 | `6d571671` | 2026-11-01 | DENSE-9 Messages: the intro is the reply-time line and the email (#284) |
 | `d74792b2` | 2026-11-01 | DENSE-9 Messages: the intro is the reply-time line and the email |
 | `fe34fcb1` | 2026-11-01 | DENSE-8 Events: the list is a table with what each event still owes (#283) |
@@ -29,13 +31,14 @@ Generated 2026-11-01 18:04 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (6 file(s))
 
 - `M DENSE_UI_SPEC.md`
-- `M docs/CODEMAP.md`
-- `M docs/codemap.json`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/settings/page.tsx`
+- `M src/components/dashboard/CardReaderCard.tsx`
+- `M src/components/dashboard/SalesTaxCard.tsx`
+- `M src/components/dashboard/ShopCatalog.tsx`
+- `M src/components/dashboard/StaffPermissions.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -161,6 +164,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `bda21776` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences (#285)
+- `e4bc0f02` 2026-11-01 — DENSE-10 Settings part 1: labels over sentences
 - `6d571671` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email (#284)
 - `d74792b2` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email
 - `fe34fcb1` 2026-11-01 — DENSE-8 Events: the list is a table with what each event still owes (#283)
@@ -171,8 +176,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `3ee7b212` 2026-11-01 — DENSE-6 Schedule: labels over sentences
 - `a59c32eb` 2026-10-31 — Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)
 - `20f25179` 2026-11-01 — Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm
-- `f353d52a` 2026-10-31 — Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)
-- `5db27c7b` 2026-11-01 — Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online
 
 ---
 

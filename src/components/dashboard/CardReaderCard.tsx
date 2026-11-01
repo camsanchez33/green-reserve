@@ -53,7 +53,7 @@ export function CardReaderCard() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-ink">Take cards at the register on a Stripe card reader. Customers tap, insert or swipe; the money goes to your Stripe account like any other payment.</p>
+      <p className="text-sm text-ink">Tap, insert or swipe at the register; paid to your Stripe account.</p>
       {list.readers.length > 0 && (
         <ul className="divide-y divide-line-soft">
           {list.readers.map(r => (
