@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission, can } from '@/lib/session';
 import { createSale, findSales, voidCashSale, settleOpenSale, saleView, reconcileStuckSale, cancelSaleIntent, whyNotOpen, refundSale, sendShopRefund, reverseShopRefundTax, hasDiscount, SALE_INCLUDE, type SaleView } from '@/lib/shop-sales';
 import { rateLimit } from '@/lib/rate-limit';
+import { todayIn, DEFAULT_TZ, isValidTimezone } from '@/lib/course-time';
+import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { ringUpCash } from '@/lib/register';
 import { startReaderPayment, readerSaleStatus, cancelReaderPayment, simulateTap } from '@/lib/card-reader';
 import { sendSms } from '@/lib/twilio';
@@ -48,7 +50,11 @@ export async function GET(req: NextRequest) {
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ sales: contact ? r.value : r.value.map(s => ({ ...s, customerEmail: '', customerPhone: '' })) });
   }
-  const since = new Date(Date.now() - 36 * 60 * 60 * 1000);
+  // Shop audit 2/27 (2026-11-01): "Today's sales" is the course's own today (its time zone), not the
+  // last 36 hours, so yesterday's sales never sit under it and the header total matches.
+  const course = await prisma.course.findUnique({ where: { id: g.session.courseId }, select: { timezone: true } });
+  const tz = course?.timezone && isValidTimezone(course.timezone) ? course.timezone : DEFAULT_TZ;
+  const since = new Date(teeToUtcMs(todayIn(tz), '00:00', tz));
   // A card payment whose request never finished is settled from Stripe here.
   const stuck = await prisma.shopSale.findMany({ where: { courseId: g.session.courseId, status: 'paying' }, select: { id: true }, take: 10 });
   for (const s of stuck) {
@@ -57,10 +63,10 @@ export async function GET(req: NextRequest) {
   }
   const sales = await prisma.shopSale.findMany({
     // PRICE-3: a golfer's unpaid online pack sale isn't the counter's to chase — listed only while recent.
-    where: { courseId: g.session.courseId, OR: [{ createdAt: { gte: since } }, { status: { in: ['open', 'paying'] }, NOT: { status: 'open', soldBy: 'online' } }] },
+    where: { courseId: g.session.courseId, OR: [{ createdAt: { gte: since } }, { paidAt: { gte: since } }, { status: { in: ['open', 'paying'] }, NOT: { status: 'open', soldBy: 'online' } }] },
     orderBy: { createdAt: 'desc' }, take: 200, include: SALE_INCLUDE,
   });
-  return NextResponse.json({ sales: sales.map(saleView) });
+  return NextResponse.json({ sales: sales.map(saleView), dayStart: since.toISOString() });
 }
 
 /** Text or email an open sale's pay link. Never throws; says what went wrong. */

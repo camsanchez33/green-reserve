@@ -18,7 +18,7 @@ type Sales = {
   byDow: { dow: string; collectedCents: number }[];
   byHour: { hour: number; collectedCents: number }[];
   collectedCents: number; beforeCollectedCents: number;
-  summary: { greenCents: number; cartCents: number; rangeCents: number; lateFeesKeptCents: number; shopOnRoundsCents: number; walkUpCents: number; walkUpSales: number; greenReserveFeesCents: number };
+  summary: { greenCents: number; cartCents: number; rangeCents: number; refundedCents?: number; lateFeesKeptCents: number; shopOnRoundsCents: number; walkUpCents: number; walkUpSales: number; eventCents?: number; eventPayments?: number; greenReserveFeesCents: number };
   paid: { cardCents: number; counterCents: number; accountCents?: number; outstandingCents: number; outstandingGroups: number };
   todayByHour: { hour: number; collectedCents: number }[]; lastWeekByHour: { hour: number; collectedCents: number }[];
   todayCollectedCents: number; lastWeekCollectedCents: number;
@@ -195,10 +195,12 @@ export function SalesPanel({ nextPayout, showPayout, stripeConnected, notPaid, o
             <Row label="Green fees" value={usd2(s.summary.greenCents)} />
             <Row label="Carts" value={usd2(s.summary.cartCents)} />
             {s.summary.rangeCents > 0 && <Row label="Range balls" value={usd2(s.summary.rangeCents)} />}
+            {(s.summary.refundedCents ?? 0) > 0 && <Row label="Refunded" value={`−${usd2(s.summary.refundedCents ?? 0)}`} />}
             <Row label="Rounds" value={usd2(s.collectedCents)} strong />
             {s.summary.lateFeesKeptCents > 0 && <Row label="Late-cancel fees kept" value={usd2(s.summary.lateFeesKeptCents)} />}
             {s.summary.shopOnRoundsCents > 0 && <Row label="Shop on rounds" value={usd2(s.summary.shopOnRoundsCents)} />}
             {s.summary.walkUpSales > 0 && <Row label={`Register sales · ${s.summary.walkUpSales}`} value={usd2(s.summary.walkUpCents)} />}
+            {(s.summary.eventPayments ?? 0) > 0 && <Row label={`Event payments · ${s.summary.eventPayments}`} value={usd2(s.summary.eventCents ?? 0)} />}
             {s.summary.greenReserveFeesCents > 0 && <Row label="GreenReserve booking fees" value={usd2(s.summary.greenReserveFeesCents)} muted />}
           </div>
         </Card>

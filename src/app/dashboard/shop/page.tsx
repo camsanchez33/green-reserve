@@ -125,17 +125,25 @@ export default function ShopPage() {
 
   // SHOP-4: every reload of the sales also refreshes the Stock line (a sale can take the last one).
   const [loads, setLoads] = useState(0);
+  // The course's midnight (its time zone), from the server: "today" here is the course's day, not the browser's.
+  const [dayStart, setDayStart] = useState<number | null>(null);
+  const paidToday = (paidAt: string | null | undefined) => {
+    if (!paidAt) return false;
+    const t = Date.parse(paidAt);
+    return dayStart != null ? t >= dayStart : new Date(t).toDateString() === new Date().toDateString();
+  };
   const load = useCallback(async () => {
     setLoads(n => n + 1);
     setLoadError('');
     const [i, s] = await Promise.all([
       dfetch<{ items: Item[] }>('/api/operator/shop-items'),
-      dfetch<{ sales: Sale[] }>('/api/operator/shop-sales'),
+      dfetch<{ sales: Sale[]; dayStart?: string }>('/api/operator/shop-sales'),
     ]);
     if (!i.ok) { setLoadError(i.error); return; }
     if (!s.ok) { setLoadError(s.error); return; }
     setItems(i.data.items.filter(x => x.active));
     setSales(s.data.sales);
+    if (s.data.dayStart) setDayStart(Date.parse(s.data.dayStart));
     // Readers are optional: a course without one (or Stripe down) still sells in cash and by link.
     const rd = await dfetch<{ readers: Reader[]; testMode: boolean }>('/api/operator/card-readers');
     if (rd.ok) { setReaders(rd.data.readers); setTestMode(rd.data.testMode); setReaderId(id => rd.data.readers.some(x => x.id === id) ? id : rd.data.readers[0]?.id ?? ''); }
@@ -429,7 +437,7 @@ export default function ShopPage() {
     else setError('That group isn’t waiting to pay today — check the tee sheet.');
   }, [roundsData, readers.length]);
   const needContact = pay === 'sms' ? customer.phone.replace(/\D/g, '').length < 10 : pay === 'email' ? !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(customer.email.trim()) : false;
-  const todayTotal = (sales ?? []).filter(s => isPaid(s) && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString()).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
+  const todayTotal = (sales ?? []).filter(s => isPaid(s) && paidToday(s.paidAt)).reduce((t, s) => t + s.totalCents - s.refundedCents, 0);
   // Quick cash amounts: the exact total, then the next notes up.
   const quickCash = [due, ...[2000, 5000, 10000].filter(n => n > due)].filter((n, i, a) => n > 0 && a.indexOf(n) === i).slice(0, 4);
 
@@ -817,7 +825,7 @@ export default function ShopPage() {
                           {isPaid(s) && <button onClick={() => { setReceipt(receipt?.id === s.id ? null : { id: s.id, via: s.customerEmail || !s.customerPhone ? 'email' : 'sms', to: s.customerEmail || s.customerPhone }); setError(''); }} disabled={!!busy} className={LINK}>Receipt</button>}
                           {isPaid(s) && (canRefund || (canReturn && s.lines.some(l => !l.round && l.quantity > l.returnedQty))) && left > 0 && <button onClick={() => { setRefund(refund?.id === s.id ? null : { id: s.id, amount: (left / 100).toFixed(2), reason: '', restock: false, confirm: false }); setError(''); }} disabled={!!busy} className={LINK}>Refund</button>}
                           {/* Dead end 23: a cash sale rung up by mistake, the same day (the server also checks the close-out). */}
-                          {(s.status === 'paid_cash' || s.status === 'paid_account') && !s.roundsCents && s.refundedCents === 0 && s.paidAt && new Date(s.paidAt).toDateString() === new Date().toDateString() && <button onClick={() => act(s, 'void_cash')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
+                          {(s.status === 'paid_cash' || s.status === 'paid_account') && !s.roundsCents && s.refundedCents === 0 && paidToday(s.paidAt) && <button onClick={() => act(s, 'void_cash')} disabled={!!busy} className="text-[12.5px] text-bad hover:underline disabled:opacity-50">Void</button>}
                           {s.status === 'open' && (
                             <>
                               {s.link

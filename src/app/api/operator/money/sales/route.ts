@@ -47,10 +47,12 @@ export async function GET(req: NextRequest) {
     collectedCents: r.collectedCents, beforeCollectedCents: before.revenue.collectedCents,
     summary: {
       greenCents: r.greenCents, cartCents: r.cartCents,
-      rangeCents: Math.max(0, r.collectedCents - r.greenCents - r.cartCents),
+      rangeCents: Math.max(0, r.collectedCents + r.roundRefundsCents - r.greenCents - r.cartCents),
+      refundedCents: r.roundRefundsCents,
       lateFeesKeptCents: r.lateFeesKeptCents,
       shopOnRoundsCents: r.beyond.shopOnRoundsCents,
       walkUpCents: r.beyond.walkUpCents, walkUpSales: r.beyond.walkUpSales,
+      eventCents: r.beyond.eventCents, eventPayments: r.beyond.eventPayments,
       greenReserveFeesCents: r.greenReserveFeesCents,
     },
     paid: { cardCents: r.cardCents, counterCents: r.counterCents, accountCents: r.accountCents, outstandingCents: r.outstandingCents, outstandingGroups: r.outstandingBookings },

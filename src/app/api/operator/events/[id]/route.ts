@@ -110,6 +110,7 @@ type Body = EventInput & {
   action?: string; preview?: boolean;
   taskId?: string; label?: string; dueDate?: string | null; done?: boolean;
   playerId?: string; playerIds?: unknown; on?: boolean; text?: string; groupNo?: number | null; startHole?: number | null; size?: number;
+  email?: unknown; phone?: unknown;
 };
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -227,6 +228,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           if (!v.ok) return bad(`Their pay link couldn\u2019t be cancelled, so they weren\u2019t removed: ${v.error}`, v.status);
         }
         const r = await prisma.courseEventPlayer.deleteMany({ where: { id: String(body.playerId ?? ''), eventId: id } });
+        if (!r.count) return bad('That player is gone — refresh the page.', 404);
+        break;
+      }
+      // Events audit 10 (2026-11-01): a substitute takes the player's place — name and contact change
+      // in place, so what was paid (and their group and hole) stays with the spot. Removing and
+      // re-adding cut the payment off from the player.
+      case 'player_edit': {
+        const name = String(body.name ?? '').trim().slice(0, 120);
+        if (!name) return bad('Add their name.');
+        const email = String(body.email ?? '').trim().toLowerCase().slice(0, 200);
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('That email doesn\u2019t look right.');
+        const phone = String(body.phone ?? '').trim().slice(0, 40);
+        const r = await prisma.courseEventPlayer.updateMany({ where: { id: String(body.playerId ?? ''), eventId: id }, data: { name, email, phone } });
         if (!r.count) return bad('That player is gone — refresh the page.', 404);
         break;
       }

@@ -70,6 +70,8 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
   const [linkCopied, setLinkCopied] = useState(false);
   // team: a captain paying for their whole sign-up (Revamp 3 fix 10).
   const [paidHere, setPaidHere] = useState<{ id: string; amount: string; method: string; team?: boolean } | null>(null);
+  // A substitute: change the name and contact on the spot, so its payment stays with it.
+  const [swap, setSwap] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
   const [copied, setCopied] = useState('');
   // W2-9d: only players on the list are paired, counted and asked to pay; a sign-up group's one payment covers each of them.
   const onList = e.entrants.filter(p => p.status === 'in');
@@ -331,8 +333,21 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
               <tbody className="divide-y divide-line-soft">
                 {[...sortedGroups.flatMap(([, ps]) => ps), ...ungrouped].map(p => (
                   <tr key={p.id} id={`player-${p.id}`}>
+                    {swap?.id === p.id ? (
+                      <td colSpan={2} className="py-2 pr-3">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <input aria-label="Name" className={INPUT + ' w-40'} value={swap.name} onChange={ev => setSwap({ ...swap, name: ev.target.value })} />
+                          <input aria-label="Email" type="email" placeholder="Email" className={INPUT + ' w-48'} value={swap.email} onChange={ev => setSwap({ ...swap, email: ev.target.value })} />
+                          <input aria-label="Phone" type="tel" placeholder="Phone" className={INPUT + ' w-32'} value={swap.phone} onChange={ev => setSwap({ ...swap, phone: ev.target.value })} />
+                          <button disabled={!!busy || !swap.name.trim()} onClick={async () => { if (await act('swap' + p.id, { action: 'player_edit', playerId: p.id, name: swap.name, email: swap.email, phone: swap.phone }, () => `${swap.name.trim()} has the spot.`)) setSwap(null); }}
+                            className={SECONDARY}>{busy === 'swap' + p.id ? 'Saving…' : 'Save'}</button>
+                          <button onClick={() => setSwap(null)} className="text-[12.5px] text-ink-soft hover:text-ink">Close</button>
+                        </span>
+                      </td>
+                    ) : (<>
                     <td className="py-2 pr-3 text-ink">{p.name}{answersOf(p) && <div className="text-[12px] text-ink-muted">{answersOf(p)}</div>}</td>
                     <td className="py-2 pr-3 text-ink-soft">{[p.email, p.phone].filter(Boolean).join(' · ') || '—'}</td>
+                    </>)}
                     <td className="py-2 pr-3">
                       <input type="number" min={1} max={250} aria-label={`Group for ${p.name}`} disabled={!live || !!busy} defaultValue={p.groupNo ?? ''} key={`g${p.id}${p.groupNo}`}
                         className={INPUT + ' w-20'} onBlur={ev => { const v = ev.target.value === '' ? null : Number(ev.target.value); if (v !== p.groupNo) act('set:' + p.id, { action: 'player_set', playerId: p.id, groupNo: v, startHole: p.startHole }); }} />
@@ -385,7 +400,14 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
                         );
                       })()}
                     </td>}
-                    <td className="py-2 text-right">{live && <button disabled={!!busy} onClick={() => act('del:' + p.id, { action: 'player_remove', playerId: p.id })} className="text-[12.5px] text-ink-soft hover:text-bad">Remove</button>}</td>
+                    <td className="py-2 text-right whitespace-nowrap">{live && <>
+                      <button disabled={!!busy} onClick={() => setSwap({ id: p.id, name: p.name, email: p.email, phone: p.phone })} className="text-[12.5px] text-ink-soft hover:text-ink mr-3">Swap</button>
+                      <button disabled={!!busy} onClick={() => {
+                        // What they paid stays on the event either way; say so before the spot goes.
+                        if (playersPay && stateOf(p) === 'paid' && !confirm(`${p.name} has paid; the money stays on the event. For a substitute, use Swap. Remove anyway?`)) return;
+                        act('del:' + p.id, { action: 'player_remove', playerId: p.id });
+                      }} className="text-[12.5px] text-ink-soft hover:text-bad">Remove</button>
+                    </>}</td>
                   </tr>
                 ))}
               </tbody>
