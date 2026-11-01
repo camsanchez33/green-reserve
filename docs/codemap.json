@@ -3704,7 +3704,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 491,
+      "lines": 492,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5887,7 +5887,7 @@
     },
     {
       "path": "src/app/api/operator/golfers/[key]/route.ts",
-      "lines": 92,
+      "lines": 97,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7082,7 +7082,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 276,
+      "lines": 280,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16090,7 +16090,7 @@
     },
     {
       "path": "src/lib/claim-tee-time.ts",
-      "lines": 103,
+      "lines": 120,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16243,7 +16243,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 298,
+      "lines": 299,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -20503,7 +20503,7 @@
     },
     {
       "path": "src/lib/membership-join.ts",
-      "lines": 92,
+      "lines": 97,
       "purpose": "MEM-JOIN (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -21989,7 +21989,7 @@
     },
     {
       "path": "src/lib/promo-codes.ts",
-      "lines": 118,
+      "lines": 122,
       "purpose": "PRICE-1 (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -22007,6 +22007,10 @@
         },
         {
           "name": "NOTHING_OFF",
+          "kind": "const"
+        },
+        {
+          "name": "PROMO_USED",
           "kind": "const"
         },
         {
@@ -23803,7 +23807,7 @@
     },
     {
       "path": "src/lib/shop-sales.ts",
-      "lines": 848,
+      "lines": 849,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [

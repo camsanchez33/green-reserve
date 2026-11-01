@@ -813,7 +813,7 @@ export async function reverseVoidTax(saleId: string): Promise<void> {
  * only the last 36 hours. A day (the course's), or a search across 90 days by customer,
  * item or receipt number. Newest first.
  */
-export async function findSales(courseId: string, opts: { day?: string; q?: string }): Promise<Result<SaleView[]>> {
+export async function findSales(courseId: string, opts: { day?: string; q?: string; contact?: boolean }): Promise<Result<SaleView[]>> {
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
   if (!course) return fail(404, 'Course not found.');
   const today = todayIn(course.timezone);
@@ -834,8 +834,9 @@ export async function findSales(courseId: string, opts: { day?: string; q?: stri
     where: {
       courseId, status: { not: 'open' }, createdAt: { gte: from, ...(to ? { lt: to } : {}) },
       ...(q ? { OR: [
-        { customerName: contains }, { customerEmail: contains },
-        ...(digits.length >= 4 ? [{ customerPhone: { contains: digits } }] : []),
+        { customerName: contains },
+        // Audit 2026-10-31: only a login that may see golfer contact details finds a sale by email or phone.
+        ...(opts.contact ? [{ customerEmail: contains }, ...(digits.length >= 4 ? [{ customerPhone: { contains: digits } }] : [])] : []),
         { lines: { some: { name: contains } } },
         // The receipt shows the sale's id — its last characters are enough.
         { id: { endsWith: q.toLowerCase() } },

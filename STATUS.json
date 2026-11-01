@@ -1,28 +1,42 @@
 {
-  "generatedAt": "2026-11-01T00:00:26.926Z",
+  "generatedAt": "2026-11-01T00:35:41.189Z",
   "repo": {
-    "head": "f2eb20ef",
-    "branch": "HEAD",
-    "dirtyCount": 12,
+    "head": "e075cedc",
+    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
+    "dirtyCount": 11,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/membership-autorenew-db-test.ts",
-      " M scripts/money-ledger-test.ts",
-      " M src/app/api/membership/[id]/route.ts",
-      " M src/app/api/operator/member-accounts/route.ts",
-      " M src/app/api/operator/tiers/route.ts",
-      " M src/app/membership/[id]/page.tsx",
-      " M src/components/dashboard/MemberAccount.tsx",
-      " M src/lib/email.ts",
-      " M src/lib/member-account.ts",
-      "?? scripts/audit-blockers-db-test.ts"
+      " M src/app/api/bookings/route.ts",
+      " M src/app/api/operator/golfers/[key]/route.ts",
+      " M src/app/api/operator/shop-sales/route.ts",
+      " M src/lib/claim-tee-time.ts",
+      " M src/lib/counter-pay.ts",
+      " M src/lib/membership-join.ts",
+      " M src/lib/promo-codes.ts",
+      " M src/lib/shop-sales.ts",
+      "?? scripts/audit-security-db-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
-    "unrecorded": []
+    "unrecorded": [
+      {
+        "h": "46be1bc6",
+        "date": "2026-10-31T20:29:18-04:00",
+        "subject": "Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "efef5f62",
+        "date": "2026-11-01T00:22:54+00:00",
+        "subject": "Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day",
+        "ids": [],
+        "matches": []
+      }
+    ]
   },
   "counts": {
     "runDone": 345,
@@ -419,9 +433,24 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "46be1bc6",
+      "date": "2026-10-31",
+      "subject": "Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)"
+    },
+    {
+      "h": "efef5f62",
+      "date": "2026-11-01",
+      "subject": "Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day"
+    },
+    {
       "h": "f2eb20ef",
       "date": "2026-10-31",
       "subject": "queue/spec update (#277)"
+    },
+    {
+      "h": "98868184",
+      "date": "2026-10-31",
+      "subject": "queue/spec update"
     },
     {
       "h": "74475da5",
@@ -429,9 +458,19 @@
       "subject": "Event day: check-in, day view, cart signs (#276)"
     },
     {
+      "h": "23c14e34",
+      "date": "2026-10-31",
+      "subject": "Event day: check-in, day view, cart signs"
+    },
+    {
       "h": "5af344f0",
       "date": "2026-10-31",
       "subject": "Front desk \"Return items\" permission; drop the false counter-fee clause (#275)"
+    },
+    {
+      "h": "847fd73c",
+      "date": "2026-10-31",
+      "subject": "Front desk \"Return items\" permission; drop the false counter-fee clause"
     },
     {
       "h": "f84e4be2",
@@ -439,44 +478,19 @@
       "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)"
     },
     {
+      "h": "36872c8f",
+      "date": "2026-10-31",
+      "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails"
+    },
+    {
       "h": "719073d5",
       "date": "2026-10-31",
       "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)"
     },
     {
-      "h": "4bf11a39",
+      "h": "94b6272a",
       "date": "2026-10-31",
-      "subject": "Change member: move a wrong-member account charge (#272)"
-    },
-    {
-      "h": "dea052d9",
-      "date": "2026-10-31",
-      "subject": "Member billing walkthrough fixes (#271)"
-    },
-    {
-      "h": "8f7d18ad",
-      "date": "2026-10-31",
-      "subject": "Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)"
-    },
-    {
-      "h": "14c84cbd",
-      "date": "2026-10-31",
-      "subject": "Membership dues: one Stripe payment per term (no double charges) (#269)"
-    },
-    {
-      "h": "0c3512ba",
-      "date": "2026-10-31",
-      "subject": "Member statements: one Stripe payment per statement (no double charges) (#268)"
-    },
-    {
-      "h": "f9a4eef5",
-      "date": "2026-10-31",
-      "subject": "Member accounts (part 2): monthly statements, paid by link or a saved card (#267)"
-    },
-    {
-      "h": "5b3f82a4",
-      "date": "2026-10-30",
-      "subject": "Member accounts (part 1): staff put a group's round on a member's account (#266)"
+      "subject": "Isolation test: pay link refused before the round's day, then the SMS checks on a round today"
     }
   ]
 }

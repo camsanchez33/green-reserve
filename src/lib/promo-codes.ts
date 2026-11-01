@@ -53,7 +53,7 @@ export function promoFits(code: PromoRow, teeTime: { date: string; time: string 
  * Look a code up for a course and check it against a tee time and a golfer. The caller
  * prices it seat by seat (seatAfter) and refuses it when it takes nothing off.
  */
-export async function applyPromo(courseId: string, raw: unknown, ctx: { date: string; time: string; rateApplied: boolean; golferEmail?: string | null }): Promise<{ ok: true; code: PromoRow } | Fail> {
+export async function applyPromo(courseId: string, raw: unknown, ctx: { date: string; time: string; rateApplied: boolean; golferEmail?: string | null; golferAccountId?: string | null }): Promise<{ ok: true; code: PromoRow } | Fail> {
   const code = normCode(raw);
   if (!code) return fail('Enter a code.');
   const row = await prisma.promoCode.findUnique({ where: { courseId_code: { courseId, code } } });
@@ -61,9 +61,12 @@ export async function applyPromo(courseId: string, raw: unknown, ctx: { date: st
   if (!row) return fail('That code isn’t valid here.');
   const why = promoFits(row, ctx, { rateApplied: ctx.rateApplied });
   if (why) return fail(why);
-  if (row.onePerGolfer && ctx.golferEmail) {
-    const used = await prisma.booking.findFirst({ where: { courseId, promoCodeId: row.id, status: { not: 'cancelled' }, golferEmail: { equals: ctx.golferEmail.trim(), mode: 'insensitive' } }, select: { id: true } });
-    if (used) return fail('You’ve already used that code.');
+  // Once per golfer: by the email on the booking and, signed in, by the golfer's account (another
+  // email typed in doesn't get it again). claimTeeTime checks the same again inside the booking's transaction.
+  const email = ctx.golferEmail?.trim();
+  if (row.onePerGolfer && (email || ctx.golferAccountId)) {
+    const used = await prisma.booking.findFirst({ where: { courseId, promoCodeId: row.id, status: { not: 'cancelled' }, OR: [...(email ? [{ golferEmail: { equals: email, mode: 'insensitive' as const } }] : []), ...(ctx.golferAccountId ? [{ golferAccountId: ctx.golferAccountId }] : [])] }, select: { id: true } });
+    if (used) return fail(PROMO_USED);
   }
   return { ok: true, code: row };
 }
@@ -115,3 +118,4 @@ export async function listPromos(courseId: string) {
 }
 
 export const NOTHING_OFF = 'That code takes nothing off this tee time.';
+export const PROMO_USED = 'You’ve already used that code.';

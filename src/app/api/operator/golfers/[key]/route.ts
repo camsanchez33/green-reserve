@@ -27,7 +27,12 @@ async function gate(params: Params['params']) {
     const b = await prisma.booking.findFirst({ where: { id: raw.slice(2), courseId: session.courseId }, select: { golferEmail: true, golferPhone: true, golferAccountId: true } });
     key = b ? golferKey(b) : null;
     if (!key) return { res: NextResponse.json({ error: b ? 'This booking has no email or phone, so there is no record to show.' : 'That booking isn’t on your course.' }, { status: b ? 409 : 404 }) };
-  } else key = parseGolferKey(raw);
+  } else {
+    key = parseGolferKey(raw);
+    // Audit 2026-10-31: an email or phone typed into the link would tell a login without
+    // sheet.golfer_contact whether that person has booked here — they open records by booking only.
+    if (key && !key.startsWith('a:') && !can(session, 'sheet.golfer_contact')) return { res: NextResponse.json({ error: 'Open this golfer from one of their bookings.' }, { status: 403 }) };
+  }
   if (!key) return { res: NextResponse.json({ error: 'That golfer link isn’t right.' }, { status: 400 }) };
   return { session, key };
 }

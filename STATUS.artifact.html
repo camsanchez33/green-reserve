@@ -117,10 +117,17 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-01 00:00 UTC</span><span>HEAD @ f2eb20ef</span>
-    <span>12 uncommitted</span>
+    <span>2026-11-01 00:35 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ e075cedc</span>
+    <span>11 uncommitted</span>
   </div>
 </header>
+<div class="alarm">
+<div class="lede">2 runs have shipped that the queue doesn't know about</div>
+<p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
+<ul>
+<li><span class="h">46be1bc6</span><span>Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)</span></li>
+<li><span class="h">efef5f62</span><span>Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day</span></li>
+</ul></div>
 <div class="tiles">
   <div class="tile t-good"><span class="n">345</span><span class="l">Done</span></div>
   <div class="tile t-warn"><span class="n">1</span><span class="l">Awaiting review</span></div>
@@ -132,7 +139,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/membership-autorenew-db-test.ts</code></li><li><code>M scripts/money-ledger-test.ts</code></li><li><code>M src/app/api/membership/[id]/route.ts</code></li><li><code>M src/app/api/operator/member-accounts/route.ts</code></li><li><code>M src/app/api/operator/tiers/route.ts</code></li><li><code>M src/app/membership/[id]/page.tsx</code></li><li><code>M src/components/dashboard/MemberAccount.tsx</code></li><li><code>M src/lib/email.ts</code></li><li><code>M src/lib/member-account.ts</code></li><li><code>?? scripts/audit-blockers-db-test.ts</code></li></ul>
+<ul class="plain"><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M src/app/api/bookings/route.ts</code></li><li><code>M src/app/api/operator/golfers/[key]/route.ts</code></li><li><code>M src/app/api/operator/shop-sales/route.ts</code></li><li><code>M src/lib/claim-tee-time.ts</code></li><li><code>M src/lib/counter-pay.ts</code></li><li><code>M src/lib/membership-join.ts</code></li><li><code>M src/lib/promo-codes.ts</code></li><li><code>M src/lib/shop-sales.ts</code></li><li><code>?? scripts/audit-security-db-test.ts</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -214,18 +221,18 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 10d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">46be1bc6</td><td class="num">2026-10-31</td><td>Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)</td></tr>
+<tr><td class="num">efef5f62</td><td class="num">2026-11-01</td><td>Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day</td></tr>
 <tr><td class="num">f2eb20ef</td><td class="num">2026-10-31</td><td>queue/spec update (#277)</td></tr>
+<tr><td class="num">98868184</td><td class="num">2026-10-31</td><td>queue/spec update</td></tr>
 <tr><td class="num">74475da5</td><td class="num">2026-10-31</td><td>Event day: check-in, day view, cart signs (#276)</td></tr>
+<tr><td class="num">23c14e34</td><td class="num">2026-10-31</td><td>Event day: check-in, day view, cart signs</td></tr>
 <tr><td class="num">5af344f0</td><td class="num">2026-10-31</td><td>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause (#275)</td></tr>
+<tr><td class="num">847fd73c</td><td class="num">2026-10-31</td><td>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause</td></tr>
 <tr><td class="num">f84e4be2</td><td class="num">2026-10-31</td><td>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)</td></tr>
+<tr><td class="num">36872c8f</td><td class="num">2026-10-31</td><td>Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails</td></tr>
 <tr><td class="num">719073d5</td><td class="num">2026-10-31</td><td>Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)</td></tr>
-<tr><td class="num">4bf11a39</td><td class="num">2026-10-31</td><td>Change member: move a wrong-member account charge (#272)</td></tr>
-<tr><td class="num">dea052d9</td><td class="num">2026-10-31</td><td>Member billing walkthrough fixes (#271)</td></tr>
-<tr><td class="num">8f7d18ad</td><td class="num">2026-10-31</td><td>Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)</td></tr>
-<tr><td class="num">14c84cbd</td><td class="num">2026-10-31</td><td>Membership dues: one Stripe payment per term (no double charges) (#269)</td></tr>
-<tr><td class="num">0c3512ba</td><td class="num">2026-10-31</td><td>Member statements: one Stripe payment per statement (no double charges) (#268)</td></tr>
-<tr><td class="num">f9a4eef5</td><td class="num">2026-10-31</td><td>Member accounts (part 2): monthly statements, paid by link or a saved card (#267)</td></tr>
-<tr><td class="num">5b3f82a4</td><td class="num">2026-10-30</td><td>Member accounts (part 1): staff put a group's round on a member's account (#266)</td></tr>
+<tr><td class="num">94b6272a</td><td class="num">2026-10-31</td><td>Isolation test: pay link refused before the round's day, then the SMS checks on a round today</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>
