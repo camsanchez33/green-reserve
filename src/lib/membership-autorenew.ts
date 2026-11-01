@@ -48,7 +48,7 @@ export function autoRenewTermsText(o: { courseName: string; tierName: string; te
 }
 
 // The real one is lib/stripe chargeOneIntent: ONE PaymentIntent per term (duesIntentId), shared with the pay link.
-type Charger = (o: { existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown>; customerId: string; paymentMethodId: string; connectedAccountId: string; amountCents: number; applicationFeeCents: number; description: string; metadata: Record<string, string> }) => Promise<{ id: string; amount: number; status: string }>;
+type Charger = (o: { existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown>; customerId: string; paymentMethodId: string; connectedAccountId: string; amountCents: number; applicationFeeCents: number; description: string; metadata: Record<string, string> }) => Promise<{ id: string; amount: number; status: string; application_fee_amount?: number | null }>;
 
 /** The one intent's key for a membership's next term (the pay link and the renewal share it). */
 export const duesIntentKey = (id: string, lastPaidAt: Date | null) => `dues-intent-${id}-${lastPaidAt ? lastPaidAt.getTime() : 'first'}`;
@@ -117,7 +117,7 @@ export async function chargeRenewal(membershipId: string, charge: Charger, now =
   const cur = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { lastPaidAt: true, expiresAt: true, duesIntentId: true } });
   if (cur.expiresAt && cur.expiresAt.getTime() > now.getTime()) { await release(); return { status: 'skipped', why: 'already renewed' }; }
   const r = renewalCents(m.tier);
-  let pi: { id: string; amount: number; status: string };
+  let pi: { id: string; amount: number; status: string; application_fee_amount?: number | null };
   try {
     pi = await charge({
       // One intent per term, shared with the pay link: a retry, a timeout or the member paying by link can never be a second charge.
@@ -141,7 +141,7 @@ export async function chargeRenewal(membershipId: string, charge: Charger, now =
     await prisma.courseMembership.update({ where: { id: m.id }, data: { duesChargeStartedAt: null, autoRenewFailedAt: now, autoRenewRetryAt: retry ? new Date(now.getTime() + RETRY_DAYS * DAY) : null } });
     return { status: 'declined', error: `The card needs the member (${pi.status}).`, retry };
   }
-  await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: r.feeCents, stripeId: pi.id, membershipId: m.id, actor: 'system', note: `${m.tier.name} renewed automatically` });
+  await recordMove({ courseId: m.courseId, what: 'dues', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? r.feeCents, stripeId: pi.id, membershipId: m.id, actor: 'system', note: `${m.tier.name} renewed automatically` });
   const ok = await recordPaidTerm({ id: m.id, startedAt: m.startedAt, termMonths: m.tier.termMonths }, cur, pi.id, { autoRenewFailedAt: null, autoRenewRetryAt: null });
   if (!ok) { await release(); console.error(JSON.stringify({ ev: 'membership.renew.term_changed', membershipId: m.id, paymentIntentId: pi.id })); }
   const after = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id }, select: { expiresAt: true } });
