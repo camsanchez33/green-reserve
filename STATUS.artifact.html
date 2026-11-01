@@ -117,14 +117,16 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
     <p class="sub">Generated from <code>RUN_QUEUE.md</code>, <code>REVISE_QUEUE.md</code>, <code>ADMIN_MASTER_PLAN.md</code> and <code>git log</code>. Nothing here is hand-maintained &mdash; if a line is wrong, the source doc is wrong.</p>
   </div>
   <div class="meta">
-    <span>2026-11-01 05:51 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ ccac7a43</span>
-    <span>6 uncommitted</span>
+    <span>2026-11-01 11:25 UTC</span><span>claude/walkthrough-2-prioritization-ui5xyu @ 374e4520</span>
+    <span>5 uncommitted</span>
   </div>
 </header>
 <div class="alarm">
-<div class="lede">6 runs have shipped that the queue doesn't know about</div>
+<div class="lede">8 runs have shipped that the queue doesn't know about</div>
 <p class="note">RUN_QUEUE.md was last committed 2026-10-31. These commits appear nowhere in it.</p>
 <ul>
+<li><span class="h">4274c1a6</span><span>DENSE-6 Schedule: labels over sentences (#281)</span></li>
+<li><span class="h">3ee7b212</span><span>DENSE-6 Schedule: labels over sentences</span></li>
 <li><span class="h">a59c32eb</span><span>Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)</span></li>
 <li><span class="h">20f25179</span><span>Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm</span></li>
 <li><span class="h">f353d52a</span><span>Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)</span></li>
@@ -143,7 +145,7 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Working tree right now</h2>
 <div class="card flag">
 <h3>A build looks mid-run</h3><p>New migration or source files are untracked. Don't run the queue header's <code>git checkout -- .</code> cleanup until this run commits, or the work is gone.</p>
-<ul class="plain"><li><code>M DENSE_UI_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/schedule-rework-test.ts</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/schedules/page.tsx</code></li></ul>
+<ul class="plain"><li><code>M DENSE_UI_SPEC.md</code></li><li><code>M docs/CODEMAP.md</code></li><li><code>M docs/codemap.json</code></li><li><code>M scripts/words-guard.baseline.json</code></li><li><code>M src/app/dashboard/shop/page.tsx</code></li></ul>
 </div></section>
 <div class="cols"><div class="stack">
 <section><h2>Not started &mdash; in queue order</h2><div class="ledger">
@@ -185,8 +187,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <section><h2>Spec inventory</h2>
 <p class="note">Open refs = how many open queue items still point at that spec. Zero and old means consumed.</p>
 <div class="tablewrap"><table><thead><tr><th>Spec</th><th>Open refs</th><th>Last touched</th></tr></thead><tbody>
+<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-11-01 &middot; 0d</td></tr>
 <tr><td><code>CLAUDE.md</code></td><td class="num">1</td><td class="num">2026-10-30 &middot; 1d</td></tr>
-<tr><td><code>DENSE_UI_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-27 &middot; 4d</td></tr>
 <tr><td><code>PLATFORM_ROADMAP_SPEC.md</code></td><td class="num">1</td><td class="num">2026-10-20 &middot; 11d</td></tr>
 <tr><td><code>STAFF_POLICY_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-26 &middot; 5d</td></tr>
 <tr><td><code>OPERATOR_REWORK_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-25 &middot; 6d</td></tr>
@@ -225,6 +227,8 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td><code>UI_REVISE_SPEC.md</code></td><td class="num">&mdash;</td><td class="num">2026-10-20 &middot; 11d</td></tr>
 </tbody></table></div></section>
 <section><h2>Recent commits</h2><div class="tablewrap"><table><tbody>
+<tr><td class="num">4274c1a6</td><td class="num">2026-11-01</td><td>DENSE-6 Schedule: labels over sentences (#281)</td></tr>
+<tr><td class="num">3ee7b212</td><td class="num">2026-11-01</td><td>DENSE-6 Schedule: labels over sentences</td></tr>
 <tr><td class="num">a59c32eb</td><td class="num">2026-10-31</td><td>Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)</td></tr>
 <tr><td class="num">20f25179</td><td class="num">2026-11-01</td><td>Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm</td></tr>
 <tr><td class="num">f353d52a</td><td class="num">2026-10-31</td><td>Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)</td></tr>
@@ -235,8 +239,6 @@ footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:
 <tr><td class="num">98868184</td><td class="num">2026-10-31</td><td>queue/spec update</td></tr>
 <tr><td class="num">74475da5</td><td class="num">2026-10-31</td><td>Event day: check-in, day view, cart signs (#276)</td></tr>
 <tr><td class="num">23c14e34</td><td class="num">2026-10-31</td><td>Event day: check-in, day view, cart signs</td></tr>
-<tr><td class="num">5af344f0</td><td class="num">2026-10-31</td><td>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause (#275)</td></tr>
-<tr><td class="num">847fd73c</td><td class="num">2026-10-31</td><td>Front desk &quot;Return items&quot; permission; drop the false counter-fee clause</td></tr>
 </tbody></table></div></section>
 <footer><span>Regenerate: <code>node scripts/status.mjs &amp;&amp; node scripts/status-html.mjs</code></span><span>Source of truth stays in the repo docs. This board only reports them.</span></footer>
 </div>

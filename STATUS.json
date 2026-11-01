@@ -1,22 +1,35 @@
 {
-  "generatedAt": "2026-11-01T05:51:40.300Z",
+  "generatedAt": "2026-11-01T11:25:14.535Z",
   "repo": {
-    "head": "ccac7a43",
+    "head": "374e4520",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 6,
+    "dirtyCount": 5,
     "dirty": [
       "M DENSE_UI_SPEC.md",
       " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/schedule-rework-test.ts",
       " M scripts/words-guard.baseline.json",
-      " M src/app/dashboard/schedules/page.tsx"
+      " M src/app/dashboard/shop/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "4274c1a6",
+        "date": "2026-11-01T01:58:35-04:00",
+        "subject": "DENSE-6 Schedule: labels over sentences (#281)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "3ee7b212",
+        "date": "2026-11-01T05:51:42+00:00",
+        "subject": "DENSE-6 Schedule: labels over sentences",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "a59c32eb",
         "date": "2026-10-31T22:09:58-04:00",
@@ -225,16 +238,16 @@
   },
   "specs": [
     {
+      "file": "DENSE_UI_SPEC.md",
+      "openRefs": 1,
+      "lastTouched": "2026-11-01",
+      "ageDays": 0
+    },
+    {
       "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-10-30",
       "ageDays": 1
-    },
-    {
-      "file": "DENSE_UI_SPEC.md",
-      "openRefs": 1,
-      "lastTouched": "2026-10-27",
-      "ageDays": 4
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
@@ -456,6 +469,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "4274c1a6",
+      "date": "2026-11-01",
+      "subject": "DENSE-6 Schedule: labels over sentences (#281)"
+    },
+    {
+      "h": "3ee7b212",
+      "date": "2026-11-01",
+      "subject": "DENSE-6 Schedule: labels over sentences"
+    },
+    {
       "h": "a59c32eb",
       "date": "2026-10-31",
       "subject": "Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)"
@@ -504,16 +527,6 @@
       "h": "23c14e34",
       "date": "2026-10-31",
       "subject": "Event day: check-in, day view, cart signs"
-    },
-    {
-      "h": "5af344f0",
-      "date": "2026-10-31",
-      "subject": "Front desk \"Return items\" permission; drop the false counter-fee clause (#275)"
-    },
-    {
-      "h": "847fd73c",
-      "date": "2026-10-31",
-      "subject": "Front desk \"Return items\" permission; drop the false counter-fee clause"
     }
   ]
 }

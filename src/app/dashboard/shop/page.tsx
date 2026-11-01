@@ -440,7 +440,7 @@ export default function ShopPage() {
         {access.loaded && !canSell ? <StaffNotice what="the pro shop" view="shop.sell" /> : (
           <div className="px-4 sm:px-10 py-7">
             <h1 className="font-serif text-[32px] leading-none text-ink">Pro shop</h1>
-            <p className="text-[13.5px] text-ink-soft mt-2">Walk-up sales and green fees taken at the register{sales ? ` · ${usd(todayTotal)} today` : ''}. For a group that’s playing, add items to their round from the tee sheet instead.</p>
+            {sales && <p className="text-[13.5px] text-ink-muted mt-2 tabular-nums">{usd(todayTotal)} today</p>}
 
             {loadError && (
               <div className="mt-4 bg-bad/5 border border-bad/20 rounded-md px-4 py-3 text-sm text-bad flex items-center justify-between gap-3" role="alert">
@@ -668,7 +668,7 @@ export default function ShopPage() {
                           <input value={discount.value} onChange={e => setDiscount({ ...discount, value: e.target.value })} inputMode="decimal" aria-label={discount.mode === 'percent' ? 'Percent off' : 'Dollars off'} placeholder={discount.mode === 'percent' ? '10' : '5.00'} className={INPUT + ' w-20'} />
                           <button type="button" onClick={() => setDiscount(null)} className="text-[12.5px] text-ink-soft hover:text-ink underline underline-offset-2">Remove</button>
                         </div>
-                        <input value={discount.note} onChange={e => setDiscount({ ...discount, note: e.target.value })} maxLength={120} placeholder="Why (for your records, shown on the receipt)" aria-label="Discount reason" className={INPUT + ' w-full'} />
+                        <input value={discount.note} onChange={e => setDiscount({ ...discount, note: e.target.value })} maxLength={120} placeholder="Reason (shown on the receipt)" aria-label="Discount reason" className={INPUT + ' w-full'} />
                       </div>
                     )
                 )}
@@ -687,10 +687,9 @@ export default function ShopPage() {
                         {readers.map(x => <option key={x.id} value={x.id}>{x.label}{x.online ? '' : ' (offline)'}</option>)}
                       </select>
                     )}
-                    {pay === 'reader' && <p className="text-[12.5px] text-ink-muted">The reader asks for the card. The money goes to your Stripe account.</p>}
                     {hasRounds && <p className="text-[12.5px] text-ink-muted">{pay === 'reader'
-                      ? 'They pay by card, booking fee included, and are checked in when it goes through.'
-                      : 'Cash: groups are checked in and paid here, one receipt. One group alone can go on the card reader. Discounts are for shop items.'}</p>}
+                      ? 'Booking fee included; checked in when it goes through.'
+                      : 'Checked in and paid here, one receipt. Discounts are for shop items only.'}</p>}
                     {/* CASH-1: a login with check-in but not counter payment can only use the reader, for one group at a time. */}
                     {!payChoices.some(([k]) => k === pay) && <p className="text-[12.5px] text-bad" role="alert">{hasRounds && !canCash ? 'One group alone can go on the card reader. Cash needs “Mark paid at the counter”.' : 'Pick how they pay.'}</p>}
                     {pay === 'cash' && ready && due > 0 && (
@@ -716,7 +715,6 @@ export default function ShopPage() {
                         {pay === 'sms'
                           ? <input value={customer.phone} onChange={e => setCustomer(c => ({ ...c, phone: e.target.value }))} placeholder="Mobile number" type="tel" aria-label="Mobile number" className={INPUT + ' w-full'} />
                           : <input value={customer.email} onChange={e => setCustomer(c => ({ ...c, email: e.target.value }))} placeholder="Email address" type="email" aria-label="Email address" className={INPUT + ' w-full'} />}
-                        <p className="text-[12.5px] text-ink-muted">They pay on their phone. The money goes to your Stripe account.</p>
                       </div>
                     )}
                     {noTax && <p className="text-[13px] text-warn" role="status">{pay === 'cash' || pay === 'account' ? 'No sales tax right now — taken without it.' : 'No sales tax right now — cash only.'} <button type="button" onClick={() => setQuoteTry(n => n + 1)} className="underline font-medium">Try again</button></p>}
