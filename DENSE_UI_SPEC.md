@@ -153,7 +153,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
 - [x] **DENSE-7 Pro shop** (BUILT 2026-11-01, text only — Cam: no sales strip or top items for now, today's total already shows and the close-out + sales report carry the rest; page words 733 → 660: subtitle → "$X today", reader/phone helper lines gone, round pay lines one short line each) (~12 → ≤ 3). Register stays task-first; add today's
   sales strip (sales · items · cash · card) and top items (Square) — ask D2.
   Close-out table unchanged, sentences → labels.
-- [ ] **DENSE-8 Events** (~20–25 → ≤ 6). List as a table (date, kind, entrants of
+- [x] **DENSE-8 Events** (BUILT 2026-11-01 — Cam picked both numbers: Money owed and Open tasks. The list is a table: Event · Date · Players · Owed · To do; Owed is eventMoney()'s owedCents, the event page's own sum, blank for a cancelled or unpriced event, "Paid" at $0; To do keeps its dot (overdue / to do / ready). The event page's Money block was already label/value rows; the empty state and the sign-up line shortened) (~20–25 → ≤ 6). List as a table (date, kind, entrants of
   players, money owed, tasks); detail's Money block as label/value rows.
 - [ ] **DENSE-9 Messages** (2 → 1). Minor: the reply-time line stays as the one
   sentence.

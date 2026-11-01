@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 11:25 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `374e4520` · working tree **5 dirty file(s)**
+Generated 2026-11-01 17:34 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a04207c5` · working tree **8 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 8 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 10 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `286a3d44` | 2026-11-01 | DENSE-7 Pro shop: labels over sentences (text only) (#282) |
+| `06c09849` | 2026-11-01 | DENSE-7 Pro shop: labels over sentences (text only) |
 | `4274c1a6` | 2026-11-01 | DENSE-6 Schedule: labels over sentences (#281) |
 | `3ee7b212` | 2026-11-01 | DENSE-6 Schedule: labels over sentences |
 | `a59c32eb` | 2026-10-31 | Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280) |
@@ -23,13 +25,16 @@ Generated 2026-11-01 11:25 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (5 file(s))
+### Uncommitted working tree (8 file(s))
 
 - `M DENSE_UI_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/shop/page.tsx`
+- `M src/app/api/operator/events/route.ts`
+- `M src/app/dashboard/events/page.tsx`
+- `M src/components/dashboard/events/EventDetail.tsx`
+- `?? scripts/dense8-events-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -46,7 +51,7 @@ This is the distinction a raw checkbox count gets wrong.
 
 | item | shipped | age | commit | source |
 |---|---|---|---|---|
-| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 101d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
+| BUG: orphan banner loops forever — BUILT b88c8bf — CAM: open /admin/courses → acknowledged orphans → Force del | 2026-07-22 | 102d | `b88c8bf3` | `RUN_QUEUE.md:2412` |
 
 ## Not started — the actual queue
 
@@ -155,6 +160,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `286a3d44` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only) (#282)
+- `06c09849` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only)
 - `4274c1a6` 2026-11-01 — DENSE-6 Schedule: labels over sentences (#281)
 - `3ee7b212` 2026-11-01 — DENSE-6 Schedule: labels over sentences
 - `a59c32eb` 2026-10-31 — Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)
@@ -165,8 +172,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `efef5f62` 2026-11-01 — Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day
 - `f2eb20ef` 2026-10-31 — queue/spec update (#277)
 - `98868184` 2026-10-31 — queue/spec update
-- `74475da5` 2026-10-31 — Event day: check-in, day view, cart signs (#276)
-- `23c14e34` 2026-10-31 — Event day: check-in, day view, cart signs
 
 ---
 

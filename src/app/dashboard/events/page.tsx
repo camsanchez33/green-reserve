@@ -18,7 +18,12 @@ import { formatTeeDay, formatTeeTime } from '@/lib/format';
 type Row = {
   id: string; name: string; kind: string; date: string; format: string; startTime: string; holes: number; status: string;
   players: number; entrantCount: number; heldCount: number; tasksOpen: number; tasksOverdue: number;
+  /** DENSE-8: what the event still owes (0 when it has no price), as on its own page. */
+  owedCents?: number; pricePerPlayerCents?: number;
 };
+const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// DENSE-8 (Cam 2026-11-01): the list is a table — event · date · players · owed · to do.
+const COLS = 'sm:grid sm:grid-cols-[minmax(0,1fr)_9rem_8rem_7rem_8.5rem] sm:items-center gap-x-4';
 type List = { today: string; courseHoles: number; products: Product[]; nines: NineOpt[]; events: Row[] };
 
 // Printing the pairings prints only the sheet: the bar, tabs and assistant stay off paper.
@@ -84,17 +89,22 @@ function EventsInner() {
     if (eventId === id) loadDetail(eventId); else router.push(`/dashboard/events?id=${eventId}`);
   }
 
+  const head = (
+    <div className={COLS + ' hidden px-5 py-2 text-[12.5px] text-ink-muted border-b border-line-soft'}>
+      <span>Event</span><span>Date</span><span>Players</span><span className="text-right">Owed</span><span>To do</span>
+    </div>
+  );
   const row = (e: Row) => (
     <button key={e.id} onClick={() => { setNote(''); router.push(`/dashboard/events?id=${e.id}`); }}
-      className="w-full text-left flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3.5 hover:bg-paper/70 transition-colors">
-      <div className="flex-1 min-w-[200px]">
-        <div className="text-[14px] font-medium text-ink">{e.name}</div>
-        <div className="text-[12.5px] text-ink-muted">
-          {KINDS.find(k => k.key === e.kind)?.label ?? 'Event'} · {formatTeeDay(e.date)} · {e.format === 'shotgun' ? `shotgun ${formatTeeTime(e.startTime)}` : `from ${formatTeeTime(e.startTime)}`}
-        </div>
+      className={COLS + ' w-full text-left flex flex-wrap items-center gap-y-1 px-5 py-3 hover:bg-paper/70 transition-colors'}>
+      <div className="min-w-0 basis-full sm:basis-auto">
+        <div className="text-[14px] font-medium text-ink truncate">{e.name}</div>
+        <div className="text-[12.5px] text-ink-muted">{KINDS.find(k => k.key === e.kind)?.label ?? 'Event'} · {e.format === 'shotgun' ? `shotgun ${formatTeeTime(e.startTime)}` : `from ${formatTeeTime(e.startTime)}`}</div>
       </div>
-      <div className="text-[13px] text-ink-soft tabular-nums">{e.entrantCount && e.players ? `${e.entrantCount} of ${e.players} players` : e.entrantCount || e.players ? `${e.entrantCount || e.players} players` : ''}</div>
-      <div className="w-[170px]">
+      <div className="text-[13px] text-ink">{formatTeeDay(e.date)}</div>
+      <div className="text-[13px] text-ink tabular-nums">{e.entrantCount && e.players ? `${e.entrantCount} of ${e.players}` : e.entrantCount || e.players || ''}</div>
+      <div className={'text-[13px] tabular-nums sm:text-right ' + (e.owedCents ? 'text-ink' : 'text-ink-muted')}>{e.status === 'cancelled' || !e.pricePerPlayerCents ? '' : e.owedCents ? <>{usd(e.owedCents)}<span className="sm:hidden"> owed</span></> : 'Paid'}</div>
+      <div>
         {e.status === 'cancelled' ? <StatusDot status="neutral" label="Cancelled" />
           : e.tasksOverdue ? <StatusDot status="bad" label={`${e.tasksOverdue} overdue`} />
           : e.tasksOpen ? <StatusDot status="warn" label={`${e.tasksOpen} to do`} />
@@ -146,19 +156,19 @@ function EventsInner() {
                   <Card className="px-6 py-10 text-center">
                     <Image src="/brand/golfer.svg" unoptimized alt="" width={40} height={49} className="mx-auto mb-3" />
                     <p className="text-[14px] text-ink">No events yet.</p>
-                    <p className="text-[13.5px] text-ink-soft mt-1 max-w-md mx-auto">Set up an outing, tournament or league night. Saving holds its tee times so golfers can&apos;t book them, and builds a checklist to get ready.</p>
+                    <p className="text-[13.5px] text-ink-soft mt-1 max-w-md mx-auto">Outings, tournaments and league nights.</p>
                   </Card>
                 )}
                 {upcoming.length > 0 && (
                   <section>
                     <h2 className="text-[15px] font-semibold text-ink mb-2">Coming up</h2>
-                    <Card className="divide-y divide-line-soft overflow-hidden">{upcoming.map(row)}</Card>
+                    <Card className="divide-y divide-line-soft overflow-hidden">{head}{upcoming.map(row)}</Card>
                   </section>
                 )}
                 {past.length > 0 && (
                   <section>
                     <h2 className="text-[15px] font-semibold text-ink mb-2">Past and cancelled</h2>
-                    <Card className="divide-y divide-line-soft overflow-hidden">{past.map(row)}</Card>
+                    <Card className="divide-y divide-line-soft overflow-hidden">{head}{past.map(row)}</Card>
                   </section>
                 )}
               </>

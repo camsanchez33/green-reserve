@@ -5790,7 +5790,7 @@
     },
     {
       "path": "src/app/api/operator/events/route.ts",
-      "lines": 70,
+      "lines": 74,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5815,6 +5815,7 @@
         "@/lib/agreement-required",
         "@/lib/course-events",
         "@/lib/course-time",
+        "@/lib/event-payments",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -8395,7 +8396,7 @@
     },
     {
       "path": "src/app/dashboard/events/page.tsx",
-      "lines": 176,
+      "lines": 186,
       "purpose": "W2-9 Events (Cam 2026-10-21/22):",
       "brain": [],
       "exports": [
@@ -18491,6 +18492,7 @@
         "src/app/api/event-payment/[id]/route.ts",
         "src/app/api/operator/events/[id]/payments/route.ts",
         "src/app/api/operator/events/[id]/route.ts",
+        "src/app/api/operator/events/route.ts",
         "src/lib/event-signup.ts"
       ]
     },
