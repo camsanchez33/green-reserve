@@ -54,7 +54,7 @@
   "src/app/dashboard/reset-password/page.tsx": 95,
   "src/app/dashboard/schedules/page.tsx": 330,
   "src/app/dashboard/settings/page.tsx": 1401,
-  "src/app/dashboard/shop/page.tsx": 733,
+  "src/app/dashboard/shop/page.tsx": 660,
   "src/app/dashboard/sign/page.tsx": 26,
   "src/app/dashboard/tournaments/page.tsx": 0,
   "src/app/dashboard/verify/page.tsx": 92,

@@ -150,7 +150,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   cut to labels; the 1% dues line stays (fee wording, LQ-2).
 - [x] **DENSE-6 Schedule** (BUILT 2026-11-01: page words 458 → 330; the page's own sentences gone — subtitle, the hours, rounds, prices and closed-days explanations, the save-preview "note, not a block" line; kept: errors, confirmations, the save preview's one line per change, the money-setting helper lines in deals/demand pricing (P7)) (~12–15 → ≤ 3). Labels over sentences; the price table
   already is the right shape. Save preview keeps its warnings as one line each.
-- [ ] **DENSE-7 Pro shop** (~12 → ≤ 3). Register stays task-first; add today's
+- [x] **DENSE-7 Pro shop** (BUILT 2026-11-01, text only — Cam: no sales strip or top items for now, today's total already shows and the close-out + sales report carry the rest; page words 733 → 660: subtitle → "$X today", reader/phone helper lines gone, round pay lines one short line each) (~12 → ≤ 3). Register stays task-first; add today's
   sales strip (sales · items · cash · card) and top items (Square) — ask D2.
   Close-out table unchanged, sentences → labels.
 - [ ] **DENSE-8 Events** (~20–25 → ≤ 6). List as a table (date, kind, entrants of

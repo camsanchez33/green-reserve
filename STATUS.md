@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 05:51 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ccac7a43` · working tree **6 dirty file(s)**
+Generated 2026-11-01 11:25 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `374e4520` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 6 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 8 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `4274c1a6` | 2026-11-01 | DENSE-6 Schedule: labels over sentences (#281) |
+| `3ee7b212` | 2026-11-01 | DENSE-6 Schedule: labels over sentences |
 | `a59c32eb` | 2026-10-31 | Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280) |
 | `20f25179` | 2026-11-01 | Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm |
 | `f353d52a` | 2026-10-31 | Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279) |
@@ -21,14 +23,13 @@ Generated 2026-11-01 05:51 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (6 file(s))
+### Uncommitted working tree (5 file(s))
 
 - `M DENSE_UI_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/schedule-rework-test.ts`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/schedules/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -113,8 +114,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
+| `DENSE_UI_SPEC.md` | 1 | 2026-11-01 | 0d |
 | `CLAUDE.md` | 1 | 2026-10-30 | 1d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 4d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 11d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 5d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 6d |
@@ -154,6 +155,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `4274c1a6` 2026-11-01 — DENSE-6 Schedule: labels over sentences (#281)
+- `3ee7b212` 2026-11-01 — DENSE-6 Schedule: labels over sentences
 - `a59c32eb` 2026-10-31 — Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)
 - `20f25179` 2026-11-01 — Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm
 - `f353d52a` 2026-10-31 — Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)
@@ -164,8 +167,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `98868184` 2026-10-31 — queue/spec update
 - `74475da5` 2026-10-31 — Event day: check-in, day view, cart signs (#276)
 - `23c14e34` 2026-10-31 — Event day: check-in, day view, cart signs
-- `5af344f0` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause (#275)
-- `847fd73c` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause
 
 ---
 

@@ -8904,7 +8904,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 915,
+      "lines": 913,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
