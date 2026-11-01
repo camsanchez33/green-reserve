@@ -97,8 +97,7 @@ function MessagesContent() {
           </div>
           {/* Cam 2026-10-19: say when to expect a reply, and offer email. */}
           <p className="text-[14px] text-ink-soft mt-2.5 max-w-[46em] leading-snug">
-            Questions, changes or anything not working — write to the GreenReserve team here. We reply within one business day.
-            Prefer email? <a href={`mailto:${ADMIN_EMAIL}`} className="text-pine font-medium hover:underline">{ADMIN_EMAIL}</a>
+            We reply within one business day. · <a href={`mailto:${ADMIN_EMAIL}`} className="text-pine font-medium hover:underline">{ADMIN_EMAIL}</a>
           </p>
         </div>
 

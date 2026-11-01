@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 17:34 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `a04207c5` · working tree **8 dirty file(s)**
+Generated 2026-11-01 17:57 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `600f2ce9` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 10 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 12 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `fe34fcb1` | 2026-11-01 | DENSE-8 Events: the list is a table with what each event still owes (#283) |
+| `1bbbbbc8` | 2026-11-01 | DENSE-8 Events: the list is a table with what each event still owes |
 | `286a3d44` | 2026-11-01 | DENSE-7 Pro shop: labels over sentences (text only) (#282) |
 | `06c09849` | 2026-11-01 | DENSE-7 Pro shop: labels over sentences (text only) |
 | `4274c1a6` | 2026-11-01 | DENSE-6 Schedule: labels over sentences (#281) |
@@ -25,16 +27,13 @@ Generated 2026-11-01 17:34 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (8 file(s))
+### Uncommitted working tree (5 file(s))
 
 - `M DENSE_UI_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/api/operator/events/route.ts`
-- `M src/app/dashboard/events/page.tsx`
-- `M src/components/dashboard/events/EventDetail.tsx`
-- `?? scripts/dense8-events-test.ts`
+- `M src/app/dashboard/messages/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -160,6 +159,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `fe34fcb1` 2026-11-01 — DENSE-8 Events: the list is a table with what each event still owes (#283)
+- `1bbbbbc8` 2026-11-01 — DENSE-8 Events: the list is a table with what each event still owes
 - `286a3d44` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only) (#282)
 - `06c09849` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only)
 - `4274c1a6` 2026-11-01 — DENSE-6 Schedule: labels over sentences (#281)
@@ -170,8 +171,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `5db27c7b` 2026-11-01 — Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online
 - `46be1bc6` 2026-10-31 — Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)
 - `efef5f62` 2026-11-01 — Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day
-- `f2eb20ef` 2026-10-31 — queue/spec update (#277)
-- `98868184` 2026-10-31 — queue/spec update
 
 ---
 

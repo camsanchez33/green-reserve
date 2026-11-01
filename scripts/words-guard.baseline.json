@@ -45,7 +45,7 @@
   "src/app/dashboard/layout.tsx": 0,
   "src/app/dashboard/login/page.tsx": 40,
   "src/app/dashboard/members/page.tsx": 482,
-  "src/app/dashboard/messages/page.tsx": 63,
+  "src/app/dashboard/messages/page.tsx": 49,
   "src/app/dashboard/money/page.tsx": 94,
   "src/app/dashboard/onboarding/page.tsx": 228,
   "src/app/dashboard/outings/page.tsx": 0,
