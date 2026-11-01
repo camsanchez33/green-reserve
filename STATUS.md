@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 17:57 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `600f2ce9` · working tree **5 dirty file(s)**
+Generated 2026-11-01 18:04 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `dfddc597` · working tree **5 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 12 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 14 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `6d571671` | 2026-11-01 | DENSE-9 Messages: the intro is the reply-time line and the email (#284) |
+| `d74792b2` | 2026-11-01 | DENSE-9 Messages: the intro is the reply-time line and the email |
 | `fe34fcb1` | 2026-11-01 | DENSE-8 Events: the list is a table with what each event still owes (#283) |
 | `1bbbbbc8` | 2026-11-01 | DENSE-8 Events: the list is a table with what each event still owes |
 | `286a3d44` | 2026-11-01 | DENSE-7 Pro shop: labels over sentences (text only) (#282) |
@@ -33,7 +35,7 @@ Generated 2026-11-01 17:57 UTC · branch `claude/walkthrough-2-prioritization-ui
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
 - `M scripts/words-guard.baseline.json`
-- `M src/app/dashboard/messages/page.tsx`
+- `M src/app/dashboard/settings/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -159,6 +161,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `6d571671` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email (#284)
+- `d74792b2` 2026-11-01 — DENSE-9 Messages: the intro is the reply-time line and the email
 - `fe34fcb1` 2026-11-01 — DENSE-8 Events: the list is a table with what each event still owes (#283)
 - `1bbbbbc8` 2026-11-01 — DENSE-8 Events: the list is a table with what each event still owes
 - `286a3d44` 2026-11-01 — DENSE-7 Pro shop: labels over sentences (text only) (#282)
@@ -169,8 +173,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `20f25179` 2026-11-01 — Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm
 - `f353d52a` 2026-10-31 — Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)
 - `5db27c7b` 2026-11-01 — Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online
-- `46be1bc6` 2026-10-31 — Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)
-- `efef5f62` 2026-11-01 — Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day
 
 ---
 

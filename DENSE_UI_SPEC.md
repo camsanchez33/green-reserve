@@ -157,7 +157,7 @@ unsold spots, an estimate AN-3 removed and `analytics-3-test.ts` pins). Then the
   players, money owed, tasks); detail's Money block as label/value rows.
 - [x] **DENSE-9 Messages** (BUILT 2026-11-01: the intro is the reply-time sentence plus the email address; page words 63 → 49) (2 → 1). Minor: the reply-time line stays as the one
   sentence.
-- [ ] **DENSE-10 Settings** (~85 incl. 35 permission helps → ≤ 25). P7 across the
+- [ ] **DENSE-10 Settings** (PART 1 BUILT 2026-11-01: settings page 1401 → 1236 words — the "Updates as you type" lines, the photo/logo/colour/gift-card/name explanations and the owner/staff login sentences cut to labels (the preview keeps "Sample times and prices", uploads say "Saves on upload"); every money, sign-in and time-zone helper and the LQ-2 fee line kept. Permission help stays VISIBLE under each row, not behind the label: a hover tooltip doesn't work on a phone or tablet and an owner choosing staff powers needs it (Cam 2026-11-01: usability first). Part 2: the Settings cards — shop catalog, card reader, sales tax, course layout, finish setup) (~85 incl. 35 permission helps → ≤ 25). P7 across the
   eight sections; live preview stays the explainer; helper lines only where money or
   sign-in is at stake (no-show/late fee timing, card at booking, time zone, 2FA);
   permission `help` sentences move behind each row's label. Fee and policy wording

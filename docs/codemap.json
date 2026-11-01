@@ -8856,7 +8856,7 @@
     },
     {
       "path": "src/app/dashboard/settings/page.tsx",
-      "lines": 1161,
+      "lines": 1158,
       "purpose": "",
       "brain": [],
       "exports": [
