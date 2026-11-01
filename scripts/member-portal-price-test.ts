@@ -37,7 +37,7 @@ async function cleanup() {
 async function main() {
   await cleanup();
   const op = await prisma.courseOperator.create({ data: { name: 'Price Test', email: `${TAG}@test.local`, password: 'x' } });
-  const course = await prisma.course.create({ data: { name: 'Price Test', slug: `${TAG}-c`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
+  const course = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: 'Price Test', slug: `${TAG}-c`, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24 } });
   // The next Saturday inside the members' default window — weekend rules are the ones that differed.
   let date = addDaysStr(todayIn('UTC'), 1);
   while (new Date(date + 'T12:00:00').getDay() !== 6) date = addDaysStr(date, 1);
