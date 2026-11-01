@@ -19,6 +19,8 @@ type DuesInfo = {
   /** GreenReserve's 1% of the dues, added on top. */
   serviceFee: number;
   total: number;
+  /** The exact total shown, sent back so the charge is only ever this. */
+  totalCents: number;
   alreadyPaid: boolean;
   expiresAt: string | null;
   stripeReady: boolean;
@@ -71,7 +73,7 @@ function PayForm({ id, token, info, onPaid }: { id: string; token: string; info:
     const res = await fetch(`/api/membership/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, paymentMethodId: paymentMethod.id, ...(info.autoRenewTier ? { autoRenewConsent: agree } : {}) }),
+      body: JSON.stringify({ token, paymentMethodId: paymentMethod.id, expectedTotalCents: info.totalCents, ...(info.autoRenewTier ? { autoRenewConsent: agree, autoRenewTerms: info.autoRenewTerms } : {}) }),
     });
     const data = await res.json();
     setSubmitting(false);

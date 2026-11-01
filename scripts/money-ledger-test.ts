@@ -130,7 +130,12 @@ async function cleanup() {
   // Outside a request, after() has no scope: run the receipt email inline and drop it.
   (createRequire(__filename)('next/server') as { after: (p: Promise<unknown>) => void }).after = (p: Promise<unknown>) => { void Promise.resolve(p).catch(() => {}); };
   const { POST } = await import('../src/app/api/membership/[id]/route');
-  const pay = (pm: string) => POST(new NextRequest(`http://x/api/membership/${m.id}`, { method: 'POST', body: JSON.stringify({ token: 'tok', paymentMethodId: pm }) }), { params: Promise.resolve({ id: m.id }) });
+  // The page sends back the total it showed ($1,000 dues + 1%); the route charges only that (audit 2026-10-31).
+  const pay = (pm: string, shown = 101000) => POST(new NextRequest(`http://x/api/membership/${m.id}`, { method: 'POST', body: JSON.stringify({ token: 'tok', paymentMethodId: pm, expectedTotalCents: shown }) }), { params: Promise.resolve({ id: m.id }) });
+
+  const stale = await pay('pm_x', 80800);
+  const afterStale = await prisma.courseMembership.findUniqueOrThrow({ where: { id: m.id } });
+  ok('a page showing an old total is refused before any charge, and the claim is let go', stale.status === 409 && charges === 0 && made === 0 && afterStale.duesChargeStartedAt === null, { status: stale.status, charges, made });
 
   failNext = true;
   const declined = await pay('pm_bad');
@@ -151,7 +156,7 @@ async function cleanup() {
   // A monthly tier: paying again right after paying is refused (every day of a 30-day term is "within 30 days").
   const monthly = await prisma.membershipTier.create({ data: { courseId: c.id, name: 'Monthly', annualFeeCents: 5000, termMonths: 1 } });
   const mm = await prisma.courseMembership.create({ data: { courseId: c.id, tierId: monthly.id, inviteName: 'Mo', inviteEmail: `${TAG}+mo@t.local`, status: 'active', payToken: 'tok2' } });
-  const payM = (pm: string) => POST(new NextRequest(`http://x/api/membership/${mm.id}`, { method: 'POST', body: JSON.stringify({ token: 'tok2', paymentMethodId: pm }) }), { params: Promise.resolve({ id: mm.id }) });
+  const payM = (pm: string) => POST(new NextRequest(`http://x/api/membership/${mm.id}`, { method: 'POST', body: JSON.stringify({ token: 'tok2', paymentMethodId: pm, expectedTotalCents: 5050 }) }), { params: Promise.resolve({ id: mm.id }) });
   const before = charges;
   const m1 = await payM('pm_m1');
   const m2 = await payM('pm_m2');

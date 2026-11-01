@@ -39,7 +39,8 @@ export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id:
   const [view, setView] = useState<View | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
-  const [credit, setCredit] = useState({ amount: '', reason: '' });
+  // chargeId: "Credit back" on a round line — the credit then also gives back that round's GreenReserve fee.
+  const [credit, setCredit] = useState<{ amount: string; reason: string; chargeId?: string; what?: string }>({ amount: '', reason: '' });
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -58,7 +59,7 @@ export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id:
   async function give() {
     setBusy(true); setError('');
     const cents = Math.round(Number(credit.amount) * 100);
-    const r = await dfetch('/api/operator/member-accounts', { method: 'POST', body: JSON.stringify({ membershipId: id, amountCents: cents, reason: credit.reason }) });
+    const r = await dfetch('/api/operator/member-accounts', { method: 'POST', body: JSON.stringify({ membershipId: id, amountCents: cents, reason: credit.reason, ...(credit.chargeId ? { chargeId: credit.chargeId } : {}) }) });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
     setCredit({ amount: '', reason: '' });
@@ -102,6 +103,7 @@ export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id:
                       <span className="text-ink">{l.note || l.kind}</span>
                       {l.createdBy && <span className="text-ink-muted">{l.createdBy}</span>}
                       <span className="ml-auto tabular-nums text-ink">{usd(l.amountCents)}</span>
+                      {canCredit && l.kind === 'round' && <button onClick={() => setCredit({ amount: (l.amountCents / 100).toFixed(2), reason: '', chargeId: l.id, what: l.note || 'this round' })} className="text-ink-soft hover:text-ink underline underline-offset-2">Credit back</button>}
                       {canMove && l.kind !== 'credit' && <ChangeAccount target={{ chargeId: l.id }} className="text-pine font-medium hover:underline" inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink" onDone={() => load()} />}
                     </li>
                   ))}
@@ -109,6 +111,7 @@ export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id:
               ) : <p className="mt-1 text-ink">Nothing new on the account.</p>}
               {canCredit && (
                 <div className="mt-3 flex flex-wrap items-end gap-2">
+                  {credit.chargeId && <p className="w-full text-[12.5px] text-ink">Against {credit.what} <button onClick={() => setCredit({ amount: '', reason: '' })} className="text-ink-soft hover:text-ink underline underline-offset-2">Not this round</button></p>}
                   <label className="text-[12.5px] text-ink-soft">Credit $<input value={credit.amount} onChange={e => setCredit({ ...credit, amount: e.target.value })} inputMode="decimal" className="block mt-1 w-24 bg-white border border-line rounded-md px-2 py-1.5 text-ink" /></label>
                   <label className="text-[12.5px] text-ink-soft flex-1 min-w-[10rem]">Reason<input value={credit.reason} onChange={e => setCredit({ ...credit, reason: e.target.value })} maxLength={200} className="block mt-1 w-full bg-white border border-line rounded-md px-2 py-1.5 text-ink" /></label>
                   <button onClick={give} disabled={busy || !credit.amount || !credit.reason.trim()} className="bg-pine hover:bg-pine-hover text-white font-medium rounded-md px-3 py-1.5 disabled:opacity-50">{busy ? 'Crediting…' : 'Credit'}</button>

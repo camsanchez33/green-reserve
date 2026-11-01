@@ -1,19 +1,27 @@
 {
-  "generatedAt": "2026-10-31T22:08:11.921Z",
+  "generatedAt": "2026-11-01T00:00:26.926Z",
   "repo": {
-    "head": "974a6d6a",
-    "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 4,
+    "head": "f2eb20ef",
+    "branch": "HEAD",
+    "dirtyCount": 12,
     "dirty": [
-      "M RUN_QUEUE.md",
-      " M STATUS.artifact.html",
-      " M STATUS.json",
-      " M STATUS.md"
+      "M docs/CODEMAP.md",
+      " M docs/codemap.json",
+      " M scripts/membership-autorenew-db-test.ts",
+      " M scripts/money-ledger-test.ts",
+      " M src/app/api/membership/[id]/route.ts",
+      " M src/app/api/operator/member-accounts/route.ts",
+      " M src/app/api/operator/tiers/route.ts",
+      " M src/app/membership/[id]/page.tsx",
+      " M src/components/dashboard/MemberAccount.tsx",
+      " M src/lib/email.ts",
+      " M src/lib/member-account.ts",
+      "?? scripts/audit-blockers-db-test.ts"
     ],
-    "looksLikeRunInProgress": false
+    "looksLikeRunInProgress": true
   },
   "drift": {
-    "queueLastCommit": "2026-10-27T13:43:44-04:00",
+    "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": []
   },
   "counts": {
@@ -183,7 +191,7 @@
       "file": "CLAUDE.md",
       "openRefs": 1,
       "lastTouched": "2026-10-30",
-      "ageDays": 0
+      "ageDays": 1
     },
     {
       "file": "DENSE_UI_SPEC.md",
@@ -198,16 +206,16 @@
       "ageDays": 10
     },
     {
-      "file": "OPERATOR_REWORK_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-25",
-      "ageDays": 5
-    },
-    {
       "file": "STAFF_POLICY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-26",
       "ageDays": 5
+    },
+    {
+      "file": "OPERATOR_REWORK_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-25",
+      "ageDays": 6
     },
     {
       "file": "ADMIN_V5_SPEC.md",
@@ -411,14 +419,14 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f2eb20ef",
+      "date": "2026-10-31",
+      "subject": "queue/spec update (#277)"
+    },
+    {
       "h": "74475da5",
       "date": "2026-10-31",
       "subject": "Event day: check-in, day view, cart signs (#276)"
-    },
-    {
-      "h": "23c14e34",
-      "date": "2026-10-31",
-      "subject": "Event day: check-in, day view, cart signs"
     },
     {
       "h": "5af344f0",
@@ -426,19 +434,9 @@
       "subject": "Front desk \"Return items\" permission; drop the false counter-fee clause (#275)"
     },
     {
-      "h": "847fd73c",
-      "date": "2026-10-31",
-      "subject": "Front desk \"Return items\" permission; drop the false counter-fee clause"
-    },
-    {
       "h": "f84e4be2",
       "date": "2026-10-31",
       "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)"
-    },
-    {
-      "h": "36872c8f",
-      "date": "2026-10-31",
-      "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails"
     },
     {
       "h": "719073d5",
@@ -446,29 +444,39 @@
       "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)"
     },
     {
-      "h": "94b6272a",
-      "date": "2026-10-31",
-      "subject": "Isolation test: pay link refused before the round's day, then the SMS checks on a round today"
-    },
-    {
-      "h": "51f33943",
-      "date": "2026-10-31",
-      "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day"
-    },
-    {
       "h": "4bf11a39",
       "date": "2026-10-31",
       "subject": "Change member: move a wrong-member account charge (#272)"
     },
     {
-      "h": "13b505dc",
-      "date": "2026-10-31",
-      "subject": "Change member: move a wrong-member account charge to the right member"
-    },
-    {
       "h": "dea052d9",
       "date": "2026-10-31",
       "subject": "Member billing walkthrough fixes (#271)"
+    },
+    {
+      "h": "8f7d18ad",
+      "date": "2026-10-31",
+      "subject": "Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)"
+    },
+    {
+      "h": "14c84cbd",
+      "date": "2026-10-31",
+      "subject": "Membership dues: one Stripe payment per term (no double charges) (#269)"
+    },
+    {
+      "h": "0c3512ba",
+      "date": "2026-10-31",
+      "subject": "Member statements: one Stripe payment per statement (no double charges) (#268)"
+    },
+    {
+      "h": "f9a4eef5",
+      "date": "2026-10-31",
+      "subject": "Member accounts (part 2): monthly statements, paid by link or a saved card (#267)"
+    },
+    {
+      "h": "5b3f82a4",
+      "date": "2026-10-30",
+      "subject": "Member accounts (part 1): staff put a group's round on a member's account (#266)"
     }
   ]
 }

@@ -12,6 +12,10 @@ const limitCents = (v: unknown) => v === undefined ? undefined : v === '' || v =
 import { memberContact, STOP_DATA } from '@/lib/membership-autorenew';
 import { sendAutoRenewOffEmail } from '@/lib/email';
 
+/** Audit 2026-10-31: a term is a whole number of months, 1 to 36 — it sets when every renewal is charged. */
+const termOk = (v: unknown) => v == null || (Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 36);
+const TERM_BAD = 'The term is a whole number of months, from 1 to 36.';
+
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,6 +38,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { name, color, greenFeeWeekday, greenFeeWeekend, cartFeeWeekday, cartFeeWeekend,
           discountPct, advanceBookingDays, guestPassesPerYear, annualFee, initiationFee, termMonths, notes, guestsPayMemberRate, joinOnline, autoRenew, autoRenewRetry, accountOn, accountLimit, accountSettle } = body;
+  if (!termOk(termMonths)) return NextResponse.json({ error: TERM_BAD }, { status: 400 });
 
   if (!name?.trim()) return NextResponse.json({ error: 'Tier name is required' }, { status: 400 });
   // ACT-1 review: a booking records its tier by NAME, so two live tiers with one
@@ -98,6 +103,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { id, ...updates } = body;
   if (!id) return NextResponse.json({ error: 'Missing tier id' }, { status: 400 });
+  if (!termOk(updates.termMonths)) return NextResponse.json({ error: TERM_BAD }, { status: 400 });
 
   const tier = await prisma.membershipTier.findUnique({ where: { id } });
   if (!tier || tier.courseId !== session.courseId) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -140,7 +146,9 @@ export async function PATCH(req: NextRequest) {
     },
   });
   // MEM-RENEW: the course stopped automatic renewal on this tier — its members go back to pay-link renewals, and are told.
-  if (tier.autoRenew && !updated.autoRenew) {
+  // Audit 2026-10-31: a new term length is a schedule nobody agreed to (yearly → monthly would charge the yearly
+  // amount every month), so it stops automatic renewal the same way; members agree again when they next pay.
+  if (tier.autoRenew && (!updated.autoRenew || updated.termMonths !== tier.termMonths)) {
     const on = await prisma.courseMembership.findMany({ where: { tierId: tier.id, autoRenew: true }, select: { id: true, inviteName: true, inviteEmail: true, expiresAt: true, golfer: { select: { email: true, firstName: true, lastName: true } } } });
     await prisma.courseMembership.updateMany({ where: { tierId: tier.id, autoRenew: true }, data: STOP_DATA() });
     const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true } });

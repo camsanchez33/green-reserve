@@ -116,7 +116,7 @@ const declining = async () => { throw new Error('Your card was declined.'); };
   const off = readFileSync('src/app/api/membership/[id]/auto-renew/route.ts', 'utf8');
   ok('turning it off from the email link needs the link\'s token, and is rate limited', off.includes('token !== m.payToken') && off.includes("rateLimit('membership:autorenew:"));
   const tiers = readFileSync('src/app/api/operator/tiers/route.ts', 'utf8');
-  ok('a course turning auto-renew off on a tier stops it for its members and tells them', tiers.includes('if (tier.autoRenew && !updated.autoRenew)') && tiers.includes('sendAutoRenewOffEmail'));
+  ok('a course turning auto-renew off on a tier stops it for its members and tells them', tiers.includes('if (tier.autoRenew && (!updated.autoRenew || updated.termMonths !== tier.termMonths))') && tiers.includes('sendAutoRenewOffEmail'));
 
   await cleanup(); await prisma.$disconnect();
   if (failed) { console.error(`${failed} failed`); process.exit(1); }

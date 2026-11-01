@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
   const denied = requirePermission(session, 'money.refund');
   if (denied) return denied;
   if (typeof b.membershipId !== 'string' || !b.membershipId) return NextResponse.json({ error: 'Pick a member.' }, { status: 400 });
-  const r = await creditAccount(session.courseId, b.membershipId, b.amountCents, b.reason, session.email);
+  const r = await creditAccount(session.courseId, b.membershipId, b.amountCents, b.reason, session.email, b.chargeId);
   if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
   return NextResponse.json({ ok: true, balanceCents: r.balanceCents });
 }

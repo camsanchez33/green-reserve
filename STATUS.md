@@ -4,21 +4,29 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-10-31 22:08 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `974a6d6a` · working tree **4 dirty file(s)**
+Generated 2026-11-01 00:00 UTC · branch `HEAD` · HEAD `f2eb20ef` · working tree **12 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
 None. Every commit since the last queue edit is recorded in `RUN_QUEUE.md`.
 
-### Uncommitted working tree (4 file(s))
+### Uncommitted working tree (12 file(s))
 
-- `M RUN_QUEUE.md`
-- `M STATUS.artifact.html`
-- `M STATUS.json`
-- `M STATUS.md`
+- `M docs/CODEMAP.md`
+- `M docs/codemap.json`
+- `M scripts/membership-autorenew-db-test.ts`
+- `M scripts/money-ledger-test.ts`
+- `M src/app/api/membership/[id]/route.ts`
+- `M src/app/api/operator/member-accounts/route.ts`
+- `M src/app/api/operator/tiers/route.ts`
+- `M src/app/membership/[id]/page.tsx`
+- `M src/components/dashboard/MemberAccount.tsx`
+- `M src/lib/email.ts`
+- `M src/lib/member-account.ts`
+- `?? scripts/audit-blockers-db-test.ts`
 
-Queue header rule: dirty docs get **committed**, dirty source gets discarded — but check what
-these actually are first.
+**A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
+the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
 
 ## In flight
 
@@ -100,11 +108,11 @@ This is the distinction a raw checkbox count gets wrong.
 
 | spec | open refs | last touched | age |
 |---|---|---|---|
-| `CLAUDE.md` | 1 | 2026-10-30 | 0d |
+| `CLAUDE.md` | 1 | 2026-10-30 | 1d |
 | `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 3d |
 | `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 10d |
-| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 5d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 5d |
+| `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 6d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 8d |
 | `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 8d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 9d |
@@ -141,18 +149,18 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `f2eb20ef` 2026-10-31 — queue/spec update (#277)
 - `74475da5` 2026-10-31 — Event day: check-in, day view, cart signs (#276)
-- `23c14e34` 2026-10-31 — Event day: check-in, day view, cart signs
 - `5af344f0` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause (#275)
-- `847fd73c` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause
 - `f84e4be2` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)
-- `36872c8f` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails
 - `719073d5` 2026-10-31 — Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)
-- `94b6272a` 2026-10-31 — Isolation test: pay link refused before the round's day, then the SMS checks on a round today
-- `51f33943` 2026-10-31 — Launch walk fixes: member $0 rate, move prices, member-link price, payments on checklist, pay link on the day
 - `4bf11a39` 2026-10-31 — Change member: move a wrong-member account charge (#272)
-- `13b505dc` 2026-10-31 — Change member: move a wrong-member account charge to the right member
 - `dea052d9` 2026-10-31 — Member billing walkthrough fixes (#271)
+- `8f7d18ad` 2026-10-31 — Pro shop on account: register sales on a member's statement (MEM-ACCT 1b) (#270)
+- `14c84cbd` 2026-10-31 — Membership dues: one Stripe payment per term (no double charges) (#269)
+- `0c3512ba` 2026-10-31 — Member statements: one Stripe payment per statement (no double charges) (#268)
+- `f9a4eef5` 2026-10-31 — Member accounts (part 2): monthly statements, paid by link or a saved card (#267)
+- `5b3f82a4` 2026-10-30 — Member accounts (part 1): staff put a group's round on a member's account (#266)
 
 ---
 
