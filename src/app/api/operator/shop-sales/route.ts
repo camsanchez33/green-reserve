@@ -40,9 +40,13 @@ export async function GET(req: NextRequest) {
   const day = req.nextUrl.searchParams.get('day') ?? '';
   const q = req.nextUrl.searchParams.get('q') ?? '';
   if (day || q) {
-    const r = await findSales(g.session.courseId, { day: day || undefined, q });
+    // Audit 2026-10-31: the 90-day history shows and searches customers' email and phone only to a
+    // login with sheet.golfer_contact (as round packs and bookings do). Today's register keeps them —
+    // the cashier typed them in, and Send again / Receipt use them.
+    const contact = can(g.session, 'sheet.golfer_contact');
+    const r = await findSales(g.session.courseId, { day: day || undefined, q, contact });
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
-    return NextResponse.json({ sales: r.value });
+    return NextResponse.json({ sales: contact ? r.value : r.value.map(s => ({ ...s, customerEmail: '', customerPhone: '' })) });
   }
   const since = new Date(Date.now() - 36 * 60 * 60 * 1000);
   // A card payment whose request never finished is settled from Stripe here.

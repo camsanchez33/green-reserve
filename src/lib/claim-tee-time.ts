@@ -9,7 +9,7 @@ export { LATE_ADD_MINUTES, LATE_ADD_MESSAGE } from './late-add';
 
 export class TeeTimeClaimError extends Error {
   constructor(
-    public readonly code: 'NOT_FOUND' | 'BLOCKED' | 'FULL' | 'SPOTS' | 'CONFLICT' | 'PAST',
+    public readonly code: 'NOT_FOUND' | 'BLOCKED' | 'FULL' | 'SPOTS' | 'CONFLICT' | 'PAST' | 'PROMO_USED',
     public readonly spotsLeft?: number
   ) {
     super(code);
@@ -57,6 +57,23 @@ export async function claimTeeTime(
         if (!Number.isInteger(players) || players < 1) throw new TeeTimeClaimError('SPOTS', spotsLeft);
         if (players > spotsLeft) {
           throw new TeeTimeClaimError(spotsLeft <= 0 ? 'FULL' : 'SPOTS', spotsLeft);
+        }
+
+        // Audit 2026-10-31: a "once per golfer" promo code is checked again here, inside the same
+        // SERIALIZABLE transaction as the booking — two bookings at once by one golfer (same email, or
+        // the same signed-in account) can't both use it; the second fails as a serialization conflict.
+        if (data.promoCodeId) {
+          const code = await tx.promoCode.findUnique({ where: { id: String(data.promoCodeId) }, select: { onePerGolfer: true } });
+          const email = String(data.golferEmail ?? '').trim();
+          const account = data.golferAccountId ? String(data.golferAccountId) : null;
+          if (code?.onePerGolfer && (email || account)) {
+            const used = await tx.booking.findFirst({
+              where: { courseId: String(data.courseId), promoCodeId: String(data.promoCodeId), status: { not: 'cancelled' },
+                OR: [...(email ? [{ golferEmail: { equals: email, mode: 'insensitive' as const } }] : []), ...(account ? [{ golferAccountId: account }] : [])] },
+              select: { id: true },
+            });
+            if (used) throw new TeeTimeClaimError('PROMO_USED');
+          }
         }
 
         const booking = await tx.booking.create({ data });

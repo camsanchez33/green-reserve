@@ -3,7 +3,7 @@ import { onlineBookingBlock } from '@/lib/golfer-record';
 import { applyTierRates } from '@/lib/tier-rates';
 import { membershipLive, memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { groupGreenFee } from '@/lib/residents';
-import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, type PromoRow } from '@/lib/promo-codes';
+import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, PROMO_USED, type PromoRow } from '@/lib/promo-codes';
 import { dealPct, dealRateSeat } from '@/lib/last-minute';
 import { demandPctFor, onlinePublicSeat, dealWins } from '@/lib/demand-pricing';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE } from '@/lib/round-packs';
@@ -195,7 +195,7 @@ export async function POST(req: NextRequest) {
     pack = { lineId: h.lineId, seats: s.seats, ...p };
   }
   if (promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') {
-    const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, rateApplied: !!appliedTier || !!resident, golferEmail: String(golferEmail) });
+    const p = await applyPromo(teeTimeFull.courseId, promoCode, { date: teeTimeFull.date, time: teeTimeFull.time, rateApplied: !!appliedTier || !!resident, golferEmail: String(golferEmail), golferAccountId: golferSession?.golferId ?? null });
     if (!p.ok) return NextResponse.json({ error: p.error, code: 'promo' }, { status: 400 });
     promoRow = p.code;
   }
@@ -347,6 +347,7 @@ export async function POST(req: NextRequest) {
       if (err.code === 'NOT_FOUND') return NextResponse.json({ error: 'Tee time not found.' }, { status: 404 });
       if (err.code === 'BLOCKED')   return NextResponse.json({ error: 'This tee time is no longer available.' }, { status: 409 });
       if (err.code === 'PAST')      return NextResponse.json({ error: 'This tee time has already gone off.' }, { status: 409 });
+      if (err.code === 'PROMO_USED') return NextResponse.json({ error: PROMO_USED, code: 'promo' }, { status: 409 });
       if (err.code === 'FULL' || err.code === 'CONFLICT') {
         return NextResponse.json({ error: 'That time just filled up. Please refresh and try again.' }, { status: 409 });
       }

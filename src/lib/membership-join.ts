@@ -62,6 +62,11 @@ export async function joinTier(courseId: string, golfer: { id: string; email: st
   // course made not active is theirs to turn back on, never the golfer's by paying.
   const old = await prisma.courseMembership.findUnique({ where: { golferId_courseId: { golferId: golfer.id, courseId } }, select: { id: true, status: true } });
   if (old?.status === 'inactive') return fail(409, 'Your membership here was paused by the course — contact them to turn it back on.');
+  // Audit 2026-10-31: a membership staff added by email and paused before the golfer ever linked it
+  // has no golferId — it is found by its email, and refused the same way.
+  if (await prisma.courseMembership.findFirst({ where: { courseId, golferId: null, status: 'inactive', inviteEmail: { equals: email, mode: 'insensitive' } }, select: { id: true } })) {
+    return fail(409, 'Your membership here was paused by the course — contact them to turn it back on.');
+  }
   const row = old
     ? await prisma.courseMembership.update({ where: { id: old.id }, data, select: { id: true, payToken: true } })
     : await prisma.courseMembership.create({ data: { ...data, golferId: golfer.id, courseId }, select: { id: true, payToken: true } });
