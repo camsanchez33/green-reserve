@@ -1,27 +1,36 @@
 {
-  "generatedAt": "2026-11-01T02:00:02.839Z",
+  "generatedAt": "2026-11-01T05:51:40.300Z",
   "repo": {
-    "head": "0cf4edc5",
+    "head": "ccac7a43",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
-    "dirtyCount": 11,
+    "dirtyCount": 6,
     "dirty": [
-      "M docs/CODEMAP.md",
+      "M DENSE_UI_SPEC.md",
+      " M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M scripts/money-ledger-test.ts",
-      " M src/app/api/operator/shop-sales/route.ts",
-      " M src/app/dashboard/golfers/[key]/page.tsx",
-      " M src/app/dashboard/shop/page.tsx",
-      " M src/components/dashboard/MemberAccount.tsx",
-      " M src/components/dashboard/PromoCodes.tsx",
-      " M src/lib/member-statements.ts",
-      " M src/lib/membership-autorenew.ts",
-      "?? scripts/audit-cleanup-test.ts"
+      " M scripts/schedule-rework-test.ts",
+      " M scripts/words-guard.baseline.json",
+      " M src/app/dashboard/schedules/page.tsx"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "a59c32eb",
+        "date": "2026-10-31T22:09:58-04:00",
+        "subject": "Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "20f25179",
+        "date": "2026-11-01T02:00:04+00:00",
+        "subject": "Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "f353d52a",
         "date": "2026-10-31T20:57:45-04:00",
@@ -225,13 +234,13 @@
       "file": "DENSE_UI_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-27",
-      "ageDays": 3
+      "ageDays": 4
     },
     {
       "file": "PLATFORM_ROADMAP_SPEC.md",
       "openRefs": 1,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "STAFF_POLICY_SPEC.md",
@@ -252,12 +261,6 @@
       "ageDays": 8
     },
     {
-      "file": "HOMEPAGE_SPEC.md",
-      "openRefs": 0,
-      "lastTouched": "2026-10-23",
-      "ageDays": 8
-    },
-    {
       "file": "AGREEMENT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
@@ -267,6 +270,12 @@
       "file": "CALL_SCHEDULING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-22",
+      "ageDays": 9
+    },
+    {
+      "file": "HOMEPAGE_SPEC.md",
+      "openRefs": 0,
+      "lastTouched": "2026-10-23",
       "ageDays": 9
     },
     {
@@ -297,155 +306,165 @@
       "file": "ADMIN_MASTER_PLAN.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "ADMIN_REBUILD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "ADMIN_V2_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "ADMIN_V3_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "ADMIN_V4_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "ARCHITECTURE.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "BACKUP_OPS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "BIRDIE_AI_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "CODEMAP_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "COURSES_SHEET_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "COURSE_LAYOUT_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "DESIGN_SYSTEM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "FB2_COPY_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "FB3_FEE_PLAN_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "GOLFER_EDGE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "GOLFER_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "HARDENING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "INQUIRY_CALL_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "INQUIRY_FORM_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "MANAGE_BOOKING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "PRIVATE_BILLING_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "PRODUCTION_READINESS_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "REVIEW_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "SITE_DASHBOARD_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     },
     {
       "file": "UI_REVISE_SPEC.md",
       "openRefs": 0,
       "lastTouched": "2026-10-20",
-      "ageDays": 10
+      "ageDays": 11
     }
   ],
   "bank": null,
   "recentCommits": [
+    {
+      "h": "a59c32eb",
+      "date": "2026-10-31",
+      "subject": "Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)"
+    },
+    {
+      "h": "20f25179",
+      "date": "2026-11-01",
+      "subject": "Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm"
+    },
     {
       "h": "f353d52a",
       "date": "2026-10-31",
@@ -495,16 +514,6 @@
       "h": "847fd73c",
       "date": "2026-10-31",
       "subject": "Front desk \"Return items\" permission; drop the false counter-fee clause"
-    },
-    {
-      "h": "f84e4be2",
-      "date": "2026-10-31",
-      "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)"
-    },
-    {
-      "h": "36872c8f",
-      "date": "2026-10-31",
-      "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails"
     }
   ]
 }

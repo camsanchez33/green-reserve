@@ -42,7 +42,7 @@ check('no Apply-to-tee-sheet button', !page.includes('Apply to tee sheet') && !p
 // W2-6 simplification: one save for the whole page, and only after the preview has answered.
 check('every save shows the preview first', page.includes("JSON.stringify({ op: 'course', plan })") && page.includes('/api/operator/schedule/preview') && page.includes("disabled={busy || !pending.preview || !!pending.preview.refusal}"));
 check('open hours, what golfers can book, what it costs, closed days', ["When you&apos;re open", '>What golfers can book</h2>', '>What it costs</h2>', '>Closed days</h2>'].every(h => page.includes(h)));
-check('price names are automatic and the course can rename them', page.includes('Tap a name to rename') && page.includes('columnNames(d)'));
+check('price names are automatic and the course can rename them', page.includes('Tap to rename') && page.includes('columnNames(d)'));
 const engine = readFileSync('src/lib/tee-sheet-engine.ts', 'utf8');
 check('the generator uses the same desiredSlots as the preview', engine.includes('const desired = desiredSlots(dateStr, schedules, products);'));
 const bo = readFileSync('src/app/api/operator/blackouts/route.ts', 'utf8') + readFileSync('src/lib/blackouts.ts', 'utf8');
