@@ -172,9 +172,9 @@ function BulkAdd({ busy, onAdd }: { busy: boolean; onAdd: (rows: PreviewRow[]) =
         ))}
       </div>
       {mode === 'paste' ? (
-        <p className="text-[12.5px] text-ink-soft">Copy rows from Excel or Google Sheets, or your old register&apos;s export. Columns: item, category, price, stock, sizes, SKU — a header row in any order works. Sizes go in one cell (&ldquo;S/M/L&rdquo;) or one row per size.</p>
+        <p className="text-[12.5px] text-ink-soft">From Excel, Google Sheets or an old register: item, category, price, stock, sizes, SKU. Sizes in one cell (&ldquo;S/M/L&rdquo;) or a row each.</p>
       ) : (
-        <p className="text-[12.5px] text-ink-soft">Paste anything: a supplier invoice, a price sheet, your own notes. The AI picks out each product, its price and sizes. You check every row before it&apos;s added.</p>
+        <p className="text-[12.5px] text-ink-soft">An invoice, price sheet or notes. You check every row before it&apos;s added.</p>
       )}
       <textarea value={text} onChange={e => { setText(e.target.value); setRows(null); }} rows={6}
         placeholder={mode === 'paste' ? 'Item\tCategory\tPrice\tStock\tSizes\nLogo polo\tApparel\t45\t\tS/M/L/XL\nPro V1 dozen\tBalls\t54.99\t24' : 'Paste the list or invoice here'}
@@ -266,7 +266,7 @@ export function ShopCatalog() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-ink-soft -mt-1">
-        Sell these on the Pro shop page (cash or a pay link), or add them to a group&apos;s round from the tee sheet, where they&apos;re charged with the round at check-in or on the golfer&apos;s pay link{SHOP_FEE_ON ? <>, plus GreenReserve&apos;s {usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer</> : null}. A price change never touches items already sold.
+        Sold on the Pro shop page, or added to a round on the tee sheet and charged with it{SHOP_FEE_ON ? <>, plus GreenReserve&apos;s {usd(SHOP_SALE_FEE_CENTS)} per sale, paid by the golfer</> : null}. A price change never touches items already sold.
       </p>
       {loadError && (
         <div className="rounded-md bg-bad/5 border border-bad/20 px-4 py-2.5 flex items-center justify-between gap-3">
