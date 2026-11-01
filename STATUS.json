@@ -1,27 +1,41 @@
 {
-  "generatedAt": "2026-11-01T00:35:41.189Z",
+  "generatedAt": "2026-11-01T02:00:02.839Z",
   "repo": {
-    "head": "e075cedc",
+    "head": "0cf4edc5",
     "branch": "claude/walkthrough-2-prioritization-ui5xyu",
     "dirtyCount": 11,
     "dirty": [
       "M docs/CODEMAP.md",
       " M docs/codemap.json",
-      " M src/app/api/bookings/route.ts",
-      " M src/app/api/operator/golfers/[key]/route.ts",
+      " M scripts/money-ledger-test.ts",
       " M src/app/api/operator/shop-sales/route.ts",
-      " M src/lib/claim-tee-time.ts",
-      " M src/lib/counter-pay.ts",
-      " M src/lib/membership-join.ts",
-      " M src/lib/promo-codes.ts",
-      " M src/lib/shop-sales.ts",
-      "?? scripts/audit-security-db-test.ts"
+      " M src/app/dashboard/golfers/[key]/page.tsx",
+      " M src/app/dashboard/shop/page.tsx",
+      " M src/components/dashboard/MemberAccount.tsx",
+      " M src/components/dashboard/PromoCodes.tsx",
+      " M src/lib/member-statements.ts",
+      " M src/lib/membership-autorenew.ts",
+      "?? scripts/audit-cleanup-test.ts"
     ],
     "looksLikeRunInProgress": true
   },
   "drift": {
     "queueLastCommit": "2026-10-31T18:20:45-04:00",
     "unrecorded": [
+      {
+        "h": "f353d52a",
+        "date": "2026-10-31T20:57:45-04:00",
+        "subject": "Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)",
+        "ids": [],
+        "matches": []
+      },
+      {
+        "h": "5db27c7b",
+        "date": "2026-11-01T00:35:42+00:00",
+        "subject": "Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online",
+        "ids": [],
+        "matches": []
+      },
       {
         "h": "46be1bc6",
         "date": "2026-10-31T20:29:18-04:00",
@@ -433,6 +447,16 @@
   "bank": null,
   "recentCommits": [
     {
+      "h": "f353d52a",
+      "date": "2026-10-31",
+      "subject": "Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)"
+    },
+    {
+      "h": "5db27c7b",
+      "date": "2026-11-01",
+      "subject": "Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online"
+    },
+    {
       "h": "46be1bc6",
       "date": "2026-10-31",
       "subject": "Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)"
@@ -481,16 +505,6 @@
       "h": "36872c8f",
       "date": "2026-10-31",
       "subject": "Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails"
-    },
-    {
-      "h": "719073d5",
-      "date": "2026-10-31",
-      "subject": "Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)"
-    },
-    {
-      "h": "94b6272a",
-      "date": "2026-10-31",
-      "subject": "Isolation test: pay link refused before the round's day, then the SMS checks on a round today"
     }
   ]
 }

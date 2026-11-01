@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 00:35 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `e075cedc` · working tree **11 dirty file(s)**
+Generated 2026-11-01 02:00 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `0cf4edc5` · working tree **11 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 2 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 4 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `f353d52a` | 2026-10-31 | Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279) |
+| `5db27c7b` | 2026-11-01 | Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online |
 | `46be1bc6` | 2026-10-31 | Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278) |
 | `efef5f62` | 2026-11-01 | Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day |
 
@@ -21,15 +23,15 @@ Generated 2026-11-01 00:35 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M src/app/api/bookings/route.ts`
-- `M src/app/api/operator/golfers/[key]/route.ts`
+- `M scripts/money-ledger-test.ts`
 - `M src/app/api/operator/shop-sales/route.ts`
-- `M src/lib/claim-tee-time.ts`
-- `M src/lib/counter-pay.ts`
-- `M src/lib/membership-join.ts`
-- `M src/lib/promo-codes.ts`
-- `M src/lib/shop-sales.ts`
-- `?? scripts/audit-security-db-test.ts`
+- `M src/app/dashboard/golfers/[key]/page.tsx`
+- `M src/app/dashboard/shop/page.tsx`
+- `M src/components/dashboard/MemberAccount.tsx`
+- `M src/components/dashboard/PromoCodes.tsx`
+- `M src/lib/member-statements.ts`
+- `M src/lib/membership-autorenew.ts`
+- `?? scripts/audit-cleanup-test.ts`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -155,6 +157,8 @@ This is the distinction a raw checkbox count gets wrong.
 
 ## Recent commits
 
+- `f353d52a` 2026-10-31 — Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)
+- `5db27c7b` 2026-11-01 — Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online
 - `46be1bc6` 2026-10-31 — Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)
 - `efef5f62` 2026-11-01 — Money audit fixes: dues charge only the shown total, tier term change stops auto-renew, credited round returns our fee, pay link opens on the day
 - `f2eb20ef` 2026-10-31 — queue/spec update (#277)
@@ -165,8 +169,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `847fd73c` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause
 - `f84e4be2` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)
 - `36872c8f` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails
-- `719073d5` 2026-10-31 — Launch walk fixes: member $0 rate, move prices, member-link price, payments checklist, pay link on the day (#273)
-- `94b6272a` 2026-10-31 — Isolation test: pay link refused before the round's day, then the SMS checks on a round today
 
 ---
 

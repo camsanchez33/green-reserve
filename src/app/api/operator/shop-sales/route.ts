@@ -234,11 +234,12 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(r.value);
   }
   if (body.action === 'refund_retry') {
-    const denied = can(g.session, 'shop.return') ? null : requirePermission(g.session, 'money.refund');
-    if (denied) return denied;
     const refundId = typeof body.refundId === 'string' ? body.refundId : '';
-    const owned = await prisma.shopSaleRefund.findFirst({ where: { id: refundId, saleId: id, courseId: g.session.courseId }, select: { id: true } });
+    const owned = await prisma.shopSaleRefund.findFirst({ where: { id: refundId, saleId: id, courseId: g.session.courseId }, select: { id: true, returnedLines: true } });
     if (!owned) return NextResponse.json({ error: 'Refund not found.' }, { status: 404 });
+    // Audit 2026-10-31: Return items may retry a return by item; a refund of a typed amount, as to start one, needs Issue refunds.
+    const denied = owned.returnedLines != null && can(g.session, 'shop.return') ? null : requirePermission(g.session, 'money.refund');
+    if (denied) return denied;
     const r = await sendShopRefund(g.session.courseId, refundId);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     if (r.value.status === 'done') await reverseShopRefundTax(refundId); // never throws; the hourly cron retries

@@ -30,6 +30,7 @@ export function PromoCodes({ canEdit }: { canEdit: boolean }) {
   const [error, setError] = useState('');
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [toggling, setToggling] = useState('');
   const [formError, setFormError] = useState('');
 
   const load = useCallback(async () => {
@@ -50,7 +51,10 @@ export function PromoCodes({ canEdit }: { canEdit: boolean }) {
     setDraft(null); load();
   }
   async function toggle(c: Code) {
+    if (toggling) return;
+    setToggling(c.id); setError('');
     const r = await dfetch('/api/operator/promo-codes', { method: 'PATCH', body: JSON.stringify({ id: c.id, active: !c.active }) });
+    setToggling('');
     if (!r.ok) { setError(r.error); return; }
     load();
   }
@@ -102,7 +106,7 @@ export function PromoCodes({ canEdit }: { canEdit: boolean }) {
               <span className="ml-auto text-ink-muted text-[12.5px] tabular-nums">{c.bookings} · {usd(c.discountedCents)}</span>
               {canEdit && <>
                 <button onClick={() => edit(c)} className="text-[13px] font-medium text-pine hover:underline underline-offset-4">Edit</button>
-                <button onClick={() => toggle(c)} className="text-[13px] font-medium text-ink-soft hover:text-ink">{c.active ? 'Turn off' : 'Turn on'}</button>
+                <button onClick={() => toggle(c)} disabled={!!toggling} className="text-[13px] font-medium text-ink-soft hover:text-ink disabled:opacity-50">{toggling === c.id ? 'Saving…' : c.active ? 'Turn off' : 'Turn on'}</button>
               </>}
             </li>
           ))}

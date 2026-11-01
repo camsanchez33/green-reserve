@@ -403,7 +403,11 @@ export default function ShopPage() {
   // MEM-ACCT 1b: "On account" shows only when some tier has member accounts on.
   useEffect(() => {
     if (!access.loaded || !canCash) return;
-    dfetch<{ members: AccountMember[] }>('/api/operator/member-accounts?q=').then(r => setAccountsOn(r.ok && r.data.members.length > 0));
+    // Audit 2026-10-31: a failed check says so, rather than quietly dropping the choice.
+    dfetch<{ members: AccountMember[] }>('/api/operator/member-accounts?q=').then(r => {
+      setAccountsOn(r.ok && r.data.members.length > 0);
+      if (!r.ok) setError(r.error);
+    });
   }, [access.loaded, canCash]);
   useEffect(() => { if (hasRounds) setPay(p => (p === 'reader' && oneRoundForReader ? p : 'cash')); }, [hasRounds, oneRoundForReader]);
   // Rounds: cash needs counter payment; the card reader needs check-in (CASH-1).

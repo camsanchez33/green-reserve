@@ -42,6 +42,12 @@ ok('cash paths write the ledger: the register, a cash sale, a sale taken in cash
   const sales = code('src/lib/shop-sales.ts');
   return /method: 'cash'[^\n]*what: 'shop'|what: 'shop', direction: 'in', method: 'cash'/.test(sales) && /note: 'voided'/.test(sales) && /pay link taken in cash/.test(sales) && /recordMove\(/.test(code('src/lib/register.ts'));
 })());
+// Audit 2026-10-31: statements and auto-renew charge through the charger passed in (chargeOneIntent), which the scan above can't see.
+for (const f of ['src/lib/member-statements.ts', 'src/lib/membership-autorenew.ts']) {
+  const src = code(f);
+  const calls = (src.match(/await charge\(/g) ?? []).length;
+  ok(`${f}: each of its ${calls} charge(s) through the charger passed in writes the ledger`, calls >= 1 && (src.match(LEDGER) ?? []).length >= calls, { calls });
+}
 ok('dues taken at the course write the ledger', /what: 'dues', direction: 'in', method: method === 'cash' \? 'cash' : 'other'/.test(code('src/lib/membership-dues.ts')) && code('src/app/api/operator/members/route.ts').includes('markDuesPaidAtCourse('));
 ok('the webhook mirrors Stripe-dashboard refunds and dispute money', /charge\.dispute\.funds_withdrawn/.test(code('src/app/api/stripe/webhook/route.ts')) && /mirrorMove\(/.test(code('src/app/api/stripe/webhook/route.ts')));
 ok('the ledger is cleared by the launch wipe and the test-course reset', WIPED_TABLES.includes('MoneyMove') && /moneyMove\.deleteMany/.test(code('src/lib/data-reset.ts')));

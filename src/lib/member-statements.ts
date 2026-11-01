@@ -85,7 +85,7 @@ export async function closeStatements(courseId: string, now = new Date()): Promi
 }
 
 // The real one is lib/stripe chargeOneIntent: ONE PaymentIntent per statement (paymentIntentId), every attempt confirming it.
-export type Charger = (o: { existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown>; customerId: string; paymentMethodId: string; connectedAccountId: string; amountCents: number; applicationFeeCents: number; description: string; metadata: Record<string, string> }) => Promise<{ id: string; amount: number; status: string }>;
+export type Charger = (o: { existingIntentId: string; intentKey: string; onCreated: (id: string) => Promise<unknown>; customerId: string; paymentMethodId: string; connectedAccountId: string; amountCents: number; applicationFeeCents: number; description: string; metadata: Record<string, string> }) => Promise<{ id: string; amount: number; status: string; application_fee_amount?: number | null }>;
 export type PayResult = { status: 'paid'; amountCents: number } | { status: 'declined'; error: string } | { status: 'skipped'; why: string };
 
 /** Charge one statement to a card: claim, charge, ledger, mark paid. The caller says which card and key. */
@@ -96,7 +96,7 @@ export async function chargeStatement(statementId: string, card: { customerId: s
   const claimed = await prisma.memberStatement.updateMany({ where: { id: st.id, status: 'open', OR: [{ chargeStartedAt: null }, { chargeStartedAt: { lt: new Date(now.getTime() - STALE_MS) } }] }, data: { chargeStartedAt: now } });
   if (!claimed.count) return { status: 'skipped', why: 'being paid now' };
   const release = () => prisma.memberStatement.updateMany({ where: { id: st.id, chargeStartedAt: now }, data: { chargeStartedAt: null } });
-  let pi: { id: string; amount: number; status: string };
+  let pi: { id: string; amount: number; status: string; application_fee_amount?: number | null };
   try {
     pi = await charge({
       existingIntentId: st.paymentIntentId, intentKey: `statement-intent-${st.id}`,
@@ -114,7 +114,7 @@ export async function chargeStatement(statementId: string, card: { customerId: s
   if (pi.status === 'processing') return { status: 'skipped', why: 'payment processing' };
   if (pi.status !== 'succeeded') { await release(); return { status: 'declined', error: `The card needs the member (${pi.status}).` }; }
   // The money moved: on the ledger first.
-  await recordMove({ courseId: st.courseId, what: 'account', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: st.feeCents, stripeId: pi.id, membershipId: st.membershipId, actor: card.actor, note: `Statement ${st.period}` });
+  await recordMove({ courseId: st.courseId, what: 'account', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? st.feeCents, stripeId: pi.id, membershipId: st.membershipId, actor: card.actor, note: `Statement ${st.period}` });
   const done = await prisma.memberStatement.updateMany({ where: { id: st.id, status: 'open', chargeStartedAt: now }, data: { status: 'paid', paidAt: now, paymentIntentId: pi.id, chargeStartedAt: null, autoRetryAt: null } });
   if (!done.count) console.error(JSON.stringify({ ev: 'member_statement.pay.state_changed', statementId: st.id, paymentIntentId: pi.id }));
   return { status: 'paid', amountCents: pi.amount };
@@ -160,7 +160,7 @@ export async function markStatementPaidOffline(courseId: string, statementId: st
     try { pi = await stripe.paymentIntents.retrieve(st.paymentIntentId, {}, acct); }
     catch (err) { await release(); return { ok: false as const, status: 502, error: `Couldn’t check the card payment (${err instanceof Error ? err.message : 'Stripe error'}) — try again.` }; }
     if (pi.status === 'succeeded') {
-      await recordMove({ courseId, what: 'account', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: st.feeCents, stripeId: pi.id, membershipId: st.membershipId, actor: 'system', note: `Statement ${st.period}` });
+      await recordMove({ courseId, what: 'account', direction: 'in', method: 'card', account: 'course', amountCents: pi.amount, platformFeeCents: pi.application_fee_amount ?? st.feeCents, stripeId: pi.id, membershipId: st.membershipId, actor: 'system', note: `Statement ${st.period}` });
       await prisma.memberStatement.updateMany({ where: { id: st.id, status: 'open', chargeStartedAt: now }, data: { status: 'paid', paidAt: now, chargeStartedAt: null, autoRetryAt: null } });
       return { ok: false as const, status: 409, error: 'This statement was just paid by card — nothing to take.' };
     }

@@ -7082,7 +7082,7 @@
     },
     {
       "path": "src/app/api/operator/shop-sales/route.ts",
-      "lines": 280,
+      "lines": 281,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -8449,7 +8449,7 @@
     },
     {
       "path": "src/app/dashboard/golfers/[key]/page.tsx",
-      "lines": 148,
+      "lines": 149,
       "purpose": "The golfer record (Revamp 3, Cam 2026-10-29):",
       "brain": [],
       "exports": [
@@ -8904,7 +8904,7 @@
     },
     {
       "path": "src/app/dashboard/shop/page.tsx",
-      "lines": 911,
+      "lines": 915,
       "purpose": "POS-2 (Cam 2026-10-19:",
       "brain": [],
       "exports": [
@@ -11020,7 +11020,7 @@
     },
     {
       "path": "src/components/dashboard/MemberAccount.tsx",
-      "lines": 128,
+      "lines": 134,
       "purpose": "MEM-ACCT (Cam 2026-10-30:",
       "brain": [],
       "exports": [
@@ -11145,7 +11145,7 @@
     },
     {
       "path": "src/components/dashboard/PromoCodes.tsx",
-      "lines": 115,
+      "lines": 119,
       "purpose": "PRICE-1 (Cam 2026-10-30:",
       "brain": [],
       "exports": [

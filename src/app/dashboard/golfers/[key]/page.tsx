@@ -81,11 +81,12 @@ export default function GolferRecordPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap border border-line rounded-lg overflow-hidden w-fit max-w-full">
-              {([['Rounds', rec.counts.rounds], ['Booked', rec.counts.upcoming], ['No-shows', rec.counts.noShows], ['Late cancels', rec.counts.lateCancels], ...(rec.spend ? [['Spent', usd(rec.spend.roundsCents + rec.spend.shopCents)]] : [])] as [string, number | string][]).map(([l, v], i) => (
-                <div key={l} className={'px-4 py-2.5 min-w-[7.5rem] ' + (i ? 'border-l border-line' : '')}><div className="text-[12.5px] text-ink-soft">{l}</div><div className="text-[20px] font-semibold tabular-nums text-ink">{v}</div></div>
+            {/* Audit 2026-10-31 (FLOW-2): a soft card with hairline-divided cells, not a ruled box. */}
+            <Card className="flex flex-wrap overflow-hidden w-fit max-w-full divide-x divide-line-soft">
+              {([['Rounds', rec.counts.rounds], ['Booked', rec.counts.upcoming], ['No-shows', rec.counts.noShows], ['Late cancels', rec.counts.lateCancels], ...(rec.spend ? [['Spent', usd(rec.spend.roundsCents + rec.spend.shopCents)]] : [])] as [string, number | string][]).map(([l, v]) => (
+                <div key={l} className="px-4 py-2.5 min-w-[7.5rem]"><div className="text-[12.5px] text-ink-soft">{l}</div><div className="text-[20px] font-semibold tabular-nums text-ink">{v}</div></div>
               ))}
-            </div>
+            </Card>
 
             {(rec.onlineBlock || rec.canBlock) && (
               <Card className={'px-5 py-4 ' + (rec.onlineBlock ? 'border-l-[3px] border-l-bad' : '')}>

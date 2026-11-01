@@ -39,6 +39,8 @@ export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id:
   const [view, setView] = useState<View | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
+  // What just worked (audit 2026-10-31: every action says so).
+  const [note, setNote] = useState('');
   // chargeId: "Credit back" on a round line — the credit then also gives back that round's GreenReserve fee.
   const [credit, setCredit] = useState<{ amount: string; reason: string; chargeId?: string; what?: string }>({ amount: '', reason: '' });
   const [busy, setBusy] = useState(false);
@@ -46,23 +48,26 @@ export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id:
   async function load() {
     const r = await dfetch<View>(`/api/operator/member-accounts?membershipId=${encodeURIComponent(id)}`);
     if (r.ok) { setView(r.data); setError(''); } else setError(r.error);
+    return r.ok;
   }
   async function toggle() { if (!open) await load(); setOpen(!open); }
   async function act(statementId: string, action: 'mark_paid' | 'email_statement', method?: 'cash' | 'check') {
     if (action === 'mark_paid' && !confirm(`Mark this statement paid at the course by ${method}?`)) return;
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setNote('');
     const r = await dfetch('/api/operator/member-accounts', { method: 'POST', body: JSON.stringify({ action, statementId, method }) });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
+    setNote(action === 'email_statement' ? 'Statement emailed.' : `Marked paid by ${method}.`);
     await load();
   }
   async function give() {
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setNote('');
     const cents = Math.round(Number(credit.amount) * 100);
     const r = await dfetch('/api/operator/member-accounts', { method: 'POST', body: JSON.stringify({ membershipId: id, amountCents: cents, reason: credit.reason, ...(credit.chargeId ? { chargeId: credit.chargeId } : {}) }) });
     setBusy(false);
     if (!r.ok) { setError(r.error); return; }
     setCredit({ amount: '', reason: '' });
+    setNote(`Credited ${usd(cents)}.`);
     await load();
   }
 
@@ -104,7 +109,7 @@ export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id:
                       {l.createdBy && <span className="text-ink-muted">{l.createdBy}</span>}
                       <span className="ml-auto tabular-nums text-ink">{usd(l.amountCents)}</span>
                       {canCredit && l.kind === 'round' && <button onClick={() => setCredit({ amount: (l.amountCents / 100).toFixed(2), reason: '', chargeId: l.id, what: l.note || 'this round' })} className="text-ink-soft hover:text-ink underline underline-offset-2">Credit back</button>}
-                      {canMove && l.kind !== 'credit' && <ChangeAccount target={{ chargeId: l.id }} className="text-pine font-medium hover:underline" inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink" onDone={() => load()} />}
+                      {canMove && l.kind !== 'credit' && <ChangeAccount target={{ chargeId: l.id }} className="text-pine font-medium hover:underline" inputClass="bg-white border border-line rounded-md px-2 py-1.5 text-ink" onDone={m => { setNote(m); setError(''); load(); }} />}
                     </li>
                   ))}
                 </ul>
@@ -119,7 +124,8 @@ export function MemberAccount({ id, canCredit, canEdit, canMove = false }: { id:
               )}
             </>
           )}
-          {error && <p role="alert" className="mt-2 text-bad">{error}</p>}
+          {error && <p role="alert" className="mt-2 text-bad">{error}{!view && <> <button onClick={() => load()} className="text-pine font-medium hover:underline">Try again</button></>}</p>}
+          {note && !error && <p role="status" className="mt-2 text-ink">{note}</p>}
         </div>
       )}
     </>
