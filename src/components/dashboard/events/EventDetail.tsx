@@ -296,7 +296,7 @@ export default function EventDetail({ data, onChange, onEdit, onBack, canRefund,
             <p className="max-w-[46em]">
               {e.signupOpen
                 ? `Players ${e.signupPay === 'now' ? 'sign up and pay' : 'sign up'} on the event’s page — send its link to the organizer to pass on.`
-                : 'Players sign up on the event’s page — open it under Sign-up page, then send its link to the organizer to pass on.'}
+                : 'Players sign up on the event’s page — send its link to the organizer.'}
               {unpaid > 0 && ` ${unpaid} player${unpaid === 1 ? '' : 's'} on the list ${unpaid === 1 ? 'hasn’t' : 'haven’t'} paid: send ${unpaid === 1 ? 'them their' : 'each their'} own link below, or take it at the course.`}
             </p>
             {e.signupOpen && <button onClick={async () => { try { await navigator.clipboard.writeText(data.signup.url); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); } catch { setError('Couldn’t copy — use the link on the Sign-up page card.'); } }}

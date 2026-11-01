@@ -4,6 +4,7 @@ import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { createEvent, previewEvent, EventError, type EventInput } from '@/lib/course-events';
 import { todayIn } from '@/lib/course-time';
+import { eventMoney } from '@/lib/event-payments';
 
 // W2-9 Events: the course's outings, tournaments and league nights. Everything
 // here needs "Run events" (owner, and staff given it); writes also need the
@@ -30,6 +31,8 @@ export async function GET() {
       take: 500,
       include: {
         tasks: { select: { dueDate: true, doneAt: true } },
+        // DENSE-8 (Cam 2026-11-01): the list shows what each event still owes — the same sum as its own page.
+        payments: { select: { status: true, amountCents: true, refundedCents: true } },
         _count: { select: { entrants: { where: { status: 'in' } }, teeTimes: true } },
       },
     }),
@@ -42,8 +45,9 @@ export async function GET() {
     courseHoles: course?.holes ?? 18,
     products,
     nines,
-    events: events.map(({ tasks, _count, ...e }) => ({
+    events: events.map(({ tasks, payments, _count, ...e }) => ({
       ...e,
+      owedCents: e.pricePerPlayerCents > 0 ? eventMoney({ ...e, entrants: _count.entrants }, payments).owedCents : 0,
       entrantCount: _count.entrants,
       heldCount: _count.teeTimes,
       tasksOpen: tasks.filter(t => !t.doneAt).length,
