@@ -1,9 +1,9 @@
 {
   "generator": "scripts/codemap.mjs",
   "counts": {
-    "files": 636,
+    "files": 637,
     "routes": 286,
-    "libs": 223,
+    "libs": 224,
     "models": 67,
     "orphans": 10,
     "ungatedRoutes": 3
@@ -1997,7 +1997,7 @@
     },
     {
       "path": "src/app/api/admin/create-course/route.ts",
-      "lines": 203,
+      "lines": 206,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2024,6 +2024,7 @@
         "@/lib/email",
         "@/lib/money",
         "@/lib/operator-setup",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "bcryptjs",
         "crypto",
@@ -2292,7 +2293,7 @@
     },
     {
       "path": "src/app/api/admin/inquiries/route.ts",
-      "lines": 1307,
+      "lines": 1312,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2340,6 +2341,7 @@
         "@/lib/lifecycle",
         "@/lib/money",
         "@/lib/operator-setup",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/setup-sheet-recap",
@@ -2807,7 +2809,7 @@
     },
     {
       "path": "src/app/api/admin/schedule/route.ts",
-      "lines": 86,
+      "lines": 90,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -2845,6 +2847,8 @@
       "imports": [
         "@/lib/admin-audit",
         "@/lib/admin-session",
+        "@/lib/pricing-switch",
+        "@/lib/prisma",
         "@/lib/schedule-service",
         "next/server"
       ],
@@ -3673,7 +3677,7 @@
     },
     {
       "path": "src/app/api/bookings/resident-rate/route.ts",
-      "lines": 62,
+      "lines": 65,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3695,6 +3699,7 @@
         "@/lib/last-minute",
         "@/lib/member-rates",
         "@/lib/member-session",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/round-packs",
         "@/lib/tier-rates",
@@ -3704,7 +3709,7 @@
     },
     {
       "path": "src/app/api/bookings/route.ts",
-      "lines": 492,
+      "lines": 494,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -3742,6 +3747,7 @@
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/promo-codes",
         "@/lib/rate-limit",
@@ -4877,7 +4883,7 @@
     },
     {
       "path": "src/app/api/manage/[bookingId]/swap-time/route.ts",
-      "lines": 67,
+      "lines": 69,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -4898,6 +4904,7 @@
         "@/lib/manage-access",
         "@/lib/member-session",
         "@/lib/move-booking",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/rate-limit",
         "@/lib/terms",
@@ -5008,7 +5015,7 @@
     },
     {
       "path": "src/app/api/member/[courseSlug]/tee-times/route.ts",
-      "lines": 131,
+      "lines": 133,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5033,6 +5040,7 @@
         "@/lib/member-rates",
         "@/lib/member-session",
         "@/lib/money",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/tier-rates",
         "next/server"
@@ -5537,7 +5545,7 @@
     },
     {
       "path": "src/app/api/operator/counter-members/route.ts",
-      "lines": 33,
+      "lines": 36,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -5555,6 +5563,7 @@
       "guard": "file",
       "imports": [
         "@/lib/member-rates",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/session",
         "next/server"
@@ -6819,7 +6828,7 @@
     },
     {
       "path": "src/app/api/operator/schedule/route.ts",
-      "lines": 99,
+      "lines": 101,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -6862,6 +6871,7 @@
       "imports": [
         "@/lib/agreement-required",
         "@/lib/course-plan",
+        "@/lib/pricing-switch",
         "@/lib/schedule-service",
         "@/lib/session",
         "next/server"
@@ -7434,7 +7444,7 @@
     },
     {
       "path": "src/app/api/operator/tiers/route.ts",
-      "lines": 187,
+      "lines": 189,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -7472,6 +7482,7 @@
         "@/lib/membership-autorenew",
         "@/lib/membership-join",
         "@/lib/money",
+        "@/lib/pricing-switch",
         "@/lib/prisma",
         "@/lib/session",
         "@/lib/tier-wire",
@@ -8726,7 +8737,7 @@
     },
     {
       "path": "src/app/dashboard/page.tsx",
-      "lines": 1699,
+      "lines": 1701,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -12217,7 +12228,7 @@
     },
     {
       "path": "src/components/dashboard/settings/WhoPaysWhat.tsx",
-      "lines": 97,
+      "lines": 99,
       "purpose": "Settings → Prices & fees:",
       "brain": [],
       "exports": [
@@ -15064,7 +15075,7 @@
     },
     {
       "path": "src/lib/booking-residents.ts",
-      "lines": 69,
+      "lines": 72,
       "purpose": "RES-1 (Cam 2026-10-19):",
       "brain": [],
       "exports": [
@@ -15086,6 +15097,7 @@
         "./booking-events",
         "./demand-pricing",
         "./last-minute",
+        "./pricing-switch",
         "./prisma",
         "./promo-codes",
         "./residents"
@@ -16026,7 +16038,7 @@
     },
     {
       "path": "src/lib/checkin-booking.ts",
-      "lines": 517,
+      "lines": 519,
       "purpose": "",
       "brain": [],
       "exports": [
@@ -16060,6 +16072,7 @@
         "./member-rates",
         "./money-ledger",
         "./no-show-fee",
+        "./pricing-switch",
         "./prisma",
         "./reader-rounds",
         "./round-shop-tax",
@@ -16250,7 +16263,7 @@
     },
     {
       "path": "src/lib/counter-pay.ts",
-      "lines": 299,
+      "lines": 303,
       "purpose": "A group pays for its round at the counter (cash, or the course's own card machine):",
       "brain": [],
       "exports": [
@@ -16299,6 +16312,7 @@
         "./member-rates",
         "./money-ledger",
         "./no-show-fee",
+        "./pricing-switch",
         "./prisma",
         "./promo-codes",
         "./reader-rounds",
@@ -20935,7 +20949,7 @@
     },
     {
       "path": "src/lib/move-booking.ts",
-      "lines": 292,
+      "lines": 295,
       "purpose": "ACT-1 (PLATFORM_ROADMAP_SPEC §2, Cam 2026-10-07):",
       "brain": [],
       "exports": [
@@ -20972,6 +20986,7 @@
         "./demand-pricing",
         "./last-minute",
         "./member-rates",
+        "./pricing-switch",
         "./prisma",
         "./promo-codes",
         "./residents",
@@ -21642,6 +21657,55 @@
       ]
     },
     {
+      "path": "src/lib/pricing-switch.ts",
+      "lines": 76,
+      "purpose": "Settings → \"Who gets their own price\" (Cam 2026-11-01:",
+      "brain": [],
+      "exports": [
+        {
+          "name": "memberPricingOn",
+          "kind": "fn"
+        },
+        {
+          "name": "residentPricingOn",
+          "kind": "fn"
+        },
+        {
+          "name": "switchOnWherePriced",
+          "kind": "fn"
+        },
+        {
+          "name": "withPriceSwitch",
+          "kind": "fn"
+        }
+      ],
+      "route": null,
+      "kind": null,
+      "methods": [],
+      "auth": null,
+      "guard": null,
+      "imports": [
+        "./prisma"
+      ],
+      "usedBy": [
+        "src/app/api/admin/create-course/route.ts",
+        "src/app/api/admin/inquiries/route.ts",
+        "src/app/api/admin/schedule/route.ts",
+        "src/app/api/bookings/resident-rate/route.ts",
+        "src/app/api/bookings/route.ts",
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
+        "src/app/api/member/[courseSlug]/tee-times/route.ts",
+        "src/app/api/operator/counter-members/route.ts",
+        "src/app/api/operator/schedule/route.ts",
+        "src/app/api/operator/tiers/route.ts",
+        "src/lib/booking-residents.ts",
+        "src/lib/checkin-booking.ts",
+        "src/lib/counter-pay.ts",
+        "src/lib/move-booking.ts",
+        "src/lib/register.ts"
+      ]
+    },
+    {
       "path": "src/lib/prisma.ts",
       "lines": 15,
       "purpose": "",
@@ -21695,6 +21759,7 @@
         "src/app/api/admin/request-re-review/route.ts",
         "src/app/api/admin/resend-staff-setup/route.ts",
         "src/app/api/admin/revenue/route.ts",
+        "src/app/api/admin/schedule/route.ts",
         "src/app/api/admin/search/route.ts",
         "src/app/api/admin/send-golive-reminder/route.ts",
         "src/app/api/admin/set-password/route.ts",
@@ -21900,6 +21965,7 @@
         "src/lib/owner-passkey.ts",
         "src/lib/owner-session.ts",
         "src/lib/page-review.ts",
+        "src/lib/pricing-switch.ts",
         "src/lib/problems.ts",
         "src/lib/promo-codes.ts",
         "src/lib/public-course.ts",
@@ -22465,7 +22531,7 @@
     },
     {
       "path": "src/lib/register.ts",
-      "lines": 125,
+      "lines": 128,
       "purpose": "POS-3 R2 (Cam 2026-10-24:",
       "brain": [],
       "exports": [
@@ -22492,6 +22558,7 @@
         "./counter-pay",
         "./format",
         "./money-ledger",
+        "./pricing-switch",
         "./prisma",
         "./shop",
         "./shop-sales"
@@ -25128,7 +25195,7 @@
     },
     {
       "path": "src/lib/who-pays.ts",
-      "lines": 104,
+      "lines": 105,
       "purpose": "Settings → Prices & fees, \"Who pays what\" (Cam 2026-10-19, OPERATOR_REWORK_SPEC \"Settings — round 1\"):",
       "brain": [],
       "exports": [
@@ -27095,6 +27162,7 @@
         "src/lib/card-reader.ts",
         "src/lib/demand-pricing.ts",
         "src/lib/lifecycle.ts",
+        "src/lib/pricing-switch.ts",
         "src/lib/sales-tax.ts"
       ],
       "readers": [
@@ -27127,6 +27195,7 @@
         "src/app/api/cron/monthly-review/route.ts",
         "src/app/api/cron/send-reminders/route.ts",
         "src/app/api/manage/[bookingId]/available-times/route.ts",
+        "src/app/api/manage/[bookingId]/swap-time/route.ts",
         "src/app/api/member/[courseSlug]/payments/route.ts",
         "src/app/api/member/[courseSlug]/send-code/route.ts",
         "src/app/api/member/[courseSlug]/session/route.ts",
@@ -27214,6 +27283,7 @@
         "src/lib/public-tee-times.ts",
         "src/lib/real-courses.ts",
         "src/lib/register-close.ts",
+        "src/lib/register.ts",
         "src/lib/sales-tax.ts",
         "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
@@ -29289,6 +29359,7 @@
         "src/lib/counter-pay.ts",
         "src/lib/member-import.ts",
         "src/lib/membership-join.ts",
+        "src/lib/pricing-switch.ts",
         "src/lib/sample-data.ts"
       ]
     },
@@ -31260,12 +31331,14 @@
         "src/lib/schedule-service.ts"
       ],
       "readers": [
+        "src/app/api/admin/schedule/route.ts",
         "src/app/api/operator/course-products/route.ts",
         "src/app/api/operator/residents/route.ts",
         "src/app/api/operator/tee-times/route.ts",
         "src/lib/birdie/course-context.ts",
         "src/lib/course-events.ts",
         "src/lib/course-shape-setup.ts",
+        "src/lib/pricing-switch.ts",
         "src/lib/sample-data.ts",
         "src/lib/schedule-preview.ts",
         "src/lib/schedule-service.ts",

@@ -7,6 +7,7 @@
 // that must happen on every check-in is done here too: the checked_in event,
 // the shop items' sales tax, refunding a hold fee taken after the cutoff, and
 // refunding a booking fee already taken on its own.
+import { memberPricingOn, residentPricingOn } from './pricing-switch';
 import { prisma } from './prisma';
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
@@ -211,6 +212,9 @@ export async function createCounterBooking(courseId: string, input: CounterBooki
   let appliedRate = 'standard';
   let packUse: { lineId: string; rounds: number } | null = null;
   let rateRows: { residentPlayers?: number; residentRateCents?: number | null; memberRateCents?: number | null; memberCartCents?: number | null } = {};
+  // Switched off in Settings (lib/pricing-switch): no resident or member rate at the counter either.
+  if (rate === 'resident' && !residentPricingOn(teeTime.course)) return { ok: false, status: 409, error: 'Resident prices are off in Settings — book them at the standard rate.' };
+  if ((rate.startsWith('tier:') || rate.startsWith('member:')) && !memberPricingOn(teeTime.course)) return { ok: false, status: 409, error: 'Member prices are off in Settings — book them at the standard rate.' };
   if (rate === 'resident' || rate === 'senior' || rate === 'junior') {
     const per = rate === 'resident' ? teeTime.residentRateCents : rate === 'senior' ? teeTime.seniorRateCents : teeTime.juniorRateCents;
     if (per == null) return { ok: false, status: 409, error: `This tee time has no ${rate} price. Set one in Schedule.` };

@@ -1478,14 +1478,16 @@ function WalkInForm({ slot, late, onSave, onCancel }: { slot: TeeTime; late: boo
   const [member, setMember] = useState<{ id: string; name: string; tier: string } | null>(null);
   // PRICE-3: rounds from a golfer's round pack.
   const [pack, setPack] = useState<Holding | null>(null);
-  useEffect(() => { dfetch<{ tiers: { id: string; name: string }[] }>('/api/operator/counter-members').then(r => { if (r.ok) setTiers(r.data.tiers); }); }, []);
+  // Member / resident prices switched off in Settings aren't offered (the server refuses them too).
+  const [switches, setSwitches] = useState<{ membersOn: boolean; residentsOn: boolean }>({ membersOn: true, residentsOn: true });
+  useEffect(() => { dfetch<{ tiers: { id: string; name: string }[]; membersOn?: boolean; residentsOn?: boolean }>('/api/operator/counter-members').then(r => { if (r.ok) { setTiers(r.data.tiers); setSwitches({ membersOn: r.data.membersOn !== false, residentsOn: r.data.residentsOn !== false }); } }); }, []);
   useEffect(() => {
     if (rate !== 'member' || memberQ.trim().length < 2) { setMemberHits([]); return; }
     const t = setTimeout(() => { dfetch<{ members: { id: string; name: string; tier: string }[] }>(`/api/operator/counter-members?q=${encodeURIComponent(memberQ.trim())}`).then(r => { if (r.ok) setMemberHits(r.data.members); }); }, 250);
     return () => clearTimeout(t);
   }, [rate, memberQ]);
-  const perCents: Record<string, number | null | undefined> = { resident: slot.residentRateCents, senior: slot.seniorRateCents, junior: slot.juniorRateCents };
-  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ['member', 'Member'], PACK_RATE, ...tiers.map(t => [`tier:${t.id}`, t.name])];
+  const perCents: Record<string, number | null | undefined> = { resident: switches.residentsOn ? slot.residentRateCents : null, senior: slot.seniorRateCents, junior: slot.juniorRateCents };
+  const rates = [['standard', `Standard $${slot.greenFee}`], ...(['resident', 'senior', 'junior'] as const).filter(k => perCents[k] != null).map(k => [k, `${k[0].toUpperCase()}${k.slice(1)} $${((perCents[k] as number) / 100).toFixed(0)}`]), ...(switches.membersOn ? [['member', 'Member']] : []), PACK_RATE, ...tiers.map(t => [`tier:${t.id}`, t.name])];
   const sentRate = rate === 'member' ? (member ? `member:${member.id}` : 'standard') : rate === 'pack' ? (pack ? `pack:${pack.lineId}` : 'standard') : rate;
   const inp = 'bg-paper border border-line rounded-md px-3 py-2 text-sm text-ink outline-none focus:border-pine/40 focus:ring-2 focus:ring-pine/10 transition-colors w-full';
   // A membership is priced by the server (its member and guest rules); the rest show here.

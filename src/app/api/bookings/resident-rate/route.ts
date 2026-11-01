@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { getGolferMembership, getMemberSession, golferResident } from '@/lib/member-session';
 import { applyTierRates } from '@/lib/tier-rates';
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
   if (!teeTimeId) return NextResponse.json({ residentGreenFee: null, member: null, packs: [] });
   const tt = await prisma.teeTime.findUnique({
     where: { id: teeTimeId },
-    select: { courseId: true, date: true, time: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, id: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } } },
+    select: { courseId: true, date: true, time: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true, hasMemberPricing: true, hasResidentPricing: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, id: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } } },
   });
   if (!tt) return NextResponse.json({ residentGreenFee: null, member: null, packs: [] });
   const grace = tt.course;
@@ -48,6 +49,8 @@ export async function GET(req: NextRequest) {
       if (m && m.courseId === tt.courseId && membershipLive(m, grace)) tier = m.tier;
     }
   }
+  // Switched off in Settings (lib/pricing-switch): no member or resident rate is shown, as none is charged.
+  if (!memberPricingOn(tt.course)) tier = null;
   if (tier) {
     const rates = applyTierRates(tt, tier);
     return NextResponse.json({
@@ -56,6 +59,6 @@ export async function GET(req: NextRequest) {
       packs,
     });
   }
-  if (tt.residentRateCents == null || !(await golferResident(tt.courseId, tt.date))) return NextResponse.json({ residentGreenFee: null, member: null, packs });
+  if (tt.residentRateCents == null || !residentPricingOn(tt.course) || !(await golferResident(tt.courseId, tt.date))) return NextResponse.json({ residentGreenFee: null, member: null, packs });
   return NextResponse.json({ residentGreenFee: rated(tt.residentRateCents) / 100, member: null, packs });
 }

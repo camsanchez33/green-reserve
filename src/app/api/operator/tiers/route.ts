@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withPriceSwitch } from '@/lib/pricing-switch';
 import { requireAgreementCurrent } from '@/lib/agreement-required';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
@@ -63,7 +64,8 @@ export async function POST(req: NextRequest) {
   const acct = readAccountSettings({ accountOn, accountLimitCents: limitCents(accountLimit), accountSettle });
   if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });
 
-  const tier = await prisma.membershipTier.create({
+  // A newly set member price switches member prices on (lib/pricing-switch).
+  const tier = await withPriceSwitch(session.courseId, () => prisma.membershipTier.create({
     data: {
       ...acct.data,
       joinOnline: join,
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
       termMonths:         termMonths         != null ? Number(termMonths)         : 12,
       notes: notes || '',
     },
-  });
+  }));
   return NextResponse.json(tierToWire(tier), { status: 201 });
 }
 
@@ -120,7 +122,7 @@ export async function PATCH(req: NextRequest) {
   const acct = readAccountSettings({ accountOn: updates.accountOn, accountLimitCents: limitCents(updates.accountLimit), accountSettle: updates.accountSettle });
   if (!acct.ok) return NextResponse.json({ error: acct.error }, { status: 400 });
 
-  const updated = await prisma.membershipTier.update({
+  const updated = await withPriceSwitch(session.courseId, () => prisma.membershipTier.update({
     where: { id },
     data: {
       ...acct.data,
@@ -144,7 +146,7 @@ export async function PATCH(req: NextRequest) {
       notes:              updates.notes              ?? tier.notes,
       active:             updates.active             !== undefined ? updates.active : tier.active,
     },
-  });
+  }));
   // MEM-RENEW: the course stopped automatic renewal on this tier — its members go back to pay-link renewals, and are told.
   // Audit 2026-10-31: a new term length is a schedule nobody agreed to (yearly → monthly would charge the yearly
   // amount every month), so it stops automatic renewal the same way; members agree again when they next pay.

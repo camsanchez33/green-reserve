@@ -57,7 +57,7 @@ async function cleanup() {
 
   // The weekly refresh from the course's own last 8 weeks.
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
-  const c = await prisma.course.create({ data: { name: 'Demand', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC', demandMode: 'suggest' } });
+  const c = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: 'Demand', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC', demandMode: 'suggest' } });
   const today = todayIn('UTC');
   const past = [];
   for (let d = 1; d <= 56; d++) {

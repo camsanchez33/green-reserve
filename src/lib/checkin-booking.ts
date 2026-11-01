@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { memberPricingOn } from './pricing-switch';
 import { liveMembershipWhere, memberPlayers, splitTotal, partyFees } from './member-rates';
 import { stripe, chargeOnConnectedAccount, refundOnConnectedAccount } from './stripe';
 import { recordBookingEventSafe, teeTimeInstant, type EventActor } from './booking-events';
@@ -81,7 +82,7 @@ export async function cartAddOnCentsFor(booking: {
   if (booking.paymentStatus === 'paid' && booking.roundPaymentIntentId) return 0;
   const standard = booking.teeTime.cartFeeCents;
   let perPlayer = standard;
-  const grace = (await prisma.course.findUnique({ where: { id: booking.courseId }, select: { memberGraceDays: true, timezone: true } })) ?? { memberGraceDays: 0 };
+  const grace = (await prisma.course.findUnique({ where: { id: booking.courseId }, select: { memberGraceDays: true, timezone: true, hasMemberPricing: true } })) ?? { memberGraceDays: 0, hasMemberPricing: false };
   // Membership resolves the way the booking route does (member-session.ts):
   // by golfer account OR by the invite email, so an invite-only member who has
   // not accepted yet still gets their rate. Scoped to THIS course.
@@ -97,7 +98,8 @@ export async function cartAddOnCentsFor(booking: {
     },
     include: { tier: { select: { greenFeeWeekdayCents: true, greenFeeWeekendCents: true, cartFeeWeekdayCents: true, cartFeeWeekendCents: true, discountPct: true, guestsPayMemberRate: true } } },
   });
-  if (m?.tier) {
+  // Members switched off in Settings (lib/pricing-switch): the cart added at check-in is the public price.
+  if (m?.tier && memberPricingOn(grace)) {
     const t = m.tier;
     const d = new Date(booking.teeTime.date + 'T12:00:00');
     const weekend = d.getDay() === 0 || d.getDay() === 6;

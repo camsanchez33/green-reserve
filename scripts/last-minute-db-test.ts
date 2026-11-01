@@ -43,7 +43,7 @@ const at = (ms: number) => { const d = new Date(Date.now() + ms); return { date:
   ok('settings are checked: 1–48 hours, 1–90%', !!dealSettingsError({ lastMinuteHours: 0 }) && !!dealSettingsError({ lastMinutePct: 95 }) && dealSettingsError({ lastMinuteHours: 6, lastMinutePct: 25 }) === null);
 
   const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
-  const c = await prisma.course.create({ data: { name: 'Last minute', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, ...on, lastMinuteCounter: true } });
+  const c = await prisma.course.create({ data: { hasMemberPricing: true, hasResidentPricing: true, name: 'Last minute', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, ...on, lastMinuteCounter: true } });
   const slot = await prisma.teeTime.create({ data: { courseId: c.id, ...soon, holes: 18, greenFeeCents: 5000, cartFeeCents: 2000, playersAvailable: 40, residentRateCents: 3000 } });
   const far = await prisma.teeTime.create({ data: { courseId: c.id, date: addDaysStr(todayIn('UTC'), 3), time: '10:00', holes: 18, greenFeeCents: 5000, cartFeeCents: 2000, playersAvailable: 8 } });
 

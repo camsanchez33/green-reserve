@@ -691,20 +691,20 @@ function SettingsPageInner() {
                   prices are set), 2. which kinds of golfer get their own price and
                   where each is set, 3. the fees golfers can be charged. The pricing
                   rules underneath are unchanged. */}
-              <WhoPaysWhat accessLoaded={access.loaded} accessFailed={!!access.failed} canSeeSchedule={access.can('schedule.view')} canSeeMembers={access.can('members.view')} />
+              <WhoPaysWhat accessLoaded={access.loaded} accessFailed={!!access.failed} canSeeSchedule={access.can('schedule.view')} canSeeMembers={access.can('members.view')} membersOn={!!form.hasMemberPricing} residentsOn={!!form.hasResidentPricing} />
               <SectionCard title="Who gets their own price">
                 <p className="text-sm text-ink-soft -mt-2">Public prices and periods like twilight are set in <Link href="/dashboard/schedules" className="text-pine font-medium hover:underline">Schedule</Link>.</p>
                 <div className="border-t border-line-soft pt-4">
                   <Toggle label="Members" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
                   <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasMemberPricing
                     ? <>Each membership&apos;s price is set on the membership in <Link href="/dashboard/members" className="text-pine hover:underline">Members</Link>. A membership without its own price pays the member price in Schedule, or the public price.</>
-                    : 'Turning this off doesn’t stop a price already set on a membership or in Schedule.'}</p>
+                    : 'Off: members pay the public price, online and at the counter.'}</p>
                 </div>
                 <div className="border-t border-line-soft pt-4">
                   <Toggle label="Residents" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
                   <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasResidentPricing
                     ? <>The resident price is set in <Link href="/dashboard/schedules" className="text-pine hover:underline">Schedule</Link>, and your list of residents is in <Link href="/dashboard/members" className="text-pine hover:underline">Members</Link>. A resident books one player at the resident price: themselves.</>
-                    : 'Turning this off doesn’t stop a resident price already set in Schedule.'}</p>
+                    : 'Off: residents pay the public price, online and at the counter.'}</p>
                   {!!form.hasResidentPricing && (
                     <div className="mt-3 space-y-3">
                       <div className="grid grid-cols-2 gap-3">

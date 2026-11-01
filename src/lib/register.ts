@@ -5,6 +5,7 @@
 // paid at the counter, no GreenReserve fee — PAY-2), then the items and the
 // settled rounds are recorded as one walk-up sale so there is one receipt.
 // Card for rounds comes with the card reader (R3); until then rounds are cash.
+import { residentPricingOn } from './pricing-switch';
 import { prisma } from './prisma';
 import { formatTeeTime } from './format';
 import { settleAtCounter, createCounterBooking, counterDueCents, type CounterBookingInput } from './counter-pay';
@@ -17,7 +18,7 @@ export const MAX_REGISTER_ROUNDS = 8;
 
 /** Today's groups that still owe at the counter, and the next open tee times for a walk-in. */
 export async function registerRounds(courseId: string, date: string, nowTime: string) {
-  const [owing, open] = await Promise.all([
+  const [owing, open, switches] = await Promise.all([
     prisma.booking.findMany({
       where: { courseId, status: 'confirmed', paymentStatus: { notIn: ['paid', 'paid_offline', 'on_account'] }, teeTime: { date } },
       select: { id: true, golferName: true, players: true, totalAmount: true, accessFeeTotal: true, greenFeeTotal: true, cartFeeTotal: true, rangeBallsTotal: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, memberCartCents: true, feePaidCents: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, noShowAt: true, teeTime: { select: { time: true, holes: true } } },
@@ -28,6 +29,7 @@ export async function registerRounds(courseId: string, date: string, nowTime: st
       select: { id: true, time: true, holes: true, playersAvailable: true, playersBooked: true, greenFeeCents: true, cartFeeCents: true, residentRateCents: true, seniorRateCents: true, juniorRateCents: true, walkingAllowed: true, product: { select: { label: true } } },
       orderBy: { time: 'asc' }, take: 40,
     }),
+    prisma.course.findUnique({ where: { id: courseId }, select: { hasResidentPricing: true } }),
   ]);
   return {
     // dueCents: in cash at the counter (no GreenReserve fee); cardCents: on the card reader (R3b — the round's card charge, booking fee included).
@@ -36,7 +38,8 @@ export async function registerRounds(courseId: string, date: string, nowTime: st
       teeTimeId: t.id, time: t.time, holes: t.holes, round: t.product?.label ?? null, spots: t.playersAvailable - t.playersBooked,
       greenFeeCents: t.greenFeeCents, cartFeeCents: t.cartFeeCents, walkingAllowed: t.walkingAllowed,
       // Dead end 20: the time's other prices the register can ring a walk-in at.
-      rates: { resident: t.residentRateCents, senior: t.seniorRateCents, junior: t.juniorRateCents },
+      // Residents switched off in Settings (lib/pricing-switch): the register offers no resident price.
+      rates: { resident: residentPricingOn(switches) ? t.residentRateCents : null, senior: t.seniorRateCents, junior: t.juniorRateCents },
     })),
   };
 }

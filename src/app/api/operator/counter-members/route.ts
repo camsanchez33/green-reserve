@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { liveMembershipWhere } from '@/lib/member-rates';
@@ -12,20 +13,22 @@ export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   { const denied = requirePermission(session, 'sheet.walkin'); if (denied) return denied; }
-  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { counterMemberRate: true, memberGraceDays: true, timezone: true } });
+  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { counterMemberRate: true, memberGraceDays: true, timezone: true, hasMemberPricing: true, hasResidentPricing: true } });
   if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  // Switched off in Settings (lib/pricing-switch): the walk-in form offers no member or resident price.
+  const membersOn = memberPricingOn(course);
   const mode = course.counterMemberRate === 'any' ? 'any' : 'member';
   const q = (req.nextUrl.searchParams.get('q') ?? '').trim().slice(0, 80);
   const contains = { contains: q, mode: 'insensitive' as const };
   const [members, tiers] = await Promise.all([
-    q.length >= 2 ? prisma.courseMembership.findMany({
+    membersOn && q.length >= 2 ? prisma.courseMembership.findMany({
       where: { courseId: session.courseId, tierId: { not: null }, AND: [liveMembershipWhere(course)], OR: [{ inviteName: contains }, { golfer: { OR: [{ firstName: contains }, { lastName: contains }] } }] },
       take: 8, select: { id: true, inviteName: true, tier: { select: { name: true } }, golfer: { select: { firstName: true, lastName: true } } },
     }) : Promise.resolve([]),
-    mode === 'any' ? prisma.membershipTier.findMany({ where: { courseId: session.courseId, active: true }, select: { id: true, name: true }, orderBy: { createdAt: 'asc' } }) : Promise.resolve([]),
+    membersOn && mode === 'any' ? prisma.membershipTier.findMany({ where: { courseId: session.courseId, active: true }, select: { id: true, name: true }, orderBy: { createdAt: 'asc' } }) : Promise.resolve([]),
   ]);
   return NextResponse.json({
-    mode,
+    mode, membersOn, residentsOn: residentPricingOn(course),
     members: members.map(m => ({ id: m.id, name: (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}` : m.inviteName).trim() || 'Member', tier: m.tier?.name ?? '' })),
     tiers,
   });

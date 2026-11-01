@@ -1,4 +1,5 @@
 import { sheetPricesNotBuilt } from '@/lib/setup-sheet-recap';
+import { switchOnWherePriced } from '@/lib/pricing-switch';
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { dollarsToCents, dollarsToCentsOr0 } from '@/lib/money';
@@ -1170,6 +1171,10 @@ async function handleAction(
           });
         }
       }
+
+      // The build wrote prices from the sheet; switch on each kind it priced (lib/pricing-switch) —
+      // the pass-type flags above don't cover every pass (an "other" pass with a per-round price).
+      if (builtCourseId) await switchOnWherePriced(builtCourseId);
 
       if (buildAndEmail) {
         if (!newLogin) {
