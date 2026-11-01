@@ -12,7 +12,14 @@ import { walkingSummary } from './walking';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeDbCourse(c: any, startingGreenFee = 0) {
   const walking = walkingSummary(Array.isArray(c.schedules) ? c.schedules.filter((r: { walkingAllowed?: unknown }) => typeof r?.walkingAllowed === 'boolean') : []);
+  // Setup audit 17 (2026-11-01): the golfer page's Twilight filter starts where the course's own
+  // twilight price period does (a schedule period named "Twilight"), not at a fixed 4 PM.
+  const twilightStarts: string[] = Array.isArray(c.schedules)
+    ? c.schedules.filter((r: { tierName?: unknown; startTime?: unknown }) => typeof r?.tierName === 'string' && /twilight/i.test(r.tierName) && typeof r.startTime === 'string' && /^\d{2}:\d{2}$/.test(r.startTime) && r.startTime > '12:00')
+        .map((r: { startTime: string }) => r.startTime).sort()
+    : [];
   return {
+    twilight_start: twilightStarts[0] ?? null,
     id: c.id,
     slug: c.slug,
     name: c.name,

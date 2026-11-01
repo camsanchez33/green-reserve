@@ -26,7 +26,7 @@ export const TERMS = {
   comingUp: 'Bookings for tee times that haven’t happened yet, and what they’re worth when they play.',
   // DENSE-5 Members strip.
   notRenewed: 'Active members whose membership ran out and who haven’t paid to renew.',
-  notLinked: 'Members who haven’t linked a GreenReserve account. Online bookings get public rates until they do.',
+  notLinked: 'Members who haven’t signed in to GreenReserve yet. Signing in with the email on their membership gives them member rates online.',
   memberRounds: 'Checked-in rounds by your members since January 1.',
   memberSpend: 'Green fees, carts and range balls on their checked-in rounds since January 1 — the same as Analytics. Pro-shop items aren’t counted.',
   pace: 'Players booked so far for each coming day, against the same weekday the same number of days out over the last four weeks.',

@@ -698,13 +698,13 @@ function SettingsPageInner() {
                   <Toggle label="Members" checked={!!form.hasMemberPricing} onChange={()=>tog('hasMemberPricing')}/>
                   <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasMemberPricing
                     ? <>Each membership&apos;s price is set on the membership in <Link href="/dashboard/members" className="text-pine hover:underline">Members</Link>. A membership without its own price pays the member price in Schedule, or the public price.</>
-                    : 'Turn on if members pay less than the public.'}</p>
+                    : 'Turning this off doesn’t stop a price already set on a membership or in Schedule.'}</p>
                 </div>
                 <div className="border-t border-line-soft pt-4">
                   <Toggle label="Residents" checked={!!form.hasResidentPricing} onChange={()=>tog('hasResidentPricing')}/>
                   <p className="text-[12.5px] text-ink-muted mt-1 pl-0.5">{form.hasResidentPricing
                     ? <>The resident price is set in <Link href="/dashboard/schedules" className="text-pine hover:underline">Schedule</Link>, and your list of residents is in <Link href="/dashboard/members" className="text-pine hover:underline">Members</Link>. A resident books one player at the resident price: themselves.</>
-                    : 'Turn on if people who live locally pay less.'}</p>
+                    : 'Turning this off doesn’t stop a resident price already set in Schedule.'}</p>
                   {!!form.hasResidentPricing && (
                     <div className="mt-3 space-y-3">
                       <div className="grid grid-cols-2 gap-3">

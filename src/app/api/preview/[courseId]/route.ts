@@ -26,7 +26,7 @@ export async function GET(
       teeSets: { orderBy: { sortOrder: 'asc' }, select: { name: true, yardage: true, rating: true, slope: true } },
       nines: { orderBy: { sortOrder: 'asc' }, select: { name: true, par: true } },
       // CART-1: About's walking line sums these up.
-      schedules: { where: { active: true }, select: { walkingAllowed: true, walkingWeekend: true } },
+      schedules: { where: { active: true }, select: { walkingAllowed: true, walkingWeekend: true, tierName: true, startTime: true } },
     },
   });
   if (!dbCourse) return NextResponse.json({ error: 'Not found' }, { status: 404 });

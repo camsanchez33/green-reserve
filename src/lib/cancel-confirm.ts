@@ -1,7 +1,7 @@
-// The words staff read before cancelling a booking — the tee sheet's panel and
-// Money → Cancellations ask the same question the same way, so the fee outcome
-// they promise matches what lib/cancel-booking.ts actually does.
-type Cancelable = { golferName: string; paymentStatus: string; cancellationFeeTotal: number; noShowAt?: string | null };
+// The words staff read before cancelling a booking from the tee sheet's panel, so
+// the fee outcome they promise matches what lib/cancel-booking.ts actually does.
+// lateFeeOnCancel (worked out at the tap from the tee-times route's lateFeeFrom) and hasCard: when known, the words are exact.
+type Cancelable = { golferName: string; paymentStatus: string; cancellationFeeTotal: number; noShowAt?: string | null; lateFeeOnCancel?: boolean; hasCard?: boolean };
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
@@ -16,6 +16,12 @@ export function cancelConfirmText(b: Cancelable, waive: boolean, canWaive: boole
     ? `Cancel ${b.golferName}'s booking and waive the fee?\n\n${feeCharged ? `The ${fee} already charged will be refunded to their card.` : 'No late fee will be charged.'}${b.noShowAt ? ' Any no-show charge is refunded too.' : ''}`
     : feeCharged
       ? `Cancel ${b.golferName}'s booking?\n\nTheir ${fee} late-cancellation fee was already charged and will NOT be refunded.`
+      : b.cancellationFeeTotal > 0 && b.lateFeeOnCancel === true
+        ? b.hasCard === false
+          ? `Cancel ${b.golferName}'s booking?\n\nTheir free-cancellation window has closed, but there's no card on file, so the ${fee} late fee can't be charged.`
+          : `Cancel ${b.golferName}'s booking?\n\nTheir free-cancellation window has closed, so the ${fee} late fee is charged to their card now.${canWaive ? ' Use “Cancel, no fee” to cancel without it.' : ''}`
+      : b.cancellationFeeTotal > 0 && b.lateFeeOnCancel === false
+        ? `Cancel ${b.golferName}'s booking?\n\nThey're inside the free-cancellation window — nothing is charged.`
       : b.cancellationFeeTotal > 0
         ? `Cancel ${b.golferName}'s booking?\n\nIf their free-cancellation window has already closed, the ${fee} late fee is charged to their card now.${canWaive ? ' Use “Cancel, no fee” to cancel without it.' : ''}`
         : `Cancel ${b.golferName}'s booking?\n\nNo late fee on this booking — nothing is charged.`;
