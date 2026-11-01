@@ -55,7 +55,7 @@ function previewLines(p: Preview): string[] {
   if (p.repriced) out.push(`New price on ${p.repriced} tee time${p.repriced === 1 ? '' : 's'}; bookings keep theirs.`);
   if (p.removed) out.push(`Takes ${p.removed} open tee time${p.removed === 1 ? '' : 's'} off the sheet.`);
   if (p.bookedKept) out.push(`Keeps ${p.bookedKept} booked or blocked time${p.bookedKept === 1 ? '' : 's'} the schedule no longer has.`);
-  if (out.length === 0) out.push('Nothing on the tee sheet changes in the next days; it applies further out as the days come up.');
+  if (out.length === 0) out.push('No change in the next days; later days pick it up.');
   return out;
 }
 
@@ -407,14 +407,13 @@ export default function SchedulesPage() {
         <div className="px-4 sm:px-10 py-7 space-y-6">
           <div className="min-w-0 max-w-[46em]">
             <h1 className="font-serif text-[32px] leading-none text-ink">Schedule</h1>
-            <p className="text-[14px] text-ink-soft mt-2.5 leading-snug">When you&apos;re open, what golfers can book, and what it costs. Saving updates your tee sheet straight away; bookings keep their price.</p>
           </div>
 
           {loadError && <LoadError message={loadError} onRetry={loadSchedules} />}
           {productsError && <LoadError message={`Couldn't load your rounds — ${productsError}`} onRetry={loadProducts} />}
           {!plan && !loadError && <Card className="p-5 text-[14px] text-ink-muted">Loading your schedule…</Card>}
           {plan && !loading && rows.length === 0 && !loadError && (
-            <p className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink">No tee times yet. Check the hours and prices below, then save.</p>
+            <p className="bg-warn/5 border border-warn/20 rounded-md px-4 py-3 text-[13.5px] text-ink">No tee times yet.</p>
           )}
 
           {plan && (
@@ -423,7 +422,7 @@ export default function SchedulesPage() {
               <Card className="p-5 space-y-5">
                 <div>
                   <h2 className="text-[17px] font-semibold text-ink">When you&apos;re open</h2>
-                  <p className="text-[13px] text-ink-soft mt-1">The last tee time goes off at the time you give.{plan.different.length ? ` ${dayList(daysOf(plan, plan.usual))}:` : ' Every day:'}</p>
+                  <p className="text-[13px] text-ink-soft mt-1">{plan.different.length ? dayList(daysOf(plan, plan.usual)) : 'Every day'}</p>
                 </div>
                 {plan.usual.closed ? null : hoursFields(0, plan.usual)}
                 {plan.different.map((d, j) => (
@@ -450,7 +449,7 @@ export default function SchedulesPage() {
               {/* 2. What golfers can book */}
               <Card className="p-5">
                 <h2 className="text-[17px] font-semibold text-ink">What golfers can book</h2>
-                <p className="text-[13px] text-ink-soft mt-1 mb-3">Each round all day, or only between two times — a back nine in the morning, a front nine at twilight. Rounds are set up in <Link href="/dashboard/settings?section=Your+course" className="text-pine hover:underline">Your course</Link>.</p>
+                <p className="text-[13px] text-ink-soft mt-1 mb-3"><Link href="/dashboard/settings?section=Your+course" className="text-pine hover:underline">Edit rounds</Link></p>
                 <div className="divide-y divide-line-soft">
                   {plan.rounds.filter(r => rounds.some(x => x.key === r.key)).map(r => (
                     <div key={r.key} className="py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -483,7 +482,7 @@ export default function SchedulesPage() {
               <Card className="p-5 space-y-6">
                 <div>
                   <h2 className="text-[17px] font-semibold text-ink">What it costs</h2>
-                  <p className="text-[13px] text-ink-soft mt-1">A price per round, and a column for each time the price changes. Tap a name to rename.{!showMember && !showResident ? ' Member and resident prices show once you have them.' : ''}{!showAges && canEdit && <> <button type="button" onClick={() => setAddAges(true)} className="text-pine font-medium hover:underline">Add senior/junior prices</button></>}</p>
+                  {!showAges && canEdit && <p className="text-[13px] mt-1"><button type="button" onClick={() => setAddAges(true)} className="text-pine font-medium hover:underline">Add senior/junior prices</button></p>}
                 </div>
                 {dayPlans.map((d, i) => d.closed ? null : (
                   <section key={i}>
@@ -511,7 +510,7 @@ export default function SchedulesPage() {
                   <button onClick={() => shiftMonth(1)} aria-label="Next month" className="w-8 h-8 rounded-md hover:bg-paper text-ink-soft text-[18px] leading-none">›</button>
                 </div>
               </div>
-              <p className="text-[13px] text-ink-soft mt-1 mb-3">Outings, maintenance, holidays. {canEdit ? 'Click a day to close it; click a closed day to reopen it. ' : ''}Booked times stay — to cancel bookings for weather, use Weather on the tee sheet.</p>
+              <p className="text-[13px] text-ink-soft mt-1 mb-3">Outings, maintenance, holidays.</p>
               {blackoutError && <LoadError message={blackoutError} onRetry={loadBlackouts} />}
               <div className="grid grid-cols-7 text-center text-[12px] text-ink-muted mb-1">{WEEK.map(d => <span key={d}>{DAYS[d]}</span>)}</div>
               <div className="grid grid-cols-7 gap-1">
@@ -621,7 +620,6 @@ export default function SchedulesPage() {
                   <div className="mt-4 bg-warn/5 border border-warn/20 rounded-md px-3 py-2.5 space-y-1.5">
                     <p className="text-[13.5px] font-semibold text-ink">Worth a look before you save</p>
                     {pending.preview.warnings.map(w => <p key={w} className="text-[13.5px] text-ink leading-snug">{w}</p>)}
-                    <p className="text-[13px] text-ink">You can still save — this is a note, not a block.</p>
                   </div>
                 )}
               </>)}

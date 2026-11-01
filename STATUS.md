@@ -4,14 +4,16 @@
 > Every line below is derived from `RUN_QUEUE.md`, `REVISE_QUEUE.md`, `ADMIN_MASTER_PLAN.md`
 > and `git log`. If something here is wrong, the source doc is wrong — fix it there.
 
-Generated 2026-11-01 02:00 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `0cf4edc5` · working tree **11 dirty file(s)**
+Generated 2026-11-01 05:51 UTC · branch `claude/walkthrough-2-prioritization-ui5xyu` · HEAD `ccac7a43` · working tree **6 dirty file(s)**
 
 ## ⚠ Drift — git and the queue disagree
 
-`RUN_QUEUE.md` was last committed **2026-10-31**. 4 commit(s) since then are not mentioned anywhere in it:
+`RUN_QUEUE.md` was last committed **2026-10-31**. 6 commit(s) since then are not mentioned anywhere in it:
 
 | commit | date | subject |
 |---|---|---|
+| `a59c32eb` | 2026-10-31 | Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280) |
+| `20f25179` | 2026-11-01 | Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm |
 | `f353d52a` | 2026-10-31 | Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279) |
 | `5db27c7b` | 2026-11-01 | Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online |
 | `46be1bc6` | 2026-10-31 | Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278) |
@@ -19,19 +21,14 @@ Generated 2026-11-01 02:00 UTC · branch `claude/walkthrough-2-prioritization-ui
 
 **Meaning:** work shipped that the queue does not know about. Either record the run, or check the box.
 
-### Uncommitted working tree (11 file(s))
+### Uncommitted working tree (6 file(s))
 
+- `M DENSE_UI_SPEC.md`
 - `M docs/CODEMAP.md`
 - `M docs/codemap.json`
-- `M scripts/money-ledger-test.ts`
-- `M src/app/api/operator/shop-sales/route.ts`
-- `M src/app/dashboard/golfers/[key]/page.tsx`
-- `M src/app/dashboard/shop/page.tsx`
-- `M src/components/dashboard/MemberAccount.tsx`
-- `M src/components/dashboard/PromoCodes.tsx`
-- `M src/lib/member-statements.ts`
-- `M src/lib/membership-autorenew.ts`
-- `?? scripts/audit-cleanup-test.ts`
+- `M scripts/schedule-rework-test.ts`
+- `M scripts/words-guard.baseline.json`
+- `M src/app/dashboard/schedules/page.tsx`
 
 **A build looks mid-run** — new migration and/or source files are untracked. Do **not** apply
 the queue header's `git checkout -- .` cleanup until that run has committed, or the work is gone.
@@ -117,46 +114,48 @@ This is the distinction a raw checkbox count gets wrong.
 | spec | open refs | last touched | age |
 |---|---|---|---|
 | `CLAUDE.md` | 1 | 2026-10-30 | 1d |
-| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 3d |
-| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 10d |
+| `DENSE_UI_SPEC.md` | 1 | 2026-10-27 | 4d |
+| `PLATFORM_ROADMAP_SPEC.md` | 1 | 2026-10-20 | 11d |
 | `STAFF_POLICY_SPEC.md` | 0 | 2026-10-26 | 5d |
 | `OPERATOR_REWORK_SPEC.md` | 0 | 2026-10-25 | 6d |
 | `ADMIN_V5_SPEC.md` | 0 | 2026-10-23 | 8d |
-| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 8d |
 | `AGREEMENT_SPEC.md` | 0 | 2026-10-22 | 9d |
 | `CALL_SCHEDULING_SPEC.md` | 0 | 2026-10-22 | 9d |
+| `HOMEPAGE_SPEC.md` | 0 | 2026-10-23 | 9d |
 | `ONBOARDING_SPEC.md` | 0 | 2026-10-22 | 9d |
 | `ONBOARDING_V2_SPEC.md` | 0 | 2026-10-22 | 9d |
 | `PUBLIC_SITE_SPEC.md` | 0 | 2026-10-22 | 9d |
 | `RECEIPT_SPEC.md` | 0 | 2026-10-22 | 9d |
-| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 10d |
-| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `ARCHITECTURE.md` | 0 | 2026-10-20 | 10d |
-| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 10d |
-| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 10d |
+| `ADMIN_MASTER_PLAN.md` | 0 | 2026-10-20 | 11d |
+| `ADMIN_REBUILD_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `ADMIN_V2_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `ADMIN_V3_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `ADMIN_V4_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `ARCHITECTURE.md` | 0 | 2026-10-20 | 11d |
+| `BACKUP_OPS_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `BIRDIE_AI_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `CODEMAP_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `COURSES_SHEET_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `COURSE_LAYOUT_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `DESIGN_SYSTEM_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `FB2_COPY_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `FB3_FEE_PLAN_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `GOLFER_EDGE_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `GOLFER_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `HARDENING_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `INQUIRY_CALL_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `INQUIRY_FORM_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `MANAGE_BOOKING_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `PRIVATE_BILLING_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `PRODUCTION_READINESS_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `REVIEW_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `SITE_DASHBOARD_SPEC.md` | 0 | 2026-10-20 | 11d |
+| `UI_REVISE_SPEC.md` | 0 | 2026-10-20 | 11d |
 
 ## Recent commits
 
+- `a59c32eb` 2026-10-31 — Audit cleanups: ledger guard + Stripe's fee, Return items retries returns only, admin actions confirm (#280)
+- `20f25179` 2026-11-01 — Audit cleanups: ledger guard sees statement and renewal charges, ledger takes Stripe's fee, Return items retries returns only, admin actions confirm
 - `f353d52a` 2026-10-31 — Security follow-ups: once-per-golfer promo codes, contact details behind their permission, paused membership blocks online join (#279)
 - `5db27c7b` 2026-11-01 — Security follow-ups: once-per-golfer promo codes hold, contact details stay behind their permission, a paused membership stops joining online
 - `46be1bc6` 2026-10-31 — Money audit fixes: dues total pinned, term change stops auto-renew, credited round returns our fee, pay link on the day (#278)
@@ -167,8 +166,6 @@ This is the distinction a raw checkbox count gets wrong.
 - `23c14e34` 2026-10-31 — Event day: check-in, day view, cart signs
 - `5af344f0` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause (#275)
 - `847fd73c` 2026-10-31 — Front desk "Return items" permission; drop the false counter-fee clause
-- `f84e4be2` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails (#274)
-- `36872c8f` 2026-10-31 — Launch batch 2: sheet prices listed, cash drawer adds up, no silent pipeline emails
 
 ---
 
